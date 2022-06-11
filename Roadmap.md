@@ -101,5 +101,43 @@ const IntSlicer = {
 
 Ok yeah the deal is, the peggyjs parser doesn't have types associated.
 So I need to build up the "parsed types" by hand.
+OHWAIT jk I've definitely built autotypes and autowhatsits from the grammar. Awesome.
+
+OK
+so
+(grammar -> ast w/ typescript types of it)
+nowww I need a transformer, for the ast.
+Can we just assume that ... one ast node maps to one tst node?
+maybe I can just ... "declare" the kind of thing
+that I'll map to.
+
+
+CAN I
+declarative the pretty-printer
+in such a way
+that I can infer the grammar?
+OR
+declarative the grammar
+on the flip side
+
+
+side note, checking out Roc's "tag"s. Which are like my records/enums, a little bit I think.
+except they're a ton more permissive.
+
+
+
+# V0
+
+numbers + builtin ops
+
+(.jd -> ast -> tast -> ir -> .ts)
+
+# V1
+
+define, id(pattern)
+
+# V2
+
+???
 
 

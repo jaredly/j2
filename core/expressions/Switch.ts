@@ -9,6 +9,7 @@ import {
     checkTypes,
     checkPattern,
     FromAst,
+    Context,
 } from '..';
 
 export const grammar = `
@@ -57,16 +58,23 @@ export const checkConsistency = (
         );
 };
 
-export const fromAst = (
-    { expr, cases }: P_Switch,
-    transform: FromAst,
-): Switch => ({
+export const fromAst = ({ expr, cases }: P_Switch, ctx: Context): Switch => ({
     type: 'Switch',
-    expr: transform.Expression(expr, transform),
-    cases: cases.map((kase) => ({
-        type: 'SwitchCase',
-        // ohhhh hm I have to modify the local scope now.
-        pattern: transform.Pattern(kase.pattern, transform),
-        body: transform.Expression(kase.body, transform),
-    })),
+    expr: FromAst.Expression(expr, ctx),
+    cases: cases.map((kase) => {
+        // so transform.Pattern needs to not only return
+        // the processed pattern, but also the scope modifiers.
+        // Should all of these return something extra?
+        // hmm expressions can't modify scope.
+        // Patterns definitely might.
+        // but other things not.
+        const [pat, subctx] = FromAst.Pattern(kase.pattern, ctx);
+
+        return {
+            type: 'SwitchCase',
+            // ohhhh hm I have to modify the local scope now.
+            pattern: pat,
+            body: FromAst.Expression(kase.body, subctx),
+        };
+    }),
 });
