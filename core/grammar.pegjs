@@ -100,13 +100,7 @@ DecDefArg = id:IdentifierWithoutHash _ ":" _ type:Type {
 
 // Binop
 Expression = BinOp
-BinOp = first:WithUnary rest_drop:BinOpRight* {
-    if (rest_drop.length) {
-        return {type: 'BinOp', first, rest: rest_drop, location: myLocation()}
-    } else {
-        return first
-    }
-}
+BinOp = first:WithUnary rest_drop:BinOpRight* 
 BinOpRight = __ op:binopWithHash __ right:WithUnary {
     return {op, right, location: myLocation()}
 }
@@ -222,7 +216,7 @@ Block = "{" _ items:Statements? _ "}" {
     return {type: 'block', items: items || [], location: myLocation()}
 }
 
-If = "if" __ cond:Expression _ yes:Block no:(_ "else" _ @(Block / IfElse))? {
+If = "if" __ cond:Expression _ yes:Block no:(_ "else" _ (Block / IfElse))? {
     return {type: 'If', cond, yes, no: no ? no[3] : null, location: myLocation()}
 }
 

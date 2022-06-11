@@ -141,3 +141,137 @@ define, id(pattern)
 ???
 
 
+OK SO
+all suffixes are function calls
+
+some prefixes are function calls
+and some prefixes are type shenanigans. introducing type or effect variables.
+
+
+
+
+CANNNN I model .attributeaccess as just functions?
+I feel like there was some reason that it wasn't going to work.
+```ts
+struct X<Z> {
+	y: int,
+	z: Z
+}
+
+const m = (n: X<int>) => n.z
+.z (n)
+
+// oh there was something about .z needing to know ... the un..specialized .. type of the record or something.
+
+// so .z is a special kind of (node?) AttributeAccessLiteral
+// it knows what type it operates on
+// and the index.
+// lovely.
+// but ... then it needs type variables?
+// .z: <Z>(value: X<Z>) ={}> Z
+// .z<int>(n)
+// huh yeah I guess it ... can just be what it is
+// very interesting.
+// Ok suffixes, we have:
+// [ as ], which is also a function call.
+// we look for `let as` right? Yeah I think so. Love it, it's also a function call. Although with the caveat that we're printing out the return type. Which is interesting.
+// And then [index] access. Which we decided is also a function call.
+// x[y, z] -> '[]'(x, y, z)
+// and there's a builtin definition for
+
+type Index<Col, Idx, Ret> = {
+	'[]': (collection: Col, idx: Idx) => Ret
+}
+// but then how to type
+let ArrGet = <T>Index<Array<T>, number, T>{
+	'[]': (collection: Array<T>, idx: number) => T
+}
+
+// And how to use ArrGet?
+ArrGet<int>.'[]'([1,2],3) -> int
+// Ok so in order to do anything to ArrGet, you need
+// to pass it a type variable.
+
+let Whatsit = <T>{
+	let m = (n: T, m: Eq<T>) => m.eq(n, n);
+	Index<Array<T>, number, T>{
+		'[]': (arr, idx) => m(arr[idx])
+	}
+}
+
+/*
+CAN RECORD LITERALS
+have OPEN TYPE VARIABLES
+like
+what
+
+the type of this value
+is
+T -> Index<Array<T>, int, T>
+
+is that weird?
+
+
+ok yeah so I can't actually think of downsides of this
+approach at the moment. Just let people declare type functions
+like wherever they want... all they do is
+- add a type vbl to the scope
+- return the body, with the type changed to be a type function.
+
+Where am I using ':' as a prefix already?
+oh yeah I was thinking of using it for 'silent args'.
+but that's still a long way off.
+'<' as a prefix fights with JSX if I should ever want it,
+and idk if I do
+yeah I don't think so; I think I'll take care of that usability
+as an editor plugin.
+so '<' is fine.
+
+nowwww a question becomes; how about effects?
+{* *} - I could use that for effects, I assume they'll be
+less used than records yaknow.
+yeah I think that's fine. I could change it later.
+
+anyway, ={* e *}>
+what about effects, where
+<T>(x: T) => T
+is no longer just a function type, it's a T -> (x: T) => T
+with effects
+<T>{* e *}(x: () ={e}> T) ={e}> T
+
+is this
+
+let monn = T ~> e ~> (x: () ={e}> T) ={e}> T?
+
+monn<int>{* Send *}(sender)
+
+is this
+
+((monn<int>){* Send *})(sender) ?
+
+I guess I don't see why not?
+that would also allow me to generally have effect variables
+in records and stuff.
+which I remember thinking would be desirable for some reason.
+
+
+
+
+*/
+
+// type Index<A, B, C> { '[]': (A, B) => C }
+// let ArrGet: <T>Index<Array<T>, number, Result<T, OutOfBounds>> = {
+//   '[]': <T>(arr: Array<T>, idx: number) => Result<T, OutOfBounds>,
+// }
+// let ArrSlice = {
+//   '[]': <T>(arr: Array<T>, slice: (number, number)) => Array<T>,
+// }
+// Does this mean that 1...3 is just sugar for (1, 3)?
+// seems like a reasonable thing ... idk. I like not having
+// to introduce some non-representable bonanza.
+// like, you could have a function
+// (slicer: (number, number)) => myarr[slicer]
+// now if you wanted to be really fancy
+// <T>(slicer: T, :Index<Array<int>, T, int>)
+
+```
