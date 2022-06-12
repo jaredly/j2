@@ -7,7 +7,9 @@ export type RuleTriple = [peggy.ast.Rule, t.TSType, t.Expression | null];
 
 export const processRules = (rules: peggy.ast.Rule[]) => {
     const alls: Array<RuleTriple> = [];
+    const ruleTags: Array<string> = [];
     rules.forEach((rule, i) => {
+        // let um: string[] = [];
         // try {
         const [type, expr] = processExpression(
             rule.expression,
@@ -15,9 +17,13 @@ export const processRules = (rules: peggy.ast.Rule[]) => {
                 type: 'top',
                 ruleName: rule.name,
             },
+            ruleTags,
             i === 0,
         );
         alls.push([rule, type, expr]);
+        // if (um.length) {
+        //     ruleTags.push(rule.name);
+        // }
         // } catch (err) {
         //     console.log(`### ${rule.name} ###`);
         //     console.log(
@@ -32,10 +38,13 @@ export const processRules = (rules: peggy.ast.Rule[]) => {
         // }
     });
 
-    return alls;
+    return { rules: alls, ruleTags };
 };
 
-export const assembleRules = (rules: RuleTriple[], raw: string) => {
+export const assembleRules = (
+    { rules, ruleTags }: { rules: RuleTriple[]; ruleTags: Array<string> },
+    raw: string,
+) => {
     const typesFile: Array<string> = [];
     const grammarFile: Array<string> = [];
 
@@ -48,12 +57,17 @@ export const assembleRules = (rules: RuleTriple[], raw: string) => {
         return rule;
     };
 
+    const ruleTagNames: string[] = [];
+
     rules.map(([rule, type, expr]) => {
-        // extract out an _inner version.
+        // extract out an _inner version, if the first of the union is a literal
         if (
             type.type === 'TSUnionType' &&
             type.types[0].type === 'TSTypeLiteral'
         ) {
+            if (ruleTags.includes(rule.name)) {
+                ruleTagNames.push(rule.name + '_inner');
+            }
             typesFile.push(
                 generate(
                     t.exportNamedDeclaration(
@@ -80,17 +94,26 @@ export const assembleRules = (rules: RuleTriple[], raw: string) => {
                 ).code,
             );
         } else {
-            typesFile.push(
-                generate(
-                    t.exportNamedDeclaration(
-                        t.tsTypeAliasDeclaration(
-                            ruleToType(rule.name),
-                            null,
-                            type,
+            const isEmpty =
+                type.type === 'TSTypeLiteral' && type.members.length === 2;
+            if (isEmpty) {
+                typesFile.push(`// No data on ${rule.name}`);
+            } else {
+                if (ruleTags.includes(rule.name)) {
+                    ruleTagNames.push('P_' + rule.name);
+                }
+                typesFile.push(
+                    generate(
+                        t.exportNamedDeclaration(
+                            t.tsTypeAliasDeclaration(
+                                ruleToType(rule.name),
+                                null,
+                                type,
+                            ),
                         ),
-                    ),
-                ).code,
-            );
+                    ).code,
+                );
+            }
         }
 
         const ruleSource = getBasic(rule.expression);
@@ -106,6 +129,22 @@ export const assembleRules = (rules: RuleTriple[], raw: string) => {
                     : ''),
         );
     });
+
+    typesFile.push(
+        generate(
+            t.exportNamedDeclaration(
+                t.tsTypeAliasDeclaration(
+                    t.identifier(`AllTaggedTypes`),
+                    null,
+                    t.tsUnionType(
+                        ruleTagNames.map((name) =>
+                            t.tsTypeReference(t.identifier(name)),
+                        ),
+                    ),
+                ),
+            ),
+        ).code,
+    );
 
     return { typesFile, grammarFile };
 };

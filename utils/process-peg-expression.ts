@@ -13,6 +13,7 @@ export const processExpression = (
     ctx:
         | { type: 'top'; ruleName: string }
         | { type: 'inner'; vbl: t.Expression },
+    ruleTags: Array<string>,
     first = false,
 ): [t.TSType, null | t.Expression] => {
     if (ctx.type === 'top' && ctx.ruleName.match(/^_/)) {
@@ -23,7 +24,7 @@ export const processExpression = (
             return [t.tsTypeReference(t.identifier('string')), null];
         }
         case 'named': {
-            return processExpression(expr.expression, ctx, first);
+            return processExpression(expr.expression, ctx, ruleTags, first);
         }
         case 'text':
             return [t.tsTypeReference(t.identifier('string')), null];
@@ -31,7 +32,7 @@ export const processExpression = (
             if (ctx.type === 'inner') {
                 throw new Error(`inner action`);
             }
-            return processExpression(expr.expression, ctx, first);
+            return processExpression(expr.expression, ctx, ruleTags, first);
         }
         case 'rule_ref': {
             return [t.tsTypeReference(ruleToType(expr.name)), null];
@@ -52,7 +53,11 @@ export const processExpression = (
             return [t.tsUnionType(names), null];
         }
         case 'optional': {
-            const [type, inner] = processExpression(expr.expression, ctx);
+            const [type, inner] = processExpression(
+                expr.expression,
+                ctx,
+                ruleTags,
+            );
             return [
                 orNull(type),
                 inner == null || ctx.type === 'top'
@@ -62,10 +67,14 @@ export const processExpression = (
         }
         case 'zero_or_more':
         case 'one_or_more': {
-            const [type, inner] = processExpression(expr.expression, {
-                type: 'inner',
-                vbl: t.identifier('element'),
-            });
+            const [type, inner] = processExpression(
+                expr.expression,
+                {
+                    type: 'inner',
+                    vbl: t.identifier('element'),
+                },
+                ruleTags,
+            );
             if (inner === null) {
                 return [t.tsArrayType(type), null];
             }
@@ -115,10 +124,14 @@ export const processExpression = (
                         t.numericLiteral(i),
                         true,
                     );
-                    const [type, inner] = processExpression(el, {
-                        type: 'inner',
-                        vbl,
-                    });
+                    const [type, inner] = processExpression(
+                        el,
+                        {
+                            type: 'inner',
+                            vbl,
+                        },
+                        ruleTags,
+                    );
                     found = [type, inner ? inner : vbl];
                 });
                 if (found == null) {
@@ -141,10 +154,14 @@ export const processExpression = (
             let attributes: Array<[string, t.TSType, t.Expression]> = [];
             elements.forEach((element) => {
                 if (element.type === 'labeled' && element.label != null) {
-                    const [type, expr] = processExpression(element.expression, {
-                        type: 'inner',
-                        vbl: t.identifier(element.label),
-                    });
+                    const [type, expr] = processExpression(
+                        element.expression,
+                        {
+                            type: 'inner',
+                            vbl: t.identifier(element.label),
+                        },
+                        ruleTags,
+                    );
                     attributes.push([
                         element.label,
                         type,
@@ -197,6 +214,7 @@ export const processExpression = (
             const typeName = attributes.some((s) => s[0] === 'type')
                 ? '$type'
                 : 'type';
+            ruleTags.push(ctx.ruleName);
 
             const recordType = t.tsTypeLiteral(
                 [

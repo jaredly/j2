@@ -22,7 +22,7 @@ CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
 Int "int" = _ contents:$("-"? [0-9]+) 
 
-Identifier = text:$IdText hash:(JustSym / HashRef)?
+Identifier = text:$IdText hash:($JustSym / $HashRef)?
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 

@@ -405,3 +405,5 @@ But then how would you know what scope to type-check the comments at?
 hmmm I kinda think maybe all nodes ... should ... be autogenned to have like pre_ and post_ comments for everything? that sounds absolutely exhausting.
 and like what about comments in between list items?
 yaknow.
+
+maybe back off on the P_, and just import * and p.

@@ -12,4 +12,6 @@ export const fromAst = ({ op, location }: P_ParenOperator, ctx: Context) => {
     // without a combinatorial explosion.
     // can I get away with only two levels of ambiguity?
     // Like, if I have an "apply" the
+    // yeah ok, so I'll have a 'resolve this thing'
+    // that I can call, on the context?
 };

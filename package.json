@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "grammar": "esbuild --bundle utils/build-grammar.ts --platform=node --sourcemap | node -"
+        "grammar": "esbuild --bundle utils/build-grammar.ts --platform=node --sourcemap=inline | node --enable-source-maps -"
     },
     "keywords": [],
     "author": "",

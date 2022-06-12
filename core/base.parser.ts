@@ -51,28 +51,16 @@ export type P_Identifier = {
   type: "Identifier";
   loc: Location;
   text: string;
-  hash: (P_JustSym | P_HashRef) | null;
+  hash: (string | string) | null;
 };
 
-export type P_IdText = {
-  type: "IdText";
-  loc: Location;
-};
+// No data on IdText
 
-export type P_JustSym = {
-  type: "JustSym";
-  loc: Location;
-};
+// No data on JustSym
 
-export type P_HashRef = {
-  type: "HashRef";
-  loc: Location;
-};
+// No data on HashRef
 
-export type P_HashNum = {
-  type: "HashNum";
-  loc: Location;
-};
+// No data on HashNum
 
 export type P_BuiltinHash = string;
 
@@ -91,5 +79,7 @@ export type P_multiLineComment = string;
 export type P_lineComment = string;
 
 export type P_finalLineComment = string;
+
+export type AllTaggedTypes = P_File | Apply_inner | P_Parens | P_CommaExpr | P_Int | P_Identifier;
 
 export const parseTyped = (input: string): File => parse(input)
