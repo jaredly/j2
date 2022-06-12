@@ -4,7 +4,9 @@
 BinOp = first:BinOpInner rest_drop:BinOpRight* 
 BinOpRight = _ op:binopWithHash _ right:BinOpInner 
 
-binopWithHash = op:binop hash:($BuiltinHash / $binopHash)?
+binopWithHash = op:binop hash:($BuiltinHash / $opHash)?
 binop = $(!"//" [+*^/<>=|&-]+)
-binopHash = (JustSym / HashRef) (JustSym / HashRef) HashNum
+opHash = (JustSym / HashRef) (JustSym / HashRef) HashNum
+
+BinOpInner = UnaryOp
 */

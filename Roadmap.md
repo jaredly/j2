@@ -148,10 +148,33 @@ some prefixes are function calls
 and some prefixes are type shenanigans. introducing type or effect variables.
 
 
+I think it's related to GADTs? hmm maybe not.
+
+you might have
+```ts
+type Showable<T> = {
+	value: T,
+	show: T => string,
+}
+
+const ok: Array<<T>Showable<T>> = [
+	Showable<int>{value: 10, show: intToString},
+	Showable<float>{value: 10.0, show: floatToString},
+]
+
+// hmm no that's not right.
+// Ok so does it only make sense for records containing functions?
+// Maybe, and that sounds fine to me.
+```
+
+
+
+
 
 
 CANNNN I model .attributeaccess as just functions?
 I feel like there was some reason that it wasn't going to work.
+
 ```ts
 struct X<Z> {
 	y: int,
@@ -275,3 +298,30 @@ which I remember thinking would be desirable for some reason.
 // <T>(slicer: T, :Index<Array<int>, T, int>)
 
 ```
+
+
+Ohhk so editor idea. When you have a line focused, off to the right
+(similar to vcode's lens thing) you have all of the fns used on that line, along with like their type signatures or something.
+So you can see what you're getting.
+
+
+
+soooo arguments for having operators just be free-floating functions: it's easier in a lot of ways.
+arguments for having them be gathered into records: it's cooler or something ... because you can do monads maybe idk.
+honestly let's not bother with that just yet.
+how far can we get without it, you know.
+
+ok so for now, we're just doing a lookup for functions.
+And there are some builtin functions and stuff.
+
+but this also means I don't necessarily need to support partially type-applied records just yet. which is nice I thikn.
+
+Am I already using ' for something? Do I even have the concept of chars? maybe I should idk.
+um anyway, how do I quote operators? \`? yeah all strings are template for me, so \` is open.
+seems appealing.
+how about quoting things for like quasiquoting? idkk.
+
+So a common way to quote operators is to just surround in parens. How annoying would that be? Seems like it's probably ok.
+
+`let (+) = `.
+Because you can't have a 1-ary tuple.

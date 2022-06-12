@@ -1,6 +1,6 @@
 // An AST node
 
-import { Location, FromAst } from '../';
+import { Location, FromAst, Context } from '../';
 
 /*:peg:
 Int "int" = _ contents:$("-"? [0-9]+) 
@@ -19,10 +19,7 @@ export const checkConsistency = (node: Int) => []; // no errors
 
 // The types of `fromAst` inform the "transformer" type ...
 //
-export const fromAst = (
-    { contents, location }: P_Int,
-    transform: FromAst,
-): Int => ({
+export const fromAst = ({ contents, location }: P_Int, ctx: Context): Int => ({
     type: 'Int',
     value: +contents,
     location,
