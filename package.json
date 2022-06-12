@@ -1,24 +1,25 @@
 {
-  "name": "j2",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@babel/generator": "^7.18.2",
-    "@babel/types": "^7.18.4",
-    "peggy": "^2.0.1",
-    "ts-pegjs": "^1.2.2"
-  },
-  "devDependencies": {
-    "@types/babel__generator": "^7.6.4",
-    "@types/jest": "^28.1.1",
-    "@types/node": "^17.0.42",
-    "esbuild": "^0.14.43"
-  }
+    "name": "j2",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "grammar": "esbuild --bundle utils/build-grammar.ts --platform=node --sourcemap | node -"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@babel/generator": "^7.18.2",
+        "@babel/types": "^7.18.4",
+        "peggy": "^2.0.1",
+        "ts-pegjs": "^1.2.2"
+    },
+    "devDependencies": {
+        "@types/babel__generator": "^7.6.4",
+        "@types/jest": "^28.1.1",
+        "@types/node": "^17.0.42",
+        "esbuild": "^0.14.43"
+    }
 }

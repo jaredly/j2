@@ -19,15 +19,19 @@ const jsOut = peggy.generate(grammarFile.join('\n\n'), {
     // plugins: [plugin],
 });
 
+fs.writeFileSync('./core/base.parser-untyped.js', jsOut);
 fs.writeFileSync(
     './core/base.parser.ts',
-    '// @ts-nocheck\n' +
-        jsOut +
-        `
-type IFileRange = {start: {line: number, column: number},
-end: {line: number, column: number}};
-        ` +
-        '\n\n// TYPES\n\nexport type Location = IFileRange & {idx: number};\n\n' +
+    `// @ts-ignore
+import {parse} from './base.parser-untyped.js'
+
+type Location = {
+    start: {line: number, column: number},
+    end: {line: number, column: number},
+    idx: number,
+};
+
+` +
         typesFile.join('\n\n') +
         `\n\nexport const parseTyped = (input: string): File => parse(input)\n`,
 );

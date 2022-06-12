@@ -12,7 +12,7 @@ Expression = target:Atom parens_drop:Parens*
 
 Atom = Int
 
-Parens = "(" CommaExpr  ")"
+Parens = "(" _ args:CommaExpr? ")"
 
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
