@@ -129,11 +129,13 @@ export const processExpression = (
                 }
                 return found;
             }
+            console.log(expr);
             throw new Error(`toplevel group or something`);
         case 'labeled':
         case 'sequence': {
             const elements = expr.type === 'labeled' ? [expr] : expr.elements;
             if (ctx.type === 'inner') {
+                console.log(expr);
                 throw new Error(`sequence is only toplevel`);
             }
             let attributes: Array<[string, t.TSType, t.Expression]> = [];

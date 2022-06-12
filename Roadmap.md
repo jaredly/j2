@@ -325,3 +325,30 @@ So a common way to quote operators is to just surround in parens. How annoying w
 
 `let (+) = `.
 Because you can't have a 1-ary tuple.
+
+
+# AMBIguouity
+
+So how do I deal with it?
+What iff, only `id`entifiers are allowed to have ambiguity?
+Like once you get to a `call`, or whatever, you're required to lock it down.
+
+Ok so that just means that I can have a node
+called 'multi-identifier', right?
+If asked, it'll report the type of the first identifier,
+but anything that knows how to deal with them can do so.
+hm yeah I think that's a reasonable approach.
+
+OK ALSO what about type errors.
+
+So there's `NotFound`, right
+and `TypeMismatch`
+anyway I'll deal with things as they come.
+
+# Ok so the thing that I want to be automating is:
+- first generate a parser & the types from some peg.
+	- we're finding the peg via a script, lets just write that
+	- and get a very basic something working.
+
+
+

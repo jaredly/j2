@@ -13,21 +13,26 @@ export type P_Int = { type: 'Int'; contents: string; location: Location };
 // I define by handdd. It gets glommed into `Expression`
 // And a walker gets made for it automatically.
 export type Int = { type: 'Int'; value: number; location: Location };
-// This is so my
-export const typeOf = (node: Int) => ({ type: 'builtin', name: 'int' });
-export const checkConsistency = (node: Int) => []; // no errors
 
-// The types of `fromAst` inform the "transformer" type ...
-//
-export const fromAst = ({ contents, location }: P_Int, ctx: Context): Int => ({
+// The types of `fromAst` inform the "FromAst" transformer ...
+export const IntFromAst = (
+    { contents, location }: P_Int,
+    ctx: Context,
+): Int => ({
     type: 'Int',
     value: +contents,
     location,
 });
 
+// This is so my
+export const typeOf = (node: Int) => ({ type: 'builtin', name: 'int' });
+export const checkConsistency = (node: Int) => []; // no errors
+
 export type I_Int = Int; // no change for IR
 
-export const toIR = (node: Int) => node;
+export const IntToIR = (node: Int) => node;
+
+export const I_IntToString = (node: I_Int) => node.value.toString();
 
 // So we run a script, and all of the sudden
 // after `grammar` we have the type, right?

@@ -8,36 +8,22 @@
 
 File = _ Expression _ finalLineComment? 
 
-// BinOpInner = WithUnary
-// // Oh maybe a Decorator is just another unary op?
-// WithUnary = op_drop:UnaryOpWithHash? inner:UnaryInner 
-// UnaryOpWithHash = op:UnaryOp hash:(OpHash _)?
-// UnaryOp = "-" / "!"
+Expression = target:Atom parens_drop:Parens*
 
-// UnaryInner = WithSuffix
-// UnaryInner = WithSuffix
-// WithSuffix = target:SuffixInner suffixes_drop:Suffix*
-// Suffix = ApplySuffix / AttributeSuffix / IndexSuffix / AsSuffix
+Atom = Int
 
-// SuffixInner = Literal
+Parens = "(" CommaExpr  ")"
 
-/*
-a binop could be #builtin
-or
-#:local#type#2 (idx within the type)
-#global#type#3
-hmm could 'type' be a local as well? maybeee
-*/
+CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
-// binopWithHash = op:binop hash:($BuiltinHash / $binopHash)?
-// binop = $(!"//" [+*^/<>=|&-]+)
-// binopHash = (JustSym / HashRef) (JustSym / HashRef) HashNum
+Int "int" = _ contents:$("-"? [0-9]+) 
 
-// IdHash = $SymHash / $OpHash / $BuiltinHash
-// SymHash = $JustSym $OpHash?
-// OpHash = $HashRef+
+Identifier = text:$IdText hash:(JustSym / HashRef)?
+
+IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
+
 JustSym = "#" ":" [0-9]+
-HashRef = ("#" [0-9a-zA-Z]+)
+HashRef = "#" [0-9a-zA-Z]+
 HashNum = "#" [0-9]+
 BuiltinHash = $("#" "builtin")
 

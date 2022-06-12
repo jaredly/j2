@@ -1,7 +1,7 @@
 import * as peggy from 'peggy';
 import * as t from '@babel/types';
 import generate from '@babel/generator';
-import { processExpression } from './process-peg-expression';
+import { processExpression, ruleToType } from './process-peg-expression';
 
 export type RuleTriple = [peggy.ast.Rule, t.TSType, t.Expression | null];
 
@@ -67,7 +67,7 @@ export const assembleRules = (rules: RuleTriple[], raw: string) => {
                 generate(
                     t.exportNamedDeclaration(
                         t.tsTypeAliasDeclaration(
-                            t.identifier(rule.name),
+                            ruleToType(rule.name),
                             null,
                             t.tsUnionType([
                                 t.tsTypeReference(
@@ -84,7 +84,7 @@ export const assembleRules = (rules: RuleTriple[], raw: string) => {
                 generate(
                     t.exportNamedDeclaration(
                         t.tsTypeAliasDeclaration(
-                            t.identifier(rule.name),
+                            ruleToType(rule.name),
                             null,
                             type,
                         ),
