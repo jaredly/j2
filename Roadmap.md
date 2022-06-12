@@ -352,3 +352,56 @@ anyway I'll deal with things as they come.
 
 
 
+
+# Ok, so visual
+
+thinking about how to make this all nice and stuff
+honestly I should really just write out by hand a basic
+thing, and then figure out how to make it nice.
+SO no binops or anything weird like that.
+just a lisp or something? I mean I guess rite
+
+
+
+
+Ok, so what if
+the way I did things was with registrars?
+explicitly
+like
+`FromAst.register('Int', fromAst)`
+hm that wouldn't give me the type checking I want tho.
+
+Ok anyway, I have a basic grammar, and it appears to parse.
+now to see about type checking.
+
+
+HMM make a `P_All_Nodes` type that is the OR of all the nodes that have a `type`. So then I can maybe get fancy with typescript.
+
+WHAT are the types of errors
+
+'UnknownReference'
+
+and
+
+'InvalidApplication'
+
+ok so there's also like 'this pattern doesn't make sense'
+and a whole bunch of other things.
+
+is there an ... auto . magic . way to 'insert' all
+of these error nodes as possibilties into the
+type hierarchy
+
+ok so then I'm like
+"What if any thing with a type error just gets commented out/??
+but then also I'm like
+"then what if it's an unknown attribute, but the value is large and complex and you don't wnat it to look just like a comment"
+so then I'm like
+"what if you could mark parts of a comment as wanting to be typechecked??"
+
+Sooo would just all AST nodes own their comments then?
+Or would I still have "comments live at the top level and are injected in-place"?
+But then how would you know what scope to type-check the comments at?
+hmmm I kinda think maybe all nodes ... should ... be autogenned to have like pre_ and post_ comments for everything? that sounds absolutely exhausting.
+and like what about comments in between list items?
+yaknow.

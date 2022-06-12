@@ -1,7 +1,7 @@
 // @ts-ignore
 import {parse} from './base.parser-untyped.js'
 
-type Location = {
+export type Location = {
     start: {line: number, column: number},
     end: {line: number, column: number},
     idx: number,
@@ -9,64 +9,69 @@ type Location = {
 
 export type P_File = {
   type: "File";
-  location: Location;
+  loc: Location;
   comments: Array<[Location, string]>;
+  toplevels: P_Toplevel[];
 };
 
-export type Expression_inner = {
-  type: "Expression";
-  location: Location;
+export type P_Toplevel = P_Expression;
+
+export type P_Expression = P_Apply;
+
+export type Apply_inner = {
+  type: "Apply";
+  loc: Location;
   target: P_Atom;
   parens: P_Parens[];
 };
 
-export type P_Expression = Expression_inner | P_Atom;
+export type P_Apply = Apply_inner | P_Atom;
 
 export type P_Atom = P_Int;
 
 export type P_Parens = {
   type: "Parens";
-  location: Location;
+  loc: Location;
   args: P_CommaExpr | null;
 };
 
 export type P_CommaExpr = {
   type: "CommaExpr";
-  location: Location;
+  loc: Location;
   items: P_Expression[];
 };
 
 export type P_Int = {
   type: "Int";
-  location: Location;
+  loc: Location;
   contents: string;
 };
 
 export type P_Identifier = {
   type: "Identifier";
-  location: Location;
+  loc: Location;
   text: string;
   hash: (P_JustSym | P_HashRef) | null;
 };
 
 export type P_IdText = {
   type: "IdText";
-  location: Location;
+  loc: Location;
 };
 
 export type P_JustSym = {
   type: "JustSym";
-  location: Location;
+  loc: Location;
 };
 
 export type P_HashRef = {
   type: "HashRef";
-  location: Location;
+  loc: Location;
 };
 
 export type P_HashNum = {
   type: "HashNum";
-  location: Location;
+  loc: Location;
 };
 
 export type P_BuiltinHash = string;

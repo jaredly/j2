@@ -6,9 +6,13 @@
     }
 }
 
-File = _ Expression _ finalLineComment? 
+File = _ toplevels:(Toplevel ';'? '\n')* _ finalLineComment? 
 
-Expression = target:Atom parens_drop:Parens*
+Toplevel = Expression
+
+Expression = Apply
+
+Apply = target:Atom parens_drop:Parens*
 
 Atom = Int
 

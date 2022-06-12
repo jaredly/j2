@@ -207,7 +207,7 @@ export const processExpression = (
                         ),
                     ),
                     t.tsPropertySignature(
-                        t.identifier('location'),
+                        t.identifier('loc'),
                         t.tsTypeAnnotation(
                             t.tsTypeReference(t.identifier('Location')),
                         ),
@@ -255,7 +255,7 @@ export const processExpression = (
                         t.stringLiteral(ctx.ruleName),
                     ),
                     t.objectProperty(
-                        t.identifier('location'),
+                        t.identifier('loc'),
                         t.callExpression(t.identifier('myLocation'), []),
                     ),
                     ...(first

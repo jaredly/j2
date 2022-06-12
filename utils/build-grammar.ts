@@ -1,7 +1,5 @@
 import fs from 'fs';
 import * as peggy from 'peggy';
-// @ts-ignore
-// import plugin from 'ts-pegjs';
 import { assembleRules, processRules } from './process-peg';
 
 const raw = fs.readFileSync('./core/base.pegjs', 'utf8');
@@ -16,7 +14,6 @@ if (ast.initializer) {
 const jsOut = peggy.generate(grammarFile.join('\n\n'), {
     output: 'source',
     format: 'es',
-    // plugins: [plugin],
 });
 
 fs.writeFileSync('./core/base.parser-untyped.js', jsOut);
@@ -25,7 +22,7 @@ fs.writeFileSync(
     `// @ts-ignore
 import {parse} from './base.parser-untyped.js'
 
-type Location = {
+export type Location = {
     start: {line: number, column: number},
     end: {line: number, column: number},
     idx: number,
