@@ -22,7 +22,7 @@ fs.writeFileSync(
     `// @ts-ignore
 import {parse} from './base.parser-untyped.js'
 
-export type Location = {
+export type Loc = {
     start: {line: number, column: number},
     end: {line: number, column: number},
     idx: number,

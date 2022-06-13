@@ -204,9 +204,11 @@ export const processExpression = (
             const canDropThrough =
                 attributes.length === 2 &&
                 (isExpendable(attributes[0]) || isExpendable(attributes[1]));
-            const typeName = attributes.some((s) => s[0] === 'type')
-                ? '$type'
-                : 'type';
+            const hasTypeAttribute = attributes.some((s) => s[0] === 'type');
+            if (hasTypeAttribute) {
+                throw new Error(`Can't have an attribute named type`);
+            }
+            const typeName = hasTypeAttribute ? '$type' : 'type';
             ruleTags.push(ctx.ruleName);
 
             const recordType = t.tsTypeLiteral(
@@ -220,7 +222,7 @@ export const processExpression = (
                     t.tsPropertySignature(
                         t.identifier('loc'),
                         t.tsTypeAnnotation(
-                            t.tsTypeReference(t.identifier('Location')),
+                            t.tsTypeReference(t.identifier('Loc')),
                         ),
                     ),
                     ...(first
@@ -233,7 +235,7 @@ export const processExpression = (
                                           t.tsTypeParameterInstantiation([
                                               t.tsTupleType([
                                                   t.tsTypeReference(
-                                                      t.identifier('Location'),
+                                                      t.identifier('Loc'),
                                                   ),
                                                   t.tsTypeReference(
                                                       t.identifier('string'),

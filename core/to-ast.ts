@@ -18,9 +18,19 @@ export const printCtx = (ctx: FullContext): Ctx => {
         printRef(ref, loc) {
             const hash = refHash(ref);
             if (reverse[hash]) {
-                return { type: 'Identifier', text: reverse[hash], hash, loc };
+                return {
+                    type: 'Identifier',
+                    text: reverse[hash],
+                    hash: `#[${hash}]`,
+                    loc,
+                };
             }
-            return { type: 'Identifier', text: 'unnamed', hash, loc };
+            return {
+                type: 'Identifier',
+                text: 'unnamed',
+                hash: `#[${hash}]`,
+                loc,
+            };
         },
     };
 };

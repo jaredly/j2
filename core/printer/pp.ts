@@ -2,10 +2,6 @@
 
 import { Loc } from '../grammar/base.parser';
 
-// import { isBinop } from '../typing/terms/ops';
-
-// Doesn't need to be terribly fancy.
-
 export type Extra = { type: 'Error' };
 export type ExtraId = { type: 'id'; id: string; isType: boolean };
 export type BreakMode = 'never' | 'always' | 'sometimes';
@@ -164,15 +160,7 @@ export const printToStringInner = (
         return lines.join('\n' + white);
     }
     if (pp.type === 'id') {
-        if (
-            options.hideNames &&
-            pp.kind === 'type'
-            // pp.kind !== 'builtin' &&
-            // pp.kind !== 'attribute' &&
-            // !isBinop(pp.text) &&
-            // pp.text !== 'as' &&
-            // pp.id
-        ) {
+        if (options.hideNames && pp.kind === 'type') {
             return `anon#${pp.id}`;
         }
 
@@ -402,17 +390,6 @@ export const printToString = (
     });
 };
 
-export type AttributedText =
-    | string
-    | { text: string; attributes: Array<string>; loc?: Loc }
-    | {
-          type: 'Group';
-          contents: Array<AttributedText>;
-          attributes: Array<string | Extra>;
-          loc?: Loc;
-      }
-    | { id: string; text: string; kind: string; loc?: Loc };
-
 export type SourceItem = {
     start: { line: number; column: number };
     end: { line: number; column: number };
@@ -423,216 +400,4 @@ export type SourceItem = {
  */
 export type SourceMap = {
     [idx: number]: SourceItem;
-};
-
-export const printToAttributedText = (
-    pp: PP,
-    maxWidth: number,
-    current: { indent: number; pos: number; line: number } = {
-        indent: 0,
-        pos: 0,
-        line: 0,
-    },
-    sourceMap: SourceMap = {},
-): Array<AttributedText> => {
-    const start = { line: current.line, column: current.pos };
-    if (pp.type === 'atom') {
-        const lines = pp.text.split('\n');
-        const text = lines.join('\n' + white(current.pos));
-        current.pos += lines[lines.length - 1].length;
-        current.line += lines.length - 1;
-        return pp.attributes || pp.loc
-            ? [{ text: text, attributes: pp.attributes || [], loc: pp.loc }]
-            : [text];
-    }
-    if (pp.type === 'id') {
-        // ids really shouldn't contain newlines
-        if (pp.loc && pp.loc.idx) {
-            sourceMap[pp.loc.idx] = {
-                start,
-                end: {
-                    line: current.line,
-                    column: current.pos + pp.text.length,
-                },
-                idx: pp.loc.idx,
-            };
-        }
-        current.pos += pp.text.length;
-        return [pp];
-    }
-    if (pp.type === 'block') {
-        const res: Array<AttributedText> = [
-            {
-                text: '{',
-                attributes: ['brace'],
-                // loc: pp.loc ? locToStart(pp.loc) : undefined,
-            },
-        ];
-        current.indent += 4;
-        pp.contents.forEach((item) => {
-            current.line += 1;
-            current.pos = current.indent;
-            res.push(
-                '\n' + white(current.indent),
-                ...printToAttributedText(item, maxWidth, current, sourceMap),
-                { text: pp.sep, attributes: ['semi'] },
-            );
-        });
-        current.indent -= 4;
-        if (res.length > 1) {
-            current.line += 1;
-            res.push('\n' + white(current.indent));
-            current.pos = current.indent;
-        }
-        current.pos += 1;
-        res.push({
-            text: '}',
-            attributes: ['brace'],
-            // loc: pp.loc ? locToEnd(pp.loc) : undefined,
-        });
-        if (pp.loc) {
-            sourceMap[pp.loc.idx!] = {
-                start,
-                end: { line: current.line, column: current.pos },
-                idx: pp.loc.idx!,
-            };
-
-            return [
-                {
-                    type: 'Group',
-                    contents: res,
-                    attributes: [],
-                    loc: pp.loc,
-                },
-            ];
-        }
-        return res;
-    }
-    if (pp.type === 'args') {
-        const full = width(pp);
-        // const full = pp.contents.reduce((w, x) => w + width(x), 0)
-        if (current.pos + full <= maxWidth) {
-            const res: Array<AttributedText> = [
-                { text: pp.left, attributes: ['brace'] },
-            ];
-            current.pos += 1;
-            pp.contents.forEach((child, i) => {
-                if (i !== 0) {
-                    res.push({ text: ', ', attributes: ['comma'] });
-                    current.pos += 2;
-                }
-                res.push(
-                    ...printToAttributedText(
-                        child,
-                        maxWidth,
-                        current,
-                        sourceMap,
-                    ),
-                );
-            });
-            current.pos += 1;
-            res.push({ text: pp.right, attributes: ['brace'] });
-            return res;
-        }
-
-        const res: Array<AttributedText> = [
-            { text: pp.left, attributes: ['brace'] },
-        ];
-        current.pos += 1;
-        current.indent += 4;
-        pp.contents.forEach((item, i) => {
-            current.line += 1;
-            current.pos = current.indent;
-            res.push(
-                '\n' + white(current.indent),
-                ...printToAttributedText(item, maxWidth, current, sourceMap),
-            );
-            if (pp.trailing || i < pp.contents.length - 1) {
-                res.push({ text: ',', attributes: ['comma'] });
-            }
-        });
-        current.indent -= 4;
-        if (res.length > 1) {
-            current.line += 1;
-            res.push('\n' + white(current.indent));
-            current.pos = current.indent;
-        }
-        current.pos += 1;
-        res.push({ text: pp.right, attributes: ['brace'] });
-        return res;
-    }
-    if (pp.type === 'items') {
-        const shouldBreak =
-            pp.breakMode === 'always' ||
-            (pp.breakMode === 'sometimes' &&
-                pp.items.length &&
-                current.pos + width(pp) > maxWidth);
-        if (shouldBreak) {
-            const extra = pp.breakMode === 'sometimes' ? 4 : 0;
-            const res: Array<AttributedText> = [];
-            pp.items.forEach((item, i) => {
-                if (i > 0) {
-                    current.pos = current.indent;
-                    current.line += 1;
-                    res.push('\n' + white(current.indent));
-                }
-                res.push(
-                    ...printToAttributedText(
-                        item,
-                        maxWidth,
-                        current,
-                        sourceMap,
-                    ),
-                );
-                if (i == 0) {
-                    current.indent += extra;
-                }
-            });
-            current.indent -= extra;
-            if (pp.loc) {
-                sourceMap[pp.loc.idx!] = {
-                    start,
-                    end: { column: current.pos, line: current.line },
-                    idx: pp.loc.idx!,
-                };
-            }
-            if (pp.attributes || pp.loc) {
-                return [
-                    {
-                        type: 'Group',
-                        contents: res,
-                        attributes: pp.attributes || [],
-                        loc: pp.loc,
-                    },
-                ];
-            }
-            return res;
-        }
-
-        const res: Array<AttributedText> = [];
-        pp.items.forEach((item) => {
-            res.push(
-                ...printToAttributedText(item, maxWidth, current, sourceMap),
-            );
-        });
-        if (pp.loc) {
-            sourceMap[pp.loc.idx!] = {
-                start,
-                end: { column: current.pos, line: current.line },
-                idx: pp.loc.idx!,
-            };
-        }
-        if (pp.attributes || pp.loc) {
-            return [
-                {
-                    type: 'Group',
-                    contents: res,
-                    attributes: pp.attributes || [],
-                    loc: pp.loc,
-                },
-            ];
-        }
-        return res;
-    }
-    throw new Error(`unexpected pp type ${JSON.stringify(pp)}`);
 };

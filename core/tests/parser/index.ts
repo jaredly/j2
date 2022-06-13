@@ -4,10 +4,19 @@ import { fullContext } from '../../ctx';
 import { parseTyped } from '../../grammar/base.parser';
 import { printCtx, ToAst } from '../../to-ast';
 import { ToTast } from '../../to-tast';
+import * as peggy from 'peggy';
+import { printToString } from '../../printer/pp';
+import { pegPrinter } from '../../printer/pegPrinter';
 
 const file = join(process.cwd(), 'core/tests/parser/examples.jd');
 
 export const parserTests = () => {
+    const pegRaw = readFileSync(
+        join(process.cwd(), 'core/grammar/base.pegjs'),
+        'utf8',
+    );
+    const past = peggy.parser.parse(pegRaw);
+
     const input = readFileSync(file, 'utf8');
     input.split('\n\n').forEach((chunk) => {
         const file = parseTyped(chunk + '\n');
@@ -17,7 +26,13 @@ export const parserTests = () => {
             res.toplevels.forEach((t) => {
                 console.log(JSON.stringify(t.expr));
             });
-            console.log(JSON.stringify(ToAst.File(res, printCtx(ctx))));
+            const back = ToAst.File(res, printCtx(ctx));
+            console.log(JSON.stringify(back));
+            console.log(
+                pegPrinter(back, past)
+                    .map((pp) => printToString(pp, 100))
+                    .join('\n'),
+            );
         }
     });
 };
