@@ -44,10 +44,12 @@ export const block = (
     sep,
     loc,
 });
+
 export const atom = (
     text: string,
     attributes?: Array<string>,
     loc?: Loc,
+    isComment = false,
 ): PP => {
     if (text == null) {
         throw new Error(`Empty atom!`);
@@ -56,9 +58,11 @@ export const atom = (
         type: 'atom',
         text,
         attributes,
+        isComment,
         loc,
     };
 };
+
 export const id = (text: string, id: string, kind: string, loc?: Loc): PP => {
     if (text == null) {
         throw new Error(`ID with no text`);
@@ -101,6 +105,7 @@ export type PP =
     | {
           type: 'atom';
           text: string;
+          isComment: boolean;
           attributes?: Array<string>;
           loc: Loc | undefined;
       }
@@ -116,24 +121,24 @@ export const crawl = (x: PP, fn: (p: PP) => PP): PP => {
         case 'id':
             return fn(x);
         case 'block':
-            x = fn(x) as Block;
-            return {
+            // x = fn(x) as Block;
+            return fn({
                 ...x,
                 contents: x.contents.map((c) => crawl(c, fn)),
-            };
+            });
         case 'args':
-            x = fn(x) as Args;
-            return {
+            // x = fn(x) as Args;
+            return fn({
                 ...x,
                 contents: x.contents.map((c) => crawl(c, fn)),
                 rest: x.rest && crawl(x.rest, fn),
-            };
+            });
         case 'items':
-            x = fn(x) as Items;
-            return {
+            // x = fn(x) as Items;
+            return fn({
                 ...x,
                 items: x.items.map((c) => crawl(c, fn)),
-            };
+            });
     }
 };
 
@@ -142,6 +147,12 @@ const white = (x: number) => new Array(x).fill(' ').join('');
 const width = (x: PP): number => {
     switch (x.type) {
         case 'atom':
+            if (
+                x.isComment &&
+                (x.text.startsWith('//') || x.text.includes('\n'))
+            ) {
+                return Infinity;
+            }
             // TODO: account for newlines?
             return x.text.length;
         case 'id':
@@ -160,16 +171,9 @@ const width = (x: PP): number => {
     }
 };
 
-export type StringOptions = {
-    hideIds?: boolean;
-    hideNames?: boolean;
-    showErrors?: boolean;
-};
-
 export const printToStringInner = (
     pp: PP,
     maxWidth: number,
-    options: StringOptions,
     sourceMap: SourceMap,
     current: { indent: number; pos: number; line: number } = {
         indent: 0,
@@ -199,11 +203,7 @@ export const printToStringInner = (
         return lines.join('\n' + white);
     }
     if (pp.type === 'id') {
-        if (options.hideNames && pp.kind === 'type') {
-            return `anon#${pp.id}`;
-        }
-
-        if (options.hideIds || !pp.id) {
+        if (!pp.id) {
             current.pos += pp.text.length;
         } else {
             current.pos += pp.text.length + 1 + pp.id.length;
@@ -221,7 +221,7 @@ export const printToStringInner = (
             };
         }
 
-        if (options.hideIds || !pp.id) {
+        if (!pp.id) {
             return pp.text;
         }
         return pp.text + '#' + pp.id;
@@ -236,13 +236,7 @@ export const printToStringInner = (
             res +=
                 '\n' +
                 white(current.indent) +
-                printToStringInner(
-                    item,
-                    maxWidth,
-                    options,
-                    sourceMap,
-                    current,
-                ) +
+                printToStringInner(item, maxWidth, sourceMap, current) +
                 pp.sep;
         });
         current.indent -= 4;
@@ -274,14 +268,17 @@ export const printToStringInner = (
             let res = pp.left;
             current.pos += 1;
             pp.contents.forEach((child, i) => {
-                if (i !== 0) {
+                if (
+                    i !== 0 &&
+                    (pp.contents[i - 1].type !== 'atom' ||
+                        !(pp.contents[i - 1] as any).isComment)
+                ) {
                     res += ', ';
                     current.pos += 2;
                 }
                 const ctext = printToStringInner(
                     child,
                     maxWidth,
-                    options,
                     sourceMap,
                     current,
                 );
@@ -313,8 +310,12 @@ export const printToStringInner = (
             res +=
                 '\n' +
                 white(current.indent) +
-                printToStringInner(item, maxWidth, options, sourceMap, current);
-            if (pp.trailing || i < pp.contents.length - 1) {
+                printToStringInner(item, maxWidth, sourceMap, current);
+            if (
+                (pp.trailing || i < pp.contents.length - 1) &&
+                (pp.contents[i].type !== 'atom' ||
+                    !(pp.contents[i] as any).isComment)
+            ) {
                 res += ',';
             }
         });
@@ -342,14 +343,6 @@ export const printToStringInner = (
     }
     if (pp.type === 'items') {
         let prefix = '';
-        if (
-            options.showErrors &&
-            pp.attributes?.find(
-                (f) => typeof f === 'object' && f.type === 'Error',
-            )
-        ) {
-            prefix = 'ERROR';
-        }
         let shouldBreak =
             pp.breakMode === 'always' ||
             (pp.breakMode === 'sometimes' &&
@@ -364,13 +357,7 @@ export const printToStringInner = (
                     current.line += 1;
                     res += '\n' + white(current.indent);
                 }
-                res += printToStringInner(
-                    item,
-                    maxWidth,
-                    options,
-                    sourceMap,
-                    current,
-                );
+                res += printToStringInner(item, maxWidth, sourceMap, current);
             });
             current.indent -= extra;
             // if (res.length > 1) {
@@ -392,13 +379,7 @@ export const printToStringInner = (
         }
         let res = prefix;
         pp.items.forEach((item) => {
-            res += printToStringInner(
-                item,
-                maxWidth,
-                options,
-                sourceMap,
-                current,
-            );
+            res += printToStringInner(item, maxWidth, sourceMap, current);
         });
 
         if (pp.loc && pp.loc.idx) {
@@ -419,10 +400,9 @@ export const printToStringInner = (
 export const printToString = (
     pp: PP,
     maxWidth: number,
-    options: StringOptions = { hideIds: false, hideNames: false },
     sourceMap: SourceMap = {},
 ): string => {
-    return printToStringInner(pp, maxWidth, options, sourceMap, {
+    return printToStringInner(pp, maxWidth, sourceMap, {
         indent: 0,
         pos: 0,
         line: 0,

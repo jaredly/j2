@@ -3,11 +3,15 @@
 
 toString#[hlmnop](1)
 
+// before all
 toWhat(
-	1,
-	// Ok and a comment please dont leave me
+	// first
+	1, // here we are
+	inner(2, /* here */ 3),
 	2
+	// last
 )
+23
 
 // id<int>(1)
 

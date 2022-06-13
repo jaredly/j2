@@ -23,16 +23,12 @@ export const parserTests = () => {
         if (file.toplevels.length) {
             const ctx = fullContext();
             const res = ToTast.File(file, ctx);
-            res.toplevels.forEach((t) => {
-                console.log(JSON.stringify(t.expr));
-            });
+            // res.toplevels.forEach((t) => {
+            //     console.log(JSON.stringify(t.expr));
+            // });
             const back = ToAst.File(res, printCtx(ctx));
-            console.log(JSON.stringify(back));
-            console.log(
-                pegPrinter(back, past)
-                    .map((pp) => printToString(pp, 100))
-                    .join('\n'),
-            );
+            console.log(printToString(pegPrinter(back, past), 100));
+            console.log();
         }
     });
 };
