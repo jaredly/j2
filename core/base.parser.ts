@@ -7,47 +7,47 @@ export type Location = {
     idx: number,
 };
 
-export type P_File = {
+export type File = {
   type: "File";
   loc: Location;
   comments: Array<[Location, string]>;
-  toplevels: P_Toplevel[];
+  toplevels: Toplevel[];
 };
 
-export type P_Toplevel = P_Expression;
+export type Toplevel = Expression;
 
-export type P_Expression = P_Apply;
+export type Expression = Apply;
 
 export type Apply_inner = {
   type: "Apply";
   loc: Location;
-  target: P_Atom;
-  parens: P_Parens[];
+  target: Atom;
+  parens: Parens[];
 };
 
-export type P_Apply = Apply_inner | P_Atom;
+export type Apply = Apply_inner | Atom;
 
-export type P_Atom = P_Int;
+export type Atom = Int;
 
-export type P_Parens = {
+export type Parens = {
   type: "Parens";
   loc: Location;
-  args: P_CommaExpr | null;
+  args: CommaExpr | null;
 };
 
-export type P_CommaExpr = {
+export type CommaExpr = {
   type: "CommaExpr";
   loc: Location;
-  items: P_Expression[];
+  items: Expression[];
 };
 
-export type P_Int = {
+export type Int = {
   type: "Int";
   loc: Location;
   contents: string;
 };
 
-export type P_Identifier = {
+export type Identifier = {
   type: "Identifier";
   loc: Location;
   text: string;
@@ -62,24 +62,24 @@ export type P_Identifier = {
 
 // No data on HashNum
 
-export type P_BuiltinHash = string;
+export type BuiltinHash = string;
 
-export type P_newline = string;
+export type newline = string;
 
-export type P__nonnewline = string;
+export type _nonnewline = string;
 
-export type P__ = string;
+export type _ = string;
 
-export type P___ = string;
+export type __ = string;
 
-export type P_comment = P_multiLineComment | P_lineComment;
+export type comment = multiLineComment | lineComment;
 
-export type P_multiLineComment = string;
+export type multiLineComment = string;
 
-export type P_lineComment = string;
+export type lineComment = string;
 
-export type P_finalLineComment = string;
+export type finalLineComment = string;
 
-export type AllTaggedTypes = P_File | Apply_inner | P_Parens | P_CommaExpr | P_Int | P_Identifier;
+export type AllTaggedTypes = File | Apply_inner | Parens | CommaExpr | Int | Identifier;
 
 export const parseTyped = (input: string): File => parse(input)

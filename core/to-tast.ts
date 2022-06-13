@@ -1,39 +1,49 @@
-import {
-    Apply_inner,
-    P_Apply,
-    P_Expression,
-    P_File,
-    P_Int,
-    P_Toplevel,
-} from './base.parser';
+import { Ctx } from '.';
+import * as p from './base.parser';
 import { Apply, Expression, Int, Toplevel } from './typed-ast';
 
-export type Ctx = {
-    scopes: [];
-};
+// do I even do builtins?
+// or do I just assign them a hash based on something else?
+// Library
+//
 
 export const ToTast = {
-    File: ({ toplevels, loc }: P_File, ctx: Ctx) => {
+    File({ toplevels, loc }: p.File, ctx: Ctx) {
         return {
             type: 'File',
             loc,
             toplevels: toplevels.map((top) => ToTast.Toplevel(top, ctx)),
         };
     },
-    Toplevel(top: P_Toplevel, ctx: Ctx): Toplevel {
+    Toplevel(top: p.Toplevel, ctx: Ctx): Toplevel {
         return {
             type: 'ToplevelExpression',
             expr: ToTast.Expression(top, ctx),
             loc: top.loc,
         };
     },
-    Expression(expr: P_Expression, ctx: Ctx): Expression {
+    Expression(expr: p.Expression, ctx: Ctx): Expression {
         return ToTast[expr.type](expr as any, ctx);
     },
-    Int({ loc, contents }: P_Int, ctx: Ctx): Int {
+    Int({ loc, contents }: p.Int, ctx: Ctx): Int {
         return { type: 'Int', loc, value: +contents };
     },
-    Apply({ target, parens }: Apply_inner, ctx: Ctx): Apply {
+    Parens({ args }: p.Parens, ctx: Ctx) {
+        return args ? ToTast[args.type](args, ctx) : [];
+    },
+    CommaExpr({ items }: p.CommaExpr, ctx: Ctx) {
+        return items.map((item) => ToTast[item.type](item as any, ctx));
+    },
+    Identifier({ hash, loc, text }: p.Identifier, ctx: Ctx) {
+        // ok so here's where rubber meets road, right?
+        // like I need to know what Ctx is.
+        // hmmmm what if we have a mapping of 'id to type'
+        // that can be independent of ... whether it came
+        // from builtlin or somethign else.
+        //
+        const resolved = ctx.resolve(text, hash);
+    },
+    Apply({ target, parens }: p.Apply_inner, ctx: Ctx): Apply {
         let res: Expression = ToTast[target.type](target, ctx);
         while (parens.length) {
             const next = parens.shift()!;
@@ -45,12 +55,13 @@ export const ToTast = {
                     end: next.loc.end,
                     idx: next.loc.idx,
                 },
-                args:
-                    next.args?.items.map((item) =>
-                        ToTast[item.type](item as any, ctx),
-                    ) ?? [],
+                args: ToTast[next.type](next, ctx),
             };
         }
         return res as Apply;
     },
+};
+
+export const nodeToTast = (node: p.AllTaggedTypes, ctx: Ctx) => {
+    return ToTast[node.type](node as any, ctx);
 };

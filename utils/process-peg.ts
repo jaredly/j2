@@ -100,7 +100,7 @@ export const assembleRules = (
                 typesFile.push(`// No data on ${rule.name}`);
             } else {
                 if (ruleTags.includes(rule.name)) {
-                    ruleTagNames.push('P_' + rule.name);
+                    ruleTagNames.push(rule.name);
                 }
                 typesFile.push(
                     generate(

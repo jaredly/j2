@@ -6,7 +6,7 @@ const orNull = (type: t.TSType) => t.tsUnionType([type, t.tsNullKeyword()]);
 const typesEqual = (one: t.TSType, two: t.TSType) =>
     t.isNodesEquivalent(one, two);
 
-export const ruleToType = (name: string) => t.identifier('P_' + name);
+export const ruleToType = (name: string) => t.identifier(name);
 
 export const processExpression = (
     expr: peggy.ast.Expression | peggy.ast.Named,
