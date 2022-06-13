@@ -28,5 +28,5 @@ export type Ref =
 
 export type Ctx = {
     resolve: (name: string, hash?: string | null) => Array<Ref>;
-    typeOf: (expr: Expression) => Type;
+    // typeOf: (expr: Expression) => Type;
 };

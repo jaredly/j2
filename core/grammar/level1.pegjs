@@ -1,5 +1,6 @@
 
 Atom /= Lambda / Parened / TypeLambda
+Suffix /= TypeApplication
 
 // ParenedOp = "(" binopWithHash ")"
 
@@ -22,8 +23,6 @@ TypeParam = id:Identifier hash:JustSym?
 Param = Pattern
 
 Pattern = id:Identifier hash:JustSym?
-
-Suffix /= TypeApplication
 
 TypeApplication = "<" _ args:CommaType? ">"
 
