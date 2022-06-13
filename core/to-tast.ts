@@ -1,4 +1,4 @@
-import { Ctx, Id } from '.';
+import { Ctx } from '.';
 import * as p from './grammar/base.parser';
 import { Apply, Expression, Int, Toplevel, Type } from './typed-ast';
 
@@ -88,13 +88,13 @@ export const ToTast = {
         // that can be independent of ... whether it came
         // from builtlin or somethign else.
         //
-        const resolved = ctx.resolve(text, hash);
+        const resolved = ctx.resolve(text, hash?.slice(2, -1));
         if (resolved.length === 1) {
-            return { type: 'Identifier', loc, ref: resolved[0] };
+            return { type: 'Ref', loc, kind: resolved[0] };
         }
         return {
-            type: 'Identifier',
-            ref: { type: 'Unresolved', text, hash },
+            type: 'Ref',
+            kind: { type: 'Unresolved', text, hash },
             loc,
         };
     },

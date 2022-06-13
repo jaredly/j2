@@ -6,22 +6,24 @@ specifiers:
   '@types/babel__generator': ^7.6.4
   '@types/jest': ^28.1.1
   '@types/node': ^17.0.42
+  '@types/object-hash': ^2.2.1
   esbuild: ^0.14.43
   fast-deep-equal: ^3.1.3
+  object-hash: ^3.0.0
   peggy: ^2.0.1
-  ts-pegjs: ^1.2.2
 
 dependencies:
   '@babel/generator': 7.18.2
   '@babel/types': 7.18.4
   fast-deep-equal: 3.1.3
+  object-hash: 3.0.0
   peggy: 2.0.1
-  ts-pegjs: 1.2.2_peggy@2.0.1
 
 devDependencies:
   '@types/babel__generator': 7.6.4
   '@types/jest': 28.1.1
   '@types/node': 17.0.42
+  '@types/object-hash': 2.2.1
   esbuild: 0.14.43
 
 packages:
@@ -91,6 +93,10 @@ packages:
 
   /@types/node/17.0.42:
     resolution: {integrity: sha512-Q5BPGyGKcvQgAMbsr7qEGN/kIPN6zZecYYABeTDBizOsau+2NMdSVTar9UQw21A2+JyA2KRNDYaYrPB0Rpk2oQ==}
+    dev: true
+
+  /@types/object-hash/2.2.1:
+    resolution: {integrity: sha512-i/rtaJFCsPljrZvP/akBqEwUP2y5cZLOmvO+JaYnz01aPknrQ+hB5MRcO7iqCUsFaYfTG8kGfKUyboA07xeDHQ==}
     dev: true
 
   /ansi-regex/5.0.1:
@@ -387,6 +393,11 @@ packages:
     hasBin: true
     dev: false
 
+  /object-hash/3.0.0:
+    resolution: {integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==}
+    engines: {node: '>= 6'}
+    dev: false
+
   /peggy/2.0.1:
     resolution: {integrity: sha512-mBqfmdUAOVn7RILpXTbcRBhLfTR4Go0SresSnivGDdRylBOyVFJncFiVyCNNpPWq8HmgeRleXHs/Go4o8kQVXA==}
     engines: {node: '>=10'}
@@ -424,12 +435,3 @@ packages:
   /to-fast-properties/2.0.0:
     resolution: {integrity: sha512-/OaKK0xYrs3DmxRYqL/yDc+FxFUVYhDlXMhRmv3z915w2HF1tnN1omB354j8VUGO/hbRzyD6Y3sA7v7GS/ceog==}
     engines: {node: '>=4'}
-
-  /ts-pegjs/1.2.2_peggy@2.0.1:
-    resolution: {integrity: sha512-nzxDbdHHKvYjfW05CBN8wvVXjx1+7uHg/aRiujcMNwUfdIaXzJ7Guw5gNI62scv7H2ymn2iHHZseDBIuO+B8gA==}
-    hasBin: true
-    peerDependencies:
-      peggy: ^1.2.0
-    dependencies:
-      peggy: 2.0.1
-    dev: false

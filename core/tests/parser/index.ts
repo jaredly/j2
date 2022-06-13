@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { fullContext } from '../../ctx';
 import { parseTyped } from '../../grammar/base.parser';
 import { ToTast } from '../../to-tast';
 
@@ -10,12 +11,11 @@ export const parserTests = () => {
     input.split('\n\n').forEach((chunk) => {
         const file = parseTyped(chunk + '\n');
         if (file.toplevels.length) {
-            const res = ToTast.File(file, {
-                resolve() {
-                    return [];
-                },
+            const ctx = fullContext();
+            const res = ToTast.File(file, ctx);
+            res.toplevels.forEach((t) => {
+                console.log(JSON.stringify(t.expr));
             });
-            console.log(JSON.stringify(res.toplevels));
         }
     });
 };

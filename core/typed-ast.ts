@@ -1,4 +1,4 @@
-import { Ref } from '.';
+import { RefKind } from '.';
 import { Location } from './grammar/base.parser';
 
 export type File = {
@@ -16,11 +16,11 @@ export type UnknownIdentifier = {
     hash: null | string;
 };
 
-export type Identifier = {
-    type: 'Identifier';
+export type Ref = {
+    type: 'Ref';
     loc: Location;
     // might be "awaiting resolution" or "unable to resolve"
-    ref: Ref | { type: 'Unresolved'; text: string; hash: null | string };
+    kind: RefKind | { type: 'Unresolved'; text: string; hash: null | string };
 };
 
 export type Toplevel = {
@@ -29,9 +29,7 @@ export type Toplevel = {
     loc: Location;
 };
 
-export type Expression = Apply | Int | Identifier;
-// | AmbiguousIdentifier
-// | UnknownIdentifier;
+export type Expression = Apply | Int | Ref;
 
 // Might be an int or float
 // export type Number = {type: 'Number', loc: Location, value: number};
@@ -53,19 +51,24 @@ export type Sym = { id: number; name: string };
 
 export type Type =
     | {
-          type: 'Ref';
-          ref: Ref;
+          type: 'TRef';
+          ref: RefKind;
           loc: Location;
       }
-    | { type: 'ApplyType'; target: Type; args: Array<Type>; loc: Location }
     | {
-          type: 'TypeVar';
+          type: 'TApply';
+          target: Type;
+          args: Array<Type>;
+          loc: Location;
+      }
+    | {
+          type: 'TVar';
           sym: Sym;
           inner: Type;
           loc: Location;
       }
     | {
-          type: 'Lambda';
+          type: 'TLambda';
           args: Array<Type>;
           result: Type;
           loc: Location;
