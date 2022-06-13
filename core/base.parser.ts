@@ -22,17 +22,55 @@ export type Apply_inner = {
   type: "Apply";
   loc: Location;
   target: Atom;
-  parens: Parens[];
+  suffixes: Suffix[];
 };
 
 export type Apply = Apply_inner | Atom;
 
-export type Atom = Int;
+export type Atom = Int | Identifier | Lambda;
+
+export type Lambda = {
+  type: "Lambda";
+  loc: Location;
+  params: Params | null;
+  body: Expression;
+};
+
+export type Params = {
+  type: "Params";
+  loc: Location;
+  items: Param[];
+};
+
+export type Param = Pattern;
+
+export type Pattern = Identifier;
+
+export type Suffix = Parens | TypeApplication;
 
 export type Parens = {
   type: "Parens";
   loc: Location;
   args: CommaExpr | null;
+};
+
+export type TypeApplication = {
+  type: "TypeApplication";
+  loc: Location;
+  args: CommaType | null;
+};
+
+export type CommaType = {
+  type: "CommaType";
+  loc: Location;
+  items: Type[];
+};
+
+export type Type = {
+  type: "Type";
+  loc: Location;
+  id: Identifier;
+  args: TypeApplication | null;
 };
 
 export type CommaExpr = {
@@ -80,6 +118,6 @@ export type lineComment = string;
 
 export type finalLineComment = string;
 
-export type AllTaggedTypes = File | Apply_inner | Parens | CommaExpr | Int | Identifier;
+export type AllTaggedTypes = File | Apply_inner | Lambda | Params | Parens | TypeApplication | CommaType | Type | CommaExpr | Int | Identifier;
 
 export const parseTyped = (input: string): File => parse(input)

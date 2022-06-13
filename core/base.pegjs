@@ -12,11 +12,30 @@ Toplevel = Expression
 
 Expression = Apply
 
-Apply = target:Atom parens_drop:Parens*
+Apply = target:Atom suffixes_drop:Suffix*
 
-Atom = Int
+Atom = Int / Identifier / Lambda
+
+// oof ok, so using parentheses to distinguish + operators
+// might run afoul of lambda syntax
+Lambda = "(" _ params:Params? ")" _ "=>" _ body:Expression
+
+Params = first:Param rest:(_ "," _ Param)* _ ","? _
+
+// TODO allow type annotations probably
+Param = Pattern
+
+Pattern = Identifier
+
+Suffix = Parens / TypeApplication
 
 Parens = "(" _ args:CommaExpr? ")"
+
+TypeApplication = "<" _ args:CommaType? ">"
+
+CommaType = first:Type rest:(_ "," _ Type)* _ ","? _
+
+Type = id:Identifier args:TypeApplication?
 
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
