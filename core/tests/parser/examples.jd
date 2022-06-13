@@ -1,0 +1,15 @@
+// Test cases are separated by double-newlines
+1
+
+toString(1)
+
+id<int>(1)
+
+() => 1
+
+(() => float#b)(1)
+
+<T>(arg#:32) => arg#:32
+
+(<T#:12>(arg) => arg)<T#:14, int#b, float>(23)
+

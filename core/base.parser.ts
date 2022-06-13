@@ -27,7 +27,9 @@ export type Apply_inner = {
 
 export type Apply = Apply_inner | Atom;
 
-export type Atom = Int | Identifier | Lambda;
+export type Atom = Int | Identifier | Lambda | Parened | TypeLambda;
+
+// No data on Parened
 
 export type Lambda = {
   type: "Lambda";
@@ -42,9 +44,34 @@ export type Params = {
   items: Param[];
 };
 
+export type TypeLambda = {
+  type: "TypeLambda";
+  loc: Location;
+  params: CommaTypeParam;
+  body: Expression;
+};
+
+export type CommaTypeParam = {
+  type: "CommaTypeParam";
+  loc: Location;
+  items: TypeParam[];
+};
+
+export type TypeParam = {
+  type: "TypeParam";
+  loc: Location;
+  id: Identifier;
+  hash: JustSym | null;
+};
+
 export type Param = Pattern;
 
-export type Pattern = Identifier;
+export type Pattern = {
+  type: "Pattern";
+  loc: Location;
+  id: Identifier;
+  hash: JustSym | null;
+};
 
 export type Suffix = Parens | TypeApplication;
 
@@ -89,7 +116,7 @@ export type Identifier = {
   type: "Identifier";
   loc: Location;
   text: string;
-  hash: (string | string) | null;
+  hash: (string | string | string) | null;
 };
 
 // No data on IdText
@@ -100,7 +127,7 @@ export type Identifier = {
 
 // No data on HashNum
 
-export type BuiltinHash = string;
+// No data on BuiltinHash
 
 export type newline = string;
 
@@ -118,6 +145,6 @@ export type lineComment = string;
 
 export type finalLineComment = string;
 
-export type AllTaggedTypes = File | Apply_inner | Lambda | Params | Parens | TypeApplication | CommaType | Type | CommaExpr | Int | Identifier;
+export type AllTaggedTypes = File | Apply_inner | Lambda | Params | TypeLambda | CommaTypeParam | TypeParam | Pattern | Parens | TypeApplication | CommaType | Type | CommaExpr | Int | Identifier;
 
 export const parseTyped = (input: string): File => parse(input)

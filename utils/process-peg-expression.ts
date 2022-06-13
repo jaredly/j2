@@ -87,14 +87,7 @@ export const processExpression = (
                     t.memberExpression(ctx.vbl, t.identifier('map')),
                     [
                         t.arrowFunctionExpression(
-                            [
-                                {
-                                    ...t.identifier('element'),
-                                    typeAnnotation: t.tsTypeAnnotation(
-                                        t.tsAnyKeyword(),
-                                    ),
-                                },
-                            ],
+                            [t.identifier('element')],
                             inner,
                         ),
                     ],
