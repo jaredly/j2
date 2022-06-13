@@ -56,10 +56,9 @@ Identifier = text:$IdText hash:($JustSym / $HashRef / $BuiltinHash)?
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 
-JustSym = "#" ":" [0-9]+
-HashRef = "#" [0-9a-zA-Z]+
-HashNum = "#" [0-9]+
-BuiltinHash = "#" ("builtin" / "b")
+JustSym = "#[" [0-9]+ "]"
+HashRef = "#[h" [0-9a-zA-Z]+ "]"
+BuiltinHash = "#[" ("builtin" / "b") "]"
 
 newline = "\n"
 _nonnewline = [ \t\r]* (comment [ \t\r]*)*

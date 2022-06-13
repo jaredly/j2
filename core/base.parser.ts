@@ -125,8 +125,6 @@ export type Identifier = {
 
 // No data on HashRef
 
-// No data on HashNum
-
 // No data on BuiltinHash
 
 export type newline = string;
