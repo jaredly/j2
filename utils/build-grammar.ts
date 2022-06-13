@@ -2,7 +2,7 @@ import fs from 'fs';
 import * as peggy from 'peggy';
 import { assembleRules, processRules } from './process-peg';
 
-const raw = fs.readFileSync('./core/base.pegjs', 'utf8');
+const raw = fs.readFileSync('./core/grammar/base.pegjs', 'utf8');
 const ast = peggy.parser.parse(raw);
 
 const { typesFile, grammarFile } = assembleRules(processRules(ast.rules), raw);
@@ -16,9 +16,9 @@ const jsOut = peggy.generate(grammarFile.join('\n\n'), {
     format: 'es',
 });
 
-fs.writeFileSync('./core/base.parser-untyped.js', jsOut);
+fs.writeFileSync('./core/grammar/base.parser-untyped.js', jsOut);
 fs.writeFileSync(
-    './core/base.parser.ts',
+    './core/grammar/base.parser.ts',
     `// @ts-ignore
 import {parse} from './base.parser-untyped.js'
 

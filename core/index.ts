@@ -25,17 +25,8 @@ export type Ref =
           type: 'Local';
           sym: number;
       };
-// export type AmbiguousIdentifier = {
-//     type: 'AmbiguousIdentifier';
-//     ids: Array<Identifier>;
-// };
-
-export type PartialIdentifier = {
-    type: 'Identifier';
-    ref: Ref;
-};
 
 export type Ctx = {
-    resolve: (name: string, hash?: string | null) => Array<PartialIdentifier>;
+    resolve: (name: string, hash?: string | null) => Array<Ref>;
     typeOf: (expr: Expression) => Type;
 };

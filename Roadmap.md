@@ -1,7 +1,17 @@
 
+#
+
+ok so this is where I wish that I could be building up my grammar incrementally.
+I guess nothing's stopping me, right?
+I can make an #include pragma or whatever.
+
 # Ok so next steps
 
-- make a way to convert the AST back into the p.AST
+- [ ] oh wait, I haven't gotten p.AST -> TAST yet
+	so I need to do that. But it'll be ... fairly typeless?
+	and then I run the algorithm to determine types of all symbols
+	as far as I can, at least.
+- [ ] make a way to convert the TAST back into the p.AST
 - use the pegjs to autogenerate a pretty-printer, yes you better believe it.
 - when inflating the p.AST to the TAST, I'll be giving all symbols unique symbol names, and then I'll have a ctx-level whatsit that keeps track of symbol types, so I can run the HM algorithm.
 BUT can hm handle a polymorphic ID function?

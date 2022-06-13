@@ -1,5 +1,5 @@
-import { PartialIdentifier, Ref } from '.';
-import { Location } from './base.parser';
+import { Ref } from '.';
+import { Location } from './grammar/base.parser';
 
 export type File = {
     type: 'File';
@@ -16,13 +16,11 @@ export type UnknownIdentifier = {
     hash: null | string;
 };
 
-export type Identifier = PartialIdentifier & { loc: Location };
-
-export type UnresolvedIdentifier = {
-    type: 'UnresolvedIdentifier';
+export type Identifier = {
+    type: 'Identifier';
     loc: Location;
-    text: string;
-    hash: null | string;
+    // might be "awaiting resolution" or "unable to resolve"
+    ref: Ref | { type: 'Unresolved'; text: string; hash: null | string };
 };
 
 export type Toplevel = {
@@ -31,9 +29,12 @@ export type Toplevel = {
     loc: Location;
 };
 
-export type Expression = Apply | Int | Identifier | UnresolvedIdentifier;
+export type Expression = Apply | Int | Identifier;
 // | AmbiguousIdentifier
 // | UnknownIdentifier;
+
+// Might be an int or float
+// export type Number = {type: 'Number', loc: Location, value: number};
 
 export type Int = {
     type: 'Int';

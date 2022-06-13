@@ -1,5 +1,5 @@
 import { Ctx, Id } from '.';
-import * as p from './base.parser';
+import * as p from './grammar/base.parser';
 import { Apply, Expression, Int, Toplevel, Type } from './typed-ast';
 
 // do I even do builtins?
@@ -34,14 +34,15 @@ let i: int = 1
 let x = f
 let x = i
 
-xs(x, x)
-xs(f, f)
+xs(x, x) // ambiguous!
+xs(f, f) // resolvable
 
-fs(x, x)
+fs(x, x) // resolvable
 
-fi(x, x)
+fi(x, x) // resolvable
 
-is(xs(x, x), i)
+is(xs(x, x), i) // resolvable
+
 -> so because we go outward-in,
  -> in this case xs will be restricted to is already
  -> and the x choices are easy.
@@ -88,20 +89,21 @@ export const ToTast = {
         // from builtlin or somethign else.
         //
         const resolved = ctx.resolve(text, hash);
-        if (!resolved.length) {
-            return { type: 'UnknownIdentifier', loc, text, hash };
-        }
         if (resolved.length === 1) {
-            return { ...resolved[0], loc };
+            return { type: 'Identifier', loc, ref: resolved[0] };
         }
-        return { type: 'AmbiguousIdentifier', options: resolved, loc };
+        return {
+            type: 'Identifier',
+            loc,
+            ref: { type: 'Unresolved', text, hash },
+        };
     },
     Apply(apply: p.Apply_inner, etyp: ExpectedType, ctx: Ctx): Expression {
         // hmm etyp is only the return type of the outer-most apply.
         // So really I need to be processing them in reverse order.
 
         let inner: p.Expression | Single = apply.target;
-        const parens = apply.parens.slice();
+        const parens = apply.suffixes.slice();
         while (parens.length) {
             const next = parens.shift()!;
             inner = {

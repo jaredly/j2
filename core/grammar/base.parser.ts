@@ -27,77 +27,14 @@ export type Apply_inner = {
 
 export type Apply = Apply_inner | Atom;
 
-export type Atom = Int | Identifier | Lambda | Parened | TypeLambda;
+export type Atom = Int | Identifier;
 
-// No data on Parened
-
-export type Lambda = {
-  type: "Lambda";
-  loc: Location;
-  params: Params | null;
-  body: Expression;
-};
-
-export type Params = {
-  type: "Params";
-  loc: Location;
-  items: Param[];
-};
-
-export type TypeLambda = {
-  type: "TypeLambda";
-  loc: Location;
-  params: CommaTypeParam;
-  body: Expression;
-};
-
-export type CommaTypeParam = {
-  type: "CommaTypeParam";
-  loc: Location;
-  items: TypeParam[];
-};
-
-export type TypeParam = {
-  type: "TypeParam";
-  loc: Location;
-  id: Identifier;
-  hash: JustSym | null;
-};
-
-export type Param = Pattern;
-
-export type Pattern = {
-  type: "Pattern";
-  loc: Location;
-  id: Identifier;
-  hash: JustSym | null;
-};
-
-export type Suffix = Parens | TypeApplication;
+export type Suffix = Parens;
 
 export type Parens = {
   type: "Parens";
   loc: Location;
   args: CommaExpr | null;
-};
-
-export type TypeApplication = {
-  type: "TypeApplication";
-  loc: Location;
-  args: CommaType | null;
-};
-
-export type CommaType = {
-  type: "CommaType";
-  loc: Location;
-  items: Type[];
-};
-
-export type Type = {
-  type: "Type";
-  loc: Location;
-  id: Identifier;
-  args: TypeApplication | null;
 };
 
 export type CommaExpr = {
@@ -143,6 +80,6 @@ export type lineComment = string;
 
 export type finalLineComment = string;
 
-export type AllTaggedTypes = File | Apply_inner | Lambda | Params | TypeLambda | CommaTypeParam | TypeParam | Pattern | Parens | TypeApplication | CommaType | Type | CommaExpr | Int | Identifier;
+export type AllTaggedTypes = File | Apply_inner | Parens | CommaExpr | Int | Identifier;
 
 export const parseTyped = (input: string): File => parse(input)

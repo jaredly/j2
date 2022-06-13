@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parseTyped } from '../../base.parser';
+import { parseTyped } from '../../grammar/base.parser';
 
 const file = join(process.cwd(), 'core/tests/parser/examples.jd');
 
