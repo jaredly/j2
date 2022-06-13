@@ -32,4 +32,7 @@ huh so maybe for printing to .jd we /do/ need a visitor/transformer for the peg 
 
 onnn the other hand, if I colocate it well enough, maybe I don't need to autogenerate the printing & structured editing. if I just have things in the same file, then it's easy to adjust & keep things in sync. yeah. Because I do want to have lots of flexibility with the structured editor, so it can be really nice to use.
 
+anyway, back to ... some things.
+BinOp is a kind of apply(), as is UnaryOp.
+What if I had them unified in the grammar? Would that be very weird?
 

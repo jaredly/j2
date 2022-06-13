@@ -1,4 +1,14 @@
 
+# PRINTINGG
+
+Yeah ok so I'm turning the TAST back into an AST.
+haven't done hash subsitution yet, but that's fine.
+
+now I need to autogenerate a pretty-printer. How hard could it be?
+I think my strategy will be to use the PP DSL, so use the parsed pegjs grammar to produce PP DSL objects, and then I can pretty-print to my heart's content.
+
+For the structured editor, I think I feel better about producing the components by hand. I'm sure I'll make a DSL for that too of course. And who knows maybe I'll do the same .pegjs => DSL thing there too. I imagine I'll need to do a bunch of annotations and stuff, we'll see.
+
 #
 
 ok so this is where I wish that I could be building up my grammar incrementally.

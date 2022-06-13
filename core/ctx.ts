@@ -2,7 +2,7 @@ import { Ctx, RefKind } from '.';
 import hashObject from 'object-hash';
 import { Expression, Type } from './typed-ast';
 import { toId } from './ids';
-import { Location } from './grammar/base.parser';
+import { Loc } from './grammar/base.parser';
 
 export type FullContext = {
     values: {
@@ -139,7 +139,7 @@ export const newContext = (): FullContext => {
     return ctx;
 };
 
-const noloc: Location = {
+const noloc: Loc = {
     start: { line: 0, column: 0 },
     end: { line: 0, column: 0 },
     idx: -1,

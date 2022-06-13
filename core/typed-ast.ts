@@ -1,24 +1,26 @@
 import { RefKind } from '.';
-import { Location } from './grammar/base.parser';
+import { Loc } from './grammar/base.parser';
+export { RefKind };
 
 export type File = {
     type: 'File';
     toplevels: Array<Toplevel>;
-    loc: Location;
+    comments: Array<[Loc, string]>;
+    loc: Loc;
 };
 
 export type ErrorExpr = UnknownIdentifier;
 
 export type UnknownIdentifier = {
     type: 'UnknownIdentifier';
-    loc: Location;
+    loc: Loc;
     text: string;
     hash: null | string;
 };
 
 export type Ref = {
     type: 'Ref';
-    loc: Location;
+    loc: Loc;
     // might be "awaiting resolution" or "unable to resolve"
     kind: RefKind | { type: 'Unresolved'; text: string; hash: null | string };
 };
@@ -26,7 +28,7 @@ export type Ref = {
 export type Toplevel = {
     type: 'ToplevelExpression';
     expr: Expression;
-    loc: Location;
+    loc: Loc;
 };
 
 export type Expression = Apply | Int | Ref;
@@ -36,13 +38,13 @@ export type Expression = Apply | Int | Ref;
 
 export type Int = {
     type: 'Int';
-    loc: Location;
+    loc: Loc;
     value: number;
 };
 
 export type Apply = {
     type: 'Apply';
-    loc: Location;
+    loc: Loc;
     target: Expression;
     args: Array<Expression>;
 };
@@ -53,25 +55,25 @@ export type Type =
     | {
           type: 'TRef';
           ref: RefKind;
-          loc: Location;
+          loc: Loc;
       }
     | {
           type: 'TApply';
           target: Type;
           args: Array<Type>;
-          loc: Location;
+          loc: Loc;
       }
     | {
           type: 'TVar';
           sym: Sym;
           inner: Type;
-          loc: Location;
+          loc: Loc;
       }
     | {
           type: 'TLambda';
           args: Array<Type>;
           result: Type;
-          loc: Location;
+          loc: Loc;
       };
 
 // export type

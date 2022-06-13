@@ -1,6 +1,6 @@
 import { Ctx } from '.';
 import * as p from './grammar/base.parser';
-import { Apply, Expression, Int, Toplevel, Type } from './typed-ast';
+import { Apply, Expression, File, Int, Toplevel, Type } from './typed-ast';
 
 // do I even do builtins?
 // or do I just assign them a hash based on something else?
@@ -60,7 +60,7 @@ export const LevelTest = {
 
 export const ToTast = {
     ...LevelTest,
-    File({ toplevels, loc }: p.File, ctx: Ctx) {
+    File({ toplevels, loc, comments }: p.File, ctx: Ctx): File {
         // Do we forbid toplevel expressions from having a value?
         // I don't see why we would.
         // We might forbid them from having outstanding effects though.
@@ -68,6 +68,7 @@ export const ToTast = {
         return {
             type: 'File',
             toplevels: toplevels.map((top) => ToTast.Toplevel(top, ctx)),
+            comments,
             loc,
         };
     },

@@ -1,6 +1,6 @@
 // Generated?
 
-import { Id } from './ids';
+import { Id, idToString } from './ids';
 import { Expression, Type } from './typed-ast';
 
 // export type Type = '';
@@ -17,6 +17,9 @@ export type RefKind =
           type: 'Local';
           sym: number;
       };
+
+export const refHash = (ref: RefKind) =>
+    ref.type === 'Global' ? 'h' + idToString(ref.id) : '' + ref.sym;
 
 export type Ctx = {
     resolve: (name: string, hash?: string | null) => Array<RefKind>;
