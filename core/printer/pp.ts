@@ -72,6 +72,31 @@ export const id = (text: string, id: string, kind: string, loc?: Loc): PP => {
     };
 };
 
+type Block = {
+    type: 'block';
+    contents: Array<PP>;
+    sep: string;
+    loc?: Loc;
+}; // surrounded by {}
+
+type Args = {
+    type: 'args';
+    contents: Array<PP>;
+    left: string;
+    right: string;
+    trailing: boolean;
+    loc?: Loc;
+    rest?: PP;
+}; // surrounded by ()
+
+type Items = {
+    type: 'items';
+    items: Array<PP>;
+    breakMode: 'never' | 'always' | 'sometimes';
+    loc?: Loc;
+    attributes?: Array<string | Extra>;
+};
+
 export type PP =
     | {
           type: 'atom';
@@ -80,23 +105,37 @@ export type PP =
           loc: Loc | undefined;
       }
     | { type: 'id'; text: string; id: string; kind: string; loc?: Loc }
-    | { type: 'block'; contents: Array<PP>; sep: string; loc?: Loc } // surrounded by {}
-    | {
-          type: 'args';
-          contents: Array<PP>;
-          left: string;
-          right: string;
-          trailing: boolean;
-          loc?: Loc;
-          rest?: PP;
-      } // surrounded by ()
-    | {
-          type: 'items';
-          items: Array<PP>;
-          breakMode: 'never' | 'always' | 'sometimes';
-          loc?: Loc;
-          attributes?: Array<string | Extra>;
-      };
+    | Block
+    | Args
+    | Items;
+
+export const crawl = (x: PP, fn: (p: PP) => PP): PP => {
+    switch (x.type) {
+        case 'atom':
+            return fn(x);
+        case 'id':
+            return fn(x);
+        case 'block':
+            x = fn(x) as Block;
+            return {
+                ...x,
+                contents: x.contents.map((c) => crawl(c, fn)),
+            };
+        case 'args':
+            x = fn(x) as Args;
+            return {
+                ...x,
+                contents: x.contents.map((c) => crawl(c, fn)),
+                rest: x.rest && crawl(x.rest, fn),
+            };
+        case 'items':
+            x = fn(x) as Items;
+            return {
+                ...x,
+                items: x.items.map((c) => crawl(c, fn)),
+            };
+    }
+};
 
 const white = (x: number) => new Array(x).fill(' ').join('');
 

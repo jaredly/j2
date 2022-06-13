@@ -23,5 +23,4 @@ export const refHash = (ref: RefKind) =>
 
 export type Ctx = {
     resolve: (name: string, hash?: string | null) => Array<RefKind>;
-    // typeOf: (expr: Expression) => Type;
 };

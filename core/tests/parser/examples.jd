@@ -3,6 +3,12 @@
 
 toString#[hlmnop](1)
 
+toWhat(
+	1,
+	// Ok and a comment please dont leave me
+	2
+)
+
 // id<int>(1)
 
 // () => 1

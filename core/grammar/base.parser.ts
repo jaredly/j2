@@ -2,8 +2,8 @@
 import {parse} from './base.parser-untyped.js'
 
 export type Loc = {
-    start: {line: number, column: number},
-    end: {line: number, column: number},
+    start: {line: number, column: number, offset: number},
+    end: {line: number, column: number, offset: number},
     idx: number,
 };
 
