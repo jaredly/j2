@@ -8,8 +8,8 @@ toWhat(
 	// first
 	1, // here we are
 	inner(2, /* here */ 3),
-	2
 	// last
+	2
 )
 23
 

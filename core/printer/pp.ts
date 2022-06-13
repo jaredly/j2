@@ -8,8 +8,8 @@ export type BreakMode = 'never' | 'always' | 'sometimes';
 
 export const items = (
     items: Array<PP | null>,
+    loc: Loc,
     breakMode: BreakMode = 'never',
-    loc?: Loc,
     attributes?: Array<string | Extra>,
 ): PP => ({
     type: 'items',
@@ -20,10 +20,10 @@ export const items = (
 });
 export const args = (
     contents: Array<PP | null>,
+    loc: Loc,
     left = '(',
     right = ')',
     trailing = true,
-    loc?: Loc,
     rest?: PP,
 ): PP => ({
     type: 'args',
@@ -36,8 +36,8 @@ export const args = (
 });
 export const block = (
     contents: Array<PP | null>,
+    loc: Loc,
     sep: string = ';',
-    loc?: Loc,
 ): PP => ({
     type: 'block',
     contents: contents.filter((c) => c != null) as Array<PP>,
@@ -47,8 +47,8 @@ export const block = (
 
 export const atom = (
     text: string,
+    loc: Loc,
     attributes?: Array<string>,
-    loc?: Loc,
     isComment = false,
 ): PP => {
     if (text == null) {
@@ -63,7 +63,7 @@ export const atom = (
     };
 };
 
-export const id = (text: string, id: string, kind: string, loc?: Loc): PP => {
+export const id = (text: string, id: string, kind: string, loc: Loc): PP => {
     if (text == null) {
         throw new Error(`ID with no text`);
     }
@@ -80,7 +80,7 @@ type Block = {
     type: 'block';
     contents: Array<PP>;
     sep: string;
-    loc?: Loc;
+    loc: Loc;
 }; // surrounded by {}
 
 type Args = {
@@ -89,7 +89,7 @@ type Args = {
     left: string;
     right: string;
     trailing: boolean;
-    loc?: Loc;
+    loc: Loc;
     rest?: PP;
 }; // surrounded by ()
 
@@ -97,7 +97,7 @@ type Items = {
     type: 'items';
     items: Array<PP>;
     breakMode: 'never' | 'always' | 'sometimes';
-    loc?: Loc;
+    loc: Loc;
     attributes?: Array<string | Extra>;
 };
 
@@ -107,12 +107,14 @@ export type PP =
           text: string;
           isComment: boolean;
           attributes?: Array<string>;
-          loc: Loc | undefined;
+          loc: Loc;
       }
-    | { type: 'id'; text: string; id: string; kind: string; loc?: Loc }
+    | { type: 'id'; text: string; id: string; kind: string; loc: Loc }
     | Block
     | Args
     | Items;
+
+export const isAtomic = (x: PP) => x.type === 'atom' || x.type === 'id';
 
 export const crawl = (x: PP, fn: (p: PP) => PP): PP => {
     switch (x.type) {
@@ -121,24 +123,24 @@ export const crawl = (x: PP, fn: (p: PP) => PP): PP => {
         case 'id':
             return fn(x);
         case 'block':
-            // x = fn(x) as Block;
-            return fn({
+            x = fn(x) as Block;
+            return {
                 ...x,
                 contents: x.contents.map((c) => crawl(c, fn)),
-            });
+            };
         case 'args':
-            // x = fn(x) as Args;
-            return fn({
+            x = fn(x) as Args;
+            return {
                 ...x,
                 contents: x.contents.map((c) => crawl(c, fn)),
                 rest: x.rest && crawl(x.rest, fn),
-            });
+            };
         case 'items':
-            // x = fn(x) as Items;
-            return fn({
+            x = fn(x) as Items;
+            return {
                 ...x,
                 items: x.items.map((c) => crawl(c, fn)),
-            });
+            };
     }
 };
 
@@ -190,7 +192,7 @@ export const printToStringInner = (
         const lines = pp.text.split(/\n/g);
         current.pos += lines[lines.length - 1].length;
         current.line += lines.length - 1;
-        if (pp.loc && pp.loc.idx) {
+        if (pp.loc.idx) {
             sourceMap[pp.loc.idx] = {
                 start,
                 end: {
@@ -210,7 +212,7 @@ export const printToStringInner = (
         }
         current.line += pp.text.split(/\n/g).length - 1;
 
-        if (pp.loc && pp.loc.idx) {
+        if (pp.loc.idx) {
             sourceMap[pp.loc.idx] = {
                 start,
                 end: {
@@ -247,7 +249,7 @@ export const printToStringInner = (
         current.pos += 1;
         res += '}';
 
-        if (pp.loc && pp.loc.idx) {
+        if (pp.loc.idx) {
             sourceMap[pp.loc.idx] = {
                 start,
                 end: {
@@ -287,7 +289,7 @@ export const printToStringInner = (
             });
             current.pos += 1;
 
-            if (pp.loc && pp.loc.idx) {
+            if (pp.loc.idx) {
                 sourceMap[pp.loc.idx] = {
                     start,
                     end: {
@@ -328,7 +330,7 @@ export const printToStringInner = (
         current.pos += 1;
         res += pp.right;
 
-        if (pp.loc && pp.loc.idx) {
+        if (pp.loc.idx) {
             sourceMap[pp.loc.idx] = {
                 start,
                 end: {
@@ -365,7 +367,7 @@ export const printToStringInner = (
             //     current.pos = current.indent;
             // }
 
-            if (pp.loc && pp.loc.idx) {
+            if (pp.loc.idx) {
                 sourceMap[pp.loc.idx] = {
                     start,
                     end: {
@@ -382,7 +384,7 @@ export const printToStringInner = (
             res += printToStringInner(item, maxWidth, sourceMap, current);
         });
 
-        if (pp.loc && pp.loc.idx) {
+        if (pp.loc.idx) {
             sourceMap[pp.loc.idx] = {
                 start,
                 end: {
