@@ -9,10 +9,49 @@ but, I do still have to decide what to do about type mismatches right?
 	- BUT if there's multiple and none fit the types, leave it ambiguous.
 
 
+- [ ] ok, and so a type error, is going to look like ... I guess we want to know
+	what the type is we were looking for, and what we found. It's ok to denomalize
+	them onto here because they're probably ephemeral anyway, right?
 
+hmmmmm I'd forgotten about decorators.
+@decorator(something) myself
+should I allow argless decorators? I don't think so? because then we could have ambiguity
+with tuples.
 
+btw, we're getting rid of forced spaces between binops, right? I think so.
 
+ok, so what if type errors were indicated by a decorator?
+like
+then the UI could filter it out, show it nicely or something
+but it also wouldn't have to be ... a whole separate ... thing
 
+ok, but so if we're making a record, and ... there are multiple options for the record type...
+... I think I decided that records just weren't allowed to have name collisions.
+...
+Does that mean I need to make scoping a thing?
+hmmm
+yeah I mean using packages to organize names of things, it's a time-honored tradition.
+but then do you like `open` stuff? hmm. And again, it is possible that you'd open
+something that has a record that collides with one you have.
+BUT I think I'd just say "we'll grab the one with the smaller hash or whatever", you
+need to specify it better next time.
+And I mean theoreeetically this is all academic, because in the UI you'll be ...
+... getting things directly.
+OK so also, `open` can just exist at the editor UI level, and you can be asked
+to clear up any confusion there directly. Ok problem solved? I think?
+
+Ok, and if you make a record with actually the same name as another, it will get
+renamed out from under you. Or the old one will lose its name. yeah idk.
+
+Ok, but all this to say: when handling record instantiation, we don't need to do
+fancy comparisons of the attributes in order to determine what record we're actually
+working with.
+Type names will essentially be unambiguous. Which is good.
+
+ok back to the matter at hand.
+Should we indicate type errors with a decorator?
+decorators are already meant to be able to go anywhere.
+so, sure.
 
 
 

@@ -1,8 +1,12 @@
 
+
+Btw we're going to use `{* x *}` instead of `{x}`, to avoid collisions with records,
+and to allow separation off EffLambda and EffApply.
+
 Ok while I'm in the 'thinking about weird things' mood,
 do we have any solution for 'effects are special and weird'?
 
-```
+```ts
 effect State<T> {
 	Get{} => T,
 	Set{value: T} => (),

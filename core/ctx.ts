@@ -39,7 +39,8 @@ export type FullContext = {
             >;
         };
         // builtins: { [key: string]: number };
-        names: { [key: string]: Array<RefKind> };
+        // type names are unique folks.
+        names: { [key: string]: RefKind };
     };
 } & Ctx;
 
@@ -64,12 +65,10 @@ export const addBuiltinType = (
 ): RefKind => {
     const hash = hashObject({ name, args, unique });
     const ref: RefKind = { type: 'Global', id: toId(hash, 0) };
-    ctx.types.names[name] = [ref];
+    ctx.types.names[name] = ref;
     ctx.types.hashed[hash] = [{ type: 'builtin', args }];
     return ref;
 };
-
-// export const addBuiltinType =
 
 export type Hash =
     | {
