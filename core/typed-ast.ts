@@ -79,12 +79,14 @@ export type Sym = { id: number; name: string };
 
 export type TRef = { type: 'TRef'; ref: RefKind | UnresolvedRef; loc: Loc };
 
+// @decorator() T
 export type TDecorated = {
     type: 'TDecorated';
     decorators: Array<Decorator>;
     loc: Loc;
 };
 
+// Something<T>
 export type TApply = {
     type: 'TApply';
     target: Type;
@@ -92,21 +94,27 @@ export type TApply = {
     loc: Loc;
 };
 
-export type TVar = {
-    type: 'TVar';
-    sym: Sym;
+// OK also how do I do ... type bounds
+// yeah that would be here.
+// <T, I, K>Something
+export type TVars = {
+    type: 'TVars';
+    args: Array<Sym>;
     inner: Type;
     loc: Loc;
 };
 
+// (arg: int, arg2: float) => string
 export type TLambda = {
     type: 'TLambda';
-    args: Array<Type>;
+    args: Array<{ label: string; typ: Type }>;
     result: Type;
     loc: Loc;
 };
 
-export type Type = TRef | TDecorated | TApply | TVar | TLambda;
+export type Type = TRef | TDecorated | TApply | TVars | TLambda;
+
+// (T -> T) -> T // hm that would be Kinds yep.
 
 // export type
 /*

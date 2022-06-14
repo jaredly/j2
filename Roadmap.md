@@ -1,4 +1,49 @@
 
+## Kinds of errors
+
+- decorator can't be applied to that thing
+- decorator hash wrong # of args
+- a decorator arg has the wrong ~type (???? what am I going to do with decorators? I guess I did widgets. ok.)
+
+- ref can't be resolved satisfactorily (either nothing by that name, or nothing agrees with the args)
+- apply
+	- wrong number of args (wrap the apply)
+	- an arg of the wrong type (wrap the arg)
+- TApply
+	- wrong number of args (wrap the TApply)
+	- an arg ... of the ... wrong ... hmmm yeah I guess "kind" is what I want here. Wrong number of args expected by this type.
+
+
+```
+struct Awesome = <<Inner>Container>{
+	party: Container<int>,
+}
+
+let m = Awesome<Array>{party: [1, 2, 3]};
+let n = Whatsit<Maybe>{party: None};
+```
+
+
+	- soooo cann I get away with treating decorators as just some special kind of function application?
+		that gets ignored when codegenning?
+		hmmm.
+		for expression decorators, probablys. like not 100%, but maybe.
+		oh but then I'd need to allow nested decorators, wouldn't I
+		ok yeah.
+		but, what about decorators on other things?
+		TDecorated can't be.
+- 
+
+
+
+# Phase 1
+
+- [x] basic parsing & printing (incl comments!)
+	- [x] decorators for type errors, sounds fine
+	- [x] want to be able to represent "partial" states
+- [ ] 
+
+
 - [x] parse decorators
 - [x] ast-tast decorators
 - [x] parsing and printing some decorators folks!
