@@ -8,8 +8,9 @@ toWhat(
 	// first
 	1, // here we are
 	inner(2, /* here */ 3), /* just chillin */
+	1.000001,
 	// last
-	2
+	true
 )
 23
 
@@ -23,3 +24,5 @@ toWhat(
 
 // (<T#[12]>(arg) => arg)<T#[14], int#[b], float, whatsit#[habcd]>(23)
 
+// this must be the ID function
+// (f) => f((s) => s)(f("hi"))

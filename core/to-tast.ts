@@ -1,65 +1,16 @@
 import { Ctx } from '.';
 import * as p from './grammar/base.parser';
-import { Apply, Expression, File, Int, Toplevel, Type } from './typed-ast';
-
-// do I even do builtins?
-// or do I just assign them a hash based on something else?
-// Library
-//
-//
-
-/*
-
-Ok, so what's the complex "args back and forth" inference case?
-
-1.0 + 2
-
-2 + 3
-
-5.0 * (2 + 3)
-
-OR EVEN
-
-let fs = (a: float, b: float) => a + b;
-let is = (a: int, b: int) => a + b;
-let fi = (a: float, b: int) => a + b as float;
-
-let xs = fs
-let xs = is
-let xs = fi
-
-let f: float = 1.0
-let i: int = 1
-
-let x = f
-let x = i
-
-xs(x, x) // ambiguous!
-xs(f, f) // resolvable
-
-fs(x, x) // resolvable
-
-fi(x, x) // resolvable
-
-is(xs(x, x), i) // resolvable
-
--> so because we go outward-in,
- -> in this case xs will be restricted to is already
- -> and the x choices are easy.
-
-
-*/
-
-// export type ExpectedType = null | Type; // {type: 'Exactly', typ: Type} | {type: 'Returns', typ: Type}
-
-export const LevelTest = {
-    Int({ loc, contents }: p.Int, ctx: Ctx): Int {
-        return { type: 'Int', value: +contents, loc };
-    },
-};
+import {
+    Apply,
+    Expression,
+    File,
+    Boolean,
+    Number,
+    Toplevel,
+    Type,
+} from './typed-ast';
 
 export const ToTast = {
-    ...LevelTest,
     File({ toplevels, loc, comments }: p.File, ctx: Ctx): File {
         // Do we forbid toplevel expressions from having a value?
         // I don't see why we would.
@@ -78,6 +29,19 @@ export const ToTast = {
             expr: ToTast[top.type](top as any, ctx),
             loc: top.loc,
         };
+    },
+    Boolean(boolean: p.Boolean, ctx: Ctx): Boolean {
+        return {
+            type: 'Boolean',
+            loc: boolean.loc,
+            value: boolean.v === 'true',
+        };
+    },
+    // um ok but does it make sense to have a whole node just for int literals?
+    // maybe I could have a 'literalconstant' node that int/float/number ...
+    // although strings can be template literals, so maybe that's a separate node
+    Number({ loc, contents }: p.Number, ctx: Ctx): Number {
+        return { type: 'Number', value: +contents, loc, kind: null };
     },
     // Expression(expr: p.Expression, typ: Type | null, ctx: Ctx): Expression {
     //     return ToTast[expr.type](expr as any, typ, ctx);
@@ -211,3 +175,53 @@ export const ToTast = {
 // // export const nodeToTast = (node: p.AllTaggedTypes, ctx: Ctx) => {
 // //     return ToTast[node.type](node as any, ctx);
 // // };
+
+// do I even do builtins?
+// or do I just assign them a hash based on something else?
+// Library
+//
+//
+
+/*
+
+Ok, so what's the complex "args back and forth" inference case?
+
+1.0 + 2
+
+2 + 3
+
+5.0 * (2 + 3)
+
+OR EVEN
+
+let fs = (a: float, b: float) => a + b;
+let is = (a: int, b: int) => a + b;
+let fi = (a: float, b: int) => a + b as float;
+
+let xs = fs
+let xs = is
+let xs = fi
+
+let f: float = 1.0
+let i: int = 1
+
+let x = f
+let x = i
+
+xs(x, x) // ambiguous!
+xs(f, f) // resolvable
+
+fs(x, x) // resolvable
+
+fi(x, x) // resolvable
+
+is(xs(x, x), i) // resolvable
+
+-> so because we go outward-in,
+ -> in this case xs will be restricted to is already
+ -> and the x choices are easy.
+
+
+*/
+
+// export type ExpectedType = null | Type; // {type: 'Exactly', typ: Type} | {type: 'Returns', typ: Type}

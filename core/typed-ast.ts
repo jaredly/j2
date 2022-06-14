@@ -31,15 +31,22 @@ export type Toplevel = {
     loc: Loc;
 };
 
-export type Expression = Apply | Int | Ref;
+export type Expression = Apply | Number | Boolean | Ref;
 
 // Might be an int or float
 // export type Number = {type: 'Number', loc: Location, value: number};
 
-export type Int = {
-    type: 'Int';
+export type Boolean = {
+    type: 'Boolean';
+    loc: Loc;
+    value: boolean;
+};
+
+export type Number = {
+    type: 'Number';
     loc: Loc;
     value: number;
+    kind: 'Int' | 'Float' | null;
 };
 
 export type Apply = {

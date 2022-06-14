@@ -14,7 +14,7 @@ Expression = Apply
 
 Apply = target:Atom suffixes_drop:Suffix*
 
-Atom = Int / Identifier
+Atom = Number / Boolean / Identifier
 
 Suffix = Parens
 
@@ -22,7 +22,9 @@ Parens = "(" _ args:CommaExpr? ")"
 
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
-Int "int" = _ contents:$("-"? [0-9]+) 
+Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
+Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?)
+
 
 Identifier = text:$IdText hash:($JustSym / $HashRef / $BuiltinHash)?
 

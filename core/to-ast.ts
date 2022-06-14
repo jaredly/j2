@@ -65,7 +65,10 @@ export const ToAst = {
         }
         return { type, target: inner, suffixes: [parens], loc };
     },
-    Int({ type, value, loc }: t.Int, ctx: Ctx): p.Int {
+    Boolean({ type, value, loc }: t.Boolean, ctx: Ctx): p.Boolean {
+        return { type, v: value ? 'true' : 'false', loc };
+    },
+    Number({ type, value, loc }: t.Number, ctx: Ctx): p.Number {
         return {
             type,
             contents: '' + value,

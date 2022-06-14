@@ -27,7 +27,7 @@ export type Apply_inner = {
 
 export type Apply = Apply_inner | Atom;
 
-export type Atom = Int | Identifier;
+export type Atom = Number | Boolean | Identifier;
 
 export type Suffix = Parens;
 
@@ -43,8 +43,14 @@ export type CommaExpr = {
   items: Expression[];
 };
 
-export type Int = {
-  type: "Int";
+export type Boolean = {
+  type: "Boolean";
+  loc: Loc;
+  v: "true" | "false";
+};
+
+export type Number = {
+  type: "Number";
   loc: Loc;
   contents: string;
 };
@@ -80,6 +86,6 @@ export type lineComment = string;
 
 export type finalLineComment = string;
 
-export type AllTaggedTypes = File | Apply_inner | Parens | CommaExpr | Int | Identifier;
+export type AllTaggedTypes = File | Apply_inner | Parens | CommaExpr | Boolean | Number | Identifier;
 
 export const parseTyped = (input: string): File => parse(input)

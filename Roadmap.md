@@ -12,6 +12,15 @@ For the structured editor, I think I feel better about producing the components 
 OK so I need to make a `comment` pp type. I'm pretty sure.
 So that my args no not to comma-separate it.
 
+- [x] get comments printing!
+- [x] make the pretty printer by hand, it's not really that hard. I like having it in the two steps though tbh, idk.
+- [x] ok just for fun, I've verified that HM (alg-j) can't handle rank-2 polymorphism. I think.
+	like, it can'd type `f => (f(1), f("hi"))`. I'm pretty sure I've established that.
+	So, that's exciting. We'll see how far I can get with inference.
+	But I do think it'll be a good exercise.
+- [x] ok so I'm so glad that comments are printing.
+- [ ] 
+
 #
 
 ok so this is where I wish that I could be building up my grammar incrementally.
@@ -20,21 +29,23 @@ I can make an #include pragma or whatever.
 
 # Ok so next steps
 
-- [ ] oh wait, I haven't gotten p.AST -> TAST yet
+- [x] oh wait, I haven't gotten p.AST -> TAST yet
 	so I need to do that. But it'll be ... fairly typeless?
 	and then I run the algorithm to determine types of all symbols
 	as far as I can, at least.
-- [ ] make a way to convert the TAST back into the p.AST
+- [x] make a way to convert the TAST back into the p.AST
 - use the pegjs to autogenerate a pretty-printer, yes you better believe it.
 - when inflating the p.AST to the TAST, I'll be giving all symbols unique symbol names, and then I'll have a ctx-level whatsit that keeps track of symbol types, so I can run the HM algorithm.
 BUT can hm handle a polymorphic ID function?
 `(f) => (f(1), f("hi"))`? and infer `f: <X>(x: X) => X`?
+spoiler, no it can't.
 
 
 Ok but here's a question.
 What if hashes were contained in []?
 `hello#[builtin]`?
 `hello#[abcd.12]`? 
+I kinda like it.
 
 ```
 hello#[b] #[builtin]
