@@ -59,11 +59,7 @@ export type DecoratedExpression = {
     loc: Loc;
 };
 
-export type Boolean = {
-    type: 'Boolean';
-    loc: Loc;
-    value: boolean;
-};
+export type Boolean = { type: 'Boolean'; loc: Loc; value: boolean };
 
 export type Number = {
     type: 'Number';
@@ -81,11 +77,7 @@ export type Apply = {
 
 export type Sym = { id: number; name: string };
 
-export type TRef = {
-    type: 'TRef';
-    ref: RefKind | UnresolvedRef;
-    loc: Loc;
-};
+export type TRef = { type: 'TRef'; ref: RefKind | UnresolvedRef; loc: Loc };
 
 export type TDecorated = {
     type: 'TDecorated';

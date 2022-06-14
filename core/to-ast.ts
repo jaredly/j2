@@ -103,6 +103,7 @@ export const ToAst = {
                                       }
                                     : {
                                           type: 'DecType',
+                                          // @ts-ignore
                                           type_: ToAst[arg.typ.type](
                                               arg.typ as any,
                                               ctx,
