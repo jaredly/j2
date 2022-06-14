@@ -140,8 +140,8 @@ export const newContext = (): FullContext => {
 };
 
 const noloc: Loc = {
-    start: { line: 0, column: 0 },
-    end: { line: 0, column: 0 },
+    start: { line: 0, column: 0, offset: -1 },
+    end: { line: 0, column: 0, offset: -1 },
     idx: -1,
 };
 const tref = (ref: RefKind): Type => ({ type: 'TRef', ref, loc: noloc });
@@ -153,10 +153,40 @@ const tlam = (args: Array<Type>, result: Type): Type => ({
     loc: noloc,
 });
 
+const prelude = `
+enum Result<Ok, Failure> {
+	Ok<Ok>{v: Ok}<Ok>,
+	Failure<Failure>{v: Failure}<Failure>, // lol
+	// maybe we'll allow it as shorthand?
+	// Failure{v: Failure} gets turned into that, because it can tell
+	// that we're using some locally defined types
+}
+
+struct Ok<Ok>{v: Ok}
+struct Failure<Failure>{v: Failure}
+`;
+
+const builtinTypes = `
+int
+float
+bool
+string
+`
+    .trim()
+    .split('\n');
+
+const builtinValues = `
+toString: (value: int) => string
+toString: (value: float) => string
+toString: (value: bool) => string
+`;
+
 export const setupDefaults = (ctx: FullContext) => {
-    const int = addBuiltinType(ctx, 'int', 0);
-    const string = addBuiltinType(ctx, 'string', 0);
-    addBuiltin(ctx, 'toString', tlam([tref(int)], tref(string)));
+    const named: { [key: string]: RefKind } = {};
+    builtinTypes.forEach((name) => {
+        named[name] = addBuiltinType(ctx, name, 0);
+    });
+    addBuiltin(ctx, 'toString', tlam([tref(named.int)], tref(named.string)));
 };
 
 export const fullContext = () => {
