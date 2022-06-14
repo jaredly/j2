@@ -78,7 +78,7 @@ export const ToAst = {
                     ? {
                           type: 'DecoratorId',
                           text: id.ref.text,
-                          hash: id.ref.hash,
+                          hash: id.ref.hash ?? '#[:unresolved:]',
                           loc: id.loc,
                       }
                     : {
