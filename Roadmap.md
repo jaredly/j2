@@ -1,4 +1,120 @@
 
+
+thinking about builtins
+you know, I could just go ahead and give
+ints and strings and stuff just a whole ton
+of .attributes. like myInt.toFloat() myString.slice() etc.
+Would really juice up the feel of it I bet.
+
+what ifff you can just up and declare `let .awesome = (x: int) => () => "is awesome"`.
+And then you get `x.awesome()`?
+hrmmmmmm oh we run into the weird unit argument.
+oh wait no I guess that's fine! yeah I mean that works right? The first is called
+when you `.awesome(x)` and then it's `.awesome(x)()`. Totally normal.
+
+now, this seems like a pretty special case, right? You can't just go around naming
+things with `.` in front. right??
+`(x: int, .y: (v: int) => int) => x.y` like ... is that weird? idk.
+it's not like that syntax is reserved for anything else.
+
+hmmmmm does that mean, that for any builtins that don't have any args (like toString)
+I'll just forgo the second set of lambdas? I mean might as well right?
+but then for toString we've got `as string` as well, so whatayado.
+
+
+Next up?
+I guess we do ... some type ... checking? I guess there's nothing to infer just yet
+but, I do still have to decide what to do about type mismatches right?
+
+Ok while I'm in the 'thinking about weird things' mood,
+do we have any solution for 'effects are special and weird'?
+
+```
+effect State<T> {
+	Get{} => T,
+	Set{value: T} => (),
+}
+// -> produces (essentially? Maybe literally?)
+enum State<T> {
+	Get{},
+	Set{value: T}
+}
+// and I mean do we just have a rule that you
+// can't have a `k`? No, I think we just make it k_ or something.
+enum StateCatch<T, Final> {
+	Get{k: (value: int) => Final},
+	Set{value: int, k: () => Final},
+	End{value: Final}, // right?? maybe???
+}
+// And then you can later
+raise!(State<int>::Get)
+raise!(State<int>::Set{:10})
+// now, if you try to raise an enum that wasn't created
+// with ... ... .. . .. ... .... . .. .... .. .... . . .. ...
+// hmm maybe that's misleading.
+// because you can't do something like. ...
+(eff: State<int>) => raise!(eff)
+// because we wouldn't know the return value.
+// I mean I guess technically we mighttt be able to if all of them were the same
+// but that seems very weird.
+// Really, I want the type of `eff` to have information on it of what the result
+// of the raise is. But we don't.
+// So, you're stuck with producing any effect enums that you wan't to raise,
+// right at the moment you raise them.
+
+// this might make some sense.
+
+let rec loop = (current, fn) => {
+	switch handle!(fn) {
+		Get{k} => k(current),
+		Set{value, k} => loop(value, k),
+		End{value} => value,
+	}
+}
+```
+
+idk if it could actually be realized
+from a computational flow sense.
+or whether it's even accurate type-wise.
+but it's cool to think about.
+
+
+
+
+
+So, I'm having some thoughts about Record types.
+It would be really, really convenient in a lot of ways,
+for Records to be ~anonymous.
+you could just declare `parseInt: (value: string) => Result<int, NotAnInteger{}>`.
+so like, that's a payloadless record, for sure.
+```ts
+enum Result<Ok, Failure> {
+	Ok{Ok},
+	Failure{Failure}
+}
+
+Result::Ok{: hmmm} // you can only do positional if no names are given.
+.0(myOkValue) // will work
+```
+
+hmm yeah ok lots of things would fall apart. I guess we can't do that.
+
+BUT
+
+Ok I'm declaring that ... you can just drop `NotAnInteger{}` in a place where you're using
+a type, and it's the same as declaring it in-line.
+Yeah I said it.
+I think that's a nice.
+If you want to re-use it elsewhere go for it.
+idk it might be weird. But it's the same basic idea as inline declaring enums, right?
+yeah that sounds rad.
+
+
+
+
+
+
+
 # PRINTINGG
 
 Yeah ok so I'm turning the TAST back into an AST.
@@ -19,7 +135,6 @@ So that my args no not to comma-separate it.
 	So, that's exciting. We'll see how far I can get with inference.
 	But I do think it'll be a good exercise.
 - [x] ok so I'm so glad that comments are printing.
-- [ ] 
 
 #
 

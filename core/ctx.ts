@@ -2,7 +2,8 @@ import { Ctx, RefKind } from '.';
 import hashObject from 'object-hash';
 import { Expression, Type } from './typed-ast';
 import { toId } from './ids';
-import { Loc } from './grammar/base.parser';
+import { Loc, parseTyped } from './grammar/base.parser';
+import { ToTast } from './to-tast';
 
 export type FullContext = {
     values: {
@@ -175,10 +176,14 @@ string
     .trim()
     .split('\n');
 
+// TODO: allow parsing from a `Declaration` rule,
+// which will let us declare our builtins like this.
+// although ... maybe what I want is to autogenerate
+// the types from the .ts file of builtins 🤔
 const builtinValues = `
-toString: (value: int) => string
-toString: (value: float) => string
-toString: (value: bool) => string
+.toString: (value: int) => () => string
+.toString: (value: float) => () => string
+.toString: (value: bool) => () => string
 `;
 
 export const setupDefaults = (ctx: FullContext) => {
@@ -187,6 +192,10 @@ export const setupDefaults = (ctx: FullContext) => {
         named[name] = addBuiltinType(ctx, name, 0);
     });
     addBuiltin(ctx, 'toString', tlam([tref(named.int)], tref(named.string)));
+    // builtinValues.split('\n').forEach((line) => {
+    // 	const ast = parseTyped(line);
+    // 	const tst = ToTast.File(ast)
+    // })
 };
 
 export const fullContext = () => {

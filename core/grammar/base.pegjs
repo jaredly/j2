@@ -8,6 +8,8 @@
 
 File = _ toplevels:(Toplevel ';'? '\n')* _ finalLineComment? 
 
+// Declaration = name:$IdText _ type:Type
+
 Toplevel = Expression
 
 Expression = Apply
