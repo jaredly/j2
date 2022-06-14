@@ -48,5 +48,5 @@ __ "whitespace"
   = [ \t\n\r]+ (comment _)*
 comment = multiLineComment / lineComment
 multiLineComment = $("/*" (!"*/" .)* "*/")
-lineComment = $("//" (!"\n" .)* "\n")
+lineComment = $("//" (!"\n" .)* &"\n")
 finalLineComment = $("//" (!"\n" .)*)

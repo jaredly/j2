@@ -11,8 +11,8 @@ toWhat(
 	1.000001,
 	// last
 	true
-)
-// mid
+) // mid
+// between
 23
 
 toString(true) // type error in the argument

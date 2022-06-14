@@ -1600,12 +1600,21 @@ function peg$parse(input, options) {
           s5 = peg$FAILED;
         }
       }
+      s5 = peg$currPos;
+      peg$silentFails++;
       if (input.charCodeAt(peg$currPos) === 10) {
-        s5 = peg$c1;
+        s6 = peg$c1;
         peg$currPos++;
       } else {
-        s5 = peg$FAILED;
+        s6 = peg$FAILED;
         if (peg$silentFails === 0) { peg$fail(peg$e1); }
+      }
+      peg$silentFails--;
+      if (s6 !== peg$FAILED) {
+        peg$currPos = s5;
+        s5 = undefined;
+      } else {
+        s5 = peg$FAILED;
       }
       if (s5 !== peg$FAILED) {
         s3 = [s3, s4, s5];
