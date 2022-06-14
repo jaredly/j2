@@ -6,7 +6,11 @@
     }
 }
 
-File = _ toplevels:(Toplevel ';'? '\n')* _ finalLineComment? 
+File = _ toplevels:(Toplevel _nonnewline ';'? _lineEnd)* _ finalLineComment? 
+
+_lineEnd = '\n' / _EOF
+
+_EOF = !.
 
 // Declaration = name:$IdText _ type:Type
 

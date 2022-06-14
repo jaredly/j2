@@ -12,7 +12,10 @@ toWhat(
 	// last
 	true
 )
+// mid
 23
+
+toString(true) // type error in the argument
 
 // id<int>(1)
 

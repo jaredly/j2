@@ -5,7 +5,8 @@ Next up?
 I guess we do ... some type ... checking? I guess there's nothing to infer just yet
 but, I do still have to decide what to do about type mismatches right?
 
-
+- [ ] when resolving a function, IF there's a hash, BUT the args don't line up, AND another hash does fit those args, go with it. OTHERWISE keep the hash and the kids are wrong.
+	- BUT if there's multiple and none fit the types, leave it ambiguous.
 
 
 

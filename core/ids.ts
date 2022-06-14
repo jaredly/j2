@@ -18,4 +18,4 @@ export const idsEqual = (a: Id, b: Id): boolean =>
     a[opaque].hash === b[opaque].hash && a[opaque].idx === b[opaque].idx;
 
 export const idToString = (id: Id): string =>
-    id[opaque].hash + '.' + id[opaque].idx;
+    id[opaque].hash + (id[opaque].idx != 0 ? '.' + id[opaque].idx : '');

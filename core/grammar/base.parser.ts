@@ -14,6 +14,10 @@ export type File = {
   toplevels: Toplevel[];
 };
 
+export type _lineEnd = string;
+
+export type _EOF = string;
+
 export type Toplevel = Expression;
 
 export type Expression = Apply;
