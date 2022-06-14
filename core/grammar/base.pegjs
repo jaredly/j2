@@ -16,11 +16,28 @@ _EOF = !.
 
 Toplevel = Expression
 
-Expression = Apply
+Expression = DecoratedExpression
+
+DecoratedExpression = decorators_drop:(Decorator _)* inner:Apply
+
+Decorator = '@' id:DecoratorId _ '(' _ args:DecoratorArgs? _ ')'
+DecoratorId = text:$IdText hash:($HashRef)?
+DecoratorArgs = first:LabeledDecoratorArg rest:(_ "," _ LabeledDecoratorArg)* _ ","? 
+DecoratorArg = DecType / DecExpr
+// DecoratorArg = DecType / DecPat / DecExpr
+LabeledDecoratorArg = label:($IdText ":" _)? arg:DecoratorArg 
+
+DecType = ":" _ type_:Type 
+// DecPat = "?" __ pattern:Pattern 
+DecExpr = expr:Expression 
+
+Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash)?
 
 Apply = target:Atom suffixes_drop:Suffix*
 
-Atom = Number / Boolean / Identifier
+Atom = Number / Boolean / Identifier / ParenedExpression
+
+ParenedExpression = "(" _ expr:Expression _ ")"
 
 Suffix = Parens
 

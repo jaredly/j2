@@ -26,6 +26,64 @@ export const ToPP = {
             apply.loc,
         );
     },
+    Type(type: p.Type): pp.PP {
+        return pp.atom(type.text + (type.hash ?? ''), type.loc);
+    },
+    DecoratedExpression({
+        inner,
+        decorators,
+        loc,
+    }: p.DecoratedExpression_inner): pp.PP {
+        const inn = ToPP[inner.type](inner as any);
+        return pp.items(
+            [...decorators.map((dec) => ToPP[dec.type](dec as any)), inn],
+            loc,
+        );
+    },
+    Decorator({ args, id, loc }: p.Decorator): pp.PP {
+        return pp.items(
+            [
+                pp.atom('@', loc),
+                pp.atom(id.text + (id.hash ?? ''), loc),
+                pp.args(
+                    args?.items.map((a) => {
+                        return pp.items(
+                            (a.label
+                                ? [
+                                      pp.atom(a.label, a.loc),
+                                      pp.atom(': ', a.loc),
+                                  ]
+                                : []
+                            ).concat([ToPP[a.arg.type](a.arg as any)]),
+                            a.loc,
+                        );
+                    }) ?? [],
+                    loc,
+                ),
+                pp.atom(' ', loc),
+            ],
+            loc,
+        );
+    },
+    ParenedExpression({ loc, expr }: p.ParenedExpression): pp.PP {
+        return pp.items(
+            [
+                pp.atom('(', loc),
+                ToPP[expr.type](expr as any),
+                pp.atom(')', loc),
+            ],
+            loc,
+        );
+    },
+    DecExpr({ expr, loc }: p.DecExpr): pp.PP {
+        return pp.items([ToPP[expr.type](expr as any)], loc);
+    },
+    DecType({ type, type_, loc }: p.DecType): pp.PP {
+        return pp.items(
+            [pp.atom(':', loc), ToPP[type_.type](type_ as any)],
+            loc,
+        );
+    },
     Identifier(identifier: p.Identifier): pp.PP {
         return pp.atom(
             identifier.text + (identifier.hash ?? ''),

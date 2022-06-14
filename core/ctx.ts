@@ -96,6 +96,33 @@ const parseHash = (hash: string): Hash => {
     };
 };
 
+const resolveType = (
+    ctx: FullContext,
+    name: string,
+    rawHash?: string | null,
+): RefKind | null => {
+    if (rawHash) {
+        const hash = parseHash(rawHash);
+        if (hash.type === 'sym') {
+            throw new Error('not yet');
+            // const ref = ctx.values.names[name]
+            // if (ref) {
+            // 	return ref
+            // }
+        } else {
+            const ref = ctx.types.hashed[hash.hash];
+            if (ref && hash.idx < ref.length) {
+                return { type: 'Global', id: toId(hash.hash, hash.idx) };
+            }
+        }
+    }
+    // TODO: local resolution
+    if (ctx.types.names[name]) {
+        return ctx.types.names[name];
+    }
+    return null;
+};
+
 const resolve = (
     ctx: FullContext,
     name: string,
@@ -135,6 +162,7 @@ export const newContext = (): FullContext => {
             names: {},
         },
         resolve: (name, rawHash) => resolve(ctx, name, rawHash),
+        resolveType: (name, rawHash) => resolveType(ctx, name, rawHash),
     };
     return ctx;
 };

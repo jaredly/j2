@@ -49,8 +49,82 @@ export const ToAst = {
     ToplevelExpression({ type, expr, loc }: t.Toplevel, ctx: Ctx): p.Toplevel {
         return ToAst[expr.type](expr as any, ctx);
     },
+    DecoratedExpression(
+        { type, decorators, expr, loc }: t.DecoratedExpression,
+        ctx: Ctx,
+    ): p.DecoratedExpression_inner {
+        const inner = ToAst[expr.type](expr as any, ctx);
+        if (inner.type === 'DecoratedExpression') {
+            return {
+                ...inner,
+                decorators: decorators
+                    .map((d) => ToAst[d.type](d, ctx))
+                    .concat(inner.decorators),
+            };
+        }
+        return {
+            type: 'DecoratedExpression',
+            inner,
+            loc,
+            decorators: decorators.map((d) => ToAst[d.type](d, ctx)),
+        };
+    },
+    Decorator({ type, id, args, loc }: t.Decorator, ctx: Ctx): p.Decorator {
+        return {
+            type,
+            id:
+                id.ref.type === 'Unresolved'
+                    ? {
+                          type: 'DecoratorId',
+                          text: id.ref.text,
+                          hash: id.ref.hash,
+                          loc: id.loc,
+                      }
+                    : {
+                          ...ctx.printRef(id.ref, id.loc),
+                          type: 'DecoratorId',
+                      },
+            args: {
+                type: 'DecoratorArgs',
+                items: args.map(
+                    ({ arg, loc, label }): p.LabeledDecoratorArg => {
+                        return {
+                            type: 'LabeledDecoratorArg',
+                            label,
+                            arg:
+                                arg.type === 'Expr'
+                                    ? {
+                                          type: 'DecExpr',
+                                          expr: ToAst[arg.expr.type](
+                                              arg.expr as any,
+                                              ctx,
+                                          ),
+                                          loc: arg.loc,
+                                      }
+                                    : {
+                                          type: 'DecType',
+                                          type_: ToAst[arg.typ.type](
+                                              arg.typ as any,
+                                              ctx,
+                                          ),
+                                          loc: arg.loc,
+                                      },
+                            loc,
+                        };
+                    },
+                ),
+                loc,
+            },
+            loc,
+        };
+    },
+    TRef({ type, ref, loc }: t.TRef, ctx: Ctx): p.Type {
+        const { text, hash } =
+            ref.type === 'Unresolved' ? ref : ctx.printRef(ref, loc);
+        return { type: 'Type', text, hash, loc };
+    },
     Apply({ type, target, args, loc }: t.Apply, ctx: Ctx): p.Apply {
-        const inner = ToAst[target.type](target as any, ctx);
+        let inner = ToAst[target.type](target as any, ctx);
         const parens: p.Parens = {
             loc,
             type: 'Parens',
@@ -62,6 +136,14 @@ export const ToAst = {
         };
         if (inner.type === 'Apply') {
             return { ...inner, suffixes: inner.suffixes.concat([parens]) };
+        }
+        if (inner.type === 'DecoratedExpression') {
+            return {
+                type,
+                target: { type: 'ParenedExpression', expr: inner, loc },
+                suffixes: [parens],
+                loc,
+            };
         }
         return { type, target: inner, suffixes: [parens], loc };
     },

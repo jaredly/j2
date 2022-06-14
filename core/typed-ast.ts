@@ -9,11 +9,28 @@ export type File = {
     loc: Loc;
 };
 
-export type ErrorExpr = UnknownIdentifier;
+// export type ErrorExpr = UnknownIdentifier;
 
-export type UnknownIdentifier = {
-    type: 'UnknownIdentifier';
+export type Decorator = {
+    type: 'Decorator';
+    id: { ref: RefKind | UnresolvedRef; loc: Loc };
+    args: Array<{ label: string | null; arg: DecoratorArg; loc: Loc }>;
     loc: Loc;
+};
+export type DecoratorArg =
+    | {
+          type: 'Expr';
+          expr: Expression;
+          loc: Loc;
+      }
+    | {
+          type: 'Type';
+          typ: Type;
+          loc: Loc;
+      };
+
+export type UnresolvedRef = {
+    type: 'Unresolved';
     text: string;
     hash: null | string;
 };
@@ -21,8 +38,7 @@ export type UnknownIdentifier = {
 export type Ref = {
     type: 'Ref';
     loc: Loc;
-    // might be "awaiting resolution" or "unable to resolve"
-    kind: RefKind | { type: 'Unresolved'; text: string; hash: null | string };
+    kind: RefKind | UnresolvedRef;
 };
 
 export type Toplevel = {
@@ -31,10 +47,17 @@ export type Toplevel = {
     loc: Loc;
 };
 
-export type Expression = Apply | Number | Boolean | Ref;
+export type Expression = Apply | Number | Boolean | Ref | DecoratedExpression;
 
 // Might be an int or float
 // export type Number = {type: 'Number', loc: Location, value: number};
+
+export type DecoratedExpression = {
+    type: 'DecoratedExpression';
+    decorators: Array<Decorator>;
+    expr: Expression;
+    loc: Loc;
+};
 
 export type Boolean = {
     type: 'Boolean';
@@ -51,37 +74,47 @@ export type Number = {
 
 export type Apply = {
     type: 'Apply';
-    loc: Loc;
     target: Expression;
     args: Array<Expression>;
+    loc: Loc;
 };
 
 export type Sym = { id: number; name: string };
 
-export type Type =
-    | {
-          type: 'TRef';
-          ref: RefKind;
-          loc: Loc;
-      }
-    | {
-          type: 'TApply';
-          target: Type;
-          args: Array<Type>;
-          loc: Loc;
-      }
-    | {
-          type: 'TVar';
-          sym: Sym;
-          inner: Type;
-          loc: Loc;
-      }
-    | {
-          type: 'TLambda';
-          args: Array<Type>;
-          result: Type;
-          loc: Loc;
-      };
+export type TRef = {
+    type: 'TRef';
+    ref: RefKind | UnresolvedRef;
+    loc: Loc;
+};
+
+export type TDecorated = {
+    type: 'TDecorated';
+    decorators: Array<Decorator>;
+    loc: Loc;
+};
+
+export type TApply = {
+    type: 'TApply';
+    target: Type;
+    args: Array<Type>;
+    loc: Loc;
+};
+
+export type TVar = {
+    type: 'TVar';
+    sym: Sym;
+    inner: Type;
+    loc: Loc;
+};
+
+export type TLambda = {
+    type: 'TLambda';
+    args: Array<Type>;
+    result: Type;
+    loc: Loc;
+};
+
+export type Type = TRef | TDecorated | TApply | TVar | TLambda;
 
 // export type
 /*

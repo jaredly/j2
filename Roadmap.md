@@ -1,4 +1,17 @@
 
+- [x] parse decorators
+- [x] ast-tast decorators
+- [x] parsing and printing some decorators folks!
+- [-] hmmmm cannnnnn I get my grammar-generation stuff so good that ... it'll produce the tast instead?
+		my motivation is, what if I could pretty-print the tast, using the grammar
+		although, hmmm idk. seems like an unlikely amount of cleverness.
+		yeah, dont do it
+- [-] remove some annoying intermediate ast nodes. ugh maybe it's fine
+- [ ] get everything ts happy
+	- [ ] need a `parens` for if we run into a decorator within an apply target
+- [ ] actually do some type checking now.
+- [ ] (maybe not) eventually, I'll want a `idOf()` function that will give me a user-representable ID, that I can use for like registering a plugin??? maybe??? Although actually, the editor UI can just take care of it I think ... and maintain that list internally. No need ... for some syntax for it? I think? Although I do like the idea of being able to export everything as a file .. idk.
+
 
 
 Next up?
