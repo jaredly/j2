@@ -4,7 +4,11 @@ import * as p from './grammar/base.parser';
 import * as t from './typed-ast';
 
 export type Ctx = {
-    printRef: (ref: t.RefKind, loc: p.Loc) => p.Identifier;
+    printRef: (
+        ref: t.RefKind,
+        loc: p.Loc,
+        kind: 'value' | 'type' | 'decorator',
+    ) => p.Identifier;
 };
 
 export const printCtx = (ctx: FullContext): Ctx => {
@@ -14,20 +18,17 @@ export const printCtx = (ctx: FullContext): Ctx => {
             reverse[refHash(ref)] = name;
         });
     });
+    const reverseType: { [key: string]: string } = {};
+    Object.keys(ctx.types.names).forEach((name) => {
+        reverseType[refHash(ctx.types.names[name])] = name;
+    });
     return {
-        printRef(ref, loc) {
+        printRef(ref, loc, kind) {
             const hash = refHash(ref);
-            if (reverse[hash]) {
-                return {
-                    type: 'Identifier',
-                    text: reverse[hash],
-                    hash: `#[${hash}]`,
-                    loc,
-                };
-            }
+            const name = kind === 'value' ? reverse[hash] : reverseType[hash];
             return {
                 type: 'Identifier',
-                text: 'unnamed',
+                text: name ?? 'unnamed',
                 hash: `#[${hash}]`,
                 loc,
             };
@@ -81,7 +82,7 @@ export const ToAst = {
                           loc: id.loc,
                       }
                     : {
-                          ...ctx.printRef(id.ref, id.loc),
+                          ...ctx.printRef(id.ref, id.loc, 'decorator'),
                           type: 'DecoratorId',
                       },
             args: {
@@ -121,7 +122,7 @@ export const ToAst = {
     },
     TRef({ type, ref, loc }: t.TRef, ctx: Ctx): p.Type {
         const { text, hash } =
-            ref.type === 'Unresolved' ? ref : ctx.printRef(ref, loc);
+            ref.type === 'Unresolved' ? ref : ctx.printRef(ref, loc, 'type');
         return { type: 'Type', text, hash, loc };
     },
     Apply({ type, target, args, loc }: t.Apply, ctx: Ctx): p.Apply {
@@ -167,7 +168,7 @@ export const ToAst = {
                 loc,
             };
         } else {
-            return ctx.printRef(kind, loc);
+            return ctx.printRef(kind, loc, 'value');
         }
     },
 };

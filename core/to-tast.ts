@@ -83,9 +83,14 @@ export const ToTast = {
         }
     },
     Type(type: p.Type, ctx: Ctx): t.Type {
+        const resolved = ctx.resolveType(type.text, type.hash);
         return {
             type: 'TRef',
-            ref: { type: 'Unresolved', text: type.text, hash: type.hash },
+            ref: resolved ?? {
+                type: 'Unresolved',
+                text: type.text,
+                hash: type.hash,
+            },
             loc: type.loc,
         };
     },
