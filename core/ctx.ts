@@ -3,7 +3,7 @@ import hashObject from 'object-hash';
 import { Expression, Type } from './typed-ast';
 import { toId } from './ids';
 import { Loc, parseTyped } from './grammar/base.parser';
-import { ToTast } from './to-tast';
+import { ToTast } from './typing/to-tast';
 
 export type FullContext = {
     values: {
@@ -52,7 +52,11 @@ export const addBuiltin = (
 ): RefKind => {
     const hash = hashObject({ name, typ, unique });
     const ref: RefKind = { type: 'Global', id: toId(hash, 0) };
-    ctx.values.names[name] = [ref];
+    if (ctx.values.names.hasOwnProperty(name)) {
+        ctx.values.names[name].push(ref);
+    } else {
+        ctx.values.names[name] = [ref];
+    }
     ctx.values.hashed[hash] = [{ type: 'builtin', typ }];
     return ref;
 };
@@ -226,10 +230,28 @@ export const setupDefaults = (ctx: FullContext) => {
         'toString',
         tlam([{ label: 'v', typ: tref(named.int) }], tref(named.string)),
     );
-    // builtinValues.split('\n').forEach((line) => {
-    // 	const ast = parseTyped(line);
-    // 	const tst = ToTast.File(ast)
-    // })
+    addBuiltin(
+        ctx,
+        'add',
+        tlam(
+            [
+                { label: 'a', typ: tref(named.int) },
+                { label: 'b', typ: tref(named.int) },
+            ],
+            tref(named.int),
+        ),
+    );
+    addBuiltin(
+        ctx,
+        'add',
+        tlam(
+            [
+                { label: 'a', typ: tref(named.float) },
+                { label: 'b', typ: tref(named.float) },
+            ],
+            tref(named.float),
+        ),
+    );
 };
 
 export const fullContext = () => {

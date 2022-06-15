@@ -1,6 +1,6 @@
-import { Ctx } from '.';
-import * as p from './grammar/base.parser';
-import * as t from './typed-ast';
+import { Ctx } from '..';
+import * as p from '../grammar/base.parser';
+import * as t from '../typed-ast';
 
 export const ToTast = {
     File({ toplevels, loc, comments }: p.File, ctx: Ctx): t.File {
@@ -105,7 +105,12 @@ export const ToTast = {
     // maybe I could have a 'literalconstant' node that int/float/number ...
     // although strings can be template literals, so maybe that's a separate node
     Number({ loc, contents }: p.Number, ctx: Ctx): t.Number {
-        return { type: 'Number', value: +contents, loc, kind: null };
+        return {
+            type: 'Number',
+            value: +contents,
+            loc,
+            kind: contents.includes('.') ? 'Float' : 'Int',
+        };
     },
     // Expression(expr: p.Expression, typ: Type | null, ctx: Ctx): Expression {
     //     return ToTast[expr.type](expr as any, typ, ctx);

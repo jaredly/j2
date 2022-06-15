@@ -22,6 +22,10 @@ toString(@error(expected: :float, received: :bool) true)
 
 @nested(@decorator() 10) 20
 
+add(1, 2)
+
+add(1.0, 2.0)
+
 // id<int>(1)
 
 // () => 1

@@ -1,7 +1,7 @@
-import { refHash } from '.';
-import { FullContext } from './ctx';
-import * as p from './grammar/base.parser';
-import * as t from './typed-ast';
+import { refHash } from '..';
+import { FullContext } from '../ctx';
+import * as p from '../grammar/base.parser';
+import * as t from '../typed-ast';
 
 export type Ctx = {
     printRef: (
@@ -152,10 +152,14 @@ export const ToAst = {
     Boolean({ type, value, loc }: t.Boolean, ctx: Ctx): p.Boolean {
         return { type, v: value ? 'true' : 'false', loc };
     },
-    Number({ type, value, loc }: t.Number, ctx: Ctx): p.Number {
+    Number({ type, value, loc, kind }: t.Number, ctx: Ctx): p.Number {
+        let contents = value.toString();
+        if (kind === 'Float' && !contents.includes('.')) {
+            contents += '.0';
+        }
         return {
             type,
-            contents: '' + value,
+            contents,
             loc,
         };
     },
