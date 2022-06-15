@@ -162,7 +162,7 @@ export const injectComments = (pretty: pp.PP, comments: [p.Loc, string][]) => {
 
 export const pegPrinter = (
     ast: p.File,
-    past: peggy.ast.Grammar,
+    // past: peggy.ast.Grammar,
     ctx: Ctx,
 ): pp.PP => {
     return injectComments(ToPP.File(ast, ctx), ast.comments.slice());

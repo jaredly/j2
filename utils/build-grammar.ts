@@ -13,7 +13,7 @@ if (ast.initializer) {
 
 const jsOut = peggy.generate(grammarFile.join('\n\n'), {
     output: 'source',
-    format: 'es',
+    format: 'commonjs',
 });
 
 fs.writeFileSync('./core/grammar/base.parser-untyped.js', jsOut);

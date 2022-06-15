@@ -45,7 +45,7 @@ export const ToTast = {
                 ref: {
                     type: 'Unresolved',
                     text: decorator.id.text,
-                    hash: decorator.id.hash,
+                    hash: filterUnresolved(decorator.id.hash),
                 },
                 loc: decorator.loc,
             },
@@ -89,7 +89,7 @@ export const ToTast = {
             ref: resolved ?? {
                 type: 'Unresolved',
                 text: type.text,
-                hash: type.hash,
+                hash: filterUnresolved(type.hash),
             },
             loc: type.loc,
         };
@@ -128,7 +128,7 @@ export const ToTast = {
         }
         return {
             type: 'Ref',
-            kind: { type: 'Unresolved', text, hash },
+            kind: { type: 'Unresolved', text, hash: filterUnresolved(hash) },
             loc,
         };
     },
@@ -153,6 +153,9 @@ export const ToTast = {
         return res as t.Apply;
     },
 };
+
+const filterUnresolved = (v: string | null) =>
+    v === '#[:unresolved:]' ? null : v;
 
 // let inner: p.Expression | Single = apply.target;
 // const parens = apply.suffixes.slice();

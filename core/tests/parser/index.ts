@@ -7,7 +7,7 @@ import { ToTast } from '../../typing/to-tast';
 import * as peggy from 'peggy';
 import { printToString } from '../../printer/pp';
 import { pegPrinter } from '../../printer/pegPrinter';
-import { analyze, verify } from '../../typing/analyze';
+import { analyze, analyzeContext, verify } from '../../typing/analyze';
 import { getType } from '../../typing/getType';
 import { Expression } from '../../typed-ast';
 import chalk from 'ansi-colors';
@@ -27,11 +27,7 @@ export const parserTests = () => {
         if (file.toplevels.length) {
             const ctx = fullContext();
             const typed = ToTast.File(file, ctx);
-            const actx = {
-                getType(expr: Expression) {
-                    return getType(expr, ctx);
-                },
-            };
+            const actx = analyzeContext(ctx);
             const checked = analyze(typed, actx);
             const errors = verify(checked, actx);
 
@@ -46,10 +42,7 @@ export const parserTests = () => {
 
             const astAgain = ToAst.File(checked, printCtx(ctx));
             console.log(
-                printToString(
-                    pegPrinter(astAgain, past, { hideIds: false }),
-                    100,
-                ),
+                printToString(pegPrinter(astAgain, { hideIds: false }), 100),
             );
             console.log();
         }

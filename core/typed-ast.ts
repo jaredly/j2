@@ -1,7 +1,11 @@
 import { RefKind } from '.';
-import { Loc } from './grammar/base.parser';
 export { RefKind };
-export { Loc };
+
+export type Loc = {
+    start: { line: number; column: number; offset: number };
+    end: { line: number; column: number; offset: number };
+    idx: number;
+};
 
 export type File = {
     type: 'File';

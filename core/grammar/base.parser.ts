@@ -42,7 +42,7 @@ export type DecoratorId = {
   type: "DecoratorId";
   loc: Loc;
   text: string;
-  hash: string | null;
+  hash: (string | string) | null;
 };
 
 export type DecoratorArgs = {
@@ -76,7 +76,7 @@ export type Type = {
   type: "Type";
   loc: Loc;
   text: string;
-  hash: (string | string | string) | null;
+  hash: (string | string | string | string) | null;
 };
 
 export type Apply_inner = {
@@ -126,7 +126,7 @@ export type Identifier = {
   type: "Identifier";
   loc: Loc;
   text: string;
-  hash: (string | string | string) | null;
+  hash: (string | string | string | string) | null;
 };
 
 // No data on IdText
@@ -136,6 +136,8 @@ export type Identifier = {
 // No data on HashRef
 
 // No data on BuiltinHash
+
+// No data on UnresolvedHash
 
 export type newline = string;
 

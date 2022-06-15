@@ -1,4 +1,20 @@
 
+- [ ] do test cases, and coverage
+	- [ ] huh yeah I guess jest will be the easiest way to do that. ok fine.
+		I can always have a separate cmd that will run the tests w/o jest if I want to.
+- [ ] String literals! Gotta have 'em. And I think I'll stick with all strings are template strings.
+	`${}` just makes sense. And the representation of "list of strings" and "list of things" also works for me.
+	Do I want to have special formatty whatsits? I ... don't really think so.
+	Do I want format strings? like I don't think I do.
+	You can pipe it through a formatter function.
+	hmm should I make a pipe? I reall probably should. |>? sure. As a simple "pass to a fn"
+	with no fancy argument munging? Yeah. `->` does enough that's fancy, I should think.
+	and |> dec vs |> dec(places: 2)? |> dec()... seems more wordy than I want.
+	%0.2f ... hmm. idk maybe at some point I'll make a c-formatter macro.
+
+	Ok, and then once I have string literals I can actually report errors lol.
+- [ ] hmmmm then do we do generic functions? Well as soon as I have full coverage of everything so far.
+
 ...
 oh, so ...
 my transform generator, needs to know that Expression items

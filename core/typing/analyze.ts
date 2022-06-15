@@ -2,7 +2,7 @@
 // Also, this is where we try to do type-based resolution.
 // Should I separate the two steps? idk.
 
-import { noloc } from '../ctx';
+import { FullContext, noloc } from '../ctx';
 import { transformFile } from '../transform-tast';
 import {
     Apply,
@@ -12,10 +12,19 @@ import {
     Loc,
     Type,
 } from '../typed-ast';
+import { getType } from './getType';
 import { typesEqual } from './typesEqual';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
+};
+
+export const analyzeContext = (ctx: FullContext): Ctx => {
+    return {
+        getType(expr: Expression) {
+            return getType(expr, ctx);
+        },
+    };
 };
 
 export const decorate = (

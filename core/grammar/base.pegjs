@@ -21,7 +21,7 @@ Expression = DecoratedExpression
 DecoratedExpression = decorators_drop:(Decorator _)* inner:Apply
 
 Decorator = '@' id:DecoratorId _ '(' _ args:DecoratorArgs? _ ')'
-DecoratorId = text:$IdText hash:($HashRef)?
+DecoratorId = text:$IdText hash:($HashRef / $UnresolvedHash)?
 DecoratorArgs = first:LabeledDecoratorArg rest:(_ "," _ LabeledDecoratorArg)* _ ","? 
 DecoratorArg = DecType / DecExpr
 // DecoratorArg = DecType / DecPat / DecExpr
@@ -31,7 +31,7 @@ DecType = ":" _ type_:Type
 // DecPat = "?" __ pattern:Pattern 
 DecExpr = expr:Expression 
 
-Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash)?
+Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
 
 Apply = target:Atom suffixes_drop:Suffix*
 
@@ -49,13 +49,14 @@ Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
 Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?)
 
 
-Identifier = text:$IdText hash:($JustSym / $HashRef / $BuiltinHash)?
+Identifier = text:$IdText hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 
 JustSym = "#[" [0-9]+ "]"
 HashRef = "#[h" [0-9a-zA-Z]+ "]"
 BuiltinHash = "#[" ("builtin" / "b") "]"
+UnresolvedHash = "#[" ":unresolved:" "]"
 
 newline = "\n"
 _nonnewline = [ \t\r]* (comment [ \t\r]*)*

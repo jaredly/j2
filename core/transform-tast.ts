@@ -1,6 +1,8 @@
-import {File, Toplevel, Expression, Loc, UnresolvedRef, DecoratedExpression, Decorator, DecoratorArg, Type, Sym, TLambda, Ref, Boolean, Number, Apply, TRef, TDecorated, TApply, TVars} from './typed-ast';
+import {Loc, File, Toplevel, Expression, UnresolvedRef, DecoratedExpression, Decorator, DecoratorArg, Type, Sym, TLambda, Ref, Boolean, Number, Apply, TRef, TDecorated, TApply, TVars} from './typed-ast';
 
 export type Visitor<Ctx> = {
+    Loc?: (node: Loc, ctx: Ctx) => null | false | Loc | [Loc | null, Ctx]
+    LocPost?: (node: Loc, ctx: Ctx) => null | Loc,
     File?: (node: File, ctx: Ctx) => null | false | File | [File | null, Ctx]
     FilePost?: (node: File, ctx: Ctx) => null | File,
     Decorator?: (node: Decorator, ctx: Ctx) => null | false | Decorator | [Decorator | null, Ctx]
@@ -38,7 +40,39 @@ export type Visitor<Ctx> = {
     Type?: (node: Type, ctx: Ctx) => null | false | Type | [Type | null, Ctx]
     TypePost?: (node: Type, ctx: Ctx) => null | Type
 }
-// not a type Loc
+export const transformLoc = <Ctx>(node: Loc, visitor: Visitor<Ctx>, ctx: Ctx): Loc => {
+        if (!node) {
+            throw new Error('No Loc provided');
+        }
+        
+        const transformed = visitor.Loc ? visitor.Loc(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        const updatedNode = node;
+        
+        node = updatedNode;
+        if (visitor.LocPost) {
+            const transformed = visitor.LocPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
 
 export const transformUnresolvedRef = <Ctx>(node: UnresolvedRef, visitor: Visitor<Ctx>, ctx: Ctx): UnresolvedRef => {
         if (!node) {
@@ -163,8 +197,12 @@ export const transformTLambda = <Ctx>(node: TLambda, visitor: Visitor<Ctx>, ctx:
                 
                 const updatedNode$result = transformType(node.result, visitor, ctx);
                 changed1 = changed1 || updatedNode$result !== node.result;
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
                 if (changed1) {
-                    updatedNode =  {...updatedNode, args: updatedNode$args, result: updatedNode$result};
+                    updatedNode =  {...updatedNode, args: updatedNode$args, result: updatedNode$result, loc: updatedNode$loc};
                     changed0 = true;
                 }
             }
@@ -205,7 +243,25 @@ export const transformType = <Ctx>(node: Type, visitor: Visitor<Ctx>, ctx: Ctx):
         
         let updatedNode = node;
         switch (node.type) {
-            case 'TRef': break;
+            case 'TRef': {
+                    const updatedNode$0specified = node;
+                    let changed1 = false;
+                    
+            let updatedNode$0node = updatedNode$0specified;
+            {
+                let changed2 = false;
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
+                if (changed2) {
+                    updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
+                    changed1 = true;
+                }
+            }
+            
+                    updatedNode = updatedNode$0node;
+                    break;
+                }
 
             case 'TDecorated': {
                     const updatedNode$0specified = node;
@@ -230,8 +286,16 @@ export const transformType = <Ctx>(node: Type, visitor: Visitor<Ctx>, ctx: Ctx):
                     }
                 }
                 
+
+                
+                const updatedNode$0node$inner = transformType(updatedNode$0specified.inner, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$inner !== updatedNode$0specified.inner;
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
                 if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, decorators: updatedNode$0node$decorators};
+                    updatedNode$0node =  {...updatedNode$0node, decorators: updatedNode$0node$decorators, inner: updatedNode$0node$inner, loc: updatedNode$0node$loc};
                     changed1 = true;
                 }
             }
@@ -267,8 +331,12 @@ export const transformType = <Ctx>(node: Type, visitor: Visitor<Ctx>, ctx: Ctx):
                     }
                 }
                 
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
                 if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, target: updatedNode$0node$target, args: updatedNode$0node$args};
+                    updatedNode$0node =  {...updatedNode$0node, target: updatedNode$0node$target, args: updatedNode$0node$args, loc: updatedNode$0node$loc};
                     changed1 = true;
                 }
             }
@@ -304,8 +372,12 @@ export const transformType = <Ctx>(node: Type, visitor: Visitor<Ctx>, ctx: Ctx):
                 
                 const updatedNode$0node$inner = transformType(updatedNode$0specified.inner, visitor, ctx);
                 changed2 = changed2 || updatedNode$0node$inner !== updatedNode$0specified.inner;
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
                 if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, args: updatedNode$0node$args, inner: updatedNode$0node$inner};
+                    updatedNode$0node =  {...updatedNode$0node, args: updatedNode$0node$args, inner: updatedNode$0node$inner, loc: updatedNode$0node$loc};
                     changed1 = true;
                 }
             }
@@ -368,8 +440,12 @@ export const transformDecoratorArg = <Ctx>(node: DecoratorArg, visitor: Visitor<
                 
                 const updatedNode$0node$expr = transformExpression(updatedNode$0specified.expr, visitor, ctx);
                 changed2 = changed2 || updatedNode$0node$expr !== updatedNode$0specified.expr;
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
                 if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, expr: updatedNode$0node$expr};
+                    updatedNode$0node =  {...updatedNode$0node, expr: updatedNode$0node$expr, loc: updatedNode$0node$loc};
                     changed1 = true;
                 }
             }
@@ -388,8 +464,12 @@ export const transformDecoratorArg = <Ctx>(node: DecoratorArg, visitor: Visitor<
                 
                 const updatedNode$0node$typ = transformType(updatedNode$0specified.typ, visitor, ctx);
                 changed2 = changed2 || updatedNode$0node$typ !== updatedNode$0specified.typ;
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
                 if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, typ: updatedNode$0node$typ};
+                    updatedNode$0node =  {...updatedNode$0node, typ: updatedNode$0node$typ, loc: updatedNode$0node$loc};
                     changed1 = true;
                 }
             }
@@ -436,6 +516,20 @@ export const transformDecorator = <Ctx>(node: Decorator, visitor: Visitor<Ctx>, 
             {
                 let changed1 = false;
                 
+            let updatedNode$id = node.id;
+            {
+                let changed2 = false;
+                
+                const updatedNode$id$loc = transformLoc(node.id.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$id$loc !== node.id.loc;
+                if (changed2) {
+                    updatedNode$id =  {...updatedNode$id, loc: updatedNode$id$loc};
+                    changed1 = true;
+                }
+            }
+            
+
+                
                 let updatedNode$args = node.args;
                 {
                     let changed2 = false;
@@ -447,8 +541,12 @@ export const transformDecorator = <Ctx>(node: Decorator, visitor: Visitor<Ctx>, 
                 
                 const result$arg = transformDecoratorArg(updatedNode$args$item1.arg, visitor, ctx);
                 changed3 = changed3 || result$arg !== updatedNode$args$item1.arg;
+
+                
+                const result$loc = transformLoc(updatedNode$args$item1.loc, visitor, ctx);
+                changed3 = changed3 || result$loc !== updatedNode$args$item1.loc;
                 if (changed3) {
-                    result =  {...result, arg: result$arg};
+                    result =  {...result, arg: result$arg, loc: result$loc};
                     changed2 = true;
                 }
             }
@@ -461,8 +559,12 @@ export const transformDecorator = <Ctx>(node: Decorator, visitor: Visitor<Ctx>, 
                     }
                 }
                 
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
                 if (changed1) {
-                    updatedNode =  {...updatedNode, args: updatedNode$args};
+                    updatedNode =  {...updatedNode, id: updatedNode$id, args: updatedNode$args, loc: updatedNode$loc};
                     changed0 = true;
                 }
             }
@@ -524,8 +626,12 @@ export const transformDecoratedExpression = <Ctx>(node: DecoratedExpression, vis
                 
                 const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
                 changed1 = changed1 || updatedNode$expr !== node.expr;
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
                 if (changed1) {
-                    updatedNode =  {...updatedNode, decorators: updatedNode$decorators, expr: updatedNode$expr};
+                    updatedNode =  {...updatedNode, decorators: updatedNode$decorators, expr: updatedNode$expr, loc: updatedNode$loc};
                     changed0 = true;
                 }
             }
@@ -593,8 +699,12 @@ export const transformExpression = <Ctx>(node: Expression, visitor: Visitor<Ctx>
                     }
                 }
                 
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
                 if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, target: updatedNode$0node$target, args: updatedNode$0node$args};
+                    updatedNode$0node =  {...updatedNode$0node, target: updatedNode$0node$target, args: updatedNode$0node$args, loc: updatedNode$0node$loc};
                     changed1 = true;
                 }
             }
@@ -603,11 +713,65 @@ export const transformExpression = <Ctx>(node: Expression, visitor: Visitor<Ctx>
                     break;
                 }
 
-            case 'Number': break;
+            case 'Number': {
+                    const updatedNode$0specified = node;
+                    let changed1 = false;
+                    
+            let updatedNode$0node = updatedNode$0specified;
+            {
+                let changed2 = false;
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
+                if (changed2) {
+                    updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
+                    changed1 = true;
+                }
+            }
+            
+                    updatedNode = updatedNode$0node;
+                    break;
+                }
 
-            case 'Boolean': break;
+            case 'Boolean': {
+                    const updatedNode$0specified = node;
+                    let changed1 = false;
+                    
+            let updatedNode$0node = updatedNode$0specified;
+            {
+                let changed2 = false;
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
+                if (changed2) {
+                    updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
+                    changed1 = true;
+                }
+            }
+            
+                    updatedNode = updatedNode$0node;
+                    break;
+                }
 
-            case 'Ref': break;
+            case 'Ref': {
+                    const updatedNode$0specified = node;
+                    let changed1 = false;
+                    
+            let updatedNode$0node = updatedNode$0specified;
+            {
+                let changed2 = false;
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
+                if (changed2) {
+                    updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
+                    changed1 = true;
+                }
+            }
+            
+                    updatedNode = updatedNode$0node;
+                    break;
+                }
 
             default: {
                         // let changed1 = false;
@@ -657,8 +821,12 @@ export const transformToplevel = <Ctx>(node: Toplevel, visitor: Visitor<Ctx>, ct
                 
                 const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
                 changed1 = changed1 || updatedNode$expr !== node.expr;
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
                 if (changed1) {
-                    updatedNode =  {...updatedNode, expr: updatedNode$expr};
+                    updatedNode =  {...updatedNode, expr: updatedNode$expr, loc: updatedNode$loc};
                     changed0 = true;
                 }
             }
@@ -718,8 +886,12 @@ export const transformFile = <Ctx>(node: File, visitor: Visitor<Ctx>, ctx: Ctx):
                     }
                 }
                 
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
                 if (changed1) {
-                    updatedNode =  {...updatedNode, toplevels: updatedNode$toplevels};
+                    updatedNode =  {...updatedNode, toplevels: updatedNode$toplevels, loc: updatedNode$loc};
                     changed0 = true;
                 }
             }
@@ -757,7 +929,19 @@ export const transformRef = <Ctx>(node: Ref, visitor: Visitor<Ctx>, ctx: Ctx): R
         }
         
         let changed0 = false;
-        const updatedNode = node;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
         
         node = updatedNode;
         if (visitor.RefPost) {
@@ -791,7 +975,19 @@ export const transformBoolean = <Ctx>(node: Boolean, visitor: Visitor<Ctx>, ctx:
         }
         
         let changed0 = false;
-        const updatedNode = node;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
         
         node = updatedNode;
         if (visitor.BooleanPost) {
@@ -825,7 +1021,19 @@ export const transformNumber = <Ctx>(node: Number, visitor: Visitor<Ctx>, ctx: C
         }
         
         let changed0 = false;
-        const updatedNode = node;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
         
         node = updatedNode;
         if (visitor.NumberPost) {
@@ -883,8 +1091,12 @@ export const transformApply = <Ctx>(node: Apply, visitor: Visitor<Ctx>, ctx: Ctx
                     }
                 }
                 
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
                 if (changed1) {
-                    updatedNode =  {...updatedNode, target: updatedNode$target, args: updatedNode$args};
+                    updatedNode =  {...updatedNode, target: updatedNode$target, args: updatedNode$args, loc: updatedNode$loc};
                     changed0 = true;
                 }
             }
@@ -922,7 +1134,19 @@ export const transformTRef = <Ctx>(node: TRef, visitor: Visitor<Ctx>, ctx: Ctx):
         }
         
         let changed0 = false;
-        const updatedNode = node;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
         
         node = updatedNode;
         if (visitor.TRefPost) {
@@ -976,8 +1200,16 @@ export const transformTDecorated = <Ctx>(node: TDecorated, visitor: Visitor<Ctx>
                     }
                 }
                 
+
+                
+                const updatedNode$inner = transformType(node.inner, visitor, ctx);
+                changed1 = changed1 || updatedNode$inner !== node.inner;
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
                 if (changed1) {
-                    updatedNode =  {...updatedNode, decorators: updatedNode$decorators};
+                    updatedNode =  {...updatedNode, decorators: updatedNode$decorators, inner: updatedNode$inner, loc: updatedNode$loc};
                     changed0 = true;
                 }
             }
@@ -1039,8 +1271,12 @@ export const transformTApply = <Ctx>(node: TApply, visitor: Visitor<Ctx>, ctx: C
                     }
                 }
                 
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
                 if (changed1) {
-                    updatedNode =  {...updatedNode, target: updatedNode$target, args: updatedNode$args};
+                    updatedNode =  {...updatedNode, target: updatedNode$target, args: updatedNode$args, loc: updatedNode$loc};
                     changed0 = true;
                 }
             }
@@ -1102,8 +1338,12 @@ export const transformTVars = <Ctx>(node: TVars, visitor: Visitor<Ctx>, ctx: Ctx
                 
                 const updatedNode$inner = transformType(node.inner, visitor, ctx);
                 changed1 = changed1 || updatedNode$inner !== node.inner;
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
                 if (changed1) {
-                    updatedNode =  {...updatedNode, args: updatedNode$args, inner: updatedNode$inner};
+                    updatedNode =  {...updatedNode, args: updatedNode$args, inner: updatedNode$inner, loc: updatedNode$loc};
                     changed0 = true;
                 }
             }
