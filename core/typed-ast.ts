@@ -61,12 +61,13 @@ export type DecoratedExpression = {
 };
 
 export type Boolean = { type: 'Boolean'; loc: Loc; value: boolean };
+// export type String = { type: 'String'; loc: Loc; value: boolean };
 
 export type Number = {
     type: 'Number';
     loc: Loc;
     value: number;
-    kind: 'Int' | 'Float' | null;
+    kind: 'Int' | 'Float';
 };
 
 export type Apply = {
@@ -84,6 +85,7 @@ export type TRef = { type: 'TRef'; ref: RefKind | UnresolvedRef; loc: Loc };
 export type TDecorated = {
     type: 'TDecorated';
     decorators: Array<Decorator>;
+    inner: Type;
     loc: Loc;
 };
 
@@ -106,6 +108,14 @@ export type TVars = {
 };
 
 // (arg: int, arg2: float) => string
+// NOTE that type arguments, and effect arguments,
+// will have already been applied if you get to this point.
+// TApply(TVars(TLambda)) => TLambda ... right?
+// or is it ... an expression that applies the tvars and stuff. I think?
+// Yeah, if you have
+// const x = <T>(m) => n;
+// x<T>(1)
+// (ApplyType(x, T)) and the getType of the ApplyType will be the lambda.
 export type TLambda = {
     type: 'TLambda';
     args: Array<{ label: string; typ: Type }>;

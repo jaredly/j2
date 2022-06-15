@@ -171,12 +171,12 @@ export const newContext = (): FullContext => {
     return ctx;
 };
 
-const noloc: Loc = {
+export const noloc: Loc = {
     start: { line: 0, column: 0, offset: -1 },
     end: { line: 0, column: 0, offset: -1 },
     idx: -1,
 };
-const tref = (ref: RefKind): Type => ({ type: 'TRef', ref, loc: noloc });
+export const tref = (ref: RefKind): Type => ({ type: 'TRef', ref, loc: noloc });
 const ref = (kind: RefKind): Expression => ({ type: 'Ref', kind, loc: noloc });
 const tlam = (
     args: Array<{ label: string; typ: Type }>,

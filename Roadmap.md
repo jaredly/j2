@@ -1,8 +1,17 @@
 
+...
+oh, so ...
+my transform generator, needs to know that Expression items
+can be transformed into other Expression items.
+Same with Types.
+For now I will cheat with any.
+hmmm so but also, if the Pre pass turns it into Not an Apply, we need to passs it immediately to the appropriate handler.
+
+
 Ok so now I ... should ...
 ... I guess if I have decorators I need
 ... to allow them to have types. So that I can report decorator errors.
-- [ ] eh ok let's just make the traversal-generator
+- [x] eh ok let's just make the traversal-generator
 - [ ] decorators have types now thanks
 - [ ] make a type error checker
 	- [ ] but first I think I need a generic mapper over the whole ast

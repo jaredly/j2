@@ -7,6 +7,10 @@ import { ToTast } from '../../typing/to-tast';
 import * as peggy from 'peggy';
 import { printToString } from '../../printer/pp';
 import { pegPrinter } from '../../printer/pegPrinter';
+import { analyze, verify } from '../../typing/analyze';
+import { getType } from '../../typing/getType';
+import { Expression } from '../../typed-ast';
+import chalk from 'ansi-colors';
 
 const file = join(process.cwd(), 'core/tests/parser/examples.jd');
 
@@ -22,10 +26,30 @@ export const parserTests = () => {
         const file = parseTyped(chunk + '\n');
         if (file.toplevels.length) {
             const ctx = fullContext();
-            const res = ToTast.File(file, ctx);
-            const back = ToAst.File(res, printCtx(ctx));
+            const typed = ToTast.File(file, ctx);
+            const actx = {
+                getType(expr: Expression) {
+                    return getType(expr, ctx);
+                },
+            };
+            const checked = analyze(typed, actx);
+            const errors = verify(checked, actx);
+
+            if (errors.errorDecorators.length || errors.missingTypes.length) {
+                console.error(chalk.bgRed(`Type Checking Failed`));
+                console.log(errors);
+            } else {
+                console.error(chalk.bgGreen(`Type checked!`));
+            }
+
+            console.log();
+
+            const astAgain = ToAst.File(checked, printCtx(ctx));
             console.log(
-                printToString(pegPrinter(back, past, { hideIds: false }), 100),
+                printToString(
+                    pegPrinter(astAgain, past, { hideIds: false }),
+                    100,
+                ),
             );
             console.log();
         }

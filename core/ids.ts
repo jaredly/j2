@@ -19,3 +19,5 @@ export const idsEqual = (a: Id, b: Id): boolean =>
 
 export const idToString = (id: Id): string =>
     id[opaque].hash + (id[opaque].idx != 0 ? '.' + id[opaque].idx : '');
+
+export const extract = (id: Id) => id[opaque];
