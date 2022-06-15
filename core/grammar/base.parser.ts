@@ -20,7 +20,64 @@ export type _EOF = string;
 
 export type Toplevel = Expression;
 
-export type Expression = Apply;
+export type Expression = DecoratedExpression;
+
+export type DecoratedExpression_inner = {
+  type: "DecoratedExpression";
+  loc: Loc;
+  decorators: Decorator[];
+  inner: Apply;
+};
+
+export type DecoratedExpression = DecoratedExpression_inner | Apply;
+
+export type Decorator = {
+  type: "Decorator";
+  loc: Loc;
+  id: DecoratorId;
+  args: DecoratorArgs | null;
+};
+
+export type DecoratorId = {
+  type: "DecoratorId";
+  loc: Loc;
+  text: string;
+  hash: string | null;
+};
+
+export type DecoratorArgs = {
+  type: "DecoratorArgs";
+  loc: Loc;
+  items: LabeledDecoratorArg[];
+};
+
+export type DecoratorArg = DecType | DecExpr;
+
+export type LabeledDecoratorArg = {
+  type: "LabeledDecoratorArg";
+  loc: Loc;
+  label: string | null;
+  arg: DecoratorArg;
+};
+
+export type DecType = {
+  type: "DecType";
+  loc: Loc;
+  type_: Type;
+};
+
+export type DecExpr = {
+  type: "DecExpr";
+  loc: Loc;
+  expr: Expression;
+};
+
+export type Type = {
+  type: "Type";
+  loc: Loc;
+  text: string;
+  hash: (string | string | string) | null;
+};
 
 export type Apply_inner = {
   type: "Apply";
@@ -31,7 +88,13 @@ export type Apply_inner = {
 
 export type Apply = Apply_inner | Atom;
 
-export type Atom = Number | Boolean | Identifier;
+export type Atom = Number | Boolean | Identifier | ParenedExpression;
+
+export type ParenedExpression = {
+  type: "ParenedExpression";
+  loc: Loc;
+  expr: Expression;
+};
 
 export type Suffix = Parens;
 
@@ -90,6 +153,6 @@ export type lineComment = string;
 
 export type finalLineComment = string;
 
-export type AllTaggedTypes = File | Apply_inner | Parens | CommaExpr | Boolean | Number | Identifier;
+export type AllTaggedTypes = File | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Type | Apply_inner | ParenedExpression | Parens | CommaExpr | Boolean | Number | Identifier;
 
 export const parseTyped = (input: string): File => parse(input)

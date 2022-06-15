@@ -3,38 +3,106 @@ import * as p from '../grammar/base.parser';
 import * as peggy from 'peggy';
 import * as pp from './pp';
 
+export type Ctx = {
+    hideIds: boolean;
+};
+
 export const ToPP = {
-    File: (file: p.File): pp.PP => {
+    File: (file: p.File, ctx: Ctx): pp.PP => {
         return pp.items(
-            file.toplevels.map((t) => ToPP[t.type](t as any)),
+            file.toplevels.map((t) => ToPP[t.type](t as any, ctx)),
             file.loc,
             'always',
         );
     },
-    Boolean(bool: p.Boolean): pp.PP {
+    Boolean(bool: p.Boolean, ctx: Ctx): pp.PP {
         return pp.atom(bool.v, bool.loc);
     },
-    Number(int: p.Number): pp.PP {
+    Number(int: p.Number, ctx: Ctx): pp.PP {
         return pp.atom(int.contents, int.loc);
     },
-    Apply(apply: p.Apply_inner): pp.PP {
+    Apply(apply: p.Apply_inner, ctx: Ctx): pp.PP {
         return pp.items(
             [
-                ToPP[apply.target.type](apply.target as any),
-                ...apply.suffixes.map((s) => ToPP[s.type](s)),
+                ToPP[apply.target.type](apply.target as any, ctx),
+                ...apply.suffixes.map((s) => ToPP[s.type](s, ctx)),
             ],
             apply.loc,
         );
     },
-    Identifier(identifier: p.Identifier): pp.PP {
+    Type(type: p.Type, ctx: Ctx): pp.PP {
+        if (ctx.hideIds) {
+            return pp.atom(type.text, type.loc);
+        }
+        return pp.atom(type.text + (type.hash ?? ''), type.loc);
+    },
+    DecoratedExpression(
+        { inner, decorators, loc }: p.DecoratedExpression_inner,
+        ctx: Ctx,
+    ): pp.PP {
+        const inn = ToPP[inner.type](inner as any, ctx);
+        return pp.items(
+            [...decorators.map((dec) => ToPP[dec.type](dec as any, ctx)), inn],
+            loc,
+        );
+    },
+    Decorator({ args, id, loc }: p.Decorator, ctx: Ctx): pp.PP {
+        return pp.items(
+            [
+                pp.atom('@', loc),
+                ctx.hideIds
+                    ? pp.atom(id.text, id.loc)
+                    : pp.atom(id.text + (id.hash ?? ''), loc),
+                pp.args(
+                    args?.items.map((a) => {
+                        return pp.items(
+                            (a.label
+                                ? [
+                                      pp.atom(a.label, a.loc),
+                                      pp.atom(': ', a.loc),
+                                  ]
+                                : []
+                            ).concat([ToPP[a.arg.type](a.arg as any, ctx)]),
+                            a.loc,
+                        );
+                    }) ?? [],
+                    loc,
+                ),
+                pp.atom(' ', loc),
+            ],
+            loc,
+        );
+    },
+    ParenedExpression({ loc, expr }: p.ParenedExpression, ctx: Ctx): pp.PP {
+        return pp.items(
+            [
+                pp.atom('(', loc),
+                ToPP[expr.type](expr as any, ctx),
+                pp.atom(')', loc),
+            ],
+            loc,
+        );
+    },
+    DecExpr({ expr, loc }: p.DecExpr, ctx: Ctx): pp.PP {
+        return pp.items([ToPP[expr.type](expr as any, ctx)], loc);
+    },
+    DecType({ type, type_, loc }: p.DecType, ctx: Ctx): pp.PP {
+        return pp.items(
+            [pp.atom(':', loc), ToPP[type_.type](type_ as any, ctx)],
+            loc,
+        );
+    },
+    Identifier(identifier: p.Identifier, ctx: Ctx): pp.PP {
         return pp.atom(
-            identifier.text + (identifier.hash ?? ''),
+            ctx.hideIds
+                ? identifier.text
+                : identifier.text + (identifier.hash ?? ''),
             identifier.loc,
         );
     },
-    Parens(parens: p.Parens): pp.PP {
+    Parens(parens: p.Parens, ctx: Ctx): pp.PP {
         return pp.args(
-            (parens.args?.items ?? []).map((a) => ToPP[a.type](a as any)),
+            (parens.args?.items ?? []).map((a) => ToPP[a.type](a as any, ctx)),
             parens.loc,
         );
     },
@@ -92,6 +160,10 @@ export const injectComments = (pretty: pp.PP, comments: [p.Loc, string][]) => {
     });
 };
 
-export const pegPrinter = (ast: p.File, past: peggy.ast.Grammar): pp.PP => {
-    return injectComments(ToPP.File(ast), ast.comments.slice());
+export const pegPrinter = (
+    ast: p.File,
+    past: peggy.ast.Grammar,
+    ctx: Ctx,
+): pp.PP => {
+    return injectComments(ToPP.File(ast, ctx), ast.comments.slice());
 };

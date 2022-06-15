@@ -1,12 +1,6 @@
 // Generated?
 
 import { Id, idToString } from './ids';
-import { Expression, Type } from './typed-ast';
-
-// export type Type = '';
-// export type FromAst = 'a';
-// export type Loc = { line: number; column: number };
-// export type Location = { start: Loc; end: Loc };
 
 export type RefKind =
     | {
@@ -23,4 +17,5 @@ export const refHash = (ref: RefKind) =>
 
 export type Ctx = {
     resolve: (name: string, hash?: string | null) => Array<RefKind>;
+    resolveType: (name: string, hash?: string | null) => RefKind | null;
 };

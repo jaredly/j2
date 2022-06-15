@@ -96,6 +96,33 @@ const parseHash = (hash: string): Hash => {
     };
 };
 
+const resolveType = (
+    ctx: FullContext,
+    name: string,
+    rawHash?: string | null,
+): RefKind | null => {
+    if (rawHash) {
+        const hash = parseHash(rawHash);
+        if (hash.type === 'sym') {
+            throw new Error('not yet');
+            // const ref = ctx.values.names[name]
+            // if (ref) {
+            // 	return ref
+            // }
+        } else {
+            const ref = ctx.types.hashed[hash.hash];
+            if (ref && hash.idx < ref.length) {
+                return { type: 'Global', id: toId(hash.hash, hash.idx) };
+            }
+        }
+    }
+    // TODO: local resolution
+    if (ctx.types.names[name]) {
+        return ctx.types.names[name];
+    }
+    return null;
+};
+
 const resolve = (
     ctx: FullContext,
     name: string,
@@ -135,6 +162,7 @@ export const newContext = (): FullContext => {
             names: {},
         },
         resolve: (name, rawHash) => resolve(ctx, name, rawHash),
+        resolveType: (name, rawHash) => resolveType(ctx, name, rawHash),
     };
     return ctx;
 };
@@ -146,7 +174,10 @@ const noloc: Loc = {
 };
 const tref = (ref: RefKind): Type => ({ type: 'TRef', ref, loc: noloc });
 const ref = (kind: RefKind): Expression => ({ type: 'Ref', kind, loc: noloc });
-const tlam = (args: Array<Type>, result: Type): Type => ({
+const tlam = (
+    args: Array<{ label: string; typ: Type }>,
+    result: Type,
+): Type => ({
     type: 'TLambda',
     args,
     result,
@@ -190,7 +221,11 @@ export const setupDefaults = (ctx: FullContext) => {
     builtinTypes.forEach((name) => {
         named[name] = addBuiltinType(ctx, name, 0);
     });
-    addBuiltin(ctx, 'toString', tlam([tref(named.int)], tref(named.string)));
+    addBuiltin(
+        ctx,
+        'toString',
+        tlam([{ label: 'v', typ: tref(named.int) }], tref(named.string)),
+    );
     // builtinValues.split('\n').forEach((line) => {
     // 	const ast = parseTyped(line);
     // 	const tst = ToTast.File(ast)

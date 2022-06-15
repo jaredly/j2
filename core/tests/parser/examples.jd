@@ -12,10 +12,15 @@ toWhat(
 	// last
 	true
 ) // mid
-// between
+// here
 23
 
-toString(true) // type error in the argument
+// type error in the argument
+toString(@error(expected: :float, received: :bool) true)
+
+(@hello() 10)(true)
+
+@nested(@decorator() 10) 20
 
 // id<int>(1)
 
