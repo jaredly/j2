@@ -5,6 +5,7 @@
     "main": "index.js",
     "scripts": {
         "grammar": "esbuild --bundle utils/build-grammar.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
+        "transform": "esbuild --bundle utils/generate-transform.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "test": "esbuild --bundle core/tests/run.ts --platform=node --sourcemap=inline | node --enable-source-maps -"
     },
     "keywords": [],
@@ -19,6 +20,7 @@
         "peggy": "^2.0.1"
     },
     "devDependencies": {
+        "@babel/preset-typescript": "^7.17.12",
         "@types/babel__core": "^7.1.19",
         "@types/babel__generator": "^7.6.4",
         "@types/jest": "^28.1.1",

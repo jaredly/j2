@@ -1,1 +1,2 @@
 core/grammar/base.parser-untyped.js binary
+core/transform-tast.ts binary

@@ -1,6 +1,7 @@
 import { RefKind } from '.';
 import { Loc } from './grammar/base.parser';
 export { RefKind };
+export { Loc };
 
 export type File = {
     type: 'File';

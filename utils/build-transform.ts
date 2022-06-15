@@ -1,7 +1,6 @@
-import * as t from '@babel/types';
-import babel, { traverse } from '@babel/core';
-import fs from 'fs';
+import { traverse } from '@babel/core';
 import generate from '@babel/generator';
+import * as t from '@babel/types';
 
 export type Ctx = {
     transformerStatus: { [key: string]: boolean | null };
@@ -499,7 +498,11 @@ export const getAllUnionTypeMembers = (
     throw new Error(`Unexpected type ${t.type}`);
 };
 
-export function buildTransformFile(body: t.Statement[], ctx: Ctx) {
+export function buildTransformFile(
+    body: t.Statement[],
+    relativeSource: string,
+    ctx: Ctx,
+) {
     body.forEach((stmt) => {
         if (
             stmt.type === 'ExportNamedDeclaration' &&
@@ -520,7 +523,7 @@ export function buildTransformFile(body: t.Statement[], ctx: Ctx) {
 
     const prelude = `import {${Object.keys(ctx.transformerStatus)
         .filter((k) => k !== 'Array')
-        .join(', ')}} from './types';
+        .join(', ')}} from '${relativeSource}';
 
 export type Visitor<Ctx> = {
     ${ctx.visitorTypes
@@ -528,7 +531,7 @@ export type Visitor<Ctx> = {
             (
                 name,
             ) => `${name}?: (node: ${name}, ctx: Ctx) => null | false | ${name} | [${name} | null, Ctx]
-                ${name}Post?: (node: ${name}, ctx: Ctx) => null | ${name}`,
+    ${name}Post?: (node: ${name}, ctx: Ctx) => null | ${name}`,
         )
         .join(',\n    ')}
 }
