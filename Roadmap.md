@@ -1,4 +1,17 @@
 
+Ok so now I ... should ...
+... I guess if I have decorators I need
+... to allow them to have types. So that I can report decorator errors.
+- [ ] eh ok let's just make the traversal-generator
+- [ ] decorators have types now thanks
+- [ ] make a type error checker
+	- [ ] but first I think I need a generic mapper over the whole ast
+		- [ ] make it automatically yes please
+
+Things I never made it to last time:
+- mutually recursive values
+- mutually recursive types
+
 ## Kinds of errors
 
 - decorator can't be applied to that thing
@@ -12,6 +25,26 @@
 - TApply
 	- wrong number of args (wrap the TApply)
 	- an arg ... of the ... wrong ... hmmm yeah I guess "kind" is what I want here. Wrong number of args expected by this type.
+	- OHWAIT do I need a ... separate something for kinds?
+		idk if I actually want to do HKT thoo
+	- ok but yeah once I have type bounds (must conform to this struct), you can also have a type arg of the wrong type.
+
+Wow ok that's not a lot of errors just yet.
+I'm sure it'll get a lot more complicated lol
+
+### What can be decorated (atm)
+
+- expressions
+- types
+- 
+
+
+### Things that I will add that will have different thingsy
+
+- declare record (enries should be decoratable, but labels don't need to be)
+- declare enum (entries should be decoratable)
+- declare effects ooh baby
+
 
 
 ```
@@ -52,8 +85,8 @@ let n = Whatsit<Maybe>{party: None};
 		although, hmmm idk. seems like an unlikely amount of cleverness.
 		yeah, dont do it
 - [-] remove some annoying intermediate ast nodes. ugh maybe it's fine
-- [ ] get everything ts happy
-	- [ ] need a `parens` for if we run into a decorator within an apply target
+- [x] get everything ts happy
+	- [x] need a `parens` for if we run into a decorator within an apply target
 - [ ] actually do some type checking now.
 - [ ] (maybe not) eventually, I'll want a `idOf()` function that will give me a user-representable ID, that I can use for like registering a plugin??? maybe??? Although actually, the editor UI can just take care of it I think ... and maintain that list internally. No need ... for some syntax for it? I think? Although I do like the idea of being able to export everything as a file .. idk.
 

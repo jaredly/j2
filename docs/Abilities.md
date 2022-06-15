@@ -124,6 +124,10 @@ needsSerializable<T>(x: T, _: Serialize<T>): T {
 	x->serialize(y)
 	// And critically, this would eat these up and prevent them from being used
 	// to start binops. which is an argument against |, because || is a thing.
+	// ok -> it is
 }
+// yeah ok, I think that's all I need to respond to the modular implicits question?
+// I mean sure it's probably going to make inference a little more interesting
+// but that's fine.
 
 ```

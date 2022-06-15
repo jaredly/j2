@@ -174,7 +174,10 @@ const noloc: Loc = {
 };
 const tref = (ref: RefKind): Type => ({ type: 'TRef', ref, loc: noloc });
 const ref = (kind: RefKind): Expression => ({ type: 'Ref', kind, loc: noloc });
-const tlam = (args: Array<Type>, result: Type): Type => ({
+const tlam = (
+    args: Array<{ label: string; typ: Type }>,
+    result: Type,
+): Type => ({
     type: 'TLambda',
     args,
     result,
@@ -218,7 +221,11 @@ export const setupDefaults = (ctx: FullContext) => {
     builtinTypes.forEach((name) => {
         named[name] = addBuiltinType(ctx, name, 0);
     });
-    addBuiltin(ctx, 'toString', tlam([tref(named.int)], tref(named.string)));
+    addBuiltin(
+        ctx,
+        'toString',
+        tlam([{ label: 'v', typ: tref(named.int) }], tref(named.string)),
+    );
     // builtinValues.split('\n').forEach((line) => {
     // 	const ast = parseTyped(line);
     // 	const tst = ToTast.File(ast)

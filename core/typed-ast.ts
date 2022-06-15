@@ -112,6 +112,8 @@ export type TLambda = {
     loc: Loc;
 };
 
+// Ok so also, you can just drop an inline record declaration, right?
+
 export type Type = TRef | TDecorated | TApply | TVars | TLambda;
 
 // (T -> T) -> T // hm that would be Kinds yep.
