@@ -32,7 +32,7 @@ toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)
 
 toString(true)
 -->
-toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](@error#[:unresolved:](msg: 1) true)
+toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](@error#[:unresolved:](msg: "Wrong type") true)
 -->
 🚨 Error decorator at 0:0
 
@@ -40,7 +40,10 @@ toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](@error#[:unresolved:](msg: 
 
 toString(1, 2)
 -->
-@error#[:unresolved:](msg: 1) toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1, 2)
+@error#[:unresolved:](msg: "Wrong number of arguments") toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
+    1,
+    2,
+)
 -->
 🚨 Error decorator at 0:0
 
@@ -48,7 +51,7 @@ toString(1, 2)
 
 (10)(20)
 -->
-@error#[:unresolved:](msg: 1) 10(20)
+@error#[:unresolved:](msg: "Not a function") 10(20)
 -->
 🚨 Error decorator at 0:0
 🚨 Missing type at 1:1
@@ -79,7 +82,7 @@ undefinedFunction#[:unresolved:]()
 
 toString(1)()
 -->
-@error#[:unresolved:](msg: 1) toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)()
+@error#[:unresolved:](msg: "Not a function") toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)()
 -->
 🚨 Error decorator at 0:0
 🚨 Missing type at 1:1

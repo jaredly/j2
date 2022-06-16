@@ -46,10 +46,10 @@ export const decorate = (
                         arg: {
                             type: 'Expr',
                             expr: {
-                                type: 'Number',
-                                kind: 'Int',
+                                type: 'TemplateString',
                                 loc: noloc,
-                                value: 1,
+                                first: msg,
+                                rest: [],
                             },
                             loc: noloc,
                         },
