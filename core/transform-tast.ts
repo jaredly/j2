@@ -1,10 +1,12 @@
-import {Loc, File, Toplevel, Expression, UnresolvedRef, DecoratedExpression, Decorator, DecoratorArg, Type, Sym, TLambda, Ref, Boolean, Number, Apply, TRef, TDecorated, TApply, TVars} from './typed-ast';
+import {Loc, File, Toplevel, Expression, UnresolvedRef, DecoratedExpression, Decorator, DecoratorArg, Type, Sym, TLambda, TemplateString, Ref, Boolean, Number, Apply, TRef, TDecorated, TApply, TVars} from './typed-ast';
 
 export type Visitor<Ctx> = {
     Loc?: (node: Loc, ctx: Ctx) => null | false | Loc | [Loc | null, Ctx]
     LocPost?: (node: Loc, ctx: Ctx) => null | Loc,
     File?: (node: File, ctx: Ctx) => null | false | File | [File | null, Ctx]
     FilePost?: (node: File, ctx: Ctx) => null | File,
+    TemplateString?: (node: TemplateString, ctx: Ctx) => null | false | TemplateString | [TemplateString | null, Ctx]
+    TemplateStringPost?: (node: TemplateString, ctx: Ctx) => null | TemplateString,
     Decorator?: (node: Decorator, ctx: Ctx) => null | false | Decorator | [Decorator | null, Ctx]
     DecoratorPost?: (node: Decorator, ctx: Ctx) => null | Decorator,
     DecoratorArg?: (node: DecoratorArg, ctx: Ctx) => null | false | DecoratorArg | [DecoratorArg | null, Ctx]
@@ -73,6 +75,8 @@ export const transformLoc = <Ctx>(node: Loc, visitor: Visitor<Ctx>, ctx: Ctx): L
         return node;
         
     }
+
+// not a type Array
 
 export const transformUnresolvedRef = <Ctx>(node: UnresolvedRef, visitor: Visitor<Ctx>, ctx: Ctx): UnresolvedRef => {
         if (!node) {
@@ -753,6 +757,8 @@ export const transformExpression = <Ctx>(node: Expression, visitor: Visitor<Ctx>
                     break;
                 }
 
+            case 'TemplateString': break;
+
             case 'Ref': {
                     const updatedNode$0specified = node;
                     let changed1 = false;
@@ -843,8 +849,6 @@ export const transformToplevel = <Ctx>(node: Toplevel, visitor: Visitor<Ctx>, ct
         
     }
 
-// not a type Array
-
 export const transformFile = <Ctx>(node: File, visitor: Visitor<Ctx>, ctx: Ctx): File => {
         if (!node) {
             throw new Error('No File provided');
@@ -900,6 +904,40 @@ export const transformFile = <Ctx>(node: File, visitor: Visitor<Ctx>, ctx: Ctx):
         node = updatedNode;
         if (visitor.FilePost) {
             const transformed = visitor.FilePost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTemplateString = <Ctx>(node: TemplateString, visitor: Visitor<Ctx>, ctx: Ctx): TemplateString => {
+        if (!node) {
+            throw new Error('No TemplateString provided');
+        }
+        
+        const transformed = visitor.TemplateString ? visitor.TemplateString(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        const updatedNode = node;
+        
+        node = updatedNode;
+        if (visitor.TemplateStringPost) {
+            const transformed = visitor.TemplateStringPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }

@@ -125,6 +125,27 @@ export const ToAst = {
             ref.type === 'Unresolved' ? ref : ctx.printRef(ref, loc, 'type');
         return { type: 'Type', text, hash, loc };
     },
+
+    TemplateString(
+        { type, first, rest, loc }: t.TemplateString,
+        ctx: Ctx,
+    ): p.TemplateString {
+        const contents: p.StringContents[] = [first];
+        contents.push(
+            ...rest
+                .map(([one, two]): p.StringContents[] => [
+                    {
+                        type: 'TemplatePart',
+                        loc: one.loc,
+                        inner: ToAst[one.type](one as any, ctx),
+                    },
+                    two,
+                ])
+                .flat(),
+        );
+        return { type: 'TemplateString', loc, contents };
+    },
+
     Apply({ type, target, args, loc }: t.Apply, ctx: Ctx): p.Apply {
         let inner = ToAst[target.type](target as any, ctx);
         const parens: p.Parens = {

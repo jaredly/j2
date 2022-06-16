@@ -35,7 +35,7 @@ Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash
 
 Apply = target:Atom suffixes_drop:Suffix*
 
-Atom = Number / Boolean / Identifier / ParenedExpression
+Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString
 
 ParenedExpression = "(" _ expr:Expression _ ")"
 
@@ -47,7 +47,6 @@ CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
 Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
 Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?)
-
 
 Identifier = text:$IdText hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
 
@@ -68,3 +67,18 @@ comment = multiLineComment / lineComment
 multiLineComment = $("/*" (!"*/" .)* "*/")
 lineComment = $("//" (!"\n" .)* &"\n")
 finalLineComment = $("//" (!"\n" .)*)
+
+
+// ----------
+
+// TemplateString = "\"" first:$stringChars rest:TemplatePair "\""
+// TemplatePair = "${" _ expr:Expression _ "}" suffix:$stringChars
+// stringChars = (!"${" stringChar)*
+// stringChar = $( escapedChar / [^"\\])
+// escapedChar = "\\" .
+
+TemplateString = "\"" contents:StringContents* "\""
+StringContents = TemplatePart / stringChar
+TemplatePart = "${" _ inner:Expression _ "}"
+stringChar = $( escapedChar / [^"\\])
+escapedChar = "\\" .

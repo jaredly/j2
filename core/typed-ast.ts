@@ -16,6 +16,13 @@ export type File = {
 
 // export type ErrorExpr = UnknownIdentifier;
 
+export type TemplateString = {
+    type: 'TemplateString';
+    first: string;
+    rest: Array<[Expression, string]>;
+    loc: Loc;
+};
+
 export type Decorator = {
     type: 'Decorator';
     id: { ref: RefKind | UnresolvedRef; loc: Loc };
@@ -52,7 +59,13 @@ export type Toplevel = {
     loc: Loc;
 };
 
-export type Expression = Apply | Number | Boolean | Ref | DecoratedExpression;
+export type Expression =
+    | Apply
+    | Number
+    | Boolean
+    | TemplateString
+    | Ref
+    | DecoratedExpression;
 
 // Might be an int or float
 // export type Number = {type: 'Number', loc: Location, value: number};

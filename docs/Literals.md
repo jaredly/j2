@@ -1,4 +1,18 @@
 
+
+
+
+
+So template strings;
+Should I allow them in patterns?
+I guess I don't really see why not ...
+like, I plan to allow `=x` for equalling some expression. right?
+(hm I guess I'll need to ensure that `Eq` or something is available .. hmmmm .... how will I do eq. is it just "can I find an == for this type?" might as well be I guess.)
+
+
+
+-------
+
 Hmmm I'm thinking about suffixing numbers to indicate what type they are.
 Should I do that?
 hmm ... that would make it unambiguous, sure.
