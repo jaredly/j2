@@ -41,7 +41,12 @@ export const ToTast = {
         ctx: Ctx,
     ): t.Expression {
         const decorators = expr.decorators.map((d) => ToTast.Decorator(d, ctx));
-        const inner = ToTast[expr.inner.type](expr.inner as any, ctx);
+        let inner = ToTast[expr.inner.type](expr.inner as any, ctx);
+        // Collapse nested decorated expressions
+        if (inner.type === 'DecoratedExpression') {
+            decorators.push(...inner.decorators);
+            inner = inner.expr;
+        }
         return {
             type: 'DecoratedExpression',
             decorators,
