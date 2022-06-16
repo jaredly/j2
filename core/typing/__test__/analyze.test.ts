@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import { fullContext, noloc } from '../../ctx';
 import { parseTyped } from '../../grammar/base.parser';
+import { fixComments } from '../../grammar/fixComments';
 import { pegPrinter } from '../../printer/pegPrinter';
 import { printToString } from '../../printer/pp';
 import { transformFile } from '../../transform-tast';
@@ -80,7 +81,7 @@ describe('analyze', () => {
         const hasOnly = fixtures.some((s) => s[0].includes('[only]'));
 
         const ctx = fullContext();
-        const tast = ToTast.File(parseTyped(input), ctx);
+        const tast = ToTast.File(fixComments(parseTyped(input)), ctx);
 
         const checked = analyze(tast, analyzeContext(ctx));
 
@@ -126,7 +127,9 @@ describe('analyze', () => {
         ) {
             try {
                 expect(clearLocs(checked)).toEqual(
-                    clearLocs(ToTast.File(parseTyped(output), ctx)),
+                    clearLocs(
+                        ToTast.File(fixComments(parseTyped(output)), ctx),
+                    ),
                 );
             } catch (err) {
                 console.error(

@@ -19,7 +19,7 @@ export type File = {
 export type TemplateString = {
     type: 'TemplateString';
     first: string;
-    rest: Array<[Expression, string]>;
+    rest: Array<{ expr: Expression; suffix: string; loc: Loc }>;
     loc: Loc;
 };
 

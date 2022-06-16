@@ -76,8 +76,6 @@ export const transformLoc = <Ctx>(node: Loc, visitor: Visitor<Ctx>, ctx: Ctx): L
         
     }
 
-// not a type Array
-
 export const transformUnresolvedRef = <Ctx>(node: UnresolvedRef, visitor: Visitor<Ctx>, ctx: Ctx): UnresolvedRef => {
         if (!node) {
             throw new Error('No UnresolvedRef provided');
@@ -757,7 +755,56 @@ export const transformExpression = <Ctx>(node: Expression, visitor: Visitor<Ctx>
                     break;
                 }
 
-            case 'TemplateString': break;
+            case 'TemplateString': {
+                    const updatedNode$0specified = node;
+                    let changed1 = false;
+                    
+            let updatedNode$0node = updatedNode$0specified;
+            {
+                let changed2 = false;
+                
+                let updatedNode$0node$rest = updatedNode$0specified.rest;
+                {
+                    let changed3 = false;
+                    const arr2 = updatedNode$0specified.rest.map((updatedNode$0node$rest$item2) => {
+                        
+            let result = updatedNode$0node$rest$item2;
+            {
+                let changed4 = false;
+                
+                const result$expr = transformExpression(updatedNode$0node$rest$item2.expr, visitor, ctx);
+                changed4 = changed4 || result$expr !== updatedNode$0node$rest$item2.expr;
+
+                
+                const result$loc = transformLoc(updatedNode$0node$rest$item2.loc, visitor, ctx);
+                changed4 = changed4 || result$loc !== updatedNode$0node$rest$item2.loc;
+                if (changed4) {
+                    result =  {...result, expr: result$expr, loc: result$loc};
+                    changed3 = true;
+                }
+            }
+            
+                        return result
+                    })
+                    if (changed3) {
+                        updatedNode$0node$rest = arr2;
+                        changed2 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
+                if (changed2) {
+                    updatedNode$0node =  {...updatedNode$0node, rest: updatedNode$0node$rest, loc: updatedNode$0node$loc};
+                    changed1 = true;
+                }
+            }
+            
+                    updatedNode = updatedNode$0node;
+                    break;
+                }
 
             case 'Ref': {
                     const updatedNode$0specified = node;
@@ -849,6 +896,8 @@ export const transformToplevel = <Ctx>(node: Toplevel, visitor: Visitor<Ctx>, ct
         
     }
 
+// not a type Array
+
 export const transformFile = <Ctx>(node: File, visitor: Visitor<Ctx>, ctx: Ctx): File => {
         if (!node) {
             throw new Error('No File provided');
@@ -933,7 +982,50 @@ export const transformTemplateString = <Ctx>(node: TemplateString, visitor: Visi
         }
         
         let changed0 = false;
-        const updatedNode = node;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                let updatedNode$rest = node.rest;
+                {
+                    let changed2 = false;
+                    const arr1 = node.rest.map((updatedNode$rest$item1) => {
+                        
+            let result = updatedNode$rest$item1;
+            {
+                let changed3 = false;
+                
+                const result$expr = transformExpression(updatedNode$rest$item1.expr, visitor, ctx);
+                changed3 = changed3 || result$expr !== updatedNode$rest$item1.expr;
+
+                
+                const result$loc = transformLoc(updatedNode$rest$item1.loc, visitor, ctx);
+                changed3 = changed3 || result$loc !== updatedNode$rest$item1.loc;
+                if (changed3) {
+                    result =  {...result, expr: result$expr, loc: result$loc};
+                    changed2 = true;
+                }
+            }
+            
+                        return result
+                    })
+                    if (changed2) {
+                        updatedNode$rest = arr1;
+                        changed1 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, rest: updatedNode$rest, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
         
         node = updatedNode;
         if (visitor.TemplateStringPost) {

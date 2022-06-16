@@ -134,11 +134,11 @@ export const ToAst = {
             type: 'TemplateString',
             loc,
             first,
-            rest: rest.map(([expr, suffix]) => ({
+            rest: rest.map(({ expr, suffix, loc }) => ({
                 type: 'TemplatePair',
-                loc: expr.loc, // TODO this loc is wrong
                 expr: ToAst[expr.type](expr as any, ctx),
                 suffix,
+                loc,
             })),
         };
     },

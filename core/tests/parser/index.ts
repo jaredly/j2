@@ -4,6 +4,7 @@ import { join } from 'path';
 import * as peggy from 'peggy';
 import { fullContext } from '../../ctx';
 import { parseTyped } from '../../grammar/base.parser';
+import { fixComments } from '../../grammar/fixComments';
 import { pegPrinter } from '../../printer/pegPrinter';
 import { printToString } from '../../printer/pp';
 import { analyze, analyzeContext, verify } from '../../typing/analyze';
@@ -21,7 +22,7 @@ export const parserTests = () => {
 
     const input = readFileSync(file, 'utf8');
     input.split('\n\n').forEach((chunk) => {
-        const file = parseTyped(chunk + '\n');
+        const file = fixComments(parseTyped(chunk + '\n'));
         if (file.toplevels.length) {
             const ctx = fullContext();
             const typed = ToTast.File(file, ctx);

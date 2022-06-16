@@ -57,10 +57,14 @@ toString(1, 2)
 ==[decorate something]==
 
 @whatsit() 10
+@onesit() @twosit() 20
 -->
 @whatsit#[:unresolved:]() 10
+@onesit#[:unresolved:]() @twosit#[:unresolved:]() 20
 -->
 🚨 Error decorator at 1:1
+🚨 Error decorator at 2:1
+🚨 Error decorator at 2:11
 
 ==[calling undefined function]==
 
@@ -95,7 +99,6 @@ toString(
 toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
     // inside
     1,
-    // after
     // after
 )
 //last

@@ -21,10 +21,11 @@ export const ToTast = {
             type: 'TemplateString',
             loc: ts.loc,
             first: ts.first,
-            rest: ts.rest.map(({ expr, suffix }) => [
-                ToTast[expr.type](expr as any, ctx),
+            rest: ts.rest.map(({ expr, suffix, loc }) => ({
+                expr: ToTast[expr.type](expr as any, ctx),
                 suffix,
-            ]),
+                loc,
+            })),
         };
     },
 
