@@ -5,6 +5,8 @@ import { Expression, Type } from '../typed-ast';
 // UMM So btw this will resolve all TRefs.
 export const getType = (expr: Expression, ctx: FullContext): Type | null => {
     switch (expr.type) {
+        case 'TemplateString':
+            return tref(ctx.types.names['string']);
         case 'Ref':
             switch (expr.kind.type) {
                 case 'Unresolved':

@@ -4,11 +4,23 @@
 false
 34.5
 12.0
+"hello"
 -->
 1
 false
 34.5
 12.0
+"hello"
+
+==[template strings?]==
+
+"Hello${toString(1)}"
+"One${1}${2} and ${3}"
+"${12}"
+-->
+"Hello${toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)}"
+"One${1}${2} and ${3}"
+"${12}"
 
 ==[well-typed builtin call]==
 
@@ -83,6 +95,7 @@ toString(
 toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
     // inside
     1,
+    // after
     // after
 )
 //last

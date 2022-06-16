@@ -130,20 +130,17 @@ export const ToAst = {
         { type, first, rest, loc }: t.TemplateString,
         ctx: Ctx,
     ): p.TemplateString {
-        const contents: p.StringContents[] = [first];
-        contents.push(
-            ...rest
-                .map(([one, two]): p.StringContents[] => [
-                    {
-                        type: 'TemplatePart',
-                        loc: one.loc,
-                        inner: ToAst[one.type](one as any, ctx),
-                    },
-                    two,
-                ])
-                .flat(),
-        );
-        return { type: 'TemplateString', loc, contents };
+        return {
+            type: 'TemplateString',
+            loc,
+            first,
+            rest: rest.map(([expr, suffix]) => ({
+                type: 'TemplatePair',
+                loc: expr.loc, // TODO this loc is wrong
+                expr: ToAst[expr.type](expr as any, ctx),
+                suffix,
+            })),
+        };
     },
 
     Apply({ type, target, args, loc }: t.Apply, ctx: Ctx): p.Apply {

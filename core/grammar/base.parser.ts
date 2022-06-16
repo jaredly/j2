@@ -158,21 +158,23 @@ export type finalLineComment = string;
 export type TemplateString = {
   type: "TemplateString";
   loc: Loc;
-  contents: StringContents[];
+  first: string;
+  rest: TemplatePair[];
 };
 
-export type StringContents = TemplatePart | stringChar;
-
-export type TemplatePart = {
-  type: "TemplatePart";
+export type TemplatePair = {
+  type: "TemplatePair";
   loc: Loc;
-  inner: Expression;
+  expr: Expression;
+  suffix: string;
 };
+
+export type stringChars = string;
 
 export type stringChar = string;
 
 // No data on escapedChar
 
-export type AllTaggedTypes = File | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Type | Apply_inner | ParenedExpression | Parens | CommaExpr | Boolean | Number | Identifier | TemplateString | TemplatePart;
+export type AllTaggedTypes = File | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Type | Apply_inner | ParenedExpression | Parens | CommaExpr | Boolean | Number | Identifier | TemplateString | TemplatePair;
 
 export const parseTyped = (input: string): File => parse(input)

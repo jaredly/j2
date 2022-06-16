@@ -17,30 +17,15 @@ export const ToTast = {
     },
 
     TemplateString(ts: p.TemplateString, ctx: Ctx): t.TemplateString {
-        let first = '';
-        let rest: t.TemplateString['rest'] = [];
-        let waiting: t.Expression | null = null;
-        for (let i = 1; i < ts.contents.length; i++) {
-            const item = ts.contents[i];
-            if (typeof item === 'string') {
-                if (waiting != null) {
-                    rest.push([waiting, item]);
-                    waiting = null;
-                } else {
-                    if (rest.length) {
-                        rest[rest.length - 1][1] += item;
-                    } else {
-                        first += item;
-                    }
-                }
-            } else {
-                if (waiting != null) {
-                    rest.push([waiting, '']);
-                }
-                waiting = ToTast[item.inner.type](item.inner as any, ctx);
-            }
-        }
-        return { type: 'TemplateString', loc: ts.loc, first, rest };
+        return {
+            type: 'TemplateString',
+            loc: ts.loc,
+            first: ts.first,
+            rest: ts.rest.map(({ expr, suffix }) => [
+                ToTast[expr.type](expr as any, ctx),
+                suffix,
+            ]),
+        };
     },
 
     Toplevel(top: p.Toplevel, ctx: Ctx): t.Toplevel {

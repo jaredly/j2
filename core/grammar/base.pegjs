@@ -71,14 +71,14 @@ finalLineComment = $("//" (!"\n" .)*)
 
 // ----------
 
-// TemplateString = "\"" first:$stringChars rest:TemplatePair "\""
-// TemplatePair = "${" _ expr:Expression _ "}" suffix:$stringChars
-// stringChars = (!"${" stringChar)*
-// stringChar = $( escapedChar / [^"\\])
-// escapedChar = "\\" .
-
-TemplateString = "\"" contents:StringContents* "\""
-StringContents = TemplatePart / stringChar
-TemplatePart = "${" _ inner:Expression _ "}"
+TemplateString = "\"" first:$stringChars rest:TemplatePair* "\""
+TemplatePair = "${" _ expr:Expression _ "}" suffix:$stringChars
+stringChars = $(!"${" stringChar)*
 stringChar = $( escapedChar / [^"\\])
 escapedChar = "\\" .
+
+// TemplateString = "\"" contents:StringContents* "\""
+// StringContents = TemplatePart / stringChar
+// TemplatePart = "${" _ inner:Expression _ "}"
+// stringChar = $( escapedChar / [^"\\])
+// escapedChar = "\\" .
