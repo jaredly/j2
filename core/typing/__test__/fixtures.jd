@@ -1,15 +1,51 @@
+==[basic constants]==
+
 1
+false
+34.5
 -->
 1
+false
+34.5
 
-====
+==[well-typed builtin call]==
 
 toString(1)
 -->
 toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)
 
-====
+==[arg type error]==
 
 toString(true)
 -->
 toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](@error#[:unresolved:](msg: 1) true)
+
+==[wrong number of types]==
+
+toString(1, 2)
+-->
+@error#[:unresolved:](msg: 1) toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1, 2)
+
+==[not a fn]==
+
+(10)(20)
+-->
+@error#[:unresolved:](msg: 1) 10(20)
+
+====
+
+@whatsit() 10
+-->
+@whatsit#[:unresolved:]() 10
+
+====
+
+undefinedFunction()
+-->
+undefinedFunction#[:unresolved:]()
+
+====
+
+toString(1)()
+-->
+@error#[:unresolved:](msg: 1) toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)()

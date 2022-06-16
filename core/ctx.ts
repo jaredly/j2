@@ -85,7 +85,7 @@ export type Hash =
           idx: number;
       };
 const parseHash = (hash: string): Hash => {
-    // hash = hash.slice(2, -1) // #[]
+    // hash = hash.slice(2, -1); // #[]
     if (!hash.startsWith('h')) {
         return {
             type: 'sym',
@@ -135,7 +135,7 @@ const resolve = (
     if (rawHash) {
         const hash = parseHash(rawHash);
         if (hash.type === 'sym') {
-            throw new Error('not yet');
+            throw new Error('not yet: ' + rawHash);
             // const ref = ctx.values.names[name]
             // if (ref) {
             // 	return ref

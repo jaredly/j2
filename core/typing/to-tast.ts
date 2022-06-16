@@ -45,7 +45,7 @@ export const ToTast = {
                 ref: {
                     type: 'Unresolved',
                     text: decorator.id.text,
-                    hash: filterUnresolved(decorator.id.hash),
+                    hash: filterUnresolved(decorator.id.hash?.slice(2, -1)),
                 },
                 loc: decorator.loc,
             },
@@ -83,13 +83,14 @@ export const ToTast = {
         }
     },
     Type(type: p.Type, ctx: Ctx): t.Type {
-        const resolved = ctx.resolveType(type.text, type.hash);
+        const hash = filterUnresolved(type.hash?.slice(2, -1));
+        const resolved = ctx.resolveType(type.text, hash);
         return {
             type: 'TRef',
             ref: resolved ?? {
                 type: 'Unresolved',
                 text: type.text,
-                hash: filterUnresolved(type.hash),
+                hash,
             },
             loc: type.loc,
         };
@@ -122,13 +123,14 @@ export const ToTast = {
         // that can be independent of ... whether it came
         // from builtlin or somethign else.
         //
-        const resolved = ctx.resolve(text, hash?.slice(2, -1));
+        hash = filterUnresolved(hash?.slice(2, -1));
+        const resolved = ctx.resolve(text, hash);
         if (resolved.length === 1) {
             return { type: 'Ref', loc, kind: resolved[0] };
         }
         return {
             type: 'Ref',
-            kind: { type: 'Unresolved', text, hash: filterUnresolved(hash) },
+            kind: { type: 'Unresolved', text, hash },
             loc,
         };
     },
@@ -154,8 +156,8 @@ export const ToTast = {
     },
 };
 
-const filterUnresolved = (v: string | null) =>
-    v === '#[:unresolved:]' ? null : v;
+const filterUnresolved = (v: string | null | undefined) =>
+    v == null || v === ':unresolved:' ? null : v;
 
 // let inner: p.Expression | Single = apply.target;
 // const parens = apply.suffixes.slice();

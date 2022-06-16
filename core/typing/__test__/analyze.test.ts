@@ -27,23 +27,32 @@ describe('analyze', () => {
     it('should work', () => {
         const fixtures = fs
             .readFileSync(fixtureFile, 'utf8')
-            .split('\n====\n')
+            .split(/(?=\n==[^\n=]*==\n)/)
+            .filter((x) => x.trim())
             .map((chunk) => chunk.trim().split('\n-->\n'));
 
-        const fixed = fixtures.map(([input, output]) => {
+        const hasOnly = fixtures.some((s) => s[0].includes('[only]'));
+
+        const fixed = fixtures.map(([rawinput, output]) => {
+            const [title, ...rest] = rawinput.split('\n');
+            const input = rest.join('\n').trim();
             const ctx = fullContext();
             const tast = ToTast.File(parseTyped(input), ctx);
 
             const checked = analyze(tast, analyzeContext(ctx));
 
-            if (output) {
-                console.log(output);
-                expect(clearLocs(checked)).toEqual(
-                    clearLocs(ToTast.File(parseTyped(output), ctx)),
-                );
+            if (output && (!hasOnly || title.includes('[only]'))) {
+                try {
+                    expect(clearLocs(checked)).toEqual(
+                        clearLocs(ToTast.File(parseTyped(output), ctx)),
+                    );
+                } catch (err) {
+                    console.error(title);
+                    throw err;
+                }
             }
             return [
-                input.trim(),
+                title + '\n\n' + input.trim(),
                 printToString(
                     pegPrinter(ToAst.File(checked, printCtx(ctx)), {
                         hideIds: false,
@@ -57,7 +66,7 @@ describe('analyze', () => {
             fixtureFile,
             fixed
                 .map(([input, output]) => `${input}\n-->\n${output}`)
-                .join('\n\n====\n\n'),
+                .join('\n\n'),
         );
         // lol
     });

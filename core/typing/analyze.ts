@@ -65,7 +65,6 @@ export const decorate = (
 };
 
 export const analyze = (ast: File, ctx: Ctx): File => {
-    console.log('analyze', ast.toplevels);
     return transformFile(
         ast,
         {
