@@ -32,25 +32,25 @@ toString(1, 2)
 -->
 @error#[:unresolved:](msg: 1) 10(20)
 
-====
+==[decorate something]==
 
 @whatsit() 10
 -->
 @whatsit#[:unresolved:]() 10
 
-====
+==[calling undefined function]==
 
 undefinedFunction()
 -->
 undefinedFunction#[:unresolved:]()
 
-====
+==[double apply]==
 
 toString(1)()
 -->
 @error#[:unresolved:](msg: 1) toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)()
 
-====
+==[comments]==
 
 // Comments
 toString(

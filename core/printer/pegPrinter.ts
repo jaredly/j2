@@ -109,7 +109,6 @@ export const ToPP = {
 };
 
 export const injectComments = (pretty: pp.PP, comments: [p.Loc, string][]) => {
-    console.log(comments.map((m) => m[1]));
     return pp.crawl(pretty, (item) => {
         if (!comments.length) {
             return item;
