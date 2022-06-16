@@ -49,3 +49,27 @@ undefinedFunction#[:unresolved:]()
 toString(1)()
 -->
 @error#[:unresolved:](msg: 1) toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)()
+
+====
+
+// Comments
+toString(
+	// inside
+	1,
+	// after
+)
+//last
+-->
+// Comments
+toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
+    // inside
+    1,
+    // after
+)
+//last
+
+==[decorated apply target]==
+
+(@decorated()toString)(10)
+-->
+(@decorated#[:unresolved:]() toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69])(10)

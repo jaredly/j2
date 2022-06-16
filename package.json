@@ -6,7 +6,8 @@
     "scripts": {
         "grammar": "esbuild --bundle utils/build-grammar.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "transform": "esbuild --bundle utils/generate-transform.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
-        "test": "esbuild --bundle core/tests/run.ts --platform=node --sourcemap=inline | node --enable-source-maps -"
+        "test": "esbuild --bundle core/tests/run.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
+        "cov": "jest --coverage"
     },
     "keywords": [],
     "author": "",

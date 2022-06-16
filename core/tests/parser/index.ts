@@ -1,16 +1,14 @@
+import chalk from 'ansi-colors';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import * as peggy from 'peggy';
 import { fullContext } from '../../ctx';
 import { parseTyped } from '../../grammar/base.parser';
+import { pegPrinter } from '../../printer/pegPrinter';
+import { printToString } from '../../printer/pp';
+import { analyze, analyzeContext, verify } from '../../typing/analyze';
 import { printCtx, ToAst } from '../../typing/to-ast';
 import { ToTast } from '../../typing/to-tast';
-import * as peggy from 'peggy';
-import { printToString } from '../../printer/pp';
-import { pegPrinter } from '../../printer/pegPrinter';
-import { analyze, analyzeContext, verify } from '../../typing/analyze';
-import { getType } from '../../typing/getType';
-import { Expression } from '../../typed-ast';
-import chalk from 'ansi-colors';
 
 const file = join(process.cwd(), 'core/tests/parser/examples.jd');
 

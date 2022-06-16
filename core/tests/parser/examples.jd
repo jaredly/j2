@@ -26,9 +26,14 @@
 
 // add(1.0, 2.0)
 
-toString(true);
+// What
+toString(
+    true,
+    // Her
+);
+// AFter
 
-1(2);
+// 1(2);
 
 // id<int>(1)
 

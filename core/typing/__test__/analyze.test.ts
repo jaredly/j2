@@ -16,6 +16,12 @@ const clearLocs = (ast: File) => {
             Loc(node, _) {
                 return noloc;
             },
+            File(node, _) {
+                return {
+                    ...node,
+                    comments: node.comments.map(([_, text]) => [noloc, text]),
+                };
+            },
         },
         null,
     );

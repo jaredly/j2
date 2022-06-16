@@ -1,6 +1,6 @@
 
-- [ ] do test cases, and coverage
-	- [ ] huh yeah I guess jest will be the easiest way to do that. ok fine.
+- [x] do test cases, and coverage
+	- [x] huh yeah I guess jest will be the easiest way to do that. ok fine.
 		I can always have a separate cmd that will run the tests w/o jest if I want to.
 - [ ] String literals! Gotta have 'em. And I think I'll stick with all strings are template strings.
 	`${}` just makes sense. And the representation of "list of strings" and "list of things" also works for me.
