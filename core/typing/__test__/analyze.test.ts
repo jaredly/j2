@@ -5,7 +5,7 @@ import { pegPrinter } from '../../printer/pegPrinter';
 import { printToString } from '../../printer/pp';
 import { transformFile } from '../../transform-tast';
 import { File } from '../../typed-ast';
-import { analyze, analyzeContext } from '../analyze';
+import { analyze, analyzeContext, verify } from '../analyze';
 import { printCtx, ToAst } from '../to-ast';
 import { ToTast } from '../to-tast';
 
@@ -30,7 +30,7 @@ const clearLocs = (ast: File) => {
 const fixtureFile = __dirname + '/fixtures.jd';
 
 describe('analyze', () => {
-    let fixtures: [string, string, string, string, number][] = fs
+    let fixtures: [string, string, string, string | undefined, number][] = fs
         .readFileSync(fixtureFile, 'utf8')
         .split(/(?=\n==[^\n=]*==\n)/)
         .filter((x) => x.trim())
@@ -46,14 +46,21 @@ describe('analyze', () => {
         fixtures = fixtures.filter((f) => f[0].includes('[only]'));
     }
 
-    let fixed: [string, string, string][] = [];
+    let fixed: [string, string, string | undefined][] = [];
 
     afterAll(() => {
         if (hasOnly) {
             console.warn('Not writing fixtures, [only] was used');
             return;
         }
-        if (fixed.length !== fixtures.length || fixed.some((m) => m == null)) {
+        let missing = false;
+        for (let i = 0; i < fixtures.length; i++) {
+            if (!fixed[i]) {
+                missing = true;
+                break;
+            }
+        }
+        if (missing) {
             console.warn(`Not writing fixtures, looks like something failed`);
             return;
         }
@@ -77,26 +84,59 @@ describe('analyze', () => {
 
         const checked = analyze(tast, analyzeContext(ctx));
 
-        if (output && (!hasOnly || title.includes('[only]'))) {
+        const newOutput = printToString(
+            pegPrinter(ToAst.File(checked, printCtx(ctx)), {
+                hideIds: false,
+            }),
+            100,
+        );
+
+        const { errorDecorators, missingTypes } = verify(
+            checked,
+            analyzeContext(ctx),
+        );
+        let newErrors: string[] = [];
+        errorDecorators.forEach((decl) => {
+            newErrors.push(
+                `🚨 Error decorator at ${
+                    decl.start.line + ':' + decl.start.column
+                }`,
+            );
+        });
+        missingTypes.forEach((missing) => {
+            newErrors.push(
+                `🚨 Missing type at ${
+                    missing.start.line + ':' + missing.start.column
+                }`,
+            );
+        });
+        if (!hasOnly || title.includes('[only]')) {
+            if (!process.env.FIX) {
+                expect(errors).toEqual(
+                    newErrors.length ? newErrors.join('\n') : undefined,
+                );
+            }
+        }
+        errors = newErrors.length ? newErrors.join('\n') : undefined;
+
+        if (
+            output &&
+            (!hasOnly || title.includes('[only]')) &&
+            !process.env.FIX
+        ) {
             try {
                 expect(clearLocs(checked)).toEqual(
                     clearLocs(ToTast.File(parseTyped(output), ctx)),
                 );
             } catch (err) {
-                console.error(title);
+                console.error(
+                    title + '\n\n' + input + '\n\n-->\n\n' + newOutput,
+                );
                 throw err;
             }
         }
-        fixed[i] = [
-            title + '\n\n' + input.trim(),
-            printToString(
-                pegPrinter(ToAst.File(checked, printCtx(ctx)), {
-                    hideIds: false,
-                }),
-                100,
-            ),
-            errors,
-        ];
+
+        fixed[i] = [title + '\n\n' + input.trim(), newOutput, errors];
 
         // lol
     });
