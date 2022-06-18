@@ -84,7 +84,7 @@ export type Number = {
     type: 'Number';
     loc: Loc;
     value: number;
-    kind: 'Int' | 'Float';
+    kind: 'Int' | 'Float' | 'UInt';
 };
 
 export type Apply = {
@@ -142,7 +142,20 @@ export type TLambda = {
 
 // Ok so also, you can just drop an inline record declaration, right?
 
-export type Type = TRef | TDecorated | TApply | TVars | TLambda;
+export type Type = TRef | TDecorated | TApply | TVars | TLambda | TExpr;
+
+// Should I only allow local refs?
+// hmm no.
+// oh I can subtract numbers too rite
+export type TExpr = TAdd | TSub | TOr | Number | String;
+
+export type TAdd = { type: 'TAdd'; elements: Array<Type>; loc: Loc };
+export type TSub = { type: 'TSub'; elements: Array<Type>; loc: Loc };
+export type TOr = { type: 'TOr'; elements: Array<Type>; loc: Loc };
+export type String = { type: 'String'; text: string; loc: Loc };
+
+/// and ... something about instantiating a record? Although that might get into
+// the realm of "where"s. Yeah I think it would.
 
 // (T -> T) -> T // hm that would be Kinds yep.
 

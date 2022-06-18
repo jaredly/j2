@@ -1,6 +1,6 @@
 import { Ctx, RefKind } from '.';
 import hashObject from 'object-hash';
-import { Expression, Type } from './typed-ast';
+import { Expression, Sym, TApply, TVars, Type } from './typed-ast';
 import { toId } from './ids';
 import { Loc, parseTyped } from './grammar/base.parser';
 import { ToTast } from './typing/to-tast';
@@ -187,6 +187,18 @@ const tlam = (
     result,
     loc: noloc,
 });
+const tvars = (args: Sym[], inner: Type): TVars => ({
+    type: 'TVars',
+    args,
+    inner,
+    loc: noloc,
+});
+const tapply = (args: Array<Type>, target: Type): TApply => ({
+    type: 'TApply',
+    args,
+    loc: noloc,
+    target,
+});
 
 const prelude = `
 enum Result<Ok, Failure> {
@@ -230,6 +242,7 @@ export const setupDefaults = (ctx: FullContext) => {
         'toString',
         tlam([{ label: 'v', typ: tref(named.int) }], tref(named.string)),
     );
+
     addBuiltin(
         ctx,
         'add',
@@ -241,6 +254,7 @@ export const setupDefaults = (ctx: FullContext) => {
             tref(named.int),
         ),
     );
+
     addBuiltin(
         ctx,
         'add',
@@ -250,6 +264,31 @@ export const setupDefaults = (ctx: FullContext) => {
                 { label: 'b', typ: tref(named.float) },
             ],
             tref(named.float),
+        ),
+    );
+
+    addBuiltin(
+        ctx,
+        'addg',
+        tvars(
+            [
+                { id: 0, name: 'A' },
+                { id: 1, name: 'B' },
+            ],
+            tlam(
+                [
+                    { label: 'a', typ: tref({ type: 'Local', sym: 0 }) },
+                    { label: 'b', typ: tref({ type: 'Local', sym: 1 }) },
+                ],
+                {
+                    type: 'TAdd',
+                    loc: noloc,
+                    elements: [
+                        tref({ type: 'Local', sym: 0 }),
+                        tref({ type: 'Local', sym: 1 }),
+                    ],
+                },
+            ),
         ),
     );
 };

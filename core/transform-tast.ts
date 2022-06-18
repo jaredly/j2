@@ -1,4 +1,4 @@
-import {Loc, File, Toplevel, Expression, UnresolvedRef, DecoratedExpression, Decorator, DecoratorArg, Type, Sym, TLambda, TemplateString, Ref, Boolean, Number, Apply, TRef, TDecorated, TApply, TVars} from './typed-ast';
+import {Loc, File, Toplevel, Expression, UnresolvedRef, DecoratedExpression, Decorator, DecoratorArg, Type, Sym, TExpr, String, TemplateString, Ref, Boolean, Number, Apply, TRef, TDecorated, TApply, TVars, TLambda, TAdd, TSub, TOr} from './typed-ast';
 
 export type Visitor<Ctx> = {
     Loc?: (node: Loc, ctx: Ctx) => null | false | Loc | [Loc | null, Ctx]
@@ -40,7 +40,17 @@ export type Visitor<Ctx> = {
     TLambda?: (node: TLambda, ctx: Ctx) => null | false | TLambda | [TLambda | null, Ctx]
     TLambdaPost?: (node: TLambda, ctx: Ctx) => null | TLambda,
     Type?: (node: Type, ctx: Ctx) => null | false | Type | [Type | null, Ctx]
-    TypePost?: (node: Type, ctx: Ctx) => null | Type
+    TypePost?: (node: Type, ctx: Ctx) => null | Type,
+    TExpr?: (node: TExpr, ctx: Ctx) => null | false | TExpr | [TExpr | null, Ctx]
+    TExprPost?: (node: TExpr, ctx: Ctx) => null | TExpr,
+    TAdd?: (node: TAdd, ctx: Ctx) => null | false | TAdd | [TAdd | null, Ctx]
+    TAddPost?: (node: TAdd, ctx: Ctx) => null | TAdd,
+    TSub?: (node: TSub, ctx: Ctx) => null | false | TSub | [TSub | null, Ctx]
+    TSubPost?: (node: TSub, ctx: Ctx) => null | TSub,
+    TOr?: (node: TOr, ctx: Ctx) => null | false | TOr | [TOr | null, Ctx]
+    TOrPost?: (node: TOr, ctx: Ctx) => null | TOr,
+    String?: (node: String, ctx: Ctx) => null | false | String | [String | null, Ctx]
+    StringPost?: (node: String, ctx: Ctx) => null | String
 }
 export const transformLoc = <Ctx>(node: Loc, visitor: Visitor<Ctx>, ctx: Ctx): Loc => {
         if (!node) {
@@ -144,12 +154,12 @@ export const transformSym = <Ctx>(node: Sym, visitor: Visitor<Ctx>, ctx: Ctx): S
         
     }
 
-export const transformTLambda = <Ctx>(node: TLambda, visitor: Visitor<Ctx>, ctx: Ctx): TLambda => {
+export const transformString = <Ctx>(node: String, visitor: Visitor<Ctx>, ctx: Ctx): String => {
         if (!node) {
-            throw new Error('No TLambda provided');
+            throw new Error('No String provided');
         }
         
-        const transformed = visitor.TLambda ? visitor.TLambda(node, ctx) : null;
+        const transformed = visitor.String ? visitor.String(node, ctx) : null;
         if (transformed === false) {
             return node;
         }
@@ -170,49 +180,193 @@ export const transformTLambda = <Ctx>(node: TLambda, visitor: Visitor<Ctx>, ctx:
             {
                 let changed1 = false;
                 
-                let updatedNode$args = node.args;
-                {
-                    let changed2 = false;
-                    const arr1 = node.args.map((updatedNode$args$item1) => {
-                        
-            let result = updatedNode$args$item1;
-            {
-                let changed3 = false;
-                
-                const result$typ = transformType(updatedNode$args$item1.typ, visitor, ctx);
-                changed3 = changed3 || result$typ !== updatedNode$args$item1.typ;
-                if (changed3) {
-                    result =  {...result, typ: result$typ};
-                    changed2 = true;
-                }
-            }
-            
-                        return result
-                    })
-                    if (changed2) {
-                        updatedNode$args = arr1;
-                        changed1 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$result = transformType(node.result, visitor, ctx);
-                changed1 = changed1 || updatedNode$result !== node.result;
-
-                
                 const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
                 changed1 = changed1 || updatedNode$loc !== node.loc;
                 if (changed1) {
-                    updatedNode =  {...updatedNode, args: updatedNode$args, result: updatedNode$result, loc: updatedNode$loc};
+                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
                     changed0 = true;
                 }
             }
             
         
         node = updatedNode;
-        if (visitor.TLambdaPost) {
-            const transformed = visitor.TLambdaPost(node, ctx);
+        if (visitor.StringPost) {
+            const transformed = visitor.StringPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTExpr = <Ctx>(node: TExpr, visitor: Visitor<Ctx>, ctx: Ctx): TExpr => {
+        if (!node) {
+            throw new Error('No TExpr provided');
+        }
+        
+        const transformed = visitor.TExpr ? visitor.TExpr(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+        let updatedNode = node;
+        switch (node.type) {
+            case 'TAdd': {
+                    const updatedNode$0specified = node;
+                    let changed1 = false;
+                    
+            let updatedNode$0node = updatedNode$0specified;
+            {
+                let changed2 = false;
+                
+                let updatedNode$0node$elements = updatedNode$0specified.elements;
+                {
+                    let changed3 = false;
+                    const arr2 = updatedNode$0specified.elements.map((updatedNode$0node$elements$item2) => {
+                        
+                const result = transformType(updatedNode$0node$elements$item2, visitor, ctx);
+                changed3 = changed3 || result !== updatedNode$0node$elements$item2;
+                        return result
+                    })
+                    if (changed3) {
+                        updatedNode$0node$elements = arr2;
+                        changed2 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
+                if (changed2) {
+                    updatedNode$0node =  {...updatedNode$0node, elements: updatedNode$0node$elements, loc: updatedNode$0node$loc};
+                    changed1 = true;
+                }
+            }
+            
+                    updatedNode = updatedNode$0node;
+                    break;
+                }
+
+            case 'TSub': {
+                    const updatedNode$0specified = node;
+                    let changed1 = false;
+                    
+            let updatedNode$0node = updatedNode$0specified;
+            {
+                let changed2 = false;
+                
+                let updatedNode$0node$elements = updatedNode$0specified.elements;
+                {
+                    let changed3 = false;
+                    const arr2 = updatedNode$0specified.elements.map((updatedNode$0node$elements$item2) => {
+                        
+                const result = transformType(updatedNode$0node$elements$item2, visitor, ctx);
+                changed3 = changed3 || result !== updatedNode$0node$elements$item2;
+                        return result
+                    })
+                    if (changed3) {
+                        updatedNode$0node$elements = arr2;
+                        changed2 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
+                if (changed2) {
+                    updatedNode$0node =  {...updatedNode$0node, elements: updatedNode$0node$elements, loc: updatedNode$0node$loc};
+                    changed1 = true;
+                }
+            }
+            
+                    updatedNode = updatedNode$0node;
+                    break;
+                }
+
+            case 'TOr': {
+                    const updatedNode$0specified = node;
+                    let changed1 = false;
+                    
+            let updatedNode$0node = updatedNode$0specified;
+            {
+                let changed2 = false;
+                
+                let updatedNode$0node$elements = updatedNode$0specified.elements;
+                {
+                    let changed3 = false;
+                    const arr2 = updatedNode$0specified.elements.map((updatedNode$0node$elements$item2) => {
+                        
+                const result = transformType(updatedNode$0node$elements$item2, visitor, ctx);
+                changed3 = changed3 || result !== updatedNode$0node$elements$item2;
+                        return result
+                    })
+                    if (changed3) {
+                        updatedNode$0node$elements = arr2;
+                        changed2 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
+                if (changed2) {
+                    updatedNode$0node =  {...updatedNode$0node, elements: updatedNode$0node$elements, loc: updatedNode$0node$loc};
+                    changed1 = true;
+                }
+            }
+            
+                    updatedNode = updatedNode$0node;
+                    break;
+                }
+
+            case 'Number': {
+                    const updatedNode$0specified = node;
+                    let changed1 = false;
+                    
+            let updatedNode$0node = updatedNode$0specified;
+            {
+                let changed2 = false;
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
+                if (changed2) {
+                    updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
+                    changed1 = true;
+                }
+            }
+            
+                    updatedNode = updatedNode$0node;
+                    break;
+                }
+
+            default: {
+                        // let changed1 = false;
+                        
+                const updatedNode$0node = transformString(node, visitor, ctx);
+                changed0 = changed0 || updatedNode$0node !== node;
+                        updatedNode = updatedNode$0node;
+                    }
+        }
+        
+        node = updatedNode;
+        if (visitor.TExprPost) {
+            const transformed = visitor.TExprPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }
@@ -388,10 +542,61 @@ export const transformType = <Ctx>(node: Type, visitor: Visitor<Ctx>, ctx: Ctx):
                     break;
                 }
 
+            case 'TLambda': {
+                    const updatedNode$0specified = node;
+                    let changed1 = false;
+                    
+            let updatedNode$0node = updatedNode$0specified;
+            {
+                let changed2 = false;
+                
+                let updatedNode$0node$args = updatedNode$0specified.args;
+                {
+                    let changed3 = false;
+                    const arr2 = updatedNode$0specified.args.map((updatedNode$0node$args$item2) => {
+                        
+            let result = updatedNode$0node$args$item2;
+            {
+                let changed4 = false;
+                
+                const result$typ = transformType(updatedNode$0node$args$item2.typ, visitor, ctx);
+                changed4 = changed4 || result$typ !== updatedNode$0node$args$item2.typ;
+                if (changed4) {
+                    result =  {...result, typ: result$typ};
+                    changed3 = true;
+                }
+            }
+            
+                        return result
+                    })
+                    if (changed3) {
+                        updatedNode$0node$args = arr2;
+                        changed2 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$0node$result = transformType(updatedNode$0specified.result, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$result !== updatedNode$0specified.result;
+
+                
+                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
+                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
+                if (changed2) {
+                    updatedNode$0node =  {...updatedNode$0node, args: updatedNode$0node$args, result: updatedNode$0node$result, loc: updatedNode$0node$loc};
+                    changed1 = true;
+                }
+            }
+            
+                    updatedNode = updatedNode$0node;
+                    break;
+                }
+
             default: {
                         // let changed1 = false;
                         
-                const updatedNode$0node = transformTLambda(node, visitor, ctx);
+                const updatedNode$0node = transformTExpr(node, visitor, ctx);
                 changed0 = changed0 || updatedNode$0node !== node;
                         updatedNode = updatedNode$0node;
                     }
@@ -1482,6 +1687,272 @@ export const transformTVars = <Ctx>(node: TVars, visitor: Visitor<Ctx>, ctx: Ctx
         node = updatedNode;
         if (visitor.TVarsPost) {
             const transformed = visitor.TVarsPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTLambda = <Ctx>(node: TLambda, visitor: Visitor<Ctx>, ctx: Ctx): TLambda => {
+        if (!node) {
+            throw new Error('No TLambda provided');
+        }
+        
+        const transformed = visitor.TLambda ? visitor.TLambda(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                let updatedNode$args = node.args;
+                {
+                    let changed2 = false;
+                    const arr1 = node.args.map((updatedNode$args$item1) => {
+                        
+            let result = updatedNode$args$item1;
+            {
+                let changed3 = false;
+                
+                const result$typ = transformType(updatedNode$args$item1.typ, visitor, ctx);
+                changed3 = changed3 || result$typ !== updatedNode$args$item1.typ;
+                if (changed3) {
+                    result =  {...result, typ: result$typ};
+                    changed2 = true;
+                }
+            }
+            
+                        return result
+                    })
+                    if (changed2) {
+                        updatedNode$args = arr1;
+                        changed1 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$result = transformType(node.result, visitor, ctx);
+                changed1 = changed1 || updatedNode$result !== node.result;
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, args: updatedNode$args, result: updatedNode$result, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.TLambdaPost) {
+            const transformed = visitor.TLambdaPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTAdd = <Ctx>(node: TAdd, visitor: Visitor<Ctx>, ctx: Ctx): TAdd => {
+        if (!node) {
+            throw new Error('No TAdd provided');
+        }
+        
+        const transformed = visitor.TAdd ? visitor.TAdd(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                let updatedNode$elements = node.elements;
+                {
+                    let changed2 = false;
+                    const arr1 = node.elements.map((updatedNode$elements$item1) => {
+                        
+                const result = transformType(updatedNode$elements$item1, visitor, ctx);
+                changed2 = changed2 || result !== updatedNode$elements$item1;
+                        return result
+                    })
+                    if (changed2) {
+                        updatedNode$elements = arr1;
+                        changed1 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, elements: updatedNode$elements, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.TAddPost) {
+            const transformed = visitor.TAddPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTSub = <Ctx>(node: TSub, visitor: Visitor<Ctx>, ctx: Ctx): TSub => {
+        if (!node) {
+            throw new Error('No TSub provided');
+        }
+        
+        const transformed = visitor.TSub ? visitor.TSub(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                let updatedNode$elements = node.elements;
+                {
+                    let changed2 = false;
+                    const arr1 = node.elements.map((updatedNode$elements$item1) => {
+                        
+                const result = transformType(updatedNode$elements$item1, visitor, ctx);
+                changed2 = changed2 || result !== updatedNode$elements$item1;
+                        return result
+                    })
+                    if (changed2) {
+                        updatedNode$elements = arr1;
+                        changed1 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, elements: updatedNode$elements, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.TSubPost) {
+            const transformed = visitor.TSubPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTOr = <Ctx>(node: TOr, visitor: Visitor<Ctx>, ctx: Ctx): TOr => {
+        if (!node) {
+            throw new Error('No TOr provided');
+        }
+        
+        const transformed = visitor.TOr ? visitor.TOr(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                let updatedNode$elements = node.elements;
+                {
+                    let changed2 = false;
+                    const arr1 = node.elements.map((updatedNode$elements$item1) => {
+                        
+                const result = transformType(updatedNode$elements$item1, visitor, ctx);
+                changed2 = changed2 || result !== updatedNode$elements$item1;
+                        return result
+                    })
+                    if (changed2) {
+                        updatedNode$elements = arr1;
+                        changed1 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, elements: updatedNode$elements, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.TOrPost) {
+            const transformed = visitor.TOrPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }

@@ -133,3 +133,52 @@ let rec sum = <N>(arr: Array<int> where arr.length == N): int => {
 // Hmm I need a type-algebra way to indicate "where the Enum variant is this one"
 
 // anyway I should think about this more later.
+
+Oh I wonder if the issue is that ... you might be passing in ... an object with more fields?
+
+```
+let gm = <T where (T <: int) and (T > 5)>(n: T) => {
+	// ... so T is a subtype of int... or uint, really. hm maybe I should have a uint type.
+}
+
+let gm = <T: int, V: int + 5>(n: T) => {
+
+}
+```
+
+Ok so how do I model this, and what is it doing?
+
+- "constraints"
+- constraints can exist on ... types that aren't functions?
+	- hmm well also there are type literals. Should I do those first?
+		then I can figure out whether subtyping & variance are really all that bad.
+
+		I should dig up some of those examples of type-level arithmetic, see if I can
+		use those as a jumping-off point.
+
+ALSO what about "hello" + string? So we can represent prefixes? And string + "suffix"? Sounds very cool.
+I mean even string + ":" + string has a bit of a ring to it.
+You could have a `split<Sep: string, T: string + Sep + string>(sep: Sep, str: T)` that returns a
+`Array<string> where .length > 1`. That seems very interesting.
+
+Now, one question is: Can function bodies access type variables as values? I should look at zig to see how they handle that bit.
+anyway, let's not mess with that just yet. If I need to, I can request that a constant be passed along? ugh but I don't like that. hmm.
+
+oh btw `split<Sep: string>(sep: Sep)` means that we're instantiating this function with a specific string ~constant. If you don't have a variable where the type is an exact string constant, you can't call this function.
+
+
+
+Ok anyway, I should get started on this kind of thing right away.
+Do I do something like `TConstant`? or is "hello" just a String with a toplevel constraint?
+Or is it TExpr which could be any number of things? hmm I guess it would be.
+
+Again, how to functions play into this?
+And ... type arguments? I Think that TExprs can only make sense as part of a bound on a variable.
+Yeah let's start with that.
+
+Ok I don't actually have type application set up syntactically.
+Need to do that, and ... maybe also function calls? I can't remember if I want to do rest args, or requiring arg labels to be correct.
+
+also, what about optional args? That would require a builtin nullable. which, eh, maybe I'll just do? What were the thoughts I had about ... a #Tag for easily creating Error types? Oh it was that I would allow inline creation of records. Sounds fine.
+
+btw I want "navigate to the definition of the thing I have highlighted" to be extremely fast, an also not break flow / local navigation.

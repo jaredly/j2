@@ -13,10 +13,11 @@ import {
     Type,
 } from '../typed-ast';
 import { getType } from './getType';
-import { typesEqual } from './typesEqual';
+import { typeMatches } from './typesEqual';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
+    _full: FullContext;
 };
 
 export const analyzeContext = (ctx: FullContext): Ctx => {
@@ -24,6 +25,7 @@ export const analyzeContext = (ctx: FullContext): Ctx => {
         getType(expr: Expression) {
             return getType(expr, ctx);
         },
+        _full: ctx,
     };
 };
 
@@ -98,7 +100,7 @@ export const analyze = (ast: File, ctx: Ctx): File => {
                         if (at == null) {
                             return arg;
                         }
-                        if (!typesEqual(at, ttype.args[i].typ)) {
+                        if (!typeMatches(at, ttype.args[i].typ, ctx._full)) {
                             changed = true;
                             return decorate(arg, 'Wrong type');
                         }
