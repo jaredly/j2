@@ -142,12 +142,13 @@ export type TLambda = {
 
 // Ok so also, you can just drop an inline record declaration, right?
 
-export type Type = TRef | TDecorated | TApply | TVars | TLambda | TExpr;
+export type Type = TRef | TLambda | TExpr;
+// | TDecorated | TApply | TVars
 
 // Should I only allow local refs?
 // hmm no.
 // oh I can subtract numbers too rite
-export type TExpr = TAdd | TSub | TOr | Number | String;
+export type TExpr = Number | String; // TAdd | TSub | TOr | ;
 
 export type TAdd = { type: 'TAdd'; elements: Array<Type>; loc: Loc };
 export type TSub = { type: 'TSub'; elements: Array<Type>; loc: Loc };

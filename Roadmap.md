@@ -1,5 +1,21 @@
 
-- [ ] STRINGSSS Follow the TODO brick road
+
+## TExpr here we come
+
+this might end horribly. But at least I'm getting in early.
+
+
+- tref -> add string and int literals
+- make a .. toy function that accepts some string & int literals
+- make a way to indicate in the title of a fixture whether it should "clear"
+
+
+
+
+
+##
+
+- [x] STRINGSSS Follow the TODO brick road
 
 - [x] do test cases, and coverage
 	- [x] huh yeah I guess jest will be the easiest way to do that. ok fine.

@@ -155,6 +155,12 @@ export type lineComment = string;
 
 export type finalLineComment = string;
 
+export type String = {
+  type: "String";
+  loc: Loc;
+  text: string;
+};
+
 export type TemplateString = {
   type: "TemplateString";
   loc: Loc;
@@ -169,12 +175,12 @@ export type TemplatePair = {
   suffix: string;
 };
 
-export type stringChars = string;
+export type tplStringChars = string;
 
 export type stringChar = string;
 
 // No data on escapedChar
 
-export type AllTaggedTypes = File | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Type | Apply_inner | ParenedExpression | Parens | CommaExpr | Boolean | Number | Identifier | TemplateString | TemplatePair;
+export type AllTaggedTypes = File | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Type | Apply_inner | ParenedExpression | Parens | CommaExpr | Boolean | Number | Identifier | String | TemplateString | TemplatePair;
 
 export const parseTyped = (input: string): File => parse(input)

@@ -1,4 +1,4 @@
-import {Loc, File, Toplevel, Expression, UnresolvedRef, DecoratedExpression, Decorator, DecoratorArg, Type, Sym, TExpr, String, TemplateString, Ref, Boolean, Number, Apply, TRef, TDecorated, TApply, TVars, TLambda, TAdd, TSub, TOr} from './typed-ast';
+import {Loc, File, Toplevel, Expression, UnresolvedRef, DecoratedExpression, Decorator, DecoratorArg, Type, TExpr, String, TemplateString, Ref, Boolean, Number, Apply, Sym, TRef, TDecorated, TApply, TVars, TLambda, TAdd, TSub, TOr} from './typed-ast';
 
 export type Visitor<Ctx> = {
     Loc?: (node: Loc, ctx: Ctx) => null | false | Loc | [Loc | null, Ctx]
@@ -120,40 +120,6 @@ export const transformUnresolvedRef = <Ctx>(node: UnresolvedRef, visitor: Visito
         
     }
 
-export const transformSym = <Ctx>(node: Sym, visitor: Visitor<Ctx>, ctx: Ctx): Sym => {
-        if (!node) {
-            throw new Error('No Sym provided');
-        }
-        
-        const transformed = visitor.Sym ? visitor.Sym(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        const updatedNode = node;
-        
-        node = updatedNode;
-        if (visitor.SymPost) {
-            const transformed = visitor.SymPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
 export const transformString = <Ctx>(node: String, visitor: Visitor<Ctx>, ctx: Ctx): String => {
         if (!node) {
             throw new Error('No String provided');
@@ -224,117 +190,6 @@ export const transformTExpr = <Ctx>(node: TExpr, visitor: Visitor<Ctx>, ctx: Ctx
         
         let updatedNode = node;
         switch (node.type) {
-            case 'TAdd': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                let updatedNode$0node$elements = updatedNode$0specified.elements;
-                {
-                    let changed3 = false;
-                    const arr2 = updatedNode$0specified.elements.map((updatedNode$0node$elements$item2) => {
-                        
-                const result = transformType(updatedNode$0node$elements$item2, visitor, ctx);
-                changed3 = changed3 || result !== updatedNode$0node$elements$item2;
-                        return result
-                    })
-                    if (changed3) {
-                        updatedNode$0node$elements = arr2;
-                        changed2 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, elements: updatedNode$0node$elements, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
-
-            case 'TSub': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                let updatedNode$0node$elements = updatedNode$0specified.elements;
-                {
-                    let changed3 = false;
-                    const arr2 = updatedNode$0specified.elements.map((updatedNode$0node$elements$item2) => {
-                        
-                const result = transformType(updatedNode$0node$elements$item2, visitor, ctx);
-                changed3 = changed3 || result !== updatedNode$0node$elements$item2;
-                        return result
-                    })
-                    if (changed3) {
-                        updatedNode$0node$elements = arr2;
-                        changed2 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, elements: updatedNode$0node$elements, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
-
-            case 'TOr': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                let updatedNode$0node$elements = updatedNode$0specified.elements;
-                {
-                    let changed3 = false;
-                    const arr2 = updatedNode$0specified.elements.map((updatedNode$0node$elements$item2) => {
-                        
-                const result = transformType(updatedNode$0node$elements$item2, visitor, ctx);
-                changed3 = changed3 || result !== updatedNode$0node$elements$item2;
-                        return result
-                    })
-                    if (changed3) {
-                        updatedNode$0node$elements = arr2;
-                        changed2 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, elements: updatedNode$0node$elements, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
-
             case 'Number': {
                     const updatedNode$0specified = node;
                     let changed1 = false;
@@ -411,129 +266,6 @@ export const transformType = <Ctx>(node: Type, visitor: Visitor<Ctx>, ctx: Ctx):
                 changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
                 if (changed2) {
                     updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
-
-            case 'TDecorated': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                let updatedNode$0node$decorators = updatedNode$0specified.decorators;
-                {
-                    let changed3 = false;
-                    const arr2 = updatedNode$0specified.decorators.map((updatedNode$0node$decorators$item2) => {
-                        
-                const result = transformDecorator(updatedNode$0node$decorators$item2, visitor, ctx);
-                changed3 = changed3 || result !== updatedNode$0node$decorators$item2;
-                        return result
-                    })
-                    if (changed3) {
-                        updatedNode$0node$decorators = arr2;
-                        changed2 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$0node$inner = transformType(updatedNode$0specified.inner, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$inner !== updatedNode$0specified.inner;
-
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, decorators: updatedNode$0node$decorators, inner: updatedNode$0node$inner, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
-
-            case 'TApply': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                const updatedNode$0node$target = transformType(updatedNode$0specified.target, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$target !== updatedNode$0specified.target;
-
-                
-                let updatedNode$0node$args = updatedNode$0specified.args;
-                {
-                    let changed3 = false;
-                    const arr2 = updatedNode$0specified.args.map((updatedNode$0node$args$item2) => {
-                        
-                const result = transformType(updatedNode$0node$args$item2, visitor, ctx);
-                changed3 = changed3 || result !== updatedNode$0node$args$item2;
-                        return result
-                    })
-                    if (changed3) {
-                        updatedNode$0node$args = arr2;
-                        changed2 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, target: updatedNode$0node$target, args: updatedNode$0node$args, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
-
-            case 'TVars': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                let updatedNode$0node$args = updatedNode$0specified.args;
-                {
-                    let changed3 = false;
-                    const arr2 = updatedNode$0specified.args.map((updatedNode$0node$args$item2) => {
-                        
-                const result = transformSym(updatedNode$0node$args$item2, visitor, ctx);
-                changed3 = changed3 || result !== updatedNode$0node$args$item2;
-                        return result
-                    })
-                    if (changed3) {
-                        updatedNode$0node$args = arr2;
-                        changed2 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$0node$inner = transformType(updatedNode$0specified.inner, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$inner !== updatedNode$0specified.inner;
-
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, args: updatedNode$0node$args, inner: updatedNode$0node$inner, loc: updatedNode$0node$loc};
                     changed1 = true;
                 }
             }
@@ -1440,6 +1172,40 @@ export const transformApply = <Ctx>(node: Apply, visitor: Visitor<Ctx>, ctx: Ctx
         node = updatedNode;
         if (visitor.ApplyPost) {
             const transformed = visitor.ApplyPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformSym = <Ctx>(node: Sym, visitor: Visitor<Ctx>, ctx: Ctx): Sym => {
+        if (!node) {
+            throw new Error('No Sym provided');
+        }
+        
+        const transformed = visitor.Sym ? visitor.Sym(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        const updatedNode = node;
+        
+        node = updatedNode;
+        if (visitor.SymPost) {
+            const transformed = visitor.SymPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }

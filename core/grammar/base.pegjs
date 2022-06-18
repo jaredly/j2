@@ -31,6 +31,8 @@ DecType = ":" _ type_:Type
 // DecPat = "?" __ pattern:Pattern 
 DecExpr = expr:Expression 
 
+// Type = TRef / Number / String
+// TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
 Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
 
 Apply = target:Atom suffixes_drop:Suffix*
@@ -71,9 +73,10 @@ finalLineComment = $("//" (!"\n" .)*)
 
 // ----------
 
-TemplateString = "\"" first:$stringChars rest:TemplatePair* "\""
-TemplatePair = "${" _ expr:Expression _ "}" suffix:$stringChars
-stringChars = $(!"${" stringChar)*
+String = "\"" text:$(stringChar*) "\""
+TemplateString = "\"" first:$tplStringChars rest:TemplatePair* "\""
+TemplatePair = "${" _ expr:Expression _ "}" suffix:$tplStringChars
+tplStringChars = $(!"${" stringChar)*
 stringChar = $( escapedChar / [^"\\])
 escapedChar = "\\" .
 

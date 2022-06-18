@@ -1,6 +1,6 @@
 // An AST node
 
-import { Location, FromAst, Context } from '../';
+import { Ctx } from '../';
 
 /*:peg:
 Int "int" = _ contents:$("-"? [0-9]+) 
@@ -14,15 +14,15 @@ export type P_Int = { type: 'Int'; contents: string; location: Location };
 // And a walker gets made for it automatically.
 export type Int = { type: 'Int'; value: number; location: Location };
 
-// The types of `fromAst` inform the "FromAst" transformer ...
-export const IntFromAst = (
-    { contents, location }: P_Int,
-    ctx: Context,
-): Int => ({
-    type: 'Int',
-    value: +contents,
-    location,
-});
+// // The types of `fromAst` inform the "FromAst" transformer ...
+// export const IntFromAst = (
+//     { contents, location }: P_Int,
+//     ctx: Context,
+// ): Int => ({
+//     type: 'Int',
+//     value: +contents,
+//     location,
+// });
 
 // This is so my
 export const typeOf = (node: Int) => ({ type: 'builtin', name: 'int' });
