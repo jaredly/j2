@@ -3,40 +3,20 @@ import * as p from '../grammar/base.parser';
 import * as peggy from 'peggy';
 import * as pp from './pp';
 import { noloc } from '../ctx';
+import { ConstantsToPP } from '../elements/constants';
 
 export type Ctx = {
     hideIds: boolean;
 };
 
 export const ToPP = {
+    ...ConstantsToPP,
     File: (file: p.File, ctx: Ctx): pp.PP => {
         return pp.items(
             file.toplevels.map((t) => ToPP[t.type](t as any, ctx)),
             file.loc,
             'always',
         );
-    },
-    TemplateString(ts: p.TemplateString, ctx: Ctx): pp.PP {
-        if (!ts.rest.length) {
-            return pp.atom(`"${ts.first}"`, ts.loc);
-        }
-        let items: pp.PP[] = [pp.atom(`"${ts.first}\${`, noloc)];
-        ts.rest.forEach(({ expr, suffix, loc }, i) => {
-            items.push(ToPP[expr.type](expr as any, ctx));
-            items.push(
-                pp.atom(
-                    '}' + suffix + (i === ts.rest.length - 1 ? '"' : '${'),
-                    loc,
-                ),
-            );
-        });
-        return pp.items(items, ts.loc);
-    },
-    Boolean(bool: p.Boolean, ctx: Ctx): pp.PP {
-        return pp.atom(bool.v, bool.loc);
-    },
-    Number(int: p.Number, ctx: Ctx): pp.PP {
-        return pp.atom(int.contents, int.loc);
     },
     Apply(apply: p.Apply_inner, ctx: Ctx): pp.PP {
         return pp.items(

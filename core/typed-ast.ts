@@ -1,5 +1,7 @@
 import { RefKind } from '.';
 export { RefKind };
+import { TemplateString, Number, Boolean, String } from './elements/constants';
+export { TemplateString, Number, Boolean, String };
 
 export type Loc = {
     start: { line: number; column: number; offset: number };
@@ -15,13 +17,6 @@ export type File = {
 };
 
 // export type ErrorExpr = UnknownIdentifier;
-
-export type TemplateString = {
-    type: 'TemplateString';
-    first: string;
-    rest: Array<{ expr: Expression; suffix: string; loc: Loc }>;
-    loc: Loc;
-};
 
 export type Decorator = {
     type: 'Decorator';
@@ -75,16 +70,6 @@ export type DecoratedExpression = {
     decorators: Array<Decorator>;
     expr: Expression;
     loc: Loc;
-};
-
-export type Boolean = { type: 'Boolean'; loc: Loc; value: boolean };
-// export type String = { type: 'String'; loc: Loc; value: boolean };
-
-export type Number = {
-    type: 'Number';
-    loc: Loc;
-    value: number;
-    kind: 'Int' | 'Float' | 'UInt';
 };
 
 export type Apply = {
@@ -153,7 +138,6 @@ export type TExpr = Number | String; // TAdd | TSub | TOr | ;
 export type TAdd = { type: 'TAdd'; elements: Array<Type>; loc: Loc };
 export type TSub = { type: 'TSub'; elements: Array<Type>; loc: Loc };
 export type TOr = { type: 'TOr'; elements: Array<Type>; loc: Loc };
-export type String = { type: 'String'; text: string; loc: Loc };
 
 /// and ... something about instantiating a record? Although that might get into
 // the realm of "where"s. Yeah I think it would.

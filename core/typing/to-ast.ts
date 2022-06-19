@@ -1,5 +1,6 @@
 import { refHash } from '..';
 import { FullContext } from '../ctx';
+import { ConstantsToAst } from '../elements/constants';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 
@@ -37,6 +38,7 @@ export const printCtx = (ctx: FullContext): Ctx => {
 };
 
 export const ToAst = {
+    ...ConstantsToAst,
     File({ type, toplevels, loc, comments }: t.File, ctx: Ctx): p.File {
         // TOOD: Go through and find all hashes, right?
         // maybe when printing unresolved things, put `#[:unresolved:]` or something?
@@ -126,23 +128,6 @@ export const ToAst = {
         return { type: 'Type', text, hash, loc };
     },
 
-    TemplateString(
-        { type, first, rest, loc }: t.TemplateString,
-        ctx: Ctx,
-    ): p.TemplateString {
-        return {
-            type: 'TemplateString',
-            loc,
-            first,
-            rest: rest.map(({ expr, suffix, loc }) => ({
-                type: 'TemplatePair',
-                expr: ToAst[expr.type](expr as any, ctx),
-                suffix,
-                loc,
-            })),
-        };
-    },
-
     Apply({ type, target, args, loc }: t.Apply, ctx: Ctx): p.Apply {
         let inner = ToAst[target.type](target as any, ctx);
         const parens: p.Parens = {
@@ -166,20 +151,6 @@ export const ToAst = {
             };
         }
         return { type, target: inner, suffixes: [parens], loc };
-    },
-    Boolean({ type, value, loc }: t.Boolean, ctx: Ctx): p.Boolean {
-        return { type, v: value ? 'true' : 'false', loc };
-    },
-    Number({ type, value, loc, kind }: t.Number, ctx: Ctx): p.Number {
-        let contents = value.toString();
-        if (kind === 'Float' && !contents.includes('.')) {
-            contents += '.0';
-        }
-        return {
-            type,
-            contents,
-            loc,
-        };
     },
     Ref({ type, kind, loc }: t.Ref, ctx: Ctx): p.Identifier {
         if (kind.type === 'Unresolved') {
