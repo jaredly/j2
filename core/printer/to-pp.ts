@@ -7,13 +7,25 @@ import { ConstantsToPP } from '../elements/constants';
 
 export type Ctx = {
     hideIds: boolean;
+    ToPP: ToPP;
 };
 
-export const ToPP = {
+export type ToPP = typeof GeneralToPP & typeof ConstantsToPP;
+
+export const makeToPP = (): ToPP => ({
+    ...GeneralToPP,
     ...ConstantsToPP,
+});
+
+export const newPPCtx = (hideIds: boolean): Ctx => ({
+    hideIds,
+    ToPP: makeToPP(),
+});
+
+export const GeneralToPP = {
     File: (file: p.File, ctx: Ctx): pp.PP => {
         return pp.items(
-            file.toplevels.map((t) => ToPP[t.type](t as any, ctx)),
+            file.toplevels.map((t) => ctx.ToPP[t.type](t as any, ctx)),
             file.loc,
             'always',
         );
@@ -21,8 +33,8 @@ export const ToPP = {
     Apply(apply: p.Apply_inner, ctx: Ctx): pp.PP {
         return pp.items(
             [
-                ToPP[apply.target.type](apply.target as any, ctx),
-                ...apply.suffixes.map((s) => ToPP[s.type](s, ctx)),
+                ctx.ToPP[apply.target.type](apply.target as any, ctx),
+                ...apply.suffixes.map((s) => ctx.ToPP[s.type](s, ctx)),
             ],
             apply.loc,
         );
@@ -37,9 +49,12 @@ export const ToPP = {
         { inner, decorators, loc }: p.DecoratedExpression_inner,
         ctx: Ctx,
     ): pp.PP {
-        const inn = ToPP[inner.type](inner as any, ctx);
+        const inn = ctx.ToPP[inner.type](inner as any, ctx);
         return pp.items(
-            [...decorators.map((dec) => ToPP[dec.type](dec as any, ctx)), inn],
+            [
+                ...decorators.map((dec) => ctx.ToPP[dec.type](dec as any, ctx)),
+                inn,
+            ],
             loc,
         );
     },
@@ -59,7 +74,7 @@ export const ToPP = {
                                       pp.atom(': ', a.loc),
                                   ]
                                 : []
-                            ).concat([ToPP[a.arg.type](a.arg as any, ctx)]),
+                            ).concat([ctx.ToPP[a.arg.type](a.arg as any, ctx)]),
                             a.loc,
                         );
                     }) ?? [],
@@ -74,18 +89,18 @@ export const ToPP = {
         return pp.items(
             [
                 pp.atom('(', loc),
-                ToPP[expr.type](expr as any, ctx),
+                ctx.ToPP[expr.type](expr as any, ctx),
                 pp.atom(')', loc),
             ],
             loc,
         );
     },
     DecExpr({ expr, loc }: p.DecExpr, ctx: Ctx): pp.PP {
-        return pp.items([ToPP[expr.type](expr as any, ctx)], loc);
+        return pp.items([ctx.ToPP[expr.type](expr as any, ctx)], loc);
     },
     DecType({ type, type_, loc }: p.DecType, ctx: Ctx): pp.PP {
         return pp.items(
-            [pp.atom(':', loc), ToPP[type_.type](type_ as any, ctx)],
+            [pp.atom(':', loc), ctx.ToPP[type_.type](type_ as any, ctx)],
             loc,
         );
     },
@@ -99,7 +114,9 @@ export const ToPP = {
     },
     Parens(parens: p.Parens, ctx: Ctx): pp.PP {
         return pp.args(
-            (parens.args?.items ?? []).map((a) => ToPP[a.type](a as any, ctx)),
+            (parens.args?.items ?? []).map((a) =>
+                ctx.ToPP[a.type](a as any, ctx),
+            ),
             parens.loc,
         );
     },
@@ -162,5 +179,5 @@ export const pegPrinter = (
     // past: peggy.ast.Grammar,
     ctx: Ctx,
 ): pp.PP => {
-    return injectComments(ToPP.File(ast, ctx), ast.comments.slice());
+    return injectComments(ctx.ToPP.File(ast, ctx), ast.comments.slice());
 };

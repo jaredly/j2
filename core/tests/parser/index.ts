@@ -5,7 +5,7 @@ import * as peggy from 'peggy';
 import { fullContext } from '../../ctx';
 import { parseTyped } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
-import { pegPrinter } from '../../printer/pegPrinter';
+import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { printToString } from '../../printer/pp';
 import { analyze, analyzeContext, verify } from '../../typing/analyze';
 import { printCtx, ToAst } from '../../typing/to-ast';
@@ -25,7 +25,7 @@ export const parserTests = () => {
         const file = fixComments(parseTyped(chunk + '\n'));
         if (file.toplevels.length) {
             const ctx = fullContext();
-            const typed = ToTast.File(file, ctx);
+            const typed = ctx.ToTast.File(file, ctx);
             const actx = analyzeContext(ctx);
             const checked = analyze(typed, actx);
             const errors = verify(checked, actx);
@@ -39,9 +39,10 @@ export const parserTests = () => {
 
             console.log();
 
-            const astAgain = ToAst.File(checked, printCtx(ctx));
+            const pactx = printCtx(ctx);
+            const astAgain = pactx.ToAst.File(checked, pactx);
             console.log(
-                printToString(pegPrinter(astAgain, { hideIds: false }), 100),
+                printToString(pegPrinter(astAgain, newPPCtx(false)), 100),
             );
             console.log();
         }

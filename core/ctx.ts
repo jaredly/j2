@@ -3,7 +3,7 @@ import hashObject from 'object-hash';
 import { Expression, Sym, TApply, TVars, Type } from './typed-ast';
 import { toId } from './ids';
 import { Loc, parseTyped } from './grammar/base.parser';
-import { ToTast } from './typing/to-tast';
+import { makeToTast, ToTast } from './typing/to-tast';
 
 export type FullContext = {
     values: {
@@ -167,6 +167,7 @@ export const newContext = (): FullContext => {
         },
         resolve: (name, rawHash) => resolve(ctx, name, rawHash),
         resolveType: (name, rawHash) => resolveType(ctx, name, rawHash),
+        ToTast: makeToTast(),
     };
     return ctx;
 };

@@ -1,6 +1,7 @@
 // Generated?
 
 import { Id, idToString } from './ids';
+export { Ctx } from './typing/to-tast';
 
 export type RefKind =
     | {
@@ -14,8 +15,3 @@ export type RefKind =
 
 export const refHash = (ref: RefKind) =>
     ref.type === 'Global' ? 'h' + idToString(ref.id) : '' + ref.sym;
-
-export type Ctx = {
-    resolve: (name: string, hash?: string | null) => Array<RefKind>;
-    resolveType: (name: string, hash?: string | null) => RefKind | null;
-};

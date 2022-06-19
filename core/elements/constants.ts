@@ -1,12 +1,11 @@
 import { Ctx } from '..';
 import { noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
-import { Ctx as PCtx, ToPP } from '../printer/pegPrinter';
+import { Ctx as PCtx, ToPP } from '../printer/to-pp';
 import * as pp from '../printer/pp';
 import * as t from '../typed-ast';
 import { Expression, Loc } from '../typed-ast';
 import { Ctx as ACtx, ToAst } from '../typing/to-ast';
-import { ToTast } from '../typing/to-tast';
 
 export type Boolean = { type: 'Boolean'; loc: Loc; value: boolean };
 // export type String = { type: 'String'; loc: Loc; value: boolean };
@@ -34,7 +33,7 @@ export const ConstantsToTast = {
             loc: ts.loc,
             first: ts.first,
             rest: ts.rest.map(({ expr, suffix, loc }) => ({
-                expr: ToTast[expr.type](expr as any, ctx),
+                expr: ctx.ToTast[expr.type](expr as any, ctx),
                 suffix,
                 loc,
             })),
@@ -71,7 +70,7 @@ export const ConstantsToAst = {
             first,
             rest: rest.map(({ expr, suffix, loc }) => ({
                 type: 'TemplatePair',
-                expr: ToAst[expr.type](expr as any, ctx),
+                expr: ctx.ToAst[expr.type](expr as any, ctx),
                 suffix,
                 loc,
             })),
@@ -100,7 +99,7 @@ export const ConstantsToPP = {
         }
         let items: pp.PP[] = [pp.atom(`"${ts.first}\${`, noloc)];
         ts.rest.forEach(({ expr, suffix, loc }, i) => {
-            items.push(ToPP[expr.type](expr as any, ctx));
+            items.push(ctx.ToPP[expr.type](expr as any, ctx));
             items.push(
                 pp.atom(
                     '}' + suffix + (i === ts.rest.length - 1 ? '"' : '${'),

@@ -10,6 +10,7 @@ export type Ctx = {
         loc: p.Loc,
         kind: 'value' | 'type' | 'decorator',
     ) => p.Identifier;
+    ToAst: ToAst;
 };
 
 export const printCtx = (ctx: FullContext): Ctx => {
@@ -34,34 +35,39 @@ export const printCtx = (ctx: FullContext): Ctx => {
                 loc,
             };
         },
+        ToAst: makeToAst(),
     };
 };
 
-export const ToAst = {
+export const makeToAst = (): ToAst => ({
     ...ConstantsToAst,
+    ...GeneralToAst,
+});
+
+export const GeneralToAst = {
     File({ type, toplevels, loc, comments }: t.File, ctx: Ctx): p.File {
         // TOOD: Go through and find all hashes, right?
         // maybe when printing unresolved things, put `#[:unresolved:]` or something?
         return {
             type,
-            toplevels: toplevels.map((t) => ToAst[t.type](t, ctx)),
+            toplevels: toplevels.map((t) => ctx.ToAst[t.type](t, ctx)),
             loc,
             comments,
         };
     },
     ToplevelExpression({ type, expr, loc }: t.Toplevel, ctx: Ctx): p.Toplevel {
-        return ToAst[expr.type](expr as any, ctx);
+        return ctx.ToAst[expr.type](expr as any, ctx);
     },
     DecoratedExpression(
         { type, decorators, expr, loc }: t.DecoratedExpression,
         ctx: Ctx,
     ): p.DecoratedExpression_inner {
-        const inner = ToAst[expr.type](expr as any, ctx);
+        const inner = ctx.ToAst[expr.type](expr as any, ctx);
         if (inner.type === 'DecoratedExpression') {
             return {
                 ...inner,
                 decorators: decorators
-                    .map((d) => ToAst[d.type](d, ctx))
+                    .map((d) => ctx.ToAst[d.type](d, ctx))
                     .concat(inner.decorators),
             };
         }
@@ -69,7 +75,7 @@ export const ToAst = {
             type: 'DecoratedExpression',
             inner,
             loc,
-            decorators: decorators.map((d) => ToAst[d.type](d, ctx)),
+            decorators: decorators.map((d) => ctx.ToAst[d.type](d, ctx)),
         };
     },
     Decorator({ type, id, args, loc }: t.Decorator, ctx: Ctx): p.Decorator {
@@ -98,7 +104,7 @@ export const ToAst = {
                                 arg.type === 'Expr'
                                     ? {
                                           type: 'DecExpr',
-                                          expr: ToAst[arg.expr.type](
+                                          expr: ctx.ToAst[arg.expr.type](
                                               arg.expr as any,
                                               ctx,
                                           ),
@@ -107,7 +113,7 @@ export const ToAst = {
                                     : {
                                           type: 'DecType',
                                           // @ts-ignore
-                                          type_: ToAst[arg.typ.type](
+                                          type_: ctx.ToAst[arg.typ.type](
                                               arg.typ as any,
                                               ctx,
                                           ),
@@ -129,13 +135,13 @@ export const ToAst = {
     },
 
     Apply({ type, target, args, loc }: t.Apply, ctx: Ctx): p.Apply {
-        let inner = ToAst[target.type](target as any, ctx);
+        let inner = ctx.ToAst[target.type](target as any, ctx);
         const parens: p.Parens = {
             loc,
             type: 'Parens',
             args: {
                 type: 'CommaExpr',
-                items: args.map((a) => ToAst[a.type](a as any, ctx)),
+                items: args.map((a) => ctx.ToAst[a.type](a as any, ctx)),
                 loc,
             },
         };
@@ -165,3 +171,5 @@ export const ToAst = {
         }
     },
 };
+
+export type ToAst = typeof ConstantsToAst & typeof GeneralToAst;

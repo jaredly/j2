@@ -2,13 +2,13 @@ import * as fs from 'fs';
 import { fullContext, noloc } from '../../ctx';
 import { parseTyped } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
-import { pegPrinter } from '../../printer/pegPrinter';
+import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { printToString } from '../../printer/pp';
 import { transformFile } from '../../transform-tast';
 import { File } from '../../typed-ast';
 import { analyze, analyzeContext, verify } from '../analyze';
 import { printCtx, ToAst } from '../to-ast';
-import { ToTast } from '../to-tast';
+import { makeToTast, ToTast } from '../to-tast';
 
 export type Fixture = [string, string, string, string | undefined, number];
 export const clearLocs = (ast: File) => {
@@ -81,7 +81,7 @@ export function runFixture(input: string, output: string) {
     const ctx = fullContext();
     let tast;
     try {
-        tast = ToTast.File(fixComments(parseTyped(input)), ctx);
+        tast = ctx.ToTast.File(fixComments(parseTyped(input)), ctx);
     } catch (err) {
         console.log('Failed to parse input:', input);
         throw err;
@@ -90,10 +90,9 @@ export function runFixture(input: string, output: string) {
     const checked = analyze(tast, analyzeContext(ctx));
     // console.log(JSON.stringify(checked.toplevels[0]));
 
+    const actx = printCtx(ctx);
     const newOutput = printToString(
-        pegPrinter(ToAst.File(checked, printCtx(ctx)), {
-            hideIds: false,
-        }),
+        pegPrinter(actx.ToAst.File(checked, actx), newPPCtx(false)),
         100,
     );
 
@@ -120,6 +119,6 @@ export function runFixture(input: string, output: string) {
         newErrors,
         checked,
         newOutput,
-        outputTast: ToTast.File(fixComments(parseTyped(output)), ctx),
+        outputTast: ctx.ToTast.File(fixComments(parseTyped(output)), ctx),
     };
 }
