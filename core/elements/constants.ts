@@ -1,11 +1,11 @@
 import { Ctx } from '..';
 import { noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
-import { Ctx as PCtx, ToPP } from '../printer/to-pp';
+import { Ctx as PCtx } from '../printer/to-pp';
 import * as pp from '../printer/pp';
 import * as t from '../typed-ast';
 import { Expression, Loc } from '../typed-ast';
-import { Ctx as ACtx, ToAst } from '../typing/to-ast';
+import { Ctx as ACtx } from '../typing/to-ast';
 
 export type Boolean = { type: 'Boolean'; loc: Loc; value: boolean };
 // export type String = { type: 'String'; loc: Loc; value: boolean };
@@ -26,7 +26,7 @@ export type TemplateString = {
 
 export type String = { type: 'String'; text: string; loc: Loc };
 
-export const ConstantsToTast = {
+export const ToTast = {
     TemplateString(ts: p.TemplateString, ctx: Ctx): t.TemplateString {
         return {
             type: 'TemplateString',
@@ -59,7 +59,7 @@ export const ConstantsToTast = {
     },
 };
 
-export const ConstantsToAst = {
+export const ToAst = {
     TemplateString(
         { type, first, rest, loc }: t.TemplateString,
         ctx: ACtx,
@@ -92,7 +92,7 @@ export const ConstantsToAst = {
     },
 };
 
-export const ConstantsToPP = {
+export const ToPP = {
     TemplateString(ts: p.TemplateString, ctx: PCtx): pp.PP {
         if (!ts.rest.length) {
             return pp.atom(`"${ts.first}"`, ts.loc);

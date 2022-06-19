@@ -3,7 +3,7 @@ import * as p from '../grammar/base.parser';
 import * as peggy from 'peggy';
 import * as pp from './pp';
 import { noloc } from '../ctx';
-import { ConstantsToPP } from '../elements/constants';
+import { ToPP as ConstantsToPP } from '../elements/constants';
 
 export type Ctx = {
     hideIds: boolean;

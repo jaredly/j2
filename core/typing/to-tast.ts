@@ -1,4 +1,4 @@
-import { ConstantsToTast } from '../elements/constants';
+import { ToTast as ConstantsToTast } from '../elements/constants';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 

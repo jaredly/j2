@@ -1,6 +1,6 @@
 import { refHash } from '..';
 import { FullContext } from '../ctx';
-import { ConstantsToAst } from '../elements/constants';
+import { ToAst as ConstantsToAst } from '../elements/constants';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 
