@@ -57,10 +57,14 @@ export const makeIndividualTransformer = (
         `;
     }
     if (type.type === 'TSTypeReference') {
-        if (type.typeName.type !== 'Identifier') {
-            throw new Error(`qualified?`);
-        }
-        if (type.typeName.name === 'Array') {
+        // if (type.typeName.type !== 'Identifier') {
+        //     console.log(type.typeName);
+        //     throw new Error(`qualified?`);
+        // }
+        if (
+            type.typeName.type === 'Identifier' &&
+            type.typeName.name === 'Array'
+        ) {
             const inner = makeIndividualTransformer(
                 `${newName}$item${level}`,
                 'result',
@@ -89,20 +93,21 @@ export const makeIndividualTransformer = (
             // console.log('Generics not handled', type.loc);
             // return null;
         }
+        const name =
+            type.typeName.type === 'Identifier'
+                ? type.typeName.name
+                : type.typeName.right.name;
         // if (visitorTypes.includes(type.typeName.name)) {
         // console.log(type.typeName.name, level);
-        if (ctx.transformerStatus[type.typeName.name] === undefined) {
-            ctx.transformers[type.typeName.name] = makeTransformer(
-                type.typeName.name,
-                ctx,
-            );
-            // transformerStatus[type.typeName.name] = true;
+        if (ctx.transformerStatus[name] === undefined) {
+            ctx.transformers[name] = makeTransformer(name, ctx);
+            // transformerStatus[name] = true;
         }
-        if (ctx.transformerStatus[type.typeName.name] === null) {
+        if (ctx.transformerStatus[name] === null) {
             return null;
         }
         return `
-                const ${newName} = transform${type.typeName.name}(${vbl}, visitor, ctx);
+                const ${newName} = transform${name}(${vbl}, visitor, ctx);
                 changed${level} = changed${level} || ${newName} !== ${vbl};`;
         // }
         // if (types[type.typeName.name]) {

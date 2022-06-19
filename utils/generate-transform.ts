@@ -4,10 +4,8 @@
 
 import * as babel from '@babel/core';
 import fs from 'fs';
+import path from 'path';
 import { buildTransformFile, Ctx, generateCheckers } from './build-transform';
-
-// const [_, __, inFile, outFile, visitorTypesRaw, ...distinguishTypesRaw] =
-//     process.argv;
 
 const inFile = './core/typed-ast.ts';
 
@@ -22,6 +20,8 @@ const body = ast.program.body;
 
 const visitorNames: string[] = [];
 
+const imports: { source: string; imports: string[] }[] = [];
+
 body.forEach((stmt) => {
     if (
         stmt.type === 'ExportNamedDeclaration' &&
@@ -30,6 +30,41 @@ body.forEach((stmt) => {
     ) {
         visitorNames.push(stmt.declaration.id.name);
     }
+    if (stmt.type === 'ImportDeclaration') {
+        if (stmt.source.type === 'StringLiteral') {
+            imports.push({
+                source: stmt.source.value,
+                imports: stmt.specifiers.map((spec) => spec.local.name),
+            });
+        }
+    }
+});
+
+imports.forEach((imp) => {
+    const filePath = path.join(
+        path.dirname(inFile),
+        imp.source + (imp.source.endsWith('.') ? '/index.ts' : '.ts'),
+    );
+    console.log(filePath);
+
+    const ast = babel.parse(fs.readFileSync(filePath, 'utf8'), {
+        filename: inFile,
+        presets: ['@babel/preset-typescript'],
+    });
+    if (!ast) {
+        throw new Error(`unable to parse`);
+    }
+
+    ast.program.body.forEach((item) => {
+        if (
+            item.type === 'ExportNamedDeclaration' &&
+            item.declaration &&
+            item.declaration.type === 'TSTypeAliasDeclaration'
+        ) {
+            visitorNames.push(item.declaration.id.name);
+            body.push(item);
+        }
+    });
 });
 
 const ctx: Ctx = {

@@ -9,6 +9,7 @@ export {
     DecoratorArg,
     TDecorated,
 } from './elements/decorators';
+export { Id } from './ids';
 
 export type Loc = {
     start: { line: number; column: number; offset: number };

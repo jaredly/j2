@@ -1,16 +1,10 @@
-import {Loc, File, Toplevel, Expression, UnresolvedRef, DecoratedExpression, Decorator, DecoratorArg, Type, TExpr, String, TemplateString, Ref, Boolean, Number, Apply, Sym, TRef, TDecorated, TApply, TVars, TLambda, TAdd, TSub, TOr} from './typed-ast';
+import {Loc, File, Toplevel, Expression, RefKind, Id, DecoratedExpression, Decorator, DecoratorArg, Type, TExpr, String, UnresolvedRef, Ref, Apply, Sym, TRef, TApply, TVars, TLambda, TAdd, TSub, TOr, Boolean, Number, TemplateString, TDecorated} from './typed-ast';
 
 export type Visitor<Ctx> = {
     Loc?: (node: Loc, ctx: Ctx) => null | false | Loc | [Loc | null, Ctx]
     LocPost?: (node: Loc, ctx: Ctx) => null | Loc,
     File?: (node: File, ctx: Ctx) => null | false | File | [File | null, Ctx]
     FilePost?: (node: File, ctx: Ctx) => null | File,
-    TemplateString?: (node: TemplateString, ctx: Ctx) => null | false | TemplateString | [TemplateString | null, Ctx]
-    TemplateStringPost?: (node: TemplateString, ctx: Ctx) => null | TemplateString,
-    Decorator?: (node: Decorator, ctx: Ctx) => null | false | Decorator | [Decorator | null, Ctx]
-    DecoratorPost?: (node: Decorator, ctx: Ctx) => null | Decorator,
-    DecoratorArg?: (node: DecoratorArg, ctx: Ctx) => null | false | DecoratorArg | [DecoratorArg | null, Ctx]
-    DecoratorArgPost?: (node: DecoratorArg, ctx: Ctx) => null | DecoratorArg,
     UnresolvedRef?: (node: UnresolvedRef, ctx: Ctx) => null | false | UnresolvedRef | [UnresolvedRef | null, Ctx]
     UnresolvedRefPost?: (node: UnresolvedRef, ctx: Ctx) => null | UnresolvedRef,
     Ref?: (node: Ref, ctx: Ctx) => null | false | Ref | [Ref | null, Ctx]
@@ -19,20 +13,12 @@ export type Visitor<Ctx> = {
     ToplevelPost?: (node: Toplevel, ctx: Ctx) => null | Toplevel,
     Expression?: (node: Expression, ctx: Ctx) => null | false | Expression | [Expression | null, Ctx]
     ExpressionPost?: (node: Expression, ctx: Ctx) => null | Expression,
-    DecoratedExpression?: (node: DecoratedExpression, ctx: Ctx) => null | false | DecoratedExpression | [DecoratedExpression | null, Ctx]
-    DecoratedExpressionPost?: (node: DecoratedExpression, ctx: Ctx) => null | DecoratedExpression,
-    Boolean?: (node: Boolean, ctx: Ctx) => null | false | Boolean | [Boolean | null, Ctx]
-    BooleanPost?: (node: Boolean, ctx: Ctx) => null | Boolean,
-    Number?: (node: Number, ctx: Ctx) => null | false | Number | [Number | null, Ctx]
-    NumberPost?: (node: Number, ctx: Ctx) => null | Number,
     Apply?: (node: Apply, ctx: Ctx) => null | false | Apply | [Apply | null, Ctx]
     ApplyPost?: (node: Apply, ctx: Ctx) => null | Apply,
     Sym?: (node: Sym, ctx: Ctx) => null | false | Sym | [Sym | null, Ctx]
     SymPost?: (node: Sym, ctx: Ctx) => null | Sym,
     TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx]
     TRefPost?: (node: TRef, ctx: Ctx) => null | TRef,
-    TDecorated?: (node: TDecorated, ctx: Ctx) => null | false | TDecorated | [TDecorated | null, Ctx]
-    TDecoratedPost?: (node: TDecorated, ctx: Ctx) => null | TDecorated,
     TApply?: (node: TApply, ctx: Ctx) => null | false | TApply | [TApply | null, Ctx]
     TApplyPost?: (node: TApply, ctx: Ctx) => null | TApply,
     TVars?: (node: TVars, ctx: Ctx) => null | false | TVars | [TVars | null, Ctx]
@@ -49,8 +35,24 @@ export type Visitor<Ctx> = {
     TSubPost?: (node: TSub, ctx: Ctx) => null | TSub,
     TOr?: (node: TOr, ctx: Ctx) => null | false | TOr | [TOr | null, Ctx]
     TOrPost?: (node: TOr, ctx: Ctx) => null | TOr,
+    RefKind?: (node: RefKind, ctx: Ctx) => null | false | RefKind | [RefKind | null, Ctx]
+    RefKindPost?: (node: RefKind, ctx: Ctx) => null | RefKind,
+    Boolean?: (node: Boolean, ctx: Ctx) => null | false | Boolean | [Boolean | null, Ctx]
+    BooleanPost?: (node: Boolean, ctx: Ctx) => null | Boolean,
+    Number?: (node: Number, ctx: Ctx) => null | false | Number | [Number | null, Ctx]
+    NumberPost?: (node: Number, ctx: Ctx) => null | Number,
+    TemplateString?: (node: TemplateString, ctx: Ctx) => null | false | TemplateString | [TemplateString | null, Ctx]
+    TemplateStringPost?: (node: TemplateString, ctx: Ctx) => null | TemplateString,
     String?: (node: String, ctx: Ctx) => null | false | String | [String | null, Ctx]
-    StringPost?: (node: String, ctx: Ctx) => null | String
+    StringPost?: (node: String, ctx: Ctx) => null | String,
+    Decorator?: (node: Decorator, ctx: Ctx) => null | false | Decorator | [Decorator | null, Ctx]
+    DecoratorPost?: (node: Decorator, ctx: Ctx) => null | Decorator,
+    DecoratorArg?: (node: DecoratorArg, ctx: Ctx) => null | false | DecoratorArg | [DecoratorArg | null, Ctx]
+    DecoratorArgPost?: (node: DecoratorArg, ctx: Ctx) => null | DecoratorArg,
+    DecoratedExpression?: (node: DecoratedExpression, ctx: Ctx) => null | false | DecoratedExpression | [DecoratedExpression | null, Ctx]
+    DecoratedExpressionPost?: (node: DecoratedExpression, ctx: Ctx) => null | DecoratedExpression,
+    TDecorated?: (node: TDecorated, ctx: Ctx) => null | false | TDecorated | [TDecorated | null, Ctx]
+    TDecoratedPost?: (node: TDecorated, ctx: Ctx) => null | TDecorated
 }
 export const transformLoc = <Ctx>(node: Loc, visitor: Visitor<Ctx>, ctx: Ctx): Loc => {
         if (!node) {
@@ -86,12 +88,14 @@ export const transformLoc = <Ctx>(node: Loc, visitor: Visitor<Ctx>, ctx: Ctx): L
         
     }
 
-export const transformUnresolvedRef = <Ctx>(node: UnresolvedRef, visitor: Visitor<Ctx>, ctx: Ctx): UnresolvedRef => {
+// not a type Id
+
+export const transformRefKind = <Ctx>(node: RefKind, visitor: Visitor<Ctx>, ctx: Ctx): RefKind => {
         if (!node) {
-            throw new Error('No UnresolvedRef provided');
+            throw new Error('No RefKind provided');
         }
         
-        const transformed = visitor.UnresolvedRef ? visitor.UnresolvedRef(node, ctx) : null;
+        const transformed = visitor.RefKind ? visitor.RefKind(node, ctx) : null;
         if (transformed === false) {
             return node;
         }
@@ -110,8 +114,8 @@ export const transformUnresolvedRef = <Ctx>(node: UnresolvedRef, visitor: Visito
         const updatedNode = node;
         
         node = updatedNode;
-        if (visitor.UnresolvedRefPost) {
-            const transformed = visitor.UnresolvedRefPost(node, ctx);
+        if (visitor.RefKindPost) {
+            const transformed = visitor.RefKindPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }
@@ -898,12 +902,12 @@ export const transformFile = <Ctx>(node: File, visitor: Visitor<Ctx>, ctx: Ctx):
         
     }
 
-export const transformTemplateString = <Ctx>(node: TemplateString, visitor: Visitor<Ctx>, ctx: Ctx): TemplateString => {
+export const transformUnresolvedRef = <Ctx>(node: UnresolvedRef, visitor: Visitor<Ctx>, ctx: Ctx): UnresolvedRef => {
         if (!node) {
-            throw new Error('No TemplateString provided');
+            throw new Error('No UnresolvedRef provided');
         }
         
-        const transformed = visitor.TemplateString ? visitor.TemplateString(node, ctx) : null;
+        const transformed = visitor.UnresolvedRef ? visitor.UnresolvedRef(node, ctx) : null;
         if (transformed === false) {
             return node;
         }
@@ -919,54 +923,11 @@ export const transformTemplateString = <Ctx>(node: TemplateString, visitor: Visi
         }
         
         let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                let updatedNode$rest = node.rest;
-                {
-                    let changed2 = false;
-                    const arr1 = node.rest.map((updatedNode$rest$item1) => {
-                        
-            let result = updatedNode$rest$item1;
-            {
-                let changed3 = false;
-                
-                const result$expr = transformExpression(updatedNode$rest$item1.expr, visitor, ctx);
-                changed3 = changed3 || result$expr !== updatedNode$rest$item1.expr;
-
-                
-                const result$loc = transformLoc(updatedNode$rest$item1.loc, visitor, ctx);
-                changed3 = changed3 || result$loc !== updatedNode$rest$item1.loc;
-                if (changed3) {
-                    result =  {...result, expr: result$expr, loc: result$loc};
-                    changed2 = true;
-                }
-            }
-            
-                        return result
-                    })
-                    if (changed2) {
-                        updatedNode$rest = arr1;
-                        changed1 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, rest: updatedNode$rest, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
+        const updatedNode = node;
         
         node = updatedNode;
-        if (visitor.TemplateStringPost) {
-            const transformed = visitor.TemplateStringPost(node, ctx);
+        if (visitor.UnresolvedRefPost) {
+            const transformed = visitor.UnresolvedRefPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }
@@ -1013,98 +974,6 @@ export const transformRef = <Ctx>(node: Ref, visitor: Visitor<Ctx>, ctx: Ctx): R
         node = updatedNode;
         if (visitor.RefPost) {
             const transformed = visitor.RefPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
-export const transformBoolean = <Ctx>(node: Boolean, visitor: Visitor<Ctx>, ctx: Ctx): Boolean => {
-        if (!node) {
-            throw new Error('No Boolean provided');
-        }
-        
-        const transformed = visitor.Boolean ? visitor.Boolean(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
-        
-        node = updatedNode;
-        if (visitor.BooleanPost) {
-            const transformed = visitor.BooleanPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
-export const transformNumber = <Ctx>(node: Number, visitor: Visitor<Ctx>, ctx: Ctx): Number => {
-        if (!node) {
-            throw new Error('No Number provided');
-        }
-        
-        const transformed = visitor.Number ? visitor.Number(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
-        
-        node = updatedNode;
-        if (visitor.NumberPost) {
-            const transformed = visitor.NumberPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }
@@ -1252,73 +1121,6 @@ export const transformTRef = <Ctx>(node: TRef, visitor: Visitor<Ctx>, ctx: Ctx):
         node = updatedNode;
         if (visitor.TRefPost) {
             const transformed = visitor.TRefPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
-export const transformTDecorated = <Ctx>(node: TDecorated, visitor: Visitor<Ctx>, ctx: Ctx): TDecorated => {
-        if (!node) {
-            throw new Error('No TDecorated provided');
-        }
-        
-        const transformed = visitor.TDecorated ? visitor.TDecorated(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                let updatedNode$decorators = node.decorators;
-                {
-                    let changed2 = false;
-                    const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
-                        
-                const result = transformDecorator(updatedNode$decorators$item1, visitor, ctx);
-                changed2 = changed2 || result !== updatedNode$decorators$item1;
-                        return result
-                    })
-                    if (changed2) {
-                        updatedNode$decorators = arr1;
-                        changed1 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$inner = transformType(node.inner, visitor, ctx);
-                changed1 = changed1 || updatedNode$inner !== node.inner;
-
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, decorators: updatedNode$decorators, inner: updatedNode$inner, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
-        
-        node = updatedNode;
-        if (visitor.TDecoratedPost) {
-            const transformed = visitor.TDecoratedPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }
@@ -1719,6 +1521,242 @@ export const transformTOr = <Ctx>(node: TOr, visitor: Visitor<Ctx>, ctx: Ctx): T
         node = updatedNode;
         if (visitor.TOrPost) {
             const transformed = visitor.TOrPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformBoolean = <Ctx>(node: Boolean, visitor: Visitor<Ctx>, ctx: Ctx): Boolean => {
+        if (!node) {
+            throw new Error('No Boolean provided');
+        }
+        
+        const transformed = visitor.Boolean ? visitor.Boolean(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.BooleanPost) {
+            const transformed = visitor.BooleanPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformNumber = <Ctx>(node: Number, visitor: Visitor<Ctx>, ctx: Ctx): Number => {
+        if (!node) {
+            throw new Error('No Number provided');
+        }
+        
+        const transformed = visitor.Number ? visitor.Number(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.NumberPost) {
+            const transformed = visitor.NumberPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTemplateString = <Ctx>(node: TemplateString, visitor: Visitor<Ctx>, ctx: Ctx): TemplateString => {
+        if (!node) {
+            throw new Error('No TemplateString provided');
+        }
+        
+        const transformed = visitor.TemplateString ? visitor.TemplateString(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                let updatedNode$rest = node.rest;
+                {
+                    let changed2 = false;
+                    const arr1 = node.rest.map((updatedNode$rest$item1) => {
+                        
+            let result = updatedNode$rest$item1;
+            {
+                let changed3 = false;
+                
+                const result$expr = transformExpression(updatedNode$rest$item1.expr, visitor, ctx);
+                changed3 = changed3 || result$expr !== updatedNode$rest$item1.expr;
+
+                
+                const result$loc = transformLoc(updatedNode$rest$item1.loc, visitor, ctx);
+                changed3 = changed3 || result$loc !== updatedNode$rest$item1.loc;
+                if (changed3) {
+                    result =  {...result, expr: result$expr, loc: result$loc};
+                    changed2 = true;
+                }
+            }
+            
+                        return result
+                    })
+                    if (changed2) {
+                        updatedNode$rest = arr1;
+                        changed1 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, rest: updatedNode$rest, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.TemplateStringPost) {
+            const transformed = visitor.TemplateStringPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTDecorated = <Ctx>(node: TDecorated, visitor: Visitor<Ctx>, ctx: Ctx): TDecorated => {
+        if (!node) {
+            throw new Error('No TDecorated provided');
+        }
+        
+        const transformed = visitor.TDecorated ? visitor.TDecorated(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                let updatedNode$decorators = node.decorators;
+                {
+                    let changed2 = false;
+                    const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
+                        
+                const result = transformDecorator(updatedNode$decorators$item1, visitor, ctx);
+                changed2 = changed2 || result !== updatedNode$decorators$item1;
+                        return result
+                    })
+                    if (changed2) {
+                        updatedNode$decorators = arr1;
+                        changed1 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$inner = transformType(node.inner, visitor, ctx);
+                changed1 = changed1 || updatedNode$inner !== node.inner;
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, decorators: updatedNode$decorators, inner: updatedNode$inner, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.TDecoratedPost) {
+            const transformed = visitor.TDecoratedPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }
