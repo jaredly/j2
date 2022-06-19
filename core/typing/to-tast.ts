@@ -1,4 +1,5 @@
 import { ToTast as ConstantsToTast } from '../elements/constants';
+import { ToTast as DecoratorsToTast } from '../elements/decorators';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 
@@ -8,10 +9,15 @@ export type Ctx = {
     ToTast: ToTast;
 };
 
+export type ToTast = typeof ConstantsToTast &
+    typeof GeneralToTast &
+    typeof DecoratorsToTast;
+
 export const makeToTast = (): ToTast => {
     return {
         ...GeneralToTast,
         ...ConstantsToTast,
+        ...DecoratorsToTast,
     };
 };
 
@@ -36,72 +42,8 @@ export const GeneralToTast = {
             loc: top.loc,
         };
     },
-    DecoratedExpression(
-        expr: p.DecoratedExpression_inner,
-        ctx: Ctx,
-    ): t.Expression {
-        const decorators = expr.decorators.map((d) =>
-            ctx.ToTast.Decorator(d, ctx),
-        );
-        let inner = ctx.ToTast[expr.inner.type](expr.inner as any, ctx);
-        // Collapse nested decorated expressions
-        if (inner.type === 'DecoratedExpression') {
-            decorators.push(...inner.decorators);
-            inner = inner.expr;
-        }
-        return {
-            type: 'DecoratedExpression',
-            decorators,
-            expr: inner,
-            loc: expr.loc,
-        };
-    },
     ParenedExpression(expr: p.ParenedExpression, ctx: Ctx): t.Expression {
         return ctx.ToTast[expr.expr.type](expr.expr as any, ctx);
-    },
-    Decorator(decorator: p.Decorator, ctx: Ctx): t.Decorator {
-        return {
-            type: 'Decorator',
-            id: {
-                ref: {
-                    type: 'Unresolved',
-                    text: decorator.id.text,
-                    hash: filterUnresolved(decorator.id.hash?.slice(2, -1)),
-                },
-                loc: decorator.loc,
-            },
-            args:
-                decorator.args?.items.map((arg) =>
-                    ctx.ToTast.LabeledDecoratorArg(arg, ctx),
-                ) ?? [],
-            loc: decorator.loc,
-        };
-    },
-    LabeledDecoratorArg(
-        { arg, label, loc }: p.LabeledDecoratorArg,
-        ctx: Ctx,
-    ): { loc: p.Loc; label: string | null; arg: t.DecoratorArg } {
-        if (arg.type === 'DecExpr') {
-            return {
-                label,
-                loc,
-                arg: {
-                    type: 'Expr',
-                    expr: ctx.ToTast[arg.expr.type](arg.expr as any, ctx),
-                    loc: arg.loc,
-                },
-            };
-        } else {
-            return {
-                label,
-                loc,
-                arg: {
-                    type: 'Type',
-                    typ: ctx.ToTast.Type(arg.type_, ctx),
-                    loc: arg.loc,
-                },
-            };
-        }
     },
     Type(type: p.Type, ctx: Ctx): t.Type {
         const hash = filterUnresolved(type.hash?.slice(2, -1));
@@ -159,7 +101,5 @@ export const GeneralToTast = {
     },
 };
 
-export type ToTast = typeof ConstantsToTast & typeof GeneralToTast;
-
-const filterUnresolved = (v: string | null | undefined) =>
+export const filterUnresolved = (v: string | null | undefined) =>
     v == null || v === ':unresolved:' ? null : v;

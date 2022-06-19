@@ -1,8 +1,19 @@
 import { refHash } from '..';
 import { FullContext } from '../ctx';
 import { ToAst as ConstantsToAst } from '../elements/constants';
+import { ToAst as DecoratorsToAst } from '../elements/decorators';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
+
+export const makeToAst = (): ToAst => ({
+    ...ConstantsToAst,
+    ...GeneralToAst,
+    ...DecoratorsToAst,
+});
+
+export type ToAst = typeof ConstantsToAst &
+    typeof GeneralToAst &
+    typeof DecoratorsToAst;
 
 export type Ctx = {
     printRef: (
@@ -39,11 +50,6 @@ export const printCtx = (ctx: FullContext): Ctx => {
     };
 };
 
-export const makeToAst = (): ToAst => ({
-    ...ConstantsToAst,
-    ...GeneralToAst,
-});
-
 export const GeneralToAst = {
     File({ type, toplevels, loc, comments }: t.File, ctx: Ctx): p.File {
         // TOOD: Go through and find all hashes, right?
@@ -57,76 +63,6 @@ export const GeneralToAst = {
     },
     ToplevelExpression({ type, expr, loc }: t.Toplevel, ctx: Ctx): p.Toplevel {
         return ctx.ToAst[expr.type](expr as any, ctx);
-    },
-    DecoratedExpression(
-        { type, decorators, expr, loc }: t.DecoratedExpression,
-        ctx: Ctx,
-    ): p.DecoratedExpression_inner {
-        const inner = ctx.ToAst[expr.type](expr as any, ctx);
-        if (inner.type === 'DecoratedExpression') {
-            return {
-                ...inner,
-                decorators: decorators
-                    .map((d) => ctx.ToAst[d.type](d, ctx))
-                    .concat(inner.decorators),
-            };
-        }
-        return {
-            type: 'DecoratedExpression',
-            inner,
-            loc,
-            decorators: decorators.map((d) => ctx.ToAst[d.type](d, ctx)),
-        };
-    },
-    Decorator({ type, id, args, loc }: t.Decorator, ctx: Ctx): p.Decorator {
-        return {
-            type,
-            id:
-                id.ref.type === 'Unresolved'
-                    ? {
-                          type: 'DecoratorId',
-                          text: id.ref.text,
-                          hash: id.ref.hash ?? '#[:unresolved:]',
-                          loc: id.loc,
-                      }
-                    : {
-                          ...ctx.printRef(id.ref, id.loc, 'decorator'),
-                          type: 'DecoratorId',
-                      },
-            args: {
-                type: 'DecoratorArgs',
-                items: args.map(
-                    ({ arg, loc, label }): p.LabeledDecoratorArg => {
-                        return {
-                            type: 'LabeledDecoratorArg',
-                            label,
-                            arg:
-                                arg.type === 'Expr'
-                                    ? {
-                                          type: 'DecExpr',
-                                          expr: ctx.ToAst[arg.expr.type](
-                                              arg.expr as any,
-                                              ctx,
-                                          ),
-                                          loc: arg.loc,
-                                      }
-                                    : {
-                                          type: 'DecType',
-                                          // @ts-ignore
-                                          type_: ctx.ToAst[arg.typ.type](
-                                              arg.typ as any,
-                                              ctx,
-                                          ),
-                                          loc: arg.loc,
-                                      },
-                            loc,
-                        };
-                    },
-                ),
-                loc,
-            },
-            loc,
-        };
     },
     TRef({ type, ref, loc }: t.TRef, ctx: Ctx): p.Type {
         const { text, hash } =
@@ -171,5 +107,3 @@ export const GeneralToAst = {
         }
     },
 };
-
-export type ToAst = typeof ConstantsToAst & typeof GeneralToAst;

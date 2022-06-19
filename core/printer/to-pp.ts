@@ -4,17 +4,21 @@ import * as peggy from 'peggy';
 import * as pp from './pp';
 import { noloc } from '../ctx';
 import { ToPP as ConstantsToPP } from '../elements/constants';
+import { ToPP as DecoratorsToPP } from '../elements/decorators';
 
 export type Ctx = {
     hideIds: boolean;
     ToPP: ToPP;
 };
 
-export type ToPP = typeof GeneralToPP & typeof ConstantsToPP;
+export type ToPP = typeof GeneralToPP &
+    typeof ConstantsToPP &
+    typeof DecoratorsToPP;
 
 export const makeToPP = (): ToPP => ({
     ...GeneralToPP,
     ...ConstantsToPP,
+    ...DecoratorsToPP,
 });
 
 export const newPPCtx = (hideIds: boolean): Ctx => ({
@@ -45,46 +49,6 @@ export const GeneralToPP = {
         }
         return pp.atom(type.text + (type.hash ?? ''), type.loc);
     },
-    DecoratedExpression(
-        { inner, decorators, loc }: p.DecoratedExpression_inner,
-        ctx: Ctx,
-    ): pp.PP {
-        const inn = ctx.ToPP[inner.type](inner as any, ctx);
-        return pp.items(
-            [
-                ...decorators.map((dec) => ctx.ToPP[dec.type](dec as any, ctx)),
-                inn,
-            ],
-            loc,
-        );
-    },
-    Decorator({ args, id, loc }: p.Decorator, ctx: Ctx): pp.PP {
-        return pp.items(
-            [
-                pp.atom('@', loc),
-                ctx.hideIds
-                    ? pp.atom(id.text, id.loc)
-                    : pp.atom(id.text + (id.hash ?? ''), loc),
-                pp.args(
-                    args?.items.map((a) => {
-                        return pp.items(
-                            (a.label
-                                ? [
-                                      pp.atom(a.label, a.loc),
-                                      pp.atom(': ', a.loc),
-                                  ]
-                                : []
-                            ).concat([ctx.ToPP[a.arg.type](a.arg as any, ctx)]),
-                            a.loc,
-                        );
-                    }) ?? [],
-                    loc,
-                ),
-                pp.atom(' ', loc),
-            ],
-            loc,
-        );
-    },
     ParenedExpression({ loc, expr }: p.ParenedExpression, ctx: Ctx): pp.PP {
         return pp.items(
             [
@@ -92,15 +56,6 @@ export const GeneralToPP = {
                 ctx.ToPP[expr.type](expr as any, ctx),
                 pp.atom(')', loc),
             ],
-            loc,
-        );
-    },
-    DecExpr({ expr, loc }: p.DecExpr, ctx: Ctx): pp.PP {
-        return pp.items([ctx.ToPP[expr.type](expr as any, ctx)], loc);
-    },
-    DecType({ type, type_, loc }: p.DecType, ctx: Ctx): pp.PP {
-        return pp.items(
-            [pp.atom(':', loc), ctx.ToPP[type_.type](type_ as any, ctx)],
             loc,
         );
     },

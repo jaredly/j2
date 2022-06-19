@@ -1,7 +1,14 @@
 import { RefKind } from '.';
 export { RefKind };
 import { TemplateString, Number, Boolean, String } from './elements/constants';
-export { TemplateString, Number, Boolean, String };
+export { TemplateString, Number, Boolean, String } from './elements/constants';
+import { DecoratedExpression } from './elements/decorators';
+export {
+    DecoratedExpression,
+    Decorator,
+    DecoratorArg,
+    TDecorated,
+} from './elements/decorators';
 
 export type Loc = {
     start: { line: number; column: number; offset: number };
@@ -17,24 +24,6 @@ export type File = {
 };
 
 // export type ErrorExpr = UnknownIdentifier;
-
-export type Decorator = {
-    type: 'Decorator';
-    id: { ref: RefKind | UnresolvedRef; loc: Loc };
-    args: Array<{ label: string | null; arg: DecoratorArg; loc: Loc }>;
-    loc: Loc;
-};
-export type DecoratorArg =
-    | {
-          type: 'Expr';
-          expr: Expression;
-          loc: Loc;
-      }
-    | {
-          type: 'Type';
-          typ: Type;
-          loc: Loc;
-      };
 
 export type UnresolvedRef = {
     type: 'Unresolved';
@@ -65,13 +54,6 @@ export type Expression =
 // Might be an int or float
 // export type Number = {type: 'Number', loc: Location, value: number};
 
-export type DecoratedExpression = {
-    type: 'DecoratedExpression';
-    decorators: Array<Decorator>;
-    expr: Expression;
-    loc: Loc;
-};
-
 export type Apply = {
     type: 'Apply';
     target: Expression;
@@ -82,14 +64,6 @@ export type Apply = {
 export type Sym = { id: number; name: string };
 
 export type TRef = { type: 'TRef'; ref: RefKind | UnresolvedRef; loc: Loc };
-
-// @decorator() T
-export type TDecorated = {
-    type: 'TDecorated';
-    decorators: Array<Decorator>;
-    inner: Type;
-    loc: Loc;
-};
 
 // Something<T>
 export type TApply = {
