@@ -14,16 +14,27 @@ import {
 } from '../typed-ast';
 import { getType } from './getType';
 import { typeMatches } from './typesEqual';
+import { analyze as analyzeApply } from '../elements/apply';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
+    typeByName(name: string): Type | null;
     _full: FullContext;
+};
+
+export type VisitorCtx = {
+    ctx: Ctx;
+    hit: {};
 };
 
 export const analyzeContext = (ctx: FullContext): Ctx => {
     return {
         getType(expr: Expression) {
             return getType(expr, ctx);
+        },
+        typeByName(name: string) {
+            const ref = ctx.types.names[name];
+            return ref ? { type: 'TRef', ref: ref, loc: noloc } : null;
         },
         _full: ctx,
     };
@@ -32,7 +43,12 @@ export const analyzeContext = (ctx: FullContext): Ctx => {
 export const decorate = (
     expr: Expression,
     msg: string,
-): DecoratedExpression => {
+    hit: { [key: number]: boolean },
+): DecoratedExpression | Expression => {
+    if (hit[expr.loc.idx]) {
+        return expr;
+    }
+    hit[expr.loc.idx] = true;
     return {
         type: 'DecoratedExpression',
         decorators: [
@@ -70,50 +86,9 @@ export const analyze = (ast: File, ctx: Ctx): File => {
     return transformFile(
         ast,
         {
-            ExpressionPost(node, _) {
-                // huh how do I know that it's already been ... decorated?
-                if (node.type === 'Apply') {
-                    if (
-                        node.target.type === 'Ref' &&
-                        node.target.kind.type === 'Unresolved'
-                    ) {
-                        // Check if there are multiples
-                    }
-                    // Otherwise, try to get the type of the target & compare to the args
-                    const ttype = ctx.getType(node.target);
-                    if (!ttype) {
-                        // Something deeper has an error.
-                        // Huh I should probably do a transformFile checking that all expressions
-                        // have types before signing off.
-                        return null;
-                    }
-                    if (ttype?.type !== 'TLambda') {
-                        return decorate(node, 'Not a function');
-                    }
-                    const argTypes = node.args.map((arg) => ctx.getType(arg));
-                    if (ttype.args.length !== argTypes.length) {
-                        return decorate(node, 'Wrong number of arguments');
-                    }
-                    let changed = false;
-                    const args = node.args.map((arg, i) => {
-                        const at = ctx.getType(arg);
-                        if (at == null) {
-                            return arg;
-                        }
-                        if (!typeMatches(at, ttype.args[i].typ, ctx._full)) {
-                            changed = true;
-                            return decorate(arg, 'Wrong type');
-                        }
-                        return arg;
-                    });
-                    // iffff target is resolved, we check the args
-                    // if it's not resolved, then
-                    return changed ? { ...node, args } : null;
-                }
-                return null;
-            },
+            ...analyzeApply,
         },
-        null,
+        { ctx, hit: {} },
     );
 };
 

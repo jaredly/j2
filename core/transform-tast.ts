@@ -131,43 +131,43 @@ export type Visitor<Ctx> = {
   TDecoratedPost?: (node: TDecorated, ctx: Ctx) => null | TDecorated;
   Expression_Apply?: (
     node: Apply,
-    ctx: any
+    ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
   Expression_Number?: (
     node: Number,
-    ctx: any
+    ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
   Expression_Boolean?: (
     node: Boolean,
-    ctx: any
+    ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
   Expression_TemplateString?: (
     node: TemplateString,
-    ctx: any
+    ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
   Expression_Ref?: (
     node: Ref,
-    ctx: any
+    ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
   Expression_DecoratedExpression?: (
     node: DecoratedExpression,
-    ctx: any
+    ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
   Type_TRef?: (
     node: TRef,
-    ctx: any
+    ctx: Ctx
   ) => null | false | Type | [Type | null, Ctx];
   Type_TLambda?: (
     node: TLambda,
-    ctx: any
+    ctx: Ctx
   ) => null | false | Type | [Type | null, Ctx];
   TExpr_Number?: (
     node: Number,
-    ctx: any
+    ctx: Ctx
   ) => null | false | TExpr | [TExpr | null, Ctx];
   TExpr_String?: (
     node: String,
-    ctx: any
+    ctx: Ctx
   ) => null | false | TExpr | [TExpr | null, Ctx];
 };
 export const transformLoc = <Ctx>(

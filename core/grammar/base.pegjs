@@ -47,8 +47,6 @@ Parens = "(" _ args:CommaExpr? ")"
 
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
-Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
-Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?)
 
 Identifier = text:$IdText hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
 
@@ -73,6 +71,16 @@ finalLineComment = $("//" (!"\n" .)*)
 
 // ----------
 
+// TemplateString = "\"" contents:StringContents* "\""
+// StringContents = TemplatePart / stringChar
+// TemplatePart = "${" _ inner:Expression _ "}"
+// stringChar = $( escapedChar / [^"\\])
+// escapedChar = "\\" .
+
+
+
+
+
 String = "\"" text:$(stringChar*) "\""
 TemplateString = "\"" first:$tplStringChars rest:TemplatePair* "\""
 TemplatePair = "${" _ expr:Expression _ "}" suffix:$tplStringChars
@@ -80,8 +88,5 @@ tplStringChars = $(!"${" stringChar)*
 stringChar = $( escapedChar / [^"\\])
 escapedChar = "\\" .
 
-// TemplateString = "\"" contents:StringContents* "\""
-// StringContents = TemplatePart / stringChar
-// TemplatePart = "${" _ inner:Expression _ "}"
-// stringChar = $( escapedChar / [^"\\])
-// escapedChar = "\\" .
+Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
+Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?)

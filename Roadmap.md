@@ -1,4 +1,10 @@
 
+- [ ] use the `analyze` from `constants.ts`
+- [ ] actually use the `grammar` exports from elements
+- [ ] actually use the `fixtures` exports from elements
+- [ ] move as much as possible into `elements`
+
+
 ## Transformer
 
 I want, before we call e.g. transformApply,

@@ -6,6 +6,55 @@ import * as pp from '../printer/pp';
 import * as t from '../typed-ast';
 import { Expression, Loc } from '../typed-ast';
 import { Ctx as ACtx } from '../typing/to-ast';
+import { Visitor } from '../transform-tast';
+import { decorate, VisitorCtx } from '../typing/analyze';
+import { typeMatches } from '../typing/typesEqual';
+
+export const grammar = `
+Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
+Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?)
+
+String = "\"" text:$(stringChar*) "\""
+TemplateString = "\"" first:$tplStringChars rest:TemplatePair* "\""
+TemplatePair = "\${" _ expr:Expression _ "}" suffix:$tplStringChars
+tplStringChars = $(!"\${" stringChar)*
+stringChar = $( escapedChar / [^"\\])
+escapedChar = "\\" .
+`;
+
+// Yeah I should have a ... mode where all types are annotated?
+// maybe in all cases I annotate the toplevel type, why not.
+export const fixtures = `
+==[booleans]==
+true
+false
+-->
+//: bool
+true
+//: bool
+false
+
+==[numbers]==
+123
+1.23
+-->
+//: int
+123
+//: float
+1.23
+
+==[strings]==
+"hello"
+-->
+//: string
+"hello"
+
+==[templates]==
+"hello \${toString(123)}"
+-->
+//: string
+"hello \${toString(123)}"
+`;
 
 export type Boolean = { type: 'Boolean'; loc: Loc; value: boolean };
 // export type String = { type: 'String'; loc: Loc; value: boolean };
@@ -25,6 +74,30 @@ export type TemplateString = {
 };
 
 export type String = { type: 'String'; text: string; loc: Loc };
+
+export const analyze: Visitor<VisitorCtx> = {
+    Expression_TemplateString(node, { ctx, hit }) {
+        let changed = false;
+        const rest: TemplateString['rest'] = node.rest.map(
+            ({ expr, suffix, loc }) => {
+                const expt = ctx.getType(expr);
+                if (
+                    expt &&
+                    !typeMatches(expt, ctx.typeByName('string')!, ctx._full)
+                ) {
+                    changed = true;
+                    return {
+                        suffix,
+                        loc,
+                        expr: decorate(expr, `Expected string`, hit),
+                    };
+                }
+                return { suffix, loc, expr };
+            },
+        );
+        return changed ? { ...node, rest } : null;
+    },
+};
 
 export const ToTast = {
     TemplateString(ts: p.TemplateString, ctx: Ctx): t.TemplateString {

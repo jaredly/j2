@@ -1,6 +1,9 @@
 These files contain:
 
 1. A grammar snippet, defining how to parse, from which Ast types are derived
+1a. TESTS! Yes please, let's have the test cases ... hmm .... for all these fixture dealios
+	  be right in here. Hm that will make auto-updating the fixture strings a little tricky.
+		but it shouldn't be tooo hard, right? Just a little in-place mischief.
 2. type definitions for the typed tree version of those Ast nodes, that are imported into  `typed-ast.ts`
 3. ToTast functions for going from Ast to Tast
 4. ToAst functions for going back

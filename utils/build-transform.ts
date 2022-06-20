@@ -599,7 +599,7 @@ export function buildTransformFile(
                         .filter(Boolean) as Array<string>;
                     if (tname.length && ctx.types[tname[0]]) {
                         visitorSubs.push(
-                            `${name}_${tname[0]}?: (node: ${tname}, ctx: any) => null | false | ${name} | [${name} | null, Ctx]`,
+                            `${name}_${tname[0]}?: (node: ${tname}, ctx: Ctx) => null | false | ${name} | [${name} | null, Ctx]`,
                         );
                     }
                 }
