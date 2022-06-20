@@ -16,12 +16,12 @@ export type Decorator = {
 };
 export type DecoratorArg =
     | {
-          type: 'Expr';
+          type: 'DExpr';
           expr: Expression;
           loc: Loc;
       }
     | {
-          type: 'Type';
+          type: 'DType';
           typ: t.Type;
           loc: Loc;
       };
@@ -89,7 +89,7 @@ export const ToTast = {
                 label,
                 loc,
                 arg: {
-                    type: 'Expr',
+                    type: 'DExpr',
                     expr: ctx.ToTast[arg.expr.type](arg.expr as any, ctx),
                     loc: arg.loc,
                 },
@@ -99,7 +99,7 @@ export const ToTast = {
                 label,
                 loc,
                 arg: {
-                    type: 'Type',
+                    type: 'DType',
                     typ: ctx.ToTast.Type(arg.type_, ctx),
                     loc: arg.loc,
                 },
@@ -152,7 +152,7 @@ export const ToAst = {
                             type: 'LabeledDecoratorArg',
                             label,
                             arg:
-                                arg.type === 'Expr'
+                                arg.type === 'DExpr'
                                     ? {
                                           type: 'DecExpr',
                                           expr: ctx.ToAst[arg.expr.type](

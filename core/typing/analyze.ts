@@ -46,7 +46,7 @@ export const decorate = (
                     {
                         label: 'msg',
                         arg: {
-                            type: 'Expr',
+                            type: 'DExpr',
                             expr: {
                                 type: 'TemplateString',
                                 loc: noloc,

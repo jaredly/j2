@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "grammar": "esbuild --bundle utils/build-grammar.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
-        "transform": "esbuild --bundle utils/generate-transform.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
+        "transform": "esbuild --bundle utils/generate-transform.ts --platform=node --sourcemap=inline | node --enable-source-maps -; prettier -w core/transform-tast.ts",
         "test": "esbuild --bundle core/tests/run.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "fix": "env FIX=1 jest",
         "cov": "jest --coverage"
@@ -21,6 +21,7 @@
         "fast-deep-equal": "^3.1.3",
         "object-hash": "^3.0.0",
         "peggy": "^2.0.1",
+        "prettier": "^2.7.1",
         "ts-jest": "^28.0.5",
         "typescript": "^4.7.3"
     },

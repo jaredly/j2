@@ -32,6 +32,7 @@ export const makeIndividualTransformer = (
     type: t.TSType,
     ctx: Ctx,
     nullable?: 'null' | 'undefined',
+    toplevelName?: string,
 ): string | null => {
     if (level > 20) {
         throw new Error('nope');
@@ -43,6 +44,8 @@ export const makeIndividualTransformer = (
             level,
             type,
             ctx,
+            undefined,
+            toplevelName,
         );
         if (!inner) {
             return null;
@@ -71,6 +74,8 @@ export const makeIndividualTransformer = (
                 level + 1,
                 type.typeParameters!.params[0],
                 ctx,
+                undefined,
+                toplevelName,
             );
             if (inner) {
                 return `
@@ -135,6 +140,7 @@ export const makeIndividualTransformer = (
                     type.types[1],
                     ctx,
                     'null',
+                    toplevelName,
                 );
             }
             if (type.types[1].type === 'TSNullKeyword') {
@@ -145,10 +151,11 @@ export const makeIndividualTransformer = (
                     type.types[0],
                     ctx,
                     'null',
+                    toplevelName,
                 );
             }
         }
-        return unionTransformer(vbl, newName, level, type, ctx);
+        return unionTransformer(vbl, newName, level, type, toplevelName, ctx);
     }
     if (type.type === 'TSArrayType') {
         throw new Error(`expected Array<X>, not X[]`);
@@ -235,6 +242,7 @@ export const unionTransformer = (
     newName: string,
     level: number,
     type: t.TSUnionType,
+    unionName?: string,
     ctx: Ctx,
 ) => {
     // console.log('---> getting');
@@ -273,6 +281,8 @@ export const unionTransformer = (
                     level,
                     type,
                     ctx,
+                    undefined,
+                    type.typeName.name,
                 );
                 if (transformer) {
                     cases.push(`default: {
@@ -343,30 +353,56 @@ export const unionTransformer = (
         }
     };
     processType(type, true);
-    // getAllUnionTypeMembers(allTypes, type, {});
-    // console.log('<--- got');
-    // const individualCases = allTypes.map(([name, defn]) => {
-    //     const transformer = objectTransformer(
-    //         vbl,
-    //         `${newName}$${level}node`,
-    //         level + 1,
-    //         defn,
-    //     );
-    //     if (!transformer) {
-    //         return `case '${name}': break;`;
-    //     }
-    //     return `case '${name}': {
-    //             let changed${level + 1} = false;
-    //             ${transformer}
-    //             ${newName} = ${newName}$${level}node;
-    //             break;
-    //         }`;
-    // });
     if (!hasCases) {
-        return null; // `const ${newName} = ${vbl};`;
+        return null;
     }
+
+    // Ok, pre-show for individuals
+    const preCases: Array<string> = [];
+    if (unionName) {
+        type.types.forEach((t) => {
+            const resolved = resolveType(t, ctx);
+            if (resolved.type === 'TSTypeLiteral') {
+                const tname = resolved.members
+                    .map(getTypeName)
+                    .filter(Boolean) as Array<string>;
+                if (tname.length && ctx.types[tname[0]]) {
+                    const name = tname[0];
+                    preCases.push(
+                        `case '${tname[0]}': {
+                            const transformed = visitor.${unionName}_${name} ? visitor.${unionName}_${name}(${vbl}, ctx) : null;
+                            if (transformed != null) {
+                                if (Array.isArray(transformed)) {
+                                    ctx = transformed[1];
+                                    if (transformed[0] != null) {
+                                        ${vbl} = transformed[0];
+                                    }
+                                } else if (transformed == false) {
+                                    return ${vbl}
+                                } else  {
+                                    ${vbl} = transformed;
+                                }
+                            }
+                            break
+                        }`,
+                        // `${name}_${tname[0]}?: (node: ${tname}, ctx: any) => null | false | ${name} | [${name} | null, Ctx]`,
+                    );
+                }
+            }
+        });
+    }
+
     return `
+        ${
+            preCases.length
+                ? `switch (${vbl}.type) {
+            ${preCases.join('\n\n            ')}
+        }`
+                : ''
+        }
+
         let ${newName} = ${vbl};
+
         switch (${vbl}.type) {
             ${cases.join('\n\n            ')}
         }`;
@@ -427,6 +463,8 @@ export const makeTransformer = (
         0,
         defn.type,
         ctx,
+        undefined,
+        name,
     );
     if (transformer == null && !ctx.visitorTypes.includes(name)) {
         ctx.transformerStatus[name] = null;
@@ -549,22 +587,12 @@ export function buildTransformFile(
         (name) => (ctx.transformers[name] = makeTransformer(name, ctx)),
     );
 
-    const resolveType = (t: t.TSType): t.TSType => {
-        if (t.type === 'TSTypeReference' && t.typeName.type === 'Identifier') {
-            const name = t.typeName.name;
-            if (ctx.types[name]) {
-                return resolveType(ctx.types[name].type);
-            }
-        }
-        return t;
-    };
-
     const visitorSubs: string[] = [];
     ctx.visitorTypes.forEach((name) => {
         const { type } = ctx.types[name];
         if (type.type === 'TSUnionType') {
             type.types.forEach((item) => {
-                const resolved = resolveType(item);
+                const resolved = resolveType(item, ctx);
                 if (resolved.type === 'TSTypeLiteral') {
                     const tname = resolved.members
                         .map(getTypeName)
@@ -604,6 +632,16 @@ export type Visitor<Ctx> = {
 
     return text;
 }
+
+const resolveType = (t: t.TSType, ctx: Ctx): t.TSType => {
+    if (t.type === 'TSTypeReference' && t.typeName.type === 'Identifier') {
+        const name = t.typeName.name;
+        if (ctx.types[name]) {
+            return resolveType(ctx.types[name].type, ctx);
+        }
+    }
+    return t;
+};
 
 export const generateCheckers = (ctx: Ctx, distinguishTypes: string[]) => {
     let result: string[] = [];
