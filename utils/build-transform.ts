@@ -549,6 +549,36 @@ export function buildTransformFile(
         (name) => (ctx.transformers[name] = makeTransformer(name, ctx)),
     );
 
+    const resolveType = (t: t.TSType): t.TSType => {
+        if (t.type === 'TSTypeReference' && t.typeName.type === 'Identifier') {
+            const name = t.typeName.name;
+            if (ctx.types[name]) {
+                return resolveType(ctx.types[name].type);
+            }
+        }
+        return t;
+    };
+
+    const visitorSubs: string[] = [];
+    ctx.visitorTypes.forEach((name) => {
+        const { type } = ctx.types[name];
+        if (type.type === 'TSUnionType') {
+            type.types.forEach((item) => {
+                const resolved = resolveType(item);
+                if (resolved.type === 'TSTypeLiteral') {
+                    const tname = resolved.members
+                        .map(getTypeName)
+                        .filter(Boolean) as Array<string>;
+                    if (tname.length && ctx.types[tname[0]]) {
+                        visitorSubs.push(
+                            `${name}_${tname[0]}?: (node: ${tname}, ctx: any) => null | false | ${name} | [${name} | null, Ctx]`,
+                        );
+                    }
+                }
+            });
+        }
+    });
+
     const prelude = `import {${Object.keys(ctx.transformerStatus)
         .filter((k) => k !== 'Array')
         .join(', ')}} from '${relativeSource}';
@@ -558,10 +588,11 @@ export type Visitor<Ctx> = {
         .map(
             (
                 name,
-            ) => `${name}?: (node: ${name}, ctx: Ctx) => null | false | ${name} | [${name} | null, Ctx]
-    ${name}Post?: (node: ${name}, ctx: Ctx) => null | ${name}`,
+            ) => `${name}?: (node: ${name}, ctx: Ctx) => null | false | ${name} | [${name} | null, Ctx],
+    ${name}Post?: (node: ${name}, ctx: Ctx) => null | ${name},`,
         )
-        .join(',\n    ')}
+        .join('\n    ')}
+    ${visitorSubs.join(',\n    ')}
 }
 `;
 

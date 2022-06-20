@@ -1,4 +1,28 @@
 
+## Transformer
+
+I want, before we call e.g. transformApply,
+to first check for visitor.Expression_Apply, and
+call it if it exists. If what we get is different,
+then we .... hmmm ...
+hm maybe what we do is ...
+make an earlier switch?
+dunno how I feel about that really.
+
+because that would, give it another chance to get traversed ...
+.. and I do want that to be the default, I think.
+Because the alternative is that it wouldn't even be a post-op. It
+would prevent traversal altogether.
+
+
+```ts
+visitor.Expression_${name}
+
+const subTransformer = visitor[`Expression_${node.type}`]
+if (subTransformer) {
+	const transformed = subTransformer(node, ctx)
+}
+```
 
 ## TExpr here we come
 
