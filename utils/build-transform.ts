@@ -240,7 +240,11 @@ export const unionTransformer = (
     // console.log('---> getting');
     let hasCases = false;
     const cases: Array<string> = [];
-    const processType = (type: t.TSType, last: boolean) => {
+    const processType = (
+        type: t.TSType,
+        last: boolean,
+        toplevelName?: string,
+    ) => {
         if (type.type === 'TSUnionType') {
             const sorted = type.types.slice().sort((a, b) => {
                 const au =
@@ -287,7 +291,7 @@ export const unionTransformer = (
                     );
                     // throw new Error('vbl in union, must fix');
                 }
-                processType(inner, false);
+                processType(inner, false, type.typeName.name);
             }
         } else if (type.type === 'TSTypeLiteral') {
             const tname = type.members
@@ -295,6 +299,26 @@ export const unionTransformer = (
                 .filter(Boolean) as Array<string>;
             if (!tname.length) {
                 throw new Error(`No 'type' member`);
+            }
+            const name = tname[0];
+            if (toplevelName) {
+                hasCases = true;
+
+                if (ctx.transformerStatus[toplevelName] === undefined) {
+                    ctx.transformers[toplevelName] = makeTransformer(
+                        toplevelName,
+                        ctx,
+                    );
+                    // transformerStatus[toplevelName] = true;
+                }
+                if (ctx.transformerStatus[toplevelName] != null) {
+                    cases.push(`case '${name}': {
+                        ${newName} = transform${toplevelName}(${vbl}, visitor, ctx);
+                        changed${level} = changed${level} || ${newName} !== ${vbl};
+                        break;
+                    }`);
+                    return;
+                }
             }
             const specified = `${newName}$${level}specified`;
             const transformer = objectTransformer(
@@ -304,7 +328,6 @@ export const unionTransformer = (
                 type,
                 ctx,
             );
-            const name = tname[0];
             if (transformer) {
                 cases.push(`case '${name}': {
                     const ${specified} = ${vbl};

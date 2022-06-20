@@ -1,4 +1,4 @@
-import {Loc, File, Toplevel, Expression, RefKind, Id, DecoratedExpression, Decorator, DecoratorArg, Type, TExpr, String, UnresolvedRef, Ref, Apply, Sym, TRef, TApply, TVars, TLambda, TAdd, TSub, TOr, Boolean, Number, TemplateString, TDecorated} from './typed-ast';
+import {Loc, File, Toplevel, Expression, Apply, Number, Boolean, TemplateString, Ref, UnresolvedRef, RefKind, Id, DecoratedExpression, Decorator, DecoratorArg, Type, TRef, TLambda, TExpr, String, Sym, TApply, TVars, TAdd, TSub, TOr, TDecorated} from './typed-ast';
 
 export type Visitor<Ctx> = {
     Loc?: (node: Loc, ctx: Ctx) => null | false | Loc | [Loc | null, Ctx]
@@ -88,6 +88,276 @@ export const transformLoc = <Ctx>(node: Loc, visitor: Visitor<Ctx>, ctx: Ctx): L
         
     }
 
+export const transformApply = <Ctx>(node: Apply, visitor: Visitor<Ctx>, ctx: Ctx): Apply => {
+        if (!node) {
+            throw new Error('No Apply provided');
+        }
+        
+        const transformed = visitor.Apply ? visitor.Apply(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                const updatedNode$target = transformExpression(node.target, visitor, ctx);
+                changed1 = changed1 || updatedNode$target !== node.target;
+
+                
+                let updatedNode$args = node.args;
+                {
+                    let changed2 = false;
+                    const arr1 = node.args.map((updatedNode$args$item1) => {
+                        
+                const result = transformExpression(updatedNode$args$item1, visitor, ctx);
+                changed2 = changed2 || result !== updatedNode$args$item1;
+                        return result
+                    })
+                    if (changed2) {
+                        updatedNode$args = arr1;
+                        changed1 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, target: updatedNode$target, args: updatedNode$args, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.ApplyPost) {
+            const transformed = visitor.ApplyPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformNumber = <Ctx>(node: Number, visitor: Visitor<Ctx>, ctx: Ctx): Number => {
+        if (!node) {
+            throw new Error('No Number provided');
+        }
+        
+        const transformed = visitor.Number ? visitor.Number(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.NumberPost) {
+            const transformed = visitor.NumberPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformBoolean = <Ctx>(node: Boolean, visitor: Visitor<Ctx>, ctx: Ctx): Boolean => {
+        if (!node) {
+            throw new Error('No Boolean provided');
+        }
+        
+        const transformed = visitor.Boolean ? visitor.Boolean(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.BooleanPost) {
+            const transformed = visitor.BooleanPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTemplateString = <Ctx>(node: TemplateString, visitor: Visitor<Ctx>, ctx: Ctx): TemplateString => {
+        if (!node) {
+            throw new Error('No TemplateString provided');
+        }
+        
+        const transformed = visitor.TemplateString ? visitor.TemplateString(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                let updatedNode$rest = node.rest;
+                {
+                    let changed2 = false;
+                    const arr1 = node.rest.map((updatedNode$rest$item1) => {
+                        
+            let result = updatedNode$rest$item1;
+            {
+                let changed3 = false;
+                
+                const result$expr = transformExpression(updatedNode$rest$item1.expr, visitor, ctx);
+                changed3 = changed3 || result$expr !== updatedNode$rest$item1.expr;
+
+                
+                const result$loc = transformLoc(updatedNode$rest$item1.loc, visitor, ctx);
+                changed3 = changed3 || result$loc !== updatedNode$rest$item1.loc;
+                if (changed3) {
+                    result =  {...result, expr: result$expr, loc: result$loc};
+                    changed2 = true;
+                }
+            }
+            
+                        return result
+                    })
+                    if (changed2) {
+                        updatedNode$rest = arr1;
+                        changed1 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, rest: updatedNode$rest, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.TemplateStringPost) {
+            const transformed = visitor.TemplateStringPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformUnresolvedRef = <Ctx>(node: UnresolvedRef, visitor: Visitor<Ctx>, ctx: Ctx): UnresolvedRef => {
+        if (!node) {
+            throw new Error('No UnresolvedRef provided');
+        }
+        
+        const transformed = visitor.UnresolvedRef ? visitor.UnresolvedRef(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        const updatedNode = node;
+        
+        node = updatedNode;
+        if (visitor.UnresolvedRefPost) {
+            const transformed = visitor.UnresolvedRefPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
 // not a type Id
 
 export const transformRefKind = <Ctx>(node: RefKind, visitor: Visitor<Ctx>, ctx: Ctx): RefKind => {
@@ -116,6 +386,211 @@ export const transformRefKind = <Ctx>(node: RefKind, visitor: Visitor<Ctx>, ctx:
         node = updatedNode;
         if (visitor.RefKindPost) {
             const transformed = visitor.RefKindPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformRef = <Ctx>(node: Ref, visitor: Visitor<Ctx>, ctx: Ctx): Ref => {
+        if (!node) {
+            throw new Error('No Ref provided');
+        }
+        
+        const transformed = visitor.Ref ? visitor.Ref(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+
+                
+        let updatedNode$kind = node.kind;
+        switch (node.kind.type) {
+            case 'Unresolved': {
+                        updatedNode$kind = transformUnresolvedRef(node.kind, visitor, ctx);
+                        changed1 = changed1 || updatedNode$kind !== node.kind;
+                        break;
+                    }
+
+            default: {
+                        // let changed2 = false;
+                        
+                const updatedNode$kind$1node = transformRefKind(node.kind, visitor, ctx);
+                changed1 = changed1 || updatedNode$kind$1node !== node.kind;
+                        updatedNode$kind = updatedNode$kind$1node;
+                    }
+        }
+                if (changed1) {
+                    updatedNode =  {...updatedNode, loc: updatedNode$loc, kind: updatedNode$kind};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.RefPost) {
+            const transformed = visitor.RefPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTRef = <Ctx>(node: TRef, visitor: Visitor<Ctx>, ctx: Ctx): TRef => {
+        if (!node) {
+            throw new Error('No TRef provided');
+        }
+        
+        const transformed = visitor.TRef ? visitor.TRef(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+        let updatedNode$ref = node.ref;
+        switch (node.ref.type) {
+            case 'Unresolved': {
+                        updatedNode$ref = transformUnresolvedRef(node.ref, visitor, ctx);
+                        changed1 = changed1 || updatedNode$ref !== node.ref;
+                        break;
+                    }
+
+            default: {
+                        // let changed2 = false;
+                        
+                const updatedNode$ref$1node = transformRefKind(node.ref, visitor, ctx);
+                changed1 = changed1 || updatedNode$ref$1node !== node.ref;
+                        updatedNode$ref = updatedNode$ref$1node;
+                    }
+        }
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, ref: updatedNode$ref, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.TRefPost) {
+            const transformed = visitor.TRefPost(node, ctx);
+            if (transformed != null) {
+                node = transformed;
+            }
+        }
+        return node;
+        
+    }
+
+export const transformTLambda = <Ctx>(node: TLambda, visitor: Visitor<Ctx>, ctx: Ctx): TLambda => {
+        if (!node) {
+            throw new Error('No TLambda provided');
+        }
+        
+        const transformed = visitor.TLambda ? visitor.TLambda(node, ctx) : null;
+        if (transformed === false) {
+            return node;
+        }
+        if (transformed != null) {
+            if (Array.isArray(transformed)) {
+                ctx = transformed[1];
+                if (transformed[0] != null) {
+                    node = transformed[0];
+                }
+            } else {
+                node = transformed;
+            }
+        }
+        
+        let changed0 = false;
+        
+            let updatedNode = node;
+            {
+                let changed1 = false;
+                
+                let updatedNode$args = node.args;
+                {
+                    let changed2 = false;
+                    const arr1 = node.args.map((updatedNode$args$item1) => {
+                        
+            let result = updatedNode$args$item1;
+            {
+                let changed3 = false;
+                
+                const result$typ = transformType(updatedNode$args$item1.typ, visitor, ctx);
+                changed3 = changed3 || result$typ !== updatedNode$args$item1.typ;
+                if (changed3) {
+                    result =  {...result, typ: result$typ};
+                    changed2 = true;
+                }
+            }
+            
+                        return result
+                    })
+                    if (changed2) {
+                        updatedNode$args = arr1;
+                        changed1 = true;
+                    }
+                }
+                
+
+                
+                const updatedNode$result = transformType(node.result, visitor, ctx);
+                changed1 = changed1 || updatedNode$result !== node.result;
+
+                
+                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+                changed1 = changed1 || updatedNode$loc !== node.loc;
+                if (changed1) {
+                    updatedNode =  {...updatedNode, args: updatedNode$args, result: updatedNode$result, loc: updatedNode$loc};
+                    changed0 = true;
+                }
+            }
+            
+        
+        node = updatedNode;
+        if (visitor.TLambdaPost) {
+            const transformed = visitor.TLambdaPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }
@@ -195,24 +670,10 @@ export const transformTExpr = <Ctx>(node: TExpr, visitor: Visitor<Ctx>, ctx: Ctx
         let updatedNode = node;
         switch (node.type) {
             case 'Number': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
+                        updatedNode = transformNumber(node, visitor, ctx);
+                        changed0 = changed0 || updatedNode !== node;
+                        break;
+                    }
 
             default: {
                         // let changed1 = false;
@@ -259,75 +720,16 @@ export const transformType = <Ctx>(node: Type, visitor: Visitor<Ctx>, ctx: Ctx):
         let updatedNode = node;
         switch (node.type) {
             case 'TRef': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
+                        updatedNode = transformTRef(node, visitor, ctx);
+                        changed0 = changed0 || updatedNode !== node;
+                        break;
+                    }
 
             case 'TLambda': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                let updatedNode$0node$args = updatedNode$0specified.args;
-                {
-                    let changed3 = false;
-                    const arr2 = updatedNode$0specified.args.map((updatedNode$0node$args$item2) => {
-                        
-            let result = updatedNode$0node$args$item2;
-            {
-                let changed4 = false;
-                
-                const result$typ = transformType(updatedNode$0node$args$item2.typ, visitor, ctx);
-                changed4 = changed4 || result$typ !== updatedNode$0node$args$item2.typ;
-                if (changed4) {
-                    result =  {...result, typ: result$typ};
-                    changed3 = true;
-                }
-            }
-            
-                        return result
-                    })
-                    if (changed3) {
-                        updatedNode$0node$args = arr2;
-                        changed2 = true;
+                        updatedNode = transformTLambda(node, visitor, ctx);
+                        changed0 = changed0 || updatedNode !== node;
+                        break;
                     }
-                }
-                
-
-                
-                const updatedNode$0node$result = transformType(updatedNode$0specified.result, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$result !== updatedNode$0specified.result;
-
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, args: updatedNode$0node$args, result: updatedNode$0node$result, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
 
             default: {
                         // let changed1 = false;
@@ -616,156 +1018,34 @@ export const transformExpression = <Ctx>(node: Expression, visitor: Visitor<Ctx>
         let updatedNode = node;
         switch (node.type) {
             case 'Apply': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                const updatedNode$0node$target = transformExpression(updatedNode$0specified.target, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$target !== updatedNode$0specified.target;
-
-                
-                let updatedNode$0node$args = updatedNode$0specified.args;
-                {
-                    let changed3 = false;
-                    const arr2 = updatedNode$0specified.args.map((updatedNode$0node$args$item2) => {
-                        
-                const result = transformExpression(updatedNode$0node$args$item2, visitor, ctx);
-                changed3 = changed3 || result !== updatedNode$0node$args$item2;
-                        return result
-                    })
-                    if (changed3) {
-                        updatedNode$0node$args = arr2;
-                        changed2 = true;
+                        updatedNode = transformApply(node, visitor, ctx);
+                        changed0 = changed0 || updatedNode !== node;
+                        break;
                     }
-                }
-                
-
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, target: updatedNode$0node$target, args: updatedNode$0node$args, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
 
             case 'Number': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
+                        updatedNode = transformNumber(node, visitor, ctx);
+                        changed0 = changed0 || updatedNode !== node;
+                        break;
+                    }
 
             case 'Boolean': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
+                        updatedNode = transformBoolean(node, visitor, ctx);
+                        changed0 = changed0 || updatedNode !== node;
+                        break;
+                    }
 
             case 'TemplateString': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                let updatedNode$0node$rest = updatedNode$0specified.rest;
-                {
-                    let changed3 = false;
-                    const arr2 = updatedNode$0specified.rest.map((updatedNode$0node$rest$item2) => {
-                        
-            let result = updatedNode$0node$rest$item2;
-            {
-                let changed4 = false;
-                
-                const result$expr = transformExpression(updatedNode$0node$rest$item2.expr, visitor, ctx);
-                changed4 = changed4 || result$expr !== updatedNode$0node$rest$item2.expr;
-
-                
-                const result$loc = transformLoc(updatedNode$0node$rest$item2.loc, visitor, ctx);
-                changed4 = changed4 || result$loc !== updatedNode$0node$rest$item2.loc;
-                if (changed4) {
-                    result =  {...result, expr: result$expr, loc: result$loc};
-                    changed3 = true;
-                }
-            }
-            
-                        return result
-                    })
-                    if (changed3) {
-                        updatedNode$0node$rest = arr2;
-                        changed2 = true;
+                        updatedNode = transformTemplateString(node, visitor, ctx);
+                        changed0 = changed0 || updatedNode !== node;
+                        break;
                     }
-                }
-                
-
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, rest: updatedNode$0node$rest, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
 
             case 'Ref': {
-                    const updatedNode$0specified = node;
-                    let changed1 = false;
-                    
-            let updatedNode$0node = updatedNode$0specified;
-            {
-                let changed2 = false;
-                
-                const updatedNode$0node$loc = transformLoc(updatedNode$0specified.loc, visitor, ctx);
-                changed2 = changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-                if (changed2) {
-                    updatedNode$0node =  {...updatedNode$0node, loc: updatedNode$0node$loc};
-                    changed1 = true;
-                }
-            }
-            
-                    updatedNode = updatedNode$0node;
-                    break;
-                }
+                        updatedNode = transformRef(node, visitor, ctx);
+                        changed0 = changed0 || updatedNode !== node;
+                        break;
+                    }
 
             default: {
                         // let changed1 = false;
@@ -902,153 +1182,6 @@ export const transformFile = <Ctx>(node: File, visitor: Visitor<Ctx>, ctx: Ctx):
         
     }
 
-export const transformUnresolvedRef = <Ctx>(node: UnresolvedRef, visitor: Visitor<Ctx>, ctx: Ctx): UnresolvedRef => {
-        if (!node) {
-            throw new Error('No UnresolvedRef provided');
-        }
-        
-        const transformed = visitor.UnresolvedRef ? visitor.UnresolvedRef(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        const updatedNode = node;
-        
-        node = updatedNode;
-        if (visitor.UnresolvedRefPost) {
-            const transformed = visitor.UnresolvedRefPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
-export const transformRef = <Ctx>(node: Ref, visitor: Visitor<Ctx>, ctx: Ctx): Ref => {
-        if (!node) {
-            throw new Error('No Ref provided');
-        }
-        
-        const transformed = visitor.Ref ? visitor.Ref(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
-        
-        node = updatedNode;
-        if (visitor.RefPost) {
-            const transformed = visitor.RefPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
-export const transformApply = <Ctx>(node: Apply, visitor: Visitor<Ctx>, ctx: Ctx): Apply => {
-        if (!node) {
-            throw new Error('No Apply provided');
-        }
-        
-        const transformed = visitor.Apply ? visitor.Apply(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                const updatedNode$target = transformExpression(node.target, visitor, ctx);
-                changed1 = changed1 || updatedNode$target !== node.target;
-
-                
-                let updatedNode$args = node.args;
-                {
-                    let changed2 = false;
-                    const arr1 = node.args.map((updatedNode$args$item1) => {
-                        
-                const result = transformExpression(updatedNode$args$item1, visitor, ctx);
-                changed2 = changed2 || result !== updatedNode$args$item1;
-                        return result
-                    })
-                    if (changed2) {
-                        updatedNode$args = arr1;
-                        changed1 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, target: updatedNode$target, args: updatedNode$args, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
-        
-        node = updatedNode;
-        if (visitor.ApplyPost) {
-            const transformed = visitor.ApplyPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
 export const transformSym = <Ctx>(node: Sym, visitor: Visitor<Ctx>, ctx: Ctx): Sym => {
         if (!node) {
             throw new Error('No Sym provided');
@@ -1075,52 +1208,6 @@ export const transformSym = <Ctx>(node: Sym, visitor: Visitor<Ctx>, ctx: Ctx): S
         node = updatedNode;
         if (visitor.SymPost) {
             const transformed = visitor.SymPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
-export const transformTRef = <Ctx>(node: TRef, visitor: Visitor<Ctx>, ctx: Ctx): TRef => {
-        if (!node) {
-            throw new Error('No TRef provided');
-        }
-        
-        const transformed = visitor.TRef ? visitor.TRef(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
-        
-        node = updatedNode;
-        if (visitor.TRefPost) {
-            const transformed = visitor.TRefPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }
@@ -1255,83 +1342,6 @@ export const transformTVars = <Ctx>(node: TVars, visitor: Visitor<Ctx>, ctx: Ctx
         node = updatedNode;
         if (visitor.TVarsPost) {
             const transformed = visitor.TVarsPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
-export const transformTLambda = <Ctx>(node: TLambda, visitor: Visitor<Ctx>, ctx: Ctx): TLambda => {
-        if (!node) {
-            throw new Error('No TLambda provided');
-        }
-        
-        const transformed = visitor.TLambda ? visitor.TLambda(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                let updatedNode$args = node.args;
-                {
-                    let changed2 = false;
-                    const arr1 = node.args.map((updatedNode$args$item1) => {
-                        
-            let result = updatedNode$args$item1;
-            {
-                let changed3 = false;
-                
-                const result$typ = transformType(updatedNode$args$item1.typ, visitor, ctx);
-                changed3 = changed3 || result$typ !== updatedNode$args$item1.typ;
-                if (changed3) {
-                    result =  {...result, typ: result$typ};
-                    changed2 = true;
-                }
-            }
-            
-                        return result
-                    })
-                    if (changed2) {
-                        updatedNode$args = arr1;
-                        changed1 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$result = transformType(node.result, visitor, ctx);
-                changed1 = changed1 || updatedNode$result !== node.result;
-
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, args: updatedNode$args, result: updatedNode$result, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
-        
-        node = updatedNode;
-        if (visitor.TLambdaPost) {
-            const transformed = visitor.TLambdaPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }
@@ -1521,175 +1531,6 @@ export const transformTOr = <Ctx>(node: TOr, visitor: Visitor<Ctx>, ctx: Ctx): T
         node = updatedNode;
         if (visitor.TOrPost) {
             const transformed = visitor.TOrPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
-export const transformBoolean = <Ctx>(node: Boolean, visitor: Visitor<Ctx>, ctx: Ctx): Boolean => {
-        if (!node) {
-            throw new Error('No Boolean provided');
-        }
-        
-        const transformed = visitor.Boolean ? visitor.Boolean(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
-        
-        node = updatedNode;
-        if (visitor.BooleanPost) {
-            const transformed = visitor.BooleanPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
-export const transformNumber = <Ctx>(node: Number, visitor: Visitor<Ctx>, ctx: Ctx): Number => {
-        if (!node) {
-            throw new Error('No Number provided');
-        }
-        
-        const transformed = visitor.Number ? visitor.Number(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
-        
-        node = updatedNode;
-        if (visitor.NumberPost) {
-            const transformed = visitor.NumberPost(node, ctx);
-            if (transformed != null) {
-                node = transformed;
-            }
-        }
-        return node;
-        
-    }
-
-export const transformTemplateString = <Ctx>(node: TemplateString, visitor: Visitor<Ctx>, ctx: Ctx): TemplateString => {
-        if (!node) {
-            throw new Error('No TemplateString provided');
-        }
-        
-        const transformed = visitor.TemplateString ? visitor.TemplateString(node, ctx) : null;
-        if (transformed === false) {
-            return node;
-        }
-        if (transformed != null) {
-            if (Array.isArray(transformed)) {
-                ctx = transformed[1];
-                if (transformed[0] != null) {
-                    node = transformed[0];
-                }
-            } else {
-                node = transformed;
-            }
-        }
-        
-        let changed0 = false;
-        
-            let updatedNode = node;
-            {
-                let changed1 = false;
-                
-                let updatedNode$rest = node.rest;
-                {
-                    let changed2 = false;
-                    const arr1 = node.rest.map((updatedNode$rest$item1) => {
-                        
-            let result = updatedNode$rest$item1;
-            {
-                let changed3 = false;
-                
-                const result$expr = transformExpression(updatedNode$rest$item1.expr, visitor, ctx);
-                changed3 = changed3 || result$expr !== updatedNode$rest$item1.expr;
-
-                
-                const result$loc = transformLoc(updatedNode$rest$item1.loc, visitor, ctx);
-                changed3 = changed3 || result$loc !== updatedNode$rest$item1.loc;
-                if (changed3) {
-                    result =  {...result, expr: result$expr, loc: result$loc};
-                    changed2 = true;
-                }
-            }
-            
-                        return result
-                    })
-                    if (changed2) {
-                        updatedNode$rest = arr1;
-                        changed1 = true;
-                    }
-                }
-                
-
-                
-                const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-                changed1 = changed1 || updatedNode$loc !== node.loc;
-                if (changed1) {
-                    updatedNode =  {...updatedNode, rest: updatedNode$rest, loc: updatedNode$loc};
-                    changed0 = true;
-                }
-            }
-            
-        
-        node = updatedNode;
-        if (visitor.TemplateStringPost) {
-            const transformed = visitor.TemplateStringPost(node, ctx);
             if (transformed != null) {
                 node = transformed;
             }
