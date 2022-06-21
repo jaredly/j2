@@ -22,25 +22,6 @@ export type Toplevel = Expression;
 
 export type Expression = DecoratedExpression;
 
-export type DecType = {
-  type: "DecType";
-  loc: Loc;
-  type_: Type;
-};
-
-export type DecExpr = {
-  type: "DecExpr";
-  loc: Loc;
-  expr: Expression;
-};
-
-export type Type = {
-  type: "Type";
-  loc: Loc;
-  text: string;
-  hash: (string | string | string | string) | null;
-};
-
 export type Atom = Number | Boolean | Identifier | ParenedExpression | TemplateString;
 
 export type ParenedExpression = {
@@ -66,22 +47,6 @@ export type Identifier = {
 
 // No data on UnresolvedHash
 
-export type newline = string;
-
-export type _nonnewline = string;
-
-export type _ = string;
-
-export type __ = string;
-
-export type comment = multiLineComment | lineComment;
-
-export type multiLineComment = string;
-
-export type lineComment = string;
-
-export type finalLineComment = string;
-
 export type Apply_inner = {
   type: "Apply";
   loc: Loc;
@@ -104,6 +69,22 @@ export type CommaExpr = {
   loc: Loc;
   items: Expression[];
 };
+
+export type newline = string;
+
+export type _nonnewline = string;
+
+export type _ = string;
+
+export type __ = string;
+
+export type comment = multiLineComment | lineComment;
+
+export type multiLineComment = string;
+
+export type lineComment = string;
+
+export type finalLineComment = string;
 
 export type Boolean = {
   type: "Boolean";
@@ -181,6 +162,25 @@ export type LabeledDecoratorArg = {
   arg: DecoratorArg;
 };
 
-export type AllTaggedTypes = File | DecType | DecExpr | Type | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg;
+export type DecType = {
+  type: "DecType";
+  loc: Loc;
+  type_: Type;
+};
+
+export type DecExpr = {
+  type: "DecExpr";
+  loc: Loc;
+  expr: Expression;
+};
+
+export type Type = {
+  type: "Type";
+  loc: Loc;
+  text: string;
+  hash: (string | string | string | string) | null;
+};
+
+export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Type;
 
 export const parseTyped = (input: string): File => parse(input)

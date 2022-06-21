@@ -18,6 +18,9 @@ DecoratorArg = DecType / DecExpr
 // DecoratorArg = DecType / DecPat / DecExpr
 LabeledDecoratorArg = label:($IdText ":" _)? arg:DecoratorArg 
 
+DecType = ":" _ type_:Type 
+// DecPat = "?" __ pattern:Pattern 
+DecExpr = expr:Expression 
 `;
 
 export type Decorator = {

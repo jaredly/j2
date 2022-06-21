@@ -19,14 +19,6 @@ Toplevel = Expression
 Expression = DecoratedExpression
 
 
-DecType = ":" _ type_:Type 
-// DecPat = "?" __ pattern:Pattern 
-DecExpr = expr:Expression 
-
-// Type = TRef / Number / String
-// TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
-Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
-
 
 Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString
 
@@ -42,13 +34,3 @@ HashRef = "#[h" [0-9a-zA-Z]+ "]"
 BuiltinHash = "#[" ("builtin" / "b") "]"
 UnresolvedHash = "#[" ":unresolved:" "]"
 
-newline = "\n"
-_nonnewline = [ \t\r]* (comment [ \t\r]*)*
-_ "whitespace"
-  = [ \t\n\r]* (comment _)*
-__ "whitespace"
-  = [ \t\n\r]+ (comment _)*
-comment = multiLineComment / lineComment
-multiLineComment = $("/*" (!"*/" .)* "*/")
-lineComment = $("//" (!"\n" .)* &"\n")
-finalLineComment = $("//" (!"\n" .)*)

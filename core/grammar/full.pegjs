@@ -19,14 +19,6 @@ Toplevel = Expression
 Expression = DecoratedExpression
 
 
-DecType = ":" _ type_:Type 
-// DecPat = "?" __ pattern:Pattern 
-DecExpr = expr:Expression 
-
-// Type = TRef / Number / String
-// TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
-Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
-
 
 Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString
 
@@ -42,6 +34,18 @@ HashRef = "#[h" [0-9a-zA-Z]+ "]"
 BuiltinHash = "#[" ("builtin" / "b") "]"
 UnresolvedHash = "#[" ":unresolved:" "]"
 
+
+
+// apply.ts
+
+Apply = target:Atom suffixes_drop:Suffix*
+Suffix = Parens
+Parens = "(" _ args:CommaExpr? ")"
+CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
+
+
+// comments.ts
+
 newline = "\n"
 _nonnewline = [ \t\r]* (comment [ \t\r]*)*
 _ "whitespace"
@@ -52,26 +56,6 @@ comment = multiLineComment / lineComment
 multiLineComment = $("/*" (!"*/" .)* "*/")
 lineComment = $("//" (!"\n" .)* &"\n")
 finalLineComment = $("//" (!"\n" .)*)
-
-
-// ----------
-
-// TemplateString = "\"" contents:StringContents* "\""
-// StringContents = TemplatePart / stringChar
-// TemplatePart = "${" _ inner:Expression _ "}"
-// stringChar = $( escapedChar / [^"\\])
-// escapedChar = "\\" .
-
-
-
-
-
-// apply.ts
-
-Apply = target:Atom suffixes_drop:Suffix*
-Suffix = Parens
-Parens = "(" _ args:CommaExpr? ")"
-CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
 
 // constants.ts
@@ -97,3 +81,15 @@ DecoratorArgs = first:LabeledDecoratorArg rest:(_ "," _ LabeledDecoratorArg)* _ 
 DecoratorArg = DecType / DecExpr
 // DecoratorArg = DecType / DecPat / DecExpr
 LabeledDecoratorArg = label:($IdText ":" _)? arg:DecoratorArg 
+
+DecType = ":" _ type_:Type 
+// DecPat = "?" __ pattern:Pattern 
+DecExpr = expr:Expression 
+
+
+// type.ts
+
+
+// Type = TRef / Number / String
+// TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
+Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
