@@ -1,47 +1,45 @@
-import { Ctx } from '.';
 import hashObject from 'object-hash';
-import { Expression, Sym, TApply, TVars, Type, RefKind } from './typed-ast';
+import { Ctx } from '.';
+import { DecoratorDecl } from './elements/decorators';
+import { Loc } from './grammar/base.parser';
 import { toId } from './ids';
-import { Loc, parseTyped } from './grammar/base.parser';
-import { makeToTast, ToTast } from './typing/to-tast';
+import {
+    Expression,
+    GlobalRef,
+    RefKind,
+    Sym,
+    TApply,
+    TLambda,
+    TVars,
+    Type,
+} from './typed-ast';
+import { makeToTast } from './typing/to-tast';
+
+export type HashedNames<Contents, NameV> = {
+    hashed: { [hash: string]: Array<Contents> };
+    // builtins: { [key: string]: Type };
+    names: { [key: string]: NameV };
+};
 
 export type FullContext = {
-    values: {
-        hashed: {
-            [hash: string]: Array<
-                | {
-                      type: 'builtin';
-                      typ: Type;
-                  }
-                | {
-                      type: 'user';
-                      typ: Type;
-                      expr: Expression;
-                  }
-            >;
-        };
-        // builtins: { [key: string]: Type };
-        names: { [key: string]: Array<RefKind> };
-    };
-    types: {
-        hashed: {
-            [hash: string]: Array<
-                | {
-                      type: 'builtin';
-                      args: number;
-                  }
-                | {
-                      type: 'user';
-                      // TODO: once I get records going
-                      // ... this'll be a 'type declaration, I think'
-                      // typ: Type,
-                  }
-            >;
-        };
-        // builtins: { [key: string]: number };
-        // type names are unique folks.
-        names: { [key: string]: RefKind };
-    };
+    values: HashedNames<
+        | { type: 'builtin'; typ: Type }
+        | { type: 'user'; typ: Type; expr: Expression },
+        Array<GlobalRef>
+    >;
+    types: HashedNames<
+        | { type: 'builtin'; args: number }
+        // TODO: once I get records going
+        // ... this'll be a 'type declaration, I think'
+        // kind: Kind,
+        | { type: 'user' },
+        GlobalRef
+    >;
+    decorators: HashedNames<
+        | { type: 'builtin'; typ: Type }
+        | { type: 'user'; typ: TLambda; decl: DecoratorDecl },
+        Array<GlobalRef>
+    >;
 } & Ctx;
 
 export const addBuiltin = (
@@ -100,6 +98,28 @@ const parseHash = (hash: string): Hash => {
     };
 };
 
+const resolveDecorator = (
+    ctx: FullContext,
+    name: string,
+    rawHash?: string | null,
+): Array<GlobalRef> => {
+    if (rawHash) {
+        const hash = parseHash(rawHash);
+        if (hash.type === 'sym') {
+            throw new Error('decorators can only be global');
+        } else {
+            const ref = ctx.decorators.hashed[hash.hash];
+            if (ref && hash.idx < ref.length) {
+                return [{ type: 'Global', id: toId(hash.hash, hash.idx) }];
+            }
+        }
+    }
+    if (ctx.decorators.names[name]) {
+        return ctx.decorators.names[name];
+    }
+    return [];
+};
+
 const resolveType = (
     ctx: FullContext,
     name: string,
@@ -109,10 +129,6 @@ const resolveType = (
         const hash = parseHash(rawHash);
         if (hash.type === 'sym') {
             throw new Error('not yet');
-            // const ref = ctx.values.names[name]
-            // if (ref) {
-            // 	return ref
-            // }
         } else {
             const ref = ctx.types.hashed[hash.hash];
             if (ref && hash.idx < ref.length) {
@@ -157,16 +173,13 @@ const resolve = (
 export const newContext = (): FullContext => {
     const ctx: FullContext = {
         // locals: {},
-        values: {
-            hashed: {},
-            names: {},
-        },
-        types: {
-            hashed: {},
-            names: {},
-        },
+        decorators: { hashed: {}, names: {} },
+        values: { hashed: {}, names: {} },
+        types: { hashed: {}, names: {} },
         resolve: (name, rawHash) => resolve(ctx, name, rawHash),
         resolveType: (name, rawHash) => resolveType(ctx, name, rawHash),
+        resolveDecorator: (name, rawHash) =>
+            resolveDecorator(ctx, name, rawHash),
         ToTast: makeToTast(),
     };
     return ctx;

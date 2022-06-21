@@ -97,7 +97,6 @@ export function runFixture(input: string, output: string) {
             return;
         }
         const pp = newPPCtx(false);
-        console.log(t.type);
         const cm = printToString(
             pp.ToPP.Type(actx.ToAst['TRef'](t as any, actx), pp),
             200,

@@ -13,11 +13,12 @@ export {
 export { Id } from './ids';
 export { Type, TRef, TApply, TVars, TLambda, TOr } from './elements/type';
 
+export type GlobalRef = {
+    type: 'Global';
+    id: Id;
+};
 export type RefKind =
-    | {
-          type: 'Global';
-          id: Id;
-      }
+    | GlobalRef
     | {
           type: 'Local';
           sym: number;

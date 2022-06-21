@@ -97,7 +97,9 @@ export const ToTast = {
 export const ToAst = {
     TRef({ type, ref, loc }: t.TRef, ctx: TACtx): p.Type {
         const { text, hash } =
-            ref.type === 'Unresolved' ? ref : ctx.printRef(ref, loc, 'type');
+            ref.type === 'Unresolved'
+                ? { text: ref.text, hash: '#[:unresolved:]' }
+                : ctx.printRef(ref, loc, 'type');
         return { type: 'Type', text, hash, loc };
     },
     // TLambda({ type, args, result, loc }: t.TLambda, ctx: TACtx): p.Type {

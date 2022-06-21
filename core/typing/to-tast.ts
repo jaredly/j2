@@ -8,6 +8,7 @@ import * as t from '../typed-ast';
 export type Ctx = {
     resolve: (name: string, hash?: string | null) => Array<t.RefKind>;
     resolveType: (name: string, hash?: string | null) => t.RefKind | null;
+    resolveDecorator: (name: string, hash?: string | null) => Array<t.RefKind>;
     ToTast: ToTast;
 };
 

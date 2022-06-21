@@ -23,6 +23,11 @@ DecType = ":" _ type_:Type
 DecExpr = expr:Expression 
 `;
 
+export type DecoratorDecl = {
+    type: 'DecoratorDecl';
+    loc: Loc;
+};
+
 export type Decorator = {
     type: 'Decorator';
     id: { ref: t.RefKind | t.UnresolvedRef; loc: Loc };
@@ -78,14 +83,19 @@ export const ToTast = {
         };
     },
     Decorator(decorator: p.Decorator, ctx: Ctx): Decorator {
+        const hash = filterUnresolved(decorator.id.hash?.slice(2, -1));
+        const resolved = ctx.resolveDecorator(decorator.id.text, hash);
         return {
             type: 'Decorator',
             id: {
-                ref: {
-                    type: 'Unresolved',
-                    text: decorator.id.text,
-                    hash: filterUnresolved(decorator.id.hash?.slice(2, -1)),
-                },
+                ref:
+                    resolved.length === 1
+                        ? resolved[0]
+                        : {
+                              type: 'Unresolved',
+                              text: decorator.id.text,
+                              hash,
+                          },
                 loc: decorator.loc,
             },
             args:

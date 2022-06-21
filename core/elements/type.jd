@@ -6,3 +6,12 @@
 // int#[h2f181c91131fd0daa282424fb3953604513df6fe]
 -->
 🚨 1 error decorators
+
+==[unresovled]==
+
+@what(: what) 10
+-->
+@what#[:unresolved:](:what#[:unresolved:]) 10
+// int#[h2f181c91131fd0daa282424fb3953604513df6fe]
+-->
+🚨 1 error decorators

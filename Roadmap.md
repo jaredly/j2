@@ -13,6 +13,8 @@
 - [ ] support parsing & printing lambdas
 	- [ ] and TApply
 	- [ ] and TVars
+- [ ] do analyze pass for types, decorating unresolved ones? hmm or actually I want a "verify" pass, I think.
+	- also if the "type" that something ends up being from getType is not a valid type, it should be null, right?
 
 
 ## Transformer
