@@ -2,14 +2,14 @@
 
 toString(1)
 -->
-toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)
+toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](1)
 // string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 
 ==[arg type error]==
 
 toString(true)
 -->
-toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
+toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](
     @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f](
         expected: :int#[h2f181c91131fd0daa282424fb3953604513df6fe],
     ) true,
@@ -22,7 +22,7 @@ toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
 
 toString(1, 2)
 -->
-@error:wrongNumberOfArgs#[he554807c644be72e6c4e5cb59aa0955f9ab67f13]() toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
+@error:wrongNumberOfArgs#[he554807c644be72e6c4e5cb59aa0955f9ab67f13]() toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](
     1,
     2,
 )
@@ -51,7 +51,7 @@ undefinedFunction#[:unresolved:]()
 
 toString(1)()
 -->
-@error:notAFunction#[h16ba48b37c7d5999c12c172bd1bbdeac9773c21a]() toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
+@error:notAFunction#[h16ba48b37c7d5999c12c172bd1bbdeac9773c21a]() toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](
     1,
 )()
 -->

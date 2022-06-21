@@ -10,11 +10,12 @@ import { Ctx as TCtx, filterUnresolved } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 
 export const grammar = `
-
-Type = TRef / Number / String
+Type = TRef / Number / String / TLambda
 TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
-// Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
 
+TArg = label:($IdText _ ":" _)? typ:Type
+TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
+TLambda = "(" _ args:TArgs? ")" _ "=>" _ result:Type
 `;
 
 export type TRef = {
@@ -52,7 +53,7 @@ export type TVars = {
 // (ApplyType(x, T)) and the getType of the ApplyType will be the lambda.
 export type TLambda = {
     type: 'TLambda';
-    args: Array<{ label: string; typ: Type }>;
+    args: Array<{ label: string | null; typ: Type; loc: t.Loc }>;
     result: Type;
     loc: t.Loc;
 };
@@ -95,6 +96,19 @@ export const ToTast = {
     String({ type, loc, text }: p.String, ctx: TCtx): t.String {
         return { type: 'String', loc, text };
     },
+    TLambda({ args, result, loc }: p.TLambda, ctx: TCtx): t.TLambda {
+        return {
+            type: 'TLambda',
+            args:
+                args?.items.map(({ label, typ, loc }) => ({
+                    typ: ctx.ToTast[typ.type](typ as any, ctx),
+                    label,
+                    loc,
+                })) ?? [],
+            loc,
+            result: ctx.ToTast[result.type](result as any, ctx),
+        };
+    },
 };
 
 export const ToAst = {
@@ -105,16 +119,47 @@ export const ToAst = {
                 : ctx.printRef(ref, loc, 'type');
         return { type: 'TRef', text, hash, loc };
     },
-    // TLambda({ type, args, result, loc }: t.TLambda, ctx: TACtx): p.Type {
-    // }
+    TLambda({ type, args, result, loc }: t.TLambda, ctx: TACtx): p.Type {
+        return {
+            type: 'TLambda',
+            args: {
+                items: args.map(({ label, typ, loc }) => ({
+                    type: 'TArg',
+                    label,
+                    typ: ctx.ToAst[typ.type](typ as any, ctx),
+                    loc,
+                })),
+                type: 'TArgs',
+                loc,
+            },
+            result: ctx.ToAst[result.type](result as any, ctx),
+            loc,
+        };
+    },
     String({ type, loc, text }: t.String): p.String {
         return { type: 'String', loc, text };
     },
 };
 
 export const ToPP = {
-    // Apply(apply: p.Apply_inner, ctx: PCtx): pp.PP {
-    // },
+    TLambda({ args, result, loc }: t.TLambda, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                pp.args(
+                    args.map((arg) =>
+                        pp.items(
+                            [ctx.ToPP[arg.typ.type](arg.typ as any, ctx)],
+                            loc,
+                        ),
+                    ),
+                    loc,
+                ),
+                pp.atom(' => ', loc),
+                ctx.ToPP[result.type](result as any, ctx),
+            ],
+            loc,
+        );
+    },
     TRef(type: p.TRef, ctx: PCtx): pp.PP {
         if (ctx.hideIds) {
             return pp.atom(type.text, type.loc);

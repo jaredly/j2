@@ -210,7 +210,7 @@ export const noloc: Loc = {
 export const tref = (ref: RefKind): Type => ({ type: 'TRef', ref, loc: noloc });
 const ref = (kind: RefKind): Expression => ({ type: 'Ref', kind, loc: noloc });
 const tlam = (
-    args: Array<{ label: string; typ: Type }>,
+    args: Array<{ label: string; typ: Type; loc: Loc }>,
     result: Type,
 ): Type => ({
     type: 'TLambda',
@@ -287,7 +287,10 @@ export const setupDefaults = (ctx: FullContext) => {
     addBuiltin(
         ctx,
         'toString',
-        tlam([{ label: 'v', typ: tref(named.int) }], tref(named.string)),
+        tlam(
+            [{ label: 'v', typ: tref(named.int), loc: noloc }],
+            tref(named.string),
+        ),
     );
 
     addBuiltin(
@@ -295,8 +298,8 @@ export const setupDefaults = (ctx: FullContext) => {
         'add',
         tlam(
             [
-                { label: 'a', typ: tref(named.int) },
-                { label: 'b', typ: tref(named.int) },
+                { label: 'a', typ: tref(named.int), loc: noloc },
+                { label: 'b', typ: tref(named.int), loc: noloc },
             ],
             tref(named.int),
         ),
@@ -307,8 +310,8 @@ export const setupDefaults = (ctx: FullContext) => {
         'add',
         tlam(
             [
-                { label: 'a', typ: tref(named.float) },
-                { label: 'b', typ: tref(named.float) },
+                { label: 'a', typ: tref(named.float), loc: noloc },
+                { label: 'b', typ: tref(named.float), loc: noloc },
             ],
             tref(named.float),
         ),
@@ -322,10 +325,12 @@ export const setupDefaults = (ctx: FullContext) => {
                 {
                     label: 'a',
                     typ: { type: 'Number', kind: 'Int', loc: noloc, value: 20 },
+                    loc: noloc,
                 },
                 {
                     label: 'a',
                     typ: { type: 'String', loc: noloc, text: 'yep' },
+                    loc: noloc,
                 },
             ],
             tref(named.float),

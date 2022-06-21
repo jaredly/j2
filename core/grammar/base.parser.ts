@@ -176,7 +176,7 @@ export type DecExpr = {
   expr: Expression;
 };
 
-export type Type = TRef | Number | String;
+export type Type = TRef | Number | String | TLambda;
 
 export type TRef = {
   type: "TRef";
@@ -185,6 +185,26 @@ export type TRef = {
   hash: (string | string | string | string) | null;
 };
 
-export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TRef;
+export type TArg = {
+  type: "TArg";
+  loc: Loc;
+  label: string | null;
+  typ: Type;
+};
+
+export type TArgs = {
+  type: "TArgs";
+  loc: Loc;
+  items: TArg[];
+};
+
+export type TLambda = {
+  type: "TLambda";
+  loc: Loc;
+  args: TArgs | null;
+  result: Type;
+};
+
+export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TRef | TArg | TArgs | TLambda;
 
 export const parseTyped = (input: string): File => parse(input)

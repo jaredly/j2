@@ -90,7 +90,9 @@ DecExpr = expr:Expression
 
 // type.ts
 
-
-Type = TRef / Number / String
+Type = TRef / Number / String / TLambda
 TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
-// Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
+
+TArg = label:($IdText _ ":" _)? typ:Type
+TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
+TLambda = "(" _ args:TArgs? ")" _ "=>" _ result:Type
