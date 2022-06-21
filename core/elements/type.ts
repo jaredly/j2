@@ -100,6 +100,8 @@ export const ToAst = {
             ref.type === 'Unresolved' ? ref : ctx.printRef(ref, loc, 'type');
         return { type: 'Type', text, hash, loc };
     },
+    // TLambda({ type, args, result, loc }: t.TLambda, ctx: TACtx): p.Type {
+    // }
 };
 
 export const ToPP = {

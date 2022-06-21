@@ -4,7 +4,9 @@
 @onesit() (@twosit() 20)
 -->
 @whatsit#[:unresolved:]() 10
+// int#[h2f181c91131fd0daa282424fb3953604513df6fe]
 @onesit#[:unresolved:]() @twosit#[:unresolved:]() 20
+// int#[h2f181c91131fd0daa282424fb3953604513df6fe]
 -->
 🚨 3 error decorators
 
@@ -13,6 +15,7 @@
 (@decorated()toString)(10)
 -->
 (@decorated#[:unresolved:]() toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69])(10)
+// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 -->
 🚨 1 error decorators
 
@@ -21,5 +24,6 @@
 @decodeURI(:string)("http://example.com")
 -->
 @decodeURI#[:unresolved:](:string#[h8f452146b75c912dedc5638091c55a088e30b7ee]) "http://example.com"
+// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 -->
 🚨 1 error decorators

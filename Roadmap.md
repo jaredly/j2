@@ -4,9 +4,15 @@
 - [x] actually use the `grammar` exports from elements
 - [x] actually use the `fixtures` exports from elements
 - [x] move as much as possible into `elements`
-- [ ] split up fixtures, colocate yes please.
+- [x] split up fixtures, colocate yes please.
 	Would it make sense to just have them be parallel files?
 	tbh that might be the best way to do it. ...
+- [x] I want to be outputting the `type` of each toplevel.
+	- as a comment? Seems like a reasonable approach.
+	- yeah I guess it's fine.
+- [ ] support parsing & printing lambdas
+	- [ ] and TApply
+	- [ ] and TVars
 
 
 ## Transformer

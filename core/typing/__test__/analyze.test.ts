@@ -42,6 +42,9 @@ readdirSync(base)
                     (!hasOnly || title.includes('[only]')) &&
                     !process.env.FIX
                 ) {
+                    if (!outputTast) {
+                        throw new Error(`Unable to process the output??`);
+                    }
                     try {
                         expect(clearLocs(checked)).toEqual(
                             clearLocs(outputTast),

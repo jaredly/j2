@@ -1,0 +1,8 @@
+==[baseic?]==
+
+@what(: bool) 10
+-->
+@what#[:unresolved:](:bool#[h850edf082092e835e7daddfaf30654b2289f5644]) 10
+// int#[h2f181c91131fd0daa282424fb3953604513df6fe]
+-->
+🚨 1 error decorators

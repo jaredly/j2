@@ -9,6 +9,7 @@ import { File } from '../../typed-ast';
 import { analyze, analyzeContext, verify } from '../analyze';
 import { printCtx, ToAst } from '../to-ast';
 import { makeToTast, ToTast } from '../to-tast';
+import { getType } from '../getType';
 
 export type Fixture = [string, string, string, string | undefined, number];
 export const clearLocs = (ast: File) => {
@@ -87,10 +88,30 @@ export function runFixture(input: string, output: string) {
         throw err;
     }
 
+    const actx = printCtx(ctx);
+
     const checked = analyze(tast, analyzeContext(ctx));
+    checked.toplevels.forEach((top) => {
+        const t = getType(top.expr, ctx);
+        if (!t) {
+            return;
+        }
+        const pp = newPPCtx(false);
+        console.log(t.type);
+        const cm = printToString(
+            pp.ToPP.Type(actx.ToAst['TRef'](t as any, actx), pp),
+            200,
+        );
+        checked.comments.push([
+            {
+                ...top.loc,
+                start: top.loc.end,
+            },
+            '// ' + cm,
+        ]);
+    });
     // console.log(JSON.stringify(checked.toplevels[0]));
 
-    const actx = printCtx(ctx);
     const newOutput = printToString(
         pegPrinter(actx.ToAst.File(checked, actx), newPPCtx(false)),
         100,
@@ -107,10 +128,16 @@ export function runFixture(input: string, output: string) {
     if (missingTypes.length) {
         errorText.push(`🚨 ${missingTypes.length} missing types`);
     }
+    let outputTast;
+    try {
+        outputTast = ctx.ToTast.File(fixComments(parseTyped(output)), ctx);
+    } catch (err) {
+        console.error;
+    }
     return {
         errorText: errorText.length ? errorText.join('\n') : null,
         checked,
         newOutput,
-        outputTast: ctx.ToTast.File(fixComments(parseTyped(output)), ctx),
+        outputTast,
     };
 }

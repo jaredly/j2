@@ -4,7 +4,9 @@ true
 false
 -->
 true
+// bool#[h850edf082092e835e7daddfaf30654b2289f5644]
 false
+// bool#[h850edf082092e835e7daddfaf30654b2289f5644]
 
 ==[numbers]==
 
@@ -12,30 +14,36 @@ false
 1.23
 -->
 123
+// int#[h2f181c91131fd0daa282424fb3953604513df6fe]
 1.23
+// float#[h82403bb59c4f81033c8b3085e8861245660c31e0]
 
 ==[strings]==
 
 "hello"
 -->
 "hello"
+// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 
 ==[templates]==
 
 "hello ${toString(123)}"
 -->
 "hello ${toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](123)}"
+// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 
 ==[right next to each other]==
 
 "One${"1"}${"2"} and ${"3"}"
 -->
 "One${"1"}${"2"} and ${"3"}"
+// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 
 ==[error]==
 
 "${12}"
 -->
 "${@error#[:unresolved:](msg: "Expected string") 12}"
+// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 -->
 🚨 1 error decorators
