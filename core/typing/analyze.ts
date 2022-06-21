@@ -117,6 +117,12 @@ export const verify = (
                 }
                 return node;
             },
+            Decorator(node, ctx) {
+                if (node.id.ref.type === 'Unresolved') {
+                    missingTypes.push(node.loc);
+                }
+                return node;
+            },
             DecoratedExpression(node) {
                 node.decorators.forEach((dec) => {
                     const ref = dec.id.ref;
