@@ -69,6 +69,7 @@ export type Fixed = {
     errors: string | undefined;
 };
 
+/* istanbul ignore next */
 export const saveFixed = (
     fixtureFile: string,
     fixtures: Fixture[],
@@ -165,9 +166,7 @@ export function runFixture(builtins: string[], input: string, output: string) {
     let outputTast;
     try {
         outputTast = ctx.ToTast.File(fixComments(parseFile(output)), ctx);
-    } catch (err) {
-        console.error;
-    }
+    } catch (err) {}
     return {
         errorText: errorText.length ? errorText.join('\n') : null,
         checked,
