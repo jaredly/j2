@@ -22,18 +22,20 @@ false
 
 ==[templates]==
 
-"hello \${toString(123)}"
+"hello ${toString(123)}"
 -->
-"hello \${toString(123)}"
+"hello ${toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](123)}"
 
-==[template strings?]==
+==[right next to each other]==
 
-"Hello${toString(1)}"
 "One${"1"}${"2"} and ${"3"}"
+-->
+"One${"1"}${"2"} and ${"3"}"
+
+==[error]==
+
 "${12}"
 -->
-"Hello${toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)}"
-"One${"1"}${"2"} and ${"3"}"
 "${@error#[:unresolved:](msg: "Expected string") 12}"
 -->
 🚨 1 error decorators
