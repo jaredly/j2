@@ -103,9 +103,10 @@ export const typeMatches = (
     //     );
     // }
     // candidate = reduceConstant(candidate);
-    if (candidate.type !== expected.type) {
-        return false;
-    }
+    // if (candidate.type !== expected.type) {
+    //     return false;
+    // }
+    // console.log(candidate, expected);
     switch (candidate.type) {
         case 'TLambda':
             return (
@@ -150,7 +151,7 @@ export const typeMatches = (
                 //     return true;
                 // }
                 default:
-                    return false;
+                    return isBuiltinType(expected, 'string', ctx);
             }
         // Ooh if this is an alias, I need to resolve it?
         case 'TRef':
@@ -254,7 +255,14 @@ export const typeMatches = (
                 //     }
                 //     return candidate.value >= min;
             } else {
-                return false;
+                // return false;
+                // console.log(
+                //     'umber',
+                //     expected,
+                //     ctx.types.names['int'],
+                //     isBuiltinType(expected, 'int', ctx),
+                // );
+                return isBuiltinType(expected, 'int', ctx);
             }
     }
 };
