@@ -1,5 +1,11 @@
 import * as fs from 'fs';
-import { addBuiltin, addBuiltinType, fullContext, noloc } from '../../ctx';
+import {
+    addBuiltin,
+    addBuiltinDecorator,
+    addBuiltinType,
+    fullContext,
+    noloc,
+} from '../../ctx';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
@@ -105,6 +111,9 @@ export function runFixture(builtins: string[], input: string, output: string) {
                 break;
             case 'type':
                 addBuiltinType(ctx, name, +rest);
+                break;
+            case 'decorator':
+                addBuiltinDecorator(ctx, name, 0);
                 break;
         }
     });
