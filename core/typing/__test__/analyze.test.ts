@@ -32,7 +32,7 @@ readdirSync(base)
                 '$title',
                 ({ title, input, output, errors, i, builtins }) => {
                     var { errorText, checked, newOutput, outputTast } =
-                        runFixture(input, output);
+                        runFixture(builtins, input, output);
 
                     const fullExpectedOutput =
                         output + (errors ? '\n-->\n' + errors : '');

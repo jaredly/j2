@@ -1,10 +1,10 @@
 import * as fs from 'fs';
-import { fullContext, noloc } from '../../ctx';
-import { parseTyped } from '../../grammar/base.parser';
+import { addBuiltin, addBuiltinType, fullContext, noloc } from '../../ctx';
+import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { printToString } from '../../printer/pp';
-import { transformFile } from '../../transform-tast';
+import { transformFile, Visitor } from '../../transform-tast';
 import { File } from '../../typed-ast';
 import { analyze, analyzeContext, verify } from '../analyze';
 import { printCtx, ToAst } from '../to-ast';
@@ -19,22 +19,11 @@ export type Fixture = {
     errors: string | undefined;
     i: number;
 };
+
+export const locClearVisitor: Visitor<null> = { Loc: () => noloc };
+
 export const clearLocs = (ast: File) => {
-    return transformFile(
-        ast,
-        {
-            Loc(node, _) {
-                return noloc;
-            },
-            File(node, _) {
-                return {
-                    ...node,
-                    comments: node.comments.map(([_, text]) => [noloc, text]),
-                };
-            },
-        },
-        null,
-    );
+    return transformFile(ast, locClearVisitor, null);
 };
 
 export const loadFixtures = (fixtureFile: string) => {
@@ -102,11 +91,27 @@ export const saveFixed = (
     );
 };
 
-export function runFixture(input: string, output: string) {
+export function runFixture(builtins: string[], input: string, output: string) {
     const ctx = fullContext();
+
+    builtins.forEach((line) => {
+        const [_, kind, name, ...rest] = line.split(':');
+        switch (kind) {
+            case 'value':
+                const typeRaw = rest.join(':').trim();
+                const ast = parseType(typeRaw);
+                const tast = ctx.ToTast[ast.type](ast as any, ctx);
+                addBuiltin(ctx, name, tast);
+                break;
+            case 'type':
+                addBuiltinType(ctx, name, +rest);
+                break;
+        }
+    });
+
     let tast;
     try {
-        tast = ctx.ToTast.File(fixComments(parseTyped(input)), ctx);
+        tast = ctx.ToTast.File(fixComments(parseFile(input)), ctx);
     } catch (err) {
         console.log('Failed to parse input:', input);
         throw err;
@@ -152,7 +157,7 @@ export function runFixture(input: string, output: string) {
     }
     let outputTast;
     try {
-        outputTast = ctx.ToTast.File(fixComments(parseTyped(output)), ctx);
+        outputTast = ctx.ToTast.File(fixComments(parseFile(output)), ctx);
     } catch (err) {
         console.error;
     }

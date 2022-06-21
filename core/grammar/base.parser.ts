@@ -207,4 +207,5 @@ export type TLambda = {
 
 export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TRef | TArg | TArgs | TLambda;
 
-export const parseTyped = (input: string): File => parse(input)
+export const parseFile = (input: string): File => parse(input, {startRule: 'File'});
+export const parseType = (input: string): Type => parse(input, {startRule: 'Type'});

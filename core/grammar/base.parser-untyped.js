@@ -170,7 +170,7 @@ function peg$parse(input, options) {
   var peg$FAILED = {};
   var peg$source = options.grammarSource;
 
-  var peg$startRuleFunctions = { File: peg$parseFile };
+  var peg$startRuleFunctions = { File: peg$parseFile, Type: peg$parseType };
   var peg$startRuleFunction = peg$parseFile;
 
   var peg$c0 = ";";

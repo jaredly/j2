@@ -37,6 +37,7 @@ if (ast.initializer) {
 const jsOut = peggy.generate(grammarFile.join('\n\n'), {
     output: 'source',
     format: 'commonjs',
+    allowedStartRules: ['File', 'Type'],
 });
 
 fs.writeFileSync('./core/grammar/base.parser-untyped.js', jsOut);
@@ -53,5 +54,8 @@ export type Loc = {
 
 ` +
         typesFile.join('\n\n') +
-        `\n\nexport const parseTyped = (input: string): File => parse(input)\n`,
+        `\n
+export const parseFile = (input: string): File => parse(input, {startRule: 'File'});
+export const parseType = (input: string): Type => parse(input, {startRule: 'Type'});
+`,
 );
