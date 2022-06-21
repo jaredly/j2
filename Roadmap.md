@@ -1,9 +1,12 @@
 
-- [ ] use the `analyze` from `constants.ts`
+- [x] use the `analyze` from `constants.ts`
 - [ ] start ... tracking the path of things? Should `ctx` always have a path component? Seems like a decent idea.
-- [ ] actually use the `grammar` exports from elements
-- [ ] actually use the `fixtures` exports from elements
-- [ ] move as much as possible into `elements`
+- [x] actually use the `grammar` exports from elements
+- [x] actually use the `fixtures` exports from elements
+- [x] move as much as possible into `elements`
+- [ ] split up fixtures, colocate yes please.
+	Would it make sense to just have them be parallel files?
+	tbh that might be the best way to do it. ...
 
 
 ## Transformer

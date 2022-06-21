@@ -1,0 +1,39 @@
+==[booleans]==
+
+true
+false
+-->
+true
+false
+
+==[numbers]==
+
+123
+1.23
+-->
+123
+1.23
+
+==[strings]==
+
+"hello"
+-->
+"hello"
+
+==[templates]==
+
+"hello \${toString(123)}"
+-->
+"hello \${toString(123)}"
+
+==[template strings?]==
+
+"Hello${toString(1)}"
+"One${"1"}${"2"} and ${"3"}"
+"${12}"
+-->
+"Hello${toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)}"
+"One${"1"}${"2"} and ${"3"}"
+"${@error#[:unresolved:](msg: "Expected string") 12}"
+-->
+🚨 1 error decorators

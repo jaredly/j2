@@ -6,7 +6,7 @@
     }
 }
 
-File = _ toplevels:(Toplevel _nonnewline ';'? _lineEnd)* _ finalLineComment? 
+File = toplevels:(_ Toplevel _nonnewline ';'? _lineEnd)* _ finalLineComment? 
 
 _lineEnd = '\n' / _EOF
 

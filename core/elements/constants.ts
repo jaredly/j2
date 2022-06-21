@@ -22,40 +22,6 @@ stringChar = $( escapedChar / [^"\\])
 escapedChar = "\\" .
 `;
 
-// Yeah I should have a ... mode where all types are annotated?
-// maybe in all cases I annotate the toplevel type, why not.
-export const fixtures = `
-==[booleans]==
-true
-false
--->
-//: bool
-true
-//: bool
-false
-
-==[numbers]==
-123
-1.23
--->
-//: int
-123
-//: float
-1.23
-
-==[strings]==
-"hello"
--->
-//: string
-"hello"
-
-==[templates]==
-"hello \${toString(123)}"
--->
-//: string
-"hello \${toString(123)}"
-`;
-
 export type Boolean = { type: 'Boolean'; loc: Loc; value: boolean };
 // export type String = { type: 'String'; loc: Loc; value: boolean };
 

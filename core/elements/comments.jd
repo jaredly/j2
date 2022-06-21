@@ -1,0 +1,17 @@
+==[comments]==
+
+// Comments
+toString(
+	// inside
+	1,
+	// after
+)
+//last
+-->
+// Comments
+toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
+    // inside
+    1,
+    // after
+)
+//last

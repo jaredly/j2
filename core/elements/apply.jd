@@ -1,0 +1,50 @@
+==[well-typed builtin call]==
+
+toString(1)
+-->
+toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)
+
+==[arg type error]==
+
+toString(true)
+-->
+toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](@error#[:unresolved:](msg: "Wrong type") true)
+-->
+🚨 1 error decorators
+
+==[wrong number of types]==
+
+toString(1, 2)
+-->
+@error#[:unresolved:](msg: "Wrong number of arguments") toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
+    1,
+    2,
+)
+-->
+🚨 1 error decorators
+
+==[not a fn]==
+
+(10)(20)
+-->
+@error#[:unresolved:](msg: "Not a function") 10(20)
+-->
+🚨 1 error decorators
+🚨 2 missing types
+
+==[calling undefined function]==
+
+undefinedFunction()
+-->
+undefinedFunction#[:unresolved:]()
+-->
+🚨 2 missing types
+
+==[double apply]==
+
+toString(1)()
+-->
+@error#[:unresolved:](msg: "Not a function") toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)()
+-->
+🚨 1 error decorators
+🚨 2 missing types

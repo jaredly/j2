@@ -1,0 +1,25 @@
+==[decorate something]==
+
+@whatsit() 10
+@onesit() (@twosit() 20)
+-->
+@whatsit#[:unresolved:]() 10
+@onesit#[:unresolved:]() @twosit#[:unresolved:]() 20
+-->
+🚨 3 error decorators
+
+==[decorated apply target]==
+
+(@decorated()toString)(10)
+-->
+(@decorated#[:unresolved:]() toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69])(10)
+-->
+🚨 1 error decorators
+
+==[um]==
+
+@decodeURI(:string)("http://example.com")
+-->
+@decodeURI#[:unresolved:](:string#[h8f452146b75c912dedc5638091c55a088e30b7ee]) "http://example.com"
+-->
+🚨 1 error decorators

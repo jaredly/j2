@@ -244,7 +244,7 @@ function peg$parse(input, options) {
     type: "File",
     loc: myLocation(),
     comments: allComments,
-    toplevels: toplevels.map(element => element[0])
+    toplevels: toplevels.map(element => element[1])
   };
 };
   var peg$f1 = function(expr) {
@@ -580,9 +580,9 @@ function peg$parse(input, options) {
     var s0, s1, s2, s3, s4, s5, s6, s7;
 
     s0 = peg$currPos;
-    s1 = peg$parse_();
-    s2 = [];
-    s3 = peg$currPos;
+    s1 = [];
+    s2 = peg$currPos;
+    s3 = peg$parse_();
     s4 = peg$parseDecoratedExpression();
     if (s4 !== peg$FAILED) {
       s5 = peg$parse_nonnewline();
@@ -598,19 +598,20 @@ function peg$parse(input, options) {
       }
       s7 = peg$parse_lineEnd();
       if (s7 !== peg$FAILED) {
-        s4 = [s4, s5, s6, s7];
-        s3 = s4;
+        s3 = [s3, s4, s5, s6, s7];
+        s2 = s3;
       } else {
-        peg$currPos = s3;
-        s3 = peg$FAILED;
+        peg$currPos = s2;
+        s2 = peg$FAILED;
       }
     } else {
-      peg$currPos = s3;
-      s3 = peg$FAILED;
+      peg$currPos = s2;
+      s2 = peg$FAILED;
     }
-    while (s3 !== peg$FAILED) {
-      s2.push(s3);
-      s3 = peg$currPos;
+    while (s2 !== peg$FAILED) {
+      s1.push(s2);
+      s2 = peg$currPos;
+      s3 = peg$parse_();
       s4 = peg$parseDecoratedExpression();
       if (s4 !== peg$FAILED) {
         s5 = peg$parse_nonnewline();
@@ -626,24 +627,24 @@ function peg$parse(input, options) {
         }
         s7 = peg$parse_lineEnd();
         if (s7 !== peg$FAILED) {
-          s4 = [s4, s5, s6, s7];
-          s3 = s4;
+          s3 = [s3, s4, s5, s6, s7];
+          s2 = s3;
         } else {
-          peg$currPos = s3;
-          s3 = peg$FAILED;
+          peg$currPos = s2;
+          s2 = peg$FAILED;
         }
       } else {
-        peg$currPos = s3;
-        s3 = peg$FAILED;
+        peg$currPos = s2;
+        s2 = peg$FAILED;
       }
     }
-    s3 = peg$parse_();
-    s4 = peg$parsefinalLineComment();
-    if (s4 === peg$FAILED) {
-      s4 = null;
+    s2 = peg$parse_();
+    s3 = peg$parsefinalLineComment();
+    if (s3 === peg$FAILED) {
+      s3 = null;
     }
     peg$savedPos = s0;
-    s0 = peg$f0(s2);
+    s0 = peg$f0(s1);
 
     return s0;
   }
