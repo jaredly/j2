@@ -20,7 +20,6 @@ import {
   Type,
   TRef,
   TLambda,
-  TExpr,
   Sym,
   String,
   DecoratorDecl,
@@ -141,8 +140,6 @@ export type Visitor<Ctx> = {
   TLambdaPost?: (node: TLambda, ctx: Ctx) => null | TLambda;
   Type?: (node: Type, ctx: Ctx) => null | false | Type | [Type | null, Ctx];
   TypePost?: (node: Type, ctx: Ctx) => null | Type;
-  TExpr?: (node: TExpr, ctx: Ctx) => null | false | TExpr | [TExpr | null, Ctx];
-  TExprPost?: (node: TExpr, ctx: Ctx) => null | TExpr;
   TAdd?: (node: TAdd, ctx: Ctx) => null | false | TAdd | [TAdd | null, Ctx];
   TAddPost?: (node: TAdd, ctx: Ctx) => null | TAdd;
   TSub?: (node: TSub, ctx: Ctx) => null | false | TSub | [TSub | null, Ctx];
@@ -187,6 +184,14 @@ export type Visitor<Ctx> = {
   ) => null | false | Type | [Type | null, Ctx];
   Type_TLambda?: (
     node: TLambda,
+    ctx: Ctx
+  ) => null | false | Type | [Type | null, Ctx];
+  Type_Number?: (
+    node: Number,
+    ctx: Ctx
+  ) => null | false | Type | [Type | null, Ctx];
+  Type_String?: (
+    node: String,
     ctx: Ctx
   ) => null | false | Type | [Type | null, Ctx];
 };
@@ -880,8 +885,15 @@ export const transformTLambda = <Ctx>(
             ctx
           );
           changed3 = changed3 || result$typ !== updatedNode$args$item1.typ;
+
+          const result$loc = transformLoc(
+            updatedNode$args$item1.loc,
+            visitor,
+            ctx
+          );
+          changed3 = changed3 || result$loc !== updatedNode$args$item1.loc;
           if (changed3) {
-            result = { ...result, typ: result$typ };
+            result = { ...result, typ: result$typ, loc: result$loc };
             changed2 = true;
           }
         }
@@ -913,43 +925,6 @@ export const transformTLambda = <Ctx>(
   node = updatedNode;
   if (visitor.TLambdaPost) {
     const transformed = visitor.TLambdaPost(node, ctx);
-    if (transformed != null) {
-      node = transformed;
-    }
-  }
-  return node;
-};
-
-export const transformTExpr = <Ctx>(
-  node: TExpr,
-  visitor: Visitor<Ctx>,
-  ctx: Ctx
-): TExpr => {
-  if (!node) {
-    throw new Error("No TExpr provided");
-  }
-
-  const transformed = visitor.TExpr ? visitor.TExpr(node, ctx) : null;
-  if (transformed === false) {
-    return node;
-  }
-  if (transformed != null) {
-    if (Array.isArray(transformed)) {
-      ctx = transformed[1];
-      if (transformed[0] != null) {
-        node = transformed[0];
-      }
-    } else {
-      node = transformed;
-    }
-  }
-
-  let changed0 = false;
-  const updatedNode = node;
-
-  node = updatedNode;
-  if (visitor.TExprPost) {
-    const transformed = visitor.TExprPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }
@@ -1021,6 +996,44 @@ export const transformType = <Ctx>(
       }
       break;
     }
+
+    case "Number": {
+      const transformed = visitor.Type_Number
+        ? visitor.Type_Number(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "String": {
+      const transformed = visitor.Type_String
+        ? visitor.Type_String(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
   }
 
   let updatedNode = node;
@@ -1036,14 +1049,6 @@ export const transformType = <Ctx>(
       updatedNode = transformTLambda(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
-    }
-
-    default: {
-      // let changed1 = false;
-
-      const updatedNode$0node = transformTExpr(node, visitor, ctx);
-      changed0 = changed0 || updatedNode$0node !== node;
-      updatedNode = updatedNode$0node;
     }
   }
 

@@ -2,16 +2,65 @@
 
 toString(1)
 -->
-toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](1)
+toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](
+    @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f](
+        expected: :int#[h2f181c91131fd0daa282424fb3953604513df6fe],
+    ) 1,
+)
 // string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+-->
+🚨 1 error decorators
 
 ==[multiple args]==
 //:value:twoArgs: (one: int, two: string) => string
 
 twoArgs(1, "hello")
 -->
-twoArgs#[h1dd55b3629241bfa7b281be99d7b03a6ca6317ae](1, "hello")
+twoArgs#[h1dd55b3629241bfa7b281be99d7b03a6ca6317ae](
+    @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f](
+        expected: :int#[h2f181c91131fd0daa282424fb3953604513df6fe],
+    ) 1,
+    @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f](
+        expected: :string#[h8f452146b75c912dedc5638091c55a088e30b7ee],
+    ) "hello",
+)
 // string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+-->
+🚨 2 error decorators
+
+==[pass lambda]==
+//:value:simple: () => string
+//:value:takeSimple: (simple: () => string) => string
+
+takeSimple(simple)
+-->
+takeSimple#[h661bc82cf84ea9f8713e296fe170c24b03b7836f](
+    simple#[hb184131ce065f6ea01a4dc5300b8971f0b1dde25],
+)
+// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+
+==[pass wrong lambda]==
+//:value:simple: () => string
+//:value:takeOneArg: (simple: (v: int) => string) => string
+//:value:takeIntle: (simple: () => int) => string
+
+takeOneArg(simple)
+takeIntle(simple)
+-->
+takeOneArg#[hb2ea0af87886a84aab2b910728dc4992597a3bfb](
+    @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f](
+        expected: :(v: int#[h2f181c91131fd0daa282424fb3953604513df6fe]) => string#[h8f452146b75c912dedc5638091c55a088e30b7ee],
+    ) simple#[hb184131ce065f6ea01a4dc5300b8971f0b1dde25],
+)
+// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+takeIntle#[h768fd053382ed07585296a431b4bfe84259e6e46](
+    @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f](
+        expected: :() => int#[h2f181c91131fd0daa282424fb3953604513df6fe],
+    ) simple#[hb184131ce065f6ea01a4dc5300b8971f0b1dde25],
+)
+// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+-->
+🚨 2 error decorators
 
 ==[arg type error]==
 
@@ -26,7 +75,7 @@ toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](
 -->
 🚨 1 error decorators
 
-==[wrong number of types]==
+==[wrong number of args]==
 
 toString(1, 2)
 -->
@@ -60,8 +109,10 @@ undefinedFunction#[:unresolved:]()
 toString(1)()
 -->
 @error:notAFunction#[h16ba48b37c7d5999c12c172bd1bbdeac9773c21a]() toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](
-    1,
+    @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f](
+        expected: :int#[h2f181c91131fd0daa282424fb3953604513df6fe],
+    ) 1,
 )()
 -->
-🚨 1 error decorators
+🚨 2 error decorators
 🚨 2 missing types

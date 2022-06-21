@@ -1,4 +1,176 @@
 
+# Big Things To Add
+
+## Elements
+
+### [ ] Generics (TVars TApply TypeApplication TypeVariables)
+
+### [ ] Oh toplevel defines
+
+`define` maybe? or just a toplevel `what =`, idk.
+
+### Record types!
+And defining records of course
+`struct`? or `record`? might be nice to call things what they are.
+
+### Type Aliases
+I think `getType` would resolve these? Yeah.
+`type Under10Arr = <T>Array<T> where .length = 10 - usize`
+
+### BinOps and such
+- `let + = add`
+
+So things that are apply's
+
+
+### Attributes (modeled as fn application)
+
+### oh lol control flow right
+- if/else
+- switch
+- let my folks
+- loop/recur I think? idk
+
+### Type Refinement madness
+- [x] allow specifying constant types
+- [x] "hello" gets inferred as "hello" not string
+- [ ] get everything together such that the type of (+) results in
+	`1 + 2` to have the type `1 + 2`.
+	`+: <A: int, B: int>(a: A, b: B): A + B => a + b`
+	also, types should collapse reasonably, like `2 + int` is still just `int`,
+	but `2 + uint` is `2 + uint`.
+- [ ] do the subtypings
+- [ ] I definitely want something like Array.length = 5, or Array.length = 5 + uint
+
+## Bigger things
+
+### Generate like typescript and stuff
+
+### TAST -> IR probably?
+
+This ... is where effects get eliminated. right?
+and blocks get flattened, where `if`s are statements not expressions.
+
+but we probably still have refined types?
+because I think it's here that we'd turn some recursive functions into loops,
+and also some loopys into fixed loops? like glsl compatible.
+
+### IR optimizations right
+
+seems like it would be good
+also maybe monomorphization happens here?
+
+# Thinking about GLSL
+
+I'm hoping the type refinement will be all I need to make things groovy.
+
+# Thinking about microcontrollers
+
+I just need to generate C++, right?
+which means ... some amount of malloc/free?
+I guess I managed to get away with no heap memory in my pen plotter stuff so far, by just using
+a fixed-length global array that I mutated.
+so, how do I keep track of what allocation strategy I'm going to use?
+
+Roc's platforms are very cool. A very nice way to separate out the pure from the side effects.
+
+what would it look like to ... turn my setup, and loop, and such ...
+have the State object ... hmm .... I guess
+if I use Setup to set up the state object, behind the scenes I could define
+it as a static global.
+And then the Loop function just takes the state, and returns a new one ... and as long as
+we disallow recursive types, that means the sum of the Loop function can have no reason
+to allocate outside of the stack.
+which is interesting.
+I guess I could do the arena allocator trick.
+
+anyway
+
+one thing going on there is a fixed-length array.
+What if I have a ... max-length array? would that even make sense?
+```
+type State = {
+	steps: Array<Step> where .length = 1000 - uint,
+}
+```
+that's kindof interesting.
+but actually, a fixed-length array should be just as doable
+```
+type State = {
+	steps: Array<Step> where .length = 1000
+}
+```
+
+I guess I'd have a `set(arr, idx, v)` that would "return" a new array, unless I knew I could
+get away with mutating it?
+eh idk, seems a little convoluted.
+maybe I should try to raise it up to the platform level? but that would be too much I think.
+orr I could just use a linked list like a reasonable person. given that I don't need random access.
+but that would mean heap allocation.
+
+# Thinking about React
+
+It would be quite nice to have drop-in react support.
+it would be very cool to autogen runtime type checkers to validate incoming values 🤔
+although if we have typescript, that can represent much of what we'll be using. so maybe its fine.
+
+so like
+do I imagine a "platform" kindof setup?
+
+What would it look like to use typescript-annotated components directly inline? and such.
+
+Alternatively, what would it look like to keep everything pure on my end, essentially passing a
+POJO data structure over to the TS side, which gets inflated into react components? a la elm ui.
+oh right, elm has its own virtualdom impl.
+i guess cljs is the more react-compatible idea. but it does side effects.
+
+so, it would have to be an opaque type, right?
+`createComponent<Props>(fn: (props) => ReactComponent, props: Props) => ReactComponent`
+is that all we need?
+I guess the various hooks would have to be wrapped as well.
+but that's all fine.
+Native components are a little interesting, because there's different allowed props
+based on which string is passed. I guess I'll just do wrappers for all of them
+`createNativeDiv(props: DivProps) => ReactComponent` etc.
+Anyway, seems like that would get the job done!
+OH Wait I can use an enum
+`createNative(props: NativeProps)`
+```
+enum NativeProps {
+	DivProps,
+	SpanProps,
+	... etc
+}
+```
+so `createNative(DivProps{})` gets the job done for you. I like that a lot.
+
+dunno about jsx though. is it worth it?
+prolly not.
+
+
+
+# Thinking about tests for things
+
+## Apply
+
+So, if we're applying, and there are unspecified type variables ...
+also, like, if we change an argument, which would change the ~inferred type variable.
+then what?
+OH RIGHT that's where autofixers come it.
+AWSOME
+so we have an autofixer that's like "this arg type is wrong, you could either change the type param over here
+or change the whatsit over there"
+
+So anyway, when first pass happens, do we already try to infer stuff?
+hmmm. might have annoying cascading consequences if I don't?
+but tbh I could add that later.
+
+
+
+
+
+
+
 - [x] use the `analyze` from `constants.ts`
 - [ ] start ... tracking the path of things? Should `ctx` always have a path component? Seems like a decent idea.
 - [x] actually use the `grammar` exports from elements
@@ -21,6 +193,14 @@
 	they're getting pretty verbose.
 	- hmmm so 'alias' would be a single mapping.
 - [x] oh fix a transformer bug
+
+- [x] test passing lambdas
+- [ ] ok lol I do need to dehash things this is getting ridiculous
+	- should I have there be an actual syntax for this?
+		maybe a toplevel macro or something?
+		or just `alias something #[hashashash]`
+		hmm should I /try/ to oneliner them?
+		I could also condense to emojis, with like `e` prefix.
 
 High-level goal: I want fixtures to really exercise
 each of the things I have going on.

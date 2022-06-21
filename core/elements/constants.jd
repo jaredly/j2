@@ -14,30 +14,38 @@ false
 1.23
 -->
 123
-// int#[h2f181c91131fd0daa282424fb3953604513df6fe]
+// 123
 1.23
-// float#[h82403bb59c4f81033c8b3085e8861245660c31e0]
+// 1.23
 
 ==[strings]==
 
 "hello"
 -->
 "hello"
-// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+// "hello"
 
 ==[templates]==
 
 "hello ${toString(123)}"
 -->
-"hello ${toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](123)}"
+"hello ${toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](
+    @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f](
+        expected: :int#[h2f181c91131fd0daa282424fb3953604513df6fe],
+    ) 123,
+)}"
 // string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+-->
+🚨 1 error decorators
 
 ==[right next to each other]==
 
 "One${"1"}${"2"} and ${"3"}"
 -->
-"One${"1"}${"2"} and ${"3"}"
+"One${@error:notAString#[h78fb9682caf6cb8dc34febba83e591c06884dc73]() "1"}${@error:notAString#[h78fb9682caf6cb8dc34febba83e591c06884dc73]() "2"} and ${@error:notAString#[h78fb9682caf6cb8dc34febba83e591c06884dc73]() "3"}"
 // string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+-->
+🚨 3 error decorators
 
 ==[error]==
 

@@ -5,14 +5,14 @@
 @test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](
     :bool#[h850edf082092e835e7daddfaf30654b2289f5644],
 ) 10
-// int#[h2f181c91131fd0daa282424fb3953604513df6fe]
+// 10
 
 ==[constants]==
 
 @test:type(: "hello", : 10) "target"
 -->
 @test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](:"hello", :10) "target"
-// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+// "target"
 
 ==[lambdas]==
 
@@ -25,13 +25,13 @@
         float#[h82403bb59c4f81033c8b3085e8861245660c31e0],
     ) => int#[h2f181c91131fd0daa282424fb3953604513df6fe],
 ) "ok"
-// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+// "ok"
 
 ==[unresovled]==
 
 @test:type(: hello) 10
 -->
 @test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](:hello#[:unresolved:]) 10
-// int#[h2f181c91131fd0daa282424fb3953604513df6fe]
+// 10
 -->
 🚨 1 missing types

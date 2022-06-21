@@ -16,7 +16,6 @@ export {
 export {
     TAdd,
     TApply,
-    TExpr,
     TLambda,
     TOr,
     TRef,

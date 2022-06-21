@@ -135,10 +135,8 @@ export function runFixture(builtins: string[], input: string, output: string) {
             return;
         }
         const pp = newPPCtx(false);
-        const cm = printToString(
-            pp.ToPP.TRef(actx.ToAst['TRef'](t as any, actx), pp),
-            200,
-        );
+        const ast = actx.ToAst[t.type](t as any, actx);
+        const cm = printToString(pp.ToPP[ast.type](ast as any, pp), 200);
         checked.comments.push([
             {
                 ...top.loc,

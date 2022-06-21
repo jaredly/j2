@@ -6,6 +6,9 @@ import { Expression, Type } from '../typed-ast';
 export const getType = (expr: Expression, ctx: FullContext): Type | null => {
     switch (expr.type) {
         case 'TemplateString':
+            if (expr.rest.length === 0) {
+                return { type: 'String', loc: expr.loc, text: expr.first };
+            }
             return tref(ctx.types.names['string']);
         case 'Ref':
             switch (expr.kind.type) {
@@ -27,9 +30,10 @@ export const getType = (expr: Expression, ctx: FullContext): Type | null => {
         case 'Boolean':
             return tref(ctx.types.names['bool']);
         case 'Number':
-            return tref(
-                ctx.types.names[expr.kind === 'Float' ? 'float' : 'int'],
-            );
+            return expr;
+        // return tref(
+        //     ctx.types.names[expr.kind === 'Float' ? 'float' : 'int'],
+        // );
         case 'DecoratedExpression':
             return getType(expr.expr, ctx);
     }

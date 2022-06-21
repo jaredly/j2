@@ -369,6 +369,8 @@ export const unionTransformer = (
                         // `${name}_${tname[0]}?: (node: ${tname}, ctx: any) => null | false | ${name} | [${name} | null, Ctx]`,
                     );
                 }
+            } else {
+                // console.log(`un`, resolved);
             }
         });
     }
@@ -620,6 +622,18 @@ const resolveType = (t: t.TSType, ctx: Ctx): t.TSType => {
         const name = t.typeName.name;
         if (ctx.types[name]) {
             return resolveType(ctx.types[name].type, ctx);
+        }
+    }
+    if (t.type === 'TSTypeReference' && t.typeName.type === 'TSQualifiedName') {
+        if (
+            t.typeName.left.type === 'Identifier' &&
+            t.typeName.left.name === 't' &&
+            t.typeName.right.type === 'Identifier'
+        ) {
+            const name = t.typeName.right.name;
+            if (ctx.types[name]) {
+                return resolveType(ctx.types[name].type, ctx);
+            }
         }
     }
     return t;
