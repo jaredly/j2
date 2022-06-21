@@ -8,10 +8,24 @@ export {
     DecoratedExpression,
     Decorator,
     DecoratorArg,
+    DecoratorDecl,
     TDecorated,
+    DType,
+    DExpr,
 } from './elements/decorators';
 export { Id } from './ids';
-export { Type, TRef, TApply, TVars, TLambda, TOr } from './elements/type';
+import { Type, TRef, TApply, TVars, TLambda, TOr } from './elements/type';
+export {
+    Type,
+    TRef,
+    TApply,
+    TVars,
+    TLambda,
+    TOr,
+    TExpr,
+    TAdd,
+    TSub,
+} from './elements/type';
 
 export type GlobalRef = {
     type: 'Global';

@@ -16,6 +16,10 @@
 - [ ] do analyze pass for types, decorating unresolved ones? hmm or actually I want a "verify" pass, I think.
 	- also if the "type" that something ends up being from getType is not a valid type, it should be null, right?
 
+- [x] actually resolve decorators
+- [ ] I might want to think about de-duping hashes in the output.
+	they're getting pretty verbose.
+	- hmmm so 'alias' would be a single mapping.
 
 ## Transformer
 

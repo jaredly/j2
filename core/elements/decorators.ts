@@ -7,6 +7,7 @@ import * as t from '../typed-ast';
 import { Expression, Loc } from '../typed-ast';
 import { Ctx as ACtx } from '../typing/to-ast';
 import { filterUnresolved } from '../typing/to-tast';
+import { Type } from './type';
 
 export const grammar = `
 DecoratedExpression = decorators_drop:(Decorator _)* inner:Apply
@@ -34,17 +35,19 @@ export type Decorator = {
     args: Array<{ label: string | null; arg: DecoratorArg; loc: Loc }>;
     loc: Loc;
 };
-export type DecoratorArg =
-    | {
-          type: 'DExpr';
-          expr: Expression;
-          loc: Loc;
-      }
-    | {
-          type: 'DType';
-          typ: t.Type;
-          loc: Loc;
-      };
+export type DType = {
+    type: 'DType';
+    typ: Type;
+    loc: Loc;
+};
+
+export type DExpr = {
+    type: 'DExpr';
+    expr: Expression;
+    loc: Loc;
+};
+
+export type DecoratorArg = DExpr | DType;
 
 export type DecoratedExpression = {
     type: 'DecoratedExpression';

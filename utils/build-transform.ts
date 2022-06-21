@@ -108,7 +108,12 @@ export const makeIndividualTransformer = (
             ctx.transformers[name] = makeTransformer(name, ctx);
             // transformerStatus[name] = true;
         }
+        // Hmm this is to prevent recursion??
         if (ctx.transformerStatus[name] === null) {
+            // if (member.key.name === 'typ') {
+            //     console.log('WHAT', individual);
+            // }
+            // console.log('NO transformer? idk', name, vbl);
             return null;
         }
         return `
@@ -155,7 +160,7 @@ export const makeIndividualTransformer = (
                 );
             }
         }
-        return unionTransformer(vbl, newName, level, type, toplevelName, ctx);
+        return unionTransformer(vbl, newName, level, type, ctx, toplevelName);
     }
     if (type.type === 'TSArrayType') {
         throw new Error(`expected Array<X>, not X[]`);
@@ -242,8 +247,8 @@ export const unionTransformer = (
     newName: string,
     level: number,
     type: t.TSUnionType,
-    unionName?: string,
     ctx: Ctx,
+    unionName?: string,
 ) => {
     // console.log('---> getting');
     let hasCases = false;
@@ -450,6 +455,7 @@ export const makeTransformer = (
     const defn = ctx.types[name];
     if (!defn) {
         ctx.transformerStatus[name] = null;
+        console.log('Not a type', name);
         return `// not a type ${name}`;
         // throw new Error(`Not a type ${name}`);
     }

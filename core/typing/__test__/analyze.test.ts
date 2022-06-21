@@ -54,6 +54,7 @@ readdirSync(base)
                         console.error(
                             title + '\n\n' + input + '\n\n-->\n\n' + newOutput,
                         );
+                        console.error(JSON.stringify(clearLocs(checked)));
                         throw err;
                     }
                 }

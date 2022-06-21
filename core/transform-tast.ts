@@ -1,6 +1,7 @@
 import {
-  RefKind,
+  GlobalRef,
   Id,
+  RefKind,
   Loc,
   File,
   Toplevel,
@@ -14,13 +15,29 @@ import {
   DecoratedExpression,
   Decorator,
   DecoratorArg,
+  DExpr,
+  DType,
   Type,
+  TRef,
+  TLambda,
+  TExpr,
   Sym,
   String,
+  DecoratorDecl,
   TDecorated,
+  TApply,
+  TVars,
+  TAdd,
+  TSub,
+  TOr,
 } from "./typed-ast";
 
 export type Visitor<Ctx> = {
+  GlobalRef?: (
+    node: GlobalRef,
+    ctx: Ctx
+  ) => null | false | GlobalRef | [GlobalRef | null, Ctx];
+  GlobalRefPost?: (node: GlobalRef, ctx: Ctx) => null | GlobalRef;
   RefKind?: (
     node: RefKind,
     ctx: Ctx
@@ -74,11 +91,20 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | String | [String | null, Ctx];
   StringPost?: (node: String, ctx: Ctx) => null | String;
+  DecoratorDecl?: (
+    node: DecoratorDecl,
+    ctx: Ctx
+  ) => null | false | DecoratorDecl | [DecoratorDecl | null, Ctx];
+  DecoratorDeclPost?: (node: DecoratorDecl, ctx: Ctx) => null | DecoratorDecl;
   Decorator?: (
     node: Decorator,
     ctx: Ctx
   ) => null | false | Decorator | [Decorator | null, Ctx];
   DecoratorPost?: (node: Decorator, ctx: Ctx) => null | Decorator;
+  DType?: (node: DType, ctx: Ctx) => null | false | DType | [DType | null, Ctx];
+  DTypePost?: (node: DType, ctx: Ctx) => null | DType;
+  DExpr?: (node: DExpr, ctx: Ctx) => null | false | DExpr | [DExpr | null, Ctx];
+  DExprPost?: (node: DExpr, ctx: Ctx) => null | DExpr;
   DecoratorArg?: (
     node: DecoratorArg,
     ctx: Ctx
@@ -99,6 +125,30 @@ export type Visitor<Ctx> = {
   TDecoratedPost?: (node: TDecorated, ctx: Ctx) => null | TDecorated;
   Id?: (node: Id, ctx: Ctx) => null | false | Id | [Id | null, Ctx];
   IdPost?: (node: Id, ctx: Ctx) => null | Id;
+  TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
+  TRefPost?: (node: TRef, ctx: Ctx) => null | TRef;
+  TApply?: (
+    node: TApply,
+    ctx: Ctx
+  ) => null | false | TApply | [TApply | null, Ctx];
+  TApplyPost?: (node: TApply, ctx: Ctx) => null | TApply;
+  TVars?: (node: TVars, ctx: Ctx) => null | false | TVars | [TVars | null, Ctx];
+  TVarsPost?: (node: TVars, ctx: Ctx) => null | TVars;
+  TLambda?: (
+    node: TLambda,
+    ctx: Ctx
+  ) => null | false | TLambda | [TLambda | null, Ctx];
+  TLambdaPost?: (node: TLambda, ctx: Ctx) => null | TLambda;
+  Type?: (node: Type, ctx: Ctx) => null | false | Type | [Type | null, Ctx];
+  TypePost?: (node: Type, ctx: Ctx) => null | Type;
+  TExpr?: (node: TExpr, ctx: Ctx) => null | false | TExpr | [TExpr | null, Ctx];
+  TExprPost?: (node: TExpr, ctx: Ctx) => null | TExpr;
+  TAdd?: (node: TAdd, ctx: Ctx) => null | false | TAdd | [TAdd | null, Ctx];
+  TAddPost?: (node: TAdd, ctx: Ctx) => null | TAdd;
+  TSub?: (node: TSub, ctx: Ctx) => null | false | TSub | [TSub | null, Ctx];
+  TSubPost?: (node: TSub, ctx: Ctx) => null | TSub;
+  TOr?: (node: TOr, ctx: Ctx) => null | false | TOr | [TOr | null, Ctx];
+  TOrPost?: (node: TOr, ctx: Ctx) => null | TOr;
   Expression_Apply?: (
     node: Apply,
     ctx: Ctx
@@ -123,6 +173,22 @@ export type Visitor<Ctx> = {
     node: DecoratedExpression,
     ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
+  DecoratorArg_DExpr?: (
+    node: DExpr,
+    ctx: Ctx
+  ) => null | false | DecoratorArg | [DecoratorArg | null, Ctx];
+  DecoratorArg_DType?: (
+    node: DType,
+    ctx: Ctx
+  ) => null | false | DecoratorArg | [DecoratorArg | null, Ctx];
+  Type_TRef?: (
+    node: TRef,
+    ctx: Ctx
+  ) => null | false | Type | [Type | null, Ctx];
+  Type_TLambda?: (
+    node: TLambda,
+    ctx: Ctx
+  ) => null | false | Type | [Type | null, Ctx];
 };
 export const transformId = <Ctx>(
   node: Id,
@@ -161,6 +227,54 @@ export const transformId = <Ctx>(
   return node;
 };
 
+export const transformGlobalRef = <Ctx>(
+  node: GlobalRef,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): GlobalRef => {
+  if (!node) {
+    throw new Error("No GlobalRef provided");
+  }
+
+  const transformed = visitor.GlobalRef ? visitor.GlobalRef(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$id = transformId(node.id, visitor, ctx);
+    changed1 = changed1 || updatedNode$id !== node.id;
+    if (changed1) {
+      updatedNode = { ...updatedNode, id: updatedNode$id };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.GlobalRefPost) {
+    const transformed = visitor.GlobalRefPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformRefKind = <Ctx>(
   node: RefKind,
   visitor: Visitor<Ctx>,
@@ -191,30 +305,8 @@ export const transformRefKind = <Ctx>(
 
   switch (node.type) {
     case "Global": {
-      const updatedNode$0specified = node;
-      let changed1 = false;
-
-      let updatedNode$0node = updatedNode$0specified;
-      {
-        let changed2 = false;
-
-        const updatedNode$0node$id = transformId(
-          updatedNode$0specified.id,
-          visitor,
-          ctx
-        );
-        changed2 =
-          changed2 || updatedNode$0node$id !== updatedNode$0specified.id;
-        if (changed2) {
-          updatedNode$0node = {
-            ...updatedNode$0node,
-            id: updatedNode$0node$id,
-          };
-          changed1 = true;
-        }
-      }
-
-      updatedNode = updatedNode$0node;
+      updatedNode = transformGlobalRef(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
       break;
     }
 
@@ -641,7 +733,384 @@ export const transformRef = <Ctx>(
   return node;
 };
 
-// not a type Type
+export const transformDExpr = <Ctx>(
+  node: DExpr,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): DExpr => {
+  if (!node) {
+    throw new Error("No DExpr provided");
+  }
+
+  const transformed = visitor.DExpr ? visitor.DExpr(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+    changed1 = changed1 || updatedNode$expr !== node.expr;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        expr: updatedNode$expr,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.DExprPost) {
+    const transformed = visitor.DExprPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTRef = <Ctx>(
+  node: TRef,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TRef => {
+  if (!node) {
+    throw new Error("No TRef provided");
+  }
+
+  const transformed = visitor.TRef ? visitor.TRef(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = { ...updatedNode, loc: updatedNode$loc };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TRefPost) {
+    const transformed = visitor.TRefPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTLambda = <Ctx>(
+  node: TLambda,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TLambda => {
+  if (!node) {
+    throw new Error("No TLambda provided");
+  }
+
+  const transformed = visitor.TLambda ? visitor.TLambda(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$args = node.args;
+    {
+      let changed2 = false;
+      const arr1 = node.args.map((updatedNode$args$item1) => {
+        let result = updatedNode$args$item1;
+        {
+          let changed3 = false;
+
+          const result$typ = transformType(
+            updatedNode$args$item1.typ,
+            visitor,
+            ctx
+          );
+          changed3 = changed3 || result$typ !== updatedNode$args$item1.typ;
+          if (changed3) {
+            result = { ...result, typ: result$typ };
+            changed2 = true;
+          }
+        }
+
+        return result;
+      });
+      if (changed2) {
+        updatedNode$args = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$result = transformType(node.result, visitor, ctx);
+    changed1 = changed1 || updatedNode$result !== node.result;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        args: updatedNode$args,
+        result: updatedNode$result,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TLambdaPost) {
+    const transformed = visitor.TLambdaPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTExpr = <Ctx>(
+  node: TExpr,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TExpr => {
+  if (!node) {
+    throw new Error("No TExpr provided");
+  }
+
+  const transformed = visitor.TExpr ? visitor.TExpr(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+  const updatedNode = node;
+
+  node = updatedNode;
+  if (visitor.TExprPost) {
+    const transformed = visitor.TExprPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformType = <Ctx>(
+  node: Type,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Type => {
+  if (!node) {
+    throw new Error("No Type provided");
+  }
+
+  const transformed = visitor.Type ? visitor.Type(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  switch (node.type) {
+    case "TRef": {
+      const transformed = visitor.Type_TRef
+        ? visitor.Type_TRef(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TLambda": {
+      const transformed = visitor.Type_TLambda
+        ? visitor.Type_TLambda(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "TRef": {
+      updatedNode = transformTRef(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TLambda": {
+      updatedNode = transformTLambda(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformTExpr(node, visitor, ctx);
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypePost) {
+    const transformed = visitor.TypePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformDType = <Ctx>(
+  node: DType,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): DType => {
+  if (!node) {
+    throw new Error("No DType provided");
+  }
+
+  const transformed = visitor.DType ? visitor.DType(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$typ = transformType(node.typ, visitor, ctx);
+    changed1 = changed1 || updatedNode$typ !== node.typ;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        typ: updatedNode$typ,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.DTypePost) {
+    const transformed = visitor.DTypePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
 
 export const transformDecoratorArg = <Ctx>(
   node: DecoratorArg,
@@ -671,72 +1140,61 @@ export const transformDecoratorArg = <Ctx>(
 
   let changed0 = false;
 
-  let updatedNode = node;
-
   switch (node.type) {
     case "DExpr": {
-      const updatedNode$0specified = node;
-      let changed1 = false;
-
-      let updatedNode$0node = updatedNode$0specified;
-      {
-        let changed2 = false;
-
-        const updatedNode$0node$expr = transformExpression(
-          updatedNode$0specified.expr,
-          visitor,
-          ctx
-        );
-        changed2 =
-          changed2 || updatedNode$0node$expr !== updatedNode$0specified.expr;
-
-        const updatedNode$0node$loc = transformLoc(
-          updatedNode$0specified.loc,
-          visitor,
-          ctx
-        );
-        changed2 =
-          changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-        if (changed2) {
-          updatedNode$0node = {
-            ...updatedNode$0node,
-            expr: updatedNode$0node$expr,
-            loc: updatedNode$0node$loc,
-          };
-          changed1 = true;
+      const transformed = visitor.DecoratorArg_DExpr
+        ? visitor.DecoratorArg_DExpr(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
         }
       }
-
-      updatedNode = updatedNode$0node;
       break;
     }
 
     case "DType": {
-      const updatedNode$0specified = node;
-      let changed1 = false;
-
-      let updatedNode$0node = updatedNode$0specified;
-      {
-        let changed2 = false;
-
-        const updatedNode$0node$loc = transformLoc(
-          updatedNode$0specified.loc,
-          visitor,
-          ctx
-        );
-        changed2 =
-          changed2 || updatedNode$0node$loc !== updatedNode$0specified.loc;
-        if (changed2) {
-          updatedNode$0node = {
-            ...updatedNode$0node,
-            loc: updatedNode$0node$loc,
-          };
-          changed1 = true;
+      const transformed = visitor.DecoratorArg_DType
+        ? visitor.DecoratorArg_DType(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
         }
       }
-
-      updatedNode = updatedNode$0node;
       break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "DExpr": {
+      updatedNode = transformDExpr(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformDType(node, visitor, ctx);
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
     }
   }
 
@@ -1336,6 +1794,56 @@ export const transformString = <Ctx>(
   return node;
 };
 
+export const transformDecoratorDecl = <Ctx>(
+  node: DecoratorDecl,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): DecoratorDecl => {
+  if (!node) {
+    throw new Error("No DecoratorDecl provided");
+  }
+
+  const transformed = visitor.DecoratorDecl
+    ? visitor.DecoratorDecl(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = { ...updatedNode, loc: updatedNode$loc };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.DecoratorDeclPost) {
+    const transformed = visitor.DecoratorDeclPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformTDecorated = <Ctx>(
   node: TDecorated,
   visitor: Visitor<Ctx>,
@@ -1384,12 +1892,16 @@ export const transformTDecorated = <Ctx>(
       }
     }
 
+    const updatedNode$inner = transformType(node.inner, visitor, ctx);
+    changed1 = changed1 || updatedNode$inner !== node.inner;
+
     const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
     changed1 = changed1 || updatedNode$loc !== node.loc;
     if (changed1) {
       updatedNode = {
         ...updatedNode,
         decorators: updatedNode$decorators,
+        inner: updatedNode$inner,
         loc: updatedNode$loc,
       };
       changed0 = true;
@@ -1399,6 +1911,344 @@ export const transformTDecorated = <Ctx>(
   node = updatedNode;
   if (visitor.TDecoratedPost) {
     const transformed = visitor.TDecoratedPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTApply = <Ctx>(
+  node: TApply,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TApply => {
+  if (!node) {
+    throw new Error("No TApply provided");
+  }
+
+  const transformed = visitor.TApply ? visitor.TApply(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$target = transformType(node.target, visitor, ctx);
+    changed1 = changed1 || updatedNode$target !== node.target;
+
+    let updatedNode$args = node.args;
+    {
+      let changed2 = false;
+      const arr1 = node.args.map((updatedNode$args$item1) => {
+        const result = transformType(updatedNode$args$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$args$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$args = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        target: updatedNode$target,
+        args: updatedNode$args,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TApplyPost) {
+    const transformed = visitor.TApplyPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTVars = <Ctx>(
+  node: TVars,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TVars => {
+  if (!node) {
+    throw new Error("No TVars provided");
+  }
+
+  const transformed = visitor.TVars ? visitor.TVars(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$args = node.args;
+    {
+      let changed2 = false;
+      const arr1 = node.args.map((updatedNode$args$item1) => {
+        const result = transformSym(updatedNode$args$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$args$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$args = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$inner = transformType(node.inner, visitor, ctx);
+    changed1 = changed1 || updatedNode$inner !== node.inner;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        args: updatedNode$args,
+        inner: updatedNode$inner,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TVarsPost) {
+    const transformed = visitor.TVarsPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTAdd = <Ctx>(
+  node: TAdd,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TAdd => {
+  if (!node) {
+    throw new Error("No TAdd provided");
+  }
+
+  const transformed = visitor.TAdd ? visitor.TAdd(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$elements = node.elements;
+    {
+      let changed2 = false;
+      const arr1 = node.elements.map((updatedNode$elements$item1) => {
+        const result = transformType(updatedNode$elements$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$elements$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$elements = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        elements: updatedNode$elements,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TAddPost) {
+    const transformed = visitor.TAddPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTSub = <Ctx>(
+  node: TSub,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TSub => {
+  if (!node) {
+    throw new Error("No TSub provided");
+  }
+
+  const transformed = visitor.TSub ? visitor.TSub(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$elements = node.elements;
+    {
+      let changed2 = false;
+      const arr1 = node.elements.map((updatedNode$elements$item1) => {
+        const result = transformType(updatedNode$elements$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$elements$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$elements = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        elements: updatedNode$elements,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TSubPost) {
+    const transformed = visitor.TSubPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTOr = <Ctx>(
+  node: TOr,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TOr => {
+  if (!node) {
+    throw new Error("No TOr provided");
+  }
+
+  const transformed = visitor.TOr ? visitor.TOr(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$elements = node.elements;
+    {
+      let changed2 = false;
+      const arr1 = node.elements.map((updatedNode$elements$item1) => {
+        const result = transformType(updatedNode$elements$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$elements$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$elements = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        elements: updatedNode$elements,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TOrPost) {
+    const transformed = visitor.TOrPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }

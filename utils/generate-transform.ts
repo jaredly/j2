@@ -38,6 +38,16 @@ body.forEach((stmt) => {
             });
         }
     }
+    if (stmt.type === 'ExportNamedDeclaration' && stmt.source) {
+        imports.push({
+            source: stmt.source.value,
+            imports: stmt.specifiers
+                .map((spec) =>
+                    spec.type === 'ExportSpecifier' ? spec.local.name : null,
+                )
+                .filter(Boolean) as string[],
+        });
+    }
 });
 
 imports.forEach((imp) => {
@@ -61,8 +71,11 @@ imports.forEach((imp) => {
             item.declaration &&
             item.declaration.type === 'TSTypeAliasDeclaration'
         ) {
-            visitorNames.push(item.declaration.id.name);
-            body.push(item);
+            const name = item.declaration.id.name;
+            if (!visitorNames.includes(name)) {
+                visitorNames.push(name);
+                body.push(item);
+            }
         }
     });
 });
