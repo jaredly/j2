@@ -20,6 +20,16 @@
 - [ ] I might want to think about de-duping hashes in the output.
 	they're getting pretty verbose.
 	- hmmm so 'alias' would be a single mapping.
+- [x] oh fix a transformer bug
+
+High-level goal: I want fixtures to really exercise
+each of the things I have going on.
+In order to do that, I want to be able to declare
+ephemeral "builtin"s, including builtin decorators, types, and values.
+This will happen via a fixture preamble.
+In order to make it work, I need to be able to parse lambda types.
+
+
 
 ## Transformer
 

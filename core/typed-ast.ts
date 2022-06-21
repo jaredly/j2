@@ -1,31 +1,30 @@
 import { Apply } from './elements/apply';
-export { Apply } from './elements/apply';
-import { TemplateString, Number, Boolean } from './elements/constants';
-export { TemplateString, Number, Boolean, String } from './elements/constants';
+import { Boolean, Number, TemplateString } from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
 import { Id, idToString } from './ids';
+export { Apply } from './elements/apply';
+export { Boolean, Number, String, TemplateString } from './elements/constants';
 export {
+    DExpr,
+    DType,
     DecoratedExpression,
     Decorator,
     DecoratorArg,
     DecoratorDecl,
     TDecorated,
-    DType,
-    DExpr,
 } from './elements/decorators';
-export { Id } from './ids';
-import { Type, TRef, TApply, TVars, TLambda, TOr } from './elements/type';
 export {
-    Type,
-    TRef,
+    TAdd,
     TApply,
-    TVars,
+    TExpr,
     TLambda,
     TOr,
-    TExpr,
-    TAdd,
+    TRef,
     TSub,
+    TVars,
+    Type,
 } from './elements/type';
+export { Id } from './ids';
 
 export type GlobalRef = {
     type: 'Global';

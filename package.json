@@ -6,6 +6,7 @@
     "scripts": {
         "grammar": "esbuild --bundle utils/build-grammar.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "transform": "esbuild --bundle utils/generate-transform.ts --platform=node --sourcemap=inline | node --enable-source-maps -; prettier -w core/transform-tast.ts",
+        "sync": "esbuild --bundle utils/sync-imports.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "test": "esbuild --bundle core/tests/run.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "nojest": "esbuild --bundle core/typing/__test__/analyze.nojest.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "fix": "env FIX=1 jest",
