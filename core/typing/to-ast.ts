@@ -1,4 +1,3 @@
-import { refHash } from '..';
 import { FullContext } from '../ctx';
 import { ToAst as ConstantsToAst } from '../elements/constants';
 import { ToAst as DecoratorsToAst } from '../elements/decorators';
@@ -34,16 +33,16 @@ export const printCtx = (ctx: FullContext): Ctx => {
     const reverse: { [key: string]: string } = {};
     Object.keys(ctx.values.names).forEach((name) => {
         ctx.values.names[name].forEach((ref) => {
-            reverse[refHash(ref)] = name;
+            reverse[t.refHash(ref)] = name;
         });
     });
     const reverseType: { [key: string]: string } = {};
     Object.keys(ctx.types.names).forEach((name) => {
-        reverseType[refHash(ctx.types.names[name])] = name;
+        reverseType[t.refHash(ctx.types.names[name])] = name;
     });
     return {
         printRef(ref, loc, kind) {
-            const hash = refHash(ref);
+            const hash = t.refHash(ref);
             const name = kind === 'value' ? reverse[hash] : reverseType[hash];
             return {
                 type: 'Identifier',

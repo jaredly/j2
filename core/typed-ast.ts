@@ -1,10 +1,9 @@
-import { RefKind } from '.';
-export { RefKind } from '.';
 import { Apply } from './elements/apply';
 export { Apply } from './elements/apply';
-import { TemplateString, Number, Boolean, String } from './elements/constants';
+import { TemplateString, Number, Boolean } from './elements/constants';
 export { TemplateString, Number, Boolean, String } from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
+import { Id, idToString } from './ids';
 export {
     DecoratedExpression,
     Decorator,
@@ -13,6 +12,19 @@ export {
 } from './elements/decorators';
 export { Id } from './ids';
 export { Type, TRef, TApply, TVars } from './elements/type';
+
+export type RefKind =
+    | {
+          type: 'Global';
+          id: Id;
+      }
+    | {
+          type: 'Local';
+          sym: number;
+      };
+
+export const refHash = (ref: RefKind) =>
+    ref.type === 'Global' ? 'h' + idToString(ref.id) : '' + ref.sym;
 
 export type Loc = {
     start: { line: number; column: number; offset: number };
