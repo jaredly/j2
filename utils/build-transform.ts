@@ -251,10 +251,12 @@ export const unionTransformer = (
             sorted.forEach((inner, i) => {
                 processType(inner, last && i === sorted.length - 1);
             });
-        } else if (
-            type.type === 'TSTypeReference' &&
-            type.typeName.type === 'Identifier'
-        ) {
+        } else if (type.type === 'TSTypeReference') {
+            const { typeName } = type;
+            const name =
+                typeName.type === 'Identifier'
+                    ? typeName.name
+                    : typeName.right.name;
             if (last) {
                 const transformer = makeIndividualTransformer(
                     vbl,
@@ -263,7 +265,7 @@ export const unionTransformer = (
                     type,
                     ctx,
                     undefined,
-                    type.typeName.name,
+                    name,
                 );
                 if (transformer) {
                     cases.push(`default: {
@@ -272,17 +274,19 @@ export const unionTransformer = (
                         ${newName} = ${newName}$${level}node;
                     }`);
                 }
-            } else if (ctx.types[type.typeName.name]) {
-                let inner = ctx.types[type.typeName.name].type;
+            } else if (ctx.types[name]) {
+                let inner = ctx.types[name].type;
                 if (type.typeParameters) {
                     inner = subsituteTypeArgs(
-                        ctx.types[type.typeName.name].type,
-                        ctx.types[type.typeName.name].params,
+                        ctx.types[name].type,
+                        ctx.types[name].params,
                         type.typeParameters,
                     );
                     // throw new Error('vbl in union, must fix');
                 }
-                processType(inner, false, type.typeName.name);
+                processType(inner, false, name);
+            } else {
+                cases.push(`// Ignoring unknown ${name}`);
             }
         } else if (type.type === 'TSTypeLiteral') {
             const tname = type.members
@@ -331,6 +335,8 @@ export const unionTransformer = (
             } else {
                 cases.push(`case '${name}': break;`);
             }
+        } else {
+            cases.push(`// ignoring ${type.type}`);
         }
     };
     processType(type, true);
@@ -369,8 +375,6 @@ export const unionTransformer = (
                         // `${name}_${tname[0]}?: (node: ${tname}, ctx: any) => null | false | ${name} | [${name} | null, Ctx]`,
                     );
                 }
-            } else {
-                // console.log(`un`, resolved);
             }
         });
     }
