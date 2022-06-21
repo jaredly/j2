@@ -1,17 +1,19 @@
 ==[comments]==
 
 // Comments
-toString(
-	// inside
-	1,
-	// after
+toString( // inside
+// then
+	1, // after
+	// again
 )
 //last
 -->
 // Comments
 toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
     // inside
+    // then
     1,
     // after
+    // again
 )
 //last
