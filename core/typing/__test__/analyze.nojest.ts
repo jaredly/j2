@@ -1,5 +1,6 @@
 import {
     clearLocs,
+    Fixed,
     loadFixtures,
     runFixture,
     saveFixed,
@@ -9,7 +10,6 @@ import { readdirSync } from 'fs';
 
 const [_, __, arg] = process.argv;
 
-const fixtureFile = './core/typing/__test__/fixtures.jd';
 const base = './core/elements/';
 readdirSync(base)
     .filter((x) => x.endsWith('.jd') && (!arg || x.includes(arg)))
@@ -18,9 +18,9 @@ readdirSync(base)
 
         const { fixtures, hasOnly } = loadFixtures(fixtureFile);
 
-        let fixed: [string, string, string | undefined][] = [];
+        const fixed: Fixed[] = [];
 
-        fixtures.forEach(([title, input, output, errors, i]) => {
+        fixtures.forEach(({ title, input, output, errors, i }) => {
             var { errorText, checked, newOutput, outputTast } = runFixture(
                 input,
                 output,
@@ -51,7 +51,11 @@ readdirSync(base)
                 }
             }
 
-            fixed[i] = [title + '\n\n' + input.trim(), newOutput, errors];
+            fixed[i] = {
+                input: title + '\n\n' + input.trim(),
+                output: newOutput,
+                errors,
+            };
         });
 
         if (hasOnly) {

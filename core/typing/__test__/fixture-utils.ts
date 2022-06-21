@@ -13,6 +13,7 @@ import { getType } from '../getType';
 
 export type Fixture = {
     title: string;
+    builtins: string[];
     input: string;
     output: string;
     errors: string | undefined;
@@ -44,7 +45,18 @@ export const loadFixtures = (fixtureFile: string) => {
         .map((chunk, i) => {
             const [input, output, errors] = chunk.trim().split('\n-->\n');
             const [title, ...rest] = input.split('\n');
-            return { title, input: rest.join('\n').trim(), output, errors, i };
+            const builtins: string[] = [];
+            while (rest[0].startsWith('//:')) {
+                builtins.push(rest.shift()!);
+            }
+            return {
+                title,
+                builtins,
+                input: rest.join('\n').trim(),
+                output,
+                errors,
+                i,
+            };
         });
     let hasOnly = fixtures.some((f) => f.title.includes('[only]'));
 

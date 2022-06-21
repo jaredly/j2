@@ -5,6 +5,15 @@ toString(1)
 toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02](1)
 // string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 
+==[multiple args]==
+//:value:twoArgs: (one: int, two: string) => string
+
+twoArgs(1, "hello")
+-->
+twoArgs#[:unresolved:](1, "hello")
+-->
+🚨 2 missing types
+
 ==[arg type error]==
 
 toString(true)

@@ -30,7 +30,7 @@ readdirSync(base)
 
             it.each(fixtures)(
                 '$title',
-                ({ title, input, output, errors, i }) => {
+                ({ title, input, output, errors, i, builtins }) => {
                     var { errorText, checked, newOutput, outputTast } =
                         runFixture(input, output);
 
@@ -60,6 +60,8 @@ readdirSync(base)
                         } catch (err) {
                             console.error(
                                 title +
+                                    '\n' +
+                                    builtins.join('\n') +
                                     '\n\n' +
                                     input +
                                     '\n\n-->\n\n' +
@@ -71,7 +73,13 @@ readdirSync(base)
                     }
 
                     fixed[i] = {
-                        input: title + '\n\n' + input.trim(),
+                        input:
+                            title +
+                            (builtins.length
+                                ? '\n' + builtins.join('\n')
+                                : '') +
+                            '\n\n' +
+                            input.trim(),
                         output: newOutput,
                         errors,
                     };
