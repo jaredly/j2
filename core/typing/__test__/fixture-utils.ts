@@ -101,20 +101,12 @@ export function runFixture(input: string, output: string) {
         analyzeContext(ctx),
     );
     let errorText: string[] = [];
-    errorDecorators.forEach((decl) => {
-        errorText.push(
-            `🚨 Error decorator at ${
-                decl.start.line + ':' + decl.start.column
-            }`,
-        );
-    });
-    missingTypes.forEach((missing) => {
-        errorText.push(
-            `🚨 Missing type at ${
-                missing.start.line + ':' + missing.start.column
-            }`,
-        );
-    });
+    if (errorDecorators.length) {
+        errorText.push(`🚨 ${errorDecorators.length} error decorators`);
+    }
+    if (missingTypes.length) {
+        errorText.push(`🚨 ${missingTypes.length} missing types`);
+    }
     return {
         errorText: errorText.length ? errorText.join('\n') : null,
         checked,

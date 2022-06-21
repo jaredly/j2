@@ -28,14 +28,6 @@ describe('analyze', () => {
 
         const fullExpectedOutput = output + (errors ? '\n-->\n' + errors : '');
         const fullOutput = newOutput + (errorText ? '\n-->\n' + errorText : '');
-
-        // if (!hasOnly || title.includes('[only]')) {
-        //     if (!process.env.FIX) {
-        //         expect(errors).toEqual(
-        //             errorText ? errorText : undefined,
-        //         );
-        //     }
-        // }
         errors = errorText ? errorText : undefined;
 
         if (

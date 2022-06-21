@@ -22,7 +22,7 @@ false
 "One${"1"}${"2"} and ${"3"}"
 "${@error#[:unresolved:](msg: "Expected string") 12}"
 -->
-🚨 Error decorator at 3:4
+🚨 1 error decorators
 
 ==[well-typed builtin call]==
 
@@ -36,7 +36,7 @@ toString(true)
 -->
 toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](@error#[:unresolved:](msg: "Wrong type") true)
 -->
-🚨 Error decorator at 1:10
+🚨 1 error decorators
 
 ==[wrong number of types]==
 
@@ -47,7 +47,7 @@ toString(1, 2)
     2,
 )
 -->
-🚨 Error decorator at 1:1
+🚨 1 error decorators
 
 ==[not a fn]==
 
@@ -55,9 +55,8 @@ toString(1, 2)
 -->
 @error#[:unresolved:](msg: "Not a function") 10(20)
 -->
-🚨 Error decorator at 1:1
-🚨 Missing type at 1:1
-🚨 Missing type at 1:1
+🚨 1 error decorators
+🚨 2 missing types
 
 ==[decorate something]==
 
@@ -67,9 +66,7 @@ toString(1, 2)
 @whatsit#[:unresolved:]() 10
 @onesit#[:unresolved:]() @twosit#[:unresolved:]() 20
 -->
-🚨 Error decorator at 1:1
-🚨 Error decorator at 2:1
-🚨 Error decorator at 2:12
+🚨 3 error decorators
 
 ==[calling undefined function]==
 
@@ -77,8 +74,7 @@ undefinedFunction()
 -->
 undefinedFunction#[:unresolved:]()
 -->
-🚨 Missing type at 1:1
-🚨 Missing type at 1:1
+🚨 2 missing types
 
 ==[double apply]==
 
@@ -86,9 +82,8 @@ toString(1)()
 -->
 @error#[:unresolved:](msg: "Not a function") toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)()
 -->
-🚨 Error decorator at 1:1
-🚨 Missing type at 1:1
-🚨 Missing type at 1:1
+🚨 1 error decorators
+🚨 2 missing types
 
 ==[comments]==
 
@@ -114,7 +109,7 @@ toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
 -->
 (@decorated#[:unresolved:]() toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69])(10)
 -->
-🚨 Error decorator at 1:2
+🚨 1 error decorators
 
 ==[um]==
 
@@ -122,4 +117,4 @@ toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
 -->
 @decodeURI#[:unresolved:](:string#[h8f452146b75c912dedc5638091c55a088e30b7ee]) "http://example.com"
 -->
-🚨 Error decorator at 1:1
+🚨 1 error decorators
