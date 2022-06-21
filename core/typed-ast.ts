@@ -1,5 +1,7 @@
 import { RefKind } from '.';
-export { RefKind };
+export { RefKind } from '.';
+import { Apply } from './elements/apply';
+export { Apply } from './elements/apply';
 import { TemplateString, Number, Boolean, String } from './elements/constants';
 export { TemplateString, Number, Boolean, String } from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
@@ -54,13 +56,6 @@ export type Expression =
 
 // Might be an int or float
 // export type Number = {type: 'Number', loc: Location, value: number};
-
-export type Apply = {
-    type: 'Apply';
-    target: Expression;
-    args: Array<Expression>;
-    loc: Loc;
-};
 
 export type Sym = { id: number; name: string };
 

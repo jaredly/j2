@@ -1,5 +1,6 @@
 import { ToTast as ConstantsToTast } from '../elements/constants';
 import { ToTast as DecoratorsToTast } from '../elements/decorators';
+import { ToTast as ApplyToTast } from '../elements/apply';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 
@@ -11,13 +12,15 @@ export type Ctx = {
 
 export type ToTast = typeof ConstantsToTast &
     typeof GeneralToTast &
-    typeof DecoratorsToTast;
+    typeof DecoratorsToTast &
+    typeof ApplyToTast;
 
 export const makeToTast = (): ToTast => {
     return {
         ...GeneralToTast,
         ...ConstantsToTast,
         ...DecoratorsToTast,
+        ...ApplyToTast,
     };
 };
 
@@ -78,26 +81,6 @@ export const GeneralToTast = {
             kind: { type: 'Unresolved', text, hash },
             loc,
         };
-    },
-    Apply(apply: p.Apply_inner, ctx: Ctx): t.Apply {
-        let res = ctx.ToTast[apply.target.type](apply.target as any, ctx);
-        while (apply.suffixes.length) {
-            const next = apply.suffixes.shift()!;
-            res = {
-                type: 'Apply',
-                args:
-                    next.args?.items.map((arg) =>
-                        ctx.ToTast[arg.type](arg as any, ctx),
-                    ) ?? [],
-                target: res,
-                loc: {
-                    start: apply.loc.start,
-                    end: next.loc.end,
-                    idx: next.loc.idx,
-                },
-            };
-        }
-        return res as t.Apply;
     },
 };
 

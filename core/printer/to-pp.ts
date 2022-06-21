@@ -5,6 +5,7 @@ import * as pp from './pp';
 import { noloc } from '../ctx';
 import { ToPP as ConstantsToPP } from '../elements/constants';
 import { ToPP as DecoratorsToPP } from '../elements/decorators';
+import { ToPP as ApplyToPP } from '../elements/apply';
 
 export type Ctx = {
     hideIds: boolean;
@@ -13,12 +14,14 @@ export type Ctx = {
 
 export type ToPP = typeof GeneralToPP &
     typeof ConstantsToPP &
-    typeof DecoratorsToPP;
+    typeof DecoratorsToPP &
+    typeof ApplyToPP;
 
 export const makeToPP = (): ToPP => ({
     ...GeneralToPP,
     ...ConstantsToPP,
     ...DecoratorsToPP,
+    ...ApplyToPP,
 });
 
 export const newPPCtx = (hideIds: boolean): Ctx => ({
@@ -32,15 +35,6 @@ export const GeneralToPP = {
             file.toplevels.map((t) => ctx.ToPP[t.type](t as any, ctx)),
             file.loc,
             'always',
-        );
-    },
-    Apply(apply: p.Apply_inner, ctx: Ctx): pp.PP {
-        return pp.items(
-            [
-                ctx.ToPP[apply.target.type](apply.target as any, ctx),
-                ...apply.suffixes.map((s) => ctx.ToPP[s.type](s, ctx)),
-            ],
-            apply.loc,
         );
     },
     Type(type: p.Type, ctx: Ctx): pp.PP {
@@ -65,14 +59,6 @@ export const GeneralToPP = {
                 ? identifier.text
                 : identifier.text + (identifier.hash ?? ''),
             identifier.loc,
-        );
-    },
-    Parens(parens: p.Parens, ctx: Ctx): pp.PP {
-        return pp.args(
-            (parens.args?.items ?? []).map((a) =>
-                ctx.ToPP[a.type](a as any, ctx),
-            ),
-            parens.loc,
         );
     },
 };

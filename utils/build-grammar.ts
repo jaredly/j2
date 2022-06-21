@@ -2,7 +2,30 @@ import fs from 'fs';
 import * as peggy from 'peggy';
 import { assembleRules, processRules } from './process-peg';
 
-const raw = fs.readFileSync('./core/grammar/base.pegjs', 'utf8');
+const elements = fs
+    .readdirSync('./core/elements')
+    .filter((x) => x.endsWith('.ts'))
+    .map((name) => {
+        const text = fs.readFileSync(`./core/elements/${name}`, 'utf8');
+        const start = '\nexport const grammar = `\n';
+        const end = '\n`;\n';
+        if (text.includes(start)) {
+            return (
+                `// ${name}\n\n` +
+                text.slice(
+                    text.indexOf(start) + start.length,
+                    text.indexOf(end),
+                )
+            );
+        }
+        return null;
+    })
+    .filter(Boolean);
+
+const base = fs.readFileSync('./core/grammar/base.pegjs.tpl', 'utf8');
+const raw = base + '\n\n' + elements.join('\n\n\n');
+fs.writeFileSync('./core/grammar/full.pegjs', raw);
+
 const ast = peggy.parser.parse(raw);
 
 const { typesFile, grammarFile } = assembleRules(processRules(ast.rules), raw);

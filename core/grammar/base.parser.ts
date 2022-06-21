@@ -22,6 +22,127 @@ export type Toplevel = Expression;
 
 export type Expression = DecoratedExpression;
 
+export type DecType = {
+  type: "DecType";
+  loc: Loc;
+  type_: Type;
+};
+
+export type DecExpr = {
+  type: "DecExpr";
+  loc: Loc;
+  expr: Expression;
+};
+
+export type Type = {
+  type: "Type";
+  loc: Loc;
+  text: string;
+  hash: (string | string | string | string) | null;
+};
+
+export type Atom = Number | Boolean | Identifier | ParenedExpression | TemplateString;
+
+export type ParenedExpression = {
+  type: "ParenedExpression";
+  loc: Loc;
+  expr: Expression;
+};
+
+export type Identifier = {
+  type: "Identifier";
+  loc: Loc;
+  text: string;
+  hash: (string | string | string | string) | null;
+};
+
+// No data on IdText
+
+// No data on JustSym
+
+// No data on HashRef
+
+// No data on BuiltinHash
+
+// No data on UnresolvedHash
+
+export type newline = string;
+
+export type _nonnewline = string;
+
+export type _ = string;
+
+export type __ = string;
+
+export type comment = multiLineComment | lineComment;
+
+export type multiLineComment = string;
+
+export type lineComment = string;
+
+export type finalLineComment = string;
+
+export type Apply_inner = {
+  type: "Apply";
+  loc: Loc;
+  target: Atom;
+  suffixes: Suffix[];
+};
+
+export type Apply = Apply_inner | Atom;
+
+export type Suffix = Parens;
+
+export type Parens = {
+  type: "Parens";
+  loc: Loc;
+  args: CommaExpr | null;
+};
+
+export type CommaExpr = {
+  type: "CommaExpr";
+  loc: Loc;
+  items: Expression[];
+};
+
+export type Boolean = {
+  type: "Boolean";
+  loc: Loc;
+  v: "true" | "false";
+};
+
+export type Number = {
+  type: "Number";
+  loc: Loc;
+  contents: string;
+};
+
+export type String = {
+  type: "String";
+  loc: Loc;
+  text: string;
+};
+
+export type TemplateString = {
+  type: "TemplateString";
+  loc: Loc;
+  first: string;
+  rest: TemplatePair[];
+};
+
+export type TemplatePair = {
+  type: "TemplatePair";
+  loc: Loc;
+  expr: Expression;
+  suffix: string;
+};
+
+export type tplStringChars = string;
+
+export type stringChar = string;
+
+// No data on escapedChar
+
 export type DecoratedExpression_inner = {
   type: "DecoratedExpression";
   loc: Loc;
@@ -60,127 +181,6 @@ export type LabeledDecoratorArg = {
   arg: DecoratorArg;
 };
 
-export type DecType = {
-  type: "DecType";
-  loc: Loc;
-  type_: Type;
-};
-
-export type DecExpr = {
-  type: "DecExpr";
-  loc: Loc;
-  expr: Expression;
-};
-
-export type Type = {
-  type: "Type";
-  loc: Loc;
-  text: string;
-  hash: (string | string | string | string) | null;
-};
-
-export type Apply_inner = {
-  type: "Apply";
-  loc: Loc;
-  target: Atom;
-  suffixes: Suffix[];
-};
-
-export type Apply = Apply_inner | Atom;
-
-export type Atom = Number | Boolean | Identifier | ParenedExpression | TemplateString;
-
-export type ParenedExpression = {
-  type: "ParenedExpression";
-  loc: Loc;
-  expr: Expression;
-};
-
-export type Suffix = Parens;
-
-export type Parens = {
-  type: "Parens";
-  loc: Loc;
-  args: CommaExpr | null;
-};
-
-export type CommaExpr = {
-  type: "CommaExpr";
-  loc: Loc;
-  items: Expression[];
-};
-
-export type Boolean = {
-  type: "Boolean";
-  loc: Loc;
-  v: "true" | "false";
-};
-
-export type Number = {
-  type: "Number";
-  loc: Loc;
-  contents: string;
-};
-
-export type Identifier = {
-  type: "Identifier";
-  loc: Loc;
-  text: string;
-  hash: (string | string | string | string) | null;
-};
-
-// No data on IdText
-
-// No data on JustSym
-
-// No data on HashRef
-
-// No data on BuiltinHash
-
-// No data on UnresolvedHash
-
-export type newline = string;
-
-export type _nonnewline = string;
-
-export type _ = string;
-
-export type __ = string;
-
-export type comment = multiLineComment | lineComment;
-
-export type multiLineComment = string;
-
-export type lineComment = string;
-
-export type finalLineComment = string;
-
-export type String = {
-  type: "String";
-  loc: Loc;
-  text: string;
-};
-
-export type TemplateString = {
-  type: "TemplateString";
-  loc: Loc;
-  first: string;
-  rest: TemplatePair[];
-};
-
-export type TemplatePair = {
-  type: "TemplatePair";
-  loc: Loc;
-  expr: Expression;
-  suffix: string;
-};
-
-export type tplStringChars = string;
-
-export type stringChar = string;
-
-// No data on escapedChar
-
-export type AllTaggedTypes = File | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Type | Apply_inner | ParenedExpression | Parens | CommaExpr | Boolean | Number | Identifier | String | TemplateString | TemplatePair;
+export type AllTaggedTypes = File | DecType | DecExpr | Type | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg;
 
 export const parseTyped = (input: string): File => parse(input)

@@ -2,6 +2,7 @@ import { refHash } from '..';
 import { FullContext } from '../ctx';
 import { ToAst as ConstantsToAst } from '../elements/constants';
 import { ToAst as DecoratorsToAst } from '../elements/decorators';
+import { ToAst as ApplyToAst } from '../elements/apply';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 
@@ -9,11 +10,13 @@ export const makeToAst = (): ToAst => ({
     ...ConstantsToAst,
     ...GeneralToAst,
     ...DecoratorsToAst,
+    ...ApplyToAst,
 });
 
 export type ToAst = typeof ConstantsToAst &
     typeof GeneralToAst &
-    typeof DecoratorsToAst;
+    typeof DecoratorsToAst &
+    typeof ApplyToAst;
 
 export type Ctx = {
     printRef: (
@@ -70,30 +73,6 @@ export const GeneralToAst = {
         return { type: 'Type', text, hash, loc };
     },
 
-    Apply({ type, target, args, loc }: t.Apply, ctx: Ctx): p.Apply {
-        let inner = ctx.ToAst[target.type](target as any, ctx);
-        const parens: p.Parens = {
-            loc,
-            type: 'Parens',
-            args: {
-                type: 'CommaExpr',
-                items: args.map((a) => ctx.ToAst[a.type](a as any, ctx)),
-                loc,
-            },
-        };
-        if (inner.type === 'Apply') {
-            return { ...inner, suffixes: inner.suffixes.concat([parens]) };
-        }
-        if (inner.type === 'DecoratedExpression') {
-            return {
-                type,
-                target: { type: 'ParenedExpression', expr: inner, loc },
-                suffixes: [parens],
-                loc,
-            };
-        }
-        return { type, target: inner, suffixes: [parens], loc };
-    },
     Ref({ type, kind, loc }: t.Ref, ctx: Ctx): p.Identifier {
         if (kind.type === 'Unresolved') {
             return {

@@ -8,6 +8,18 @@ import { Expression, Loc } from '../typed-ast';
 import { Ctx as ACtx } from '../typing/to-ast';
 import { filterUnresolved } from '../typing/to-tast';
 
+export const grammar = `
+DecoratedExpression = decorators_drop:(Decorator _)* inner:Apply
+
+Decorator = '@' id:DecoratorId _ '(' _ args:DecoratorArgs? _ ')'
+DecoratorId = text:$IdText hash:($HashRef / $UnresolvedHash)?
+DecoratorArgs = first:LabeledDecoratorArg rest:(_ "," _ LabeledDecoratorArg)* _ ","? 
+DecoratorArg = DecType / DecExpr
+// DecoratorArg = DecType / DecPat / DecExpr
+LabeledDecoratorArg = label:($IdText ":" _)? arg:DecoratorArg 
+
+`;
+
 export type Decorator = {
     type: 'Decorator';
     id: { ref: t.RefKind | t.UnresolvedRef; loc: Loc };
