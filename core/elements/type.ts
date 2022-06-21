@@ -11,9 +11,9 @@ import { Ctx as TACtx } from '../typing/to-ast';
 
 export const grammar = `
 
-// Type = TRef / Number / String
-// TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
-Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
+Type = TRef / Number / String
+TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
+// Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
 
 `;
 
@@ -79,7 +79,7 @@ export type TOr = { type: 'TOr'; elements: Array<Type>; loc: t.Loc };
 export const ToTast = {
     // Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
     // },
-    Type(type: p.Type, ctx: TCtx): t.Type {
+    TRef(type: p.TRef, ctx: TCtx): t.TRef {
         const hash = filterUnresolved(type.hash?.slice(2, -1));
         const resolved = ctx.resolveType(type.text, hash);
         return {
@@ -92,28 +92,37 @@ export const ToTast = {
             loc: type.loc,
         };
     },
+    String({ type, loc, text }: p.String, ctx: TCtx): t.String {
+        return { type: 'String', loc, text };
+    },
 };
 
 export const ToAst = {
-    TRef({ type, ref, loc }: t.TRef, ctx: TACtx): p.Type {
+    TRef({ type, ref, loc }: t.TRef, ctx: TACtx): p.TRef {
         const { text, hash } =
             ref.type === 'Unresolved'
                 ? { text: ref.text, hash: '#[:unresolved:]' }
                 : ctx.printRef(ref, loc, 'type');
-        return { type: 'Type', text, hash, loc };
+        return { type: 'TRef', text, hash, loc };
     },
     // TLambda({ type, args, result, loc }: t.TLambda, ctx: TACtx): p.Type {
     // }
+    String({ type, loc, text }: t.String): p.String {
+        return { type: 'String', loc, text };
+    },
 };
 
 export const ToPP = {
     // Apply(apply: p.Apply_inner, ctx: PCtx): pp.PP {
     // },
-    Type(type: p.Type, ctx: PCtx): pp.PP {
+    TRef(type: p.TRef, ctx: PCtx): pp.PP {
         if (ctx.hideIds) {
             return pp.atom(type.text, type.loc);
         }
         return pp.atom(type.text + (type.hash ?? ''), type.loc);
+    },
+    String(type: p.String, ctx: PCtx): pp.PP {
+        return pp.atom(`"${type.text}"`, type.loc);
     },
 };
 

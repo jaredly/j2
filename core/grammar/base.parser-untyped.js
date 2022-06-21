@@ -421,7 +421,7 @@ function peg$parse(input, options) {
 };
   var peg$f28 = function(text, hash) {
   return {
-    type: "Type",
+    type: "TRef",
     loc: myLocation(),
     text,
     hash
@@ -2629,6 +2629,20 @@ function peg$parse(input, options) {
   }
 
   function peg$parseType() {
+    var s0;
+
+    s0 = peg$parseTRef();
+    if (s0 === peg$FAILED) {
+      s0 = peg$parseNumber();
+      if (s0 === peg$FAILED) {
+        s0 = peg$parseString();
+      }
+    }
+
+    return s0;
+  }
+
+  function peg$parseTRef() {
     var s0, s1, s2, s3;
 
     s0 = peg$currPos;

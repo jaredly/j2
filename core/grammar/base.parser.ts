@@ -176,13 +176,15 @@ export type DecExpr = {
   expr: Expression;
 };
 
-export type Type = {
-  type: "Type";
+export type Type = TRef | Number | String;
+
+export type TRef = {
+  type: "TRef";
   loc: Loc;
   text: string;
   hash: (string | string | string | string) | null;
 };
 
-export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Type;
+export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TRef;
 
 export const parseTyped = (input: string): File => parse(input)

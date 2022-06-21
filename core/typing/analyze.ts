@@ -105,13 +105,19 @@ export const verify = (
     transformFile(
         ast,
         {
+            Type(node) {
+                if (node.type === 'TRef' && node.ref.type === 'Unresolved') {
+                    missingTypes.push(node.loc);
+                }
+                return node;
+            },
             Expression(node) {
                 if (!ctx.getType(node)) {
                     missingTypes.push(node.loc);
                 }
                 return node;
             },
-            DecoratedExpression(node, _) {
+            DecoratedExpression(node) {
                 node.decorators.forEach((dec) => {
                     const ref = dec.id.ref;
                     if (ref.type === 'Global') {

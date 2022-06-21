@@ -110,7 +110,7 @@ export function runFixture(input: string, output: string) {
         }
         const pp = newPPCtx(false);
         const cm = printToString(
-            pp.ToPP.Type(actx.ToAst['TRef'](t as any, actx), pp),
+            pp.ToPP.TRef(actx.ToAst['TRef'](t as any, actx), pp),
             200,
         );
         checked.comments.push([

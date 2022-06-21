@@ -1,4 +1,4 @@
-==[baseic?]==
+==[basic]==
 
 @test:type(: bool) 10
 -->
@@ -7,9 +7,18 @@
 ) 10
 // int#[h2f181c91131fd0daa282424fb3953604513df6fe]
 
+==[constants]==
+
+@test:type(: "hello", : 10) "target"
+-->
+@test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](:"hello", :10) "target"
+// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
+
 ==[unresovled]==
 
-@test:type(: type) 10
+@test:type(: hello) 10
 -->
-@test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](:type#[:unresolved:]) 10
+@test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](:hello#[:unresolved:]) 10
 // int#[h2f181c91131fd0daa282424fb3953604513df6fe]
+-->
+🚨 1 missing types

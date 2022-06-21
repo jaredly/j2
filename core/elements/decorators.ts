@@ -128,7 +128,7 @@ export const ToTast = {
                 loc,
                 arg: {
                     type: 'DType',
-                    typ: ctx.ToTast.Type(arg.type_, ctx),
+                    typ: ctx.ToTast[arg.type_.type](arg.type_ as any, ctx),
                     loc: arg.loc,
                 },
             };
