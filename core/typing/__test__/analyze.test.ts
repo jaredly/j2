@@ -1,6 +1,7 @@
 import { fstat, readdirSync } from 'fs';
 import {
     clearLocs,
+    Fixed,
     loadFixtures,
     runFixture,
     saveFixed,
@@ -15,7 +16,7 @@ readdirSync(base)
         describe('analyze ' + file, () => {
             const { fixtures, hasOnly } = loadFixtures(fixtureFile);
 
-            let fixed: [string, string, string | undefined][] = [];
+            let fixed: Fixed[] = [];
 
             if (process.env.FIX) {
                 afterAll(() => {
@@ -27,43 +28,56 @@ readdirSync(base)
                 });
             }
 
-            it.each(fixtures)('%s', (title, input, output, errors, i) => {
-                var { errorText, checked, newOutput, outputTast } = runFixture(
-                    input,
-                    output,
-                );
+            it.each(fixtures)(
+                '$title',
+                ({ title, input, output, errors, i }) => {
+                    var { errorText, checked, newOutput, outputTast } =
+                        runFixture(input, output);
 
-                const fullExpectedOutput =
-                    output + (errors ? '\n-->\n' + errors : '');
-                const fullOutput =
-                    newOutput + (errorText ? '\n-->\n' + errorText : '');
-                errors = errorText ? errorText : undefined;
+                    const fullExpectedOutput =
+                        output + (errors ? '\n-->\n' + errors : '');
+                    const fullOutput =
+                        newOutput + (errorText ? '\n-->\n' + errorText : '');
+                    errors = errorText ? errorText : undefined;
 
-                if (
-                    output &&
-                    (!hasOnly || title.includes('[only]')) &&
-                    !process.env.FIX
-                ) {
-                    if (!outputTast) {
-                        throw new Error(`Unable to process the output??`);
+                    if (
+                        output &&
+                        (!hasOnly || title.includes('[only]')) &&
+                        !process.env.FIX
+                    ) {
+                        if (!outputTast) {
+                            throw new Error(`Unable to process the output??`);
+                        }
+                        try {
+                            expect({
+                                ...clearLocs(checked),
+                                comments: [],
+                            }).toEqual({
+                                ...clearLocs(outputTast),
+                                comments: [],
+                            });
+                            expect(fullOutput).toEqual(fullExpectedOutput);
+                        } catch (err) {
+                            console.error(
+                                title +
+                                    '\n\n' +
+                                    input +
+                                    '\n\n-->\n\n' +
+                                    newOutput,
+                            );
+                            console.error(JSON.stringify(clearLocs(checked)));
+                            throw err;
+                        }
                     }
-                    try {
-                        expect({ ...clearLocs(checked), comments: [] }).toEqual(
-                            { ...clearLocs(outputTast), comments: [] },
-                        );
-                        expect(fullOutput).toEqual(fullExpectedOutput);
-                    } catch (err) {
-                        console.error(
-                            title + '\n\n' + input + '\n\n-->\n\n' + newOutput,
-                        );
-                        console.error(JSON.stringify(clearLocs(checked)));
-                        throw err;
-                    }
-                }
 
-                fixed[i] = [title + '\n\n' + input.trim(), newOutput, errors];
+                    fixed[i] = {
+                        input: title + '\n\n' + input.trim(),
+                        output: newOutput,
+                        errors,
+                    };
 
-                // lol
-            });
+                    // lol
+                },
+            );
         });
     });

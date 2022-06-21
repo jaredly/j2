@@ -11,7 +11,13 @@ import { printCtx, ToAst } from '../to-ast';
 import { makeToTast, ToTast } from '../to-tast';
 import { getType } from '../getType';
 
-export type Fixture = [string, string, string, string | undefined, number];
+export type Fixture = {
+    title: string;
+    input: string;
+    output: string;
+    errors: string | undefined;
+    i: number;
+};
 export const clearLocs = (ast: File) => {
     return transformFile(
         ast,
@@ -38,22 +44,28 @@ export const loadFixtures = (fixtureFile: string) => {
         .map((chunk, i) => {
             const [input, output, errors] = chunk.trim().split('\n-->\n');
             const [title, ...rest] = input.split('\n');
-            return [title, rest.join('\n').trim(), output, errors, i];
+            return { title, input: rest.join('\n').trim(), output, errors, i };
         });
-    let hasOnly = fixtures.some((f) => f[0].includes('[only]'));
+    let hasOnly = fixtures.some((f) => f.title.includes('[only]'));
 
     if (hasOnly) {
         hasOnly = true;
-        fixtures = fixtures.filter((f) => f[0].includes('[only]'));
+        fixtures = fixtures.filter((f) => f.title.includes('[only]'));
     }
 
     return { fixtures, hasOnly };
 };
 
+export type Fixed = {
+    input: string;
+    output: string;
+    errors: string | undefined;
+};
+
 export const saveFixed = (
     fixtureFile: string,
     fixtures: Fixture[],
-    fixed: [string, string, string | undefined][],
+    fixed: Fixed[],
 ) => {
     let missing = false;
     for (let i = 0; i < fixtures.length; i++) {
@@ -70,7 +82,7 @@ export const saveFixed = (
         fixtureFile,
         fixed
             .map(
-                ([input, output, errors]) =>
+                ({ input, output, errors }) =>
                     `${input}\n-->\n${output}` +
                     (errors ? '\n-->\n' + errors : ''),
             )
