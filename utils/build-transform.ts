@@ -60,10 +60,6 @@ export const makeIndividualTransformer = (
         `;
     }
     if (type.type === 'TSTypeReference') {
-        // if (type.typeName.type !== 'Identifier') {
-        //     console.log(type.typeName);
-        //     throw new Error(`qualified?`);
-        // }
         if (
             type.typeName.type === 'Identifier' &&
             type.typeName.name === 'Array'
@@ -102,35 +98,15 @@ export const makeIndividualTransformer = (
             type.typeName.type === 'Identifier'
                 ? type.typeName.name
                 : type.typeName.right.name;
-        // if (visitorTypes.includes(type.typeName.name)) {
-        // console.log(type.typeName.name, level);
         if (ctx.transformerStatus[name] === undefined) {
             ctx.transformers[name] = makeTransformer(name, ctx);
-            // transformerStatus[name] = true;
         }
-        // Hmm this is to prevent recursion??
         if (ctx.transformerStatus[name] === null) {
-            // if (member.key.name === 'typ') {
-            //     console.log('WHAT', individual);
-            // }
-            // console.log('NO transformer? idk', name, vbl);
             return null;
         }
         return `
                 const ${newName} = transform${name}(${vbl}, visitor, ctx);
                 changed${level} = changed${level} || ${newName} !== ${vbl};`;
-        // }
-        // if (types[type.typeName.name]) {
-        //     console.log(type.typeName.name);
-        //     return makeIndividualTransformer(
-        //         vbl,
-        //         newName,
-        //         level,
-        //         types[type.typeName.name],
-        //     );
-        // }
-        // OTHERWISE: if this type eventually includes a thing that needs changing,
-        // it'll be quite a hassle.
     }
     if (type.type === 'TSTypeLiteral') {
         return objectTransformer(vbl, newName, level, type, ctx);
