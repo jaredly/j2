@@ -1,7 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { decorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
-import { typeMatches } from '../typing/typesEqual';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -10,8 +8,11 @@ import { Ctx as TCtx, filterUnresolved } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 
 export const grammar = `
-Type = TRef / Number / String / TLambda
+Type = TRef / Number / String / TLambda / TVars
 TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
+TVars = "<" _ args:TBargs _ ">" inner:Type
+TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
+TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)?
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
@@ -37,7 +38,7 @@ export type TApply = {
 // <T, I, K>Something
 export type TVars = {
     type: 'TVars';
-    args: Array<t.Sym>;
+    args: Array<{ sym: t.Sym; bound: Type | null; loc: t.Loc }>;
     inner: Type;
     loc: t.Loc;
 };
@@ -60,7 +61,7 @@ export type TLambda = {
 
 // Ok so also, you can just drop an inline record declaration, right?
 
-export type Type = TRef | TLambda | t.Number | t.String;
+export type Type = TRef | TLambda | t.Number | t.String | TVars; // | TApply;
 // | TDecorated | TApply | TVars
 
 // Should I only allow local refs?
@@ -109,9 +110,52 @@ export const ToTast = {
             result: ctx.ToTast[result.type](result as any, ctx),
         };
     },
+    TVars({ args, inner, loc }: p.TVars, ctx: TCtx): t.TVars {
+        const targs = args.items.map(({ label, hash, bound, loc }) => {
+            const sym = hash
+                ? { name: label, id: +hash.slice(2, -1) }
+                : ctx.sym(label);
+            return {
+                sym,
+                bound: bound ? ctx.ToTast[bound.type](bound as any, ctx) : null,
+                loc,
+            };
+        });
+        return {
+            type: 'TVars',
+            args: targs,
+            inner: ctx.ToTast[inner.type](
+                inner as any,
+                ctx.withLocalTypes(targs),
+            ),
+            loc,
+        };
+    },
+    // TArgs({ args, loc }: p.TArgs, ctx: TCtx): t.TArgs {
+    // }
 };
 
 export const ToAst = {
+    TVars(type: t.TVars, ctx: TACtx): p.TVars {
+        return {
+            type: 'TVars',
+            args: {
+                type: 'TBargs',
+                loc: type.loc,
+                items: type.args.map(({ sym, bound, loc }) => ({
+                    type: 'TBArg',
+                    label: sym.name,
+                    hash: `#[${sym.id}]`,
+                    bound: bound
+                        ? ctx.ToAst[bound.type](bound as any, ctx)
+                        : null,
+                    loc,
+                })),
+            },
+            inner: ctx.ToAst[type.inner.type](type.inner as any, ctx),
+            loc: type.loc,
+        };
+    },
     TRef({ type, ref, loc }: t.TRef, ctx: TACtx): p.TRef {
         const { text, hash } =
             ref.type === 'Unresolved'
@@ -142,6 +186,39 @@ export const ToAst = {
 };
 
 export const ToPP = {
+    TVars({ args, inner, loc }: p.TVars, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                pp.args(
+                    args.items.map(({ label, bound, loc }) =>
+                        pp.items(
+                            [
+                                pp.atom(label, loc),
+                                bound
+                                    ? pp.items(
+                                          [
+                                              pp.atom(': ', loc),
+                                              ctx.ToPP[bound.type](
+                                                  bound as any,
+                                                  ctx,
+                                              ),
+                                          ],
+                                          loc,
+                                      )
+                                    : null,
+                            ],
+                            loc,
+                        ),
+                    ),
+                    loc,
+                    '<',
+                    '>',
+                ),
+                ctx.ToPP[inner.type](inner as any, ctx),
+            ],
+            loc,
+        );
+    },
     TLambda({ args, result, loc }: p.TLambda, ctx: PCtx): pp.PP {
         return pp.items(
             [

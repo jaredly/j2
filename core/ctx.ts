@@ -40,6 +40,10 @@ export type FullContext = {
         | { type: 'user'; typ: 0; decl: DecoratorDecl },
         Array<GlobalRef>
     >;
+    locals: {
+        types: { sym: Sym; bound: Type | null }[];
+        values: { sym: Sym; type: Type }[];
+    }[];
 } & Ctx;
 
 export const addBuiltin = (
@@ -188,8 +192,9 @@ const resolve = (
 };
 
 export const newContext = (): FullContext => {
+    let symid = 0;
     const ctx: FullContext = {
-        // locals: {},
+        locals: [],
         decorators: { hashed: {}, names: {} },
         values: { hashed: {}, names: {} },
         types: { hashed: {}, names: {} },
@@ -198,6 +203,16 @@ export const newContext = (): FullContext => {
         resolveDecorator: (name, rawHash) =>
             resolveDecorator(ctx, name, rawHash),
         ToTast: makeToTast(),
+        withLocalTypes(types) {
+            const locals: FullContext['locals'][0] = { types, values: [] };
+            return { ...this, locals: [locals, ...this.locals] };
+        },
+        sym(name) {
+            return {
+                name,
+                id: symid++,
+            };
+        },
     };
     return ctx;
 };
@@ -218,7 +233,10 @@ const tlam = (
     result,
     loc: noloc,
 });
-const tvars = (args: Sym[], inner: Type): TVars => ({
+const tvars = (
+    args: { sym: Sym; bound: Type | null; loc: Loc }[],
+    inner: Type,
+): TVars => ({
     type: 'TVars',
     args,
     inner,

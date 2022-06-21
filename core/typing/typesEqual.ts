@@ -108,6 +108,8 @@ export const typeMatches = (
     // }
     // console.log(candidate, expected);
     switch (candidate.type) {
+        case 'TVars':
+            return false;
         case 'TLambda':
             return (
                 expected.type === 'TLambda' &&

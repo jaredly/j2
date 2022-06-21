@@ -176,13 +176,34 @@ export type DecExpr = {
   expr: Expression;
 };
 
-export type Type = TRef | Number | String | TLambda;
+export type Type = TRef | Number | String | TLambda | TVars;
 
 export type TRef = {
   type: "TRef";
   loc: Loc;
   text: string;
   hash: (string | string | string | string) | null;
+};
+
+export type TVars = {
+  type: "TVars";
+  loc: Loc;
+  args: TBargs;
+  inner: Type;
+};
+
+export type TBargs = {
+  type: "TBargs";
+  loc: Loc;
+  items: TBArg[];
+};
+
+export type TBArg = {
+  type: "TBArg";
+  loc: Loc;
+  label: string;
+  hash: string;
+  bound: Type | null;
 };
 
 export type TArg = {
@@ -205,7 +226,7 @@ export type TLambda = {
   result: Type;
 };
 
-export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TRef | TArg | TArgs | TLambda;
+export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TRef | TVars | TBargs | TBArg | TArg | TArgs | TLambda;
 
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});
 export const parseType = (input: string): Type => parse(input, {startRule: 'Type'});

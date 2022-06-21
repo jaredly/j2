@@ -1,6 +1,21 @@
 
 # Big Things To Add
 
+## Better Fixture Setup
+
+hmm I do think I need a fixture UI now.
+or ... something. yeah jest just really isn't cutting the mustard.
+What I want:
+- hot reloading (vite probably?)
+- button to commit all
+- show diffs, show json if asked.
+
+hmm ok
+vite
+JSON
+stringify
+parsing .. and stuff ...
+
 ## Elements
 
 ### [ ] Generics (TVars TApply TypeApplication TypeVariables)
@@ -34,6 +49,7 @@ So things that are apply's
 ### Type Refinement madness
 - [x] allow specifying constant types
 - [x] "hello" gets inferred as "hello" not string
+- [ ] oh but "hello" needs to .. work as the type of things
 - [ ] get everything together such that the type of (+) results in
 	`1 + 2` to have the type `1 + 2`.
 	`+: <A: int, B: int>(a: A, b: B): A + B => a + b`

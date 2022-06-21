@@ -20,8 +20,9 @@ readdirSync(base)
 
         const fixed: Fixed[] = [];
 
-        fixtures.forEach(({ title, input, output, errors, i }) => {
+        fixtures.forEach(({ title, input, output, errors, i, builtins }) => {
             var { errorText, checked, newOutput, outputTast } = runFixture(
+                builtins,
                 input,
                 output,
             );

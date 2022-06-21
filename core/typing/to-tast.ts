@@ -9,6 +9,11 @@ export type Ctx = {
     resolve: (name: string, hash?: string | null) => Array<t.RefKind>;
     resolveType: (name: string, hash?: string | null) => t.RefKind | null;
     resolveDecorator: (name: string, hash?: string | null) => Array<t.RefKind>;
+    // hmm
+    // seems like the ctx probably wants a say in the assignment of symbol IDs.
+    // to ensure there aren't collisions.
+    sym: (name: string) => t.Sym;
+    withLocalTypes: (locals: { sym: t.Sym; bound: t.Type | null }[]) => Ctx;
     ToTast: ToTast;
 };
 
