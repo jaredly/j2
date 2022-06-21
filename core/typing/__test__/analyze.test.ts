@@ -21,18 +21,22 @@ describe('analyze', () => {
     });
 
     it.each(fixtures)('%s', (title, input, output, errors, i) => {
-        var { newErrors, checked, newOutput, outputTast } = runFixture(
+        var { errorText, checked, newOutput, outputTast } = runFixture(
             input,
             output,
         );
-        if (!hasOnly || title.includes('[only]')) {
-            if (!process.env.FIX) {
-                expect(errors).toEqual(
-                    newErrors.length ? newErrors.join('\n') : undefined,
-                );
-            }
-        }
-        errors = newErrors.length ? newErrors.join('\n') : undefined;
+
+        const fullExpectedOutput = output + (errors ? '\n-->\n' + errors : '');
+        const fullOutput = newOutput + (errorText ? '\n-->\n' + errorText : '');
+
+        // if (!hasOnly || title.includes('[only]')) {
+        //     if (!process.env.FIX) {
+        //         expect(errors).toEqual(
+        //             errorText ? errorText : undefined,
+        //         );
+        //     }
+        // }
+        errors = errorText ? errorText : undefined;
 
         if (
             output &&
@@ -41,6 +45,7 @@ describe('analyze', () => {
         ) {
             try {
                 expect(clearLocs(checked)).toEqual(clearLocs(outputTast));
+                expect(fullOutput).toEqual(fullExpectedOutput);
             } catch (err) {
                 console.error(
                     title + '\n\n' + input + '\n\n-->\n\n' + newOutput,

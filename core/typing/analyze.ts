@@ -15,6 +15,7 @@ import {
 import { getType } from './getType';
 import { typeMatches } from './typesEqual';
 import { analyze as analyzeApply } from '../elements/apply';
+import { analyze as analyzeConstants } from '../elements/constants';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
@@ -74,7 +75,7 @@ export const decorate = (
                         loc: noloc,
                     },
                 ],
-                loc: noloc,
+                loc: expr.loc,
             },
         ],
         expr,
@@ -87,6 +88,7 @@ export const analyze = (ast: File, ctx: Ctx): File => {
         ast,
         {
             ...analyzeApply,
+            ...analyzeConstants,
         },
         { ctx, hit: {} },
     );

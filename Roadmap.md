@@ -1,5 +1,6 @@
 
 - [ ] use the `analyze` from `constants.ts`
+- [ ] start ... tracking the path of things? Should `ctx` always have a path component? Seems like a decent idea.
 - [ ] actually use the `grammar` exports from elements
 - [ ] actually use the `fixtures` exports from elements
 - [ ] move as much as possible into `elements`

@@ -15,12 +15,14 @@ false
 ==[template strings?]==
 
 "Hello${toString(1)}"
-"One${1}${2} and ${3}"
+"One${"1"}${"2"} and ${"3"}"
 "${12}"
 -->
 "Hello${toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)}"
-"One${1}${2} and ${3}"
-"${12}"
+"One${"1"}${"2"} and ${"3"}"
+"${@error#[:unresolved:](msg: "Expected string") 12}"
+-->
+🚨 Error decorator at 3:4
 
 ==[well-typed builtin call]==
 
@@ -34,7 +36,7 @@ toString(true)
 -->
 toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](@error#[:unresolved:](msg: "Wrong type") true)
 -->
-🚨 Error decorator at 0:0
+🚨 Error decorator at 1:10
 
 ==[wrong number of types]==
 
@@ -45,7 +47,7 @@ toString(1, 2)
     2,
 )
 -->
-🚨 Error decorator at 0:0
+🚨 Error decorator at 1:1
 
 ==[not a fn]==
 
@@ -53,7 +55,7 @@ toString(1, 2)
 -->
 @error#[:unresolved:](msg: "Not a function") 10(20)
 -->
-🚨 Error decorator at 0:0
+🚨 Error decorator at 1:1
 🚨 Missing type at 1:1
 🚨 Missing type at 1:1
 
@@ -84,7 +86,7 @@ toString(1)()
 -->
 @error#[:unresolved:](msg: "Not a function") toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)()
 -->
-🚨 Error decorator at 0:0
+🚨 Error decorator at 1:1
 🚨 Missing type at 1:1
 🚨 Missing type at 1:1
 

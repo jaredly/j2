@@ -100,23 +100,23 @@ export function runFixture(input: string, output: string) {
         checked,
         analyzeContext(ctx),
     );
-    let newErrors: string[] = [];
+    let errorText: string[] = [];
     errorDecorators.forEach((decl) => {
-        newErrors.push(
+        errorText.push(
             `🚨 Error decorator at ${
                 decl.start.line + ':' + decl.start.column
             }`,
         );
     });
     missingTypes.forEach((missing) => {
-        newErrors.push(
+        errorText.push(
             `🚨 Missing type at ${
                 missing.start.line + ':' + missing.start.column
             }`,
         );
     });
     return {
-        newErrors,
+        errorText: errorText.length ? errorText.join('\n') : null,
         checked,
         newOutput,
         outputTast: ctx.ToTast.File(fixComments(parseTyped(output)), ctx),

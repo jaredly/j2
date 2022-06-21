@@ -81,6 +81,10 @@ export const analyze: Visitor<VisitorCtx> = {
         const rest: TemplateString['rest'] = node.rest.map(
             ({ expr, suffix, loc }) => {
                 const expt = ctx.getType(expr);
+                // HMMMM This might ... end up wrapping multiple times?
+                // like ... and the idxs we're doing to be having with noloc
+                // are not going to disambiguate. I think I need to think
+                // about this more.
                 if (
                     expt &&
                     !typeMatches(expt, ctx.typeByName('string')!, ctx._full)
