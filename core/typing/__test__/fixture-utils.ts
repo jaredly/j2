@@ -3,6 +3,7 @@ import {
     addBuiltin,
     addBuiltinDecorator,
     addBuiltinType,
+    FullContext,
     fullContext,
     noloc,
 } from '../../ctx';
@@ -101,23 +102,7 @@ export const saveFixed = (
 export function runFixture(builtins: string[], input: string, output: string) {
     const ctx = fullContext();
 
-    builtins.forEach((line) => {
-        const [_, kind, name, ...rest] = line.split(':');
-        switch (kind) {
-            case 'value':
-                const typeRaw = rest.join(':').trim();
-                const ast = parseType(typeRaw);
-                const tast = ctx.ToTast[ast.type](ast as any, ctx);
-                addBuiltin(ctx, name, tast);
-                break;
-            case 'type':
-                addBuiltinType(ctx, name, +rest);
-                break;
-            case 'decorator':
-                addBuiltinDecorator(ctx, name, 0);
-                break;
-        }
-    });
+    loadBuiltins(builtins, ctx);
 
     let tast;
     try {
@@ -165,6 +150,9 @@ export function runFixture(builtins: string[], input: string, output: string) {
     }
     let outputTast;
     try {
+        const ctx = fullContext();
+
+        loadBuiltins(builtins, ctx);
         outputTast = ctx.ToTast.File(fixComments(parseFile(output)), ctx);
     } catch (err) {}
     return {
@@ -173,4 +161,24 @@ export function runFixture(builtins: string[], input: string, output: string) {
         newOutput,
         outputTast,
     };
+}
+
+function loadBuiltins(builtins: string[], ctx: FullContext) {
+    builtins.forEach((line) => {
+        const [_, kind, name, ...rest] = line.split(':');
+        switch (kind) {
+            case 'value':
+                const typeRaw = rest.join(':').trim();
+                const ast = parseType(typeRaw);
+                const tast = ctx.ToTast[ast.type](ast as any, ctx);
+                addBuiltin(ctx, name, tast);
+                break;
+            case 'type':
+                addBuiltinType(ctx, name, +rest);
+                break;
+            case 'decorator':
+                addBuiltinDecorator(ctx, name, 0);
+                break;
+        }
+    });
 }
