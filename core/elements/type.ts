@@ -17,6 +17,65 @@ Type = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash
 
 `;
 
+export type TRef = {
+    type: 'TRef';
+    ref: t.RefKind | t.UnresolvedRef;
+    loc: t.Loc;
+};
+
+// Something<T>
+export type TApply = {
+    type: 'TApply';
+    target: Type;
+    args: Array<Type>;
+    loc: t.Loc;
+};
+
+// OK also how do I do ... type bounds
+// yeah that would be here.
+// <T, I, K>Something
+export type TVars = {
+    type: 'TVars';
+    args: Array<t.Sym>;
+    inner: Type;
+    loc: t.Loc;
+};
+
+// (arg: int, arg2: float) => string
+// NOTE that type arguments, and effect arguments,
+// will have already been applied if you get to this point.
+// TApply(TVars(TLambda)) => TLambda ... right?
+// or is it ... an expression that applies the tvars and stuff. I think?
+// Yeah, if you have
+// const x = <T>(m) => n;
+// x<T>(1)
+// (ApplyType(x, T)) and the getType of the ApplyType will be the lambda.
+export type TLambda = {
+    type: 'TLambda';
+    args: Array<{ label: string; typ: Type }>;
+    result: Type;
+    loc: t.Loc;
+};
+
+// Ok so also, you can just drop an inline record declaration, right?
+
+export type Type = TRef | TLambda | TExpr;
+// | TDecorated | TApply | TVars
+
+// Should I only allow local refs?
+// hmm no.
+// oh I can subtract numbers too rite
+export type TExpr = t.Number | t.String; // TAdd | TSub | TOr | ;
+
+export type TAdd = { type: 'TAdd'; elements: Array<Type>; loc: t.Loc };
+export type TSub = { type: 'TSub'; elements: Array<Type>; loc: t.Loc };
+export type TOr = { type: 'TOr'; elements: Array<Type>; loc: t.Loc };
+
+/// and ... something about instantiating a record? Although that might get into
+// the realm of "where"s. Yeah I think it would.
+
+// (T -> T) -> T // hm that would be Kinds yep.
+
 export const ToTast = {
     // Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
     // },
