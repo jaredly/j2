@@ -17,6 +17,7 @@ import { getType } from './getType';
 import { typeMatches } from './typesEqual';
 import { analyze as analyzeApply } from '../elements/apply';
 import { analyze as analyzeConstants } from '../elements/constants';
+import { idToString } from '../ids';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
@@ -92,6 +93,15 @@ export const verify = (
 ): { missingTypes: Loc[]; errorDecorators: Loc[] } => {
     let missingTypes: Array<Loc> = [];
     let errorDecorators: Array<Loc> = [];
+
+    const decoratorNames: { [key: string]: string } = {};
+    Object.keys(ctx._full.decorators.names).forEach((name) => {
+        const ids = ctx._full.decorators.names[name];
+        ids.forEach((id) => {
+            decoratorNames[idToString(id.id)] = name;
+        });
+    });
+
     transformFile(
         ast,
         {
@@ -103,9 +113,13 @@ export const verify = (
             },
             DecoratedExpression(node, _) {
                 node.decorators.forEach((dec) => {
-                    // TODO: Check for my error decorators. I should keep a list of them somewhere.
-                    // if (dec.id)
-                    errorDecorators.push(dec.loc);
+                    const ref = dec.id.ref;
+                    if (ref.type === 'Global') {
+                        const name = decoratorNames[idToString(ref.id)];
+                        if (name && name.startsWith('error:')) {
+                            errorDecorators.push(dec.loc);
+                        }
+                    }
                 });
                 return node;
             },

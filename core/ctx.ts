@@ -283,6 +283,7 @@ export const setupDefaults = (ctx: FullContext) => {
     Object.keys(errors).forEach((tag) => {
         addBuiltinDecorator(ctx, `error:` + tag, 0);
     });
+    addBuiltinDecorator(ctx, `test:type`, 0);
     addBuiltin(
         ctx,
         'toString',

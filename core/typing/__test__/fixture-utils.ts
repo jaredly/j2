@@ -121,7 +121,6 @@ export function runFixture(input: string, output: string) {
             '// ' + cm,
         ]);
     });
-    // console.log(JSON.stringify(checked.toplevels[0]));
 
     const newOutput = printToString(
         pegPrinter(actx.ToAst.File(checked, actx), newPPCtx(false)),
