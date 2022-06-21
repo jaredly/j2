@@ -1,4 +1,6 @@
 import {
+  RefKind,
+  Id,
   Loc,
   File,
   Toplevel,
@@ -9,8 +11,6 @@ import {
   TemplateString,
   Ref,
   UnresolvedRef,
-  RefKind,
-  Id,
   DecoratedExpression,
   Decorator,
   DecoratorArg,
@@ -21,6 +21,11 @@ import {
 } from "./typed-ast";
 
 export type Visitor<Ctx> = {
+  RefKind?: (
+    node: RefKind,
+    ctx: Ctx
+  ) => null | false | RefKind | [RefKind | null, Ctx];
+  RefKindPost?: (node: RefKind, ctx: Ctx) => null | RefKind;
   Loc?: (node: Loc, ctx: Ctx) => null | false | Loc | [Loc | null, Ctx];
   LocPost?: (node: Loc, ctx: Ctx) => null | Loc;
   File?: (node: File, ctx: Ctx) => null | false | File | [File | null, Ctx];
@@ -44,11 +49,6 @@ export type Visitor<Ctx> = {
   ExpressionPost?: (node: Expression, ctx: Ctx) => null | Expression;
   Sym?: (node: Sym, ctx: Ctx) => null | false | Sym | [Sym | null, Ctx];
   SymPost?: (node: Sym, ctx: Ctx) => null | Sym;
-  RefKind?: (
-    node: RefKind,
-    ctx: Ctx
-  ) => null | false | RefKind | [RefKind | null, Ctx];
-  RefKindPost?: (node: RefKind, ctx: Ctx) => null | RefKind;
   Apply?: (node: Apply, ctx: Ctx) => null | false | Apply | [Apply | null, Ctx];
   ApplyPost?: (node: Apply, ctx: Ctx) => null | Apply;
   Boolean?: (
@@ -97,6 +97,8 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TDecorated | [TDecorated | null, Ctx];
   TDecoratedPost?: (node: TDecorated, ctx: Ctx) => null | TDecorated;
+  Id?: (node: Id, ctx: Ctx) => null | false | Id | [Id | null, Ctx];
+  IdPost?: (node: Id, ctx: Ctx) => null | Id;
   Expression_Apply?: (
     node: Apply,
     ctx: Ctx
@@ -122,6 +124,114 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
 };
+export const transformId = <Ctx>(
+  node: Id,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Id => {
+  if (!node) {
+    throw new Error("No Id provided");
+  }
+
+  const transformed = visitor.Id ? visitor.Id(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+  const updatedNode = node;
+
+  node = updatedNode;
+  if (visitor.IdPost) {
+    const transformed = visitor.IdPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformRefKind = <Ctx>(
+  node: RefKind,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): RefKind => {
+  if (!node) {
+    throw new Error("No RefKind provided");
+  }
+
+  const transformed = visitor.RefKind ? visitor.RefKind(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "Global": {
+      const updatedNode$0specified = node;
+      let changed1 = false;
+
+      let updatedNode$0node = updatedNode$0specified;
+      {
+        let changed2 = false;
+
+        const updatedNode$0node$id = transformId(
+          updatedNode$0specified.id,
+          visitor,
+          ctx
+        );
+        changed2 =
+          changed2 || updatedNode$0node$id !== updatedNode$0specified.id;
+        if (changed2) {
+          updatedNode$0node = {
+            ...updatedNode$0node,
+            id: updatedNode$0node$id,
+          };
+          changed1 = true;
+        }
+      }
+
+      updatedNode = updatedNode$0node;
+      break;
+    }
+
+    case "Local":
+      break;
+  }
+
+  node = updatedNode;
+  if (visitor.RefKindPost) {
+    const transformed = visitor.RefKindPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformLoc = <Ctx>(
   node: Loc,
   visitor: Visitor<Ctx>,
@@ -450,45 +560,6 @@ export const transformUnresolvedRef = <Ctx>(
   node = updatedNode;
   if (visitor.UnresolvedRefPost) {
     const transformed = visitor.UnresolvedRefPost(node, ctx);
-    if (transformed != null) {
-      node = transformed;
-    }
-  }
-  return node;
-};
-
-// not a type Id
-
-export const transformRefKind = <Ctx>(
-  node: RefKind,
-  visitor: Visitor<Ctx>,
-  ctx: Ctx
-): RefKind => {
-  if (!node) {
-    throw new Error("No RefKind provided");
-  }
-
-  const transformed = visitor.RefKind ? visitor.RefKind(node, ctx) : null;
-  if (transformed === false) {
-    return node;
-  }
-  if (transformed != null) {
-    if (Array.isArray(transformed)) {
-      ctx = transformed[1];
-      if (transformed[0] != null) {
-        node = transformed[0];
-      }
-    } else {
-      node = transformed;
-    }
-  }
-
-  let changed0 = false;
-  const updatedNode = node;
-
-  node = updatedNode;
-  if (visitor.RefKindPost) {
-    const transformed = visitor.RefKindPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }

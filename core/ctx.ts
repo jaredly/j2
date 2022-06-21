@@ -1,6 +1,6 @@
-import { Ctx, RefKind } from '.';
+import { Ctx } from '.';
 import hashObject from 'object-hash';
-import { Expression, Sym, TApply, TVars, Type } from './typed-ast';
+import { Expression, Sym, TApply, TVars, Type, RefKind } from './typed-ast';
 import { toId } from './ids';
 import { Loc, parseTyped } from './grammar/base.parser';
 import { makeToTast, ToTast } from './typing/to-tast';

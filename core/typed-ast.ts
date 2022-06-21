@@ -11,7 +11,7 @@ export {
     TDecorated,
 } from './elements/decorators';
 export { Id } from './ids';
-export { Type, TRef, TApply, TVars } from './elements/type';
+export { Type, TRef, TApply, TVars, TLambda, TOr } from './elements/type';
 
 export type RefKind =
     | {
