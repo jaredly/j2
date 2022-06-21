@@ -40,10 +40,21 @@ export const printCtx = (ctx: FullContext): Ctx => {
     Object.keys(ctx.types.names).forEach((name) => {
         reverseType[t.refHash(ctx.types.names[name])] = name;
     });
+    const reverseDecorator: { [key: string]: string } = {};
+    Object.keys(ctx.decorators.names).forEach((name) => {
+        ctx.decorators.names[name].forEach((ref) => {
+            reverseDecorator[t.refHash(ref)] = name;
+        });
+    });
     return {
         printRef(ref, loc, kind) {
             const hash = t.refHash(ref);
-            const name = kind === 'value' ? reverse[hash] : reverseType[hash];
+            const name =
+                kind === 'value'
+                    ? reverse[hash]
+                    : kind === 'decorator'
+                    ? reverseDecorator[hash]
+                    : reverseType[hash];
             return {
                 type: 'Identifier',
                 text: name ?? 'unnamed',

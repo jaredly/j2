@@ -59,7 +59,7 @@ export const analyze: Visitor<VisitorCtx> = {
                     return {
                         suffix,
                         loc,
-                        expr: decorate(expr, `Expected string`, hit),
+                        expr: decorate(expr, 'notAString', hit, ctx._full),
                     };
                 }
                 return { suffix, loc, expr };

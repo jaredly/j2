@@ -9,7 +9,9 @@ toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)
 
 toString(true)
 -->
-toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](@error#[:unresolved:](msg: "Wrong type") true)
+toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
+    @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f]() true,
+)
 // string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 -->
 🚨 1 error decorators
@@ -18,7 +20,7 @@ toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](@error#[:unresolved:](msg: 
 
 toString(1, 2)
 -->
-@error#[:unresolved:](msg: "Wrong number of arguments") toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
+@error:wrongNumberOfArgs#[he554807c644be72e6c4e5cb59aa0955f9ab67f13]() toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
     1,
     2,
 )
@@ -30,7 +32,7 @@ toString(1, 2)
 
 (10)(20)
 -->
-@error#[:unresolved:](msg: "Not a function") 10(20)
+@error:notAFunction#[h16ba48b37c7d5999c12c172bd1bbdeac9773c21a]() 10(20)
 -->
 🚨 1 error decorators
 🚨 2 missing types
@@ -47,7 +49,9 @@ undefinedFunction#[:unresolved:]()
 
 toString(1)()
 -->
-@error#[:unresolved:](msg: "Not a function") toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)()
+@error:notAFunction#[h16ba48b37c7d5999c12c172bd1bbdeac9773c21a]() toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
+    1,
+)()
 -->
 🚨 1 error decorators
 🚨 2 missing types

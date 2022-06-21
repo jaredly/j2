@@ -110,11 +110,11 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             return null;
         }
         if (ttype?.type !== 'TLambda') {
-            return decorate(node, 'Not a function', hit);
+            return decorate(node, 'notAFunction', hit, ctx._full);
         }
         const argTypes = node.args.map((arg) => ctx.getType(arg));
         if (ttype.args.length !== argTypes.length) {
-            return decorate(node, 'Wrong number of arguments', hit);
+            return decorate(node, 'wrongNumberOfArgs', hit, ctx._full);
         }
         let changed = false;
         const args = node.args.map((arg, i) => {
@@ -124,7 +124,7 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             }
             if (!typeMatches(at, ttype.args[i].typ, ctx._full)) {
                 changed = true;
-                return decorate(arg, 'Wrong type', hit);
+                return decorate(arg, 'argWrongType', hit, ctx._full);
             }
             return arg;
         });

@@ -46,8 +46,8 @@ readdirSync(base)
                         throw new Error(`Unable to process the output??`);
                     }
                     try {
-                        expect(clearLocs(checked)).toEqual(
-                            clearLocs(outputTast),
+                        expect({ ...clearLocs(checked), comments: [] }).toEqual(
+                            { ...clearLocs(outputTast), comments: [] },
                         );
                         expect(fullOutput).toEqual(fullExpectedOutput);
                     } catch (err) {

@@ -39,6 +39,8 @@ export type Identifier = {
 
 // No data on IdText
 
+// No data on NamespacedIdText
+
 // No data on JustSym
 
 // No data on HashRef

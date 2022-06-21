@@ -36,8 +36,8 @@ export type FullContext = {
         GlobalRef
     >;
     decorators: HashedNames<
-        | { type: 'builtin'; typ: Type }
-        | { type: 'user'; typ: TLambda; decl: DecoratorDecl },
+        | { type: 'builtin'; typ: 0 }
+        | { type: 'user'; typ: 0; decl: DecoratorDecl },
         Array<GlobalRef>
     >;
 } & Ctx;
@@ -56,6 +56,23 @@ export const addBuiltin = (
         ctx.values.names[name] = [ref];
     }
     ctx.values.hashed[hash] = [{ type: 'builtin', typ }];
+    return ref;
+};
+
+export const addBuiltinDecorator = (
+    ctx: FullContext,
+    name: string,
+    typ: 0,
+    unique = 0,
+): RefKind => {
+    const hash = hashObject({ name, typ, unique });
+    const ref: GlobalRef = { type: 'Global', id: toId(hash, 0) };
+    if (ctx.decorators.names.hasOwnProperty(name)) {
+        ctx.decorators.names[name].push(ref);
+    } else {
+        ctx.decorators.names[name] = [ref];
+    }
+    ctx.decorators.hashed[hash] = [{ type: 'builtin', typ }];
     return ref;
 };
 
@@ -227,6 +244,18 @@ struct Ok<Ok>{v: Ok}
 struct Failure<Failure>{v: Failure}
 `;
 
+// So ... the ....
+// types here, I think I'm going to want them to be
+// in the in-universe AST. hmm.
+export const errors = {
+    typeNotFound: 3,
+    notAFunction: 1,
+    wrongNumberOfArgs: 4,
+    argWrongType: 5,
+    notAString: 6,
+};
+export type ErrorTag = keyof typeof errors;
+
 const builtinTypes = `
 int
 float
@@ -250,6 +279,9 @@ export const setupDefaults = (ctx: FullContext) => {
     const named: { [key: string]: RefKind } = {};
     builtinTypes.forEach((name) => {
         named[name] = addBuiltinType(ctx, name, 0);
+    });
+    Object.keys(errors).forEach((tag) => {
+        addBuiltinDecorator(ctx, `error:` + tag, 0);
     });
     addBuiltin(
         ctx,

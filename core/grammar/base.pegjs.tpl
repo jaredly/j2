@@ -28,6 +28,7 @@ ParenedExpression = "(" _ expr:Expression _ ")"
 Identifier = text:$IdText hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
+NamespacedIdText "identifier" = $IdText (":" IdText)*
 
 JustSym = "#[" [0-9]+ "]"
 HashRef = "#[h" [0-9a-zA-Z]+ "]"

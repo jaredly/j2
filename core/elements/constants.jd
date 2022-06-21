@@ -43,7 +43,7 @@ false
 
 "${12}"
 -->
-"${@error#[:unresolved:](msg: "Expected string") 12}"
+"${@error:notAString#[h78fb9682caf6cb8dc34febba83e591c06884dc73]() 12}"
 // string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 -->
 🚨 1 error decorators

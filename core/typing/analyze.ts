@@ -2,7 +2,7 @@
 // Also, this is where we try to do type-based resolution.
 // Should I separate the two steps? idk.
 
-import { FullContext, noloc } from '../ctx';
+import { ErrorTag, FullContext, noloc } from '../ctx';
 import { transformFile } from '../transform-tast';
 import {
     Apply,
@@ -43,38 +43,28 @@ export const analyzeContext = (ctx: FullContext): Ctx => {
 
 export const decorate = (
     expr: Expression,
-    msg: string,
+    tag: ErrorTag,
     hit: { [key: number]: boolean },
+    ctx: FullContext,
 ): DecoratedExpression | Expression => {
     if (hit[expr.loc.idx]) {
         return expr;
     }
     hit[expr.loc.idx] = true;
+    const abc = ctx.decorators.names[`error:${tag}`];
+    if (!abc || abc.length !== 1) {
+        throw new Error(`can't resolve that decorator`);
+    }
     return {
         type: 'DecoratedExpression',
         decorators: [
             {
                 type: 'Decorator',
                 id: {
-                    ref: { type: 'Unresolved', text: 'error', hash: null },
+                    ref: abc[0],
                     loc: noloc,
                 },
-                args: [
-                    {
-                        label: 'msg',
-                        arg: {
-                            type: 'DExpr',
-                            expr: {
-                                type: 'TemplateString',
-                                loc: noloc,
-                                first: msg,
-                                rest: [],
-                            },
-                            loc: noloc,
-                        },
-                        loc: noloc,
-                    },
-                ],
+                args: [],
                 loc: expr.loc,
             },
         ],

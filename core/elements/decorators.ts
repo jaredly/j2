@@ -12,7 +12,7 @@ export const grammar = `
 DecoratedExpression = decorators_drop:(Decorator _)* inner:Apply
 
 Decorator = '@' id:DecoratorId _ '(' _ args:DecoratorArgs? _ ')'
-DecoratorId = text:$IdText hash:($HashRef / $UnresolvedHash)?
+DecoratorId = text:$NamespacedIdText hash:($HashRef / $UnresolvedHash)?
 DecoratorArgs = first:LabeledDecoratorArg rest:(_ "," _ LabeledDecoratorArg)* _ ","? 
 DecoratorArg = DecType / DecExpr
 // DecoratorArg = DecType / DecPat / DecExpr
