@@ -1,12 +1,11 @@
 // Printing I hope
-import * as p from '../grammar/base.parser';
-import * as peggy from 'peggy';
-import * as pp from './pp';
-import { noloc } from '../ctx';
-import { ToPP as ConstantsToPP } from '../elements/constants';
-import { ToPP as DecoratorsToPP } from '../elements/decorators';
 import { ToPP as ApplyToPP } from '../elements/apply';
 import { injectComments } from '../elements/comments';
+import { ToPP as ConstantsToPP } from '../elements/constants';
+import { ToPP as DecoratorsToPP } from '../elements/decorators';
+import { ToPP as TypeToPP } from '../elements/type';
+import * as p from '../grammar/base.parser';
+import * as pp from './pp';
 
 export type Ctx = {
     hideIds: boolean;
@@ -16,13 +15,15 @@ export type Ctx = {
 export type ToPP = typeof GeneralToPP &
     typeof ConstantsToPP &
     typeof DecoratorsToPP &
-    typeof ApplyToPP;
+    typeof ApplyToPP &
+    typeof TypeToPP;
 
 export const makeToPP = (): ToPP => ({
     ...GeneralToPP,
     ...ConstantsToPP,
     ...DecoratorsToPP,
     ...ApplyToPP,
+    ...TypeToPP,
 });
 
 export const newPPCtx = (hideIds: boolean): Ctx => ({
@@ -37,12 +38,6 @@ export const GeneralToPP = {
             file.loc,
             'always',
         );
-    },
-    Type(type: p.Type, ctx: Ctx): pp.PP {
-        if (ctx.hideIds) {
-            return pp.atom(type.text, type.loc);
-        }
-        return pp.atom(type.text + (type.hash ?? ''), type.loc);
     },
     ParenedExpression({ loc, expr }: p.ParenedExpression, ctx: Ctx): pp.PP {
         return pp.items(

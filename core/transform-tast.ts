@@ -50,8 +50,6 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
   ExpressionPost?: (node: Expression, ctx: Ctx) => null | Expression;
-  Apply?: (node: Apply, ctx: Ctx) => null | false | Apply | [Apply | null, Ctx];
-  ApplyPost?: (node: Apply, ctx: Ctx) => null | Apply;
   Sym?: (node: Sym, ctx: Ctx) => null | false | Sym | [Sym | null, Ctx];
   SymPost?: (node: Sym, ctx: Ctx) => null | Sym;
   TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
@@ -83,6 +81,8 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | RefKind | [RefKind | null, Ctx];
   RefKindPost?: (node: RefKind, ctx: Ctx) => null | RefKind;
+  Apply?: (node: Apply, ctx: Ctx) => null | false | Apply | [Apply | null, Ctx];
+  ApplyPost?: (node: Apply, ctx: Ctx) => null | Apply;
   Boolean?: (
     node: Boolean,
     ctx: Ctx

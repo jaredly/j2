@@ -1,6 +1,7 @@
 import { ToTast as ConstantsToTast } from '../elements/constants';
 import { ToTast as DecoratorsToTast } from '../elements/decorators';
 import { ToTast as ApplyToTast } from '../elements/apply';
+import { ToTast as TypeToTast } from '../elements/type';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 
@@ -13,7 +14,8 @@ export type Ctx = {
 export type ToTast = typeof ConstantsToTast &
     typeof GeneralToTast &
     typeof DecoratorsToTast &
-    typeof ApplyToTast;
+    typeof ApplyToTast &
+    typeof TypeToTast;
 
 export const makeToTast = (): ToTast => {
     return {
@@ -21,6 +23,7 @@ export const makeToTast = (): ToTast => {
         ...ConstantsToTast,
         ...DecoratorsToTast,
         ...ApplyToTast,
+        ...TypeToTast,
     };
 };
 
@@ -47,19 +50,6 @@ export const GeneralToTast = {
     },
     ParenedExpression(expr: p.ParenedExpression, ctx: Ctx): t.Expression {
         return ctx.ToTast[expr.expr.type](expr.expr as any, ctx);
-    },
-    Type(type: p.Type, ctx: Ctx): t.Type {
-        const hash = filterUnresolved(type.hash?.slice(2, -1));
-        const resolved = ctx.resolveType(type.text, hash);
-        return {
-            type: 'TRef',
-            ref: resolved ?? {
-                type: 'Unresolved',
-                text: type.text,
-                hash,
-            },
-            loc: type.loc,
-        };
     },
     // Expression(expr: p.Expression, typ: Type | null, ctx: Ctx): Expression {
     //     return ctx.ToTast[expr.type](expr as any, typ, ctx);

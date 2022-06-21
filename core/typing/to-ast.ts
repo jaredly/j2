@@ -3,6 +3,7 @@ import { FullContext } from '../ctx';
 import { ToAst as ConstantsToAst } from '../elements/constants';
 import { ToAst as DecoratorsToAst } from '../elements/decorators';
 import { ToAst as ApplyToAst } from '../elements/apply';
+import { ToAst as TypeToAst } from '../elements/type';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 
@@ -11,12 +12,14 @@ export const makeToAst = (): ToAst => ({
     ...GeneralToAst,
     ...DecoratorsToAst,
     ...ApplyToAst,
+    ...TypeToAst,
 });
 
 export type ToAst = typeof ConstantsToAst &
     typeof GeneralToAst &
     typeof DecoratorsToAst &
-    typeof ApplyToAst;
+    typeof ApplyToAst &
+    typeof TypeToAst;
 
 export type Ctx = {
     printRef: (
@@ -66,11 +69,6 @@ export const GeneralToAst = {
     },
     ToplevelExpression({ type, expr, loc }: t.Toplevel, ctx: Ctx): p.Toplevel {
         return ctx.ToAst[expr.type](expr as any, ctx);
-    },
-    TRef({ type, ref, loc }: t.TRef, ctx: Ctx): p.Type {
-        const { text, hash } =
-            ref.type === 'Unresolved' ? ref : ctx.printRef(ref, loc, 'type');
-        return { type: 'Type', text, hash, loc };
     },
 
     Ref({ type, kind, loc }: t.Ref, ctx: Ctx): p.Identifier {
