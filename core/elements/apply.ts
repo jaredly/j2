@@ -8,6 +8,7 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
+import { noloc } from '../ctx';
 
 export const grammar = `
 Apply = target:Atom suffixes_drop:Suffix*
@@ -124,7 +125,17 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             }
             if (!typeMatches(at, ttype.args[i].typ, ctx._full)) {
                 changed = true;
-                return decorate(arg, 'argWrongType', hit, ctx._full);
+                return decorate(arg, 'argWrongType', hit, ctx._full, [
+                    {
+                        label: 'expected',
+                        arg: {
+                            type: 'DType',
+                            loc: noloc,
+                            typ: ttype.args[i].typ,
+                        },
+                        loc: noloc,
+                    },
+                ]);
             }
             return arg;
         });

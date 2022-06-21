@@ -29,6 +29,7 @@ ephemeral "builtin"s, including builtin decorators, types, and values.
 This will happen via a fixture preamble.
 In order to make it work, I need to be able to parse lambda types.
 
+- [ ] automate exporting all element types through typed-ast.ts
 
 
 ## Transformer

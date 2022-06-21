@@ -7,6 +7,7 @@ import { transformFile } from '../transform-tast';
 import {
     Apply,
     DecoratedExpression,
+    Decorator,
     Expression,
     File,
     Loc,
@@ -46,6 +47,7 @@ export const decorate = (
     tag: ErrorTag,
     hit: { [key: number]: boolean },
     ctx: FullContext,
+    args: Decorator['args'] = [],
 ): DecoratedExpression | Expression => {
     if (hit[expr.loc.idx]) {
         return expr;
@@ -64,7 +66,7 @@ export const decorate = (
                     ref: abc[0],
                     loc: noloc,
                 },
-                args: [],
+                args,
                 loc: expr.loc,
             },
         ],

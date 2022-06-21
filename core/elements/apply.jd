@@ -10,7 +10,9 @@ toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](1)
 toString(true)
 -->
 toString#[h8c4f9bfb98e1dffc12f20ead9aa4e817820dff69](
-    @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f]() true,
+    @error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f](
+        expected: :int#[h2f181c91131fd0daa282424fb3953604513df6fe],
+    ) true,
 )
 // string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
 -->

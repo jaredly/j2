@@ -17,13 +17,15 @@ readdirSync(base)
 
             let fixed: [string, string, string | undefined][] = [];
 
-            afterAll(() => {
-                if (hasOnly) {
-                    console.warn('Not writing fixtures, [only] was used');
-                    return;
-                }
-                saveFixed(fixtureFile, fixtures, fixed);
-            });
+            if (process.env.FIX) {
+                afterAll(() => {
+                    if (hasOnly) {
+                        console.warn('Not writing fixtures, [only] was used');
+                        return;
+                    }
+                    saveFixed(fixtureFile, fixtures, fixed);
+                });
+            }
 
             it.each(fixtures)('%s', (title, input, output, errors, i) => {
                 var { errorText, checked, newOutput, outputTast } = runFixture(
