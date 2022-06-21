@@ -142,17 +142,28 @@ export const ToAst = {
 };
 
 export const ToPP = {
-    TLambda({ args, result, loc }: t.TLambda, ctx: PCtx): pp.PP {
+    TLambda({ args, result, loc }: p.TLambda, ctx: PCtx): pp.PP {
         return pp.items(
             [
                 pp.args(
-                    args.map((arg) =>
+                    args?.items.map((arg) =>
                         pp.items(
-                            [ctx.ToPP[arg.typ.type](arg.typ as any, ctx)],
+                            [
+                                arg.label
+                                    ? pp.items(
+                                          [
+                                              pp.atom(arg.label, arg.loc),
+                                              pp.atom(': ', arg.loc),
+                                          ],
+                                          arg.loc,
+                                      )
+                                    : null,
+                                ctx.ToPP[arg.typ.type](arg.typ as any, ctx),
+                            ],
                             loc,
                         ),
-                    ),
-                    loc,
+                    ) ?? [],
+                    args?.loc ?? loc,
                 ),
                 pp.atom(' => ', loc),
                 ctx.ToPP[result.type](result as any, ctx),
