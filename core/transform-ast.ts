@@ -30,6 +30,7 @@ import {
   ParenedExpression,
   TemplateString,
   TemplatePair,
+  TemplateWrap,
   Suffix,
   Parens,
   CommaExpr,
@@ -175,6 +176,11 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TemplatePair | [TemplatePair | null, Ctx];
   TemplatePairPost?: (node: TemplatePair, ctx: Ctx) => null | TemplatePair;
+  TemplateWrap?: (
+    node: TemplateWrap,
+    ctx: Ctx
+  ) => null | false | TemplateWrap | [TemplateWrap | null, Ctx];
+  TemplateWrapPost?: (node: TemplateWrap, ctx: Ctx) => null | TemplateWrap;
   tplStringChars?: (
     node: tplStringChars,
     ctx: Ctx
@@ -374,6 +380,10 @@ export type Visitor<Ctx> = {
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TemplatePair?: (
     node: TemplatePair,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TemplateWrap?: (
+    node: TemplateWrap,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_DecoratedExpression?: (
@@ -1772,6 +1782,63 @@ export const transformParenedExpression = <Ctx>(
   return node;
 };
 
+export const transformTemplateWrap = <Ctx>(
+  node: TemplateWrap,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TemplateWrap => {
+  if (!node) {
+    throw new Error("No TemplateWrap provided");
+  }
+
+  const transformed = visitor.TemplateWrap
+    ? visitor.TemplateWrap(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+    changed1 = changed1 || updatedNode$expr !== node.expr;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        expr: updatedNode$expr,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TemplateWrapPost) {
+    const transformed = visitor.TemplateWrapPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformTemplatePair = <Ctx>(
   node: TemplatePair,
   visitor: Visitor<Ctx>,
@@ -1807,13 +1874,13 @@ export const transformTemplatePair = <Ctx>(
     const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
     changed1 = changed1 || updatedNode$loc !== node.loc;
 
-    const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
-    changed1 = changed1 || updatedNode$expr !== node.expr;
+    const updatedNode$wrap = transformTemplateWrap(node.wrap, visitor, ctx);
+    changed1 = changed1 || updatedNode$wrap !== node.wrap;
     if (changed1) {
       updatedNode = {
         ...updatedNode,
         loc: updatedNode$loc,
-        expr: updatedNode$expr,
+        wrap: updatedNode$wrap,
       };
       changed0 = true;
     }
@@ -3392,6 +3459,25 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
+    case "TemplateWrap": {
+      const transformed = visitor.AllTaggedTypes_TemplateWrap
+        ? visitor.AllTaggedTypes_TemplateWrap(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "DecoratedExpression": {
       const transformed = visitor.AllTaggedTypes_DecoratedExpression
         ? visitor.AllTaggedTypes_DecoratedExpression(node, ctx)
@@ -3724,6 +3810,12 @@ export const transformAllTaggedTypes = <Ctx>(
 
     case "TemplatePair": {
       updatedNode = transformTemplatePair(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TemplateWrap": {
+      updatedNode = transformTemplateWrap(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

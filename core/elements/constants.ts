@@ -16,7 +16,8 @@ Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?)
 
 String = "\"" text:$(stringChar*) "\""
 TemplateString = "\"" first:$tplStringChars rest:TemplatePair* "\""
-TemplatePair = "\${" _ expr:Expression _ "}" suffix:$tplStringChars
+TemplatePair = wrap:TemplateWrap suffix:$tplStringChars
+TemplateWrap = "\${" _ expr:Expression _ "}"
 tplStringChars = $(!"\${" stringChar)*
 stringChar = $( escapedChar / [^"\\])
 escapedChar = "\\" .
@@ -75,7 +76,7 @@ export const ToTast = {
             type: 'TemplateString',
             loc: ts.loc,
             first: ts.first,
-            rest: ts.rest.map(({ expr, suffix, loc }) => ({
+            rest: ts.rest.map(({ wrap: { expr }, suffix, loc }) => ({
                 expr: ctx.ToTast[expr.type](expr as any, ctx),
                 suffix,
                 loc,
@@ -113,7 +114,11 @@ export const ToAst = {
             first,
             rest: rest.map(({ expr, suffix, loc }) => ({
                 type: 'TemplatePair',
-                expr: ctx.ToAst[expr.type](expr as any, ctx),
+                wrap: {
+                    expr: ctx.ToAst[expr.type](expr as any, ctx),
+                    loc,
+                    type: 'TemplateWrap',
+                },
                 suffix,
                 loc,
             })),
@@ -141,7 +146,7 @@ export const ToPP = {
             return pp.atom(`"${ts.first}"`, ts.loc);
         }
         let items: pp.PP[] = [pp.atom(`"${ts.first}\${`, noloc)];
-        ts.rest.forEach(({ expr, suffix, loc }, i) => {
+        ts.rest.forEach(({ wrap: { expr }, suffix, loc }, i) => {
             items.push(ctx.ToPP[expr.type](expr as any, ctx));
             items.push(
                 pp.atom(

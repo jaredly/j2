@@ -22,6 +22,7 @@ const colors: { [key in keyof Visitor<null>]: string } = {
     comment: 'green',
     Decorator: 'orange',
     DecoratorId: '#ffbf88',
+    TemplateWrap: 'yellow',
 };
 
 const visitor: Visitor<Array<{ loc: Loc; type: string }>> = {};

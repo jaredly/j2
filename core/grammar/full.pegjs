@@ -66,7 +66,8 @@ Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?)
 
 String = "\"" text:$(stringChar*) "\""
 TemplateString = "\"" first:$tplStringChars rest:TemplatePair* "\""
-TemplatePair = "\${" _ expr:Expression _ "}" suffix:$tplStringChars
+TemplatePair = wrap:TemplateWrap suffix:$tplStringChars
+TemplateWrap = "\${" _ expr:Expression _ "}"
 tplStringChars = $(!"\${" stringChar)*
 stringChar = $( escapedChar / [^"\\])
 escapedChar = "\\" .
