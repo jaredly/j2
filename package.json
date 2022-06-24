@@ -4,6 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
+        "start": "esbuild --bundle devui/server.ts --platform=node --external:vite | node -",
         "grammar": "esbuild --bundle utils/build-grammar.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "transform": "npm run sync; esbuild --bundle utils/generate-transform.ts --platform=node --sourcemap=inline | node --enable-source-maps -; prettier -w core/transform-tast.ts",
         "sync": "esbuild --bundle utils/sync-imports.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
