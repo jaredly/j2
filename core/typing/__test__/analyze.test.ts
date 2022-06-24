@@ -11,15 +11,11 @@ readdirSync(base)
             const { fixtures, hasOnly } = loadFixtures(fixtureFile);
 
             it.each(fixtures)('$title', (fixture) => {
-                let { title, input, output, errors, i, builtins } = fixture;
-                let { errorText, checked, newOutput, outputTast } =
-                    runFixture(fixture);
+                let { title, input, output, builtins } = fixture;
+                let { checked, newOutput, outputTast } = runFixture(fixture);
 
-                const fullExpectedOutput =
-                    output + (errors ? '\n-->\n' + errors : '');
-                const fullOutput =
-                    newOutput + (errorText ? '\n-->\n' + errorText : '');
-                errors = errorText ? errorText : undefined;
+                const fullExpectedOutput = output;
+                const fullOutput = newOutput;
 
                 if (output && (!hasOnly || title.includes('[only]'))) {
                     if (!outputTast) {

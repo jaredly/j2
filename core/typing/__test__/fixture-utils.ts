@@ -22,11 +22,11 @@ import { idToString } from '../../ids';
 export type Fixture = {
     title: string;
     aliases: { [key: string]: string };
-    builtins: string[];
+    builtins: Builtin[];
     input: string;
     output: string;
-    errors: string | undefined | null;
-    i: number;
+    failing: boolean;
+    // i: number;
 };
 
 export const locClearVisitor: Visitor<null> = { Loc: () => noloc };
@@ -35,10 +35,27 @@ export const clearLocs = (ast: File) => {
     return transformFile(ast, locClearVisitor, null);
 };
 
+const takeFirstLine = (text: string): [string, string] => {
+    const lines = text.split('\n');
+    return [lines[0], lines.slice(1).join('\n')];
+};
+
 export const parseFixture = (chunk: string, i: number): Fixture => {
-    const [input, output, errors] = chunk.trim().split('\n-->\n');
+    if (chunk.includes('----')) {
+        const [first, input, output] = chunk.split('----');
+        const [title, metaRaw] = takeFirstLine(first.trim());
+        const meta = JSON.parse(metaRaw);
+        return {
+            title: title.replace(/^=+\[/, '').replace(/\]=+$/, '').trim(),
+            input: input.trim(),
+            output: output.trim(),
+            ...meta,
+        };
+    }
+
+    const [input, output] = chunk.trim().split('\n-->\n');
     const [title, ...rest] = input.split('\n');
-    const builtins: string[] = [];
+    const builtins: Builtin[] = [];
     const aliases: { [key: string]: string } = {};
     while (rest[0].startsWith('//:')) {
         if (rest[0].startsWith('//:aliases:')) {
@@ -48,38 +65,45 @@ export const parseFixture = (chunk: string, i: number): Fixture => {
                 .forEach((line) => {
                     const [key, value] = line.split('=');
                     aliases[value] = key;
-                    // aliases[key] = value;
                 });
         } else {
-            builtins.push(rest.shift()!);
+            builtins.push(parseBuiltin(rest.shift()!));
         }
     }
     return {
-        title,
+        title: title.replace(/^=+\[/, '').replace(/\]=+$/, '').trim(),
         builtins,
         aliases,
         input: rest.join('\n').trim(),
         output,
-        errors,
-        i,
+        failing: false,
+        // i,
     };
 };
 
 export const serializeFixture = ({
     title,
-    builtins,
-    aliases,
     input,
     output,
-    errors,
+    builtins,
+    aliases,
+    failing,
 }: Fixture) => {
-    return `${title}\n${builtins.length ? builtins.join('\n') + '\n' : ''}${
-        Object.keys(aliases).length
-            ? `//:aliases:${Object.keys(aliases)
-                  .map((k) => `${aliases[k]}=${k}`)
-                  .join(',')}\n`
-            : ''
-    }\n${input}\n-->\n${output}${errors ? '\n-->\n' + errors : ''}`;
+    return `==[${title}]==\n${JSON.stringify({
+        builtins,
+        aliases,
+        failing,
+    })}\n----\n${input}\n----\n${output}`;
+
+    // return `==[${title}]==\n${
+    //     builtins.length ? builtins.join('\n') + '\n' : ''
+    // }${
+    //     Object.keys(aliases).length
+    //         ? `//:aliases:${Object.keys(aliases)
+    //               .map((k) => `${aliases[k]}=${k}`)
+    //               .join(',')}\n`
+    //         : ''
+    // }\n${input}\n-->\n${output}`;
 };
 
 export const parseFixtureFile = (inputRaw: string) => {
@@ -106,7 +130,6 @@ export const loadFixtures = (fixtureFile: string) => {
 export type Fixed = {
     // input: string;
     output: string;
-    errors: string | undefined | null;
     aliases: Fixture['aliases'];
 };
 
@@ -130,8 +153,8 @@ export const saveFixed = (
     fs.writeFileSync(
         fixtureFile,
         fixed
-            .map(({ output, errors }, i) =>
-                serializeFixture({ ...fixtures[i], output, errors }),
+            .map(({ output }, i) =>
+                serializeFixture({ ...fixtures[i], output }),
             )
             .join('\n\n'),
     );
@@ -179,13 +202,6 @@ export function runFixture({ builtins, input, output, aliases }: Fixture) {
         checked,
         analyzeContext(ctx),
     );
-    let errorText: string[] = [];
-    if (errorDecorators.length) {
-        errorText.push(`🚨 ${errorDecorators.length} error decorators`);
-    }
-    if (missingTypes.length) {
-        errorText.push(`🚨 ${missingTypes.length} missing types`);
-    }
     let outputTast;
     try {
         const ctx = fullContext(aliases);
@@ -194,7 +210,6 @@ export function runFixture({ builtins, input, output, aliases }: Fixture) {
         outputTast = ctx.ToTast.File(fixComments(parseFile(output)), ctx);
     } catch (err) {}
     return {
-        errorText: errorText.length ? errorText.join('\n') : null,
         checked,
         newOutput,
         outputTast,
@@ -202,22 +217,42 @@ export function runFixture({ builtins, input, output, aliases }: Fixture) {
     };
 }
 
-function loadBuiltins(builtins: string[], ctx: FullContext) {
-    builtins.forEach((line) => {
-        const [_, kind, name, ...rest] = line.split(':');
-        switch (kind) {
+function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
+    builtins.forEach((builtin) => {
+        switch (builtin.kind) {
             case 'value':
-                const typeRaw = rest.join(':').trim();
-                const ast = parseType(typeRaw);
+                const ast = parseType(builtin.type);
                 const tast = ctx.ToTast[ast.type](ast as any, ctx);
-                addBuiltin(ctx, name, tast);
+                addBuiltin(ctx, builtin.name, tast);
                 break;
             case 'type':
-                addBuiltinType(ctx, name, +rest);
+                addBuiltinType(ctx, builtin.name, builtin.args);
                 break;
             case 'decorator':
-                addBuiltinDecorator(ctx, name, 0);
+                addBuiltinDecorator(ctx, builtin.name, 0);
                 break;
         }
     });
+}
+
+export type Builtin =
+    | { kind: 'value'; name: string; type: string }
+    | { kind: 'type'; name: string; args: number }
+    | {
+          kind: 'decorator';
+          name: string;
+      };
+function parseBuiltin(line: string): Builtin {
+    const [_, kind, name, ...rest] = line.split(':');
+    switch (kind) {
+        case 'value':
+            const typeRaw = rest.join(':').trim();
+            return { kind: 'value', name, type: typeRaw };
+        case 'type':
+            return { kind: 'type', name, args: +rest };
+        case 'decorator':
+            return { kind: 'decorator', name };
+        default:
+            throw new Error(`Invalid builtin line`);
+    }
 }

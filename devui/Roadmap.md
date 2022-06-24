@@ -24,6 +24,8 @@
 	seems like I've got to be able to do that.
 	oh and maybe if there's a parse error, I can just like ... make everything slightly transparent?
 	yeah that sounds fun.
+- [ ] fixtures can be wrong! make the "reject" button do something.
+	maybe have a `-->[expected]` that we can toss in there.
 
 - [-] main dealio is a listing of the fixtures in the selected file
 	- [x] parse the .jd into constituent parts

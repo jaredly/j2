@@ -1,85 +1,66 @@
 ==[well-typed builtin call]==
-//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string,hb906415c72c78c3b88d97d9c8adad6d0f4e89b02=toString
-
+{"builtins":[],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","toString":"hb906415c72c78c3b88d97d9c8adad6d0f4e89b02"},"failing":false}
+----
 toString(1)
 toString(3.4)
--->
+----
 toString(1)
 // string
 toString(3.4)
 // string
 ==[multiple args]==
-//:value:twoArgs: (one: int, two: string) => string
-//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string,hc8048a4b3d9e555999c52780ad2e6d8a6da91e61=twoArgs
-
+{"builtins":[{"kind":"value","name":"twoArgs","type":"(one: int, two: string) => string"}],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","twoArgs":"hc8048a4b3d9e555999c52780ad2e6d8a6da91e61"},"failing":false}
+----
 twoArgs(1, "hello")
--->
+----
 twoArgs(1, "hello")
 // string
 ==[pass lambda]==
-//:value:simple: () => string
-//:value:takeSimple: (simple: () => string) => string
-//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string,h6cc604dd9054fdec2754c922ca366761e98fc352=takeSimple,hb184131ce065f6ea01a4dc5300b8971f0b1dde25=simple
-
+{"builtins":[{"kind":"value","name":"simple","type":"() => string"},{"kind":"value","name":"takeSimple","type":"(simple: () => string) => string"}],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","takeSimple":"h6cc604dd9054fdec2754c922ca366761e98fc352","simple":"hb184131ce065f6ea01a4dc5300b8971f0b1dde25"},"failing":false}
+----
 takeSimple(simple)
--->
+----
 takeSimple(simple)
 // string
 ==[pass wrong lambda]==
-//:value:simple: () => string
-//:value:takeOneArg: (simple: (v: int) => string) => string
-//:value:takeIntle: (simple: () => int) => string
-//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string,h7436b75a0b88b4d11b7d3f8a5ca7570b3b5fcec1=takeOneArg,hb184131ce065f6ea01a4dc5300b8971f0b1dde25=simple,hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f=error:argWrongType,h2f181c91131fd0daa282424fb3953604513df6fe=int,h768fd053382ed07585296a431b4bfe84259e6e46=takeIntle
-
+{"builtins":[{"kind":"value","name":"simple","type":"() => string"},{"kind":"value","name":"takeOneArg","type":"(simple: (v: int) => string) => string"},{"kind":"value","name":"takeIntle","type":"(simple: () => int) => string"}],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","takeOneArg":"h7436b75a0b88b4d11b7d3f8a5ca7570b3b5fcec1","simple":"hb184131ce065f6ea01a4dc5300b8971f0b1dde25","error:argWrongType":"hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f","int":"h2f181c91131fd0daa282424fb3953604513df6fe","takeIntle":"h768fd053382ed07585296a431b4bfe84259e6e46"},"failing":false}
+----
 takeOneArg(simple)
 takeIntle(simple)
--->
+----
 takeOneArg(@error:argWrongType(expected: :(v: int) => string) simple)
 // string
 takeIntle(@error:argWrongType(expected: :() => int) simple)
 // string
--->
-🚨 2 error decorators
 ==[arg type error]==
-//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string,hb906415c72c78c3b88d97d9c8adad6d0f4e89b02=toString,hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f=error:argWrongType,h2f181c91131fd0daa282424fb3953604513df6fe=int
-
+{"builtins":[],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","toString":"hb906415c72c78c3b88d97d9c8adad6d0f4e89b02","error:argWrongType":"hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f","int":"h2f181c91131fd0daa282424fb3953604513df6fe"},"failing":false}
+----
 toString(true)
--->
+----
 toString(@error:argWrongType(expected: :int) true)
 // string
--->
-🚨 1 error decorators
 ==[wrong number of args]==
-//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string,hb906415c72c78c3b88d97d9c8adad6d0f4e89b02=toString,he554807c644be72e6c4e5cb59aa0955f9ab67f13=error:wrongNumberOfArgs
-
+{"builtins":[],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","toString":"hb906415c72c78c3b88d97d9c8adad6d0f4e89b02","error:wrongNumberOfArgs":"he554807c644be72e6c4e5cb59aa0955f9ab67f13"},"failing":false}
+----
 toString(1, 2)
--->
+----
 @error:wrongNumberOfArgs() toString(1, 2)
 // string
--->
-🚨 1 error decorators
 ==[not a fn]==
-//:aliases:h16ba48b37c7d5999c12c172bd1bbdeac9773c21a=error:notAFunction
-
+{"builtins":[],"aliases":{"error:notAFunction":"h16ba48b37c7d5999c12c172bd1bbdeac9773c21a"},"failing":false}
+----
 (10)(20)
--->
+----
 @error:notAFunction() 10(20)
--->
-🚨 1 error decorators
-🚨 2 missing types
 ==[calling undefined function]==
-
+{"builtins":[],"aliases":{},"failing":false}
+----
 undefinedFunction()
--->
+----
 undefinedFunction#[:unresolved:]()
--->
-🚨 2 missing types
 ==[double apply]==
-//:aliases:hb906415c72c78c3b88d97d9c8adad6d0f4e89b02=toString,h16ba48b37c7d5999c12c172bd1bbdeac9773c21a=error:notAFunction
-
+{"builtins":[],"aliases":{"toString":"hb906415c72c78c3b88d97d9c8adad6d0f4e89b02","error:notAFunction":"h16ba48b37c7d5999c12c172bd1bbdeac9773c21a"},"failing":false}
+----
 toString(1)()
--->
+----
 @error:notAFunction() toString(1)()
--->
-🚨 1 error decorators
-🚨 2 missing types

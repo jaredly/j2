@@ -1,37 +1,35 @@
 ==[basic]==
-//:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type,h850edf082092e835e7daddfaf30654b2289f5644=bool
-
+{"builtins":[],"aliases":{"test:type":"he071eaec952a7917f20d1828e42268ca3a10c513","bool":"h850edf082092e835e7daddfaf30654b2289f5644"},"failing":false}
+----
 @test:type(: bool) 10
--->
+----
 @test:type(:bool) 10
 // 10
 ==[constants]==
-//:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type
-
+{"builtins":[],"aliases":{"test:type":"he071eaec952a7917f20d1828e42268ca3a10c513"},"failing":false}
+----
 @test:type(: "hello", : 10) "target"
--->
+----
 @test:type(:"hello", :10) "target"
 // "target"
 ==[lambdas]==
-//:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type,h2f181c91131fd0daa282424fb3953604513df6fe=int,h82403bb59c4f81033c8b3085e8861245660c31e0=float
-
+{"builtins":[],"aliases":{"test:type":"he071eaec952a7917f20d1828e42268ca3a10c513","int":"h2f181c91131fd0daa282424fb3953604513df6fe","float":"h82403bb59c4f81033c8b3085e8861245660c31e0"},"failing":false}
+----
 @test:type(: () => 10, :(v: int, float) => int) "ok"
--->
+----
 @test:type(:() => 10, :(v: int, float) => int) "ok"
 // "ok"
 ==[tvars]==
-//:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type,0=T
-
+{"builtins":[],"aliases":{"test:type":"he071eaec952a7917f20d1828e42268ca3a10c513","T":"0"},"failing":false}
+----
 @test:type(: <T>(v: T) => T) 10
--->
+----
 @test:type(:<T>(v: T) => T) 10
 // 10
 ==[unresovled]==
-//:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type
-
+{"builtins":[],"aliases":{"test:type":"he071eaec952a7917f20d1828e42268ca3a10c513"},"failing":false}
+----
 @test:type(: hello) 10
--->
+----
 @test:type(:hello#[:unresolved:]) 10
 // 10
--->
-🚨 1 missing types

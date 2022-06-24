@@ -146,7 +146,7 @@ const Highlight = ({ text }: { text: string }) => {
             >
                 <Tree tree={marked} hover={hover} />
             </span>
-            {JSON.stringify(hover)}
+            {hover ? JSON.stringify(hover) : null}
         </Text>
     );
 };
@@ -192,13 +192,28 @@ export const Tree = ({
 };
 
 export const FixtureFile = ({ name }: { name: string }) => {
+    let last = React.useRef(null as null | string);
     const [data, setData] = usePromise(
         () =>
             fetch(`/element/${name}`)
                 .then((res) => res.text())
-                .then(parseFixtureFile),
+                .then((raw) => {
+                    last.current = raw;
+                    return parseFixtureFile(raw);
+                }),
         [name],
     );
+    const serialized = React.useMemo(
+        () => data?.map(serializeFixture).join('\n'),
+        [data],
+    );
+    React.useEffect(() => {
+        if (!serialized || serialized === last.current) {
+            return;
+        }
+        last.current = serialized;
+        fetch(`/element/${name}`, { method: 'POST', body: serialized });
+    }, [serialized]);
     if (!data) {
         return null;
     }
@@ -210,13 +225,11 @@ export const FixtureFile = ({ name }: { name: string }) => {
                     key={i}
                     onChange={(fixed) => {
                         console.log('ok', fixed);
-                        const fixes: Fixture[] = data.map((f, j) =>
-                            j === i ? { ...f, ...fixed } : f,
+                        setData(
+                            data.map((f, j) =>
+                                j === i ? { ...f, ...fixed } : f,
+                            ),
                         );
-                        fetch(`/element/${name}`, {
-                            method: 'POST',
-                            body: fixes.map(serializeFixture).join('\n'),
-                        }).then(() => setData(fixes));
                     }}
                 />
             ))}
@@ -241,7 +254,7 @@ function OneFixture({
     fixture: Fixture;
     onChange: (v: Fixed) => void;
 }) {
-    const { title, aliases, builtins, input, output, i } = fixture;
+    const { title, aliases, builtins, input, output } = fixture;
 
     const newOutput = React.useMemo(() => runFixture(fixture), [fixture]);
 
@@ -259,17 +272,24 @@ function OneFixture({
             }}
         >
             <Card.Header>
-                <Text b>{title}</Text>
+                <Text css={{ fontWeight: '$light', letterSpacing: '$wide' }}>
+                    {title}
+                </Text>
             </Card.Header>
             <Card.Divider />
             <Card.Body css={{ display: 'flex' }}>
                 {builtins.length ? (
                     <>
-                        {builtins.map((item, i) => (
-                            <Text key={i} css={{ fontFamily: '$mono' }}>
-                                {item}
+                        <div>
+                            <Text css={{ fontFamily: '$mono' }} small>
+                                Builtins:
+                                {builtins.map((item, i) => (
+                                    <span key={i} style={{ marginLeft: 8 }}>
+                                        {item.name}
+                                    </span>
+                                ))}
                             </Text>
-                        ))}
+                        </div>
                         <Card.Divider css={{ marginBlock: '$6' }} />
                     </>
                 ) : null}
@@ -299,7 +319,6 @@ function OneFixture({
                         onPress={() => {
                             onChange({
                                 output: newOutput.newOutput,
-                                errors: newOutput.errorText,
                                 aliases: newOutput.aliases,
                             });
                         }}

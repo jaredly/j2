@@ -1,48 +1,48 @@
 ==[booleans]==
-//:aliases:h850edf082092e835e7daddfaf30654b2289f5644=bool
-
+{"builtins":[],"aliases":{"bool":"h850edf082092e835e7daddfaf30654b2289f5644"},"failing":false}
+----
 true
 false
--->
+----
 true
 // bool
 false
 // bool
 ==[numbers]==
-
+{"builtins":[],"aliases":{},"failing":false}
+----
 123
 1.23
--->
+----
 123
 // 123
 1.23
 // 1.23
 ==[strings]==
-
+{"builtins":[],"aliases":{},"failing":false}
+----
 "hello"
--->
+----
 "hello"
 // "hello"
 ==[templates]==
-//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string,hb906415c72c78c3b88d97d9c8adad6d0f4e89b02=toString
-
+{"builtins":[],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","toString":"hb906415c72c78c3b88d97d9c8adad6d0f4e89b02"},"failing":false}
+----
 "hello ${toString(123)}"
--->
+----
 "hello ${toString(123)}"
 // string
 ==[right next to each other]==
-//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string
-
+{"builtins":[],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee"},"failing":false}
+----
 "One${"1"}${"2"} and ${"3"}"
--->
+----
 "One${"1"}${"2"} and ${"3"}"
 // string
 ==[error]==
-//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string,h78fb9682caf6cb8dc34febba83e591c06884dc73=error:notAString
-
+{"builtins":[],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","error:notAString":"h78fb9682caf6cb8dc34febba83e591c06884dc73"},"failing":false}
+----
 "${12}"
--->
+----
 "${@error:notAString() 12}"
 // string
--->
-🚨 1 error decorators
