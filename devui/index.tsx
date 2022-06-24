@@ -34,7 +34,7 @@ const App = () => {
         [],
     );
     if (!listing) {
-        return 'Loading...';
+        return <>Loading...</>;
     }
     return (
         <div
