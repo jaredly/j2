@@ -4,9 +4,13 @@
 - [x] basic server
 - [x] left panel with listing of files
 - [x] load up the fixture text
-- [ ] ok I probably want react-router, let's be honest
+- [-] ok I probably want react-router, let's be honest
+	- not just yet though.
 - [ ] main dealio is a listing of the fixtures in the selected file
-- [ ] 
+	- [ ] parse the .jd into constituent parts
+	- [ ] render the textarea, and a checkbox for whether it's supposed to succeed
+	- [ ] render the result, calculating the new result
+	- [ ] "save" on change.
 - [ ] hmm could I also have some sort of coverage reporting built in? that would be very cool
 
 

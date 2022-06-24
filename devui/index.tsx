@@ -13,7 +13,7 @@ export const usePromise = <T,>(fn: () => Promise<T>, bust: any[]) => {
 };
 
 export const useHash = (): [string, (v: string) => void] => {
-    const [hash, setHash] = React.useState(location.search?.slice(1));
+    const [hash, setHash] = React.useState(location.hash?.slice(1));
     React.useEffect(() => {
         if (location.hash !== (hash ? '#' + hash : '')) {
             location.hash = '#' + hash;
