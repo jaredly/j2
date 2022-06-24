@@ -27,6 +27,7 @@ export type Ctx = {
         kind: 'value' | 'type' | 'decorator',
     ) => p.Identifier;
     ToAst: ToAst;
+    recordSym: (sym: t.Sym, kind: 'value' | 'type') => void;
 };
 
 export const printCtx = (ctx: FullContext): Ctx => {
@@ -46,7 +47,19 @@ export const printCtx = (ctx: FullContext): Ctx => {
             reverseDecorator[t.refHash(ref)] = name;
         });
     });
+    ctx.locals.forEach(({ types, values }) => {
+        types.forEach(({ sym, bound }) => {
+            reverseType[sym.id] = sym.name;
+        });
+    });
     return {
+        recordSym(sym, kind) {
+            if (kind === 'value') {
+                reverse[sym.id] = sym.name;
+            } else {
+                reverseType[sym.id] = sym.name;
+            }
+        },
         printRef(ref, loc, kind) {
             const hash = t.refHash(ref);
             const name =

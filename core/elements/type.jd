@@ -31,12 +31,8 @@
 
 @test:type(: <T>(v: T) => T) 10
 -->
-@test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](
-    :<T>(v: T#[:unresolved:]) => T#[:unresolved:],
-) 10
+@test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](:<T#[0]>(v: T#[0]) => T#[0]) 10
 // 10
--->
-🚨 2 missing types
 
 ==[unresovled]==
 

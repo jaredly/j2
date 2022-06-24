@@ -9,6 +9,7 @@
         "sync": "esbuild --bundle utils/sync-imports.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "test": "esbuild --bundle core/tests/run.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "nojest": "esbuild --bundle core/typing/__test__/analyze.nojest.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
+        "fixn": "env FIX=1 pnpm nojest",
         "fix": "env FIX=1 jest",
         "cov": "jest --coverage"
     },

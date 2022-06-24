@@ -67,7 +67,7 @@ readdirSync(base)
 
         if (hasOnly) {
             console.warn('Not writing fixtures, [only] was used');
-        } else {
+        } else if (process.env.FIX) {
             saveFixed(fixtureFile, fixtures, fixed);
         }
     });

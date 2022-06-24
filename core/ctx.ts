@@ -157,6 +157,14 @@ const resolveType = (
             }
         }
     }
+    console.log('rest ', name, ctx.locals);
+    for (let { types } of ctx.locals) {
+        for (let { sym, bound } of types) {
+            if (sym.name === name) {
+                return { type: 'Local', sym: sym.id }; // , bound};
+            }
+        }
+    }
     // TODO: local resolution
     if (ctx.types.names[name]) {
         return ctx.types.names[name];
@@ -198,10 +206,15 @@ export const newContext = (): FullContext => {
         decorators: { hashed: {}, names: {} },
         values: { hashed: {}, names: {} },
         types: { hashed: {}, names: {} },
-        resolve: (name, rawHash) => resolve(ctx, name, rawHash),
-        resolveType: (name, rawHash) => resolveType(ctx, name, rawHash),
-        resolveDecorator: (name, rawHash) =>
-            resolveDecorator(ctx, name, rawHash),
+        resolve(name, rawHash) {
+            return resolve(this, name, rawHash);
+        },
+        resolveType(name, rawHash) {
+            return resolveType(this, name, rawHash);
+        },
+        resolveDecorator(name, rawHash) {
+            return resolveDecorator(this, name, rawHash);
+        },
         ToTast: makeToTast(),
         withLocalTypes(types) {
             const locals: FullContext['locals'][0] = { types, values: [] };

@@ -111,6 +111,7 @@ export const ToTast = {
         };
     },
     TVars({ args, inner, loc }: p.TVars, ctx: TCtx): t.TVars {
+        // TODO later args can refer to previous ones.
         const targs = args.items.map(({ label, hash, bound, loc }) => {
             const sym = hash
                 ? { name: label, id: +hash.slice(2, -1) }
@@ -137,6 +138,7 @@ export const ToTast = {
 
 export const ToAst = {
     TVars(type: t.TVars, ctx: TACtx): p.TVars {
+        type.args.forEach((arg) => ctx.recordSym(arg.sym, 'type'));
         return {
             type: 'TVars',
             args: {
@@ -190,10 +192,11 @@ export const ToPP = {
         return pp.items(
             [
                 pp.args(
-                    args.items.map(({ label, bound, loc }) =>
+                    args.items.map(({ label, hash, bound, loc }) =>
                         pp.items(
                             [
                                 pp.atom(label, loc),
+                                pp.atom(hash, loc),
                                 bound
                                     ? pp.items(
                                           [
