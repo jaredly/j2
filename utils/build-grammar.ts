@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import * as peggy from 'peggy';
 import { assembleRules, processRules } from './process-peg';
 

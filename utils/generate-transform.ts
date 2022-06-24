@@ -3,8 +3,8 @@
 //   and so they can be done at the top level of `transformTerm`, instead of in every branch.
 
 import * as babel from '@babel/core';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 import { buildTransformFile, Ctx, generateCheckers } from './build-transform';
 
 const inFile = './core/typed-ast.ts';

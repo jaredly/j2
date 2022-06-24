@@ -158,7 +158,7 @@ export const ToAst = {
             loc: type.loc,
         };
     },
-    TRef({ type, ref, loc }: t.TRef, ctx: TACtx): p.TRef {
+    TRef({ ref, loc }: t.TRef, ctx: TACtx): p.TRef {
         const { text, hash } =
             ref.type === 'Unresolved'
                 ? { text: ref.text, hash: '#[:unresolved:]' }

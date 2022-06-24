@@ -1,7 +1,5 @@
 import * as babel from '@babel/core';
-import { SourceLocation } from '@babel/types';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
 
 const inFile = './core/typed-ast.ts';
 
@@ -23,9 +21,9 @@ ast.program.body.forEach((line) => {
 
 const replaces: { range: [number, number]; text: string; prev: string }[] = [];
 
-const elements = fs
+const elements: string[] = fs
     .readdirSync('./core/elements')
-    .filter((t) => t.endsWith('.ts'));
+    .filter((t: string) => t.endsWith('.ts'));
 elements.forEach((name) => {
     const fileName = `./core/elements/${name}`;
     const east = babel.parse(fs.readFileSync(fileName, 'utf8'), {
