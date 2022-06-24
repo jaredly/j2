@@ -28,9 +28,24 @@ export type Ctx = {
     ) => p.Identifier;
     ToAst: ToAst;
     recordSym: (sym: t.Sym, kind: 'value' | 'type') => void;
+    aliases: { [key: string]: string };
 };
 
 export const printCtx = (ctx: FullContext): Ctx => {
+    const backAliases: { [key: string]: string } = {};
+    const aliases: { [key: string]: string } = {};
+
+    const add = (name: string, ref: t.RefKind) => {
+        let i = 2;
+        let uniqueName = name;
+        const key = t.refHash(ref);
+        while (Object.hasOwn(backAliases, uniqueName)) {
+            uniqueName = `${name}_${key.slice(0, i++)}`;
+        }
+        backAliases[uniqueName] = key;
+        aliases[key] = uniqueName;
+    };
+
     const reverse: { [key: string]: string } = {};
     Object.keys(ctx.values.names).forEach((name) => {
         ctx.values.names[name].forEach((ref) => {
@@ -53,6 +68,7 @@ export const printCtx = (ctx: FullContext): Ctx => {
         });
     });
     return {
+        aliases,
         recordSym(sym, kind) {
             if (kind === 'value') {
                 reverse[sym.id] = sym.name;
@@ -68,6 +84,17 @@ export const printCtx = (ctx: FullContext): Ctx => {
                     : kind === 'decorator'
                     ? reverseDecorator[hash]
                     : reverseType[hash];
+            if (name) {
+                if (!aliases[hash]) {
+                    add(name, ref);
+                }
+                return {
+                    type: 'Identifier',
+                    text: aliases[hash],
+                    hash: null,
+                    loc,
+                };
+            }
             return {
                 type: 'Identifier',
                 text: name ?? 'unnamed',

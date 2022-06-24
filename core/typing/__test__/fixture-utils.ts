@@ -12,11 +12,12 @@ import { fixComments } from '../../grammar/fixComments';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { printToString } from '../../printer/pp';
 import { transformFile, Visitor } from '../../transform-tast';
-import { File } from '../../typed-ast';
+import { File, refHash } from '../../typed-ast';
 import { analyze, analyzeContext, verify } from '../analyze';
 import { printCtx, ToAst } from '../to-ast';
 import { makeToTast, ToTast } from '../to-tast';
 import { getType } from '../getType';
+import { idToString } from '../../ids';
 
 export type Fixture = {
     title: string;
@@ -33,8 +34,8 @@ export const clearLocs = (ast: File) => {
     return transformFile(ast, locClearVisitor, null);
 };
 
-export const parseFixture = (input: string) => {
-    return input
+export const parseFixture = (inputRaw: string) => {
+    return inputRaw
         .split(/(?=\n==[^\n=]*==\n)/)
         .filter((x) => x.trim())
         .map((chunk, i) => {
@@ -165,6 +166,7 @@ export function runFixture(builtins: string[], input: string, output: string) {
         checked,
         newOutput,
         outputTast,
+        aliases: actx.aliases,
     };
 }
 

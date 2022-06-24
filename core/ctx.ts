@@ -157,7 +157,6 @@ const resolveType = (
             }
         }
     }
-    console.log('rest ', name, ctx.locals);
     for (let { types } of ctx.locals) {
         for (let { sym, bound } of types) {
             if (sym.name === name) {

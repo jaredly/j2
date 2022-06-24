@@ -6,6 +6,7 @@ Things I'm getting:
 	ok yeah that is quite nice to have
 - indelible track record of everything you've done
 - incremental building for free99
+	- at least up until monomorphization
 
 Things I'm paying:
 - updating dependencies is like a whole thing
