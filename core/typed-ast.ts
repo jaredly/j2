@@ -2,9 +2,14 @@ import { Apply } from './elements/apply';
 import { Boolean, Number, TemplateString } from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
 import { Id, idToString } from './ids';
-export { Apply } from './elements/apply';
-export { Boolean, Number, String, TemplateString } from './elements/constants';
-export {
+export type { Apply } from './elements/apply';
+export type {
+    Boolean,
+    Number,
+    String,
+    TemplateString,
+} from './elements/constants';
+export type {
     DExpr,
     DType,
     DecoratedExpression,
@@ -13,7 +18,7 @@ export {
     DecoratorDecl,
     TDecorated,
 } from './elements/decorators';
-export {
+export type {
     TAdd,
     TApply,
     TLambda,
@@ -23,7 +28,7 @@ export {
     TVars,
     Type,
 } from './elements/type';
-export { Id } from './ids';
+export type { Id } from './ids';
 
 export type GlobalRef = {
     type: 'Global';

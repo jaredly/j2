@@ -33,9 +33,8 @@ export const clearLocs = (ast: File) => {
     return transformFile(ast, locClearVisitor, null);
 };
 
-export const loadFixtures = (fixtureFile: string) => {
-    let fixtures: Fixture[] = fs
-        .readFileSync(fixtureFile, 'utf8')
+export const parseFixture = (input: string) => {
+    return input
         .split(/(?=\n==[^\n=]*==\n)/)
         .filter((x) => x.trim())
         .map((chunk, i) => {
@@ -54,6 +53,12 @@ export const loadFixtures = (fixtureFile: string) => {
                 i,
             };
         });
+};
+
+export const loadFixtures = (fixtureFile: string) => {
+    let fixtures: Fixture[] = parseFixture(
+        fs.readFileSync(fixtureFile, 'utf8'),
+    );
     let hasOnly = fixtures.some((f) => f.title.includes('[only]'));
 
     if (hasOnly) {

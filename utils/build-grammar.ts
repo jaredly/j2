@@ -36,7 +36,7 @@ if (ast.initializer) {
 
 const jsOut = peggy.generate(grammarFile.join('\n\n'), {
     output: 'source',
-    format: 'commonjs',
+    format: 'es',
     allowedStartRules: ['File', 'Type'],
 });
 

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render } from 'react-dom';
 import { NextUIProvider, createTheme, Link } from '@nextui-org/react';
+import { FixtureFile } from './FixtureFile';
 
 const darkTheme = createTheme({ type: 'dark' });
 
@@ -12,7 +13,7 @@ export const usePromise = <T,>(fn: () => Promise<T>, bust: any[]) => {
     return data;
 };
 
-export const useHash = (): [string, (v: string) => void] => {
+export const useHash = () => {
     const [hash, setHash] = React.useState(location.hash?.slice(1));
     React.useEffect(() => {
         if (location.hash !== (hash ? '#' + hash : '')) {
@@ -24,11 +25,11 @@ export const useHash = (): [string, (v: string) => void] => {
         window.addEventListener('hashchange', fn);
         return () => window.removeEventListener('hashchange', fn);
     }, [hash]);
-    return [hash, setHash];
+    return hash;
 };
 
 const App = () => {
-    const [hash, setHash] = useHash();
+    const hash = useHash();
     const listing = usePromise<string[]>(
         () => fetch('/element/').then((res) => res.json()),
         [],
@@ -61,28 +62,9 @@ const App = () => {
                     >
                         {name}
                     </Link>
-                    // <div
-                    //     key={name}
-                    //     onClick={() => setHash(name)}
-                    // >
-                    //     {name}
-                    // </div>
                 ))}
             </div>
-            <div>{hash ? <Show name={hash} /> : 'Click a thing'}</div>
-        </div>
-    );
-};
-
-const Show = ({ name }: { name: string }) => {
-    const data = usePromise(
-        () => fetch(`/element/${name}`).then((res) => res.text()),
-        [name],
-    );
-    return (
-        <div>
-            {name}
-            <pre>{data}</pre>
+            <div>{hash ? <FixtureFile name={hash} /> : 'Click a thing'}</div>
         </div>
     );
 };

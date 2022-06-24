@@ -45,9 +45,9 @@ elements.forEach((name) => {
         .filter(Boolean);
     if (tnames.length) {
         const prev = raw.slice(range[0], range[1]);
-        let text = `export { ${tnames.sort().join(', ')} } from '${key}';`;
+        let text = `export type { ${tnames.sort().join(', ')} } from '${key}';`;
         if (text.length > 79) {
-            text = `export {\n    ${tnames
+            text = `export type {\n    ${tnames
                 .sort()
                 .join(',\n    ')},\n} from '${key}';`;
         }

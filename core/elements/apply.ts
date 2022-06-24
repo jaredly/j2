@@ -25,7 +25,7 @@ export type Apply = {
 };
 
 export const ToTast = {
-    Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
+    Apply(apply: p.Apply_inner, ctx: TCtx): Apply {
         let res = ctx.ToTast[apply.target.type](apply.target as any, ctx);
         while (apply.suffixes.length) {
             const next = apply.suffixes.shift()!;
@@ -43,12 +43,12 @@ export const ToTast = {
                 },
             };
         }
-        return res as t.Apply;
+        return res as Apply;
     },
 };
 
 export const ToAst = {
-    Apply({ type, target, args, loc }: t.Apply, ctx: TACtx): p.Apply {
+    Apply({ type, target, args, loc }: Apply, ctx: TACtx): p.Apply {
         let inner = ctx.ToAst[target.type](target as any, ctx);
         const parens: p.Parens = {
             loc,
