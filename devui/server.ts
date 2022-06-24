@@ -21,7 +21,11 @@ import { createServer as vite } from 'vite';
                 );
             }
             const element = req.url.slice('/element/'.length);
-            const fname = `./core/elements/${element}.jd`;
+            if (!element.endsWith('.jd') || element.includes('/')) {
+                res.writeHead(400, { 'Content-Type': 'text/plain' });
+                return res.end('Invalid element name');
+            }
+            const fname = `./core/elements/${element}`;
             if (!existsSync(fname)) {
                 res.writeHead(404);
                 return res.end(`Element not found ${fname}`);

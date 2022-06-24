@@ -1,5 +1,17 @@
 
-Ok basic idea:
+# Plan of action
+
+- [x] basic server
+- [x] left panel with listing of files
+- [x] load up the fixture text
+- [ ] ok I probably want react-router, let's be honest
+- [ ] main dealio is a listing of the fixtures in the selected file
+- [ ] 
+- [ ] hmm could I also have some sort of coverage reporting built in? that would be very cool
+
+
+
+# Ok basic idea:
 - I want ... to be able to read from the file system, so I can persist these fixtures.
 - It's OK for fixtures to be human-readable but not writeable. So we can do "json blob w/ pretty print" and have the json blob be source of truth.
 
