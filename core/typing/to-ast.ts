@@ -26,9 +26,11 @@ export type Ctx = {
         loc: p.Loc,
         kind: 'value' | 'type' | 'decorator',
     ) => p.Identifier;
+    printSym: (sym: t.Sym) => { label: string; hash: string };
     ToAst: ToAst;
     recordSym: (sym: t.Sym, kind: 'value' | 'type') => void;
     aliases: { [key: string]: string };
+    backAliases: { [key: string]: string };
 };
 
 export const printCtx = (ctx: FullContext): Ctx => {
@@ -69,12 +71,20 @@ export const printCtx = (ctx: FullContext): Ctx => {
     });
     return {
         aliases,
+        backAliases,
         recordSym(sym, kind) {
             if (kind === 'value') {
                 reverse[sym.id] = sym.name;
             } else {
                 reverseType[sym.id] = sym.name;
             }
+        },
+        printSym(sym) {
+            const hash = '' + sym.id;
+            if (!aliases[hash]) {
+                add(sym.name, { type: 'Local', sym: sym.id });
+            }
+            return { label: aliases[hash], hash: '' };
         },
         printRef(ref, loc, kind) {
             const hash = t.refHash(ref);

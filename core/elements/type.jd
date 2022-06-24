@@ -20,11 +20,11 @@
 @test:type(:() => 10, :(v: int, float) => int) "ok"
 // "ok"
 ==[tvars]==
-//:aliases:0=T,he071eaec952a7917f20d1828e42268ca3a10c513=test:type
+//:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type,0=T
 
 @test:type(: <T>(v: T) => T) 10
 -->
-@test:type(:<T#[0]>(v: T) => T) 10
+@test:type(:<T>(v: T) => T) 10
 // 10
 ==[unresovled]==
 //:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type

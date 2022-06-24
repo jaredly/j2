@@ -144,15 +144,18 @@ export const ToAst = {
             args: {
                 type: 'TBargs',
                 loc: type.loc,
-                items: type.args.map(({ sym, bound, loc }) => ({
-                    type: 'TBArg',
-                    label: sym.name,
-                    hash: `#[${sym.id}]`,
-                    bound: bound
-                        ? ctx.ToAst[bound.type](bound as any, ctx)
-                        : null,
-                    loc,
-                })),
+                items: type.args.map(
+                    ({ sym, bound, loc }): p.TBArg => ({
+                        type: 'TBArg',
+                        ...ctx.printSym(sym),
+                        // label: sym.name,
+                        // hash: `#[${sym.id}]`,
+                        bound: bound
+                            ? ctx.ToAst[bound.type](bound as any, ctx)
+                            : null,
+                        loc,
+                    }),
+                ),
             },
             inner: ctx.ToAst[type.inner.type](type.inner as any, ctx),
             loc: type.loc,

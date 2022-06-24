@@ -1,0 +1,8 @@
+==[basic]==
+//:value:hello: string
+//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string,hbef7a4d391e9c6ea5e9e1a5b32b0c2ce4d616a2b=hello
+
+hello
+-->
+hello
+// string

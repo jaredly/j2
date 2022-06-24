@@ -47,7 +47,8 @@ export const parseFixture = (chunk: string, i: number): Fixture => {
                 .split(',')
                 .forEach((line) => {
                     const [key, value] = line.split('=');
-                    aliases[key] = value;
+                    aliases[value] = key;
+                    // aliases[key] = value;
                 });
         } else {
             builtins.push(rest.shift()!);
@@ -75,7 +76,7 @@ export const serializeFixture = ({
     return `${title}\n${builtins.length ? builtins.join('\n') + '\n' : ''}${
         Object.keys(aliases).length
             ? `//:aliases:${Object.keys(aliases)
-                  .map((k) => `${k}=${aliases[k]}`)
+                  .map((k) => `${aliases[k]}=${k}`)
                   .join(',')}\n`
             : ''
     }\n${input}\n-->\n${output}${errors ? '\n-->\n' + errors : ''}`;
@@ -136,8 +137,8 @@ export const saveFixed = (
     );
 };
 
-export function runFixture(builtins: string[], input: string, output: string) {
-    const ctx = fullContext();
+export function runFixture({ builtins, input, output, aliases }: Fixture) {
+    const ctx = fullContext(aliases);
 
     loadBuiltins(builtins, ctx);
 
@@ -187,7 +188,7 @@ export function runFixture(builtins: string[], input: string, output: string) {
     }
     let outputTast;
     try {
-        const ctx = fullContext();
+        const ctx = fullContext(aliases);
 
         loadBuiltins(builtins, ctx);
         outputTast = ctx.ToTast.File(fixComments(parseFile(output)), ctx);
@@ -197,7 +198,7 @@ export function runFixture(builtins: string[], input: string, output: string) {
         checked,
         newOutput,
         outputTast,
-        aliases: actx.aliases,
+        aliases: actx.backAliases,
     };
 }
 

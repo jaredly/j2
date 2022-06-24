@@ -11,13 +11,21 @@
 - [x] alias things so it's not sooo noisy
 - [x] figure out the text representation of the aliases
 - [x] serialize & parse aliases for fixtures
-- [ ] actually use aliases during resolution
+- [x] actually use aliases during resolution
 	- so if we come across a name with a given alias & no hash, we give it the hash, no questions asked.
 
-- [ ] have a button for writing everything back to disk.
+- [x] have a button for writing everything back to disk.
+
 - [ ] show ... types ... of things ... on hover. I think I want like a `crawlTypes` or something that's like `getType` but more. Oh wait no maybe my getType doesn't go deep anyway, so that's ok.
 	- ok so we crawl everything, get the types of expressions, and the ... resolved types of types or something
-- [ ] main dealio is a listing of the fixtures in the selected file
+
+- [ ] editing of fixtures! probably? Can I do the same contentediable trick, but without the reprinting?
+	like, just parse + recolor?
+	seems like I've got to be able to do that.
+	oh and maybe if there's a parse error, I can just like ... make everything slightly transparent?
+	yeah that sounds fun.
+
+- [-] main dealio is a listing of the fixtures in the selected file
 	- [x] parse the .jd into constituent parts
 	- [ ] render the textarea, and a checkbox for whether it's supposed to succeed
 	- [x] render the result, calculating the new result

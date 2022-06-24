@@ -104,7 +104,6 @@ export type Hash =
           idx: number;
       };
 const parseHash = (hash: string): Hash => {
-    // hash = hash.slice(2, -1); // #[]
     if (!hash.startsWith('h')) {
         return {
             type: 'sym',
@@ -115,7 +114,7 @@ const parseHash = (hash: string): Hash => {
     return {
         type: 'global',
         hash: parts[0],
-        idx: parseInt(parts[1], 10),
+        idx: parts.length > 1 ? parseInt(parts[1], 10) : 0,
     };
 };
 
@@ -124,8 +123,8 @@ const resolveDecorator = (
     name: string,
     rawHash?: string | null,
 ): Array<GlobalRef> => {
-    if (rawHash) {
-        const hash = parseHash(rawHash);
+    if (rawHash || Object.hasOwn(ctx.aliases, name)) {
+        const hash = parseHash(rawHash ?? ctx.aliases[name]);
         if (hash.type === 'sym') {
             throw new Error('decorators can only be global');
         } else {
@@ -146,10 +145,16 @@ const resolveType = (
     name: string,
     rawHash?: string | null,
 ): RefKind | null => {
-    if (rawHash) {
-        const hash = parseHash(rawHash);
+    if (rawHash || Object.hasOwn(ctx.aliases, name)) {
+        const hash = parseHash(rawHash ?? ctx.aliases[name]);
         if (hash.type === 'sym') {
-            throw new Error('not yet');
+            for (let { types } of ctx.locals) {
+                for (let { sym, bound } of types) {
+                    if (sym.id === hash.num) {
+                        return { type: 'Local', sym: sym.id }; // , bound};
+                    }
+                }
+            }
         } else {
             const ref = ctx.types.hashed[hash.hash];
             if (ref && hash.idx < ref.length) {
@@ -176,8 +181,10 @@ const resolve = (
     name: string,
     rawHash?: string | null,
 ): RefKind[] => {
-    if (rawHash) {
-        const hash = parseHash(rawHash);
+    console.log(ctx.aliases, name, Object.hasOwn(ctx.aliases, name), rawHash);
+    if (rawHash || Object.hasOwn(ctx.aliases, name)) {
+        console.log('ok', name);
+        const hash = parseHash(rawHash ?? ctx.aliases[name]);
         if (hash.type === 'sym') {
             throw new Error('not yet: ' + rawHash);
             // const ref = ctx.values.names[name]
@@ -186,6 +193,7 @@ const resolve = (
             // }
         } else {
             const ref = ctx.values.hashed[hash.hash];
+            console.log(ref, hash);
             if (ref && hash.idx < ref.length) {
                 return [{ type: 'Global', id: toId(hash.hash, hash.idx) }];
             }
@@ -198,10 +206,11 @@ const resolve = (
     return [];
 };
 
-export const newContext = (): FullContext => {
+export const newContext = (aliases: FullContext['aliases']): FullContext => {
     let symid = 0;
     const ctx: FullContext = {
         locals: [],
+        aliases,
         decorators: { hashed: {}, names: {} },
         values: { hashed: {}, names: {} },
         types: { hashed: {}, names: {} },
@@ -393,8 +402,8 @@ export const setupDefaults = (ctx: FullContext) => {
     // );
 };
 
-export const fullContext = () => {
-    const ctx = newContext();
+export const fullContext = (aliases: FullContext['aliases'] = {}) => {
+    const ctx = newContext(aliases);
     setupDefaults(ctx);
     return ctx;
 };

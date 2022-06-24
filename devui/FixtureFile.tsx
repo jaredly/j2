@@ -1,7 +1,7 @@
 import { Button, Card, Container, Spacer, Text } from '@nextui-org/react';
 import equal from 'fast-deep-equal';
 import * as React from 'react';
-import { noloc } from '../core/ctx';
+import { FullContext, noloc } from '../core/ctx';
 import {
     AllTaggedTypeNames,
     AllTaggedTypes,
@@ -224,6 +224,16 @@ export const FixtureFile = ({ name }: { name: string }) => {
     );
 };
 
+const aliasesMatch = (
+    one: FullContext['aliases'],
+    two: FullContext['aliases'],
+) => {
+    return (
+        Object.keys(one).length === Object.keys(two).length &&
+        Object.keys(one).every((key) => one[key] === two[key])
+    );
+};
+
 function OneFixture({
     fixture,
     onChange,
@@ -233,13 +243,11 @@ function OneFixture({
 }) {
     const { title, aliases, builtins, input, output, i } = fixture;
 
-    const newOutput = React.useMemo(
-        () => runFixture(builtins, input, output),
-        [builtins, input, output],
-    );
+    const newOutput = React.useMemo(() => runFixture(fixture), [fixture]);
 
     const changed =
-        output !== newOutput.newOutput || !equal(aliases, newOutput.aliases);
+        output !== newOutput.newOutput ||
+        !aliasesMatch(aliases, newOutput.aliases);
     return (
         <Card
             variant={'bordered'}
@@ -324,9 +332,9 @@ const Aliases = ({ aliases }: { aliases: { [key: string]: string } }) => {
                 .sort((a, b) => (b[1] > a[1] ? -1 : 1))
                 .map(([key, value]) => (
                     <Text key={key} css={{ marginRight: 8, marginBottom: 8 }}>
-                        {value}{' '}
+                        {key}{' '}
                         <span style={{ color: '#666' }}>
-                            {key.slice(0, 10)}...
+                            {value.slice(0, 10)}...
                         </span>
                     </Text>
                 ))}
