@@ -228,5 +228,7 @@ export type TLambda = {
 
 export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | Parens | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TRef | TVars | TBargs | TBArg | TArg | TArgs | TLambda;
 
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Identifier", "Apply", "Parens", "CommaExpr", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TRef", "TVars", "TBargs", "TBArg", "TArg", "TArgs", "TLambda"];
+
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});
 export const parseType = (input: string): Type => parse(input, {startRule: 'Type'});

@@ -59,22 +59,26 @@ export const makeIndividualTransformer = (
         }
         `;
     }
-    if (type.type === 'TSTypeReference') {
-        if (
+
+    if (
+        (type.type === 'TSTypeReference' &&
             type.typeName.type === 'Identifier' &&
-            type.typeName.name === 'Array'
-        ) {
-            const inner = makeIndividualTransformer(
-                `${newName}$item${level}`,
-                'result',
-                level + 1,
-                type.typeParameters!.params[0],
-                ctx,
-                undefined,
-                toplevelName,
-            );
-            if (inner) {
-                return `
+            type.typeName.name === 'Array') ||
+        type.type === 'TSArrayType'
+    ) {
+        const inner = makeIndividualTransformer(
+            `${newName}$item${level}`,
+            'result',
+            level + 1,
+            type.type === 'TSTypeReference'
+                ? type.typeParameters!.params[0]
+                : type.elementType,
+            ctx,
+            undefined,
+            toplevelName,
+        );
+        if (inner) {
+            return `
                 let ${newName} = ${vbl};
                 {
                     let changed${level + 1} = false;
@@ -88,8 +92,12 @@ export const makeIndividualTransformer = (
                     }
                 }
                 `;
-            }
+        } else {
+            return null;
         }
+    }
+
+    if (type.type === 'TSTypeReference') {
         if (type.typeParameters) {
             // console.log('Generics not handled', type.loc);
             // return null;
@@ -138,9 +146,9 @@ export const makeIndividualTransformer = (
         }
         return unionTransformer(vbl, newName, level, type, ctx, toplevelName);
     }
-    if (type.type === 'TSArrayType') {
-        throw new Error(`expected Array<X>, not X[]`);
-    }
+    // if (type.type === 'TSArrayType') {
+    //     throw new Error(`expected Array<X>, not X[]`);
+    // }
     return null;
 };
 

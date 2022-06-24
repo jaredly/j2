@@ -7,7 +7,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { buildTransformFile, Ctx, generateCheckers } from './build-transform';
 
-const inFile = './core/typed-ast.ts';
+// const inFile = './core/typed-ast.ts';
+const [_, __, inFile, outFile] = process.argv;
 
 const ast = babel.parse(fs.readFileSync(inFile, 'utf8'), {
     filename: inFile,
@@ -56,6 +57,9 @@ imports.forEach((imp) => {
         imp.source + (imp.source.endsWith('.') ? '/index.ts' : '.ts'),
     );
     console.log(filePath);
+    if (!fs.existsSync(filePath)) {
+        return;
+    }
 
     const ast = babel.parse(fs.readFileSync(filePath, 'utf8'), {
         filename: inFile,
@@ -88,8 +92,15 @@ const ctx: Ctx = {
 };
 
 let text =
-    buildTransformFile(body, './typed-ast', ctx) +
+    buildTransformFile(
+        body,
+        path
+            .relative(path.dirname(outFile), inFile)
+            .replace(/\.ts$/, '')
+            .replace(/^(?=[^.])/, './'),
+        ctx,
+    ) +
     '\n' +
     generateCheckers(ctx, []);
 
-fs.writeFileSync('./core/transform-tast.ts', text);
+fs.writeFileSync(outFile, text);

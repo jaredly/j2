@@ -1,4 +1,4 @@
-import { Text } from '@nextui-org/react';
+import { Card, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { Fixture, parseFixture } from '../core/typing/__test__/fixture-utils';
 import { usePromise } from './index';
@@ -20,10 +20,22 @@ export const FixtureFile = ({ name }: { name: string }) => {
                 const { title, builtins, input, output, i } = fixture;
 
                 return (
-                    <div>
-                        <Text h3>{title}</Text>
-                        <Text>{input}</Text>
-                    </div>
+                    <Card variant={'bordered'} css={{ p: '$6', m: '$6' }}>
+                        <Card.Header>
+                            <Text b>{title}</Text>
+                        </Card.Header>
+                        <Card.Divider />
+                        <Card.Body>
+                            <Text
+                                css={{
+                                    whiteSpace: 'pre-wrap',
+                                    fontFamily: '$mono',
+                                }}
+                            >
+                                {input}
+                            </Text>
+                        </Card.Body>
+                    </Card>
                 );
             })}
         </div>
