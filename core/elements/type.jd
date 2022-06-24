@@ -1,44 +1,37 @@
 ==[basic]==
+//:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type,h850edf082092e835e7daddfaf30654b2289f5644=bool
 
 @test:type(: bool) 10
 -->
-@test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](
-    :bool#[h850edf082092e835e7daddfaf30654b2289f5644],
-) 10
+@test:type(:bool) 10
 // 10
-
 ==[constants]==
+//:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type
 
 @test:type(: "hello", : 10) "target"
 -->
-@test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](:"hello", :10) "target"
+@test:type(:"hello", :10) "target"
 // "target"
-
 ==[lambdas]==
+//:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type,h2f181c91131fd0daa282424fb3953604513df6fe=int,h82403bb59c4f81033c8b3085e8861245660c31e0=float
 
 @test:type(: () => 10, :(v: int, float) => int) "ok"
 -->
-@test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](
-    :() => 10,
-    :(
-        v: int#[h2f181c91131fd0daa282424fb3953604513df6fe],
-        float#[h82403bb59c4f81033c8b3085e8861245660c31e0],
-    ) => int#[h2f181c91131fd0daa282424fb3953604513df6fe],
-) "ok"
+@test:type(:() => 10, :(v: int, float) => int) "ok"
 // "ok"
-
 ==[tvars]==
+//:aliases:0=T,he071eaec952a7917f20d1828e42268ca3a10c513=test:type
 
 @test:type(: <T>(v: T) => T) 10
 -->
-@test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](:<T#[0]>(v: T#[0]) => T#[0]) 10
+@test:type(:<T#[0]>(v: T) => T) 10
 // 10
-
 ==[unresovled]==
+//:aliases:he071eaec952a7917f20d1828e42268ca3a10c513=test:type
 
 @test:type(: hello) 10
 -->
-@test:type#[he071eaec952a7917f20d1828e42268ca3a10c513](:hello#[:unresolved:]) 10
+@test:type(:hello#[:unresolved:]) 10
 // 10
 -->
 🚨 1 missing types

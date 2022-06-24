@@ -9,7 +9,11 @@
 - [x] syntax highlight!!
 - [x] underline on hover
 - [x] alias things so it's not sooo noisy
-- [ ] figure out the text representation of the aliases
+- [x] figure out the text representation of the aliases
+- [x] serialize & parse aliases for fixtures
+- [ ] actually use aliases during resolution
+	- so if we come across a name with a given alias & no hash, we give it the hash, no questions asked.
+
 - [ ] have a button for writing everything back to disk.
 - [ ] show ... types ... of things ... on hover. I think I want like a `crawlTypes` or something that's like `getType` but more. Oh wait no maybe my getType doesn't go deep anyway, so that's ok.
 	- ok so we crawl everything, get the types of expressions, and the ... resolved types of types or something

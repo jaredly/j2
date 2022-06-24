@@ -21,6 +21,7 @@ import { idToString } from '../../ids';
 
 export type Fixture = {
     title: string;
+    aliases: { [key: string]: string };
     builtins: string[];
     input: string;
     output: string;
@@ -34,16 +35,28 @@ export const clearLocs = (ast: File) => {
     return transformFile(ast, locClearVisitor, null);
 };
 
-export const parseFixture = (chunk: string, i: number) => {
+export const parseFixture = (chunk: string, i: number): Fixture => {
     const [input, output, errors] = chunk.trim().split('\n-->\n');
     const [title, ...rest] = input.split('\n');
     const builtins: string[] = [];
+    const aliases: { [key: string]: string } = {};
     while (rest[0].startsWith('//:')) {
-        builtins.push(rest.shift()!);
+        if (rest[0].startsWith('//:aliases:')) {
+            rest.shift()!
+                .slice('//:aliases:'.length)
+                .split(',')
+                .forEach((line) => {
+                    const [key, value] = line.split('=');
+                    aliases[key] = value;
+                });
+        } else {
+            builtins.push(rest.shift()!);
+        }
     }
     return {
         title,
         builtins,
+        aliases,
         input: rest.join('\n').trim(),
         output,
         errors,
@@ -54,12 +67,17 @@ export const parseFixture = (chunk: string, i: number) => {
 export const serializeFixture = ({
     title,
     builtins,
+    aliases,
     input,
     output,
     errors,
 }: Fixture) => {
-    return `${title}\n${
-        builtins.length ? builtins.join('\n') + '\n' : ''
+    return `${title}\n${builtins.length ? builtins.join('\n') + '\n' : ''}${
+        Object.keys(aliases).length
+            ? `//:aliases:${Object.keys(aliases)
+                  .map((k) => `${k}=${aliases[k]}`)
+                  .join(',')}\n`
+            : ''
     }\n${input}\n-->\n${output}${errors ? '\n-->\n' + errors : ''}`;
 };
 
@@ -88,6 +106,7 @@ export type Fixed = {
     // input: string;
     output: string;
     errors: string | undefined | null;
+    aliases: Fixture['aliases'];
 };
 
 /* istanbul ignore next */

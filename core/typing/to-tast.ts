@@ -15,6 +15,7 @@ export type Ctx = {
     sym: (name: string) => t.Sym;
     withLocalTypes: (locals: { sym: t.Sym; bound: t.Type | null }[]) => Ctx;
     ToTast: ToTast;
+    aliases: { [readableName: string]: string };
 };
 
 export type ToTast = typeof ConstantsToTast &

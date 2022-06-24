@@ -1,4 +1,5 @@
 import { Button, Card, Container, Spacer, Text } from '@nextui-org/react';
+import equal from 'fast-deep-equal';
 import * as React from 'react';
 import { noloc } from '../core/ctx';
 import {
@@ -191,7 +192,7 @@ export const Tree = ({
 };
 
 export const FixtureFile = ({ name }: { name: string }) => {
-    const data = usePromise(
+    const [data, setData] = usePromise(
         () =>
             fetch(`/element/${name}`)
                 .then((res) => res.text())
@@ -208,16 +209,14 @@ export const FixtureFile = ({ name }: { name: string }) => {
                     fixture={fixture}
                     key={i}
                     onChange={(fixed) => {
+                        console.log('ok', fixed);
+                        const fixes: Fixture[] = data.map((f, j) =>
+                            j === i ? { ...f, ...fixed } : f,
+                        );
                         fetch(`/element/${name}`, {
                             method: 'POST',
-                            body: data
-                                .map((fix, ii) => {
-                                    return serializeFixture(
-                                        ii === i ? { ...fix, ...fixed } : fix,
-                                    );
-                                })
-                                .join('\n'),
-                        }).then(() => location.reload());
+                            body: fixes.map(serializeFixture).join('\n'),
+                        }).then(() => setData(fixes));
                     }}
                 />
             ))}
@@ -232,14 +231,15 @@ function OneFixture({
     fixture: Fixture;
     onChange: (v: Fixed) => void;
 }) {
-    const { title, builtins, input, output, i } = fixture;
+    const { title, aliases, builtins, input, output, i } = fixture;
 
     const newOutput = React.useMemo(
         () => runFixture(builtins, input, output),
         [builtins, input, output],
     );
 
-    const changed = output !== newOutput.newOutput;
+    const changed =
+        output !== newOutput.newOutput || !equal(aliases, newOutput.aliases);
     return (
         <Card
             variant={'bordered'}
@@ -267,6 +267,7 @@ function OneFixture({
                 ) : null}
                 <Highlight text={input} />
                 <Card.Divider css={{ marginBlock: '$6' }} />
+                <Aliases aliases={aliases} />
                 <Highlight text={output} />
                 {changed ? (
                     <>
@@ -287,10 +288,11 @@ function OneFixture({
                 >
                     <Button
                         size={'xs'}
-                        onClick={() => {
+                        onPress={() => {
                             onChange({
                                 output: newOutput.newOutput,
                                 errors: newOutput.errorText,
+                                aliases: newOutput.aliases,
                             });
                         }}
                     >

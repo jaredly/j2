@@ -2,30 +2,29 @@
 //:decorator:whatsit
 //:decorator:onesit
 //:decorator:twosit
+//:aliases:haf4a9b4fd8c53f7ca2d2e2ce236ca5ef837fd4ed=whatsit,ha1ea686a0f954591e6817d1e38eba3d7dcf85068=onesit,h8819c3a2c310a65e65204176616bcd32e68326b5=twosit
 
 @whatsit() 10
 @onesit() (@twosit() 20)
 -->
-@whatsit#[haf4a9b4fd8c53f7ca2d2e2ce236ca5ef837fd4ed]() 10
+@whatsit() 10
 // 10
-@onesit#[ha1ea686a0f954591e6817d1e38eba3d7dcf85068]() @twosit#[h8819c3a2c310a65e65204176616bcd32e68326b5]() 20
+@onesit() @twosit() 20
 // 20
-
 ==[decorated apply target]==
 //:decorator:decorated
+//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string,hb906415c72c78c3b88d97d9c8adad6d0f4e89b02=toString,h216be29e211ffb2bbb1ff40ab9718fad53bb9687=decorated
 
 (@decorated()toString)(10)
 -->
-(@decorated#[h216be29e211ffb2bbb1ff40ab9718fad53bb9687]() toString#[hb906415c72c78c3b88d97d9c8adad6d0f4e89b02])(
-    10,
-)
-// string#[h8f452146b75c912dedc5638091c55a088e30b7ee]
-
+(@decorated() toString)(10)
+// string
 ==[undefined]==
+//:aliases:h8f452146b75c912dedc5638091c55a088e30b7ee=string
 
 @decodeURI(:string)("http://example.com")
 -->
-@decodeURI#[:unresolved:](:string#[h8f452146b75c912dedc5638091c55a088e30b7ee]) "http://example.com"
+@decodeURI#[:unresolved:](:string) "http://example.com"
 // "http://example.com"
 -->
 🚨 1 missing types

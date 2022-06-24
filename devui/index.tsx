@@ -1,16 +1,19 @@
 import * as React from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { NextUIProvider, createTheme, Link } from '@nextui-org/react';
 import { FixtureFile } from './FixtureFile';
 
 const darkTheme = createTheme({ type: 'dark' });
 
-export const usePromise = <T,>(fn: () => Promise<T>, bust: any[]) => {
+export const usePromise = <T,>(
+    fn: () => Promise<T>,
+    bust: any[],
+): [T | null, (v: T) => void] => {
     const [data, setData] = React.useState<T | null>(null);
     React.useEffect(() => {
         fn().then(setData);
     }, bust);
-    return data;
+    return [data, setData];
 };
 
 export const useHash = () => {
@@ -30,7 +33,7 @@ export const useHash = () => {
 
 const App = () => {
     const hash = useHash();
-    const listing = usePromise<string[]>(
+    const [listing] = usePromise<string[]>(
         () => fetch('/element/').then((res) => res.json()),
         [],
     );
@@ -69,9 +72,12 @@ const App = () => {
     );
 };
 
-render(
+// @ts-ignore
+const root = (window.rootRoot =
+    // @ts-ignore
+    window.rootRoot || createRoot(document.getElementById('root')!));
+root.render(
     <NextUIProvider theme={darkTheme}>
         <App />
     </NextUIProvider>,
-    document.getElementById('root'),
 );
