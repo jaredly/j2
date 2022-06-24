@@ -6,9 +6,13 @@
 - [x] load up the fixture text
 - [-] ok I probably want react-router, let's be honest
 	- not just yet though.
-- [ ] syntax highlight!!
-- [ ] underline on hover
+- [x] syntax highlight!!
+- [x] underline on hover
+- [x] alias things so it's not sooo noisy
+- [ ] figure out the text representation of the aliases
+- [ ] have a button for writing everything back to disk.
 - [ ] show ... types ... of things ... on hover. I think I want like a `crawlTypes` or something that's like `getType` but more. Oh wait no maybe my getType doesn't go deep anyway, so that's ok.
+	- ok so we crawl everything, get the types of expressions, and the ... resolved types of types or something
 - [ ] main dealio is a listing of the fixtures in the selected file
 	- [x] parse the .jd into constituent parts
 	- [ ] render the textarea, and a checkbox for whether it's supposed to succeed

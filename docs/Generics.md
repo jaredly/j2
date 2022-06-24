@@ -143,6 +143,23 @@ right?
 Saying "T is a supertype of the empty enum".
 
 
+HMMMM So, btw, for hashing:
+if we hash, by essentially making a tree of hashes,
+then we could more easily recognize names for types dotchaknow.
+hmmmmmmmmm oh I wonder if that's how ... we determine that one
+recursive type is a subset of another? 🤔 🤔 I don't think that
+would be sufficient.
+
+THIS means I want a new `transform` suite generated, but in this case
+it's "collapse". I mean maybe it's just called "hash". anyway.
+hmm but I would want to store them ... in such a way ...
+like, hang into hashes keyed by loc.idx. But I really need to ensure
+that loc.idx's are unique my good people.
+I mean I guess I can just traverse the whole thing and refresh them ...
+does that cause any problems?
+Seems like it wouldn't.
+
+
 
 hmmmm ok another question, how do we ... do recursive types, when it's structural?
 

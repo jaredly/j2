@@ -73,13 +73,6 @@ readdirSync(base)
                     }
 
                     fixed[i] = {
-                        input:
-                            title +
-                            (builtins.length
-                                ? '\n' + builtins.join('\n')
-                                : '') +
-                            '\n\n' +
-                            input.trim(),
                         output: newOutput,
                         errors,
                     };

@@ -1,4 +1,4 @@
-import { Card, Container, Text } from '@nextui-org/react';
+import { Button, Card, Container, Spacer, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { noloc } from '../core/ctx';
 import {
@@ -9,9 +9,11 @@ import {
 import { transformFile, Visitor } from '../core/transform-ast';
 import { Loc } from '../core/typed-ast';
 import {
+    Fixed,
     Fixture,
-    parseFixture,
+    parseFixtureFile,
     runFixture,
+    serializeFixture,
 } from '../core/typing/__test__/fixture-utils';
 import { usePromise } from './index';
 
@@ -193,7 +195,7 @@ export const FixtureFile = ({ name }: { name: string }) => {
         () =>
             fetch(`/element/${name}`)
                 .then((res) => res.text())
-                .then(parseFixture),
+                .then(parseFixtureFile),
         [name],
     );
     if (!data) {
@@ -202,13 +204,34 @@ export const FixtureFile = ({ name }: { name: string }) => {
     return (
         <Container css={{ p: '$6', mb: '50vh' }}>
             {data.map((fixture: Fixture, i) => (
-                <OneFixture fixture={fixture} key={i} />
+                <OneFixture
+                    fixture={fixture}
+                    key={i}
+                    onChange={(fixed) => {
+                        fetch(`/element/${name}`, {
+                            method: 'POST',
+                            body: data
+                                .map((fix, ii) => {
+                                    return serializeFixture(
+                                        ii === i ? { ...fix, ...fixed } : fix,
+                                    );
+                                })
+                                .join('\n'),
+                        }).then(() => location.reload());
+                    }}
+                />
             ))}
         </Container>
     );
 };
 
-function OneFixture({ fixture }: { fixture: Fixture }) {
+function OneFixture({
+    fixture,
+    onChange,
+}: {
+    fixture: Fixture;
+    onChange: (v: Fixed) => void;
+}) {
     const { title, builtins, input, output, i } = fixture;
 
     const newOutput = React.useMemo(
@@ -220,7 +243,12 @@ function OneFixture({ fixture }: { fixture: Fixture }) {
     return (
         <Card
             variant={'bordered'}
-            css={{ p: '$6', m: '$6', borderColor: changed ? 'red' : undefined }}
+            css={{
+                p: '$6',
+                m: '$6',
+                borderColor: changed ? 'red' : undefined,
+                position: 'relative',
+            }}
         >
             <Card.Header>
                 <Text b>{title}</Text>
@@ -248,6 +276,39 @@ function OneFixture({ fixture }: { fixture: Fixture }) {
                     </>
                 ) : null}
             </Card.Body>
+            {changed ? (
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        display: 'flex',
+                    }}
+                >
+                    <Button
+                        size={'xs'}
+                        onClick={() => {
+                            onChange({
+                                output: newOutput.newOutput,
+                                errors: newOutput.errorText,
+                            });
+                        }}
+                    >
+                        Accept
+                    </Button>
+                    <Spacer x={0.5} />
+                    <Button
+                        size="xs"
+                        color="secondary"
+                        onClick={() => {
+                            // So if the old one is rejected, we overwrite
+                            // but if the old one is accepted, then we keep it around as "the right one"
+                        }}
+                    >
+                        Reject
+                    </Button>
+                </div>
+            ) : null}
         </Card>
     );
 }

@@ -24,7 +24,7 @@ export type Fixture = {
     builtins: string[];
     input: string;
     output: string;
-    errors: string | undefined;
+    errors: string | undefined | null;
     i: number;
 };
 
@@ -34,30 +34,44 @@ export const clearLocs = (ast: File) => {
     return transformFile(ast, locClearVisitor, null);
 };
 
-export const parseFixture = (inputRaw: string) => {
+export const parseFixture = (chunk: string, i: number) => {
+    const [input, output, errors] = chunk.trim().split('\n-->\n');
+    const [title, ...rest] = input.split('\n');
+    const builtins: string[] = [];
+    while (rest[0].startsWith('//:')) {
+        builtins.push(rest.shift()!);
+    }
+    return {
+        title,
+        builtins,
+        input: rest.join('\n').trim(),
+        output,
+        errors,
+        i,
+    };
+};
+
+export const serializeFixture = ({
+    title,
+    builtins,
+    input,
+    output,
+    errors,
+}: Fixture) => {
+    return `${title}\n${
+        builtins.length ? builtins.join('\n') + '\n' : ''
+    }\n${input}\n-->\n${output}${errors ? '\n-->\n' + errors : ''}`;
+};
+
+export const parseFixtureFile = (inputRaw: string) => {
     return inputRaw
         .split(/(?=\n==[^\n=]*==\n)/)
         .filter((x) => x.trim())
-        .map((chunk, i) => {
-            const [input, output, errors] = chunk.trim().split('\n-->\n');
-            const [title, ...rest] = input.split('\n');
-            const builtins: string[] = [];
-            while (rest[0].startsWith('//:')) {
-                builtins.push(rest.shift()!);
-            }
-            return {
-                title,
-                builtins,
-                input: rest.join('\n').trim(),
-                output,
-                errors,
-                i,
-            };
-        });
+        .map((chunk, i) => parseFixture(chunk, i));
 };
 
 export const loadFixtures = (fixtureFile: string) => {
-    let fixtures: Fixture[] = parseFixture(
+    let fixtures: Fixture[] = parseFixtureFile(
         fs.readFileSync(fixtureFile, 'utf8'),
     );
     let hasOnly = fixtures.some((f) => f.title.includes('[only]'));
@@ -71,9 +85,9 @@ export const loadFixtures = (fixtureFile: string) => {
 };
 
 export type Fixed = {
-    input: string;
+    // input: string;
     output: string;
-    errors: string | undefined;
+    errors: string | undefined | null;
 };
 
 /* istanbul ignore next */
@@ -96,10 +110,8 @@ export const saveFixed = (
     fs.writeFileSync(
         fixtureFile,
         fixed
-            .map(
-                ({ input, output, errors }) =>
-                    `${input}\n-->\n${output}` +
-                    (errors ? '\n-->\n' + errors : ''),
+            .map(({ output, errors }, i) =>
+                serializeFixture({ ...fixtures[i], output, errors }),
             )
             .join('\n\n'),
     );

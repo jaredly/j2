@@ -2,46 +2,6 @@ import { FullContext, tref } from '../ctx';
 import { extract, idToString } from '../ids';
 import { Expression, Type } from '../typed-ast';
 
-type L1 = { t: 'nil' } | { t: 'cons'; l: L5 };
-type L2 = { t: 'nil' } | { t: 'cons'; l: { t: 'nil' } | { t: 'cons'; l: L2 } };
-type L3 =
-    | { t: 'nil' }
-    | {
-          t: 'cons';
-          l:
-              | { t: 'nil' }
-              | { t: 'cons'; l: { t: 'nil' } | { t: 'cons'; l: L4 } };
-      };
-type L4 =
-    | { t: 'nil' }
-    | {
-          t: 'cons';
-          l:
-              | { t: 'nil' }
-              | {
-                    t: 'cons';
-                    l:
-                        | { t: 'nil' }
-                        | { t: 'cons'; l: { t: 'nil' } | { t: 'cons'; l: L3 } };
-                };
-      };
-type L5 =
-    | { t: 'nil' }
-    | {
-          t: 'cons';
-          l:
-              | { t: 'nil' }
-              | {
-                    t: 'cons';
-                    l:
-                        | { t: 'nil' }
-                        | { t: 'cons'; l: { t: 'nil' } | { t: 'cons'; l: L4 } };
-                };
-      };
-
-const x = (m: L4): L5 => m;
-const x1 = (m: L5): L4 => m;
-
 // UMM So btw this will resolve all TRefs.
 export const getType = (expr: Expression, ctx: FullContext): Type | null => {
     switch (expr.type) {
