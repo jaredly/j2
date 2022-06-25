@@ -92,12 +92,24 @@ export function OneFixture({
                     <Highlight text={input} />
                     <Card.Divider css={{ marginBlock: '$6' }} />
                     <Aliases aliases={aliases} />
-                    <Highlight text={output} />
+                    <Highlight
+                        text={output}
+                        info={{
+                            tast: newOutput.outputTast,
+                            ctx: newOutput.ctx2,
+                        }}
+                    />
                     {changed ? (
                         <>
                             <Card.Divider css={{ marginBlock: '$6' }} />
                             <Aliases aliases={newOutput.aliases} />
-                            <Highlight text={newOutput.newOutput} />
+                            <Highlight
+                                text={newOutput.newOutput}
+                                info={{
+                                    tast: newOutput.checked,
+                                    ctx: newOutput.ctx,
+                                }}
+                            />
                         </>
                     ) : null}
                 </Card.Body>

@@ -203,13 +203,14 @@ export function runFixture({ builtins, input, output, aliases }: Fixture) {
         analyzeContext(ctx),
     );
     let outputTast;
-    try {
-        const ctx = fullContext(aliases);
 
-        loadBuiltins(builtins, ctx);
-        outputTast = ctx.ToTast.File(fixComments(parseFile(output)), ctx);
-    } catch (err) {}
+    const ctx2 = fullContext(aliases);
+    loadBuiltins(builtins, ctx2);
+    outputTast = ctx2.ToTast.File(fixComments(parseFile(output)), ctx2);
+
     return {
+        ctx,
+        ctx2,
         checked,
         newOutput,
         outputTast,

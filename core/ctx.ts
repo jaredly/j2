@@ -181,9 +181,9 @@ const resolve = (
     name: string,
     rawHash?: string | null,
 ): RefKind[] => {
-    console.log(ctx.aliases, name, Object.hasOwn(ctx.aliases, name), rawHash);
+    // console.log(ctx.aliases, name, Object.hasOwn(ctx.aliases, name), rawHash);
     if (rawHash || Object.hasOwn(ctx.aliases, name)) {
-        console.log('ok', name);
+        // console.log('ok', name);
         const hash = parseHash(rawHash ?? ctx.aliases[name]);
         if (hash.type === 'sym') {
             throw new Error('not yet: ' + rawHash);
@@ -193,7 +193,7 @@ const resolve = (
             // }
         } else {
             const ref = ctx.values.hashed[hash.hash];
-            console.log(ref, hash);
+            // console.log(ref, hash);
             if (ref && hash.idx < ref.length) {
                 return [{ type: 'Global', id: toId(hash.hash, hash.idx) }];
             }
