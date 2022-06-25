@@ -5,6 +5,7 @@ import {
     Fixture,
     parseFixtureFile,
     serializeFixture,
+    serializeFixtureFile,
 } from '../core/typing/__test__/fixture-utils';
 import { usePromise } from './index';
 import { OneFixture } from './OneFixture';
@@ -28,7 +29,7 @@ export const FixtureFile = ({
         [name],
     );
     const serialized = React.useMemo(
-        () => data?.map(serializeFixture).join('\n'),
+        () => (data ? serializeFixtureFile(data) : null),
         [data],
     );
     React.useEffect(() => {
@@ -79,7 +80,7 @@ export const FixtureFile = ({
                     </Link>
                 ))}
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
-                {data.map((fixture: Fixture, i) => (
+                {data.fixtures.map((fixture: Fixture, i) => (
                     <Link href={`#${name}/${i}`} key={i} block>
                         {fixture.title}
                     </Link>
@@ -87,16 +88,19 @@ export const FixtureFile = ({
             </div>
 
             <Container css={{ p: '$6', pb: '50vh', overflow: 'auto' }}>
-                {data.map((fixture: Fixture, i) => (
+                {data.fixtures.map((fixture: Fixture, i) => (
                     <OneFixture
                         portal={portal.current!}
                         id={`${name}/${i}`}
                         fixture={fixture}
                         key={i}
                         onChange={(fixture) => {
-                            setData(
-                                data.map((f, j) => (j === i ? fixture : f)),
-                            );
+                            setData({
+                                ...data,
+                                fixtures: data.fixtures.map((f, j) =>
+                                    j === i ? fixture : f,
+                                ),
+                            });
                         }}
                     />
                 ))}

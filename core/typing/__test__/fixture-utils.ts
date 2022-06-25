@@ -19,6 +19,10 @@ import { makeToTast, ToTast } from '../to-tast';
 import { getType } from '../getType';
 import { idToString } from '../../ids';
 
+export type FixtureFile = {
+    fixtures: Array<Fixture>;
+};
+
 export type Fixture = {
     title: string;
     aliases: { [key: string]: string };
@@ -106,17 +110,23 @@ export const serializeFixture = ({
     // }\n${input}\n-->\n${output}`;
 };
 
-export const parseFixtureFile = (inputRaw: string) => {
-    return inputRaw
-        .split(/(?=\n==[^\n=]*==\n)/)
-        .filter((x) => x.trim())
-        .map((chunk, i) => parseFixture(chunk, i));
+export const serializeFixtureFile = (file: FixtureFile) => {
+    return file.fixtures.map(serializeFixture).join('\n');
+};
+
+export const parseFixtureFile = (inputRaw: string): FixtureFile => {
+    return {
+        fixtures: inputRaw
+            .split(/(?=\n==[^\n=]*==\n)/)
+            .filter((x) => x.trim())
+            .map((chunk, i) => parseFixture(chunk, i)),
+    };
 };
 
 export const loadFixtures = (fixtureFile: string) => {
     let fixtures: Fixture[] = parseFixtureFile(
         fs.readFileSync(fixtureFile, 'utf8'),
-    );
+    ).fixtures;
     let hasOnly = fixtures.some((f) => f.title.includes('[only]'));
 
     if (hasOnly) {
