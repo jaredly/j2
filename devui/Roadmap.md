@@ -1,6 +1,10 @@
 
 # Plan of action
 
+Oh oh oh! Now try type algebra???
+
+
+
 - [x] basic server
 - [x] left panel with listing of files
 - [x] load up the fixture text
@@ -21,9 +25,11 @@
 
 - [x] show ... types ... of things ... on hover. I think I want like a `crawlTypes` or something that's like `getType` but more. Oh wait no maybe my getType doesn't go deep anyway, so that's ok.
 	- ok so we crawl everything, get the types of expressions, and the ... resolved types of types or something
-- [ ] have hover follow mouse probs
+- [x] have hover follow mouse probs
 - [ ] have hover stick on click, then you can hover entries there to get them underlined.
 - [ ] dedup hover entries? idk.
+
+- [ ] BUG multiple dispatch isn't working?
 
 - [ ] editing of fixtures! probably? Can I do the same contentediable trick, but without the reprinting?
 	like, just parse + recolor?

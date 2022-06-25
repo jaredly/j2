@@ -1,12 +1,13 @@
 import { Card, Text } from '@nextui-org/react';
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { FullContext } from '../core/ctx';
 import { AllTaggedTypeNames, parseFile } from '../core/grammar/base.parser';
 import { printToString } from '../core/printer/pp';
 import { newPPCtx } from '../core/printer/to-pp';
 import { transformFile, Visitor } from '../core/transform-ast';
 import * as tt from '../core/transform-tast';
-import { File, Loc, Type } from '../core/typed-ast';
+import { File, Loc, refHash, Type } from '../core/typed-ast';
 import { getType } from '../core/typing/getType';
 import { printCtx } from '../core/typing/to-ast';
 
@@ -30,6 +31,16 @@ const collectAnnotations = (tast: File, ctx: FullContext) => {
             }
             return node;
         },
+        Ref(node, ctx) {
+            annotations.push({
+                loc: node.loc,
+                text:
+                    node.kind.type === 'Unresolved'
+                        ? 'unresolved'
+                        : refHash(node.kind),
+            });
+            return null;
+        },
     };
     tt.transformFile(tast, visitor, null);
     console.log(annotations);
@@ -39,9 +50,11 @@ const collectAnnotations = (tast: File, ctx: FullContext) => {
 export const Highlight = ({
     text,
     info,
+    portal,
 }: {
     text: string;
     info?: { tast: File; ctx: FullContext };
+    portal: HTMLDivElement;
 }) => {
     const parsed = React.useMemo(() => {
         try {
@@ -68,9 +81,15 @@ export const Highlight = ({
     );
     // console.log(annotations);
 
-    const [hover, setHover] = React.useState(null as null | [number, number]);
+    const [hover, setHover] = React.useState(
+        null as null | {
+            span: [number, number];
+            pos: { x: number; y: number };
+        },
+    );
+
     return (
-        <div style={{ position: 'relative' }}>
+        <div>
             <Text
                 css={{
                     whiteSpace: 'pre-wrap',
@@ -94,42 +113,62 @@ export const Highlight = ({
                             ?.split(':')
                             .map(Number);
                         if (span) {
-                            setHover(span as [number, number]);
+                            setHover({
+                                span: span as [number, number],
+                                pos: { x: evt.clientX, y: evt.clientY },
+                            });
+                        }
+                    }}
+                    onMouseMove={(evt) => {
+                        const span = (evt.target as HTMLSpanElement)
+                            .getAttribute('data-span')
+                            ?.split(':')
+                            .map(Number);
+                        if (span) {
+                            setHover({
+                                span: span as [number, number],
+                                pos: { x: evt.clientX, y: evt.clientY },
+                            });
                         }
                     }}
                 >
-                    <Tree tree={marked} hover={hover} />
+                    <Tree tree={marked} hover={hover?.span ?? null} />
                 </span>
             </Text>
-            {hover && annotations.length ? (
-                <Card
-                    variant="bordered"
-                    css={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        width: 200,
-                        padding: '$4',
-                    }}
-                >
-                    {annotations
-                        .filter(
-                            (ann) =>
-                                ann.loc.start.offset <= hover[0] &&
-                                ann.loc.end.offset >= hover[1],
-                        )
-                        .sort(
-                            (a, b) =>
-                                // b.loc.start.offset - a.loc.start.offset
-                                a.loc.end.offset -
-                                a.loc.start.offset -
-                                (b.loc.end.offset - b.loc.start.offset),
-                        )
-                        .map((ann, i) => (
-                            <div key={i}>{ann.text}</div>
-                        ))}
-                </Card>
-            ) : null}
+            {hover && annotations.length
+                ? createPortal(
+                      <Card
+                          variant="bordered"
+                          css={{
+                              position: 'absolute',
+                              top: hover.pos.y,
+                              left: hover.pos.x,
+                              width: 200,
+                              padding: '$4',
+                              pointerEvents: 'none',
+                          }}
+                      >
+                          {/* {JSON.stringify(hover)} */}
+                          {annotations
+                              .filter(
+                                  (ann) =>
+                                      ann.loc.start.offset <= hover.span[0] &&
+                                      ann.loc.end.offset >= hover.span[1],
+                              )
+                              .sort(
+                                  (a, b) =>
+                                      // b.loc.start.offset - a.loc.start.offset
+                                      a.loc.end.offset -
+                                      a.loc.start.offset -
+                                      (b.loc.end.offset - b.loc.start.offset),
+                              )
+                              .map((ann, i) => (
+                                  <div key={i}>{ann.text}</div>
+                              ))}
+                      </Card>,
+                      portal,
+                  )
+                : null}
         </div>
     );
 };

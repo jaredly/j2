@@ -331,6 +331,14 @@ export const setupDefaults = (ctx: FullContext) => {
             tref(named.string),
         ),
     );
+    addBuiltin(
+        ctx,
+        'toString',
+        tlam(
+            [{ label: 'v', typ: tref(named.float), loc: noloc }],
+            tref(named.string),
+        ),
+    );
 
     addBuiltin(
         ctx,

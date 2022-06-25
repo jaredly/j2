@@ -11,9 +11,11 @@ import { Highlight } from './Highlight';
 export function OneFixture({
     fixture,
     onChange,
+    portal,
     id,
 }: {
     id: string;
+    portal: HTMLDivElement;
     fixture: Fixture;
     onChange: (v: Fixture) => void;
 }) {
@@ -89,10 +91,11 @@ export function OneFixture({
                             <Card.Divider css={{ marginBlock: '$6' }} />
                         </>
                     ) : null}
-                    <Highlight text={input} />
+                    <Highlight text={input} portal={portal} />
                     <Card.Divider css={{ marginBlock: '$6' }} />
                     <Aliases aliases={aliases} />
                     <Highlight
+                        portal={portal}
                         text={output}
                         info={{
                             tast: newOutput.outputTast,
@@ -104,6 +107,7 @@ export function OneFixture({
                             <Card.Divider css={{ marginBlock: '$6' }} />
                             <Aliases aliases={newOutput.aliases} />
                             <Highlight
+                                portal={portal}
                                 text={newOutput.newOutput}
                                 info={{
                                     tast: newOutput.checked,

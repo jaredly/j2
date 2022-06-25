@@ -100,6 +100,33 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             node.target.type === 'Ref' &&
             node.target.kind.type === 'Unresolved'
         ) {
+            console.log('UNRESOLVE', node);
+            const resolved = ctx._full.resolve(node.target.kind.text, null);
+            if (resolved.length > 1) {
+                const argTypes = node.args.map((arg) => ctx.getType(arg));
+                if (argTypes.every(Boolean)) {
+                    for (let option of resolved) {
+                        const ttype = ctx.getType({
+                            ...node.target,
+                            kind: option,
+                        });
+                        if (
+                            ttype?.type === 'TLambda' &&
+                            ttype.args.length === argTypes.length &&
+                            ttype.args.every((arg, i) =>
+                                typeMatches(argTypes[i]!, arg.typ, ctx._full),
+                            )
+                        ) {
+                            return {
+                                ...node,
+                                target: { ...node.target, kind: option },
+                            };
+                        }
+                    }
+                }
+                // STOPSHIP
+                // debugger;
+            }
             // Check if there are multiples
         }
         // Otherwise, try to get the type of the target & compare to the args

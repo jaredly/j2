@@ -161,7 +161,7 @@ export const saveFixed = (
 };
 
 export function runFixture({ builtins, input, output, aliases }: Fixture) {
-    const ctx = fullContext(aliases);
+    const ctx = fullContext();
 
     loadBuiltins(builtins, ctx);
 
@@ -184,13 +184,13 @@ export function runFixture({ builtins, input, output, aliases }: Fixture) {
         const pp = newPPCtx(false);
         const ast = actx.ToAst[t.type](t as any, actx);
         const cm = printToString(pp.ToPP[ast.type](ast as any, pp), 200);
-        checked.comments.push([
-            {
-                ...top.loc,
-                start: top.loc.end,
-            },
-            '// ' + cm,
-        ]);
+        // checked.comments.push([
+        //     {
+        //         ...top.loc,
+        //         start: top.loc.end,
+        //     },
+        //     '// ' + cm,
+        // ]);
     });
 
     const newOutput = printToString(

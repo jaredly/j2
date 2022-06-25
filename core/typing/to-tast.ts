@@ -70,6 +70,7 @@ export const GeneralToTast = {
         //
         hash = filterUnresolved(hash?.slice(2, -1));
         const resolved = ctx.resolve(text, hash);
+        console.log('resolved', text, hash);
         if (resolved.length === 1) {
             return { type: 'Ref', loc, kind: resolved[0] };
         }

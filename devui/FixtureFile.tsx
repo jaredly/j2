@@ -38,6 +38,15 @@ export const FixtureFile = ({
         last.current = serialized;
         fetch(`/element/${name}`, { method: 'POST', body: serialized });
     }, [serialized]);
+
+    const portal = React.useRef(null as null | HTMLDivElement);
+
+    React.useEffect(() => {
+        portal.current = document.createElement('div');
+        document.body.append(portal.current);
+        return () => portal.current!.remove();
+    }, []);
+
     if (!data) {
         return null;
     }
@@ -80,6 +89,7 @@ export const FixtureFile = ({
             <Container css={{ p: '$6', pb: '50vh', overflow: 'auto' }}>
                 {data.map((fixture: Fixture, i) => (
                     <OneFixture
+                        portal={portal.current!}
                         id={`${name}/${i}`}
                         fixture={fixture}
                         key={i}

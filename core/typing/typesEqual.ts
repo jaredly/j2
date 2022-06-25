@@ -264,7 +264,11 @@ export const typeMatches = (
                 //     ctx.types.names['int'],
                 //     isBuiltinType(expected, 'int', ctx),
                 // );
-                return isBuiltinType(expected, 'int', ctx);
+                return isBuiltinType(
+                    expected,
+                    candidate.kind.toLowerCase(),
+                    ctx,
+                );
             }
     }
 };
