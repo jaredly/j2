@@ -141,7 +141,7 @@ export const Highlight = ({
                           variant="bordered"
                           css={{
                               position: 'absolute',
-                              top: hover.pos.y,
+                              top: hover.pos.y + 14,
                               left: hover.pos.x,
                               width: 200,
                               padding: '$4',
