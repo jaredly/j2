@@ -14,6 +14,7 @@
 - [x] actually use aliases during resolution
 	- so if we come across a name with a given alias & no hash, we give it the hash, no questions asked.
 - [x] new format for fixtures
+- [x] edit title
 
 - [x] have a button for writing everything back to disk.
 

@@ -40,7 +40,9 @@ const App = () => {
     if (!listing) {
         return <>Loading...</>;
     }
-    return (
+    return hash ? (
+        <FixtureFile listing={listing} name={hash.split('/')[0]} />
+    ) : (
         <div
             style={{
                 display: 'flex',
@@ -67,7 +69,7 @@ const App = () => {
                     </Link>
                 ))}
             </div>
-            <div>{hash ? <FixtureFile name={hash} /> : 'Click a thing'}</div>
+            <div>Click a thing</div>
         </div>
     );
 };

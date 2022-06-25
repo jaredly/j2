@@ -1,4 +1,4 @@
-import { Button, Card, Spacer, Text } from '@nextui-org/react';
+import { Button, Card, Input, Spacer, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
 import {
@@ -11,7 +11,9 @@ import { Highlight } from './Highlight';
 export function OneFixture({
     fixture,
     onChange,
+    id,
 }: {
+    id: string;
     fixture: Fixture;
     onChange: (v: Fixture) => void;
 }) {
@@ -23,94 +25,124 @@ export function OneFixture({
         output !== newOutput.newOutput ||
         !aliasesMatch(aliases, newOutput.aliases);
 
+    const [titleEdit, setTitleEdit] = React.useState(null as null | string);
     return (
-        <Card
-            variant={'bordered'}
-            css={{
-                p: '$6',
-                m: '$6',
-                borderColor: changed ? 'red' : undefined,
-                position: 'relative',
-            }}
-        >
-            <Card.Header>
-                <Text css={{ fontWeight: '$light', letterSpacing: '$wide' }}>
-                    {title}
-                </Text>
-            </Card.Header>
-            <Card.Divider />
-            <Card.Body css={{ display: 'flex' }}>
-                {builtins.length ? (
-                    <>
-                        <div>
-                            <Text css={{ fontFamily: '$mono' }} small>
-                                Builtins:
-                                {builtins.map((item, i) => (
-                                    <span key={i} style={{ marginLeft: 8 }}>
-                                        {item.name}
-                                    </span>
-                                ))}
-                            </Text>
-                        </div>
-                        <Card.Divider css={{ marginBlock: '$6' }} />
-                    </>
-                ) : null}
-                <Highlight text={input} />
-                <Card.Divider css={{ marginBlock: '$6' }} />
-                <Aliases aliases={aliases} />
-                <Highlight text={output} />
-                {changed ? (
-                    <>
-                        <Card.Divider css={{ marginBlock: '$6' }} />
-                        <Aliases aliases={newOutput.aliases} />
-                        <Highlight text={newOutput.newOutput} />
-                    </>
-                ) : null}
-            </Card.Body>
-            {changed ? (
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        display: 'flex',
-                    }}
+        <div id={id} style={{ paddingTop: 24 }}>
+            <Card
+                variant={'bordered'}
+                css={{
+                    p: '$6',
+                    // m: '$6',
+                    borderColor: changed ? 'red' : undefined,
+                    position: 'relative',
+                }}
+            >
+                <Card.Header
+                    onClick={() => (titleEdit ? null : setTitleEdit(title))}
                 >
-                    <Button
-                        size={'xs'}
-                        onPress={() => {
-                            onChange({
-                                ...fixture,
-                                output: newOutput.newOutput,
-                                aliases: newOutput.aliases,
-                                failing: false,
-                            });
+                    {titleEdit ? (
+                        <Input
+                            autoFocus
+                            css={{
+                                letterSpacing: '$wide',
+                                fontWeight: '$light',
+                            }}
+                            bordered
+                            fullWidth
+                            value={titleEdit}
+                            onChange={(evt) => setTitleEdit(evt.target.value)}
+                            onBlur={() => {
+                                setTitleEdit(null);
+                                onChange({ ...fixture, title: titleEdit });
+                            }}
+                        />
+                    ) : (
+                        <Text
+                            css={{
+                                fontWeight: '$light',
+                                letterSpacing: '$wide',
+                            }}
+                            onClick={() => setTitleEdit(title)}
+                        >
+                            {title}
+                        </Text>
+                    )}
+                </Card.Header>
+                <Card.Divider />
+                <Card.Body css={{ display: 'flex' }}>
+                    {builtins.length ? (
+                        <>
+                            <div>
+                                <Text css={{ fontFamily: '$mono' }} small>
+                                    Builtins:
+                                    {builtins.map((item, i) => (
+                                        <span key={i} style={{ marginLeft: 8 }}>
+                                            {item.name}
+                                        </span>
+                                    ))}
+                                </Text>
+                            </div>
+                            <Card.Divider css={{ marginBlock: '$6' }} />
+                        </>
+                    ) : null}
+                    <Highlight text={input} />
+                    <Card.Divider css={{ marginBlock: '$6' }} />
+                    <Aliases aliases={aliases} />
+                    <Highlight text={output} />
+                    {changed ? (
+                        <>
+                            <Card.Divider css={{ marginBlock: '$6' }} />
+                            <Aliases aliases={newOutput.aliases} />
+                            <Highlight text={newOutput.newOutput} />
+                        </>
+                    ) : null}
+                </Card.Body>
+                {changed ? (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            display: 'flex',
                         }}
                     >
-                        Accept
-                    </Button>
-                    <Spacer x={0.5} />
-                    <Button
-                        size="xs"
-                        color="secondary"
-                        onClick={() => {
-                            // So if the old one is rejected, we overwrite
-                            // but if the old one is accepted, then we keep it around as "the right one"
-                            onChange({
-                                ...fixture,
-                                output: newOutput.newOutput,
-                                aliases: newOutput.aliases,
-                                failing: true,
-                            });
-                        }}
-                    >
-                        Reject
-                    </Button>
-                </div>
-            ) : null}
-        </Card>
+                        <Button
+                            size={'xs'}
+                            onPress={() => {
+                                onChange({
+                                    ...fixture,
+                                    output: newOutput.newOutput,
+                                    aliases: newOutput.aliases,
+                                    failing: false,
+                                });
+                            }}
+                        >
+                            Accept
+                        </Button>
+                        <Spacer x={0.5} />
+                        <Button
+                            size="xs"
+                            color="secondary"
+                            onClick={() => {
+                                // So if the old one is rejected, we overwrite
+                                // but if the old one is accepted, then we keep it around as "the right one"
+                                onChange({
+                                    ...fixture,
+                                    output: newOutput.newOutput,
+                                    aliases: newOutput.aliases,
+                                    failing: true,
+                                });
+                            }}
+                        >
+                            Reject
+                        </Button>
+                    </div>
+                ) : null}
+            </Card>
+        </div>
     );
 }
+
 const Aliases = ({ aliases }: { aliases: { [key: string]: string } }) => {
     return (
         <div
