@@ -25,7 +25,7 @@ false
 ----
 "hello"
 // "hello"
-==[templates]==
+==[basic template]==
 {"builtins":[],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","toString":"hb906415c72c78c3b88d97d9c8adad6d0f4e89b02"},"failing":false}
 ----
 "hello ${toString(123)}"
@@ -39,7 +39,7 @@ false
 ----
 "One${"1"}${"2"} and ${"3"}"
 // string
-==[error]==
+==[expression wrong type]==
 {"builtins":[],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","error:notAString":"h78fb9682caf6cb8dc34febba83e591c06884dc73"},"failing":false}
 ----
 "${12}"

@@ -33,7 +33,11 @@ export function OneFixture({
                 css={{
                     p: '$6',
                     // m: '$6',
-                    borderColor: changed ? 'red' : undefined,
+                    borderColor: changed
+                        ? 'orange'
+                        : fixture.failing
+                        ? 'red'
+                        : undefined,
                     position: 'relative',
                 }}
             >

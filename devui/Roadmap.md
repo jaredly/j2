@@ -15,6 +15,7 @@
 	- so if we come across a name with a given alias & no hash, we give it the hash, no questions asked.
 - [x] new format for fixtures
 - [x] edit title
+- [x] better scrolling
 
 - [x] have a button for writing everything back to disk.
 
@@ -26,7 +27,7 @@
 	seems like I've got to be able to do that.
 	oh and maybe if there's a parse error, I can just like ... make everything slightly transparent?
 	yeah that sounds fun.
-- [ ] fixtures can be wrong! make the "reject" button do something.
+- [x] fixtures can be wrong! make the "reject" button do something.
 	maybe have a `-->[expected]` that we can toss in there.
 
 - [-] main dealio is a listing of the fixtures in the selected file
