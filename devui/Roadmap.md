@@ -3,6 +3,21 @@
 
 Oh oh oh! Now try type algebra???
 
+Fixtures need to be fully usable:
+- [x] I think builtins might be a per-file basis, not per-fixture
+- [x] how to do aliases? I think it really makes sense to have it be in-source. Right?
+	Because if I'm saving source files, they'll be in-source as well.
+- [x] How to mark 'failed'? I guess I could have 'output:failed' instead of 'output'?
+	oh maybe `output:expected` and `output:failed`. if there's just expected, we assume we're doing well
+	if there's `output:failed` and no expected, that's fine too.
+- [ ] get 'alias'es parsing. I'll say the must be the first line? Might as well.
+- [ ] get parsing of the new fixture format working
+- [ ] update the devui n stuff
+
+
+- [ ] I need source maps or some such, so that type reporting actually works correctly
+- [ ] 
+
 
 
 - [x] basic server
