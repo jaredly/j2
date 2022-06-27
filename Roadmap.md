@@ -23,9 +23,14 @@ parsing .. and stuff ...
 ### [-] Generics (TVars TApply TypeApplication TypeVariables)
 - [x] TVars
 - [x] TypeApplication
+- [ ] oh TApply, I think we need it
+	Yeah for like `Array<int>`
 - [ ] Defaults!
+	- [x] builtin types need type args
+	- hmmm ok so also, I'm not sure about types
 	- errors:
 		- defaults need to not be followed by non-defaults
+		- hmmm anything else?
 - [ ] 
 - [ ] TypeVariables (we don't need this until we have lambdas)
 ... I'm not sure that I need TApply?

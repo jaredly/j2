@@ -10,7 +10,7 @@ toString( // inside
 //last
 
 --[output:expected]--
-alias string=h8f452146b75c912dedc5638091c55a088e30b7ee toString=hb906415c72c78c3b88d97d9c8adad6d0f4e89b02
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=hdbca9f915bde32147ea3f57bb5676c33bd2ae511
 // Comments
 toString(
     // inside

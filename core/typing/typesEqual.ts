@@ -1,15 +1,6 @@
 import { FullContext } from '../ctx';
 import { idsEqual } from '../ids';
-import {
-    Ref,
-    RefKind,
-    TApply,
-    TLambda,
-    TOr,
-    TRef,
-    TVars,
-    Type,
-} from '../typed-ast';
+import { Ref, RefKind, TLambda, TOr, TRef, TVars, Type } from '../typed-ast';
 
 export const refsEqual = (a: RefKind, b: RefKind): boolean => {
     if (a.type !== b.type) {
@@ -159,7 +150,11 @@ export const typeMatches = (
         case 'TRef':
             return (
                 expected.type === 'TRef' &&
-                trefsEqual(candidate.ref, expected.ref)
+                trefsEqual(candidate.ref, expected.ref) &&
+                candidate.args.length === expected.args.length &&
+                candidate.args.every((arg, i) =>
+                    typeMatches(arg, expected.args[i], ctx),
+                )
             );
         // case 'TApply':
         //     // So TApply should get "worked out" by this point, right?

@@ -102,10 +102,13 @@ TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
 // type.ts
 
 Type = TRef / Number / String / TLambda / TVars
-TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
+TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)? args:(TApply)?
 TVars = "<" _ args:TBargs _ ">" inner:Type
 TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
 TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Type)?
+
+TApply = "<" _ args:TComma _ ">"
+TComma = first:Type rest:(_ "," _ Type)* _ ","?
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _

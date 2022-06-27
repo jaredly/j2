@@ -4,6 +4,7 @@
 //:value:multi:<A, B>(a: A, b: B) => A
 //:value:bounded:<A: int>(a: A) => A
 //:value:takesInt:(a: int) => int
+//:type:Array:<Element, Length: uint>
 
 ##[fixtures]##
 ==[basic]==
@@ -11,7 +12,7 @@
 hello<int>(10)
 
 --[output:expected]--
-alias hello=hf6e269898d7d9d035467350db13cfa38ac824c31 int=h2f181c91131fd0daa282424fb3953604513df6fe
+alias hello=hd00e18d65bbfa2e36da4cae7859311a174e50ac0 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 hello<int>(10)
 // int
 
@@ -20,7 +21,7 @@ hello<int>(10)
 (@decorate() hello)<10>(10)
 
 --[output:expected]--
-alias decorate=h5a7fc9170718190f9388084b28fb49f6cb4602fc hello=hf6e269898d7d9d035467350db13cfa38ac824c31
+alias decorate=h5a7fc9170718190f9388084b28fb49f6cb4602fc hello=hd00e18d65bbfa2e36da4cae7859311a174e50ac0
 (@decorate() hello)<10>(10)
 // 10
 
@@ -30,7 +31,7 @@ multi<int, string>
 multi<int, string>(10, "hello")
 
 --[output:expected]--
-alias int=h2f181c91131fd0daa282424fb3953604513df6fe multi=h088d53f5e3ddc6bf12a7e3054c4a52ebae49789d string=h8f452146b75c912dedc5638091c55a088e30b7ee
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f multi=h418d7a01dfba08e63f9d591581378a723c8e07e1 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 multi<int, string>
 // (a: int, b: string) => int
 multi<int, string>(10, "hello")
@@ -41,7 +42,7 @@ multi<int, string>(10, "hello")
 bounded<10>(10)
 
 --[output:expected]--
-alias bounded=h9a68796fa42783d7317d2e1e68412fc3caeaced2
+alias bounded=h82ba945bb3e182acfcc0fd217a21a9336d99498a
 bounded<10>(10)
 // 10
 
@@ -50,7 +51,7 @@ bounded<10>(10)
 bounded<string>("wat")
 
 --[output:expected]--
-alias bounded=h9a68796fa42783d7317d2e1e68412fc3caeaced2 string=h8f452146b75c912dedc5638091c55a088e30b7ee
+alias bounded=h82ba945bb3e182acfcc0fd217a21a9336d99498a string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 bounded<string>("wat")
 
 ==[wrong args]==
@@ -59,7 +60,7 @@ bounded<int, string>(20)
 takesInt<int>(10)
 
 --[output:expected]--
-alias bounded=h9a68796fa42783d7317d2e1e68412fc3caeaced2 error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h2f181c91131fd0daa282424fb3953604513df6fe string=h8f452146b75c912dedc5638091c55a088e30b7ee takesInt=h98cad21c987827b75b207788fd3ba796e7123874
+alias bounded=h82ba945bb3e182acfcc0fd217a21a9336d99498a error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesInt=h61a33961423768e7cfc1fb0b395ed5efb9f2d24a
 (@error:wrongNumberOfTypeArgs() bounded<int, string>)(20)
 // int
 (@error:notATypeVars() takesInt<int>)(10)

@@ -23,7 +23,7 @@ alias onesit=ha1ea686a0f954591e6817d1e38eba3d7dcf85068 twosit=h8819c3a2c310a65e6
 (@decorated()oneArg)(10)
 
 --[output:expected]--
-alias decorated=h216be29e211ffb2bbb1ff40ab9718fad53bb9687 oneArg=hb08abf80591f2e867a9b48a1e552e95c835deae7 string=h8f452146b75c912dedc5638091c55a088e30b7ee
+alias decorated=h216be29e211ffb2bbb1ff40ab9718fad53bb9687 oneArg=h1c684dfbfdbfe5aa532bc148ffa28719da1da880 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 (@decorated() oneArg)(10)
 // string
 
@@ -32,6 +32,6 @@ alias decorated=h216be29e211ffb2bbb1ff40ab9718fad53bb9687 oneArg=hb08abf80591f2e
 @decodeURI(:string)("http://example.com")
 
 --[output:expected]--
-alias string=h8f452146b75c912dedc5638091c55a088e30b7ee
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 @decodeURI#[:unresolved:](:string) "http://example.com"
 // "http://example.com"

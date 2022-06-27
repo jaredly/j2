@@ -3,6 +3,7 @@ import {
     addBuiltin,
     addBuiltinDecorator,
     addBuiltinType,
+    BuiltinTarg,
     FullContext,
     fullContext,
     noloc,
@@ -391,9 +392,21 @@ function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
                 const tast = ctx.ToTast[ast.type](ast as any, ctx);
                 addBuiltin(ctx, builtin.name, tast);
                 break;
-            case 'type':
-                addBuiltinType(ctx, builtin.name, builtin.args);
+            case 'type': {
+                let args: BuiltinTarg[] = [];
+                if (builtin.args) {
+                    const ast = parseType(builtin.args + 'ok');
+                    const tast = ctx.ToTast[ast.type](ast as any, ctx);
+                    if (tast.type === 'TVars') {
+                        args = tast.args.map(({ bound, default_ }) => ({
+                            bound,
+                            default_,
+                        }));
+                    }
+                }
+                addBuiltinType(ctx, builtin.name, args);
                 break;
+            }
             case 'decorator':
                 addBuiltinDecorator(ctx, builtin.name, 0);
                 break;
@@ -403,7 +416,7 @@ function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
 
 export type Builtin =
     | { kind: 'value'; name: string; type: string }
-    | { kind: 'type'; name: string; args: number }
+    | { kind: 'type'; name: string; args: string }
     | {
           kind: 'decorator';
           name: string;
@@ -415,7 +428,7 @@ export function parseBuiltin(line: string): Builtin {
             const typeRaw = rest.join(':').trim();
             return { kind: 'value', name, type: typeRaw };
         case 'type':
-            return { kind: 'type', name, args: +rest[0] };
+            return { kind: 'type', name, args: rest.join(':') };
         case 'decorator':
             return { kind: 'decorator', name };
         default:

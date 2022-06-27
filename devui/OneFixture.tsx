@@ -128,8 +128,9 @@ export function OneFixture({
                         }}
                     >
                         <Checkbox
-                            label="Should Fail"
                             size="xs"
+                            label="Should Fail"
+                            disableAnimation
                             isSelected={fixture.shouldFail}
                             onChange={(shouldFail) =>
                                 onChange({ ...fixture, shouldFail })
@@ -142,6 +143,7 @@ export function OneFixture({
                         <Textarea
                             autoFocus
                             fullWidth
+                            aria-label="Input"
                             style={{
                                 fontFamily: 'inherit',
                                 fontSize: 'inherit',

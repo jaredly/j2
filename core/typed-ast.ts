@@ -21,7 +21,6 @@ export type {
 } from './elements/decorators';
 export type {
     TAdd,
-    TApply,
     TLambda,
     TOr,
     TRef,
@@ -78,11 +77,11 @@ export type Toplevel = {
 };
 
 export type Expression =
+    | Ref
     | Apply
     | Number
     | Boolean
     | TemplateString
-    | Ref
     | TypeApplication
     | DecoratedExpression;
 

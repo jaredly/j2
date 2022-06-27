@@ -220,6 +220,7 @@ export type TRef = {
   loc: Loc;
   text: string;
   hash: (string | string | string | string) | null;
+  args: TApply | null;
 };
 
 export type TVars = {
@@ -244,6 +245,18 @@ export type TBArg = {
   default_: Type | null;
 };
 
+export type TApply = {
+  type: "TApply";
+  loc: Loc;
+  args: TComma;
+};
+
+export type TComma = {
+  type: "TComma";
+  loc: Loc;
+  items: Type[];
+};
+
 export type TArg = {
   type: "TArg";
   loc: Loc;
@@ -264,9 +277,9 @@ export type TLambda = {
   result: Type;
 };
 
-export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | CallSuffix | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TRef | TVars | TBargs | TBArg | TArg | TArgs | TLambda;
+export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | CallSuffix | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TRef | TVars | TBargs | TBArg | TApply | TComma | TArg | TArgs | TLambda;
 
-export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Identifier", "Apply", "CallSuffix", "CommaExpr", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TRef", "TVars", "TBargs", "TBArg", "TArg", "TArgs", "TLambda"];
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Identifier", "Apply", "CallSuffix", "CommaExpr", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TRef", "TVars", "TBargs", "TBArg", "TApply", "TComma", "TArg", "TArgs", "TLambda"];
 
 // @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});

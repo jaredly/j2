@@ -36,7 +36,9 @@ export const analyzeContext = (ctx: FullContext): Ctx => {
         },
         typeByName(name: string) {
             const ref = ctx.types.names[name];
-            return ref ? { type: 'TRef', ref: ref, loc: noloc } : null;
+            return ref
+                ? { type: 'TRef', ref: ref, loc: noloc, args: [] }
+                : null;
         },
         _full: ctx,
     };

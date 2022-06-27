@@ -13,6 +13,8 @@ import {
   DecType,
   Type,
   TRef,
+  TApply,
+  TComma,
   Number,
   String,
   TLambda,
@@ -302,6 +304,16 @@ export type Visitor<Ctx> = {
   TBargsPost?: (node: TBargs, ctx: Ctx) => null | TBargs;
   TBArg?: (node: TBArg, ctx: Ctx) => null | false | TBArg | [TBArg | null, Ctx];
   TBArgPost?: (node: TBArg, ctx: Ctx) => null | TBArg;
+  TApply?: (
+    node: TApply,
+    ctx: Ctx
+  ) => null | false | TApply | [TApply | null, Ctx];
+  TApplyPost?: (node: TApply, ctx: Ctx) => null | TApply;
+  TComma?: (
+    node: TComma,
+    ctx: Ctx
+  ) => null | false | TComma | [TComma | null, Ctx];
+  TCommaPost?: (node: TComma, ctx: Ctx) => null | TComma;
   TArg?: (node: TArg, ctx: Ctx) => null | false | TArg | [TArg | null, Ctx];
   TArgPost?: (node: TArg, ctx: Ctx) => null | TArg;
   TArgs?: (node: TArgs, ctx: Ctx) => null | false | TArgs | [TArgs | null, Ctx];
@@ -495,6 +507,14 @@ export type Visitor<Ctx> = {
     node: TBArg,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TApply?: (
+    node: TApply,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TComma?: (
+    node: TComma,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TArg?: (
     node: TArg,
     ctx: Ctx
@@ -595,6 +615,128 @@ export const transformDecoratorId = <Ctx>(
   return node;
 };
 
+export const transformTComma = <Ctx>(
+  node: TComma,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TComma => {
+  if (!node) {
+    throw new Error("No TComma provided");
+  }
+
+  const transformed = visitor.TComma ? visitor.TComma(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformType(updatedNode$items$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        items: updatedNode$items,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TCommaPost) {
+    const transformed = visitor.TCommaPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTApply = <Ctx>(
+  node: TApply,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TApply => {
+  if (!node) {
+    throw new Error("No TApply provided");
+  }
+
+  const transformed = visitor.TApply ? visitor.TApply(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    const updatedNode$args = transformTComma(node.args, visitor, ctx);
+    changed1 = changed1 || updatedNode$args !== node.args;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        args: updatedNode$args,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TApplyPost) {
+    const transformed = visitor.TApplyPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformTRef = <Ctx>(
   node: TRef,
   visitor: Visitor<Ctx>,
@@ -627,8 +769,25 @@ export const transformTRef = <Ctx>(
 
     const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
     changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$args = null;
+    const updatedNode$args$current = node.args;
+    if (updatedNode$args$current != null) {
+      const updatedNode$args$1$ = transformTApply(
+        updatedNode$args$current,
+        visitor,
+        ctx
+      );
+      changed1 = changed1 || updatedNode$args$1$ !== updatedNode$args$current;
+      updatedNode$args = updatedNode$args$1$;
+    }
+
     if (changed1) {
-      updatedNode = { ...updatedNode, loc: updatedNode$loc };
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        args: updatedNode$args,
+      };
       changed0 = true;
     }
   }
@@ -4243,6 +4402,44 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
+    case "TApply": {
+      const transformed = visitor.AllTaggedTypes_TApply
+        ? visitor.AllTaggedTypes_TApply(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TComma": {
+      const transformed = visitor.AllTaggedTypes_TComma
+        ? visitor.AllTaggedTypes_TComma(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "TArg": {
       const transformed = visitor.AllTaggedTypes_TArg
         ? visitor.AllTaggedTypes_TArg(node, ctx)
@@ -4468,6 +4665,18 @@ export const transformAllTaggedTypes = <Ctx>(
 
     case "TBArg": {
       updatedNode = transformTBArg(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TApply": {
+      updatedNode = transformTApply(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TComma": {
+      updatedNode = transformTComma(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

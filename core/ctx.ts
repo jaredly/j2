@@ -8,7 +8,6 @@ import {
     GlobalRef,
     RefKind,
     Sym,
-    TApply,
     TLambda,
     TVars,
     Type,
@@ -28,7 +27,10 @@ export type FullContext = {
         Array<GlobalRef>
     >;
     types: HashedNames<
-        | { type: 'builtin'; args: number }
+        | {
+              type: 'builtin';
+              args: BuiltinTarg[];
+          }
         // TODO: once I get records going
         // ... this'll be a 'type declaration, I think'
         // kind: Kind,
@@ -80,10 +82,12 @@ export const addBuiltinDecorator = (
     return ref;
 };
 
+export type BuiltinTarg = { bound: Type | null; default_: Type | null };
+
 export const addBuiltinType = (
     ctx: FullContext,
     name: string,
-    args: number,
+    args: BuiltinTarg[],
     unique = 0,
 ): RefKind => {
     const hash = hashObject({ name, args, unique });
@@ -243,7 +247,12 @@ export const noloc: Loc = {
     end: { line: 0, column: 0, offset: -1 },
     idx: -1,
 };
-export const tref = (ref: RefKind): Type => ({ type: 'TRef', ref, loc: noloc });
+export const tref = (ref: RefKind): Type => ({
+    type: 'TRef',
+    ref,
+    loc: noloc,
+    args: [],
+});
 const ref = (kind: RefKind): Expression => ({ type: 'Ref', kind, loc: noloc });
 const tlam = (
     args: Array<{ label: string; typ: Type; loc: Loc }>,
@@ -263,12 +272,12 @@ const tvars = (
     inner,
     loc: noloc,
 });
-const tapply = (args: Array<Type>, target: Type): TApply => ({
-    type: 'TApply',
-    args,
-    loc: noloc,
-    target,
-});
+// const tapply = (args: Array<Type>, target: Type): TApply => ({
+//     type: 'TApply',
+//     args,
+//     loc: noloc,
+//     target,
+// });
 
 const prelude = `
 enum Result<Ok, Failure> {
@@ -299,6 +308,7 @@ export type ErrorTag = keyof typeof errors;
 
 const builtinTypes = `
 int
+uint
 float
 bool
 string
@@ -319,7 +329,7 @@ const builtinValues = `
 export const setupDefaults = (ctx: FullContext) => {
     const named: { [key: string]: RefKind } = {};
     builtinTypes.forEach((name) => {
-        named[name] = addBuiltinType(ctx, name, 0);
+        named[name] = addBuiltinType(ctx, name, []);
     });
     Object.keys(errors).forEach((tag) => {
         addBuiltinDecorator(ctx, `error:` + tag, 0);

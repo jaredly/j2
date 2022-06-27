@@ -126,6 +126,7 @@ export const FixtureFile = ({
                                 autoFocus
                                 fullWidth
                                 minRows={5}
+                                label="Builtins"
                                 value={editBuiltins}
                                 onChange={(evt) =>
                                     setEditBuiltins(evt.target.value)

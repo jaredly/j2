@@ -9,10 +9,13 @@ import { Ctx as TACtx } from '../typing/to-ast';
 
 export const grammar = `
 Type = TRef / Number / String / TLambda / TVars
-TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
+TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)? args:(TApply)?
 TVars = "<" _ args:TBargs _ ">" inner:Type
 TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
 TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Type)?
+
+TApply = "<" _ args:TComma _ ">"
+TComma = first:Type rest:(_ "," _ Type)* _ ","?
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
@@ -23,15 +26,16 @@ export type TRef = {
     type: 'TRef';
     ref: t.RefKind | t.UnresolvedRef;
     loc: t.Loc;
+    args: Type[];
 };
 
 // Something<T>
-export type TApply = {
-    type: 'TApply';
-    target: Type;
-    args: Array<Type>;
-    loc: t.Loc;
-};
+// export type TApply = {
+//     type: 'TApply';
+//     target: Type;
+//     args: Array<Type>;
+//     loc: t.Loc;
+// };
 
 // OK also how do I do ... type bounds
 // yeah that would be here.
@@ -97,6 +101,10 @@ export const ToTast = {
                 hash,
             },
             loc: type.loc,
+            args:
+                type.args?.args.items.map((arg) =>
+                    ctx.ToTast[arg.type](arg as any, ctx),
+                ) ?? [],
         };
     },
     String({ type, loc, text }: p.String, ctx: TCtx): t.String {
@@ -176,12 +184,28 @@ export const ToAst = {
             loc: type.loc,
         };
     },
-    TRef({ ref, loc }: t.TRef, ctx: TACtx): p.TRef {
+    TRef({ ref, loc, args }: t.TRef, ctx: TACtx): p.TRef {
         const { text, hash } =
             ref.type === 'Unresolved'
                 ? { text: ref.text, hash: '#[:unresolved:]' }
                 : ctx.printRef(ref, loc, 'type');
-        return { type: 'TRef', text, hash, loc };
+        return {
+            type: 'TRef',
+            text,
+            hash,
+            loc,
+            args: {
+                type: 'TApply',
+                loc,
+                args: {
+                    type: 'TComma',
+                    loc,
+                    items: args.map((arg) =>
+                        ctx.ToAst[arg.type](arg as any, ctx),
+                    ),
+                },
+            },
+        };
     },
     TLambda({ type, args, result, loc }: t.TLambda, ctx: TACtx): p.Type {
         return {
