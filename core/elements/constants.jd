@@ -53,6 +53,6 @@ alias string=h8f452146b75c912dedc5638091c55a088e30b7ee
 "${12}"
 
 --[output:expected]--
-alias string=h8f452146b75c912dedc5638091c55a088e30b7ee error:notAString=h78fb9682caf6cb8dc34febba83e591c06884dc73
+alias error:notAString=h78fb9682caf6cb8dc34febba83e591c06884dc73 string=h8f452146b75c912dedc5638091c55a088e30b7ee
 "${@error:notAString() 12}"
 // string

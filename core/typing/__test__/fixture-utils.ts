@@ -155,7 +155,7 @@ export const aliasesToString = (aliases: { [key: string]: string }) =>
     Object.keys(aliases).length
         ? 'alias ' +
           Object.entries(aliases)
-              .sort((a, b) => b[0].localeCompare(a[0]))
+              .sort((a, b) => a[0].localeCompare(b[0]))
               .map(([key, value]) => {
                   return `${key}=${value}`;
               })
