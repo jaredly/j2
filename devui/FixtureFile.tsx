@@ -101,8 +101,23 @@ export const FixtureFile = ({
                 ))}
             </div>
 
-            <Container css={{ p: '$6', pb: '50vh', overflow: 'auto' }}>
-                <>
+            <Container
+                css={{
+                    maxWidth: 'none',
+                    overflow: 'auto',
+                    paddingLeft: '$12',
+                    paddingRight: '$12',
+                    margin: 0,
+                    flex: 1,
+                }}
+            >
+                <Container
+                    css={{
+                        p: '$6',
+                        pb: '50vh',
+                        // margin: '$12',
+                    }}
+                >
                     {editBuiltins != null ? (
                         <div>
                             <Textarea
@@ -172,25 +187,25 @@ export const FixtureFile = ({
                         </div>
                     )}
                     <Card.Divider css={{ marginBlock: '$6' }} />
-                </>
 
-                {data.fixtures.map((fixture: Fixture, i) => (
-                    <OneFixture
-                        builtins={data.builtins}
-                        portal={portal.current!}
-                        id={`${name}/${i}`}
-                        fixture={fixture}
-                        key={i}
-                        onChange={(fixture) => {
-                            setData({
-                                ...data,
-                                fixtures: data.fixtures.map((f, j) =>
-                                    j === i ? fixture : f,
-                                ),
-                            });
-                        }}
-                    />
-                ))}
+                    {data.fixtures.map((fixture: Fixture, i) => (
+                        <OneFixture
+                            builtins={data.builtins}
+                            portal={portal.current!}
+                            id={`${name}/${i}`}
+                            fixture={fixture}
+                            key={i}
+                            onChange={(fixture) => {
+                                setData({
+                                    ...data,
+                                    fixtures: data.fixtures.map((f, j) =>
+                                        j === i ? fixture : f,
+                                    ),
+                                });
+                            }}
+                        />
+                    ))}
+                </Container>
             </Container>
         </div>
     );
