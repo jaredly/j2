@@ -101,50 +101,65 @@ export const FixtureFile = ({
             </div>
 
             <Container css={{ p: '$6', pb: '50vh', overflow: 'auto' }}>
-                {data.builtins.length ? (
-                    <>
-                        {editBuiltins ? (
-                            <div>
-                                <Textarea
-                                    minRows={5}
-                                    value={editBuiltins}
-                                    onChange={(evt) =>
-                                        setEditBuiltins(evt.target.value)
-                                    }
-                                    onBlur={() => {
+                <>
+                    {editBuiltins != null ? (
+                        <div>
+                            <Textarea
+                                minRows={5}
+                                autoFocus
+                                value={editBuiltins}
+                                onChange={(evt) =>
+                                    setEditBuiltins(evt.target.value)
+                                }
+                                onKeyDown={(evt) => {
+                                    if (evt.key === 'Escape') {
+                                        setEditBuiltins(null);
+                                    } else if (
+                                        evt.key === 'Enter' &&
+                                        evt.metaKey
+                                    ) {
+                                        evt.preventDefault();
                                         setData({
                                             ...data,
                                             builtins: editBuiltins
                                                 .split('\n')
                                                 .map(parseBuiltin),
                                         });
-                                        setEditBuiltins(null);
-                                    }}
-                                />
-                            </div>
-                        ) : (
-                            <div
-                                onClick={() =>
-                                    setEditBuiltins(
-                                        data.builtins
-                                            .map(serializeBuiltin)
-                                            .join('\n'),
-                                    )
-                                }
-                            >
-                                <Text css={{ fontFamily: '$mono' }} small>
-                                    Builtins:
-                                    {data.builtins.map((item, i) => (
-                                        <span key={i} style={{ marginLeft: 8 }}>
-                                            {item.name}
-                                        </span>
-                                    ))}
-                                </Text>
-                            </div>
-                        )}
-                        <Card.Divider css={{ marginBlock: '$6' }} />
-                    </>
-                ) : null}
+                                    }
+                                }}
+                                onBlur={() => {
+                                    setData({
+                                        ...data,
+                                        builtins: editBuiltins
+                                            .split('\n')
+                                            .map(parseBuiltin),
+                                    });
+                                    setEditBuiltins(null);
+                                }}
+                            />
+                        </div>
+                    ) : (
+                        <div
+                            onClick={() =>
+                                setEditBuiltins(
+                                    data.builtins
+                                        .map(serializeBuiltin)
+                                        .join('\n'),
+                                )
+                            }
+                        >
+                            <Text css={{ fontFamily: '$mono' }} small>
+                                Builtins:
+                                {data.builtins.map((item, i) => (
+                                    <span key={i} style={{ marginLeft: 8 }}>
+                                        {item.name}
+                                    </span>
+                                ))}
+                            </Text>
+                        </div>
+                    )}
+                    <Card.Divider css={{ marginBlock: '$6' }} />
+                </>
 
                 {data.fixtures.map((fixture: Fixture, i) => (
                     <OneFixture

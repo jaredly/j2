@@ -63,7 +63,7 @@ export const Highlight = ({
                 css={{
                     whiteSpace: 'pre-wrap',
                     fontFamily: '$mono',
-                    cursor: 'default',
+                    cursor: onClick ? 'pointer' : 'default',
                 }}
                 onMouseLeave={(evt) => {
                     setHover(null);

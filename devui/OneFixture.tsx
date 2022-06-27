@@ -83,13 +83,38 @@ export function OneFixture({
                         </Text>
                     )}
                 </div>
-                <Card.Body css={{ display: 'flex' }}>
+                <Card.Body css={{ display: 'flex', fontFamily: '$mono' }}>
                     {editing != null ? (
                         <Textarea
                             autoFocus
+                            style={{
+                                fontFamily: 'inherit',
+                                fontSize: 'inherit',
+                                padding: 0,
+                                margin: 0,
+                            }}
                             minRows={3}
                             value={editing}
                             onChange={(evt) => setEditing(evt.target.value)}
+                            onKeyDown={(evt) => {
+                                if (evt.key === 'Escape') {
+                                    setEditing(null);
+                                    if (editing === newOutput.input) {
+                                        onChange({
+                                            ...fixture,
+                                            input: editing,
+                                        });
+                                    }
+                                } else if (evt.key === 'Enter' && evt.metaKey) {
+                                    evt.preventDefault();
+                                    if (editing === newOutput.input) {
+                                        onChange({
+                                            ...fixture,
+                                            input: editing,
+                                        });
+                                    }
+                                }
+                            }}
                             onBlur={() => {
                                 if (editing === newOutput.input) {
                                     onChange({ ...fixture, input: editing });
