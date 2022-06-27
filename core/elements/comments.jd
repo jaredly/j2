@@ -1,6 +1,6 @@
+##[fixtures]##
 ==[comments]==
-{"builtins":[],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","toString":"hb906415c72c78c3b88d97d9c8adad6d0f4e89b02"},"failing":false}
-----
+--[input]--
 // Comments
 toString( // inside
 // then
@@ -8,7 +8,9 @@ toString( // inside
 	// again
 )
 //last
-----
+
+--[output:expected]--
+alias string=h8f452146b75c912dedc5638091c55a088e30b7ee toString=hb906415c72c78c3b88d97d9c8adad6d0f4e89b02
 // Comments
 toString(
     // inside

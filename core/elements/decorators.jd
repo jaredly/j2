@@ -1,24 +1,36 @@
+##[builtins]##
+//:decorator:whatsit
+//:decorator:onesit
+//:decorator:twosit
+//:decorator:decorated
+
+##[fixtures]##
 ==[decorate something]==
-{"builtins":[{"kind":"decorator","name":"whatsit"},{"kind":"decorator","name":"onesit"},{"kind":"decorator","name":"twosit"}],"aliases":{"whatsit":"haf4a9b4fd8c53f7ca2d2e2ce236ca5ef837fd4ed","onesit":"ha1ea686a0f954591e6817d1e38eba3d7dcf85068","twosit":"h8819c3a2c310a65e65204176616bcd32e68326b5"},"failing":false}
-----
+--[input]--
 @whatsit() 10
 @onesit() (@twosit() 20)
-----
+
+--[output:expected]--
+alias whatsit=haf4a9b4fd8c53f7ca2d2e2ce236ca5ef837fd4ed onesit=ha1ea686a0f954591e6817d1e38eba3d7dcf85068 twosit=h8819c3a2c310a65e65204176616bcd32e68326b5
 @whatsit() 10
 // 10
 @onesit() @twosit() 20
 // 20
+
 ==[decorated apply target]==
-{"builtins":[{"kind":"decorator","name":"decorated"}],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","toString":"hb906415c72c78c3b88d97d9c8adad6d0f4e89b02","decorated":"h216be29e211ffb2bbb1ff40ab9718fad53bb9687"},"failing":false}
-----
+--[input]--
 (@decorated()toString)(10)
-----
+
+--[output:expected]--
+alias string=h8f452146b75c912dedc5638091c55a088e30b7ee toString=hb906415c72c78c3b88d97d9c8adad6d0f4e89b02 decorated=h216be29e211ffb2bbb1ff40ab9718fad53bb9687
 (@decorated() toString)(10)
 // string
+
 ==[undefined]==
-{"builtins":[],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee"},"failing":false}
-----
+--[input]--
 @decodeURI(:string)("http://example.com")
-----
+
+--[output:expected]--
+alias string=h8f452146b75c912dedc5638091c55a088e30b7ee
 @decodeURI#[:unresolved:](:string) "http://example.com"
 // "http://example.com"

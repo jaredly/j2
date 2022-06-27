@@ -1,14 +1,22 @@
+##[builtins]##
+//:value:hello:string
+//:value:one:string
+
+##[fixtures]##
 ==[basic]==
-{"builtins":[{"kind":"value","name":"hello","type":"string"}],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","hello":"hbef7a4d391e9c6ea5e9e1a5b32b0c2ce4d616a2b"},"failing":false}
-----
+--[input]--
 hello
-----
+
+--[output:expected]--
+alias string=h8f452146b75c912dedc5638091c55a088e30b7ee hello=hbef7a4d391e9c6ea5e9e1a5b32b0c2ce4d616a2b
 hello
 // string
+
 ==[types]==
-{"builtins":[{"kind":"value","name":"one","type":"string"}],"aliases":{"string":"h8f452146b75c912dedc5638091c55a088e30b7ee","toString":"hb906415c72c78c3b88d97d9c8adad6d0f4e89b02","one":"h02e11f648e704ed47f48bd9eb61b814bf54a199b"},"failing":false}
-----
+--[input]--
 "${toString(10)} and ${one}"
-----
+
+--[output:expected]--
+alias string=h8f452146b75c912dedc5638091c55a088e30b7ee toString=hb906415c72c78c3b88d97d9c8adad6d0f4e89b02 one=h02e11f648e704ed47f48bd9eb61b814bf54a199b
 "${toString(10)} and ${one}"
 // string
