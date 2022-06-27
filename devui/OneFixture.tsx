@@ -87,6 +87,7 @@ export function OneFixture({
                     {editing != null ? (
                         <Textarea
                             autoFocus
+                            fullWidth
                             style={{
                                 fontFamily: 'inherit',
                                 fontSize: 'inherit',

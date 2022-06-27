@@ -146,7 +146,7 @@ export const Highlight = ({
     );
 };
 
-const colors: {
+export const colors: {
     [key in keyof Visitor<null>]: string;
 } = {
     TRef: 'green',

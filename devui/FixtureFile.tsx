@@ -16,6 +16,7 @@ import {
     serializeBuiltin,
     parseBuiltin,
 } from '../core/typing/__test__/fixture-utils';
+import { colors } from './Highlight';
 import { usePromise } from './index';
 import { OneFixture } from './OneFixture';
 
@@ -105,8 +106,9 @@ export const FixtureFile = ({
                     {editBuiltins != null ? (
                         <div>
                             <Textarea
-                                minRows={5}
                                 autoFocus
+                                fullWidth
+                                minRows={5}
                                 value={editBuiltins}
                                 onChange={(evt) =>
                                     setEditBuiltins(evt.target.value)
@@ -151,7 +153,18 @@ export const FixtureFile = ({
                             <Text css={{ fontFamily: '$mono' }} small>
                                 Builtins:
                                 {data.builtins.map((item, i) => (
-                                    <span key={i} style={{ marginLeft: 8 }}>
+                                    <span
+                                        key={i}
+                                        style={{
+                                            marginLeft: 8,
+                                            color:
+                                                item.kind === 'decorator'
+                                                    ? colors.DecoratorId
+                                                    : item.kind === 'type'
+                                                    ? colors.TRef
+                                                    : colors.Identifier,
+                                        }}
+                                    >
                                         {item.name}
                                     </span>
                                 ))}
