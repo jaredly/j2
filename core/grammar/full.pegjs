@@ -40,8 +40,8 @@ UnresolvedHash = "#[" ":unresolved:" "]"
 // apply.ts
 
 Apply = target:Atom suffixes_drop:Suffix*
-Suffix = Parens
-Parens = "(" _ args:CommaExpr? ")"
+Suffix = CallSuffix / TypeApplicationSuffix
+CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
 
@@ -87,6 +87,16 @@ LabeledDecoratorArg = label:($IdText ":" _)? arg:DecoratorArg
 DecType = ":" _ type_:Type 
 // DecPat = "?" __ pattern:Pattern 
 DecExpr = expr:Expression 
+
+
+// generics.ts
+
+TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
+TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
+
+TypeVariables = "<" _ vbls:TypeVbls ">" _ body:Expression
+TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
+TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
 
 
 // type.ts

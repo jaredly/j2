@@ -32,8 +32,10 @@ import {
   TemplatePair,
   TemplateWrap,
   Suffix,
-  Parens,
+  CallSuffix,
   CommaExpr,
+  TypeApplicationSuffix,
+  TypeAppVbls,
   _lineEnd,
   _EOF,
   newline,
@@ -46,6 +48,9 @@ import {
   finalLineComment,
   tplStringChars,
   stringChar,
+  TypeVariables,
+  TypeVbls,
+  TypeVbl,
   AllTaggedTypes,
 } from "./grammar/base.parser";
 
@@ -98,11 +103,11 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | Suffix | [Suffix | null, Ctx];
   SuffixPost?: (node: Suffix, ctx: Ctx) => null | Suffix;
-  Parens?: (
-    node: Parens,
+  CallSuffix?: (
+    node: CallSuffix,
     ctx: Ctx
-  ) => null | false | Parens | [Parens | null, Ctx];
-  ParensPost?: (node: Parens, ctx: Ctx) => null | Parens;
+  ) => null | false | CallSuffix | [CallSuffix | null, Ctx];
+  CallSuffixPost?: (node: CallSuffix, ctx: Ctx) => null | CallSuffix;
   CommaExpr?: (
     node: CommaExpr,
     ctx: Ctx
@@ -252,6 +257,38 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | DecExpr | [DecExpr | null, Ctx];
   DecExprPost?: (node: DecExpr, ctx: Ctx) => null | DecExpr;
+  TypeApplicationSuffix?: (
+    node: TypeApplicationSuffix,
+    ctx: Ctx
+  ) =>
+    | null
+    | false
+    | TypeApplicationSuffix
+    | [TypeApplicationSuffix | null, Ctx];
+  TypeApplicationSuffixPost?: (
+    node: TypeApplicationSuffix,
+    ctx: Ctx
+  ) => null | TypeApplicationSuffix;
+  TypeAppVbls?: (
+    node: TypeAppVbls,
+    ctx: Ctx
+  ) => null | false | TypeAppVbls | [TypeAppVbls | null, Ctx];
+  TypeAppVblsPost?: (node: TypeAppVbls, ctx: Ctx) => null | TypeAppVbls;
+  TypeVariables?: (
+    node: TypeVariables,
+    ctx: Ctx
+  ) => null | false | TypeVariables | [TypeVariables | null, Ctx];
+  TypeVariablesPost?: (node: TypeVariables, ctx: Ctx) => null | TypeVariables;
+  TypeVbls?: (
+    node: TypeVbls,
+    ctx: Ctx
+  ) => null | false | TypeVbls | [TypeVbls | null, Ctx];
+  TypeVblsPost?: (node: TypeVbls, ctx: Ctx) => null | TypeVbls;
+  TypeVbl?: (
+    node: TypeVbl,
+    ctx: Ctx
+  ) => null | false | TypeVbl | [TypeVbl | null, Ctx];
+  TypeVblPost?: (node: TypeVbl, ctx: Ctx) => null | TypeVbl;
   Type?: (node: Type, ctx: Ctx) => null | false | Type | [Type | null, Ctx];
   TypePost?: (node: Type, ctx: Ctx) => null | Type;
   TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
@@ -306,6 +343,14 @@ export type Visitor<Ctx> = {
     node: Apply,
     ctx: Ctx
   ) => null | false | Apply | [Apply | null, Ctx];
+  Suffix_CallSuffix?: (
+    node: CallSuffix,
+    ctx: Ctx
+  ) => null | false | Suffix | [Suffix | null, Ctx];
+  Suffix_TypeApplicationSuffix?: (
+    node: TypeApplicationSuffix,
+    ctx: Ctx
+  ) => null | false | Suffix | [Suffix | null, Ctx];
   DecoratedExpression_DecoratedExpression?: (
     node: DecoratedExpression,
     ctx: Ctx
@@ -354,8 +399,8 @@ export type Visitor<Ctx> = {
     node: Apply,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-  AllTaggedTypes_Parens?: (
-    node: Parens,
+  AllTaggedTypes_CallSuffix?: (
+    node: CallSuffix,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_CommaExpr?: (
@@ -412,6 +457,26 @@ export type Visitor<Ctx> = {
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_DecExpr?: (
     node: DecExpr,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TypeApplicationSuffix?: (
+    node: TypeApplicationSuffix,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TypeAppVbls?: (
+    node: TypeAppVbls,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TypeVariables?: (
+    node: TypeVariables,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TypeVbls?: (
+    node: TypeVbls,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TypeVbl?: (
+    node: TypeVbl,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TRef?: (
@@ -2209,16 +2274,16 @@ export const transformCommaExpr = <Ctx>(
   return node;
 };
 
-export const transformParens = <Ctx>(
-  node: Parens,
+export const transformCallSuffix = <Ctx>(
+  node: CallSuffix,
   visitor: Visitor<Ctx>,
   ctx: Ctx
-): Parens => {
+): CallSuffix => {
   if (!node) {
-    throw new Error("No Parens provided");
+    throw new Error("No CallSuffix provided");
   }
 
-  const transformed = visitor.Parens ? visitor.Parens(node, ctx) : null;
+  const transformed = visitor.CallSuffix ? visitor.CallSuffix(node, ctx) : null;
   if (transformed === false) {
     return node;
   }
@@ -2265,8 +2330,134 @@ export const transformParens = <Ctx>(
   }
 
   node = updatedNode;
-  if (visitor.ParensPost) {
-    const transformed = visitor.ParensPost(node, ctx);
+  if (visitor.CallSuffixPost) {
+    const transformed = visitor.CallSuffixPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTypeAppVbls = <Ctx>(
+  node: TypeAppVbls,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeAppVbls => {
+  if (!node) {
+    throw new Error("No TypeAppVbls provided");
+  }
+
+  const transformed = visitor.TypeAppVbls
+    ? visitor.TypeAppVbls(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformType(updatedNode$items$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        items: updatedNode$items,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeAppVblsPost) {
+    const transformed = visitor.TypeAppVblsPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTypeApplicationSuffix = <Ctx>(
+  node: TypeApplicationSuffix,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeApplicationSuffix => {
+  if (!node) {
+    throw new Error("No TypeApplicationSuffix provided");
+  }
+
+  const transformed = visitor.TypeApplicationSuffix
+    ? visitor.TypeApplicationSuffix(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    const updatedNode$vbls = transformTypeAppVbls(node.vbls, visitor, ctx);
+    changed1 = changed1 || updatedNode$vbls !== node.vbls;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        vbls: updatedNode$vbls,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeApplicationSuffixPost) {
+    const transformed = visitor.TypeApplicationSuffixPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }
@@ -2300,8 +2491,67 @@ export const transformSuffix = <Ctx>(
 
   let changed0 = false;
 
-  const updatedNode = transformParens(node, visitor, ctx);
-  changed0 = changed0 || updatedNode !== node;
+  switch (node.type) {
+    case "CallSuffix": {
+      const transformed = visitor.Suffix_CallSuffix
+        ? visitor.Suffix_CallSuffix(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TypeApplicationSuffix": {
+      const transformed = visitor.Suffix_TypeApplicationSuffix
+        ? visitor.Suffix_TypeApplicationSuffix(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "CallSuffix": {
+      updatedNode = transformCallSuffix(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformTypeApplicationSuffix(
+        node,
+        visitor,
+        ctx
+      );
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
+    }
+  }
 
   node = updatedNode;
   if (visitor.SuffixPost) {
@@ -3221,6 +3471,203 @@ export const transformstringChar = <Ctx>(
   return node;
 };
 
+export const transformTypeVbl = <Ctx>(
+  node: TypeVbl,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeVbl => {
+  if (!node) {
+    throw new Error("No TypeVbl provided");
+  }
+
+  const transformed = visitor.TypeVbl ? visitor.TypeVbl(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    const updatedNode$vbl = transformIdentifier(node.vbl, visitor, ctx);
+    changed1 = changed1 || updatedNode$vbl !== node.vbl;
+
+    let updatedNode$bound = null;
+    const updatedNode$bound$current = node.bound;
+    if (updatedNode$bound$current != null) {
+      const updatedNode$bound$1$ = transformType(
+        updatedNode$bound$current,
+        visitor,
+        ctx
+      );
+      changed1 = changed1 || updatedNode$bound$1$ !== updatedNode$bound$current;
+      updatedNode$bound = updatedNode$bound$1$;
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        vbl: updatedNode$vbl,
+        bound: updatedNode$bound,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeVblPost) {
+    const transformed = visitor.TypeVblPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTypeVbls = <Ctx>(
+  node: TypeVbls,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeVbls => {
+  if (!node) {
+    throw new Error("No TypeVbls provided");
+  }
+
+  const transformed = visitor.TypeVbls ? visitor.TypeVbls(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformTypeVbl(updatedNode$items$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        items: updatedNode$items,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeVblsPost) {
+    const transformed = visitor.TypeVblsPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTypeVariables = <Ctx>(
+  node: TypeVariables,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeVariables => {
+  if (!node) {
+    throw new Error("No TypeVariables provided");
+  }
+
+  const transformed = visitor.TypeVariables
+    ? visitor.TypeVariables(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    const updatedNode$vbls = transformTypeVbls(node.vbls, visitor, ctx);
+    changed1 = changed1 || updatedNode$vbls !== node.vbls;
+
+    const updatedNode$body = transformExpression(node.body, visitor, ctx);
+    changed1 = changed1 || updatedNode$body !== node.body;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        vbls: updatedNode$vbls,
+        body: updatedNode$body,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeVariablesPost) {
+    const transformed = visitor.TypeVariablesPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformAllTaggedTypes = <Ctx>(
   node: AllTaggedTypes,
   visitor: Visitor<Ctx>,
@@ -3326,9 +3773,9 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
-    case "Parens": {
-      const transformed = visitor.AllTaggedTypes_Parens
-        ? visitor.AllTaggedTypes_Parens(node, ctx)
+    case "CallSuffix": {
+      const transformed = visitor.AllTaggedTypes_CallSuffix
+        ? visitor.AllTaggedTypes_CallSuffix(node, ctx)
         : null;
       if (transformed != null) {
         if (Array.isArray(transformed)) {
@@ -3611,6 +4058,101 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
+    case "TypeApplicationSuffix": {
+      const transformed = visitor.AllTaggedTypes_TypeApplicationSuffix
+        ? visitor.AllTaggedTypes_TypeApplicationSuffix(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TypeAppVbls": {
+      const transformed = visitor.AllTaggedTypes_TypeAppVbls
+        ? visitor.AllTaggedTypes_TypeAppVbls(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TypeVariables": {
+      const transformed = visitor.AllTaggedTypes_TypeVariables
+        ? visitor.AllTaggedTypes_TypeVariables(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TypeVbls": {
+      const transformed = visitor.AllTaggedTypes_TypeVbls
+        ? visitor.AllTaggedTypes_TypeVbls(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TypeVbl": {
+      const transformed = visitor.AllTaggedTypes_TypeVbl
+        ? visitor.AllTaggedTypes_TypeVbl(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "TRef": {
       const transformed = visitor.AllTaggedTypes_TRef
         ? visitor.AllTaggedTypes_TRef(node, ctx)
@@ -3772,8 +4314,8 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
-    case "Parens": {
-      updatedNode = transformParens(node, visitor, ctx);
+    case "CallSuffix": {
+      updatedNode = transformCallSuffix(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }
@@ -3858,6 +4400,36 @@ export const transformAllTaggedTypes = <Ctx>(
 
     case "DecExpr": {
       updatedNode = transformDecExpr(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TypeApplicationSuffix": {
+      updatedNode = transformTypeApplicationSuffix(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TypeAppVbls": {
+      updatedNode = transformTypeAppVbls(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TypeVariables": {
+      updatedNode = transformTypeVariables(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TypeVbls": {
+      updatedNode = transformTypeVbls(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TypeVbl": {
+      updatedNode = transformTypeVbl(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

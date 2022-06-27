@@ -2,6 +2,7 @@ import { ToTast as ConstantsToTast } from '../elements/constants';
 import { ToTast as DecoratorsToTast } from '../elements/decorators';
 import { ToTast as ApplyToTast } from '../elements/apply';
 import { ToTast as TypeToTast } from '../elements/type';
+import { ToTast as GenericsToTast } from '../elements/generics';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 
@@ -22,13 +23,15 @@ export type ToTast = typeof ConstantsToTast &
     typeof GeneralToTast &
     typeof DecoratorsToTast &
     typeof ApplyToTast &
-    typeof TypeToTast;
+    typeof TypeToTast &
+    typeof GenericsToTast;
 
 export const makeToTast = (): ToTast => {
     return {
         ...GeneralToTast,
         ...ConstantsToTast,
         ...DecoratorsToTast,
+        ...GenericsToTast,
         ...ApplyToTast,
         ...TypeToTast,
     };

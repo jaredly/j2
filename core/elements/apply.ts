@@ -12,8 +12,8 @@ import { noloc } from '../ctx';
 
 export const grammar = `
 Apply = target:Atom suffixes_drop:Suffix*
-Suffix = Parens
-Parens = "(" _ args:CommaExpr? ")"
+Suffix = CallSuffix / TypeApplicationSuffix
+CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 `;
 
@@ -25,52 +25,64 @@ export type Apply = {
 };
 
 export const ToTast = {
-    Apply(apply: p.Apply_inner, ctx: TCtx): Apply {
+    Apply(apply: p.Apply_inner, ctx: TCtx): t.Expression {
         let res = ctx.ToTast[apply.target.type](apply.target as any, ctx);
         while (apply.suffixes.length) {
             const next = apply.suffixes.shift()!;
-            res = {
-                type: 'Apply',
-                args:
-                    next.args?.items.map((arg) =>
-                        ctx.ToTast[arg.type](arg as any, ctx),
-                    ) ?? [],
-                target: res,
-                loc: {
-                    start: apply.loc.start,
-                    end: next.loc.end,
-                    idx: next.loc.idx,
-                },
-            };
+            res = ctx.ToTast[next.type](next as any, res, ctx);
         }
-        return res as Apply;
+        return res;
+    },
+    CallSuffix(suffix: p.CallSuffix, target: t.Expression, ctx: TCtx): Apply {
+        return {
+            type: 'Apply',
+            target,
+            args:
+                suffix.args?.items.map((arg) =>
+                    ctx.ToTast[arg.type](arg as any, ctx),
+                ) ?? [],
+            loc: {
+                ...suffix.loc,
+                start: target.loc.start,
+            },
+        };
     },
 };
 
-export const ToAst = {
-    Apply({ type, target, args, loc }: Apply, ctx: TACtx): p.Apply {
-        let inner = ctx.ToAst[target.type](target as any, ctx);
-        const parens: p.Parens = {
+export const makeApply = (
+    inner: p.Expression,
+    suffix: p.Suffix,
+    loc: t.Loc,
+): p.Apply_inner => {
+    if (inner.type === 'Apply') {
+        return { ...inner, suffixes: inner.suffixes.concat([suffix]) };
+    }
+    if (inner.type === 'DecoratedExpression') {
+        return {
+            type: 'Apply',
+            target: { type: 'ParenedExpression', expr: inner, loc },
+            suffixes: [suffix],
             loc,
-            type: 'Parens',
-            args: {
-                type: 'CommaExpr',
-                items: args.map((a) => ctx.ToAst[a.type](a as any, ctx)),
+        };
+    }
+    return { type: 'Apply', target: inner, suffixes: [suffix], loc };
+};
+
+export const ToAst = {
+    Apply({ target, args, loc }: Apply, ctx: TACtx): p.Apply {
+        return makeApply(
+            ctx.ToAst[target.type](target as any, ctx),
+            {
+                type: 'CallSuffix',
+                args: {
+                    type: 'CommaExpr',
+                    items: args.map((a) => ctx.ToAst[a.type](a as any, ctx)),
+                    loc,
+                },
                 loc,
             },
-        };
-        if (inner.type === 'Apply') {
-            return { ...inner, suffixes: inner.suffixes.concat([parens]) };
-        }
-        if (inner.type === 'DecoratedExpression') {
-            return {
-                type,
-                target: { type: 'ParenedExpression', expr: inner, loc },
-                suffixes: [parens],
-                loc,
-            };
-        }
-        return { type, target: inner, suffixes: [parens], loc };
+            loc,
+        );
     },
 };
 
@@ -79,12 +91,12 @@ export const ToPP = {
         return pp.items(
             [
                 ctx.ToPP[apply.target.type](apply.target as any, ctx),
-                ...apply.suffixes.map((s) => ctx.ToPP[s.type](s, ctx)),
+                ...apply.suffixes.map((s) => ctx.ToPP[s.type](s as any, ctx)),
             ],
             apply.loc,
         );
     },
-    Parens(parens: p.Parens, ctx: PCtx): pp.PP {
+    CallSuffix(parens: p.CallSuffix, ctx: PCtx): pp.PP {
         return pp.args(
             (parens.args?.items ?? []).map((a) =>
                 ctx.ToPP[a.type](a as any, ctx),

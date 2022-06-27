@@ -3,6 +3,7 @@ import { ToAst as ConstantsToAst } from '../elements/constants';
 import { ToAst as DecoratorsToAst } from '../elements/decorators';
 import { ToAst as ApplyToAst } from '../elements/apply';
 import { ToAst as TypeToAst } from '../elements/type';
+import { ToAst as GenericsToAst } from '../elements/generics';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 
@@ -12,13 +13,15 @@ export const makeToAst = (): ToAst => ({
     ...DecoratorsToAst,
     ...ApplyToAst,
     ...TypeToAst,
+    ...GenericsToAst,
 });
 
 export type ToAst = typeof ConstantsToAst &
     typeof GeneralToAst &
     typeof DecoratorsToAst &
     typeof ApplyToAst &
-    typeof TypeToAst;
+    typeof TypeToAst &
+    typeof GenericsToAst;
 
 export type Ctx = {
     printRef: (

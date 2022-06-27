@@ -1,6 +1,7 @@
 import { Apply } from './elements/apply';
 import { Boolean, Number, TemplateString } from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
+import { TypeApplication } from './elements/generics';
 import { Id, idToString } from './ids';
 export type { Apply } from './elements/apply';
 export type {
@@ -29,6 +30,7 @@ export type {
     Type,
 } from './elements/type';
 export type { Id } from './ids';
+export type { TypeApplication, TypeVariables } from './elements/generics';
 
 export type GlobalRef = {
     type: 'Global';
@@ -81,6 +83,7 @@ export type Expression =
     | Boolean
     | TemplateString
     | Ref
+    | TypeApplication
     | DecoratedExpression;
 
 export type Sym = { id: number; name: string };

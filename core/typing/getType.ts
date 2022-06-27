@@ -1,10 +1,44 @@
 import { FullContext, tref } from '../ctx';
 import { extract, idToString } from '../ids';
+import { transformType } from '../transform-tast';
 import { Expression, Type } from '../typed-ast';
 
 // UMM So btw this will resolve all TRefs.
 export const getType = (expr: Expression, ctx: FullContext): Type | null => {
     switch (expr.type) {
+        case 'TypeApplication': {
+            const target = getType(expr.target, ctx);
+            if (target?.type === 'TVars') {
+                const symbols: { [num: number]: Type } = {};
+                expr.args.forEach((arg, i) => {
+                    const targ = target.args[i];
+                    symbols[targ.sym.id] = arg;
+                });
+                // ok we need to transform the inner
+                // target.args
+                return transformType(
+                    target.inner,
+                    {
+                        Type_TRef(node, ctx) {
+                            if (
+                                node.ref.type === 'Local' &&
+                                symbols[node.ref.sym]
+                            ) {
+                                return symbols[node.ref.sym];
+                                // const name = idToString(node.ref.id);
+                                // const type = ctx.types.names[name];
+                                // if (type) {
+                                //     return type;
+                                // }
+                            }
+                            return null;
+                        },
+                    },
+                    null,
+                );
+            }
+            return null;
+        }
         case 'TemplateString':
             if (expr.rest.length === 0) {
                 return { type: 'String', loc: expr.loc, text: expr.first };

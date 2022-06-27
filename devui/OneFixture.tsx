@@ -61,11 +61,7 @@ export function OneFixture({
             <Card
                 variant={'bordered'}
                 css={{
-                    borderColor: changed
-                        ? 'orange'
-                        : // : numErrors
-                          // ? 'red'
-                          undefined,
+                    borderColor: changed ? 'orange' : undefined,
                     position: 'relative',
                     borderRadius: 3,
                 }}
@@ -200,7 +196,10 @@ export function OneFixture({
                                 }}
                             />
                         ) : (
-                            <Text>Failed to parse probably</Text>
+                            <Text>
+                                Failed to parse probably{' '}
+                                {newOutput.error.message}{' '}
+                            </Text>
                         )}
                     </div>
                     {changed && newOutput.type === 'success' ? (

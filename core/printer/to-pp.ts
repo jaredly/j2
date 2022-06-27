@@ -4,6 +4,7 @@ import { injectComments } from '../elements/comments';
 import { ToPP as ConstantsToPP } from '../elements/constants';
 import { ToPP as DecoratorsToPP } from '../elements/decorators';
 import { ToPP as TypeToPP } from '../elements/type';
+import { ToPP as GenericsToPP } from '../elements/generics';
 import * as p from '../grammar/base.parser';
 import * as pp from './pp';
 
@@ -16,12 +17,14 @@ export type ToPP = typeof GeneralToPP &
     typeof ConstantsToPP &
     typeof DecoratorsToPP &
     typeof ApplyToPP &
-    typeof TypeToPP;
+    typeof TypeToPP &
+    typeof GenericsToPP;
 
 export const makeToPP = (): ToPP => ({
     ...GeneralToPP,
     ...ConstantsToPP,
     ...DecoratorsToPP,
+    ...GenericsToPP,
     ...ApplyToPP,
     ...TypeToPP,
 });
