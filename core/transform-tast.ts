@@ -1077,12 +1077,27 @@ export const transformTVars = <Ctx>(
             ctx
           );
           changed3 = changed3 || result$loc !== updatedNode$args$item1.loc;
+
+          let result$default_ = null;
+          const result$default_$current = updatedNode$args$item1.default_;
+          if (result$default_$current != null) {
+            const result$default_$3$ = transformType(
+              result$default_$current,
+              visitor,
+              ctx
+            );
+            changed3 =
+              changed3 || result$default_$3$ !== result$default_$current;
+            result$default_ = result$default_$3$;
+          }
+
           if (changed3) {
             result = {
               ...result,
               sym: result$sym,
               bound: result$bound,
               loc: result$loc,
+              default_: result$default_,
             };
             changed2 = true;
           }
