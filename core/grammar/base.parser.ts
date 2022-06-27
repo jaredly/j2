@@ -241,6 +241,7 @@ export type TBArg = {
   label: string;
   hash: string;
   bound: Type | null;
+  default_: Type | null;
 };
 
 export type TArg = {

@@ -61,9 +61,9 @@ hmmmm wait what's the next
 - [x] fixtures can be wrong! make the "reject" button do something.
 	maybe have a `-->[expected]` that we can toss in there.
 
-- [-] main dealio is a listing of the fixtures in the selected file
+- [x] main dealio is a listing of the fixtures in the selected file
 	- [x] parse the .jd into constituent parts
-	- [ ] render the textarea, and a checkbox for whether it's supposed to succeed
+	- [x] render the textarea, and a checkbox for whether it's supposed to succeed
 	- [x] render the result, calculating the new result
 	- [x] "save" on change.
 - [ ] hmm could I also have some sort of coverage reporting built in? that would be very cool

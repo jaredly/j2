@@ -12,7 +12,7 @@ Type = TRef / Number / String / TLambda / TVars
 TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
 TVars = "<" _ args:TBargs _ ">" inner:Type
 TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
-TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)?
+TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Type)?
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
@@ -38,7 +38,12 @@ export type TApply = {
 // <T, I, K>Something
 export type TVars = {
     type: 'TVars';
-    args: Array<{ sym: t.Sym; bound: Type | null; loc: t.Loc }>;
+    args: Array<{
+        sym: t.Sym;
+        bound: Type | null;
+        loc: t.Loc;
+        default_: Type | null;
+    }>;
     inner: Type;
     loc: t.Loc;
 };
@@ -112,16 +117,23 @@ export const ToTast = {
     },
     TVars({ args, inner, loc }: p.TVars, ctx: TCtx): t.TVars {
         // TODO later args can refer to previous ones.
-        const targs = args.items.map(({ label, hash, bound, loc }) => {
-            const sym = hash
-                ? { name: label, id: +hash.slice(2, -1) }
-                : ctx.sym(label);
-            return {
-                sym,
-                bound: bound ? ctx.ToTast[bound.type](bound as any, ctx) : null,
-                loc,
-            };
-        });
+        const targs = args.items.map(
+            ({ label, hash, bound, default_, loc }) => {
+                const sym = hash
+                    ? { name: label, id: +hash.slice(2, -1) }
+                    : ctx.sym(label);
+                return {
+                    sym,
+                    bound: bound
+                        ? ctx.ToTast[bound.type](bound as any, ctx)
+                        : null,
+                    default_: default_
+                        ? ctx.ToTast[default_.type](default_ as any, ctx)
+                        : null,
+                    loc,
+                };
+            },
+        );
         return {
             type: 'TVars',
             args: targs,
@@ -145,11 +157,14 @@ export const ToAst = {
                 type: 'TBargs',
                 loc: type.loc,
                 items: type.args.map(
-                    ({ sym, bound, loc }): p.TBArg => ({
+                    ({ sym, bound, default_, loc }): p.TBArg => ({
                         type: 'TBArg',
                         ...ctx.printSym(sym),
                         // label: sym.name,
                         // hash: `#[${sym.id}]`,
+                        default_: default_
+                            ? ctx.ToAst[default_.type](default_ as any, ctx)
+                            : null,
                         bound: bound
                             ? ctx.ToAst[bound.type](bound as any, ctx)
                             : null,

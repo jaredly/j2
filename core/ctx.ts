@@ -255,7 +255,7 @@ const tlam = (
     loc: noloc,
 });
 const tvars = (
-    args: { sym: Sym; bound: Type | null; loc: Loc }[],
+    args: { sym: Sym; bound: Type | null; default_: Type | null; loc: Loc }[],
     inner: Type,
 ): TVars => ({
     type: 'TVars',

@@ -1,4 +1,13 @@
 
+# WHATis the type of Array?
+
+Ok, yeah I feel like I want default values for type args.
+`Array<Element, length: uint = uint>`
+So `Array<int>` is an array of ints
+`Array<int, 5 - uint>` is an array of at most length 5
+`Array<int, 5 + uint>` is an array of at least length 5
+Yeah I like it!
+
 # Binops?
 So if I'm saying that you have to TypeApply a generic in order to then use it in an Apply
 ...

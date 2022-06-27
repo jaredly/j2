@@ -20,7 +20,19 @@ parsing .. and stuff ...
 
 ## Elements
 
-### [ ] Generics (TVars TApply TypeApplication TypeVariables)
+### [-] Generics (TVars TApply TypeApplication TypeVariables)
+- [x] TVars
+- [x] TypeApplication
+- [ ] Defaults!
+	- errors:
+		- defaults need to not be followed by non-defaults
+- [ ] 
+- [ ] TypeVariables (we don't need this until we have lambdas)
+... I'm not sure that I need TApply?
+
+### [ ] Now let's try type mathsss
+
+
 
 ### [ ] Oh toplevel defines
 
