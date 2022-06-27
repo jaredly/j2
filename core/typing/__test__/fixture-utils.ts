@@ -118,7 +118,9 @@ export const serializeSections = (
 ) => {
     return Object.keys(map)
         .filter((k) => map[k].trim().length > 0)
-        .map((key) => `${char}${char}[${key}]${char}${char}\n${map[key]}`)
+        .map(
+            (key) => `${char}${char}[${key}]${char}${char}\n${map[key].trim()}`,
+        )
         .join('\n\n');
 };
 
@@ -197,7 +199,11 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
             };
         });
         return {
-            builtins: toplevel['builtins'].split('\n').map(parseBuiltin),
+            builtins: toplevel['builtins']
+                .trim()
+                .split('\n')
+                .filter(Boolean)
+                .map(parseBuiltin),
             fixtures,
         };
     }
