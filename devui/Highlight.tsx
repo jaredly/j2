@@ -104,7 +104,7 @@ export const Highlight = ({
                     {marked ? (
                         <Tree tree={marked} hover={hover?.span ?? null} />
                     ) : (
-                        'Error parsing'
+                        'Error parsing: ' + text
                     )}
                 </span>
             </Text>

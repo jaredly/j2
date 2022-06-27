@@ -13,7 +13,7 @@ import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { transformFile, Visitor } from '../../transform-tast';
 import { File } from '../../typed-ast';
-import { analyze, analyzeContext, verify } from '../analyze';
+import { analyze, analyzeContext, Verify, verify } from '../analyze';
 import { getType } from '../getType';
 import { printCtx } from '../to-ast';
 
@@ -178,7 +178,7 @@ export const serializeFixtureFile = (file: FixtureFile) => {
             {
                 input: fixture.input,
                 'output:expected':
-                    (fixture.output_expected.startsWith('alias ')
+                    (fixture.output_expected?.startsWith('alias ')
                         ? ''
                         : aliasesToString(fixture.aliases_deprecated)) +
                     fixture.output_expected,
@@ -301,10 +301,22 @@ export const parseRaw = (raw: string, ctx: FullContext): File => {
     return ctx.ToTast.File(fixComments(parseFile(raw)), ctx);
 };
 
+export type FixtureResult = {
+    ctx: FullContext;
+    ctx2: FullContext;
+    input: string;
+    checked: File;
+    verify: Verify;
+    newOutput: string;
+    outputTast: File;
+    outputVerify: Verify;
+    aliases: { [key: string]: string };
+};
+
 export function runFixture(
     { input, output_expected }: Fixture,
     builtins: Builtin[],
-) {
+): FixtureResult {
     const ctx = fullContext();
 
     loadBuiltins(builtins, ctx);

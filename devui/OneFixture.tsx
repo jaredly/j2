@@ -6,6 +6,7 @@ import { errorCount } from '../core/typing/analyze';
 import {
     Builtin,
     Fixture,
+    FixtureResult,
     runFixture,
 } from '../core/typing/__test__/fixture-utils';
 import { Highlight } from './Highlight';
@@ -26,20 +27,35 @@ export function OneFixture({
     const { title, input, output_expected } = fixture;
     const [editing, setEditing] = React.useState(null as null | string);
 
-    const newOutput = React.useMemo(() => {
+    const newOutput = React.useMemo(():
+        | { type: 'error'; error: Error }
+        | { type: 'success'; result: FixtureResult } => {
         if (editing != null) {
             try {
-                return runFixture({ ...fixture, input: editing }, builtins);
+                return {
+                    type: 'success',
+                    result: runFixture(
+                        { ...fixture, input: editing },
+                        builtins,
+                    ),
+                };
             } catch (err) {}
         }
-        return runFixture(fixture, builtins);
+        try {
+            return { type: 'success', result: runFixture(fixture, builtins) };
+        } catch (err) {
+            return { type: 'error', error: err as Error };
+        }
     }, [fixture, builtins, editing]);
-
-    const changed = output_expected !== newOutput.newOutput;
-
-    const numErrors = errorCount(newOutput.verify);
-
     const [titleEdit, setTitleEdit] = React.useState(null as null | string);
+
+    const changed =
+        newOutput.type === 'error' ||
+        output_expected !== newOutput.result.newOutput;
+
+    const numErrors =
+        newOutput.type === 'error' ? 1 : errorCount(newOutput.result.verify);
+
     return (
         <div id={id} style={{ paddingTop: 24 }}>
             <Card
@@ -115,7 +131,10 @@ export function OneFixture({
                             onKeyDown={(evt) => {
                                 if (evt.key === 'Escape') {
                                     setEditing(null);
-                                    if (editing === newOutput.input) {
+                                    if (
+                                        newOutput.type === 'error' ||
+                                        editing === newOutput.result.input
+                                    ) {
                                         onChange({
                                             ...fixture,
                                             input: editing,
@@ -123,7 +142,10 @@ export function OneFixture({
                                     }
                                 } else if (evt.key === 'Enter' && evt.metaKey) {
                                     evt.preventDefault();
-                                    if (editing === newOutput.input) {
+                                    if (
+                                        newOutput.type === 'error' ||
+                                        editing === newOutput.result.input
+                                    ) {
                                         onChange({
                                             ...fixture,
                                             input: editing,
@@ -132,7 +154,10 @@ export function OneFixture({
                                 }
                             }}
                             onBlur={() => {
-                                if (editing === newOutput.input) {
+                                if (
+                                    newOutput.type === 'error' ||
+                                    editing === newOutput.result.input
+                                ) {
                                     onChange({ ...fixture, input: editing });
                                 }
                                 setEditing(null);
@@ -161,35 +186,39 @@ export function OneFixture({
                                     backgroundColor: 'rgba(255,0,0,0.3)',
                                 }}
                             >
-                                {numErrors} issues
+                                {numErrors} issue{numErrors > 1 ? 's' : ''}
                             </Text>
                         ) : null}
 
-                        <Highlight
-                            portal={portal}
-                            text={output_expected}
-                            info={{
-                                tast: newOutput.outputTast,
-                                ctx: newOutput.ctx2,
-                            }}
-                        />
-                    </div>
-                    {changed ? (
-                        <>
-                            <Card.Divider css={{ marginBlock: '$6' }} />
-                            <Aliases aliases={newOutput.aliases} />
+                        {newOutput.type === 'success' ? (
                             <Highlight
                                 portal={portal}
-                                text={newOutput.newOutput}
+                                text={output_expected}
                                 info={{
-                                    tast: newOutput.checked,
-                                    ctx: newOutput.ctx,
+                                    tast: newOutput.result.outputTast,
+                                    ctx: newOutput.result.ctx2,
+                                }}
+                            />
+                        ) : (
+                            <Text>Failed to parse probably</Text>
+                        )}
+                    </div>
+                    {changed && newOutput.type === 'success' ? (
+                        <>
+                            <Card.Divider css={{ marginBlock: '$6' }} />
+                            <Aliases aliases={newOutput.result.aliases} />
+                            <Highlight
+                                portal={portal}
+                                text={newOutput.result.newOutput}
+                                info={{
+                                    tast: newOutput.result.checked,
+                                    ctx: newOutput.result.ctx,
                                 }}
                             />
                         </>
                     ) : null}
                 </Card.Body>
-                {changed ? (
+                {changed && newOutput.type === 'success' ? (
                     <div
                         style={{
                             position: 'absolute',
@@ -203,8 +232,9 @@ export function OneFixture({
                             onPress={() => {
                                 onChange({
                                     ...fixture,
-                                    output_expected: newOutput.newOutput,
-                                    aliases_deprecated: newOutput.aliases,
+                                    output_expected: newOutput.result.newOutput,
+                                    aliases_deprecated:
+                                        newOutput.result.aliases,
                                     failing_deprecated: false,
                                 });
                             }}
@@ -220,8 +250,9 @@ export function OneFixture({
                                 // but if the old one is accepted, then we keep it around as "the right one"
                                 onChange({
                                     ...fixture,
-                                    output_expected: newOutput.newOutput,
-                                    aliases_deprecated: newOutput.aliases,
+                                    output_expected: newOutput.result.newOutput,
+                                    aliases_deprecated:
+                                        newOutput.result.aliases,
                                     failing_deprecated: true,
                                 });
                             }}

@@ -1,0 +1,10 @@
+##[builtins]##
+//:value:hello:<T>(v: T) => T
+
+##[fixtures]##
+==[basic]==
+--[input]--
+hello<int>(10)
+
+--[output:expected]--
+undefined

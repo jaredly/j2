@@ -18,8 +18,9 @@ Fixtures need to be fully usable:
 - [x] update the devui n stuff
 - [ ] make "Reject" do something
 - [ ] hm have "Accept" & "Reject" there the whole time, so you can change your mind?
-- [ ] expect-error? yeah need `validate` happening here.
+- [x] expect-error? yeah need `validate` happening here.
 
+hmmmm wait what's the next
 
 - [ ] I need source maps or some such, so that type reporting actually works correctly
 - [ ] 
@@ -50,9 +51,9 @@ Fixtures need to be fully usable:
 - [ ] have hover stick on click, then you can hover entries there to get them underlined.
 - [ ] dedup hover entries? idk.
 
-- [ ] BUG multiple dispatch isn't working?
+- [x] BUG multiple dispatch isn't working?
 
-- [ ] editing of fixtures! probably? Can I do the same contentediable trick, but without the reprinting?
+- [x] editing of fixtures! probably? Can I do the same contentediable trick, but without the reprinting?
 	like, just parse + recolor?
 	seems like I've got to be able to do that.
 	oh and maybe if there's a parse error, I can just like ... make everything slightly transparent?
@@ -64,7 +65,7 @@ Fixtures need to be fully usable:
 	- [x] parse the .jd into constituent parts
 	- [ ] render the textarea, and a checkbox for whether it's supposed to succeed
 	- [x] render the result, calculating the new result
-	- [ ] "save" on change.
+	- [x] "save" on change.
 - [ ] hmm could I also have some sort of coverage reporting built in? that would be very cool
 
 
