@@ -38,7 +38,7 @@ takeSimple(simple)
 // string
 
 ==[pass wrong lambda]==
---[input]--
+--[input:shouldFail]--
 takeOneArg(simple)
 takeIntle(simple)
 
@@ -50,7 +50,7 @@ takeIntle(@error:argWrongType(expected: :() => int) simple)
 // string
 
 ==[arg type error]==
---[input]--
+--[input:shouldFail]--
 oneArg(true)
 
 --[output:expected]--
@@ -59,7 +59,7 @@ oneArg(@error:argWrongType(expected: :int) true)
 // string
 
 ==[wrong number of args]==
---[input]--
+--[input:shouldFail]--
 oneArg(1, 2)
 
 --[output:expected]--
@@ -68,7 +68,7 @@ alias error:wrongNumberOfArgs=he554807c644be72e6c4e5cb59aa0955f9ab67f13 oneArg=h
 // string
 
 ==[not a fn]==
---[input]--
+--[input:shouldFail]--
 (10)(20)
 
 --[output:expected]--
@@ -76,14 +76,14 @@ alias error:notAFunction=h16ba48b37c7d5999c12c172bd1bbdeac9773c21a
 @error:notAFunction() 10(20)
 
 ==[calling undefined function]==
---[input]--
+--[input:shouldFail]--
 undefinedFunction()
 
 --[output:expected]--
 undefinedFunction#[:unresolved:]()
 
 ==[double apply]==
---[input]--
+--[input:shouldFail]--
 oneArg(1)()
 
 --[output:expected]--

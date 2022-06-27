@@ -49,7 +49,7 @@ alias string=h8f452146b75c912dedc5638091c55a088e30b7ee
 // string
 
 ==[expression wrong type]==
---[input]--
+--[input:shouldFail]--
 "${12}"
 
 --[output:expected]--

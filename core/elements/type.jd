@@ -36,7 +36,7 @@ alias T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 // 10
 
 ==[unresovled]==
---[input]--
+--[input:shouldFail]--
 @test:type(: hello) 10
 
 --[output:expected]--

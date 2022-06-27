@@ -28,7 +28,7 @@ alias decorated=h216be29e211ffb2bbb1ff40ab9718fad53bb9687 oneArg=hb08abf80591f2e
 // string
 
 ==[unresolved]==
---[input]--
+--[input:shouldFail]--
 @decodeURI(:string)("http://example.com")
 
 --[output:expected]--
