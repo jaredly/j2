@@ -3,6 +3,7 @@
 //:decorator:onesit
 //:decorator:twosit
 //:decorator:decorated
+//:value:oneArg:(v: int) => string
 
 ##[fixtures]##
 ==[decorate something]==
@@ -19,14 +20,14 @@ alias whatsit=haf4a9b4fd8c53f7ca2d2e2ce236ca5ef837fd4ed onesit=ha1ea686a0f954591
 
 ==[decorated apply target]==
 --[input]--
-(@decorated()toString)(10)
+(@decorated()oneArg)(10)
 
 --[output:expected]--
-alias string=h8f452146b75c912dedc5638091c55a088e30b7ee toString=hb906415c72c78c3b88d97d9c8adad6d0f4e89b02 decorated=h216be29e211ffb2bbb1ff40ab9718fad53bb9687
-(@decorated() toString)(10)
+alias string=h8f452146b75c912dedc5638091c55a088e30b7ee oneArg=hb08abf80591f2e867a9b48a1e552e95c835deae7 decorated=h216be29e211ffb2bbb1ff40ab9718fad53bb9687
+(@decorated() oneArg)(10)
 // string
 
-==[undefined]==
+==[unresolved]==
 --[input]--
 @decodeURI(:string)("http://example.com")
 

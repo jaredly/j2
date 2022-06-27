@@ -311,7 +311,7 @@ export function runFixture(
 
     let tast;
     try {
-        tast = parseRaw(input, ctx); // ctx.ToTast.File(fixComments(parseFile(input)), ctx);
+        tast = parseRaw(input, ctx);
     } catch (err) {
         console.log('Failed to parse input:', input);
         throw err;
@@ -356,14 +356,11 @@ export function runFixture(
         console.log(output_expected);
         throw err;
     }
-    // outputTast = ctx2.ToTast.File(
-    //     fixComments(parseFile(output_expected)),
-    //     ctx2,
-    // );
 
     return {
         ctx,
         ctx2,
+        input,
         checked,
         newOutput: aliasesToString(actx.backAliases) + newOutput,
         outputTast,
@@ -396,7 +393,7 @@ export type Builtin =
           kind: 'decorator';
           name: string;
       };
-function parseBuiltin(line: string): Builtin {
+export function parseBuiltin(line: string): Builtin {
     const [_, kind, name, ...rest] = line.split(':');
     switch (kind) {
         case 'value':

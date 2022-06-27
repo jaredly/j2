@@ -1,4 +1,4 @@
-import { Button, Card, Input, Spacer, Text } from '@nextui-org/react';
+import { Button, Card, Input, Spacer, Text, Textarea } from '@nextui-org/react';
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
 import {
@@ -21,17 +21,17 @@ export function OneFixture({
     onChange: (v: Fixture) => void;
     builtins: Builtin[];
 }) {
-    const {
-        title,
-        // aliases_deprecated: aliases,
-        input,
-        output_expected,
-    } = fixture;
+    const { title, input, output_expected } = fixture;
+    const [editing, setEditing] = React.useState(null as null | string);
 
-    const newOutput = React.useMemo(
-        () => runFixture(fixture, builtins),
-        [fixture, builtins],
-    );
+    const newOutput = React.useMemo(() => {
+        if (editing != null) {
+            try {
+                return runFixture({ ...fixture, input: editing }, builtins);
+            } catch (err) {}
+        }
+        return runFixture(fixture, builtins);
+    }, [fixture, builtins, editing]);
 
     const changed = output_expected !== newOutput.newOutput;
 
@@ -41,8 +41,6 @@ export function OneFixture({
             <Card
                 variant={'bordered'}
                 css={{
-                    // p: '$6',
-                    // m: '$6',
                     borderColor: changed
                         ? 'orange'
                         : fixture.failing_deprecated
@@ -52,9 +50,6 @@ export function OneFixture({
                     borderRadius: 3,
                 }}
             >
-                {/* <Card.Header
-                    onClick={() => (titleEdit ? null : setTitleEdit(title))}
-                > */}
                 <div style={{}}>
                     {titleEdit ? (
                         <Input
@@ -88,12 +83,28 @@ export function OneFixture({
                         </Text>
                     )}
                 </div>
-                {/* </Card.Header> */}
-                {/* <Card.Divider /> */}
                 <Card.Body css={{ display: 'flex' }}>
-                    <Highlight text={input} portal={portal} />
+                    {editing != null ? (
+                        <Textarea
+                            autoFocus
+                            minRows={3}
+                            value={editing}
+                            onChange={(evt) => setEditing(evt.target.value)}
+                            onBlur={() => {
+                                if (editing === newOutput.input) {
+                                    onChange({ ...fixture, input: editing });
+                                }
+                                setEditing(null);
+                            }}
+                        />
+                    ) : (
+                        <Highlight
+                            text={input}
+                            portal={portal}
+                            onClick={() => setEditing(input)}
+                        />
+                    )}
                     <Card.Divider css={{ marginBlock: '$6' }} />
-                    {/* <Aliases aliases={aliases} /> */}
                     <Highlight
                         portal={portal}
                         text={output_expected}

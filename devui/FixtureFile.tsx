@@ -1,4 +1,11 @@
-import { Card, Container, Divider, Link, Text } from '@nextui-org/react';
+import {
+    Card,
+    Container,
+    Divider,
+    Link,
+    Text,
+    Textarea,
+} from '@nextui-org/react';
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
 import {
@@ -6,6 +13,8 @@ import {
     parseFixtureFile,
     serializeFixtureOld,
     serializeFixtureFile,
+    serializeBuiltin,
+    parseBuiltin,
 } from '../core/typing/__test__/fixture-utils';
 import { usePromise } from './index';
 import { OneFixture } from './OneFixture';
@@ -41,6 +50,10 @@ export const FixtureFile = ({
     }, [serialized]);
 
     const portal = React.useRef(null as null | HTMLDivElement);
+
+    const [editBuiltins, setEditBuiltins] = React.useState(
+        null as null | string,
+    );
 
     React.useEffect(() => {
         portal.current = document.createElement('div');
@@ -90,16 +103,45 @@ export const FixtureFile = ({
             <Container css={{ p: '$6', pb: '50vh', overflow: 'auto' }}>
                 {data.builtins.length ? (
                     <>
-                        <div>
-                            <Text css={{ fontFamily: '$mono' }} small>
-                                Builtins:
-                                {data.builtins.map((item, i) => (
-                                    <span key={i} style={{ marginLeft: 8 }}>
-                                        {item.name}
-                                    </span>
-                                ))}
-                            </Text>
-                        </div>
+                        {editBuiltins ? (
+                            <div>
+                                <Textarea
+                                    minRows={5}
+                                    value={editBuiltins}
+                                    onChange={(evt) =>
+                                        setEditBuiltins(evt.target.value)
+                                    }
+                                    onBlur={() => {
+                                        setData({
+                                            ...data,
+                                            builtins: editBuiltins
+                                                .split('\n')
+                                                .map(parseBuiltin),
+                                        });
+                                        setEditBuiltins(null);
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <div
+                                onClick={() =>
+                                    setEditBuiltins(
+                                        data.builtins
+                                            .map(serializeBuiltin)
+                                            .join('\n'),
+                                    )
+                                }
+                            >
+                                <Text css={{ fontFamily: '$mono' }} small>
+                                    Builtins:
+                                    {data.builtins.map((item, i) => (
+                                        <span key={i} style={{ marginLeft: 8 }}>
+                                            {item.name}
+                                        </span>
+                                    ))}
+                                </Text>
+                            </div>
+                        )}
                         <Card.Divider css={{ marginBlock: '$6' }} />
                     </>
                 ) : null}

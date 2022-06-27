@@ -11,50 +11,16 @@ import { File, Loc, refHash, Type } from '../core/typed-ast';
 import { getType } from '../core/typing/getType';
 import { printCtx } from '../core/typing/to-ast';
 
-export const typeToString = (t: Type, ctx: FullContext) => {
-    const actx = printCtx(ctx);
-    const pctx = newPPCtx(false);
-    const ast = actx.ToAst[t.type](t as any, actx);
-    return printToString(pctx.ToPP[ast.type](ast as any, pctx), 100);
-};
-
-const collectAnnotations = (tast: File, ctx: FullContext) => {
-    const annotations: { loc: Loc; text: string }[] = [];
-    const visitor: tt.Visitor<null> = {
-        Expression: (node) => {
-            const t = getType(node, ctx);
-            if (t) {
-                annotations.push({
-                    loc: node.loc,
-                    text: typeToString(t, ctx),
-                });
-            }
-            return node;
-        },
-        Ref(node, ctx) {
-            annotations.push({
-                loc: node.loc,
-                text:
-                    node.kind.type === 'Unresolved'
-                        ? 'unresolved'
-                        : refHash(node.kind),
-            });
-            return null;
-        },
-    };
-    tt.transformFile(tast, visitor, null);
-    // console.log(annotations);
-    return annotations;
-};
-
 export const Highlight = ({
     text,
     info,
     portal,
+    onClick,
 }: {
     text: string;
     info?: { tast: File; ctx: FullContext };
     portal: HTMLDivElement;
+    onClick?: () => void;
 }) => {
     const parsed = React.useMemo(() => {
         try {
@@ -92,7 +58,7 @@ export const Highlight = ({
     );
 
     return (
-        <div>
+        <div onClick={onClick}>
             <Text
                 css={{
                     whiteSpace: 'pre-wrap',
@@ -330,3 +296,39 @@ export function sortLocs(locs: { loc: Loc; type: string }[]) {
     });
     return points;
 }
+
+export const typeToString = (t: Type, ctx: FullContext) => {
+    const actx = printCtx(ctx);
+    const pctx = newPPCtx(false);
+    const ast = actx.ToAst[t.type](t as any, actx);
+    return printToString(pctx.ToPP[ast.type](ast as any, pctx), 100);
+};
+
+const collectAnnotations = (tast: File, ctx: FullContext) => {
+    const annotations: { loc: Loc; text: string }[] = [];
+    const visitor: tt.Visitor<null> = {
+        Expression: (node) => {
+            const t = getType(node, ctx);
+            if (t) {
+                annotations.push({
+                    loc: node.loc,
+                    text: typeToString(t, ctx),
+                });
+            }
+            return node;
+        },
+        Ref(node, ctx) {
+            annotations.push({
+                loc: node.loc,
+                text:
+                    node.kind.type === 'Unresolved'
+                        ? 'unresolved'
+                        : refHash(node.kind),
+            });
+            return null;
+        },
+    };
+    tt.transformFile(tast, visitor, null);
+    // console.log(annotations);
+    return annotations;
+};
