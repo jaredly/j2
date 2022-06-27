@@ -21,3 +21,10 @@ Inspired by:
 - roc
 - ante
 - typescript
+
+Things I should probably look into:
+- F#
+- http://dot.planet.ee/yeti/intro.html#structures
+- https://github.com/Storyyeller/IntercalScript
+- https://en.m.wikibooks.org/wiki/Scala/Structural_Typing
+- https://whiley.org/learn/

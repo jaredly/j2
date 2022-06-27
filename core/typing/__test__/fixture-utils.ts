@@ -9,15 +9,13 @@ import {
 } from '../../ctx';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
-import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { printToString } from '../../printer/pp';
+import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { transformFile, Visitor } from '../../transform-tast';
-import { File, refHash } from '../../typed-ast';
+import { File } from '../../typed-ast';
 import { analyze, analyzeContext, verify } from '../analyze';
-import { printCtx, ToAst } from '../to-ast';
-import { makeToTast, ToTast } from '../to-tast';
 import { getType } from '../getType';
-import { idToString } from '../../ids';
+import { printCtx } from '../to-ast';
 
 export type FixtureFile = {
     builtins: Builtin[];
@@ -46,7 +44,7 @@ const takeFirstLine = (text: string): [string, string] => {
     return [lines[0], lines.slice(1).join('\n')];
 };
 
-export const parseFixture = (chunk: string, i: number): Fixture => {
+export const parseFixtureOld = (chunk: string, i: number): Fixture => {
     if (chunk.includes('----')) {
         const [first, input, output] = chunk.split('----');
         const [title, metaRaw] = takeFirstLine(first.trim());
@@ -88,7 +86,7 @@ export const parseFixture = (chunk: string, i: number): Fixture => {
     };
 };
 
-export const serializeFixture = ({
+export const serializeFixtureOld = ({
     title,
     input,
     output_expected,
@@ -147,6 +145,17 @@ export const loadSections = (data: string, char = '=') => {
     return sections;
 };
 
+export const aliasesToString = (aliases: { [key: string]: string }) =>
+    Object.keys(aliases).length
+        ? 'alias ' +
+          Object.entries(aliases)
+              .map(([key, value]) => {
+                  return `${key}=${value}`;
+              })
+              .join(' ') +
+          '\n'
+        : '';
+
 export const serializeFixtureFile = (file: FixtureFile) => {
     const fixmap: { [key: string]: string } = {};
     file.fixtures.forEach((fixture) => {
@@ -154,15 +163,7 @@ export const serializeFixtureFile = (file: FixtureFile) => {
             {
                 input: fixture.input,
                 'output:expected':
-                    (Object.keys(fixture.aliases).length
-                        ? 'alias ' +
-                          Object.entries(fixture.aliases)
-                              .map(([key, value]) => {
-                                  return `${key}=${value}`;
-                              })
-                              .join(' ') +
-                          '\n'
-                        : '') + fixture.output_expected,
+                    aliasesToString(fixture.aliases) + fixture.output_expected,
             },
             '-',
         );
@@ -207,7 +208,7 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
             .split(/(?=\n==[^\n=]*==\n)/)
             .filter((x) => x.trim())
             .map((chunk, i) => {
-                const parsed = parseFixture(chunk, i);
+                const parsed = parseFixtureOld(chunk, i);
                 parsed.builtins.forEach((builtin) => {
                     const k = `${builtin.name}:${builtin.kind}`;
                     if (!seen[k]) {
@@ -235,38 +236,40 @@ export const loadFixtures = (fixtureFile: string) => {
     return { fixtures, hasOnly };
 };
 
-export type Fixed = {
-    // input: string;
-    output: string;
-    aliases: Fixture['aliases'];
-};
+// export type Fixed = {
+//     // input: string;
+//     output: string;
+//     aliases: Fixture['aliases'];
+// };
 
-/* istanbul ignore next */
-export const saveFixed = (
-    fixtureFile: string,
-    fixtures: Fixture[],
-    fixed: Fixed[],
-) => {
-    let missing = false;
-    for (let i = 0; i < fixtures.length; i++) {
-        if (!fixed[i]) {
-            missing = true;
-            break;
-        }
-    }
-    if (missing) {
-        console.warn(`Not writing fixtures, looks like something failed`);
-        return;
-    }
-    fs.writeFileSync(
-        fixtureFile,
-        fixed
-            .map(({ output }, i) =>
-                serializeFixture({ ...fixtures[i], output_expected: output }),
-            )
-            .join('\n\n'),
-    );
-};
+// export const saveFixed = (
+//     fixtureFile: string,
+//     fixtures: Fixture[],
+//     fixed: Fixed[],
+// ) => {
+//     let missing = false;
+//     for (let i = 0; i < fixtures.length; i++) {
+//         if (!fixed[i]) {
+//             missing = true;
+//             break;
+//         }
+//     }
+//     if (missing) {
+//         console.warn(`Not writing fixtures, looks like something failed`);
+//         return;
+//     }
+//     fs.writeFileSync(
+//         fixtureFile,
+//         fixed
+//             .map(({ output }, i) =>
+//                 serializeFixtureOld({
+//                     ...fixtures[i],
+//                     output_expected: output,
+//                 }),
+//             )
+//             .join('\n\n'),
+//     );
+// };
 
 export function runFixture({
     builtins,
@@ -329,7 +332,7 @@ export function runFixture({
         ctx,
         ctx2,
         checked,
-        newOutput,
+        newOutput: aliasesToString(actx.backAliases) + newOutput,
         outputTast,
         aliases: actx.backAliases,
     };

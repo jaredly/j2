@@ -1,11 +1,7 @@
 import { Button, Card, Input, Spacer, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
-import {
-    Fixed,
-    Fixture,
-    runFixture,
-} from '../core/typing/__test__/fixture-utils';
+import { Fixture, runFixture } from '../core/typing/__test__/fixture-utils';
 import { Highlight } from './Highlight';
 
 export function OneFixture({
@@ -19,12 +15,12 @@ export function OneFixture({
     fixture: Fixture;
     onChange: (v: Fixture) => void;
 }) {
-    const { title, aliases, builtins, input, output } = fixture;
+    const { title, aliases, builtins, input, output_expected } = fixture;
 
     const newOutput = React.useMemo(() => runFixture(fixture), [fixture]);
 
     const changed =
-        output !== newOutput.newOutput ||
+        output_expected !== newOutput.newOutput ||
         !aliasesMatch(aliases, newOutput.aliases);
 
     const [titleEdit, setTitleEdit] = React.useState(null as null | string);
@@ -96,7 +92,7 @@ export function OneFixture({
                     <Aliases aliases={aliases} />
                     <Highlight
                         portal={portal}
-                        text={output}
+                        text={output_expected}
                         info={{
                             tast: newOutput.outputTast,
                             ctx: newOutput.ctx2,
@@ -131,7 +127,7 @@ export function OneFixture({
                             onPress={() => {
                                 onChange({
                                     ...fixture,
-                                    output: newOutput.newOutput,
+                                    output_expected: newOutput.newOutput,
                                     aliases: newOutput.aliases,
                                     failing: false,
                                 });
@@ -148,7 +144,7 @@ export function OneFixture({
                                 // but if the old one is accepted, then we keep it around as "the right one"
                                 onChange({
                                     ...fixture,
-                                    output: newOutput.newOutput,
+                                    output_expected: newOutput.newOutput,
                                     aliases: newOutput.aliases,
                                     failing: true,
                                 });

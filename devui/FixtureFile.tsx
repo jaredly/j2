@@ -4,7 +4,7 @@ import { FullContext } from '../core/ctx';
 import {
     Fixture,
     parseFixtureFile,
-    serializeFixture,
+    serializeFixtureOld,
     serializeFixtureFile,
 } from '../core/typing/__test__/fixture-utils';
 import { usePromise } from './index';
