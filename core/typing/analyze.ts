@@ -5,7 +5,6 @@
 import { ErrorTag, FullContext, noloc } from '../ctx';
 import { transformFile } from '../transform-tast';
 import {
-    Apply,
     DecoratedExpression,
     Decorator,
     Expression,
@@ -14,7 +13,6 @@ import {
     Type,
 } from '../typed-ast';
 import { getType } from './getType';
-import { typeMatches } from './typesEqual';
 import { analyze as analyzeApply } from '../elements/apply';
 import { analyze as analyzeConstants } from '../elements/constants';
 import { idToString } from '../ids';
@@ -87,12 +85,36 @@ export const analyze = (ast: File, ctx: Ctx): File => {
     );
 };
 
-export const verify = (
-    ast: File,
-    ctx: Ctx,
-): { missingTypes: Loc[]; errorDecorators: Loc[] } => {
-    let missingTypes: Array<Loc> = [];
-    let errorDecorators: Array<Loc> = [];
+export type Verify = {
+    errors: Loc[];
+    untypedExpression: Loc[];
+    unresolved: {
+        type: Loc[];
+        decorator: Loc[];
+        value: Loc[];
+    };
+};
+
+export const errorCount = (v: Verify): number => {
+    return (
+        v.errors.length +
+        v.untypedExpression.length +
+        v.unresolved.type.length +
+        v.unresolved.decorator.length +
+        v.unresolved.value.length
+    );
+};
+
+export const verify = (ast: File, ctx: Ctx): Verify => {
+    const results: Verify = {
+        errors: [],
+        untypedExpression: [],
+        unresolved: {
+            type: [],
+            decorator: [],
+            value: [],
+        },
+    };
 
     const decoratorNames: { [key: string]: string } = {};
     Object.keys(ctx._full.decorators.names).forEach((name) => {
@@ -105,38 +127,38 @@ export const verify = (
     transformFile(
         ast,
         {
-            Type(node) {
-                if (node.type === 'TRef' && node.ref.type === 'Unresolved') {
-                    missingTypes.push(node.loc);
+            TRef(node) {
+                if (node.ref.type === 'Unresolved') {
+                    results.unresolved.type.push(node.loc);
                 }
-                return node;
+                return null;
+            },
+            Ref(node) {
+                if (node.kind.type === 'Unresolved') {
+                    results.unresolved.value.push(node.loc);
+                }
+                return null;
             },
             Expression(node) {
                 if (!ctx.getType(node)) {
-                    missingTypes.push(node.loc);
+                    results.untypedExpression.push(node.loc);
                 }
-                return node;
+                return null;
             },
-            Decorator(node, ctx) {
+            Decorator(node) {
                 if (node.id.ref.type === 'Unresolved') {
-                    missingTypes.push(node.loc);
+                    results.unresolved.decorator.push(node.loc);
                 }
-                return node;
-            },
-            DecoratedExpression(node) {
-                node.decorators.forEach((dec) => {
-                    const ref = dec.id.ref;
-                    if (ref.type === 'Global') {
-                        const name = decoratorNames[idToString(ref.id)];
-                        if (name && name.startsWith('error:')) {
-                            errorDecorators.push(dec.loc);
-                        }
+                if (node.id.ref.type === 'Global') {
+                    const name = decoratorNames[idToString(node.id.ref.id)];
+                    if (name && name.startsWith('error:')) {
+                        results.errors.push(node.loc);
                     }
-                });
-                return node;
+                }
+                return null;
             },
         },
         null,
     );
-    return { missingTypes, errorDecorators };
+    return results;
 };

@@ -57,8 +57,6 @@ export type File = {
     loc: Loc;
 };
 
-// export type ErrorExpr = UnknownIdentifier;
-
 export type UnresolvedRef = {
     type: 'Unresolved';
     text: string;
@@ -84,9 +82,6 @@ export type Expression =
     | TemplateString
     | Ref
     | DecoratedExpression;
-
-// Might be an int or float
-// export type Number = {type: 'Number', loc: Location, value: number};
 
 export type Sym = { id: number; name: string };
 

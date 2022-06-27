@@ -12,10 +12,13 @@ Fixtures need to be fully usable:
 	if there's `output:failed` and no expected, that's fine too.
 - [x] get 'alias'es parsing. I'll say the must be the first line? Might as well.
 - [x] get parsing of the new fixture format working
-- [ ] move builtins to the top of the list, not inline
-- [ ] editable builtins
-- [ ] editable fixture input
-- [ ] update the devui n stuff
+- [x] move builtins to the top of the list, not inline
+- [x] editable builtins
+- [x] editable fixture input
+- [x] update the devui n stuff
+- [ ] make "Reject" do something
+- [ ] hm have "Accept" & "Reject" there the whole time, so you can change your mind?
+- [ ] expect-error? yeah need `validate` happening here.
 
 
 - [ ] I need source maps or some such, so that type reporting actually works correctly

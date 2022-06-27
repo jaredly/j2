@@ -342,10 +342,6 @@ export function runFixture(
         100,
     );
 
-    const { errorDecorators, missingTypes } = verify(
-        checked,
-        analyzeContext(ctx),
-    );
     let outputTast;
 
     const ctx2 = fullContext();
@@ -362,8 +358,10 @@ export function runFixture(
         ctx2,
         input,
         checked,
+        verify: verify(checked, analyzeContext(ctx)),
         newOutput: aliasesToString(actx.backAliases) + newOutput,
         outputTast,
+        outputVerify: verify(outputTast, analyzeContext(ctx2)),
         aliases: actx.backAliases,
     };
 }

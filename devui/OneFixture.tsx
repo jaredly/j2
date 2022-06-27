@@ -1,6 +1,8 @@
 import { Button, Card, Input, Spacer, Text, Textarea } from '@nextui-org/react';
+import equal from 'fast-deep-equal';
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
+import { errorCount } from '../core/typing/analyze';
 import {
     Builtin,
     Fixture,
@@ -35,6 +37,8 @@ export function OneFixture({
 
     const changed = output_expected !== newOutput.newOutput;
 
+    const numErrors = errorCount(newOutput.verify);
+
     const [titleEdit, setTitleEdit] = React.useState(null as null | string);
     return (
         <div id={id} style={{ paddingTop: 24 }}>
@@ -43,14 +47,14 @@ export function OneFixture({
                 css={{
                     borderColor: changed
                         ? 'orange'
-                        : fixture.failing_deprecated
-                        ? 'red'
-                        : undefined,
+                        : // : numErrors
+                          // ? 'red'
+                          undefined,
                     position: 'relative',
                     borderRadius: 3,
                 }}
             >
-                <div style={{}}>
+                <div style={{ display: 'flex', flexDirection: 'row' }}>
                     {titleEdit ? (
                         <Input
                             autoFocus
@@ -61,6 +65,16 @@ export function OneFixture({
                             bordered
                             fullWidth
                             value={titleEdit}
+                            onKeyDown={(evt) => {
+                                if (evt.key === 'Enter') {
+                                    setTitleEdit(null);
+                                    onChange({ ...fixture, title: titleEdit });
+                                    evt.preventDefault();
+                                }
+                                if (evt.key === 'Escape') {
+                                    setTitleEdit(null);
+                                }
+                            }}
                             onChange={(evt) => setTitleEdit(evt.target.value)}
                             onBlur={() => {
                                 setTitleEdit(null);
@@ -70,6 +84,7 @@ export function OneFixture({
                     ) : (
                         <Text
                             css={{
+                                cursor: 'pointer',
                                 fontWeight: '$light',
                                 letterSpacing: '$wide',
                                 backgroundColor: 'rgba(0,0,0,0.3)',
@@ -131,14 +146,34 @@ export function OneFixture({
                         />
                     )}
                     <Card.Divider css={{ marginBlock: '$6' }} />
-                    <Highlight
-                        portal={portal}
-                        text={output_expected}
-                        info={{
-                            tast: newOutput.outputTast,
-                            ctx: newOutput.ctx2,
-                        }}
-                    />
+                    <div style={{ position: 'relative' }}>
+                        {numErrors != 0 ? (
+                            <Text
+                                css={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 4,
+                                    flex: 1,
+                                    textAlign: 'right',
+                                    flexShrink: 0,
+                                    paddingRight: '$6',
+                                    paddingLeft: '$6',
+                                    backgroundColor: 'rgba(255,0,0,0.3)',
+                                }}
+                            >
+                                {numErrors} issues
+                            </Text>
+                        ) : null}
+
+                        <Highlight
+                            portal={portal}
+                            text={output_expected}
+                            info={{
+                                tast: newOutput.outputTast,
+                                ctx: newOutput.ctx2,
+                            }}
+                        />
+                    </div>
                     {changed ? (
                         <>
                             <Card.Divider css={{ marginBlock: '$6' }} />
