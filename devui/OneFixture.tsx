@@ -1,4 +1,12 @@
-import { Button, Card, Input, Spacer, Text, Textarea } from '@nextui-org/react';
+import {
+    Button,
+    Card,
+    Checkbox,
+    Input,
+    Spacer,
+    Text,
+    Textarea,
+} from '@nextui-org/react';
 import equal from 'fast-deep-equal';
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
@@ -85,6 +93,8 @@ export function OneFixture({
                                 }
                                 if (evt.key === 'Escape') {
                                     setTitleEdit(null);
+                                    onChange({ ...fixture, title: titleEdit });
+                                    evt.preventDefault();
                                 }
                             }}
                             onChange={(evt) => setTitleEdit(evt.target.value)}
@@ -109,6 +119,23 @@ export function OneFixture({
                             {title}
                         </Text>
                     )}
+                    <div
+                        style={{
+                            flex: 1,
+                            textAlign: 'right',
+                            paddingRight: 12,
+                            paddingTop: 4,
+                        }}
+                    >
+                        <Checkbox
+                            label="Should Fail"
+                            size="xs"
+                            isSelected={fixture.shouldFail}
+                            onChange={(shouldFail) =>
+                                onChange({ ...fixture, shouldFail })
+                            }
+                        />
+                    </div>
                 </div>
                 <Card.Body css={{ display: 'flex', fontFamily: '$mono' }}>
                     {editing != null ? (
@@ -173,7 +200,7 @@ export function OneFixture({
                                 css={{
                                     position: 'absolute',
                                     top: 0,
-                                    right: 4,
+                                    right: 0,
                                     flex: 1,
                                     textAlign: 'right',
                                     flexShrink: 0,
@@ -183,6 +210,22 @@ export function OneFixture({
                                 }}
                             >
                                 {numErrors} issue{numErrors > 1 ? 's' : ''}
+                            </Text>
+                        ) : fixture.shouldFail ? (
+                            <Text
+                                css={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    flex: 1,
+                                    textAlign: 'right',
+                                    flexShrink: 0,
+                                    paddingRight: '$6',
+                                    paddingLeft: '$6',
+                                    backgroundColor: 'rgba(255,0,0,0.3)',
+                                }}
+                            >
+                                No errors, but expected failure
                             </Text>
                         ) : null}
 

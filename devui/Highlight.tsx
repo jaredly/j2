@@ -41,7 +41,7 @@ export const Highlight = ({
     }, [text]);
 
     const marked = React.useMemo(() => {
-        return parsed ? markUpTree(text, parsed) : null;
+        return parsed && text.trim().length ? markUpTree(text, parsed) : null;
     }, [parsed]);
 
     const annotations = React.useMemo(
@@ -117,6 +117,7 @@ export const Highlight = ({
                               top: hover.pos.y + 14,
                               left: hover.pos.x,
                               width: 200,
+                              zIndex: 1000,
                               padding: '$4',
                               pointerEvents: 'none',
                           }}

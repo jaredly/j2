@@ -27,6 +27,7 @@ export type Fixture = {
     input: string;
     output_expected: string;
     output_failed: string;
+    shouldFail: boolean;
 
     failing_deprecated: boolean;
     aliases_deprecated: { [key: string]: string };
@@ -81,9 +82,10 @@ export const parseFixtureOld = (chunk: string, i: number): Fixture => {
         builtins_deprecated: builtins,
         aliases_deprecated: aliases,
         input: rest.join('\n').trim(),
+        failing_deprecated: false,
         output_expected: output,
         output_failed: '',
-        failing_deprecated: false,
+        shouldFail: false,
         // i,
     };
 };
@@ -176,7 +178,8 @@ export const serializeFixtureFile = (file: FixtureFile) => {
     file.fixtures.forEach((fixture) => {
         fixmap[fixture.title] = serializeSections(
             {
-                input: fixture.input,
+                [fixture.shouldFail ? 'input:shouldFail' : 'input']:
+                    fixture.input,
                 'output:expected':
                     (fixture.output_expected?.startsWith('alias ')
                         ? ''
@@ -203,9 +206,10 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
             const items = loadSections(data, '-');
             return {
                 title,
-                input: items['input'].trim(),
+                input: (items['input'] ?? items['input:shouldFail']).trim(),
                 output_expected: items['output:expected']?.trim(),
                 output_failed: items['output:failed']?.trim(),
+                shouldFail: 'input:shouldFail' in items,
 
                 // No longer needed
                 aliases_deprecated: {}, // this will come from the output

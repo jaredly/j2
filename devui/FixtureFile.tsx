@@ -1,4 +1,5 @@
 import {
+    Button,
     Card,
     Container,
     Divider,
@@ -131,10 +132,18 @@ export const FixtureFile = ({
                                 onKeyDown={(evt) => {
                                     if (evt.key === 'Escape') {
                                         setEditBuiltins(null);
+                                        evt.preventDefault();
+                                        setData({
+                                            ...data,
+                                            builtins: editBuiltins
+                                                .split('\n')
+                                                .map(parseBuiltin),
+                                        });
                                     } else if (
                                         evt.key === 'Enter' &&
                                         evt.metaKey
                                     ) {
+                                        setEditBuiltins(null);
                                         evt.preventDefault();
                                         setData({
                                             ...data,
@@ -205,6 +214,29 @@ export const FixtureFile = ({
                             }}
                         />
                     ))}
+                    <Button
+                        onPress={() => {
+                            setData({
+                                ...data,
+                                fixtures: [
+                                    ...data.fixtures,
+                                    {
+                                        title: 'New fixture',
+                                        input: '// hello',
+                                        output_expected: '// hello',
+                                        output_failed: '',
+                                        shouldFail: false,
+                                        // nope
+                                        failing_deprecated: false,
+                                        aliases_deprecated: {},
+                                        builtins_deprecated: [],
+                                    },
+                                ],
+                            });
+                        }}
+                    >
+                        Add fixture
+                    </Button>
                 </Container>
             </Container>
         </div>
