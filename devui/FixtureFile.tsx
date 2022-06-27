@@ -1,4 +1,4 @@
-import { Container, Divider, Link } from '@nextui-org/react';
+import { Card, Container, Divider, Link, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
 import {
@@ -88,8 +88,25 @@ export const FixtureFile = ({
             </div>
 
             <Container css={{ p: '$6', pb: '50vh', overflow: 'auto' }}>
+                {data.builtins.length ? (
+                    <>
+                        <div>
+                            <Text css={{ fontFamily: '$mono' }} small>
+                                Builtins:
+                                {data.builtins.map((item, i) => (
+                                    <span key={i} style={{ marginLeft: 8 }}>
+                                        {item.name}
+                                    </span>
+                                ))}
+                            </Text>
+                        </div>
+                        <Card.Divider css={{ marginBlock: '$6' }} />
+                    </>
+                ) : null}
+
                 {data.fixtures.map((fixture: Fixture, i) => (
                     <OneFixture
+                        builtins={data.builtins}
                         portal={portal.current!}
                         id={`${name}/${i}`}
                         fixture={fixture}

@@ -178,7 +178,9 @@ export const serializeFixtureFile = (file: FixtureFile) => {
             {
                 input: fixture.input,
                 'output:expected':
-                    aliasesToString(fixture.aliases_deprecated) +
+                    (fixture.output_expected.startsWith('alias ')
+                        ? ''
+                        : aliasesToString(fixture.aliases_deprecated)) +
                     fixture.output_expected,
             },
             '-',
@@ -201,9 +203,9 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
             const items = loadSections(data, '-');
             return {
                 title,
-                input: items['input'],
-                output_expected: items['output:expected'],
-                output_failed: items['output:failed'],
+                input: items['input'].trim(),
+                output_expected: items['output:expected']?.trim(),
+                output_failed: items['output:failed']?.trim(),
 
                 // No longer needed
                 aliases_deprecated: {}, // this will come from the output
@@ -348,7 +350,12 @@ export function runFixture(
 
     const ctx2 = fullContext();
     loadBuiltins(builtins, ctx2);
-    outputTast = parseRaw(output_expected, ctx2);
+    try {
+        outputTast = parseRaw(output_expected, ctx2);
+    } catch (err) {
+        console.log(output_expected);
+        throw err;
+    }
     // outputTast = ctx2.ToTast.File(
     //     fixComments(parseFile(output_expected)),
     //     ctx2,

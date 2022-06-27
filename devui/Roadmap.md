@@ -10,8 +10,11 @@ Fixtures need to be fully usable:
 - [x] How to mark 'failed'? I guess I could have 'output:failed' instead of 'output'?
 	oh maybe `output:expected` and `output:failed`. if there's just expected, we assume we're doing well
 	if there's `output:failed` and no expected, that's fine too.
-- [ ] get 'alias'es parsing. I'll say the must be the first line? Might as well.
-- [ ] get parsing of the new fixture format working
+- [x] get 'alias'es parsing. I'll say the must be the first line? Might as well.
+- [x] get parsing of the new fixture format working
+- [ ] move builtins to the top of the list, not inline
+- [ ] editable builtins
+- [ ] editable fixture input
 - [ ] update the devui n stuff
 
 

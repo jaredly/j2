@@ -1,7 +1,11 @@
 import { Button, Card, Input, Spacer, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
-import { Fixture, runFixture } from '../core/typing/__test__/fixture-utils';
+import {
+    Builtin,
+    Fixture,
+    runFixture,
+} from '../core/typing/__test__/fixture-utils';
 import { Highlight } from './Highlight';
 
 export function OneFixture({
@@ -9,25 +13,27 @@ export function OneFixture({
     onChange,
     portal,
     id,
+    builtins,
 }: {
     id: string;
     portal: HTMLDivElement;
     fixture: Fixture;
     onChange: (v: Fixture) => void;
+    builtins: Builtin[];
 }) {
     const {
         title,
-        aliases_deprecated: aliases,
-        builtins_deprecated: builtins,
+        // aliases_deprecated: aliases,
         input,
         output_expected,
     } = fixture;
 
-    const newOutput = React.useMemo(() => runFixture(fixture), [fixture]);
+    const newOutput = React.useMemo(
+        () => runFixture(fixture, builtins),
+        [fixture, builtins],
+    );
 
-    const changed =
-        output_expected !== newOutput.newOutput ||
-        !aliasesMatch(aliases, newOutput.aliases);
+    const changed = output_expected !== newOutput.newOutput;
 
     const [titleEdit, setTitleEdit] = React.useState(null as null | string);
     return (
@@ -35,7 +41,7 @@ export function OneFixture({
             <Card
                 variant={'bordered'}
                 css={{
-                    p: '$6',
+                    // p: '$6',
                     // m: '$6',
                     borderColor: changed
                         ? 'orange'
@@ -43,11 +49,13 @@ export function OneFixture({
                         ? 'red'
                         : undefined,
                     position: 'relative',
+                    borderRadius: 3,
                 }}
             >
-                <Card.Header
+                {/* <Card.Header
                     onClick={() => (titleEdit ? null : setTitleEdit(title))}
-                >
+                > */}
+                <div style={{}}>
                     {titleEdit ? (
                         <Input
                             autoFocus
@@ -69,33 +77,23 @@ export function OneFixture({
                             css={{
                                 fontWeight: '$light',
                                 letterSpacing: '$wide',
+                                backgroundColor: 'rgba(0,0,0,0.3)',
+                                display: 'inline-block',
+                                paddingLeft: 8,
+                                paddingRight: 8,
                             }}
                             onClick={() => setTitleEdit(title)}
                         >
                             {title}
                         </Text>
                     )}
-                </Card.Header>
-                <Card.Divider />
+                </div>
+                {/* </Card.Header> */}
+                {/* <Card.Divider /> */}
                 <Card.Body css={{ display: 'flex' }}>
-                    {builtins.length ? (
-                        <>
-                            <div>
-                                <Text css={{ fontFamily: '$mono' }} small>
-                                    Builtins:
-                                    {builtins.map((item, i) => (
-                                        <span key={i} style={{ marginLeft: 8 }}>
-                                            {item.name}
-                                        </span>
-                                    ))}
-                                </Text>
-                            </div>
-                            <Card.Divider css={{ marginBlock: '$6' }} />
-                        </>
-                    ) : null}
                     <Highlight text={input} portal={portal} />
                     <Card.Divider css={{ marginBlock: '$6' }} />
-                    <Aliases aliases={aliases} />
+                    {/* <Aliases aliases={aliases} /> */}
                     <Highlight
                         portal={portal}
                         text={output_expected}

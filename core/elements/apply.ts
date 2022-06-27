@@ -100,7 +100,7 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             node.target.type === 'Ref' &&
             node.target.kind.type === 'Unresolved'
         ) {
-            console.log('UNRESOLVE', node);
+            // console.log('UNRESOLVE', node);
             const resolved = ctx._full.resolve(node.target.kind.text, null);
             if (resolved.length > 1) {
                 const argTypes = node.args.map((arg) => ctx.getType(arg));

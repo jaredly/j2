@@ -43,7 +43,7 @@ const collectAnnotations = (tast: File, ctx: FullContext) => {
         },
     };
     tt.transformFile(tast, visitor, null);
-    console.log(annotations);
+    // console.log(annotations);
     return annotations;
 };
 
@@ -58,6 +58,9 @@ export const Highlight = ({
 }) => {
     const parsed = React.useMemo(() => {
         try {
+            if (text.startsWith('alias ')) {
+                text = text.slice(text.indexOf('\n') + 1);
+            }
             const ast = parseFile(text);
             const locs: Array<{ loc: Loc; type: string }> = [];
             ast.comments.forEach(([loc, _]) => {
@@ -67,12 +70,12 @@ export const Highlight = ({
             return locs;
         } catch (err) {
             console.error(err);
-            return [];
+            return null;
         }
     }, [text]);
 
     const marked = React.useMemo(() => {
-        return markUpTree(text, parsed);
+        return parsed ? markUpTree(text, parsed) : null;
     }, [parsed]);
 
     const annotations = React.useMemo(
@@ -132,7 +135,11 @@ export const Highlight = ({
                         }
                     }}
                 >
-                    <Tree tree={marked} hover={hover?.span ?? null} />
+                    {marked ? (
+                        <Tree tree={marked} hover={hover?.span ?? null} />
+                    ) : (
+                        'Error parsing'
+                    )}
                 </span>
             </Text>
             {hover && annotations.length
