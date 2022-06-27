@@ -43,3 +43,12 @@ alias T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 alias test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 @test:type(:hello#[:unresolved:]) 10
 // 10
+
+==[arg default]==
+--[input]--
+@test:type(: <T: string, A: int = 10>(a: T, b: A) => A) 100
+
+--[output:expected]--
+alias A=1 int=h2f181c91131fd0daa282424fb3953604513df6fe string=h8f452146b75c912dedc5638091c55a088e30b7ee T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+@test:type(:<T: string, A: int = 10>(a: T, b: A) => A) 100
+// 100

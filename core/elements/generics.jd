@@ -64,3 +64,10 @@ alias bounded=h9a68796fa42783d7317d2e1e68412fc3caeaced2 error:notATypeVars=hf975
 // int
 (@error:notATypeVars() takesInt<int>)(10)
 // int
+
+==[arg defulat]==
+--[input]--
+// hello
+
+--[output:expected]--
+// hello

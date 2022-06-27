@@ -210,7 +210,7 @@ export const ToPP = {
         return pp.items(
             [
                 pp.args(
-                    args.items.map(({ label, hash, bound, loc }) =>
+                    args.items.map(({ label, hash, bound, default_, loc }) =>
                         pp.items(
                             [
                                 pp.atom(label, loc),
@@ -221,6 +221,18 @@ export const ToPP = {
                                               pp.atom(': ', loc),
                                               ctx.ToPP[bound.type](
                                                   bound as any,
+                                                  ctx,
+                                              ),
+                                          ],
+                                          loc,
+                                      )
+                                    : null,
+                                default_
+                                    ? pp.items(
+                                          [
+                                              pp.atom(' = ', loc),
+                                              ctx.ToPP[default_.type](
+                                                  default_ as any,
                                                   ctx,
                                               ),
                                           ],
