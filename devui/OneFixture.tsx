@@ -15,7 +15,13 @@ export function OneFixture({
     fixture: Fixture;
     onChange: (v: Fixture) => void;
 }) {
-    const { title, aliases, builtins, input, output_expected } = fixture;
+    const {
+        title,
+        aliases_deprecated: aliases,
+        builtins_deprecated: builtins,
+        input,
+        output_expected,
+    } = fixture;
 
     const newOutput = React.useMemo(() => runFixture(fixture), [fixture]);
 
@@ -33,7 +39,7 @@ export function OneFixture({
                     // m: '$6',
                     borderColor: changed
                         ? 'orange'
-                        : fixture.failing
+                        : fixture.failing_deprecated
                         ? 'red'
                         : undefined,
                     position: 'relative',
@@ -128,8 +134,8 @@ export function OneFixture({
                                 onChange({
                                     ...fixture,
                                     output_expected: newOutput.newOutput,
-                                    aliases: newOutput.aliases,
-                                    failing: false,
+                                    aliases_deprecated: newOutput.aliases,
+                                    failing_deprecated: false,
                                 });
                             }}
                         >
@@ -145,8 +151,8 @@ export function OneFixture({
                                 onChange({
                                     ...fixture,
                                     output_expected: newOutput.newOutput,
-                                    aliases: newOutput.aliases,
-                                    failing: true,
+                                    aliases_deprecated: newOutput.aliases,
+                                    failing_deprecated: true,
                                 });
                             }}
                         >

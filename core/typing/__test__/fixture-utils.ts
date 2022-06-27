@@ -24,12 +24,13 @@ export type FixtureFile = {
 
 export type Fixture = {
     title: string;
-    aliases: { [key: string]: string };
-    builtins: Builtin[];
     input: string;
     output_expected: string;
     output_failed: string;
-    failing: boolean;
+
+    failing_deprecated: boolean;
+    aliases_deprecated: { [key: string]: string };
+    builtins_deprecated: Builtin[];
     // i: number;
 };
 
@@ -77,12 +78,12 @@ export const parseFixtureOld = (chunk: string, i: number): Fixture => {
     }
     return {
         title: title.replace(/^=+\[/, '').replace(/\]=+$/, '').trim(),
-        builtins,
-        aliases,
+        builtins_deprecated: builtins,
+        aliases_deprecated: aliases,
         input: rest.join('\n').trim(),
         output_expected: output,
         output_failed: '',
-        failing: false,
+        failing_deprecated: false,
         // i,
     };
 };
@@ -91,9 +92,9 @@ export const serializeFixtureOld = ({
     title,
     input,
     output_expected,
-    builtins,
-    aliases,
-    failing,
+    builtins_deprecated: builtins,
+    aliases_deprecated: aliases,
+    failing_deprecated: failing,
 }: Fixture) => {
     return `==[${title}]==\n${JSON.stringify({
         builtins,
@@ -159,6 +160,17 @@ export const aliasesToString = (aliases: { [key: string]: string }) =>
           '\n'
         : '';
 
+export const aliasesFromString = (raw: string) => {
+    return raw
+        .slice('alias '.length)
+        .split(' ')
+        .reduce((acc, cur) => {
+            const [key, value] = cur.split('=');
+            acc[key] = value;
+            return acc;
+        }, {} as { [key: string]: string });
+};
+
 export const serializeFixtureFile = (file: FixtureFile) => {
     const fixmap: { [key: string]: string } = {};
     file.fixtures.forEach((fixture) => {
@@ -166,7 +178,8 @@ export const serializeFixtureFile = (file: FixtureFile) => {
             {
                 input: fixture.input,
                 'output:expected':
-                    aliasesToString(fixture.aliases) + fixture.output_expected,
+                    aliasesToString(fixture.aliases_deprecated) +
+                    fixture.output_expected,
             },
             '-',
         );
@@ -193,9 +206,9 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
                 output_failed: items['output:failed'],
 
                 // No longer needed
-                aliases: {}, // this will come from the output
-                builtins: [], // nope as well
-                failing: false, // comes from output_failed
+                aliases_deprecated: {}, // this will come from the output
+                builtins_deprecated: [], // nope as well
+                failing_deprecated: false, // comes from output_failed
             };
         });
         return {
@@ -217,7 +230,7 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
             .filter((x) => x.trim())
             .map((chunk, i) => {
                 const parsed = parseFixtureOld(chunk, i);
-                parsed.builtins.forEach((builtin) => {
+                parsed.builtins_deprecated.forEach((builtin) => {
                     const k = `${builtin.name}:${builtin.kind}`;
                     if (!seen[k]) {
                         seen[k] = true;
@@ -231,17 +244,15 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
 };
 
 export const loadFixtures = (fixtureFile: string) => {
-    let fixtures: Fixture[] = parseFixtureFile(
-        fs.readFileSync(fixtureFile, 'utf8'),
-    ).fixtures;
-    let hasOnly = fixtures.some((f) => f.title.includes('[only]'));
+    let file = parseFixtureFile(fs.readFileSync(fixtureFile, 'utf8'));
+    let hasOnly = file.fixtures.some((f) => f.title.includes('[only]'));
 
     if (hasOnly) {
         hasOnly = true;
-        fixtures = fixtures.filter((f) => f.title.includes('[only]'));
+        file.fixtures = file.fixtures.filter((f) => f.title.includes('[only]'));
     }
 
-    return { fixtures, hasOnly };
+    return { file, hasOnly };
 };
 
 // export type Fixed = {
@@ -279,20 +290,26 @@ export const loadFixtures = (fixtureFile: string) => {
 //     );
 // };
 
-export function runFixture({
-    builtins,
-    input,
-    output_expected,
-    output_failed,
-    aliases,
-}: Fixture) {
+export const parseRaw = (raw: string, ctx: FullContext): File => {
+    if (raw.startsWith('alias ')) {
+        const idx = raw.indexOf('\n');
+        ctx.aliases = aliasesFromString(raw.slice(0, idx));
+        raw = raw.slice(idx + 1);
+    }
+    return ctx.ToTast.File(fixComments(parseFile(raw)), ctx);
+};
+
+export function runFixture(
+    { input, output_expected }: Fixture,
+    builtins: Builtin[],
+) {
     const ctx = fullContext();
 
     loadBuiltins(builtins, ctx);
 
     let tast;
     try {
-        tast = ctx.ToTast.File(fixComments(parseFile(input)), ctx);
+        tast = parseRaw(input, ctx); // ctx.ToTast.File(fixComments(parseFile(input)), ctx);
     } catch (err) {
         console.log('Failed to parse input:', input);
         throw err;
@@ -329,12 +346,13 @@ export function runFixture({
     );
     let outputTast;
 
-    const ctx2 = fullContext(aliases);
+    const ctx2 = fullContext();
     loadBuiltins(builtins, ctx2);
-    outputTast = ctx2.ToTast.File(
-        fixComments(parseFile(output_expected)),
-        ctx2,
-    );
+    outputTast = parseRaw(output_expected, ctx2);
+    // outputTast = ctx2.ToTast.File(
+    //     fixComments(parseFile(output_expected)),
+    //     ctx2,
+    // );
 
     return {
         ctx,

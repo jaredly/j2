@@ -8,11 +8,19 @@ readdirSync(base)
         const fixtureFile = base + file;
 
         describe('analyze ' + file, () => {
-            const { fixtures, hasOnly } = loadFixtures(fixtureFile);
+            const { file, hasOnly } = loadFixtures(fixtureFile);
 
-            it.each(fixtures)('$title', (fixture) => {
-                let { title, input, output_expected, builtins } = fixture;
-                let { checked, newOutput, outputTast } = runFixture(fixture);
+            it.each(file.fixtures)('$title', (fixture) => {
+                let {
+                    title,
+                    input,
+                    output_expected,
+                    builtins_deprecated: builtins,
+                } = fixture;
+                let { checked, newOutput, outputTast } = runFixture(
+                    fixture,
+                    file.builtins,
+                );
 
                 const fullExpectedOutput = output_expected;
                 const fullOutput = newOutput;
@@ -29,7 +37,9 @@ readdirSync(base)
                             ...clearLocs(outputTast),
                             comments: [],
                         });
-                        expect(fullOutput).toEqual(fullExpectedOutput);
+                        expect(fullOutput.trim()).toEqual(
+                            fullExpectedOutput.trim(),
+                        );
                     } catch (err) {
                         console.error(
                             title +
