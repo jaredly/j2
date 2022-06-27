@@ -2,6 +2,7 @@ import { FullContext, tref } from '../ctx';
 import { extract, idToString } from '../ids';
 import { transformType } from '../transform-tast';
 import { Expression, Type } from '../typed-ast';
+import { typeMatches } from './typesEqual';
 
 // UMM So btw this will resolve all TRefs.
 export const getType = (expr: Expression, ctx: FullContext): Type | null => {
@@ -10,10 +11,24 @@ export const getType = (expr: Expression, ctx: FullContext): Type | null => {
             const target = getType(expr.target, ctx);
             if (target?.type === 'TVars') {
                 const symbols: { [num: number]: Type } = {};
+                // So, I'm kindof allowing them to apply more?
+                if (expr.args.length < target.args.length) {
+                    return null;
+                }
+                let failed = false;
                 expr.args.forEach((arg, i) => {
                     const targ = target.args[i];
+                    if (!targ) {
+                        return;
+                    }
                     symbols[targ.sym.id] = arg;
+                    if (targ.bound && !typeMatches(arg, targ.bound, ctx)) {
+                        failed = true;
+                    }
                 });
+                if (failed) {
+                    return null;
+                }
                 // ok we need to transform the inner
                 // target.args
                 return transformType(
@@ -37,7 +52,9 @@ export const getType = (expr: Expression, ctx: FullContext): Type | null => {
                     null,
                 );
             }
-            return null;
+            // If they're trying to apply and they shouldn't,
+            // I'll still let the type resolve.
+            return target;
         }
         case 'TemplateString':
             if (expr.rest.length === 0) {

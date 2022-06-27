@@ -15,6 +15,7 @@ import {
 import { getType } from './getType';
 import { analyze as analyzeApply } from '../elements/apply';
 import { analyze as analyzeConstants } from '../elements/constants';
+import { analyze as analyzeGenerics } from '../elements/generics';
 import { idToString } from '../ids';
 
 export type Ctx = {
@@ -80,6 +81,7 @@ export const analyze = (ast: File, ctx: Ctx): File => {
         {
             ...analyzeApply,
             ...analyzeConstants,
+            ...analyzeGenerics,
         },
         { ctx, hit: {} },
     );

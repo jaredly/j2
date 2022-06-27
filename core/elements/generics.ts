@@ -10,6 +10,7 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { noloc } from '../ctx';
 import { makeApply } from './apply';
+import { getType } from '../typing/getType';
 
 export const grammar = `
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
@@ -94,4 +95,31 @@ export const ToPP = {
             '>',
         );
     },
+};
+
+export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
+    Expression_TypeApplication(node, { ctx, hit }) {
+        const target = getType(node.target, ctx._full);
+        if (!target) {
+            return null;
+        }
+        if (target.type !== 'TVars') {
+            return decorate(node, 'notATypeVars', hit, ctx._full);
+        }
+        if (node.args.length !== target.args.length) {
+            return decorate(node, 'wrongNumberOfTypeArgs', hit, ctx._full);
+        }
+        // TODO: Type Decoration thanks
+        // let changed = false;
+        // const args = node.args.map((arg, i) => {
+        // 	const bound = target.args[i].bound
+        // 	if (bound && !typeMatches(arg, bound, ctx._full)) {
+        // 		return decorate(arg, 'typeMismatch', hit, ctx._full);
+        // 	}
+        // });
+        return null;
+    },
+    // Expression_TypeApplication(node, ctx) {
+    // 	// node.args.forEach(arg => { })
+    // },
 };

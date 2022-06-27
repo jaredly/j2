@@ -290,8 +290,10 @@ export const errors = {
     typeNotFound: 3,
     notAFunction: 1,
     wrongNumberOfArgs: 4,
+    wrongNumberOfTypeArgs: 1,
     argWrongType: 5,
     notAString: 6,
+    notATypeVars: 1,
 };
 export type ErrorTag = keyof typeof errors;
 

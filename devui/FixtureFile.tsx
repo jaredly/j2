@@ -4,6 +4,7 @@ import {
     Container,
     Divider,
     Link,
+    Spacer,
     Text,
     Textarea,
 } from '@nextui-org/react';
@@ -214,6 +215,7 @@ export const FixtureFile = ({
                             }}
                         />
                     ))}
+                    <Spacer />
                     <Button
                         onPress={() => {
                             setData({
