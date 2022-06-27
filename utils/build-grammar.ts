@@ -40,11 +40,13 @@ const jsOut = peggy.generate(grammarFile.join('\n\n'), {
     allowedStartRules: ['File', 'Type'],
 });
 
-fs.writeFileSync('./core/grammar/base.parser-untyped.js', jsOut);
+fs.writeFileSync(
+    './core/grammar/base.parser-untyped.ts',
+    '// @ts-nocheck\n' + jsOut,
+);
 fs.writeFileSync(
     './core/grammar/base.parser.ts',
-    `// @ts-ignore
-import {parse} from './base.parser-untyped.js'
+    `import {parse} from './base.parser-untyped'
 
 export type Loc = {
     start: {line: number, column: number, offset: number},
@@ -55,7 +57,9 @@ export type Loc = {
 ` +
         typesFile.join('\n\n') +
         `\n
+// @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});
+// @ts-ignore
 export const parseType = (input: string): Type => parse(input, {startRule: 'Type'});
 `,
 );

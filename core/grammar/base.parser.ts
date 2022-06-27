@@ -1,5 +1,4 @@
-// @ts-ignore
-import {parse} from './base.parser-untyped.js'
+import {parse} from './base.parser-untyped'
 
 export type Loc = {
     start: {line: number, column: number, offset: number},
@@ -236,5 +235,7 @@ export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner
 
 export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Identifier", "Apply", "Parens", "CommaExpr", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TRef", "TVars", "TBargs", "TBArg", "TArg", "TArgs", "TLambda"];
 
+// @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});
+// @ts-ignore
 export const parseType = (input: string): Type => parse(input, {startRule: 'Type'});

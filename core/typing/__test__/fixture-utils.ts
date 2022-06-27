@@ -62,6 +62,7 @@ export const parseFixtureOld = (chunk: string, i: number): Fixture => {
     const builtins: Builtin[] = [];
     const aliases: { [key: string]: string } = {};
     while (rest[0].startsWith('//:')) {
+        console.log(rest[0]);
         if (rest[0].startsWith('//:aliases:')) {
             rest.shift()!
                 .slice('//:aliases:'.length)
@@ -374,7 +375,7 @@ function parseBuiltin(line: string): Builtin {
         case 'decorator':
             return { kind: 'decorator', name };
         default:
-            throw new Error(`Invalid builtin line`);
+            throw new Error(`Invalid builtin line: ${line}`);
     }
 }
 
