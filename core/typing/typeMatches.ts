@@ -125,21 +125,29 @@ export const typeMatches = (
         case 'TDecorated':
             return typeMatches(candidate.inner, expected, ctx);
         case 'TVars': {
-            // First, find the max sym in both
-            // then make up new IDs and a mapping
-            // then "Apply" the new syms throughout
+            if (
+                expected.type !== 'TVars' ||
+                expected.args.length !== candidate.args.length ||
+                !expected.args.every(
+                    // True if the bounds align
+                    (arg, i) => {
+                        if (!arg.bound) {
+                            return !candidate.args[i].bound;
+                        }
+                        if (!candidate.args[i].bound) {
+                            return true; // bounded is a subset of unbounded
+                        }
 
-            // OHO here we get into contra ... variance?
-
-            // if (
-            //     expected.type !== 'TVars' ||
-            //     expected.args.length !== candidate.args.length ||
-            //     expected.args.some(
-            //         (arg, i) => !typeMatches(arg, candidate.args[i], ctx),
-            //     )
-            // ) {
-            //     return false;
-            // }
+                        return typeMatches(
+                            arg.bound,
+                            candidate.args[i].bound!,
+                            ctx,
+                        );
+                    },
+                )
+            ) {
+                return false;
+            }
             return false;
         }
         case 'TLambda':

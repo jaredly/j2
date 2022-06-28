@@ -8,6 +8,7 @@ import * as t from '../typed-ast';
 import { GlobalType, GlobalValue } from '../ctx';
 
 export type Ctx = {
+    resetSym: () => void;
     typeForId: (id: t.Id) => GlobalType | null;
     valueForId: (id: t.Id) => GlobalValue | null;
     resolve: (name: string, hash?: string | null) => Array<t.RefKind>;
@@ -48,6 +49,7 @@ export const GeneralToTast = {
         // We might forbid them from having outstanding effects though.
         // deal with that when it comes
         let parsed = toplevels.map((t) => {
+            ctx.resetSym();
             let top = ctx.ToTast.Toplevel(t as any, ctx);
             if (top.type === 'TypeAlias') {
                 ctx = ctx.withTypes(top.elements);

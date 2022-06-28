@@ -17,6 +17,7 @@ import {
     FixtureResult,
     runFixture,
 } from '../core/typing/__test__/fixture-utils';
+import { Editor } from './Editor';
 import { Highlight } from './Highlight';
 
 export function OneFixture({
@@ -189,7 +190,23 @@ export function OneFixture({
                     ) : null}
                 </div>
                 <Card.Body css={{ display: 'flex', fontFamily: '$mono' }}>
-                    {editing != null ? (
+                    <Editor
+                        text={editing ?? input}
+                        onChange={setEditing}
+                        onBlur={(input) => {
+                            setEditing(null);
+                            if (
+                                newOutput.type === 'error' ||
+                                input === newOutput.result.input
+                            ) {
+                                onChange({
+                                    ...fixture,
+                                    input,
+                                });
+                            }
+                        }}
+                    />
+                    {/*editing != null ? (
                         <Textarea
                             autoFocus
                             fullWidth
@@ -199,8 +216,9 @@ export function OneFixture({
                                 fontSize: 'inherit',
                                 padding: 0,
                                 margin: 0,
+                                flexShrink: 0,
                             }}
-                            minRows={3}
+                            minRows={10}
                             value={editing}
                             onChange={(evt) => setEditing(evt.target.value)}
                             onKeyDown={(evt) => {
@@ -244,7 +262,7 @@ export function OneFixture({
                             portal={portal}
                             onClick={() => setEditing(input)}
                         />
-                    )}
+                    )*/}
                     <Card.Divider css={{ marginBlock: '$6' }} />
                     <div style={{ position: 'relative' }}>
                         {numErrors != 0 ? (
@@ -282,14 +300,17 @@ export function OneFixture({
                         ) : null}
 
                         {newOutput.type === 'success' ? (
-                            <Highlight
-                                portal={portal}
-                                text={output_expected}
-                                info={{
-                                    tast: newOutput.result.outputTast,
-                                    ctx: newOutput.result.ctx2,
-                                }}
-                            />
+                            <>
+                                <Aliases aliases={newOutput.result.aliases} />
+                                <Highlight
+                                    portal={portal}
+                                    text={output_expected}
+                                    info={{
+                                        tast: newOutput.result.outputTast,
+                                        ctx: newOutput.result.ctx2,
+                                    }}
+                                />
+                            </>
                         ) : (
                             <Text>
                                 Failed to parse probably{' '}

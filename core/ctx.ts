@@ -214,6 +214,7 @@ export const newContext = (aliases: FullContext['aliases']): FullContext => {
     const ctx: FullContext = {
         locals: [],
         aliases,
+        resetSym: () => (symid = 0),
         decorators: { hashed: {}, names: {} },
         values: { hashed: {}, names: {} },
         types: { hashed: {}, names: {} },
