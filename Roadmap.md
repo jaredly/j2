@@ -17,6 +17,11 @@ type Y = () => x
 Ok so yeah technically that works. without combining it with records or tuples or something it seems quite useless.
 
 
+# BUGS
+
+- [ ] when just the aliases change, but the printed output doesn't, indicate that somehow. Maybe just have a diff view? Could be good.
+
+
 # Big Things To Add
 
 ## Better Fixture Setup

@@ -78,6 +78,7 @@ export function OneFixture({
                     {titleEdit ? (
                         <Input
                             autoFocus
+                            aria-label="Fixture title"
                             css={{
                                 letterSpacing: '$wide',
                                 fontWeight: '$light',

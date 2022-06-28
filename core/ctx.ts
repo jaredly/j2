@@ -249,6 +249,7 @@ export const newContext = (aliases: FullContext['aliases']): FullContext => {
             return { ...this, locals: [locals, ...this.locals] };
         },
         withTypes(types) {
+            console.log('adding types', types);
             const defns = types.map((m) => m.type);
             const hash = hashObject(defns);
             const ctx = { ...this };
@@ -271,7 +272,7 @@ export const newContext = (aliases: FullContext['aliases']): FullContext => {
                     id: toId(hash, i),
                 };
             });
-            return this;
+            return ctx;
         },
     };
     return ctx;

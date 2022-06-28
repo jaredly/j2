@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import objectHash from 'object-hash';
 import {
     addBuiltin,
     addBuiltinDecorator,
@@ -353,6 +354,15 @@ export function runFixture(
                     start: top.loc.end,
                 },
                 '// ' + cm,
+            ]);
+        } else if (top.type === 'TypeAlias') {
+            const hash = objectHash(top.elements.map((t) => t.type));
+            checked.comments.push([
+                {
+                    ...top.loc,
+                    start: top.loc.end,
+                },
+                '// h' + hash,
             ]);
         }
     });
