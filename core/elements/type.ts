@@ -430,7 +430,7 @@ export const ToPP = {
                 ...type.right.map((x) =>
                     pp.items(
                         [
-                            pp.atom(x.top, x.loc),
+                            pp.atom(' ' + x.top + ' ', x.loc),
                             ctx.ToPP[x.right.type](x.right as any, ctx),
                         ],
                         x.loc,

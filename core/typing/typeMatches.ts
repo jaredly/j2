@@ -14,6 +14,7 @@ import {
     TVars,
     Type,
 } from '../typed-ast';
+import { resolveType } from './analyze';
 import { applyType } from './getType';
 
 export const refsEqual = (a: RefKind, b: RefKind): boolean => {
@@ -106,8 +107,9 @@ export const justAdds = (t: TOps): Type[] | null => {
     for (let { top, right } of t.right) {
         if (top === '+') {
             results.push(right);
+        } else {
+            return null;
         }
-        return null;
     }
     return results;
 };
@@ -118,6 +120,14 @@ export const typeMatches = (
     ctx: FullContext,
 ): boolean => {
     // Ok I need like a "resolve refs" function
+    const c2 = resolveType(candidate, ctx)!;
+    const e2 = resolveType(expected, ctx);
+    if (c2 != null) {
+        candidate = c2;
+    }
+    if (e2 != null) {
+        expected = e2;
+    }
 
     while (expected.type === 'TDecorated') {
         expected = expected.inner;
@@ -153,7 +163,7 @@ export const typeMatches = (
                 !expected.args.every(
                     // True if the bounds align
                     (arg, i) => {
-                        const carg = (candidate as TVars).args[i];
+                        const carg: TVar = (candidate as TVars).args[i];
                         if (!arg.bound) {
                             return !carg.bound;
                         }
@@ -205,7 +215,19 @@ export const typeMatches = (
                     ),
                 )
             );
-        case 'TOps':
+        case 'TOps': {
+            const adds = justAdds(candidate);
+            if (
+                isBuiltinType(expected, 'string', ctx) &&
+                adds &&
+                adds.every(
+                    (add) =>
+                        add.type === 'String' ||
+                        isBuiltinType(add, 'string', ctx),
+                )
+            ) {
+                return true;
+            }
             // Probably need to "condense"?
             return (
                 expected.type === 'TOps' &&
@@ -221,6 +243,7 @@ export const typeMatches = (
                         ),
                 )
             );
+        }
         // A string literal type matches either that lateral type, or the full string type.
         // OR I guess a prefix or suffix 🤔
         case 'String':
