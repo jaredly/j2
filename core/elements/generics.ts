@@ -106,10 +106,41 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         if (target.type !== 'TVars') {
             return decorate(node, 'notATypeVars', hit, ctx._full);
         }
-        if (node.args.length !== target.args.length) {
+        // Hmm ok what about,
+        let changed = false;
+        const args = node.args.map((arg, i) => {
+            const targ = target.args[i];
+            if (!targ) {
+                changed = true;
+                return tdecorate(arg, 'extraArg', hit, ctx._full);
+            }
+            if (targ.bound && !typeMatches(arg, targ.bound, ctx._full)) {
+                changed = true;
+                return tdecorate(arg, 'argWrongType', hit, ctx._full, [
+                    {
+                        label: 'expected',
+                        arg: { type: 'DType', loc: noloc, typ: targ.bound },
+                        loc: noloc,
+                    },
+                ]);
+            }
+            return arg;
+        });
+        node = changed ? { ...node, args } : node;
+
+        let minArgs = target.args.findIndex((arg) => arg.default_);
+        if (minArgs === -1) {
+            minArgs = target.args.length;
+        }
+
+        if (
+            node.args.length < minArgs ||
+            node.args.length > target.args.length
+        ) {
             return decorate(node, 'wrongNumberOfTypeArgs', hit, ctx._full);
         }
-        return null;
+
+        return changed ? { ...node, args } : node;
     },
     Type_TApply(node, { ctx, hit }) {
         const inner = ctx.resolveType(node.target);
@@ -142,7 +173,15 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             node = { ...node, args };
         }
 
-        if (node.args.length !== inner.args.length) {
+        let minArgs = inner.args.findIndex((arg) => arg.default_);
+        if (minArgs === -1) {
+            minArgs = inner.args.length;
+        }
+
+        if (
+            node.args.length < minArgs ||
+            node.args.length > inner.args.length
+        ) {
             return tdecorate(node, 'wrongNumberOfTypeArgs', hit, ctx._full);
         }
         return changed ? node : null;

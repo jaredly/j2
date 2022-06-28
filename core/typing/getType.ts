@@ -5,25 +5,32 @@ import { Expression, Type, TVars } from '../typed-ast';
 import { typeMatches } from './typeMatches';
 
 export const applyType = (args: Type[], target: TVars, ctx: FullContext) => {
+    let minArgs = target.args.findIndex((arg) => arg.default_);
+    if (minArgs === -1) {
+        minArgs = target.args.length;
+    }
+
     const symbols: { [num: number]: Type } = {};
     // So, I'm kindof allowing them to apply more?
-    if (args.length < target.args.length) {
+    if (args.length < minArgs) {
         return null;
     }
     let failed = false;
-    args.forEach((arg, i) => {
-        const targ = target.args[i];
-        if (!targ) {
-            return;
+
+    target.args.forEach((targ, i) => {
+        const arg = i < args.length ? args[i] : targ.default_;
+        if (arg == null) {
+            failed = true;
         }
-        symbols[targ.sym.id] = arg;
-        if (targ.bound && !typeMatches(arg, targ.bound, ctx)) {
+        symbols[targ.sym.id] = arg!;
+        if (targ.bound && !typeMatches(arg!, targ.bound, ctx)) {
             failed = true;
         }
     });
     if (failed) {
         return null;
     }
+
     // ok we need to transform the inner
     // target.args
     return transformType(

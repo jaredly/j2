@@ -55,7 +55,7 @@ alias test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 @test:type(: <T: string, A: int = 10>(a: T, b: A) => A) 100
 
 --[output:expected]--
-alias A=3 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=2 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias A=1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 @test:type(:<T: string, A: int = 10>(a: T, b: A) => A) 100
 // 100
 
@@ -78,9 +78,9 @@ type StringMe = <T: string>int;
 @test:type(:StringMe<"hello">) 10
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=h2eb7a52a45ec7a6533dbde0881bb5577ff211068 T=2 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=h157cdf49f9ebaa5a0c5f37d1d6f289d8b0eff09a T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type StringMe = <T: string>int
-// h2eb7a52a45ec7a6533dbde0881bb5577ff211068
+// h157cdf49f9ebaa5a0c5f37d1d6f289d8b0eff09a
 @test:type(:StringMe<@error:argWrongType(expected: :string) 20>) 10
 // 10
 @test:type(:StringMe<"hello">) 10
@@ -121,3 +121,7 @@ wantsId(id)
 alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f id=hf5df74f88f6398e9901d80dd2392d8fffa98142d int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f T=1 wantsId=h3b8037c287f715e3d39f600ea453673b4ab5768c
 wantsId(@error:argWrongType(expected: :<T>(x: T) => T) id)
 // int
+
+==[New fixture]==
+--[output:expected]--
+// hello

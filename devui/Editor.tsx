@@ -70,6 +70,9 @@ export const Editor = ({
     return (
         <div
             contentEditable
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
             style={{
                 outline: editing ? '2px solid #f00' : 'none',
                 whiteSpace: 'pre-wrap',
@@ -87,7 +90,7 @@ export const Editor = ({
                     // onBlur(getText(ref.current!));
                     ref.current!.blur();
                     // document.body.focus();
-                    // document.getSelection()?.removeAllRanges();
+                    document.getSelection()?.removeAllRanges();
                 }
             }}
             ref={(node) => (ref.current = node)}

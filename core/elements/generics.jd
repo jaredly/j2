@@ -3,6 +3,7 @@
 //:decorator:decorate
 //:value:multi:<A, B>(a: A, b: B) => A
 //:value:bounded:<A: int>(a: A) => A
+//:value:boundedDefault:<A: int, B: uint = 10>(a: A, b: B) => A
 //:value:takesInt:(a: int) => int
 //:type:Array:<Element, Length: uint>
 //:value:takesArray:(ar: Array<string, 10>) => int
@@ -53,8 +54,8 @@ bounded<10>(10)
 bounded<string>("wat")
 
 --[output:expected]--
-alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d string=hd978df838905e7e1bd7bb33530ae12436e3756f4
-bounded<string>("wat")
+alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+bounded<@error:argWrongType(expected: :int) string>("wat")
 // Error, no type!
 
 ==[wrong args]==
@@ -63,8 +64,8 @@ bounded<int, string>(20)
 takesInt<int>(10)
 
 --[output:expected]--
-alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
-(@error:wrongNumberOfTypeArgs() bounded<int, string>)(20)
+alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:extraArg=haae12b260f3d25abb4b67dfe8895a3c6fb00eb59 error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
+(@error:wrongNumberOfTypeArgs() bounded<int, @error:extraArg() string>)(20)
 // int
 (@error:notATypeVars() takesInt<int>)(10)
 // int
@@ -74,7 +75,7 @@ alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:notATypeVars=hf975
 @test:type(:Array<int, string, int>) 10
 
 --[output:expected]--
-alias Array=hec476a05f5b96e6cde2e810873da9ea402334adc error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f error:extraArg=haae12b260f3d25abb4b67dfe8895a3c6fb00eb59 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+alias Array=h8de4ecae93abe8de85536031f6f8a05742a6ee53 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f error:extraArg=haae12b260f3d25abb4b67dfe8895a3c6fb00eb59 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
 @test:type(
     :@error:wrongNumberOfTypeArgs() Array<
         int,
@@ -90,7 +91,7 @@ takesArray(10)
 takesArray(anArray)
 
 --[output:expected]--
-alias anArray=h6190b2c5c57f746c61bbf06a1b0a9dcedd9ccbcd Array=hec476a05f5b96e6cde2e810873da9ea402334adc error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesArray=hb8c390c12bc700fe47a8200e3a22c5d9773c3458
+alias anArray=h3b5b5f972e2903d7c82350fc80e38407c1f785a8 Array=h8de4ecae93abe8de85536031f6f8a05742a6ee53 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesArray=hcdd9a45603b52a498bc71cafbe9a0a4f62cb0d90
 takesArray(@error:argWrongType(expected: :Array<string, 10>) 10)
 // int
 takesArray(anArray)
@@ -217,15 +218,24 @@ type TTen = (v: Ten) => string
 
 ==[New fixture__]==
 --[input]--
-type DArray = <Element, Length: uint>int
+type DArray = <Element, Length: uint = uint>int
 type Marray = DArray<int>
 type TArray = DArray<int, 10>
 
 --[output:expected]--
-alias DArray=h57714392b5a02ab755f186be825b4ed0a355f0ab Element=0 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f Length=1 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
-type DArray = <Element, Length: uint>int
-// h57714392b5a02ab755f186be825b4ed0a355f0ab
-type Marray = @error:wrongNumberOfTypeArgs() DArray<int>
-// h9ea081976d9895ee62bbe5fe6180acf5897237eb
+alias DArray=h4a70283eb453c226d5fa09f4230057b901cb63b8 Element=0 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f Length=1 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+type DArray = <Element, Length: uint = uint>int
+// h4a70283eb453c226d5fa09f4230057b901cb63b8
+type Marray = DArray<int>
+// h4ba493696830de81b2c129583bbead94914dc054
 type TArray = DArray<int, 10>
-// h863598991441e1c68c0f6febe0f205931bc76c58
+// h9059382faeeb1bf719d7ff1e44473a2d9ac19a55
+
+==[New fixture___]==
+--[input]--
+boundedDefault<int>
+
+--[output:expected]--
+alias boundedDefault=hc4316951341561217c1d42557785019239254ba1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+boundedDefault<int>
+// (a: int, b: 10) => int
