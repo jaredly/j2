@@ -24,6 +24,7 @@ export type {
     TApply,
     TDecorated,
     TLambda,
+    TOps,
     TOr,
     TRef,
     TSub,

@@ -7,6 +7,7 @@ import {
     RefKind,
     TApply,
     TLambda,
+    TOps,
     TOr,
     TRef,
     TVar,
@@ -100,6 +101,17 @@ yeah ok so same deal as fn args. they go backwards
 
 */
 
+export const justAdds = (t: TOps): Type[] | null => {
+    const results = [t.left];
+    for (let { top, right } of t.right) {
+        if (top === '+') {
+            results.push(right);
+        }
+        return null;
+    }
+    return results;
+};
+
 export const typeMatches = (
     candidate: Type,
     expected: Type,
@@ -107,12 +119,12 @@ export const typeMatches = (
 ): boolean => {
     // Ok I need like a "resolve refs" function
 
-    // while (expected.type === 'TDecorated') {
-    //     expected = expected.inner;
-    // }
-    // while (candidate.type === 'TDecorated') {
-    //     candidate = candidate.inner;
-    // }
+    while (expected.type === 'TDecorated') {
+        expected = expected.inner;
+    }
+    while (candidate.type === 'TDecorated') {
+        candidate = candidate.inner;
+    }
     // if (expected.type === 'TOr') {
     //     if (candidate.type === 'TOr') {
     //         return candidate.elements.every((can) =>
@@ -134,8 +146,6 @@ export const typeMatches = (
     // }
     // console.log(candidate, expected);
     switch (candidate.type) {
-        case 'TDecorated':
-            return typeMatches(candidate.inner, expected, ctx);
         case 'TVars': {
             if (
                 expected.type !== 'TVars' ||
@@ -143,19 +153,16 @@ export const typeMatches = (
                 !expected.args.every(
                     // True if the bounds align
                     (arg, i) => {
+                        const carg = (candidate as TVars).args[i];
                         if (!arg.bound) {
-                            return !candidate.args[i].bound;
+                            return !carg.bound;
                         }
-                        if (!candidate.args[i].bound) {
+                        if (!carg.bound) {
                             return true; // bounded is a subset of unbounded
                         }
 
                         // REVERSED! For Variance
-                        return typeMatches(
-                            arg.bound,
-                            candidate.args[i].bound!,
-                            ctx,
-                        );
+                        return typeMatches(arg.bound, carg.bound!, ctx);
                     },
                 )
             ) {
@@ -198,35 +205,54 @@ export const typeMatches = (
                     ),
                 )
             );
+        case 'TOps':
+            // Probably need to "condense"?
+            return (
+                expected.type === 'TOps' &&
+                candidate.right.length === expected.right.length &&
+                typeMatches(candidate.left, expected.left, ctx) &&
+                candidate.right.every(
+                    (arg, i) =>
+                        arg.top === (expected as TOps).right[i].top &&
+                        typeMatches(
+                            arg.right,
+                            (expected as TOps).right[i].right,
+                            ctx,
+                        ),
+                )
+            );
         // A string literal type matches either that lateral type, or the full string type.
         // OR I guess a prefix or suffix 🤔
         case 'String':
             switch (expected.type) {
                 case 'String':
                     return candidate.text === expected.text;
-                // case 'TAdd': {
-                //     let { text } = candidate;
-                //     let pos = 0;
-                //     let exact = true;
-                //     // TODO: I'll need to flatten nested ADDs if I ever want that.
-                //     for (let ex of expected.elements) {
-                //         if (ex.type === 'String') {
-                //             const idx = text.indexOf(ex.text, pos);
-                //             if (idx === -1 || (exact && idx !== 0)) {
-                //                 return false;
-                //             }
-                //             pos = idx + ex.text.length;
-                //         } else if (isBuiltinType(ex, 'string', ctx)) {
-                //             exact = false;
-                //         } else {
-                //             return false;
-                //         }
-                //     }
-                //     if (exact && pos !== text.length - 1) {
-                //         return false; // extra trailing
-                //     }
-                //     return true;
-                // }
+                case 'TOps': {
+                    let { text } = candidate;
+                    let pos = 0;
+                    let exact = true;
+                    const elements = justAdds(expected);
+                    if (!elements) {
+                        return false;
+                    }
+                    for (let ex of elements) {
+                        if (ex.type === 'String') {
+                            const idx = text.indexOf(ex.text, pos);
+                            if (idx === -1 || (exact && idx !== 0)) {
+                                return false;
+                            }
+                            pos = idx + ex.text.length;
+                        } else if (isBuiltinType(ex, 'string', ctx)) {
+                            exact = false;
+                        } else {
+                            return false;
+                        }
+                    }
+                    if (exact && pos !== text.length - 1) {
+                        return false; // extra trailing
+                    }
+                    return true;
+                }
                 default:
                     return isBuiltinType(expected, 'string', ctx);
             }

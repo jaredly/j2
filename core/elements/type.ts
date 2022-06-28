@@ -8,14 +8,20 @@ import { Ctx as TCtx, filterUnresolved } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 
 export const grammar = `
-Type = TDecorated / TApply
+Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 TApply = inner:TAtom args_drop:(_ "<" _ TComma _ ">")*
+
 TAtom = TRef / Number / String / TLambda / TVars / TParens
 TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)? args:(TApply)?
 TVars = "<" _ args:TBargs _ ">" inner:Type
 TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
 TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Type)?
+
+TOps = left:TOpInner right_drop:TRight*
+TRight = _ top:$top _ right:TOpInner
+top = "-" / "+"
+TOpInner = TDecorated / TApply
 
 TComma = first:Type rest:(_ "," _ Type)* _ ","?
 TParens = "(" _ inner:Type _ ")"
@@ -28,6 +34,13 @@ TypeAlias = "type" _ first:TypePair rest:(_ "and" _ TypePair)*
 TypePair = name:$IdText _ "=" _ typ:Type
 
 `;
+
+export type TOps = {
+    type: 'TOps';
+    left: Type;
+    right: Array<{ top: '+' | '-'; right: Type }>;
+    loc: t.Loc;
+};
 
 export type TRef = {
     type: 'TRef';
@@ -92,8 +105,10 @@ export type Type =
     | t.String
     | TVars
     | TDecorated
-    | TApply; // | TApply;
-// | TDecorated | TApply | TVars
+    | TApply
+    | TOps;
+
+// | TApply | TDecorated | TApply | TVars
 
 // Should I only allow local refs?
 // hmm no.
@@ -109,6 +124,15 @@ export type TOr = { type: 'TOr'; elements: Array<Type>; loc: t.Loc };
 
 // (T -> T) -> T // hm that would be Kinds yep.
 
+export const asApply = (t: p.Type): p.TApply =>
+    t.type === 'TDecorated' || t.type === 'TOps'
+        ? {
+              type: 'TParens',
+              inner: t,
+              loc: t.loc,
+          }
+        : t;
+
 export const ToTast = {
     TypeAlias({ loc, items }: p.TypeAlias, ctx: TCtx): t.TypeAlias {
         return {
@@ -117,6 +141,17 @@ export const ToTast = {
             elements: items.map((x) => ({
                 name: x.name,
                 type: ctx.ToTast[x.typ.type](x.typ as any, ctx),
+            })),
+        };
+    },
+    TOps({ loc, left, right }: p.TOps_inner, ctx: TCtx): TOps {
+        return {
+            type: 'TOps',
+            loc,
+            left: ctx.ToTast[left.type](left as any, ctx),
+            right: right.map((x) => ({
+                top: x.top as '+' | '-',
+                right: ctx.ToTast[x.right.type](x.right as any, ctx),
             })),
         };
     },
@@ -228,11 +263,28 @@ export const ToAst = {
         return {
             type: 'TypeAlias',
             loc,
-            items: elements.map(({ name, type }) => ({
-                type: 'TypePair',
-                name: name,
-                typ: ctx.ToAst[type.type](type as any, ctx),
-                loc,
+            items: elements.map(
+                ({ name, type }): p.TypePair => ({
+                    type: 'TypePair',
+                    name: name,
+                    typ: ctx.ToAst[type.type](type as any, ctx),
+                    loc,
+                }),
+            ),
+        };
+    },
+    TOps(type: TOps, ctx: TACtx): p.TOps_inner {
+        // left...
+        // right..
+        return {
+            type: 'TOps',
+            loc: type.loc,
+            left: asApply(ctx.ToAst[type.left.type](type.left as any, ctx)),
+            right: type.right.map((x) => ({
+                type: 'TRight',
+                loc: type.loc,
+                top: x.top as '+' | '-',
+                right: asApply(ctx.ToAst[x.right.type](x.right as any, ctx)),
             })),
         };
     },
@@ -247,7 +299,7 @@ export const ToAst = {
             return { ...inner, args: inner.args.concat([targs]) };
         }
         const in2: p.TAtom =
-            inner.type === 'TDecorated'
+            inner.type === 'TDecorated' || inner.type === 'TOps'
                 ? { type: 'TParens', inner: inner, loc }
                 : inner;
         return {
@@ -266,6 +318,18 @@ export const ToAst = {
             return {
                 ...inner,
                 decorators: decorators.concat(inner.decorators),
+            };
+        }
+        if (inner.type === 'TOps') {
+            return {
+                type: 'TDecorated',
+                loc: type.loc,
+                inner: {
+                    type: 'TParens',
+                    loc: inner.loc,
+                    inner,
+                },
+                decorators,
             };
         }
         return {
@@ -357,6 +421,23 @@ export const ToPP = {
                 ),
             ],
             loc,
+        );
+    },
+    TOps(type: p.TOps_inner, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                ctx.ToPP[type.left.type](type.left as any, ctx),
+                ...type.right.map((x) =>
+                    pp.items(
+                        [
+                            pp.atom(x.top, x.loc),
+                            ctx.ToPP[x.right.type](x.right as any, ctx),
+                        ],
+                        x.loc,
+                    ),
+                ),
+            ],
+            type.loc,
         );
     },
     TDecorated({ inner, decorators, loc }: p.TDecorated, ctx: PCtx): pp.PP {

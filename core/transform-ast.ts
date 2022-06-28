@@ -5,6 +5,9 @@ import {
   TypeAlias,
   TypePair,
   Type,
+  TOps,
+  TOps_inner,
+  TOpInner,
   TDecorated,
   Decorator,
   DecoratorId,
@@ -44,6 +47,7 @@ import {
   TBArg,
   TParens,
   TComma,
+  TRight,
   _lineEnd,
   _EOF,
   newline,
@@ -59,6 +63,7 @@ import {
   TypeVariables,
   TypeVbls,
   TypeVbl,
+  top,
   AllTaggedTypes,
 } from "./grammar/base.parser";
 
@@ -327,6 +332,25 @@ export type Visitor<Ctx> = {
   TBargsPost?: (node: TBargs, ctx: Ctx) => null | TBargs;
   TBArg?: (node: TBArg, ctx: Ctx) => null | false | TBArg | [TBArg | null, Ctx];
   TBArgPost?: (node: TBArg, ctx: Ctx) => null | TBArg;
+  TOps_inner?: (
+    node: TOps_inner,
+    ctx: Ctx
+  ) => null | false | TOps_inner | [TOps_inner | null, Ctx];
+  TOps_innerPost?: (node: TOps_inner, ctx: Ctx) => null | TOps_inner;
+  TOps?: (node: TOps, ctx: Ctx) => null | false | TOps | [TOps | null, Ctx];
+  TOpsPost?: (node: TOps, ctx: Ctx) => null | TOps;
+  TRight?: (
+    node: TRight,
+    ctx: Ctx
+  ) => null | false | TRight | [TRight | null, Ctx];
+  TRightPost?: (node: TRight, ctx: Ctx) => null | TRight;
+  top?: (node: top, ctx: Ctx) => null | false | top | [top | null, Ctx];
+  topPost?: (node: top, ctx: Ctx) => null | top;
+  TOpInner?: (
+    node: TOpInner,
+    ctx: Ctx
+  ) => null | false | TOpInner | [TOpInner | null, Ctx];
+  TOpInnerPost?: (node: TOpInner, ctx: Ctx) => null | TOpInner;
   TComma?: (
     node: TComma,
     ctx: Ctx
@@ -412,10 +436,6 @@ export type Visitor<Ctx> = {
     node: DecExpr,
     ctx: Ctx
   ) => null | false | DecoratorArg | [DecoratorArg | null, Ctx];
-  Type_TDecorated?: (
-    node: TDecorated,
-    ctx: Ctx
-  ) => null | false | Type | [Type | null, Ctx];
   TApply_TApply?: (
     node: TApply,
     ctx: Ctx
@@ -444,6 +464,14 @@ export type Visitor<Ctx> = {
     node: TParens,
     ctx: Ctx
   ) => null | false | TAtom | [TAtom | null, Ctx];
+  TOps_TOps?: (
+    node: TOps,
+    ctx: Ctx
+  ) => null | false | TOps | [TOps | null, Ctx];
+  TOpInner_TDecorated?: (
+    node: TDecorated,
+    ctx: Ctx
+  ) => null | false | TOpInner | [TOpInner | null, Ctx];
   AllTaggedTypes_File?: (
     node: File,
     ctx: Ctx
@@ -562,6 +590,14 @@ export type Visitor<Ctx> = {
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TBArg?: (
     node: TBArg,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TOps?: (
+    node: TOps,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TRight?: (
+    node: TRight,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TComma?: (
@@ -3392,16 +3428,16 @@ export const transformTDecorated = <Ctx>(
   return node;
 };
 
-export const transformType = <Ctx>(
-  node: Type,
+export const transformTOpInner = <Ctx>(
+  node: TOpInner,
   visitor: Visitor<Ctx>,
   ctx: Ctx
-): Type => {
+): TOpInner => {
   if (!node) {
-    throw new Error("No Type provided");
+    throw new Error("No TOpInner provided");
   }
 
-  const transformed = visitor.Type ? visitor.Type(node, ctx) : null;
+  const transformed = visitor.TOpInner ? visitor.TOpInner(node, ctx) : null;
   if (transformed === false) {
     return node;
   }
@@ -3420,8 +3456,8 @@ export const transformType = <Ctx>(
 
   switch (node.type) {
     case "TDecorated": {
-      const transformed = visitor.Type_TDecorated
-        ? visitor.Type_TDecorated(node, ctx)
+      const transformed = visitor.TOpInner_TDecorated
+        ? visitor.TOpInner_TDecorated(node, ctx)
         : null;
       if (transformed != null) {
         if (Array.isArray(transformed)) {
@@ -3456,6 +3492,246 @@ export const transformType = <Ctx>(
       updatedNode = updatedNode$0node;
     }
   }
+
+  node = updatedNode;
+  if (visitor.TOpInnerPost) {
+    const transformed = visitor.TOpInnerPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTRight = <Ctx>(
+  node: TRight,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TRight => {
+  if (!node) {
+    throw new Error("No TRight provided");
+  }
+
+  const transformed = visitor.TRight ? visitor.TRight(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    const updatedNode$right = transformTOpInner(node.right, visitor, ctx);
+    changed1 = changed1 || updatedNode$right !== node.right;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        right: updatedNode$right,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TRightPost) {
+    const transformed = visitor.TRightPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTOps_inner = <Ctx>(
+  node: TOps_inner,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TOps_inner => {
+  if (!node) {
+    throw new Error("No TOps_inner provided");
+  }
+
+  const transformed = visitor.TOps_inner ? visitor.TOps_inner(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    const updatedNode$left = transformTOpInner(node.left, visitor, ctx);
+    changed1 = changed1 || updatedNode$left !== node.left;
+
+    let updatedNode$right = node.right;
+    {
+      let changed2 = false;
+      const arr1 = node.right.map((updatedNode$right$item1) => {
+        const result = transformTRight(updatedNode$right$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$right$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$right = arr1;
+        changed1 = true;
+      }
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        left: updatedNode$left,
+        right: updatedNode$right,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TOps_innerPost) {
+    const transformed = visitor.TOps_innerPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTOps = <Ctx>(
+  node: TOps,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TOps => {
+  if (!node) {
+    throw new Error("No TOps provided");
+  }
+
+  const transformed = visitor.TOps ? visitor.TOps(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  switch (node.type) {
+    case "TOps": {
+      const transformed = visitor.TOps_TOps
+        ? visitor.TOps_TOps(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "TOps": {
+      updatedNode = transformTOps_inner(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformTOpInner(node, visitor, ctx);
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TOpsPost) {
+    const transformed = visitor.TOpsPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformType = <Ctx>(
+  node: Type,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Type => {
+  if (!node) {
+    throw new Error("No Type provided");
+  }
+
+  const transformed = visitor.Type ? visitor.Type(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  const updatedNode = transformTOps(node, visitor, ctx);
+  changed0 = changed0 || updatedNode !== node;
 
   node = updatedNode;
   if (visitor.TypePost) {
@@ -4386,6 +4662,43 @@ export const transformTypeVariables = <Ctx>(
   return node;
 };
 
+export const transformtop = <Ctx>(
+  node: top,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): top => {
+  if (!node) {
+    throw new Error("No top provided");
+  }
+
+  const transformed = visitor.top ? visitor.top(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+  const updatedNode = node;
+
+  node = updatedNode;
+  if (visitor.topPost) {
+    const transformed = visitor.topPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformAllTaggedTypes = <Ctx>(
   node: AllTaggedTypes,
   visitor: Visitor<Ctx>,
@@ -4985,6 +5298,44 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
+    case "TOps": {
+      const transformed = visitor.AllTaggedTypes_TOps
+        ? visitor.AllTaggedTypes_TOps(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TRight": {
+      const transformed = visitor.AllTaggedTypes_TRight
+        ? visitor.AllTaggedTypes_TRight(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "TComma": {
       const transformed = visitor.AllTaggedTypes_TComma
         ? visitor.AllTaggedTypes_TComma(node, ctx)
@@ -5298,6 +5649,18 @@ export const transformAllTaggedTypes = <Ctx>(
 
     case "TBArg": {
       updatedNode = transformTBArg(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TOps": {
+      updatedNode = transformTOps_inner(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TRight": {
+      updatedNode = transformTRight(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

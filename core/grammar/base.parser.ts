@@ -213,7 +213,7 @@ export type TypeVbl = {
   bound: Type | null;
 };
 
-export type Type = TDecorated | TApply;
+export type Type = TOps;
 
 export type TDecorated = {
   type: "TDecorated";
@@ -263,6 +263,26 @@ export type TBArg = {
   default_: Type | null;
 };
 
+export type TOps_inner = {
+  type: "TOps";
+  loc: Loc;
+  left: TOpInner;
+  right: TRight[];
+};
+
+export type TOps = TOps_inner | TOpInner;
+
+export type TRight = {
+  type: "TRight";
+  loc: Loc;
+  top: string;
+  right: TOpInner;
+};
+
+export type top = "-" | "+";
+
+export type TOpInner = TDecorated | TApply;
+
 export type TComma = {
   type: "TComma";
   loc: Loc;
@@ -308,9 +328,9 @@ export type TypePair = {
   typ: Type;
 };
 
-export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | CallSuffix | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TDecorated | TApply_inner | TRef | TVars | TBargs | TBArg | TComma | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
+export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | CallSuffix | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TDecorated | TApply_inner | TRef | TVars | TBargs | TBArg | TOps_inner | TRight | TComma | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
 
-export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Identifier", "Apply", "CallSuffix", "CommaExpr", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TDecorated", "TApply", "TRef", "TVars", "TBargs", "TBArg", "TComma", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Identifier", "Apply", "CallSuffix", "CommaExpr", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TDecorated", "TApply", "TRef", "TVars", "TBargs", "TBArg", "TOps", "TRight", "TComma", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
 
 // @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});

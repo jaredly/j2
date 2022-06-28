@@ -46,6 +46,7 @@ export const processExpression = (
                     return t.tsTypeReference(t.identifier('string'));
                 }
                 if (alt.type !== 'rule_ref') {
+                    console.log(expr);
                     throw new Error(`Choice with ${alt.type}`);
                 }
                 return t.tsTypeReference(ruleToType(alt.name));

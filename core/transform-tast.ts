@@ -27,6 +27,7 @@ import {
   DExpr,
   DType,
   TApply,
+  TOps,
   DecoratedExpression,
   TypeAlias,
   DecoratorDecl,
@@ -148,6 +149,8 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TypeVariables | [TypeVariables | null, Ctx];
   TypeVariablesPost?: (node: TypeVariables, ctx: Ctx) => null | TypeVariables;
+  TOps?: (node: TOps, ctx: Ctx) => null | false | TOps | [TOps | null, Ctx];
+  TOpsPost?: (node: TOps, ctx: Ctx) => null | TOps;
   TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
   TRefPost?: (node: TRef, ctx: Ctx) => null | TRef;
   TDecorated?: (
@@ -249,6 +252,10 @@ export type Visitor<Ctx> = {
   ) => null | false | Type | [Type | null, Ctx];
   Type_TApply?: (
     node: TApply,
+    ctx: Ctx
+  ) => null | false | Type | [Type | null, Ctx];
+  Type_TOps?: (
+    node: TOps,
     ctx: Ctx
   ) => null | false | Type | [Type | null, Ctx];
 };
@@ -1681,6 +1688,90 @@ export const transformTApply = <Ctx>(
   return node;
 };
 
+export const transformTOps = <Ctx>(
+  node: TOps,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TOps => {
+  if (!node) {
+    throw new Error("No TOps provided");
+  }
+
+  const transformed = visitor.TOps ? visitor.TOps(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$left = transformType(node.left, visitor, ctx);
+    changed1 = changed1 || updatedNode$left !== node.left;
+
+    let updatedNode$right = node.right;
+    {
+      let changed2 = false;
+      const arr1 = node.right.map((updatedNode$right$item1) => {
+        let result = updatedNode$right$item1;
+        {
+          let changed3 = false;
+
+          const result$right = transformType(
+            updatedNode$right$item1.right,
+            visitor,
+            ctx
+          );
+          changed3 = changed3 || result$right !== updatedNode$right$item1.right;
+          if (changed3) {
+            result = { ...result, right: result$right };
+            changed2 = true;
+          }
+        }
+
+        return result;
+      });
+      if (changed2) {
+        updatedNode$right = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        left: updatedNode$left,
+        right: updatedNode$right,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TOpsPost) {
+    const transformed = visitor.TOpsPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformType = <Ctx>(
   node: Type,
   visitor: Visitor<Ctx>,
@@ -1840,6 +1931,25 @@ export const transformType = <Ctx>(
       }
       break;
     }
+
+    case "TOps": {
+      const transformed = visitor.Type_TOps
+        ? visitor.Type_TOps(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
   }
 
   let updatedNode = node;
@@ -1881,10 +1991,16 @@ export const transformType = <Ctx>(
       break;
     }
 
+    case "TApply": {
+      updatedNode = transformTApply(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
     default: {
       // let changed1 = false;
 
-      const updatedNode$0node = transformTApply(node, visitor, ctx);
+      const updatedNode$0node = transformTOps(node, visitor, ctx);
       changed0 = changed0 || updatedNode$0node !== node;
       updatedNode = updatedNode$0node;
     }
