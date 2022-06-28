@@ -4,11 +4,11 @@ import {
     addBuiltin,
     addBuiltinDecorator,
     addBuiltinType,
-    BuiltinTarg,
     FullContext,
     fullContext,
     noloc,
 } from '../../ctx';
+import { TVar } from '../../elements/type';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
 import { printToString } from '../../printer/pp';
@@ -180,6 +180,9 @@ export const aliasesFromString = (raw: string) => {
 export const serializeFixtureFile = (file: FixtureFile) => {
     const fixmap: { [key: string]: string } = {};
     file.fixtures.forEach((fixture) => {
+        while (fixmap[fixture.title]) {
+            fixture.title += '_';
+        }
         fixmap[fixture.title] = serializeSections(
             {
                 [fixture.shouldFail ? 'input:shouldFail' : 'input']:
@@ -417,15 +420,12 @@ function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
                 addBuiltin(ctx, builtin.name, tast);
                 break;
             case 'type': {
-                let args: BuiltinTarg[] = [];
+                let args: TVar[] = [];
                 if (builtin.args) {
                     const ast = parseType(builtin.args + 'ok');
                     const tast = ctx.ToTast[ast.type](ast as any, ctx);
                     if (tast.type === 'TVars') {
-                        args = tast.args.map(({ bound, default_ }) => ({
-                            bound,
-                            default_,
-                        }));
+                        args = tast.args.map((arg) => ({ ...arg, loc: noloc }));
                     }
                 }
                 addBuiltinType(ctx, builtin.name, args);

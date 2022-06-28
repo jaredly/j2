@@ -65,17 +65,20 @@ type hello = int
 @test:type(: hello) 10
 // 10
 
-==[New fixture]==
---[input]--
-type m = <A><B>int
-type n = m
+==[bound]==
+--[input:shouldFail]--
+type StringMe = <T: string>int;
+@test:type(:StringMe<20>) 10
+@test:type(:StringMe<"hello">) 10
 
 --[output:expected]--
-alias A=0 B=1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f m=h9ccde0aa894b9e55f18cc5eacbf49d46380d93fd
-type m = <A><B>int
-// h9ccde0aa894b9e55f18cc5eacbf49d46380d93fd
-type n = m
-// ha7564a8b7bdfe2bc10f01870f48c01b4b6f8cb1e
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=he4f90a00516868cf19f16ad45a7d28a588098a83 T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+type StringMe = <T: string>int
+// he4f90a00516868cf19f16ad45a7d28a588098a83
+@test:type(: StringMe<@error:argWrongType(expected: : string) 20>) 10
+// 10
+@test:type(: StringMe<"hello">) 10
+// 10
 
 ==[decorate the type]==
 --[input]--

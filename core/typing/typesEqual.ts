@@ -289,6 +289,13 @@ export const typeMatches = (
                 //     ctx.types.names['int'],
                 //     isBuiltinType(expected, 'int', ctx),
                 // );
+                if (
+                    candidate.kind === 'Int' &&
+                    candidate.value >= 0 &&
+                    isBuiltinType(expected, 'uint', ctx)
+                ) {
+                    return true;
+                }
                 return isBuiltinType(
                     expected,
                     candidate.kind.toLowerCase(),

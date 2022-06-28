@@ -68,10 +68,16 @@ alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:notATypeVars=hf975
 // int
 
 ==[arg defulat]==
---[input]--
+--[input:shouldFail]--
 @test:type(:Array<int, string, int>) 10
 
 --[output:expected]--
-alias Array=h682f3ca24bf2124e068512472fbd286b4be64b45 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
-@test:type(: Array<int, string, int>) 10
+alias Array=hec476a05f5b96e6cde2e810873da9ea402334adc error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f error:extraArg=haae12b260f3d25abb4b67dfe8895a3c6fb00eb59 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+@test:type(
+    : @error:wrongNumberOfTypeArgs() Array<
+        int,
+        @error:argWrongType(expected: : uint) string,
+        @error:extraArg() int,
+    >,
+) 10
 // 10

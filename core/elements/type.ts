@@ -48,17 +48,19 @@ export type TApply = {
     loc: t.Loc;
 };
 
+export type TVar = {
+    sym: t.Sym;
+    bound: Type | null;
+    loc: t.Loc;
+    default_: Type | null;
+};
+
 // OK also how do I do ... type bounds
 // yeah that would be here.
 // <T, I, K>Something
 export type TVars = {
     type: 'TVars';
-    args: Array<{
-        sym: t.Sym;
-        bound: Type | null;
-        loc: t.Loc;
-        default_: Type | null;
-    }>;
+    args: Array<TVar>;
     inner: Type;
     loc: t.Loc;
 };

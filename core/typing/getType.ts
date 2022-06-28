@@ -1,17 +1,8 @@
-import { BuiltinTarg, FullContext, tref } from '../ctx';
+import { FullContext, tref } from '../ctx';
 import { extract, idToString } from '../ids';
 import { transformType } from '../transform-tast';
 import { Expression, Type, TVars } from '../typed-ast';
 import { typeMatches } from './typesEqual';
-
-//
-// hm
-// export const getArgs = (expr: Type, ctx: FullContext): BuiltinTarg[] => {
-//     switch (expr.type) {
-//         case 'TRef':
-//             if (expr.)
-//     }
-// }
 
 export const applyType = (args: Type[], target: TVars, ctx: FullContext) => {
     const symbols: { [num: number]: Type } = {};

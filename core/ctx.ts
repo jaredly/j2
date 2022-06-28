@@ -1,6 +1,7 @@
 import hashObject from 'object-hash';
 import { Ctx } from '.';
 import { DecoratorDecl } from './elements/decorators';
+import { TVar } from './elements/type';
 import { Loc } from './grammar/base.parser';
 import { extract, toId } from './ids';
 import {
@@ -28,7 +29,7 @@ export type GlobalValue =
 export type GlobalType =
     | {
           type: 'builtin';
-          args: BuiltinTarg[];
+          args: TVar[];
       }
     | { type: 'user'; typ: Type };
 
@@ -80,12 +81,10 @@ export const addBuiltinDecorator = (
     return ref;
 };
 
-export type BuiltinTarg = { bound: Type | null; default_: Type | null };
-
 export const addBuiltinType = (
     ctx: FullContext,
     name: string,
-    args: BuiltinTarg[],
+    args: TVar[],
     unique = 0,
 ): RefKind => {
     const hash = hashObject({ name, args, unique });
@@ -331,6 +330,7 @@ struct Failure<Failure>{v: Failure}
 // types here, I think I'm going to want them to be
 // in the in-universe AST. hmm.
 export const errors = {
+    extraArg: 0,
     typeNotFound: 3,
     notAFunction: 1,
     wrongNumberOfArgs: 4,

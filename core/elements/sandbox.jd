@@ -20,3 +20,17 @@ hello
 alias one=h75a4651f0e6841970290c6a4c7f547d57bb814ca string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h0ac4106142a4522c2471a4bc4c3cc92ae5c381f8
 "${toString(10)} and ${one}"
 // string
+
+==[New fixture]==
+--[input]--
+// hello
+
+--[output:expected]--
+// hello
+
+==[New fixture_]==
+--[input]--
+// hello
+
+--[output:expected]--
+// hello

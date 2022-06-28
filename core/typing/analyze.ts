@@ -41,20 +41,33 @@ export const resolveType = (type: Type, ctx: FullContext): Type | null => {
         if (type.ref.type === 'Global') {
             const { idx, hash } = extract(type.ref.id);
             if (!ctx.types.hashed[hash]) {
+                // console.log('bad hash');
                 return null;
             }
             const t = ctx.types.hashed[hash][idx];
             if (!t) {
+                // console.log('bad idx');
                 return null;
             }
             if (t.type === 'user') {
+                // console.log('user ref, go deeper');
                 return resolveType(t.typ, ctx);
+            } else {
+                if (t.args.length) {
+                    return {
+                        type: 'TVars',
+                        args: t.args,
+                        inner: type,
+                        loc: noloc,
+                    };
+                }
             }
         }
     }
     if (type.type === 'TApply') {
         const target = resolveType(type.target, ctx);
         if (!target || target.type !== 'TVars') {
+            // console.log('bad apply');
             return null;
         }
         const applied = applyType(type.args, target, ctx);

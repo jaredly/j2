@@ -207,12 +207,10 @@ export const FixtureFile = ({
                             fixture={fixture}
                             key={i}
                             onChange={(fixture) => {
-                                setData({
-                                    ...data,
-                                    fixtures: data.fixtures.map((f, j) =>
-                                        j === i ? fixture : f,
-                                    ),
-                                });
+                                console.log('chagne', fixture, i);
+                                const fixtures = data.fixtures.slice();
+                                fixtures[i] = fixture;
+                                setData({ ...data, fixtures });
                             }}
                         />
                     ))}
@@ -221,8 +219,7 @@ export const FixtureFile = ({
                         onPress={() => {
                             setData({
                                 ...data,
-                                fixtures: [
-                                    ...data.fixtures,
+                                fixtures: data.fixtures.concat([
                                     {
                                         title: 'New fixture',
                                         input: '// hello',
@@ -234,7 +231,7 @@ export const FixtureFile = ({
                                         aliases_deprecated: {},
                                         builtins_deprecated: [],
                                     },
-                                ],
+                                ]),
                             });
                         }}
                     >

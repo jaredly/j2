@@ -1,5 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { decorate } from '../typing/analyze';
+import { decorate, tdecorate } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
 import { typeMatches } from '../typing/typesEqual';
 import * as t from '../typed-ast';
@@ -119,13 +119,49 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         // });
         return null;
     },
-    Type_TRef(node, ctx) {
-        // Do validation here, and TDecorate
-        // if (!node.args.length || node.ref.type === 'Unresolved') {
-        //     return null;
-        // }
-        // const resolved = ctx.resolveType(node.ref);
-        return null;
+    // Type_TRef(node, ctx) {
+    //     // Do validation here, and TDecorate
+    //     // if (!node.args.length || node.ref.type === 'Unresolved') {
+    //     //     return null;
+    //     // }
+    //     // const resolved = ctx.resolveType(node.ref);
+    //     return null;
+    // },
+    Type_TApply(node, { ctx, hit }) {
+        const inner = ctx.resolveType(node.target);
+        if (!inner) {
+            console.log('not resolved', node, ctx);
+            return null;
+        }
+        if (inner.type !== 'TVars') {
+            return tdecorate(node, 'notATypeVars', hit, ctx._full);
+        }
+        let changed = false;
+        const args = node.args.map((arg, i) => {
+            if (i >= inner.args.length) {
+                return tdecorate(arg, 'extraArg', hit, ctx._full);
+            }
+            const { bound } = inner.args[i];
+            if (bound && !typeMatches(arg, bound, ctx._full)) {
+                changed = true;
+                return tdecorate(arg, 'argWrongType', hit, ctx._full, [
+                    {
+                        label: 'expected',
+                        arg: { type: 'DType', loc: noloc, typ: bound },
+                        loc: noloc,
+                    },
+                ]);
+            }
+            return arg;
+        });
+        if (changed) {
+            node = { ...node, args };
+        }
+
+        if (node.args.length !== inner.args.length) {
+            return tdecorate(node, 'wrongNumberOfTypeArgs', hit, ctx._full);
+        }
+        return changed ? node : null;
     },
     // Expression_TypeApplication(node, ctx) {
     // 	// node.args.forEach(arg => { })
