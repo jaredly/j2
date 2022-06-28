@@ -66,19 +66,12 @@ type hello = int
 // 10
 
 ==[New fixture]==
---[input:shouldFail]--
-type whatsit = <T: string>(m: T) => int
-@test:type(:whatsit<"hello">) 10
-@test:type(:whatsit<10>) 10
+--[input]--
+type m = <A><B>int
+type n = m
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513 whatsit=hfa0e433b754ee8ea16339cffb72f49222485b65f
-type whatsit = <T: string>(m: T) => int
-// hfa0e433b754ee8ea16339cffb72f49222485b65f
-@test:type(: whatsit<"hello">) 10
-// 10
-@test:type(: whatsit<10>) 10
-// 10
+// hello
 
 ==[decorate the type]==
 --[input]--

@@ -47,7 +47,9 @@ export function OneFixture({
                         builtins,
                     ),
                 };
-            } catch (err) {}
+            } catch (err) {
+                console.log(err);
+            }
         }
         try {
             return { type: 'success', result: runFixture(fixture, builtins) };

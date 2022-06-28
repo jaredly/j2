@@ -10,16 +10,18 @@ import {
     Expression,
     File,
     Loc,
+    RefKind,
     Type,
 } from '../typed-ast';
 import { getType } from './getType';
 import { analyze as analyzeApply } from '../elements/apply';
 import { analyze as analyzeConstants } from '../elements/constants';
 import { analyze as analyzeGenerics } from '../elements/generics';
-import { idToString } from '../ids';
+import { extract, idToString } from '../ids';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
+    resolveType(type: Type): Type | null;
     typeByName(name: string): Type | null;
     _full: FullContext;
 };
@@ -29,10 +31,43 @@ export type VisitorCtx = {
     hit: {};
 };
 
+// ugh ok so because
+// i've tied application to TRef, it makes things
+// less flexible. Can't do Some<X><Y> even though you can
+// do let Some = <X><Y>int;
+// OK BACKUP.
+export const resolveType = (type: Type, ctx: FullContext): Type | null => {
+    if (type.type === 'TRef') {
+        if (type.ref.type === 'Global') {
+            const { idx, hash } = extract(type.ref.id);
+            if (!ctx.types.hashed[hash]) {
+                return null;
+            }
+            const t = ctx.types.hashed[hash][idx];
+            if (!t) {
+                return null;
+            }
+            if (t.type === 'user') {
+                const inner = resolveType(t.typ, ctx);
+                if (type.args) {
+                    if (inner?.type !== 'TVars') {
+                        return null;
+                    }
+                }
+                return inner;
+            }
+        }
+    }
+    return type;
+};
+
 export const analyzeContext = (ctx: FullContext): Ctx => {
     return {
         getType(expr: Expression) {
             return getType(expr, ctx);
+        },
+        resolveType(type: Type) {
+            return resolveType(type, ctx);
         },
         typeByName(name: string) {
             const ref = ctx.types.names[name];
@@ -41,6 +76,39 @@ export const analyzeContext = (ctx: FullContext): Ctx => {
                 : null;
         },
         _full: ctx,
+    };
+};
+
+export const tdecorate = (
+    type: Type,
+    tag: ErrorTag,
+    hit: { [key: number]: boolean },
+    ctx: FullContext,
+    args: Decorator['args'] = [],
+): Type => {
+    if (hit[type.loc.idx]) {
+        return type;
+    }
+    hit[type.loc.idx] = true;
+    const abc = ctx.decorators.names[`error:${tag}`];
+    if (!abc || abc.length !== 1) {
+        throw new Error(`can't resolve that decorator`);
+    }
+    return {
+        type: 'TDecorated',
+        decorators: [
+            {
+                type: 'Decorator',
+                id: {
+                    ref: abc[0],
+                    loc: noloc,
+                },
+                args,
+                loc: type.loc,
+            },
+        ],
+        inner: type,
+        loc: type.loc,
     };
 };
 
