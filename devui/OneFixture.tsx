@@ -137,6 +137,44 @@ export function OneFixture({
                             }
                         />
                     </div>
+                    {changed && newOutput.type === 'success' ? (
+                        <>
+                            <Button
+                                size={'xs'}
+                                onPress={() => {
+                                    onChange({
+                                        ...fixture,
+                                        output_expected:
+                                            newOutput.result.newOutput,
+                                        aliases_deprecated:
+                                            newOutput.result.aliases,
+                                        failing_deprecated: false,
+                                    });
+                                }}
+                            >
+                                Accept
+                            </Button>
+                            <Spacer x={0.5} />
+                            <Button
+                                size="xs"
+                                color="secondary"
+                                onClick={() => {
+                                    // So if the old one is rejected, we overwrite
+                                    // but if the old one is accepted, then we keep it around as "the right one"
+                                    onChange({
+                                        ...fixture,
+                                        output_expected:
+                                            newOutput.result.newOutput,
+                                        aliases_deprecated:
+                                            newOutput.result.aliases,
+                                        failing_deprecated: true,
+                                    });
+                                }}
+                            >
+                                Reject
+                            </Button>
+                        </>
+                    ) : null}
                 </div>
                 <Card.Body css={{ display: 'flex', fontFamily: '$mono' }}>
                     {editing != null ? (
@@ -262,49 +300,6 @@ export function OneFixture({
                         </>
                     ) : null}
                 </Card.Body>
-                {changed && newOutput.type === 'success' ? (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: 8,
-                            right: 8,
-                            display: 'flex',
-                        }}
-                    >
-                        <Button
-                            size={'xs'}
-                            onPress={() => {
-                                onChange({
-                                    ...fixture,
-                                    output_expected: newOutput.result.newOutput,
-                                    aliases_deprecated:
-                                        newOutput.result.aliases,
-                                    failing_deprecated: false,
-                                });
-                            }}
-                        >
-                            Accept
-                        </Button>
-                        <Spacer x={0.5} />
-                        <Button
-                            size="xs"
-                            color="secondary"
-                            onClick={() => {
-                                // So if the old one is rejected, we overwrite
-                                // but if the old one is accepted, then we keep it around as "the right one"
-                                onChange({
-                                    ...fixture,
-                                    output_expected: newOutput.result.newOutput,
-                                    aliases_deprecated:
-                                        newOutput.result.aliases,
-                                    failing_deprecated: true,
-                                });
-                            }}
-                        >
-                            Reject
-                        </Button>
-                    </div>
-                ) : null}
             </Card>
         </div>
     );

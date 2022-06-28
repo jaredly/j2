@@ -2,10 +2,11 @@ import hashObject from 'object-hash';
 import { Ctx } from '.';
 import { DecoratorDecl } from './elements/decorators';
 import { Loc } from './grammar/base.parser';
-import { toId } from './ids';
+import { extract, toId } from './ids';
 import {
     Expression,
     GlobalRef,
+    refHash,
     RefKind,
     Sym,
     TLambda,
@@ -20,23 +21,20 @@ export type HashedNames<Contents, NameV> = {
     names: { [key: string]: NameV };
 };
 
+export type GlobalValue =
+    | { type: 'builtin'; typ: Type }
+    | { type: 'user'; typ: Type; expr: Expression };
+
+export type GlobalType =
+    | {
+          type: 'builtin';
+          args: BuiltinTarg[];
+      }
+    | { type: 'user'; typ: Type };
+
 export type FullContext = {
-    values: HashedNames<
-        | { type: 'builtin'; typ: Type }
-        | { type: 'user'; typ: Type; expr: Expression },
-        Array<GlobalRef>
-    >;
-    types: HashedNames<
-        | {
-              type: 'builtin';
-              args: BuiltinTarg[];
-          }
-        // TODO: once I get records going
-        // ... this'll be a 'type declaration, I think'
-        // kind: Kind,
-        | { type: 'user' },
-        GlobalRef
-    >;
+    values: HashedNames<GlobalValue, Array<GlobalRef>>;
+    types: HashedNames<GlobalType, GlobalRef>;
     decorators: HashedNames<
         | { type: 'builtin'; typ: 0 }
         | { type: 'user'; typ: 0; decl: DecoratorDecl },
@@ -218,6 +216,16 @@ export const newContext = (aliases: FullContext['aliases']): FullContext => {
         decorators: { hashed: {}, names: {} },
         values: { hashed: {}, names: {} },
         types: { hashed: {}, names: {} },
+        typeForId(id) {
+            const { idx, hash } = extract(id);
+            const types = this.types.hashed[hash];
+            return types ? types[idx] : null;
+        },
+        valueForId(id) {
+            const { idx, hash } = extract(id);
+            const values = this.values.hashed[hash];
+            return values ? values[idx] : null;
+        },
         resolve(name, rawHash) {
             return resolve(this, name, rawHash);
         },
@@ -228,15 +236,42 @@ export const newContext = (aliases: FullContext['aliases']): FullContext => {
             return resolveDecorator(this, name, rawHash);
         },
         ToTast: makeToTast(),
-        withLocalTypes(types) {
-            const locals: FullContext['locals'][0] = { types, values: [] };
-            return { ...this, locals: [locals, ...this.locals] };
-        },
         sym(name) {
             return {
                 name,
                 id: symid++,
             };
+        },
+
+        // Modifiers
+        withLocalTypes(types) {
+            const locals: FullContext['locals'][0] = { types, values: [] };
+            return { ...this, locals: [locals, ...this.locals] };
+        },
+        withTypes(types) {
+            const defns = types.map((m) => m.type);
+            const hash = hashObject(defns);
+            const ctx = { ...this };
+            ctx.types = {
+                ...ctx.types,
+                hashed: {
+                    ...ctx.types.hashed,
+                    [hash]: types.map(({ name, type }) => ({
+                        type: 'user',
+                        typ: type,
+                    })),
+                },
+                names: {
+                    ...ctx.types.names,
+                },
+            };
+            types.forEach(({ name }, i) => {
+                ctx.types.names[name] = {
+                    type: 'Global',
+                    id: toId(hash, i),
+                };
+            });
+            return this;
         },
     };
     return ctx;

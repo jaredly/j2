@@ -1,6 +1,15 @@
 import { FullContext } from '../ctx';
 import { idsEqual } from '../ids';
-import { Ref, RefKind, TLambda, TOr, TRef, TVars, Type } from '../typed-ast';
+import {
+    Ref,
+    refHash,
+    RefKind,
+    TLambda,
+    TOr,
+    TRef,
+    TVars,
+    Type,
+} from '../typed-ast';
 
 export const refsEqual = (a: RefKind, b: RefKind): boolean => {
     if (a.type !== b.type) {
@@ -67,11 +76,24 @@ export const isBuiltinType = (t: Type, name: string, ctx: FullContext) =>
 //     return t;
 // };
 
+// export const resolveRefs = (
+//     t: Type,
+//     ctx: FullContext,
+// ): Type => {
+//     while (t.type === 'TRef' && t.ref.type === 'Global') {
+//         const resolved = ctx.typeForId(t.ref.id)
+//         if (resolved)
+//     }
+//     return t
+// }
+
 export const typeMatches = (
     candidate: Type,
     expected: Type,
     ctx: FullContext,
 ): boolean => {
+    // Ok I need like a "resolve refs" function
+
     // while (expected.type === 'TDecorated') {
     //     expected = expected.inner;
     // }

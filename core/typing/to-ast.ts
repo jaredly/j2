@@ -125,12 +125,15 @@ export const GeneralToAst = {
         // maybe when printing unresolved things, put `#[:unresolved:]` or something?
         return {
             type,
-            toplevels: toplevels.map((t) => ctx.ToAst[t.type](t, ctx)),
+            toplevels: toplevels.map((t) => ctx.ToAst[t.type](t as any, ctx)),
             loc,
             comments,
         };
     },
-    ToplevelExpression({ type, expr, loc }: t.Toplevel, ctx: Ctx): p.Toplevel {
+    ToplevelExpression(
+        { type, expr, loc }: t.ToplevelExpression,
+        ctx: Ctx,
+    ): p.Toplevel {
         return ctx.ToAst[expr.type](expr as any, ctx);
     },
 

@@ -2,6 +2,7 @@ import { Apply } from './elements/apply';
 import { Boolean, Number, TemplateString } from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
 import { TypeApplication } from './elements/generics';
+import { Type } from './elements/type';
 import { Id, idToString } from './ids';
 export type { Apply } from './elements/apply';
 export type {
@@ -70,9 +71,15 @@ export type Ref = {
     kind: RefKind | UnresolvedRef;
 };
 
-export type Toplevel = {
+export type ToplevelExpression = {
     type: 'ToplevelExpression';
     expr: Expression;
+    loc: Loc;
+};
+export type Toplevel = ToplevelExpression | TypeAlias;
+export type TypeAlias = {
+    type: 'TypeAlias';
+    elements: Array<{ name: string; type: Type }>;
     loc: Loc;
 };
 

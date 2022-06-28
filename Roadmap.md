@@ -1,4 +1,22 @@
 
+Ok what Im doing now:
+
+- [ ] type aliases
+- [ ] generics, defaults, bounds
+	- all the validation for that
+- [ ] then enums? Could be fun. At that point recursive types make sense.
+- [ ] records! and tuples.
+
+
+- [ ] type aliases! And let's make sure that mutually recursive types work
+	- Can I even do those without records yet? No idea. like, functions seem weird
+```ts
+type X = () => Y
+type Y = () => x
+```
+Ok so yeah technically that works. without combining it with records or tuples or something it seems quite useless.
+
+
 # Big Things To Add
 
 ## Better Fixture Setup

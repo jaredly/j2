@@ -2,15 +2,8 @@ import {
   Loc,
   File,
   Toplevel,
-  Expression,
-  DecoratedExpression,
-  DecoratedExpression_inner,
-  Decorator,
-  DecoratorId,
-  DecoratorArgs,
-  LabeledDecoratorArg,
-  DecoratorArg,
-  DecType,
+  TypeAlias,
+  TypePair,
   Type,
   TRef,
   TApply,
@@ -23,6 +16,15 @@ import {
   TVars,
   TBargs,
   TBArg,
+  Expression,
+  DecoratedExpression,
+  DecoratedExpression_inner,
+  Decorator,
+  DecoratorId,
+  DecoratorArgs,
+  LabeledDecoratorArg,
+  DecoratorArg,
+  DecType,
   DecExpr,
   Apply,
   Apply_inner,
@@ -323,6 +325,16 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TLambda | [TLambda | null, Ctx];
   TLambdaPost?: (node: TLambda, ctx: Ctx) => null | TLambda;
+  TypeAlias?: (
+    node: TypeAlias,
+    ctx: Ctx
+  ) => null | false | TypeAlias | [TypeAlias | null, Ctx];
+  TypeAliasPost?: (node: TypeAlias, ctx: Ctx) => null | TypeAlias;
+  TypePair?: (
+    node: TypePair,
+    ctx: Ctx
+  ) => null | false | TypePair | [TypePair | null, Ctx];
+  TypePairPost?: (node: TypePair, ctx: Ctx) => null | TypePair;
   AllTaggedTypes?: (
     node: AllTaggedTypes,
     ctx: Ctx
@@ -331,6 +343,10 @@ export type Visitor<Ctx> = {
     node: AllTaggedTypes,
     ctx: Ctx
   ) => null | AllTaggedTypes;
+  Toplevel_TypeAlias?: (
+    node: TypeAlias,
+    ctx: Ctx
+  ) => null | false | Toplevel | [Toplevel | null, Ctx];
   Atom_Number?: (
     node: Number,
     ctx: Ctx
@@ -527,6 +543,14 @@ export type Visitor<Ctx> = {
     node: TLambda,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TypeAlias?: (
+    node: TypeAlias,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TypePair?: (
+    node: TypePair,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
 };
 export const transformLoc = <Ctx>(
   node: Loc,
@@ -558,56 +582,6 @@ export const transformLoc = <Ctx>(
   node = updatedNode;
   if (visitor.LocPost) {
     const transformed = visitor.LocPost(node, ctx);
-    if (transformed != null) {
-      node = transformed;
-    }
-  }
-  return node;
-};
-
-export const transformDecoratorId = <Ctx>(
-  node: DecoratorId,
-  visitor: Visitor<Ctx>,
-  ctx: Ctx
-): DecoratorId => {
-  if (!node) {
-    throw new Error("No DecoratorId provided");
-  }
-
-  const transformed = visitor.DecoratorId
-    ? visitor.DecoratorId(node, ctx)
-    : null;
-  if (transformed === false) {
-    return node;
-  }
-  if (transformed != null) {
-    if (Array.isArray(transformed)) {
-      ctx = transformed[1];
-      if (transformed[0] != null) {
-        node = transformed[0];
-      }
-    } else {
-      node = transformed;
-    }
-  }
-
-  let changed0 = false;
-
-  let updatedNode = node;
-  {
-    let changed1 = false;
-
-    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-    changed1 = changed1 || updatedNode$loc !== node.loc;
-    if (changed1) {
-      updatedNode = { ...updatedNode, loc: updatedNode$loc };
-      changed0 = true;
-    }
-  }
-
-  node = updatedNode;
-  if (visitor.DecoratorIdPost) {
-    const transformed = visitor.DecoratorIdPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }
@@ -1455,6 +1429,178 @@ export const transformType = <Ctx>(
   node = updatedNode;
   if (visitor.TypePost) {
     const transformed = visitor.TypePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTypePair = <Ctx>(
+  node: TypePair,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypePair => {
+  if (!node) {
+    throw new Error("No TypePair provided");
+  }
+
+  const transformed = visitor.TypePair ? visitor.TypePair(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    const updatedNode$typ = transformType(node.typ, visitor, ctx);
+    changed1 = changed1 || updatedNode$typ !== node.typ;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        typ: updatedNode$typ,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypePairPost) {
+    const transformed = visitor.TypePairPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTypeAlias = <Ctx>(
+  node: TypeAlias,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeAlias => {
+  if (!node) {
+    throw new Error("No TypeAlias provided");
+  }
+
+  const transformed = visitor.TypeAlias ? visitor.TypeAlias(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformTypePair(updatedNode$items$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        items: updatedNode$items,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeAliasPost) {
+    const transformed = visitor.TypeAliasPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformDecoratorId = <Ctx>(
+  node: DecoratorId,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): DecoratorId => {
+  if (!node) {
+    throw new Error("No DecoratorId provided");
+  }
+
+  const transformed = visitor.DecoratorId
+    ? visitor.DecoratorId(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = { ...updatedNode, loc: updatedNode$loc };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.DecoratorIdPost) {
+    const transformed = visitor.DecoratorIdPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }
@@ -3106,8 +3252,44 @@ export const transformToplevel = <Ctx>(
 
   let changed0 = false;
 
-  const updatedNode = transformExpression(node, visitor, ctx);
-  changed0 = changed0 || updatedNode !== node;
+  switch (node.type) {
+    case "TypeAlias": {
+      const transformed = visitor.Toplevel_TypeAlias
+        ? visitor.Toplevel_TypeAlias(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "TypeAlias": {
+      updatedNode = transformTypeAlias(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformExpression(node, visitor, ctx);
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
+    }
+  }
 
   node = updatedNode;
   if (visitor.ToplevelPost) {
@@ -4496,6 +4678,44 @@ export const transformAllTaggedTypes = <Ctx>(
       }
       break;
     }
+
+    case "TypeAlias": {
+      const transformed = visitor.AllTaggedTypes_TypeAlias
+        ? visitor.AllTaggedTypes_TypeAlias(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TypePair": {
+      const transformed = visitor.AllTaggedTypes_TypePair
+        ? visitor.AllTaggedTypes_TypePair(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
   }
 
   let updatedNode = node;
@@ -4693,10 +4913,22 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
+    case "TLambda": {
+      updatedNode = transformTLambda(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TypeAlias": {
+      updatedNode = transformTypeAlias(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
     default: {
       // let changed1 = false;
 
-      const updatedNode$0node = transformTLambda(node, visitor, ctx);
+      const updatedNode$0node = transformTypePair(node, visitor, ctx);
       changed0 = changed0 || updatedNode$0node !== node;
       updatedNode = updatedNode$0node;
     }

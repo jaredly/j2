@@ -20,6 +20,10 @@ TComma = first:Type rest:(_ "," _ Type)* _ ","?
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
 TLambda = "(" _ args:TArgs? ")" _ "=>" _ result:Type
+
+TypeAlias = "type" _ first:TypePair rest:(_ "and" _ TypePair)*
+TypePair = name:$IdText _ "=" _ typ:Type
+
 `;
 
 export type TRef = {
@@ -88,6 +92,16 @@ export type TOr = { type: 'TOr'; elements: Array<Type>; loc: t.Loc };
 // (T -> T) -> T // hm that would be Kinds yep.
 
 export const ToTast = {
+    TypeAlias({ loc, items }: p.TypeAlias, ctx: TCtx): t.TypeAlias {
+        return {
+            type: 'TypeAlias',
+            loc,
+            elements: items.map((x) => ({
+                name: x.name,
+                type: ctx.ToTast[x.typ.type](x.typ as any, ctx),
+            })),
+        };
+    },
     // Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
     // },
     TRef(type: p.TRef, ctx: TCtx): t.TRef {
@@ -157,6 +171,18 @@ export const ToTast = {
 };
 
 export const ToAst = {
+    TypeAlias({ elements, loc }: t.TypeAlias, ctx: TACtx): p.TypeAlias {
+        return {
+            type: 'TypeAlias',
+            loc,
+            items: elements.map(({ name, type }) => ({
+                type: 'TypePair',
+                name: name,
+                typ: ctx.ToAst[type.type](type as any, ctx),
+                loc,
+            })),
+        };
+    },
     TVars(type: t.TVars, ctx: TACtx): p.TVars {
         type.args.forEach((arg) => ctx.recordSym(arg.sym, 'type'));
         return {
@@ -230,6 +256,27 @@ export const ToAst = {
 };
 
 export const ToPP = {
+    TypeAlias({ items, loc }: p.TypeAlias, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                pp.atom('type ', loc),
+                pp.items(
+                    items.map(({ name, typ }) =>
+                        pp.items(
+                            [
+                                pp.atom(name, typ.loc),
+                                pp.atom(' = ', typ.loc),
+                                ctx.ToPP[typ.type](typ as any, ctx),
+                            ],
+                            typ.loc,
+                        ),
+                    ),
+                    loc,
+                ),
+            ],
+            loc,
+        );
+    },
     TVars({ args, inner, loc }: p.TVars, ctx: PCtx): pp.PP {
         return pp.items(
             [
@@ -306,10 +353,22 @@ export const ToPP = {
         );
     },
     TRef(type: p.TRef, ctx: PCtx): pp.PP {
-        if (ctx.hideIds) {
-            return pp.atom(type.text, type.loc);
-        }
-        return pp.atom(type.text + (type.hash ?? ''), type.loc);
+        return pp.items(
+            [
+                pp.atom(type.text + (type.hash ?? ''), type.loc),
+                type.args && type.args.args.items.length
+                    ? pp.args(
+                          type.args.args.items.map((arg) =>
+                              ctx.ToPP[arg.type](arg as any, ctx),
+                          ),
+                          type.args.loc,
+                          '<',
+                          '>',
+                      )
+                    : null,
+            ],
+            type.loc,
+        );
     },
     String(type: p.String, ctx: PCtx): pp.PP {
         return pp.atom(`"${type.text}"`, type.loc);

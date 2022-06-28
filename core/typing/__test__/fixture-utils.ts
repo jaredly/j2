@@ -339,20 +339,22 @@ export function runFixture(
 
     const checked = analyze(tast, analyzeContext(ctx));
     checked.toplevels.forEach((top) => {
-        const t = getType(top.expr, ctx);
-        if (!t) {
-            return;
+        if (top.type === 'ToplevelExpression') {
+            const t = getType(top.expr, ctx);
+            if (!t) {
+                return;
+            }
+            const pp = newPPCtx(false);
+            const ast = actx.ToAst[t.type](t as any, actx);
+            const cm = printToString(pp.ToPP[ast.type](ast as any, pp), 200);
+            checked.comments.push([
+                {
+                    ...top.loc,
+                    start: top.loc.end,
+                },
+                '// ' + cm,
+            ]);
         }
-        const pp = newPPCtx(false);
-        const ast = actx.ToAst[t.type](t as any, actx);
-        const cm = printToString(pp.ToPP[ast.type](ast as any, pp), 200);
-        checked.comments.push([
-            {
-                ...top.loc,
-                start: top.loc.end,
-            },
-            '// ' + cm,
-        ]);
     });
 
     const newOutput = printToString(

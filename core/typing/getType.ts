@@ -1,10 +1,19 @@
-import { FullContext, tref } from '../ctx';
+import { BuiltinTarg, FullContext, tref } from '../ctx';
 import { extract, idToString } from '../ids';
 import { transformType } from '../transform-tast';
 import { Expression, Type } from '../typed-ast';
 import { typeMatches } from './typesEqual';
 
-// UMM So btw this will resolve all TRefs.
+//
+// hm
+// export const getArgs = (expr: Type, ctx: FullContext): BuiltinTarg[] => {
+//     switch (expr.type) {
+//         case 'TRef':
+//             if (expr.)
+//     }
+// }
+
+// UMM So btw this will resolve all TRefs? Maybe? hmm maybe not..
 export const getType = (expr: Expression, ctx: FullContext): Type | null => {
     switch (expr.type) {
         case 'TypeApplication': {
@@ -40,11 +49,6 @@ export const getType = (expr: Expression, ctx: FullContext): Type | null => {
                                 symbols[node.ref.sym]
                             ) {
                                 return symbols[node.ref.sym];
-                                // const name = idToString(node.ref.id);
-                                // const type = ctx.types.names[name];
-                                // if (type) {
-                                //     return type;
-                                // }
                             }
                             return null;
                         },
@@ -67,10 +71,11 @@ export const getType = (expr: Expression, ctx: FullContext): Type | null => {
                     return null;
                 case 'Global':
                     const { hash, idx } = extract(expr.kind.id);
+                    // Hmm so, what if what we get is
+                    // an alias?
                     return ctx.values.hashed[hash][idx].typ;
                 case 'Local':
                     throw new Error('not yet');
-                // return ctx.locals[expr.kind.sym].typ;
             }
         case 'Apply':
             const typ = getType(expr.target, ctx);
@@ -82,9 +87,6 @@ export const getType = (expr: Expression, ctx: FullContext): Type | null => {
             return tref(ctx.types.names['bool']);
         case 'Number':
             return expr;
-        // return tref(
-        //     ctx.types.names[expr.kind === 'Float' ? 'float' : 'int'],
-        // );
         case 'DecoratedExpression':
             return getType(expr.expr, ctx);
     }

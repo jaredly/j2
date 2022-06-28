@@ -227,9 +227,7 @@ export const ToPP = {
         return pp.items(
             [
                 pp.atom('@', loc),
-                ctx.hideIds
-                    ? pp.atom(id.text, id.loc)
-                    : pp.atom(id.text + (id.hash ?? ''), loc),
+                pp.atom(id.text + (id.hash ?? ''), loc),
                 pp.args(
                     args?.items.map((a) => {
                         return pp.items(

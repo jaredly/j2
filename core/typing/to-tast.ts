@@ -5,8 +5,11 @@ import { ToTast as TypeToTast } from '../elements/type';
 import { ToTast as GenericsToTast } from '../elements/generics';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
+import { GlobalType, GlobalValue } from '../ctx';
 
 export type Ctx = {
+    typeForId: (id: t.Id) => GlobalType | null;
+    valueForId: (id: t.Id) => GlobalValue | null;
     resolve: (name: string, hash?: string | null) => Array<t.RefKind>;
     resolveType: (name: string, hash?: string | null) => t.RefKind | null;
     resolveDecorator: (name: string, hash?: string | null) => Array<t.RefKind>;
@@ -15,6 +18,7 @@ export type Ctx = {
     // to ensure there aren't collisions.
     sym: (name: string) => t.Sym;
     withLocalTypes: (locals: { sym: t.Sym; bound: t.Type | null }[]) => Ctx;
+    withTypes: (types: { name: string; type: t.Type }[]) => Ctx;
     ToTast: ToTast;
     aliases: { [readableName: string]: string };
 };
@@ -43,20 +47,31 @@ export const GeneralToTast = {
         // I don't see why we would.
         // We might forbid them from having outstanding effects though.
         // deal with that when it comes
+        let parsed = toplevels.map((t) => {
+            let top = ctx.ToTast.Toplevel(t as any, ctx);
+            if (top.type === 'TypeAlias') {
+                ctx = ctx.withTypes(top.elements);
+            }
+            return top;
+        });
         return {
             type: 'File',
-            toplevels: toplevels.map((top) => ctx.ToTast.Toplevel(top, ctx)),
+            toplevels: parsed,
             comments,
             loc,
         };
     },
 
     Toplevel(top: p.Toplevel, ctx: Ctx): t.Toplevel {
-        return {
-            type: 'ToplevelExpression',
-            expr: ctx.ToTast[top.type](top as any, ctx),
-            loc: top.loc,
-        };
+        if (top.type === 'TypeAlias') {
+            return ctx.ToTast.TypeAlias(top, ctx);
+        } else {
+            return {
+                type: 'ToplevelExpression',
+                expr: ctx.ToTast[top.type](top as any, ctx),
+                loc: top.loc,
+            };
+        }
     },
     ParenedExpression(expr: p.ParenedExpression, ctx: Ctx): t.Expression {
         return ctx.ToTast[expr.expr.type](expr.expr as any, ctx);

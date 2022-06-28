@@ -5,6 +5,7 @@ import {
   Loc,
   File,
   Toplevel,
+  ToplevelExpression,
   Expression,
   Ref,
   UnresolvedRef,
@@ -24,6 +25,7 @@ import {
   DecoratorArg,
   DExpr,
   DType,
+  TypeAlias,
   DecoratorDecl,
   TDecorated,
   TypeVariables,
@@ -54,11 +56,24 @@ export type Visitor<Ctx> = {
   UnresolvedRefPost?: (node: UnresolvedRef, ctx: Ctx) => null | UnresolvedRef;
   Ref?: (node: Ref, ctx: Ctx) => null | false | Ref | [Ref | null, Ctx];
   RefPost?: (node: Ref, ctx: Ctx) => null | Ref;
+  ToplevelExpression?: (
+    node: ToplevelExpression,
+    ctx: Ctx
+  ) => null | false | ToplevelExpression | [ToplevelExpression | null, Ctx];
+  ToplevelExpressionPost?: (
+    node: ToplevelExpression,
+    ctx: Ctx
+  ) => null | ToplevelExpression;
   Toplevel?: (
     node: Toplevel,
     ctx: Ctx
   ) => null | false | Toplevel | [Toplevel | null, Ctx];
   ToplevelPost?: (node: Toplevel, ctx: Ctx) => null | Toplevel;
+  TypeAlias?: (
+    node: TypeAlias,
+    ctx: Ctx
+  ) => null | false | TypeAlias | [TypeAlias | null, Ctx];
+  TypeAliasPost?: (node: TypeAlias, ctx: Ctx) => null | TypeAlias;
   Expression?: (
     node: Expression,
     ctx: Ctx
@@ -136,8 +151,6 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TypeVariables | [TypeVariables | null, Ctx];
   TypeVariablesPost?: (node: TypeVariables, ctx: Ctx) => null | TypeVariables;
-  Id?: (node: Id, ctx: Ctx) => null | false | Id | [Id | null, Ctx];
-  IdPost?: (node: Id, ctx: Ctx) => null | Id;
   TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
   TRefPost?: (node: TRef, ctx: Ctx) => null | TRef;
   TVars?: (node: TVars, ctx: Ctx) => null | false | TVars | [TVars | null, Ctx];
@@ -155,6 +168,16 @@ export type Visitor<Ctx> = {
   TSubPost?: (node: TSub, ctx: Ctx) => null | TSub;
   TOr?: (node: TOr, ctx: Ctx) => null | false | TOr | [TOr | null, Ctx];
   TOrPost?: (node: TOr, ctx: Ctx) => null | TOr;
+  Id?: (node: Id, ctx: Ctx) => null | false | Id | [Id | null, Ctx];
+  IdPost?: (node: Id, ctx: Ctx) => null | Id;
+  Toplevel_ToplevelExpression?: (
+    node: ToplevelExpression,
+    ctx: Ctx
+  ) => null | false | Toplevel | [Toplevel | null, Ctx];
+  Toplevel_TypeAlias?: (
+    node: TypeAlias,
+    ctx: Ctx
+  ) => null | false | Toplevel | [Toplevel | null, Ctx];
   Expression_Ref?: (
     node: Ref,
     ctx: Ctx
@@ -2022,16 +2045,18 @@ export const transformExpression = <Ctx>(
   return node;
 };
 
-export const transformToplevel = <Ctx>(
-  node: Toplevel,
+export const transformToplevelExpression = <Ctx>(
+  node: ToplevelExpression,
   visitor: Visitor<Ctx>,
   ctx: Ctx
-): Toplevel => {
+): ToplevelExpression => {
   if (!node) {
-    throw new Error("No Toplevel provided");
+    throw new Error("No ToplevelExpression provided");
   }
 
-  const transformed = visitor.Toplevel ? visitor.Toplevel(node, ctx) : null;
+  const transformed = visitor.ToplevelExpression
+    ? visitor.ToplevelExpression(node, ctx)
+    : null;
   if (transformed === false) {
     return node;
   }
@@ -2064,6 +2089,181 @@ export const transformToplevel = <Ctx>(
         loc: updatedNode$loc,
       };
       changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.ToplevelExpressionPost) {
+    const transformed = visitor.ToplevelExpressionPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTypeAlias = <Ctx>(
+  node: TypeAlias,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeAlias => {
+  if (!node) {
+    throw new Error("No TypeAlias provided");
+  }
+
+  const transformed = visitor.TypeAlias ? visitor.TypeAlias(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$elements = node.elements;
+    {
+      let changed2 = false;
+      const arr1 = node.elements.map((updatedNode$elements$item1) => {
+        let result = updatedNode$elements$item1;
+        {
+          let changed3 = false;
+
+          const result$type = transformType(
+            updatedNode$elements$item1.type,
+            visitor,
+            ctx
+          );
+          changed3 =
+            changed3 || result$type !== updatedNode$elements$item1.type;
+          if (changed3) {
+            result = { ...result, type: result$type };
+            changed2 = true;
+          }
+        }
+
+        return result;
+      });
+      if (changed2) {
+        updatedNode$elements = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        elements: updatedNode$elements,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeAliasPost) {
+    const transformed = visitor.TypeAliasPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformToplevel = <Ctx>(
+  node: Toplevel,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Toplevel => {
+  if (!node) {
+    throw new Error("No Toplevel provided");
+  }
+
+  const transformed = visitor.Toplevel ? visitor.Toplevel(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  switch (node.type) {
+    case "ToplevelExpression": {
+      const transformed = visitor.Toplevel_ToplevelExpression
+        ? visitor.Toplevel_ToplevelExpression(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TypeAlias": {
+      const transformed = visitor.Toplevel_TypeAlias
+        ? visitor.Toplevel_TypeAlias(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "ToplevelExpression": {
+      updatedNode = transformToplevelExpression(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformTypeAlias(node, visitor, ctx);
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
     }
   }
 

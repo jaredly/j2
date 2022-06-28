@@ -14,7 +14,7 @@ _EOF = !.
 
 // Declaration = name:$IdText _ type:Type
 
-Toplevel = Expression
+Toplevel = TypeAlias / Expression
 
 Expression = DecoratedExpression
 
@@ -113,3 +113,6 @@ TComma = first:Type rest:(_ "," _ Type)* _ ","?
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
 TLambda = "(" _ args:TArgs? ")" _ "=>" _ result:Type
+
+TypeAlias = "type" _ first:TypePair rest:(_ "and" _ TypePair)*
+TypePair = name:$IdText _ "=" _ typ:Type

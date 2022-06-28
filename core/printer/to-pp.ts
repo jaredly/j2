@@ -9,7 +9,7 @@ import * as p from '../grammar/base.parser';
 import * as pp from './pp';
 
 export type Ctx = {
-    hideIds: boolean;
+    // hideIds: boolean;
     ToPP: ToPP;
 };
 
@@ -30,7 +30,7 @@ export const makeToPP = (): ToPP => ({
 });
 
 export const newPPCtx = (hideIds: boolean): Ctx => ({
-    hideIds,
+    // hideIds,
     ToPP: makeToPP(),
 });
 
@@ -54,9 +54,9 @@ export const GeneralToPP = {
     },
     Identifier(identifier: p.Identifier, ctx: Ctx): pp.PP {
         return pp.atom(
-            ctx.hideIds
-                ? identifier.text
-                : identifier.text + (identifier.hash ?? ''),
+            // ctx.hideIds
+            //     ? identifier.text :
+            identifier.text + (identifier.hash ?? ''),
             identifier.loc,
         );
     },

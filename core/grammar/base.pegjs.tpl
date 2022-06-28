@@ -14,7 +14,7 @@ _EOF = !.
 
 // Declaration = name:$IdText _ type:Type
 
-Toplevel = Expression
+Toplevel = TypeAlias / Expression
 
 Expression = DecoratedExpression
 

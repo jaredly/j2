@@ -52,3 +52,14 @@ alias test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 alias A=1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 @test:type(:<T: string, A: int = 10>(a: T, b: A) => A) 100
 // 100
+
+==[New fixture]==
+--[input]--
+type hello = int
+@test:type(: hello) 10
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+type hello = int
+@test:type(:hello#[:unresolved:]) 10
+// 10
