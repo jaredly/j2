@@ -79,3 +79,12 @@ type whatsit = <T: string>(m: T) => int
 // 10
 @test:type(:whatsit<10>) 10
 // 10
+
+==[decorate the type]==
+--[input]--
+@test:type(: @test:type() string) 10
+
+--[output:expected]--
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+@test:type(:@test:type() string) 10
+// 10

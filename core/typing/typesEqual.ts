@@ -121,6 +121,8 @@ export const typeMatches = (
     // }
     // console.log(candidate, expected);
     switch (candidate.type) {
+        case 'TDecorated':
+            return typeMatches(candidate.inner, expected, ctx);
         case 'TVars':
             return false;
         case 'TLambda':

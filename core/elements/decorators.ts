@@ -56,14 +56,6 @@ export type DecoratedExpression = {
     loc: Loc;
 };
 
-// @decorator() T
-export type TDecorated = {
-    type: 'TDecorated';
-    decorators: Array<Decorator>;
-    inner: t.Type;
-    loc: Loc;
-};
-
 export const ToTast = {
     DecoratedExpression(
         expr: p.DecoratedExpression_inner,

@@ -8,11 +8,12 @@ import { Ctx as TCtx, filterUnresolved } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 
 export const grammar = `
-Type = TRef / Number / String / TLambda / TVars
+Type = TDecorated / TRef / Number / String / TLambda / TVars
 TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)? args:(TApply)?
 TVars = "<" _ args:TBargs _ ">" inner:Type
 TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
 TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Type)?
+TDecorated = decorators:(Decorator _)+ inner:Type
 
 TApply = "<" _ args:TComma _ ">"
 TComma = first:Type rest:(_ "," _ Type)* _ ","?
@@ -31,6 +32,13 @@ export type TRef = {
     ref: t.RefKind | t.UnresolvedRef;
     loc: t.Loc;
     args: Type[];
+};
+
+export type TDecorated = {
+    type: 'TDecorated';
+    loc: t.Loc;
+    inner: Type;
+    decorators: t.Decorator[];
 };
 
 // Something<T>
@@ -74,7 +82,7 @@ export type TLambda = {
 
 // Ok so also, you can just drop an inline record declaration, right?
 
-export type Type = TRef | TLambda | t.Number | t.String | TVars; // | TApply;
+export type Type = TRef | TLambda | t.Number | t.String | TVars | TDecorated; // | TApply;
 // | TDecorated | TApply | TVars
 
 // Should I only allow local refs?
@@ -100,6 +108,19 @@ export const ToTast = {
                 name: x.name,
                 type: ctx.ToTast[x.typ.type](x.typ as any, ctx),
             })),
+        };
+    },
+    TDecorated(
+        { loc, inner, decorators }: p.TDecorated,
+        ctx: TCtx,
+    ): TDecorated {
+        return {
+            type: 'TDecorated',
+            loc,
+            inner: ctx.ToTast[inner.type](inner as any, ctx),
+            decorators: decorators.map((x) =>
+                ctx.ToTast[x.type](x as any, ctx),
+            ),
         };
     },
     // Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
@@ -181,6 +202,17 @@ export const ToAst = {
                 typ: ctx.ToAst[type.type](type as any, ctx),
                 loc,
             })),
+        };
+    },
+    TDecorated(
+        { inner, decorators, loc }: TDecorated,
+        ctx: TACtx,
+    ): p.TDecorated {
+        return {
+            type: 'TDecorated',
+            loc,
+            inner: ctx.ToAst[inner.type](inner as any, ctx),
+            decorators: decorators.map((x) => ctx.ToAst[x.type](x as any, ctx)),
         };
     },
     TVars(type: t.TVars, ctx: TACtx): p.TVars {
@@ -273,6 +305,15 @@ export const ToPP = {
                     ),
                     loc,
                 ),
+            ],
+            loc,
+        );
+    },
+    TDecorated({ inner, decorators, loc }: TDecorated, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                ...decorators.map((x) => ctx.ToPP[x.type](x as any, ctx)),
+                ctx.ToPP[inner.type](inner as any, ctx),
             ],
             loc,
         );

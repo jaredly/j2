@@ -18,7 +18,7 @@ export const parserTests = () => {
         const file = fixComments(parseFile(chunk + '\n'));
         if (file.toplevels.length) {
             const ctx = fullContext();
-            const typed = ctx.ToTast.File(file, ctx);
+            const [typed, _] = ctx.ToTast.File(file, ctx);
             const actx = analyzeContext(ctx);
             const checked = analyze(typed, actx);
 

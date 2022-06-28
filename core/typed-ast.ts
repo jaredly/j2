@@ -18,10 +18,10 @@ export type {
     Decorator,
     DecoratorArg,
     DecoratorDecl,
-    TDecorated,
 } from './elements/decorators';
 export type {
     TAdd,
+    TDecorated,
     TLambda,
     TOr,
     TRef,
