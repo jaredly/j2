@@ -123,11 +123,20 @@ export function OneFixture({
                         style={{
                             flex: 1,
                             textAlign: 'right',
-                            paddingRight: 12,
-                            paddingTop: 4,
+                            // paddingRight: 12,
+                            // paddingTop: 4,
                         }}
                     >
                         <Checkbox
+                            css={{
+                                backgroundColor:
+                                    numErrors > 0 !== fixture.shouldFail
+                                        ? 'rgba(255,0,0,0.6)'
+                                        : undefined,
+                                padding: '4px 8px',
+                                margin: 0,
+                                borderRadius: 4,
+                            }}
                             size="xs"
                             label="Should Fail"
                             disableAnimation
@@ -246,7 +255,7 @@ export function OneFixture({
                                     flexShrink: 0,
                                     paddingRight: '$6',
                                     paddingLeft: '$6',
-                                    backgroundColor: 'rgba(255,0,0,0.3)',
+                                    backgroundColor: 'rgba(255,0,0,0.1)',
                                 }}
                             >
                                 {numErrors} issue{numErrors > 1 ? 's' : ''}
