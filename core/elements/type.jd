@@ -5,7 +5,7 @@
 
 --[output:expected]--
 alias bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
-@test:type(:bool) 10
+@test:type(: bool) 10
 // 10
 
 ==[constants]==
@@ -14,7 +14,7 @@ alias bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150 test:type=he071eaec952a7917
 
 --[output:expected]--
 alias test:type=he071eaec952a7917f20d1828e42268ca3a10c513
-@test:type(:"hello", :10) "target"
+@test:type(: "hello", : 10) "target"
 // "target"
 
 ==[lambdas]==
@@ -23,7 +23,7 @@ alias test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 
 --[output:expected]--
 alias float=h1c9cc9450fe2e869a48abaa5e4a85271e1625474 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
-@test:type(:() => 10, :(v: int, float) => int) "ok"
+@test:type(: () => 10, : (v: int, float) => int) "ok"
 // "ok"
 
 ==[tvars]==
@@ -32,7 +32,7 @@ alias float=h1c9cc9450fe2e869a48abaa5e4a85271e1625474 int=h942cd67cf31d350ec1f39
 
 --[output:expected]--
 alias T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
-@test:type(:<T>(v: T) => T) 10
+@test:type(: <T>(v: T) => T) 10
 // 10
 
 ==[unresovled]==
@@ -41,7 +41,7 @@ alias T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 
 --[output:expected]--
 alias test:type=he071eaec952a7917f20d1828e42268ca3a10c513
-@test:type(:hello#[:unresolved:]) 10
+@test:type(: hello#[:unresolved:]) 10
 // 10
 
 ==[arg default]==
@@ -50,7 +50,7 @@ alias test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 
 --[output:expected]--
 alias A=1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
-@test:type(:<T: string, A: int = 10>(a: T, b: A) => A) 100
+@test:type(: <T: string, A: int = 10>(a: T, b: A) => A) 100
 // 100
 
 ==[basic type alias]==
@@ -62,7 +62,7 @@ type hello = int
 alias hello=hd75cac4b203a7a6374a1698e5b1b62b700f00870 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type hello = int
 // hd75cac4b203a7a6374a1698e5b1b62b700f00870
-@test:type(:hello) 10
+@test:type(: hello) 10
 // 10
 
 ==[New fixture]==
@@ -75,9 +75,9 @@ type whatsit = <T: string>(m: T) => int
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513 whatsit=hfa0e433b754ee8ea16339cffb72f49222485b65f
 type whatsit = <T: string>(m: T) => int
 // hfa0e433b754ee8ea16339cffb72f49222485b65f
-@test:type(:whatsit<"hello">) 10
+@test:type(: whatsit<"hello">) 10
 // 10
-@test:type(:whatsit<10>) 10
+@test:type(: whatsit<10>) 10
 // 10
 
 ==[decorate the type]==
@@ -86,5 +86,5 @@ type whatsit = <T: string>(m: T) => int
 
 --[output:expected]--
 alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
-@test:type(:@test:type() string) 10
+@test:type(: @test:type() string) 10
 // 10

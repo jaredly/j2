@@ -245,7 +245,7 @@ export const ToPP = {
     },
     DecType({ type, type_, loc }: p.DecType, ctx: PCtx): pp.PP {
         return pp.items(
-            [pp.atom(':', loc), ctx.ToPP[type_.type](type_ as any, ctx)],
+            [pp.atom(': ', loc), ctx.ToPP[type_.type](type_ as any, ctx)],
             loc,
         );
     },

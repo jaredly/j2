@@ -74,6 +74,7 @@ alias error:wrongNumberOfArgs=he554807c644be72e6c4e5cb59aa0955f9ab67f13 oneArg=h
 --[output:expected]--
 alias error:notAFunction=h16ba48b37c7d5999c12c172bd1bbdeac9773c21a
 @error:notAFunction() 10(20)
+// Error, no type!
 
 ==[calling undefined function]==
 --[input:shouldFail]--
@@ -81,6 +82,7 @@ undefinedFunction()
 
 --[output:expected]--
 undefinedFunction#[:unresolved:]()
+// Error, no type!
 
 ==[double apply]==
 --[input:shouldFail]--
@@ -89,3 +91,4 @@ oneArg(1)()
 --[output:expected]--
 alias error:notAFunction=h16ba48b37c7d5999c12c172bd1bbdeac9773c21a oneArg=h1c684dfbfdbfe5aa532bc148ffa28719da1da880
 @error:notAFunction() oneArg(1)()
+// Error, no type!

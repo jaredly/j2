@@ -73,5 +73,5 @@ alias bounded=h82ba945bb3e182acfcc0fd217a21a9336d99498a error:notATypeVars=hf975
 
 --[output:expected]--
 alias Array=h4341e066d89949f98a72434fc7d7e45a960cfecc int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
-@test:type(:Array<int, string, int>) 10
+@test:type(: Array<int, string, int>) 10
 // 10
