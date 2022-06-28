@@ -124,8 +124,24 @@ export const typeMatches = (
     switch (candidate.type) {
         case 'TDecorated':
             return typeMatches(candidate.inner, expected, ctx);
-        case 'TVars':
+        case 'TVars': {
+            // First, find the max sym in both
+            // then make up new IDs and a mapping
+            // then "Apply" the new syms throughout
+
+            // OHO here we get into contra ... variance?
+
+            // if (
+            //     expected.type !== 'TVars' ||
+            //     expected.args.length !== candidate.args.length ||
+            //     expected.args.some(
+            //         (arg, i) => !typeMatches(arg, candidate.args[i], ctx),
+            //     )
+            // ) {
+            //     return false;
+            // }
             return false;
+        }
         case 'TLambda':
             return (
                 expected.type === 'TLambda' &&
@@ -133,8 +149,8 @@ export const typeMatches = (
                 candidate.args.length === expected.args.length &&
                 candidate.args.every((arg, i) =>
                     typeMatches(
-                        arg.typ,
                         (expected as TLambda).args[i].typ,
+                        arg.typ,
                         ctx,
                     ),
                 )

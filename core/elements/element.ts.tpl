@@ -1,7 +1,7 @@
 import { Visitor } from '../transform-tast';
 import { decorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
-import { typeMatches } from '../typing/typesEqual';
+import { typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';

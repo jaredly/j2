@@ -119,3 +119,50 @@ type Array = <Element, Length: uint>int
 // h28fcc96082d8366d9577a5ef27eb4de5d1d39fa7
 type x = (@test:type() Array)<int, 10>
 // h5b0cf7306c207455d176051e1f20d7d360df691d
+
+==[variance?]==
+--[input]--
+type One = (v: int) => int
+type Two = (v: 10) => int
+// Should Three accept Two? NO
+// Should Four accept One? YES
+type Three = (l: One) => string // might pass any int to it
+type Four = (l: Two) => string // will only pass 10 to it
+
+// ## OK now to the actual question ##
+type OneInt = <T: int>(v: T) => string
+type OneTen = <T: 10>(v: T) => string
+// ## Does Ones match Two? or Two match Ones?
+// ## We know that 10 matches int, but int does not match 10.
+// ## I would expect it to reverse here?
+type TwoInt = <T: int>(v: (m: T) => string) => string
+type TwoTen = <T: 10>(v: (m: T) => string) => string
+// ## And then I think it would reverse again here?
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f One=hf0a3686509a7741a3a15078be2cd944ff4ad9bf4 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=6 T_7=7 T_8=8 T_9=9 Two=haa87d495b9b9178d8a87e6775e4bd4ca3c4fe0e5
+type One = (v: int) => int
+// hf0a3686509a7741a3a15078be2cd944ff4ad9bf4
+type Two = (v: 10) => int
+// haa87d495b9b9178d8a87e6775e4bd4ca3c4fe0e5
+// Should Three accept Two? NO
+// Should Four accept One? YES
+type Three = (l: One) => string
+// hc8f1be7e01f83d98cc2a26fabeb06b5129f61b51
+// might pass any int to it
+type Four = (l: Two) => string
+// h67ba592063d27762dd945f9a8d7489b48626364f
+// will only pass 10 to it
+// ## OK now to the actual question ##
+type OneInt = <T: int>(v: T) => string
+// h9237c48853673d927a7e7e126a76317e408462d0
+type OneTen = <T_7: 10>(v: T_7) => string
+// h2b1caf63d5ff68d4f34e17018a280721d718a495
+// ## Does Ones match Two? or Two match Ones?
+// ## We know that 10 matches int, but int does not match 10.
+// ## I would expect it to reverse here?
+type TwoInt = <T_8: int>(v: (m: T_8) => string) => string
+// h807a3b76dbb1f84e94e05db9f406ddfc3878342f
+type TwoTen = <T_9: 10>(v: (m: T_9) => string) => string
+// h8fca9a5f30860a90c12f9a1d7a69f46d4d8a41b8
+// ## And then I think it would reverse again here?

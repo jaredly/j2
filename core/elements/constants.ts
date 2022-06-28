@@ -8,7 +8,7 @@ import { Expression, Loc } from '../typed-ast';
 import { Ctx as ACtx } from '../typing/to-ast';
 import { Visitor } from '../transform-tast';
 import { decorate, VisitorCtx } from '../typing/analyze';
-import { typeMatches } from '../typing/typesEqual';
+import { typeMatches } from '../typing/typeMatches';
 
 export const grammar = `
 Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
