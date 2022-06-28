@@ -62,7 +62,7 @@ finalLineComment = $("//" (!"\n" .)*)
 // constants.ts
 
 Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
-Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?)
+Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?) "u"?
 
 String = "\"" text:$(stringChar*) "\""
 TemplateString = "\"" first:$tplStringChars rest:TemplatePair* "\""

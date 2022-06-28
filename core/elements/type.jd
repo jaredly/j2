@@ -136,7 +136,7 @@ type Z = <S: string>int<x>
 // h314d8f03199abc096f04758985366115ff81f828
 
 ==[string ops]==
---[input]--
+--[input:shouldFail]--
 type FancyArray = <Element: "one" + string + "suffix">Array<Element>
 type Good = FancyArray<"ones and a suffix">
 type Bad = FancyArray<"something else">
@@ -164,3 +164,12 @@ type Good = NumArray<@error:argWrongType(expected: :10 + uint) 20>
 // hbb67e60c6e5e3eb87d55633cbfac48ec433d7be6
 type Bad = NumArray<@error:argWrongType(expected: :10 + uint) 5>
 // h2fccdfb50b3244d6e8da3670847bb82cc9db0dac
+
+==[New fixture]==
+--[input]--
+type X = (<X: 10u>int)<5u + 5>
+
+--[output:expected]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f X=0
+type X = <X: 10>int<@error:argWrongType(expected: :10) (5 + 5)>
+// hd21223888b6b23b3af4fd87ee7e6ced829bef13c

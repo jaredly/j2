@@ -342,61 +342,50 @@ export const typeMatches = (
                     expected.kind === candidate.kind &&
                     expected.value === candidate.value
                 );
-                // } else if (expected.type === 'TSub') {
-                //     if (candidate.kind !== 'UInt') {
-                //         return false;
-                //     }
-                //     let num = 0;
-                //     let ismax = false;
-                //     for (let i = 0; i < expected.elements.length; i++) {
-                //         const el = expected.elements[i];
-                //         if (el.type === 'Number') {
-                //             if (el.kind !== candidate.kind) {
-                //                 return false;
-                //             }
-                //             if (i === 0) {
-                //                 num += el.value;
-                //             } else {
-                //                 num -= el.value;
-                //             }
-                //         } else if (
-                //             isBuiltinType(el, candidate.kind.toLowerCase(), ctx)
-                //         ) {
-                //             // it's fine
-                //             ismax = true;
-                //         } else {
-                //             return false;
-                //         }
-                //     }
-                //     return ismax ? candidate.value <= num : candidate.value === num;
-                // } else if (expected.type === 'TAdd') {
-                //     if (candidate.kind !== 'UInt') {
-                //         return false;
-                //     }
-                //     let min = 0;
-                //     for (let el of expected.elements) {
-                //         if (el.type === 'Number') {
-                //             if (el.kind !== candidate.kind) {
-                //                 return false;
-                //             }
-                //             min += el.value;
-                //         } else if (
-                //             isBuiltinType(el, candidate.kind.toLowerCase(), ctx)
-                //         ) {
-                //             // it's fine
-                //         } else {
-                //             return false;
-                //         }
-                //     }
-                //     return candidate.value >= min;
+            } else if (expected.type === 'TOps') {
+                if (candidate.kind !== 'UInt') {
+                    return false;
+                }
+                let num = 0;
+                const mm = { max: false, min: false };
+                // let ismax = false;
+                const elements = [{ op: '+', right: expected.left }].concat(
+                    expected.right.map(({ top, right }) => ({
+                        op: top,
+                        right,
+                    })),
+                );
+                for (let i = 0; i < elements.length; i++) {
+                    const { op, right: el } = elements[i];
+                    if (el.type === 'Number') {
+                        if (el.kind !== candidate.kind) {
+                            return false;
+                        }
+                        if (op === '+') {
+                            num += el.value;
+                        } else {
+                            num -= el.value;
+                        }
+                        // if (i === 0) {
+                        //     num += el.value;
+                        // }
+                    } else if (
+                        isBuiltinType(el, candidate.kind.toLowerCase(), ctx)
+                    ) {
+                        mm[op === '+' ? 'min' : 'max'] = true;
+                        // ismax = true;
+                    } else {
+                        return false;
+                    }
+                }
+                if (candidate.value <= num && mm.max) {
+                    return true;
+                }
+                if (candidate.value >= num && mm.min) {
+                    return true;
+                }
+                return candidate.value === num;
             } else {
-                // return false;
-                // console.log(
-                //     'umber',
-                //     expected,
-                //     ctx.types.names['int'],
-                //     isBuiltinType(expected, 'int', ctx),
-                // );
                 if (
                     candidate.kind === 'Int' &&
                     candidate.value >= 0 &&
