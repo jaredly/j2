@@ -65,9 +65,9 @@ type hello = int
 @test:type(: hello) 10
 
 --[output:expected]--
-alias hello=h97e17b767986fd8610c4c1203f666df79ed2de94 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias hello=h8bb3f2bbb72e129406007760fde8c48eb0e9cf5b int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type hello = int
-// h97e17b767986fd8610c4c1203f666df79ed2de94
+// h8bb3f2bbb72e129406007760fde8c48eb0e9cf5b
 @test:type(:hello) 10
 // 10
 
@@ -78,9 +78,9 @@ type StringMe = <T: string>int;
 @test:type(:StringMe<"hello">) 10
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=h41be22ea8332c080eb342beb257aac1ce5a8558e T=2 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=h2eb7a52a45ec7a6533dbde0881bb5577ff211068 T=2 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type StringMe = <T: string>int
-// h41be22ea8332c080eb342beb257aac1ce5a8558e
+// h2eb7a52a45ec7a6533dbde0881bb5577ff211068
 @test:type(:StringMe<@error:argWrongType(expected: :string) 20>) 10
 // 10
 @test:type(:StringMe<"hello">) 10

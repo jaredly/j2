@@ -13,7 +13,7 @@ import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
 import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
-import { transformFile, Visitor } from '../../transform-tast';
+import { transformFile, transformType, Visitor } from '../../transform-tast';
 import { File } from '../../typed-ast';
 import { analyze, analyzeContext, Verify, verify } from '../analyze';
 import { getType } from '../getType';
@@ -241,7 +241,11 @@ export function runFixture(
                 '// ' + cm,
             ]);
         } else if (top.type === 'TypeAlias') {
-            const hash = objectHash(top.elements.map((t) => t.type));
+            const hash = objectHash(
+                top.elements.map((t) =>
+                    transformType(t.type, locClearVisitor, null),
+                ),
+            );
             checked.comments.push([
                 {
                     ...top.loc,

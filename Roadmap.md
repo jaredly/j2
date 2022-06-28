@@ -4,10 +4,14 @@ Ok what Im doing now:
 - [x] type aliases
 - [x] TDecorated, so we can make bound errors more visible
 - [x] check bounds! awesome
+- [x] tapply at the tast level
+- [x] tapply at the ast level?
 - [ ] generics, defaults, bounds
 	- all the validation for that
 - [ ] then enums? Could be fun. At that point recursive types make sense.
 - [ ] records! and tuples.
+
+
 
 
 - [ ] type aliases! And let's make sure that mutually recursive types work
@@ -19,9 +23,12 @@ type Y = () => x
 Ok so yeah technically that works. without combining it with records or tuples or something it seems quite useless.
 
 
-# BUGS
+# DEVUI MUST HAVES
 
 - [ ] when just the aliases change, but the printed output doesn't, indicate that somehow. Maybe just have a diff view? Could be good.
+- [ ] the sidebar should indicate files that have failing fixtures.
+	Which means I need to pull all calculations up to the top level,
+	and load all fixture files.
 
 
 # Big Things To Add

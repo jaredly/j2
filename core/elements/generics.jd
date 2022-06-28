@@ -104,9 +104,9 @@ type y=x<int><10>
 --[output:expected]--
 alias A=6 B=7 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f x=h1c9b7191723a4de929b4df34f8741f109359dfb3
 type x = <A: int><B: int>int
-// he6250023a3239a39e160d8aa2d9e96e24c8c32aa
+// h1c9b7191723a4de929b4df34f8741f109359dfb3
 type y = x<int><10>
-// h88225b8f4eda9443eb5cb68a97a697d2d4d86784
+// h523543d9228a0b4a3646032b5bdc6ec1e0032fa5
 
 ==[parnes]==
 --[input]--
@@ -116,6 +116,6 @@ type x = (@test:type() Array)<int, 10>
 --[output:expected]--
 alias Array=h28fcc96082d8366d9577a5ef27eb4de5d1d39fa7 Element=6 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f Length=7 test:type=he071eaec952a7917f20d1828e42268ca3a10c513 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
 type Array = <Element, Length: uint>int
-// h67fc5ec0d02889b740fafa847cd01eab60e9cc4c
+// h28fcc96082d8366d9577a5ef27eb4de5d1d39fa7
 type x = (@test:type() Array)<int, 10>
-// h3dc3f926d4edce38161a72f396978a3375c0e505
+// h5b0cf7306c207455d176051e1f20d7d360df691d
