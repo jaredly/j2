@@ -40,11 +40,14 @@ takeSimple(simple)
 ==[pass wrong lambda]==
 --[input:shouldFail]--
 takeOneArg(simple)
+takeOneArg(oneArg)
 takeIntle(simple)
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f simple=h65dbf0bf0a81f130770718771f42643e5fb6ac13 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takeIntle=h99f1d88655e3e7bf225c2511cd77a0fa1b520d59 takeOneArg=h49c17c8d3d1c8610fb4d0b14b9cd3caa7248cfdd
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f oneArg=h6c7b76e2a1fd1d300d0aa0993809744ac47efe81 simple=h65dbf0bf0a81f130770718771f42643e5fb6ac13 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takeIntle=h99f1d88655e3e7bf225c2511cd77a0fa1b520d59 takeOneArg=h49c17c8d3d1c8610fb4d0b14b9cd3caa7248cfdd
 takeOneArg(@error:argWrongType(expected: : (v: int) => string) simple)
+// string
+takeOneArg(oneArg)
 // string
 takeIntle(@error:argWrongType(expected: : () => int) simple)
 // string

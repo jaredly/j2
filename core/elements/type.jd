@@ -1,3 +1,9 @@
+##[builtins]##
+//:value:hello:(v: "hello") => int
+//:value:ten:(v: 10) => int
+//:value:id:<T>(x: T) => T
+//:value:wantsId:(v: <T>(x: T) => T) => int
+
 ##[fixtures]##
 ==[basic]==
 --[input]--
@@ -31,7 +37,7 @@ alias float=h1c9cc9450fe2e869a48abaa5e4a85271e1625474 int=h942cd67cf31d350ec1f39
 @test:type(: <T>(v: T) => T) 10
 
 --[output:expected]--
-alias T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias T=2 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 @test:type(: <T>(v: T) => T) 10
 // 10
 
@@ -49,7 +55,7 @@ alias test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 @test:type(: <T: string, A: int = 10>(a: T, b: A) => A) 100
 
 --[output:expected]--
-alias A=1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias A=3 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=2 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 @test:type(: <T: string, A: int = 10>(a: T, b: A) => A) 100
 // 100
 
@@ -72,9 +78,9 @@ type StringMe = <T: string>int;
 @test:type(:StringMe<"hello">) 10
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=he4f90a00516868cf19f16ad45a7d28a588098a83 T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=h41be22ea8332c080eb342beb257aac1ce5a8558e T=2 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type StringMe = <T: string>int
-// he4f90a00516868cf19f16ad45a7d28a588098a83
+// h41be22ea8332c080eb342beb257aac1ce5a8558e
 @test:type(: StringMe<@error:argWrongType(expected: : string) 20>) 10
 // 10
 @test:type(: StringMe<"hello">) 10
@@ -88,3 +94,30 @@ type StringMe = <T: string>int
 alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 @test:type(: @test:type() string) 10
 // 10
+
+==[literals]==
+--[input:shouldFail]--
+hello("hello")
+hello("ho")
+ten(10)
+ten(5)
+
+--[output:expected]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f hello=h4be83b97ef46480eb6f8573f2ab90ed7c5c8b1e5 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f ten=hf4f51e4cf24724da57c43defaba9896829117c9f
+hello("hello")
+// int
+hello(@error:argWrongType(expected: : "hello") "ho")
+// int
+ten(10)
+// int
+ten(@error:argWrongType(expected: : 10) 5)
+// int
+
+==[rank 2 my folks]==
+--[input]--
+wantsId(id)
+
+--[output:expected]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f id=hf5df74f88f6398e9901d80dd2392d8fffa98142d int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f T=1 wantsId=h3b8037c287f715e3d39f600ea453673b4ab5768c
+wantsId(@error:argWrongType(expected: : <T>(x: T) => T) id)
+// int

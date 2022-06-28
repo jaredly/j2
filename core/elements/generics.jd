@@ -5,6 +5,8 @@
 //:value:bounded:<A: int>(a: A) => A
 //:value:takesInt:(a: int) => int
 //:type:Array:<Element, Length: uint>
+//:value:takesArray:(ar: Array<string, 10>) => int
+//:value:anArray:Array<string, 10>
 
 ##[fixtures]##
 ==[basic]==
@@ -81,3 +83,15 @@ alias Array=hec476a05f5b96e6cde2e810873da9ea402334adc error:argWrongType=hfcfe64
     >,
 ) 10
 // 10
+
+==[New fixture]==
+--[input]--
+takesArray(10)
+takesArray(anArray)
+
+--[output:expected]--
+alias anArray=h49faa5e0018fdec9ea2144a07d99f31fe524a254 Array=hec476a05f5b96e6cde2e810873da9ea402334adc error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesArray=hf0931e5412c22ece7b21a7d092c724fec69848ad
+takesArray(@error:argWrongType(expected: : Array<string, 10>) 10)
+// int
+takesArray(anArray)
+// int

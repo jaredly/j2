@@ -44,80 +44,6 @@ export const clearLocs = (ast: File) => {
     return transformFile(ast, locClearVisitor, null);
 };
 
-const takeFirstLine = (text: string): [string, string] => {
-    const lines = text.split('\n');
-    return [lines[0], lines.slice(1).join('\n')];
-};
-
-export const parseFixtureOld = (chunk: string, i: number): Fixture => {
-    if (chunk.includes('----')) {
-        const [first, input, output] = chunk.split('----');
-        const [title, metaRaw] = takeFirstLine(first.trim());
-        const meta = JSON.parse(metaRaw);
-        return {
-            title: title.replace(/^=+\[/, '').replace(/\]=+$/, '').trim(),
-            input: input.trim(),
-            output_expected: output.trim(),
-            ...meta,
-        };
-    }
-
-    const [input, output] = chunk.trim().split('\n-->\n');
-    const [title, ...rest] = input.split('\n');
-    const builtins: Builtin[] = [];
-    const aliases: { [key: string]: string } = {};
-    while (rest[0].startsWith('//:')) {
-        console.log(rest[0]);
-        if (rest[0].startsWith('//:aliases:')) {
-            rest.shift()!
-                .slice('//:aliases:'.length)
-                .split(',')
-                .forEach((line) => {
-                    const [key, value] = line.split('=');
-                    aliases[value] = key;
-                });
-        } else {
-            builtins.push(parseBuiltin(rest.shift()!));
-        }
-    }
-    return {
-        title: title.replace(/^=+\[/, '').replace(/\]=+$/, '').trim(),
-        builtins_deprecated: builtins,
-        aliases_deprecated: aliases,
-        input: rest.join('\n').trim(),
-        failing_deprecated: false,
-        output_expected: output,
-        output_failed: '',
-        shouldFail: false,
-        // i,
-    };
-};
-
-export const serializeFixtureOld = ({
-    title,
-    input,
-    output_expected,
-    builtins_deprecated: builtins,
-    aliases_deprecated: aliases,
-    failing_deprecated: failing,
-}: Fixture) => {
-    return `==[${title}]==\n${JSON.stringify({
-        builtins,
-        aliases,
-        failing,
-    })}\n----\n${input}\n----\n${output_expected}`;
-
-    // return `==[${title}]==\n${
-    //     builtins.length ? builtins.join('\n') + '\n' : ''
-    // }${
-    //     Object.keys(aliases).length
-    //         ? `//:aliases:${Object.keys(aliases)
-    //               .map((k) => `${aliases[k]}=${k}`)
-    //               .join(',')}\n`
-    //         : ''
-    // }\n${input}\n-->\n${output}`;
-};
-
 export const serializeSections = (
     map: { [key: string]: string },
     char = '=',
@@ -207,52 +133,30 @@ export const serializeFixtureFile = (file: FixtureFile) => {
 
 export const parseFixtureFile = (inputRaw: string): FixtureFile => {
     const toplevel = loadSections(inputRaw, '#');
-    if (toplevel['fixtures']) {
-        const fix = loadSections(toplevel['fixtures'], '=');
-        const fixtures = Object.entries(fix).map(([title, data]): Fixture => {
-            const items = loadSections(data, '-');
-            return {
-                title,
-                input: (items['input'] ?? items['input:shouldFail']).trim(),
-                output_expected: items['output:expected']?.trim(),
-                output_failed: items['output:failed']?.trim(),
-                shouldFail: 'input:shouldFail' in items,
-
-                // No longer needed
-                aliases_deprecated: {}, // this will come from the output
-                builtins_deprecated: [], // nope as well
-                failing_deprecated: false, // comes from output_failed
-            };
-        });
+    const fix = loadSections(toplevel['fixtures'], '=');
+    const fixtures = Object.entries(fix).map(([title, data]): Fixture => {
+        const items = loadSections(data, '-');
         return {
-            builtins:
-                toplevel['builtins']
-                    ?.trim()
-                    .split('\n')
-                    .filter(Boolean)
-                    .map(parseBuiltin) ?? [],
-            fixtures,
-        };
-    }
+            title,
+            input: (items['input'] ?? items['input:shouldFail']).trim(),
+            output_expected: items['output:expected']?.trim(),
+            output_failed: items['output:failed']?.trim(),
+            shouldFail: 'input:shouldFail' in items,
 
-    const seen: { [key: string]: true } = {};
-    let builtins: Builtin[] = [];
+            // No longer needed
+            aliases_deprecated: {}, // this will come from the output
+            builtins_deprecated: [], // nope as well
+            failing_deprecated: false, // comes from output_failed
+        };
+    });
     return {
-        fixtures: inputRaw
-            .split(/(?=\n==[^\n=]*==\n)/)
-            .filter((x) => x.trim())
-            .map((chunk, i) => {
-                const parsed = parseFixtureOld(chunk, i);
-                parsed.builtins_deprecated.forEach((builtin) => {
-                    const k = `${builtin.name}:${builtin.kind}`;
-                    if (!seen[k]) {
-                        seen[k] = true;
-                        builtins.push(builtin);
-                    }
-                });
-                return { ...parsed, builtins: [] };
-            }),
-        builtins,
+        builtins:
+            toplevel['builtins']
+                ?.trim()
+                .split('\n')
+                .filter(Boolean)
+                .map(parseBuiltin) ?? [],
+        fixtures,
     };
 };
 
@@ -267,41 +171,6 @@ export const loadFixtures = (fixtureFile: string) => {
 
     return { file, hasOnly };
 };
-
-// export type Fixed = {
-//     // input: string;
-//     output: string;
-//     aliases: Fixture['aliases'];
-// };
-
-// export const saveFixed = (
-//     fixtureFile: string,
-//     fixtures: Fixture[],
-//     fixed: Fixed[],
-// ) => {
-//     let missing = false;
-//     for (let i = 0; i < fixtures.length; i++) {
-//         if (!fixed[i]) {
-//             missing = true;
-//             break;
-//         }
-//     }
-//     if (missing) {
-//         console.warn(`Not writing fixtures, looks like something failed`);
-//         return;
-//     }
-//     fs.writeFileSync(
-//         fixtureFile,
-//         fixed
-//             .map(({ output }, i) =>
-//                 serializeFixtureOld({
-//                     ...fixtures[i],
-//                     output_expected: output,
-//                 }),
-//             )
-//             .join('\n\n'),
-//     );
-// };
 
 export const parseRaw = (
     raw: string,

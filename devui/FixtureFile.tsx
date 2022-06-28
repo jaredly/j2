@@ -13,7 +13,6 @@ import { FullContext } from '../core/ctx';
 import {
     Fixture,
     parseFixtureFile,
-    serializeFixtureOld,
     serializeFixtureFile,
     serializeBuiltin,
     parseBuiltin,
