@@ -18,6 +18,7 @@ import { File } from '../../typed-ast';
 import { analyze, analyzeContext, Verify, verify } from '../analyze';
 import { getType } from '../getType';
 import { printCtx } from '../to-ast';
+import { Ctx } from '../to-tast';
 
 export type FixtureFile = {
     builtins: Builtin[];
@@ -299,13 +300,17 @@ export const loadFixtures = (fixtureFile: string) => {
 //     );
 // };
 
-export const parseRaw = (raw: string, ctx: FullContext): File => {
+export const parseRaw = (
+    raw: string,
+    ctx: FullContext,
+): [File, FullContext] => {
     if (raw.startsWith('alias ')) {
         const idx = raw.indexOf('\n');
         ctx.aliases = aliasesFromString(raw.slice(0, idx));
         raw = raw.slice(idx + 1);
     }
-    return ctx.ToTast.File(fixComments(parseFile(raw)), ctx);
+    const [file, tctx] = ctx.ToTast.File(fixComments(parseFile(raw)), ctx);
+    return [file, tctx as FullContext];
 };
 
 export type FixtureResult = {
@@ -324,13 +329,13 @@ export function runFixture(
     { input, output_expected }: Fixture,
     builtins: Builtin[],
 ): FixtureResult {
-    const ctx = fullContext();
+    let ctx = fullContext();
 
     loadBuiltins(builtins, ctx);
 
     let tast;
     try {
-        tast = parseRaw(input, ctx);
+        [tast, ctx] = parseRaw(input, ctx);
     } catch (err) {
         console.log('Failed to parse input:', input);
         throw err;
@@ -374,10 +379,10 @@ export function runFixture(
 
     let outputTast;
 
-    const ctx2 = fullContext();
+    let ctx2 = fullContext();
     loadBuiltins(builtins, ctx2);
     try {
-        outputTast = parseRaw(output_expected, ctx2);
+        [outputTast, ctx2] = parseRaw(output_expected, ctx2);
     } catch (err) {
         console.log(output_expected);
         throw err;

@@ -59,7 +59,8 @@ type hello = int
 @test:type(: hello) 10
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias hello=hd75cac4b203a7a6374a1698e5b1b62b700f00870 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type hello = int
-@test:type(:hello#[:unresolved:]) 10
+// hd75cac4b203a7a6374a1698e5b1b62b700f00870
+@test:type(:hello) 10
 // 10

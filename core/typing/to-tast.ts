@@ -42,7 +42,7 @@ export const makeToTast = (): ToTast => {
 };
 
 export const GeneralToTast = {
-    File({ toplevels, loc, comments }: p.File, ctx: Ctx): t.File {
+    File({ toplevels, loc, comments }: p.File, ctx: Ctx): [t.File, Ctx] {
         // Do we forbid toplevel expressions from having a value?
         // I don't see why we would.
         // We might forbid them from having outstanding effects though.
@@ -54,12 +54,15 @@ export const GeneralToTast = {
             }
             return top;
         });
-        return {
-            type: 'File',
-            toplevels: parsed,
-            comments,
-            loc,
-        };
+        return [
+            {
+                type: 'File',
+                toplevels: parsed,
+                comments,
+                loc,
+            },
+            ctx,
+        ];
     },
 
     Toplevel(top: p.Toplevel, ctx: Ctx): t.Toplevel {
