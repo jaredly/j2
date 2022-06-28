@@ -37,6 +37,9 @@ export type VisitorCtx = {
 // do let Some = <X><Y>int;
 // OK BACKUP.
 export const resolveType = (type: Type, ctx: FullContext): Type | null => {
+    if (type.type === 'TDecorated') {
+        return resolveType(type.inner, ctx);
+    }
     if (type.type === 'TRef') {
         if (type.ref.type === 'Global') {
             const { idx, hash } = extract(type.ref.id);

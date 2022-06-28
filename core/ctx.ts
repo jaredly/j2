@@ -4,6 +4,7 @@ import { DecoratorDecl } from './elements/decorators';
 import { TVar } from './elements/type';
 import { Loc } from './grammar/base.parser';
 import { extract, toId } from './ids';
+import { transformType } from './transform-tast';
 import {
     Expression,
     GlobalRef,
@@ -15,6 +16,7 @@ import {
     Type,
 } from './typed-ast';
 import { makeToTast } from './typing/to-tast';
+import { locClearVisitor } from './typing/__test__/fixture-utils';
 
 export type HashedNames<Contents, NameV> = {
     hashed: { [hash: string]: Array<Contents> };
@@ -248,7 +250,9 @@ export const newContext = (aliases: FullContext['aliases']): FullContext => {
             return { ...this, locals: [locals, ...this.locals] };
         },
         withTypes(types) {
-            const defns = types.map((m) => m.type);
+            const defns = types.map((m) =>
+                transformType(m.type, locClearVisitor, null),
+            );
             const hash = hashObject(defns);
             const ctx = { ...this };
             ctx.types = {
