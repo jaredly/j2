@@ -95,3 +95,15 @@ takesArray(@error:argWrongType(expected: :Array<string, 10>) 10)
 // int
 takesArray(anArray)
 // int
+
+==[chained]==
+--[input]--
+type x=<A><B>int
+type y=x<int>
+
+--[output:expected]--
+alias A=6 B=7 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f x=hc9d2c2e0e9d2e5266c563a6c2dbf69be02edcd32
+type x = <A><B>int
+// hc9d2c2e0e9d2e5266c563a6c2dbf69be02edcd32
+type y = x<int>
+// hbc25affa3ecc8dc156970fa3179d64eeae44ea6d

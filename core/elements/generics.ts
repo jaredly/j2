@@ -109,24 +109,8 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         if (node.args.length !== target.args.length) {
             return decorate(node, 'wrongNumberOfTypeArgs', hit, ctx._full);
         }
-        // TODO: Type Decoration thanks
-        // let changed = false;
-        // const args = node.args.map((arg, i) => {
-        // 	const bound = target.args[i].bound
-        // 	if (bound && !typeMatches(arg, bound, ctx._full)) {
-        // 		return decorate(arg, 'typeMismatch', hit, ctx._full);
-        // 	}
-        // });
         return null;
     },
-    // Type_TRef(node, ctx) {
-    //     // Do validation here, and TDecorate
-    //     // if (!node.args.length || node.ref.type === 'Unresolved') {
-    //     //     return null;
-    //     // }
-    //     // const resolved = ctx.resolveType(node.ref);
-    //     return null;
-    // },
     Type_TApply(node, { ctx, hit }) {
         const inner = ctx.resolveType(node.target);
         if (!inner) {
