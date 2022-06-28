@@ -59,9 +59,9 @@ type hello = int
 @test:type(: hello) 10
 
 --[output:expected]--
-alias hello=hd75cac4b203a7a6374a1698e5b1b62b700f00870 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias hello=h97e17b767986fd8610c4c1203f666df79ed2de94 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type hello = int
-// hd75cac4b203a7a6374a1698e5b1b62b700f00870
+// h97e17b767986fd8610c4c1203f666df79ed2de94
 @test:type(: hello) 10
 // 10
 
@@ -71,7 +71,11 @@ type m = <A><B>int
 type n = m
 
 --[output:expected]--
-// hello
+alias A=0 B=1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f m=h9ccde0aa894b9e55f18cc5eacbf49d46380d93fd
+type m = <A><B>int
+// h9ccde0aa894b9e55f18cc5eacbf49d46380d93fd
+type n = m
+// ha7564a8b7bdfe2bc10f01870f48c01b4b6f8cb1e
 
 ==[decorate the type]==
 --[input]--

@@ -286,7 +286,7 @@ export const tref = (ref: RefKind): Type => ({
     type: 'TRef',
     ref,
     loc: noloc,
-    args: [],
+    // args: [],
 });
 const ref = (kind: RefKind): Expression => ({ type: 'Ref', kind, loc: noloc });
 const tlam = (

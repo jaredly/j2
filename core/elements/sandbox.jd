@@ -8,7 +8,7 @@
 hello
 
 --[output:expected]--
-alias hello=h30d0f8aeef4d14a6b72fbcf383283bccd6eae60c string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias hello=hfe91f1ef2452e6927118530ab0bc97677c300137 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 hello
 // string
 
@@ -17,6 +17,6 @@ hello
 "${toString(10)} and ${one}"
 
 --[output:expected]--
-alias one=hf48b109c360671d5a19b774451ea2ebe03666920 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=hdbca9f915bde32147ea3f57bb5676c33bd2ae511
+alias one=h75a4651f0e6841970290c6a4c7f547d57bb814ca string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h0ac4106142a4522c2471a4bc4c3cc92ae5c381f8
 "${toString(10)} and ${one}"
 // string

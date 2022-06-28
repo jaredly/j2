@@ -13,7 +13,7 @@ import {
     RefKind,
     Type,
 } from '../typed-ast';
-import { getType } from './getType';
+import { applyType, getType } from './getType';
 import { analyze as analyzeApply } from '../elements/apply';
 import { analyze as analyzeConstants } from '../elements/constants';
 import { analyze as analyzeGenerics } from '../elements/generics';
@@ -48,15 +48,17 @@ export const resolveType = (type: Type, ctx: FullContext): Type | null => {
                 return null;
             }
             if (t.type === 'user') {
-                const inner = resolveType(t.typ, ctx);
-                if (type.args) {
-                    if (inner?.type !== 'TVars') {
-                        return null;
-                    }
-                }
-                return inner;
+                return resolveType(t.typ, ctx);
             }
         }
+    }
+    if (type.type === 'TApply') {
+        const target = resolveType(type.target, ctx);
+        if (!target || target.type !== 'TVars') {
+            return null;
+        }
+        const applied = applyType(type.args, target, ctx);
+        return applied ? resolveType(applied, ctx) : null;
     }
     return type;
 };

@@ -21,6 +21,7 @@ export type {
 } from './elements/decorators';
 export type {
     TAdd,
+    TApply,
     TDecorated,
     TLambda,
     TOr,

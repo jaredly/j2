@@ -13,7 +13,7 @@ toString(1)
 toString(3.4)
 
 --[output:expected]--
-alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=hdbca9f915bde32147ea3f57bb5676c33bd2ae511 toString_h0=h07f1e9855318b2123668f966c09983ab22c93d0e
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h0ac4106142a4522c2471a4bc4c3cc92ae5c381f8 toString_h0=h0577208ab68b5bcf6e07aca25d16d3ec1a739b13
 toString(1)
 // string
 toString_h0(3.4)
@@ -24,7 +24,7 @@ toString_h0(3.4)
 twoArgs(1, "hello")
 
 --[output:expected]--
-alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 twoArgs=hb503cdf51b99ec068ec447c4b36110007ed8589e
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 twoArgs=h0f02217a611769b7c4ee218488bbd1fc16cbeeb5
 twoArgs(1, "hello")
 // string
 
@@ -33,7 +33,7 @@ twoArgs(1, "hello")
 takeSimple(simple)
 
 --[output:expected]--
-alias simple=hf8d971f5ff808a78a576d04716105e0fd805d25b string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takeSimple=h556a12edbad08adcb5e4ac003b0bf43fdeeaebdc
+alias simple=h65dbf0bf0a81f130770718771f42643e5fb6ac13 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takeSimple=hdc45749f4e265c12ceb62ea6db4d02a0386622c5
 takeSimple(simple)
 // string
 
@@ -43,10 +43,10 @@ takeOneArg(simple)
 takeIntle(simple)
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f simple=hf8d971f5ff808a78a576d04716105e0fd805d25b string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takeIntle=h9f7c19eb8e09df427ab60ec751fadbd7bc3dc0f1 takeOneArg=h3e6d978dfb956709373c3096d8bfa0fc5901eec8
-takeOneArg(@error:argWrongType(expected: :(v: int) => string) simple)
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f simple=h65dbf0bf0a81f130770718771f42643e5fb6ac13 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takeIntle=h99f1d88655e3e7bf225c2511cd77a0fa1b520d59 takeOneArg=h49c17c8d3d1c8610fb4d0b14b9cd3caa7248cfdd
+takeOneArg(@error:argWrongType(expected: : (v: int) => string) simple)
 // string
-takeIntle(@error:argWrongType(expected: :() => int) simple)
+takeIntle(@error:argWrongType(expected: : () => int) simple)
 // string
 
 ==[arg type error]==
@@ -54,8 +54,8 @@ takeIntle(@error:argWrongType(expected: :() => int) simple)
 oneArg(true)
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f oneArg=h1c684dfbfdbfe5aa532bc148ffa28719da1da880 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
-oneArg(@error:argWrongType(expected: :int) true)
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f oneArg=h6c7b76e2a1fd1d300d0aa0993809744ac47efe81 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+oneArg(@error:argWrongType(expected: : int) true)
 // string
 
 ==[wrong number of args]==
@@ -63,7 +63,7 @@ oneArg(@error:argWrongType(expected: :int) true)
 oneArg(1, 2)
 
 --[output:expected]--
-alias error:wrongNumberOfArgs=he554807c644be72e6c4e5cb59aa0955f9ab67f13 oneArg=h1c684dfbfdbfe5aa532bc148ffa28719da1da880 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias error:wrongNumberOfArgs=he554807c644be72e6c4e5cb59aa0955f9ab67f13 oneArg=h6c7b76e2a1fd1d300d0aa0993809744ac47efe81 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 @error:wrongNumberOfArgs() oneArg(1, 2)
 // string
 
@@ -89,6 +89,6 @@ undefinedFunction#[:unresolved:]()
 oneArg(1)()
 
 --[output:expected]--
-alias error:notAFunction=h16ba48b37c7d5999c12c172bd1bbdeac9773c21a oneArg=h1c684dfbfdbfe5aa532bc148ffa28719da1da880
+alias error:notAFunction=h16ba48b37c7d5999c12c172bd1bbdeac9773c21a oneArg=h6c7b76e2a1fd1d300d0aa0993809744ac47efe81
 @error:notAFunction() oneArg(1)()
 // Error, no type!

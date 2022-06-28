@@ -12,7 +12,7 @@
 hello<int>(10)
 
 --[output:expected]--
-alias hello=hd00e18d65bbfa2e36da4cae7859311a174e50ac0 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias hello=hf6e269898d7d9d035467350db13cfa38ac824c31 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 hello<int>(10)
 // int
 
@@ -21,7 +21,7 @@ hello<int>(10)
 (@decorate() hello)<10>(10)
 
 --[output:expected]--
-alias decorate=h5a7fc9170718190f9388084b28fb49f6cb4602fc hello=hd00e18d65bbfa2e36da4cae7859311a174e50ac0
+alias decorate=h5a7fc9170718190f9388084b28fb49f6cb4602fc hello=hf6e269898d7d9d035467350db13cfa38ac824c31
 (@decorate() hello)<10>(10)
 // 10
 
@@ -31,7 +31,7 @@ multi<int, string>
 multi<int, string>(10, "hello")
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f multi=h418d7a01dfba08e63f9d591581378a723c8e07e1 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f multi=h088d53f5e3ddc6bf12a7e3054c4a52ebae49789d string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 multi<int, string>
 // (a: int, b: string) => int
 multi<int, string>(10, "hello")
@@ -42,7 +42,7 @@ multi<int, string>(10, "hello")
 bounded<10>(10)
 
 --[output:expected]--
-alias bounded=h82ba945bb3e182acfcc0fd217a21a9336d99498a
+alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d
 bounded<10>(10)
 // 10
 
@@ -51,7 +51,7 @@ bounded<10>(10)
 bounded<string>("wat")
 
 --[output:expected]--
-alias bounded=h82ba945bb3e182acfcc0fd217a21a9336d99498a string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 bounded<string>("wat")
 // Error, no type!
 
@@ -61,7 +61,7 @@ bounded<int, string>(20)
 takesInt<int>(10)
 
 --[output:expected]--
-alias bounded=h82ba945bb3e182acfcc0fd217a21a9336d99498a error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesInt=h61a33961423768e7cfc1fb0b395ed5efb9f2d24a
+alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
 (@error:wrongNumberOfTypeArgs() bounded<int, string>)(20)
 // int
 (@error:notATypeVars() takesInt<int>)(10)
@@ -72,6 +72,6 @@ alias bounded=h82ba945bb3e182acfcc0fd217a21a9336d99498a error:notATypeVars=hf975
 @test:type(:Array<int, string, int>) 10
 
 --[output:expected]--
-alias Array=h4341e066d89949f98a72434fc7d7e45a960cfecc int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias Array=h682f3ca24bf2124e068512472fbd286b4be64b45 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 @test:type(: Array<int, string, int>) 10
 // 10

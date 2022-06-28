@@ -121,9 +121,9 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     },
     Type_TRef(node, ctx) {
         // Do validation here, and TDecorate
-        if (!node.args.length || node.ref.type === 'Unresolved') {
-            return null;
-        }
+        // if (!node.args.length || node.ref.type === 'Unresolved') {
+        //     return null;
+        // }
         // const resolved = ctx.resolveType(node.ref);
         return null;
     },

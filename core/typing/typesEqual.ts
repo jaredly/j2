@@ -4,6 +4,7 @@ import {
     Ref,
     refHash,
     RefKind,
+    TApply,
     TLambda,
     TOr,
     TRef,
@@ -171,14 +172,19 @@ export const typeMatches = (
                     return isBuiltinType(expected, 'string', ctx);
             }
         // Ooh if this is an alias, I need to resolve it?
+        case 'TApply':
+            return (
+                expected.type === 'TApply' &&
+                typeMatches(candidate.target, expected.target, ctx) &&
+                candidate.args.length === expected.args.length &&
+                candidate.args.every((arg, i) =>
+                    typeMatches(arg, (expected as TApply).args[i], ctx),
+                )
+            );
         case 'TRef':
             return (
                 expected.type === 'TRef' &&
-                trefsEqual(candidate.ref, expected.ref) &&
-                candidate.args.length === expected.args.length &&
-                candidate.args.every((arg, i) =>
-                    typeMatches(arg, expected.args[i], ctx),
-                )
+                trefsEqual(candidate.ref, expected.ref)
             );
         // case 'TApply':
         //     // So TApply should get "worked out" by this point, right?

@@ -9,7 +9,7 @@ import { Ctx as TACtx } from '../typing/to-ast';
 
 export const grammar = `
 Type = TDecorated / TRef / Number / String / TLambda / TVars
-TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)?
+TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)? args:(TApply)?
 TVars = "<" _ args:TBargs _ ">" inner:Type
 TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
 TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Type)?
@@ -31,7 +31,6 @@ export type TRef = {
     type: 'TRef';
     ref: t.RefKind | t.UnresolvedRef;
     loc: t.Loc;
-    args: Type[];
 };
 
 export type TDecorated = {
@@ -42,12 +41,12 @@ export type TDecorated = {
 };
 
 // Something<T>
-// export type TApply = {
-//     type: 'TApply';
-//     target: Type;
-//     args: Array<Type>;
-//     loc: t.Loc;
-// };
+export type TApply = {
+    type: 'TApply';
+    target: Type;
+    args: Array<Type>;
+    loc: t.Loc;
+};
 
 // OK also how do I do ... type bounds
 // yeah that would be here.
@@ -82,7 +81,14 @@ export type TLambda = {
 
 // Ok so also, you can just drop an inline record declaration, right?
 
-export type Type = TRef | TLambda | t.Number | t.String | TVars | TDecorated; // | TApply;
+export type Type =
+    | TRef
+    | TLambda
+    | t.Number
+    | t.String
+    | TVars
+    | TDecorated
+    | TApply; // | TApply;
 // | TDecorated | TApply | TVars
 
 // Should I only allow local refs?
@@ -125,10 +131,10 @@ export const ToTast = {
     },
     // Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
     // },
-    TRef(type: p.TRef, ctx: TCtx): t.TRef {
+    TRef(type: p.TRef, ctx: TCtx): TRef | TApply {
         const hash = filterUnresolved(type.hash?.slice(2, -1));
         const resolved = ctx.resolveType(type.text, hash);
-        return {
+        const res: TRef = {
             type: 'TRef',
             ref: resolved ?? {
                 type: 'Unresolved',
@@ -136,11 +142,19 @@ export const ToTast = {
                 hash,
             },
             loc: type.loc,
-            args:
-                type.args?.args.items.map((arg) =>
-                    ctx.ToTast[arg.type](arg as any, ctx),
-                ) ?? [],
         };
+        if (type.args) {
+            return {
+                type: 'TApply',
+                target: res,
+                loc: type.loc,
+                args:
+                    type.args?.args.items.map((arg) =>
+                        ctx.ToTast[arg.type](arg as any, ctx),
+                    ) ?? [],
+            };
+        }
+        return res;
     },
     String({ type, loc, text }: p.String, ctx: TCtx): t.String {
         return { type: 'String', loc, text };
@@ -204,6 +218,26 @@ export const ToAst = {
             })),
         };
     },
+    TApply({ target, args, loc }: TApply, ctx: TACtx): p.TRef {
+        if (target.type !== 'TRef') {
+            throw new Error('TApply target must be TRef');
+        }
+        const ref = ctx.ToAst.TRef(target, ctx);
+        return {
+            ...ref,
+            args: {
+                type: 'TApply',
+                args: {
+                    type: 'TComma',
+                    loc,
+                    items: args.map((arg) =>
+                        ctx.ToAst[arg.type](arg as any, ctx),
+                    ),
+                },
+                loc,
+            },
+        };
+    },
     TDecorated(
         { inner, decorators, loc }: TDecorated,
         ctx: TACtx,
@@ -242,7 +276,7 @@ export const ToAst = {
             loc: type.loc,
         };
     },
-    TRef({ ref, loc, args }: t.TRef, ctx: TACtx): p.TRef {
+    TRef({ ref, loc }: t.TRef, ctx: TACtx): p.TRef {
         const { text, hash } =
             ref.type === 'Unresolved'
                 ? { text: ref.text, hash: '#[:unresolved:]' }
@@ -252,17 +286,7 @@ export const ToAst = {
             text,
             hash,
             loc,
-            args: {
-                type: 'TApply',
-                loc,
-                args: {
-                    type: 'TComma',
-                    loc,
-                    items: args.map((arg) =>
-                        ctx.ToAst[arg.type](arg as any, ctx),
-                    ),
-                },
-            },
+            args: null,
         };
     },
     TLambda({ type, args, result, loc }: t.TLambda, ctx: TACtx): p.Type {
@@ -309,7 +333,7 @@ export const ToPP = {
             loc,
         );
     },
-    TDecorated({ inner, decorators, loc }: TDecorated, ctx: PCtx): pp.PP {
+    TDecorated({ inner, decorators, loc }: p.TDecorated, ctx: PCtx): pp.PP {
         return pp.items(
             [
                 ...decorators.map((x) => ctx.ToPP[x.type](x as any, ctx)),
