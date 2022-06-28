@@ -6,8 +6,9 @@ Ok what Im doing now:
 - [x] check bounds! awesome
 - [x] tapply at the tast level
 - [x] tapply at the ast level?
-- [ ] typeMatch for ... tvars?
-- [ ] defaults
+- [x] typeMatch for ... tvars?
+- [x] defaults
+- [ ] TYPE ARITHMATIC
 - [ ] then enums? Could be fun. At that point recursive types make sense.
 - [ ] records! and tuples.
 

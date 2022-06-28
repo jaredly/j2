@@ -70,7 +70,7 @@ alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:extraArg=haae12b26
 (@error:notATypeVars() takesInt<int>)(10)
 // int
 
-==[arg defulat]==
+==[arg default]==
 --[input:shouldFail]--
 @test:type(:Array<int, string, int>) 10
 

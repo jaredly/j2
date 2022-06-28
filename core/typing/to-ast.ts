@@ -36,7 +36,7 @@ export type Ctx = {
     backAliases: { [key: string]: string };
 };
 
-export const printCtx = (ctx: FullContext): Ctx => {
+export const printCtx = (ctx: FullContext, showIds: boolean = false): Ctx => {
     const backAliases: { [key: string]: string } = {};
     const aliases: { [key: string]: string } = {};
 
@@ -83,11 +83,14 @@ export const printCtx = (ctx: FullContext): Ctx => {
             }
         },
         printSym(sym) {
+            if (showIds) {
+                return { label: sym.name, hash: `#[${sym.id}]` };
+            }
             const hash = '' + sym.id;
-            if (!aliases[hash]) {
+            if (!this.aliases[hash]) {
                 add(sym.name, { type: 'Local', sym: sym.id });
             }
-            return { label: aliases[hash], hash: '' };
+            return { label: this.aliases[hash], hash: '' };
         },
         printRef(ref, loc, kind) {
             const hash = t.refHash(ref);
@@ -97,13 +100,13 @@ export const printCtx = (ctx: FullContext): Ctx => {
                     : kind === 'decorator'
                     ? reverseDecorator[hash]
                     : reverseType[hash];
-            if (name) {
-                if (!aliases[hash]) {
+            if (name && !showIds) {
+                if (!this.aliases[hash]) {
                     add(name, ref);
                 }
                 return {
                     type: 'Identifier',
-                    text: aliases[hash],
+                    text: this.aliases[hash],
                     hash: null,
                     loc,
                 };

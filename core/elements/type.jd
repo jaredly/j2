@@ -37,7 +37,7 @@ alias float=h1c9cc9450fe2e869a48abaa5e4a85271e1625474 int=h942cd67cf31d350ec1f39
 @test:type(: <T>(v: T) => T) 10
 
 --[output:expected]--
-alias T=2 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 @test:type(:<T>(v: T) => T) 10
 // 10
 
@@ -118,10 +118,13 @@ ten(@error:argWrongType(expected: :10) 5)
 wantsId(id)
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f id=hf5df74f88f6398e9901d80dd2392d8fffa98142d int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f T=1 wantsId=h3b8037c287f715e3d39f600ea453673b4ab5768c
-wantsId(@error:argWrongType(expected: :<T>(x: T) => T) id)
+alias id=hf5df74f88f6398e9901d80dd2392d8fffa98142d int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f wantsId=h3b8037c287f715e3d39f600ea453673b4ab5768c
+wantsId(id)
 // int
 
 ==[New fixture]==
+--[input]--
+// hello
+
 --[output:expected]--
 // hello

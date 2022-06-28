@@ -1,5 +1,6 @@
-import { FullContext } from '../ctx';
+import { FullContext, noloc } from '../ctx';
 import { idsEqual } from '../ids';
+import { transformType, Visitor } from '../transform-tast';
 import {
     Ref,
     refHash,
@@ -8,9 +9,11 @@ import {
     TLambda,
     TOr,
     TRef,
+    TVar,
     TVars,
     Type,
 } from '../typed-ast';
+import { applyType } from './getType';
 
 export const refsEqual = (a: RefKind, b: RefKind): boolean => {
     if (a.type !== b.type) {
@@ -88,6 +91,15 @@ export const isBuiltinType = (t: Type, name: string, ctx: FullContext) =>
 //     return t
 // }
 
+// hmm
+// adding:
+/*
+
+hello(x: <T: int>{contents: (v: T) => int})
+yeah ok so same deal as fn args. they go backwards
+
+*/
+
 export const typeMatches = (
     candidate: Type,
     expected: Type,
@@ -138,6 +150,7 @@ export const typeMatches = (
                             return true; // bounded is a subset of unbounded
                         }
 
+                        // REVERSED! For Variance
                         return typeMatches(
                             arg.bound,
                             candidate.args[i].bound!,
@@ -148,7 +161,29 @@ export const typeMatches = (
             ) {
                 return false;
             }
-            return false;
+            let maxSym = 0;
+            const visit: Visitor<null> = {
+                TRef(node) {
+                    if (node.ref.type === 'Local') {
+                        maxSym = Math.max(maxSym, node.ref.sym);
+                    }
+                    return null;
+                },
+                TVar(node, ctx) {
+                    maxSym = Math.max(maxSym, node.sym.id);
+                    return null;
+                },
+            };
+            transformType(expected, visit, null);
+            transformType(candidate, visit, null);
+            let newTypes: TRef[] = expected.args.map((_, i) => ({
+                type: 'TRef',
+                loc: noloc,
+                ref: { type: 'Local', sym: maxSym + i + 1 },
+            }));
+            const capp = applyType(newTypes, candidate, ctx);
+            const eapp = applyType(newTypes, expected, ctx);
+            return capp != null && eapp != null && typeMatches(capp, eapp, ctx);
         }
         case 'TLambda':
             return (
