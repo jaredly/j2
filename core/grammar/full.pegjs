@@ -101,15 +101,17 @@ TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
 
 // type.ts
 
-Type = TDecorated / TRef / Number / String / TLambda / TVars
+Type = TDecorated / TApply
+TDecorated = decorators:(Decorator _)+ inner:TApply
+TApply = inner:TAtom args_drop:(_ "<" _ TComma _ ">")*
+TAtom = TRef / Number / String / TLambda / TVars / TParens
 TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)? args:(TApply)?
 TVars = "<" _ args:TBargs _ ">" inner:Type
 TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
 TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Type)?
-TDecorated = decorators:(Decorator _)+ inner:Type
 
-TApply = "<" _ args:TComma _ ">"
 TComma = first:Type rest:(_ "," _ Type)* _ ","?
+TParens = "(" _ inner:Type _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _

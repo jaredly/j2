@@ -27,6 +27,7 @@ export type {
     TOr,
     TRef,
     TSub,
+    TVar,
     TVars,
     Type,
 } from './elements/type';

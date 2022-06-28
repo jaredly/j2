@@ -90,7 +90,7 @@ takesArray(10)
 takesArray(anArray)
 
 --[output:expected]--
-alias anArray=h49faa5e0018fdec9ea2144a07d99f31fe524a254 Array=hec476a05f5b96e6cde2e810873da9ea402334adc error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesArray=hf0931e5412c22ece7b21a7d092c724fec69848ad
+alias anArray=h6190b2c5c57f746c61bbf06a1b0a9dcedd9ccbcd Array=hec476a05f5b96e6cde2e810873da9ea402334adc error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesArray=hb8c390c12bc700fe47a8200e3a22c5d9773c3458
 takesArray(@error:argWrongType(expected: :Array<string, 10>) 10)
 // int
 takesArray(anArray)
@@ -98,12 +98,12 @@ takesArray(anArray)
 
 ==[chained]==
 --[input]--
-type x=<A><B>int
-type y=x<int>
+type x=<A: int><B: int>int
+type y=x<int><10>
 
 --[output:expected]--
-alias A=6 B=7 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f x=hc9d2c2e0e9d2e5266c563a6c2dbf69be02edcd32
-type x = <A><B>int
-// hc9d2c2e0e9d2e5266c563a6c2dbf69be02edcd32
-type y = x<int>
-// hbc25affa3ecc8dc156970fa3179d64eeae44ea6d
+alias A=6 B=7 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f x=he6250023a3239a39e160d8aa2d9e96e24c8c32aa
+type x = <A: int><B: int>int
+// he6250023a3239a39e160d8aa2d9e96e24c8c32aa
+type y = x<int><10>
+// hdc637068f6b00fc76871d86b2444c106c098e97b

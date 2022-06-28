@@ -213,7 +213,25 @@ export type TypeVbl = {
   bound: Type | null;
 };
 
-export type Type = TDecorated | TRef | Number | String | TLambda | TVars;
+export type Type = TDecorated | TApply;
+
+export type TDecorated = {
+  type: "TDecorated";
+  loc: Loc;
+  decorators: Decorator[];
+  inner: TApply;
+};
+
+export type TApply_inner = {
+  type: "TApply";
+  loc: Loc;
+  inner: TAtom;
+  args: TComma[];
+};
+
+export type TApply = TApply_inner | TAtom;
+
+export type TAtom = TRef | Number | String | TLambda | TVars | TParens;
 
 export type TRef = {
   type: "TRef";
@@ -245,23 +263,16 @@ export type TBArg = {
   default_: Type | null;
 };
 
-export type TDecorated = {
-  type: "TDecorated";
-  loc: Loc;
-  decorators: Decorator[];
-  inner: Type;
-};
-
-export type TApply = {
-  type: "TApply";
-  loc: Loc;
-  args: TComma;
-};
-
 export type TComma = {
   type: "TComma";
   loc: Loc;
   items: Type[];
+};
+
+export type TParens = {
+  type: "TParens";
+  loc: Loc;
+  inner: Type;
 };
 
 export type TArg = {
@@ -297,9 +308,9 @@ export type TypePair = {
   typ: Type;
 };
 
-export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | CallSuffix | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TRef | TVars | TBargs | TBArg | TDecorated | TApply | TComma | TArg | TArgs | TLambda | TypeAlias | TypePair;
+export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | CallSuffix | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TDecorated | TApply_inner | TRef | TVars | TBargs | TBArg | TComma | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
 
-export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Identifier", "Apply", "CallSuffix", "CommaExpr", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TRef", "TVars", "TBargs", "TBArg", "TDecorated", "TApply", "TComma", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Identifier", "Apply", "CallSuffix", "CommaExpr", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TDecorated", "TApply", "TRef", "TVars", "TBargs", "TBArg", "TComma", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
 
 // @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});

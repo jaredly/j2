@@ -8,15 +8,17 @@ import { Ctx as TCtx, filterUnresolved } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 
 export const grammar = `
-Type = TDecorated / TRef / Number / String / TLambda / TVars
+Type = TDecorated / TApply
+TDecorated = decorators:(Decorator _)+ inner:TApply
+TApply = inner:TAtom args_drop:(_ "<" _ TComma _ ">")*
+TAtom = TRef / Number / String / TLambda / TVars / TParens
 TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)? args:(TApply)?
 TVars = "<" _ args:TBargs _ ">" inner:Type
 TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
 TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Type)?
-TDecorated = decorators:(Decorator _)+ inner:Type
 
-TApply = "<" _ args:TComma _ ">"
 TComma = first:Type rest:(_ "," _ Type)* _ ","?
+TParens = "(" _ inner:Type _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
@@ -118,6 +120,9 @@ export const ToTast = {
             })),
         };
     },
+    TParens({ loc, inner }: p.TParens, ctx: TCtx): t.Type {
+        return ctx.ToTast[inner.type](inner as any, ctx);
+    },
     TDecorated(
         { loc, inner, decorators }: p.TDecorated,
         ctx: TCtx,
@@ -133,6 +138,26 @@ export const ToTast = {
     },
     // Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
     // },
+    TApply(type: p.TApply_inner, ctx: TCtx): Type {
+        let inner = ctx.ToTast[type.inner.type](type.inner as any, ctx);
+        if (!type.args.length) {
+            return inner;
+        }
+        const args = type.args.slice();
+        while (args.length) {
+            const next = args.shift()!;
+            inner = {
+                type: 'TApply',
+                target: inner,
+                loc: type.loc,
+                args:
+                    next.items.map((arg) =>
+                        ctx.ToTast[arg.type](arg as any, ctx),
+                    ) ?? [],
+            };
+        }
+        return inner;
+    },
     TRef(type: p.TRef, ctx: TCtx): TRef | TApply {
         const hash = filterUnresolved(type.hash?.slice(2, -1));
         const resolved = ctx.resolveType(type.text, hash);
@@ -146,15 +171,6 @@ export const ToTast = {
             loc: type.loc,
         };
         if (type.args) {
-            return {
-                type: 'TApply',
-                target: res,
-                loc: type.loc,
-                args:
-                    type.args?.args.items.map((arg) =>
-                        ctx.ToTast[arg.type](arg as any, ctx),
-                    ) ?? [],
-            };
         }
         return res;
     },
@@ -220,35 +236,43 @@ export const ToAst = {
             })),
         };
     },
-    TApply({ target, args, loc }: TApply, ctx: TACtx): p.TRef {
-        if (target.type !== 'TRef') {
-            throw new Error('TApply target must be TRef');
+    TApply({ target, args, loc }: TApply, ctx: TACtx): p.TApply_inner {
+        const inner: p.Type = ctx.ToAst[target.type](target as any, ctx);
+        const targs: p.TComma = {
+            type: 'TComma',
+            loc,
+            items: args.map((arg) => ctx.ToAst[arg.type](arg as any, ctx)),
+        };
+        if (inner.type === 'TApply') {
+            return { ...inner, args: inner.args.concat([targs]) };
         }
-        const ref = ctx.ToAst.TRef(target, ctx);
+        const in2: p.TAtom =
+            inner.type === 'TDecorated'
+                ? { type: 'TParens', inner: inner, loc }
+                : inner;
         return {
-            ...ref,
-            args: {
-                type: 'TApply',
-                args: {
-                    type: 'TComma',
-                    loc,
-                    items: args.map((arg) =>
-                        ctx.ToAst[arg.type](arg as any, ctx),
-                    ),
-                },
-                loc,
-            },
+            type: 'TApply',
+            inner: in2,
+            args: [targs],
+            loc,
         };
     },
-    TDecorated(
-        { inner, decorators, loc }: TDecorated,
-        ctx: TACtx,
-    ): p.TDecorated {
+    TDecorated(type: TDecorated, ctx: TACtx): p.TDecorated {
+        const inner = ctx.ToAst[type.inner.type](type.inner as any, ctx);
+        const decorators = type.decorators.map((x) =>
+            ctx.ToAst[x.type](x as any, ctx),
+        );
+        if (inner.type === 'TDecorated') {
+            return {
+                ...inner,
+                decorators: decorators.concat(inner.decorators),
+            };
+        }
         return {
             type: 'TDecorated',
-            loc,
-            inner: ctx.ToAst[inner.type](inner as any, ctx),
-            decorators: decorators.map((x) => ctx.ToAst[x.type](x as any, ctx)),
+            loc: type.loc,
+            inner,
+            decorators,
         };
     },
     TVars(type: t.TVars, ctx: TACtx): p.TVars {
@@ -419,23 +443,34 @@ export const ToPP = {
             loc,
         );
     },
-    TRef(type: p.TRef, ctx: PCtx): pp.PP {
+    TParens({ inner, loc }: p.TParens, ctx: PCtx): pp.PP {
         return pp.items(
             [
-                pp.atom(type.text + (type.hash ?? ''), type.loc),
-                type.args && type.args.args.items.length
-                    ? pp.args(
-                          type.args.args.items.map((arg) =>
-                              ctx.ToPP[arg.type](arg as any, ctx),
-                          ),
-                          type.args.loc,
-                          '<',
-                          '>',
-                      )
-                    : null,
+                pp.atom('(', loc),
+                ctx.ToPP[inner.type](inner as any, ctx),
+                pp.atom(')', loc),
             ],
-            type.loc,
+            loc,
         );
+    },
+    TApply({ args, inner, loc }: p.TApply_inner, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                ctx.ToPP[inner.type](inner as any, ctx),
+                ...args.map(({ items, loc }) =>
+                    pp.args(
+                        items.map((arg) => ctx.ToPP[arg.type](arg as any, ctx)),
+                        loc,
+                        '<',
+                        '>',
+                    ),
+                ),
+            ],
+            loc,
+        );
+    },
+    TRef(type: p.TRef, ctx: PCtx): pp.PP {
+        return pp.atom(type.text + (type.hash ?? ''), type.loc);
     },
     String(type: p.String, ctx: PCtx): pp.PP {
         return pp.atom(`"${type.text}"`, type.loc);

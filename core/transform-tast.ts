@@ -19,6 +19,7 @@ import {
   TLambda,
   String,
   TVars,
+  TVar,
   Sym,
   TDecorated,
   Decorator,
@@ -159,6 +160,8 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TApply | [TApply | null, Ctx];
   TApplyPost?: (node: TApply, ctx: Ctx) => null | TApply;
+  TVar?: (node: TVar, ctx: Ctx) => null | false | TVar | [TVar | null, Ctx];
+  TVarPost?: (node: TVar, ctx: Ctx) => null | TVar;
   TVars?: (node: TVars, ctx: Ctx) => null | false | TVars | [TVars | null, Ctx];
   TVarsPost?: (node: TVars, ctx: Ctx) => null | TVars;
   TLambda?: (
@@ -1045,6 +1048,89 @@ export const transformSym = <Ctx>(
   return node;
 };
 
+export const transformTVar = <Ctx>(
+  node: TVar,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TVar => {
+  if (!node) {
+    throw new Error("No TVar provided");
+  }
+
+  const transformed = visitor.TVar ? visitor.TVar(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$sym = transformSym(node.sym, visitor, ctx);
+    changed1 = changed1 || updatedNode$sym !== node.sym;
+
+    let updatedNode$bound = null;
+    const updatedNode$bound$current = node.bound;
+    if (updatedNode$bound$current != null) {
+      const updatedNode$bound$1$ = transformType(
+        updatedNode$bound$current,
+        visitor,
+        ctx
+      );
+      changed1 = changed1 || updatedNode$bound$1$ !== updatedNode$bound$current;
+      updatedNode$bound = updatedNode$bound$1$;
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$default_ = null;
+    const updatedNode$default_$current = node.default_;
+    if (updatedNode$default_$current != null) {
+      const updatedNode$default_$1$ = transformType(
+        updatedNode$default_$current,
+        visitor,
+        ctx
+      );
+      changed1 =
+        changed1 || updatedNode$default_$1$ !== updatedNode$default_$current;
+      updatedNode$default_ = updatedNode$default_$1$;
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        sym: updatedNode$sym,
+        bound: updatedNode$bound,
+        loc: updatedNode$loc,
+        default_: updatedNode$default_,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TVarPost) {
+    const transformed = visitor.TVarPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformTVars = <Ctx>(
   node: TVars,
   visitor: Visitor<Ctx>,
@@ -1079,61 +1165,8 @@ export const transformTVars = <Ctx>(
     {
       let changed2 = false;
       const arr1 = node.args.map((updatedNode$args$item1) => {
-        let result = updatedNode$args$item1;
-        {
-          let changed3 = false;
-
-          const result$sym = transformSym(
-            updatedNode$args$item1.sym,
-            visitor,
-            ctx
-          );
-          changed3 = changed3 || result$sym !== updatedNode$args$item1.sym;
-
-          let result$bound = null;
-          const result$bound$current = updatedNode$args$item1.bound;
-          if (result$bound$current != null) {
-            const result$bound$3$ = transformType(
-              result$bound$current,
-              visitor,
-              ctx
-            );
-            changed3 = changed3 || result$bound$3$ !== result$bound$current;
-            result$bound = result$bound$3$;
-          }
-
-          const result$loc = transformLoc(
-            updatedNode$args$item1.loc,
-            visitor,
-            ctx
-          );
-          changed3 = changed3 || result$loc !== updatedNode$args$item1.loc;
-
-          let result$default_ = null;
-          const result$default_$current = updatedNode$args$item1.default_;
-          if (result$default_$current != null) {
-            const result$default_$3$ = transformType(
-              result$default_$current,
-              visitor,
-              ctx
-            );
-            changed3 =
-              changed3 || result$default_$3$ !== result$default_$current;
-            result$default_ = result$default_$3$;
-          }
-
-          if (changed3) {
-            result = {
-              ...result,
-              sym: result$sym,
-              bound: result$bound,
-              loc: result$loc,
-              default_: result$default_,
-            };
-            changed2 = true;
-          }
-        }
-
+        const result = transformTVar(updatedNode$args$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$args$item1;
         return result;
       });
       if (changed2) {

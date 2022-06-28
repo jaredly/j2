@@ -210,6 +210,7 @@ export function runFixture(
         [tast, ctx] = parseRaw(input, ctx);
     } catch (err) {
         console.log('Failed to parse input:', input);
+        console.log(err);
         throw err;
     }
 
@@ -264,6 +265,7 @@ export function runFixture(
         [outputTast, ctx2] = parseRaw(output_expected, ctx2);
     } catch (err) {
         console.log(output_expected);
+        console.log(err);
         throw err;
     }
 
