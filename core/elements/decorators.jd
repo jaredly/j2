@@ -33,5 +33,5 @@ alias decorated=h216be29e211ffb2bbb1ff40ab9718fad53bb9687 oneArg=h6c7b76e2a1fd1d
 
 --[output:expected]--
 alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
-@decodeURI#[:unresolved:](: string) "http://example.com"
+@decodeURI#[:unresolved:](:string) "http://example.com"
 // "http://example.com"
