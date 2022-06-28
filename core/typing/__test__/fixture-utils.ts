@@ -348,6 +348,13 @@ export function runFixture(
         if (top.type === 'ToplevelExpression') {
             const t = getType(top.expr, ctx);
             if (!t) {
+                checked.comments.push([
+                    {
+                        ...top.loc,
+                        start: top.loc.end,
+                    },
+                    '// Error, no type!',
+                ]);
                 return;
             }
             const pp = newPPCtx(false);

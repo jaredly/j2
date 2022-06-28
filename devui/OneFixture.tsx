@@ -168,7 +168,7 @@ export function OneFixture({
                             <Button
                                 size="xs"
                                 color="secondary"
-                                onClick={() => {
+                                onPress={() => {
                                     // So if the old one is rejected, we overwrite
                                     // but if the old one is accepted, then we keep it around as "the right one"
                                     onChange({

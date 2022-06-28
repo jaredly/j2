@@ -53,6 +53,7 @@ bounded<string>("wat")
 --[output:expected]--
 alias bounded=h82ba945bb3e182acfcc0fd217a21a9336d99498a string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 bounded<string>("wat")
+// Error, no type!
 
 ==[wrong args]==
 --[input:shouldFail]--

@@ -1,7 +1,8 @@
 
 Ok what Im doing now:
 
-- [ ] type aliases
+- [x] type aliases
+- [ ] TDecorated, so we can make bound errors more visible
 - [ ] generics, defaults, bounds
 	- all the validation for that
 - [ ] then enums? Could be fun. At that point recursive types make sense.

@@ -53,7 +53,7 @@ alias A=1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1
 @test:type(:<T: string, A: int = 10>(a: T, b: A) => A) 100
 // 100
 
-==[New fixture]==
+==[basic type alias]==
 --[input]--
 type hello = int
 @test:type(: hello) 10
@@ -63,4 +63,19 @@ alias hello=hd75cac4b203a7a6374a1698e5b1b62b700f00870 int=h942cd67cf31d350ec1f39
 type hello = int
 // hd75cac4b203a7a6374a1698e5b1b62b700f00870
 @test:type(:hello) 10
+// 10
+
+==[New fixture]==
+--[input:shouldFail]--
+type whatsit = <T: string>(m: T) => int
+@test:type(:whatsit<"hello">) 10
+@test:type(:whatsit<10>) 10
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513 whatsit=hfa0e433b754ee8ea16339cffb72f49222485b65f
+type whatsit = <T: string>(m: T) => int
+// hfa0e433b754ee8ea16339cffb72f49222485b65f
+@test:type(:whatsit<"hello">) 10
+// 10
+@test:type(:whatsit<10>) 10
 // 10

@@ -119,6 +119,13 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         // });
         return null;
     },
+    Type_TRef(node, ctx) {
+        // Do validation here, and TDecorate
+        if (node.args.length) {
+            // node.ref
+        }
+        return null;
+    },
     // Expression_TypeApplication(node, ctx) {
     // 	// node.args.forEach(arg => { })
     // },
