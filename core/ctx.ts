@@ -254,7 +254,7 @@ export const newContext = (aliases: FullContext['aliases']): FullContext => {
             const defns = types.map((m) =>
                 transformType(m.type, locClearVisitor, null),
             );
-            const hash = hashObject(defns);
+            const hash = hashTypes(defns);
             const ctx = { ...this };
             ctx.types = {
                 ...ctx.types,
@@ -265,9 +265,7 @@ export const newContext = (aliases: FullContext['aliases']): FullContext => {
                         typ: type,
                     })),
                 },
-                names: {
-                    ...ctx.types.names,
-                },
+                names: { ...ctx.types.names },
             };
             types.forEach(({ name }, i) => {
                 ctx.types.names[name] = {
@@ -280,6 +278,11 @@ export const newContext = (aliases: FullContext['aliases']): FullContext => {
     };
     return ctx;
 };
+
+export const hashType = (type: Type): string => {
+    return hashObject(serial(type));
+};
+export const hashTypes = (t: Type[]): string => hashObject(t.map(hashType));
 
 export const noloc: Loc = {
     start: { line: 0, column: 0, offset: -1 },
@@ -466,4 +469,26 @@ export const fullContext = (aliases: FullContext['aliases'] = {}) => {
     const ctx = newContext(aliases);
     setupDefaults(ctx);
     return ctx;
+};
+
+export const serial = (x: any): any => {
+    if (Array.isArray(x)) {
+        return '[' + x.map(serial).join(', ') + ']';
+    }
+    if (!x) {
+        return '' + x;
+    }
+    if (typeof x === 'object') {
+        return (
+            '{' +
+            Object.keys(x)
+                .map((k) => k + ': ' + serial(x[k]))
+                .join(', ') +
+            '}'
+        );
+    }
+    if (typeof x === 'function') {
+        return 'function ' + x;
+    }
+    return '' + x;
 };

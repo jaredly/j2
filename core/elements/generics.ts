@@ -103,13 +103,25 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         if (!target) {
             return null;
         }
+        let targs: t.TVar[];
         if (target.type !== 'TVars') {
-            return decorate(node, 'notATypeVars', hit, ctx._full);
+            if (target.type === 'TRef' && target.ref.type === 'Global') {
+                let got = ctx.getTypeArgs(target.ref);
+                if (got != null) {
+                    targs = got;
+                } else {
+                    return decorate(node, 'notATypeVars', hit, ctx._full);
+                }
+            } else {
+                return decorate(node, 'notATypeVars', hit, ctx._full);
+            }
+        } else {
+            targs = target.args;
         }
         // Hmm ok what about,
         let changed = false;
         const args = node.args.map((arg, i) => {
-            const targ = target.args[i];
+            const targ = targs[i];
             if (!targ) {
                 changed = true;
                 return tdecorate(arg, 'extraArg', hit, ctx._full);
@@ -128,15 +140,12 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         });
         node = changed ? { ...node, args } : node;
 
-        let minArgs = target.args.findIndex((arg) => arg.default_);
+        let minArgs = targs.findIndex((arg) => arg.default_);
         if (minArgs === -1) {
-            minArgs = target.args.length;
+            minArgs = targs.length;
         }
 
-        if (
-            node.args.length < minArgs ||
-            node.args.length > target.args.length
-        ) {
+        if (node.args.length < minArgs || node.args.length > targs.length) {
             return decorate(node, 'wrongNumberOfTypeArgs', hit, ctx._full);
         }
 
@@ -148,15 +157,32 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             console.log('not resolved', node, ctx);
             return null;
         }
+        // if (inner.type !== 'TVars') {
+        //     return tdecorate(node, 'notATypeVars', hit, ctx._full);
+        // }
+
+        let targs: t.TVar[];
         if (inner.type !== 'TVars') {
-            return tdecorate(node, 'notATypeVars', hit, ctx._full);
+            if (inner.type === 'TRef' && inner.ref.type === 'Global') {
+                let got = ctx.getTypeArgs(inner.ref);
+                if (got != null) {
+                    targs = got;
+                } else {
+                    return tdecorate(node, 'notATypeVars', hit, ctx._full);
+                }
+            } else {
+                return tdecorate(node, 'notATypeVars', hit, ctx._full);
+            }
+        } else {
+            targs = inner.args;
         }
+
         let changed = false;
         const args = node.args.map((arg, i) => {
-            if (i >= inner.args.length) {
+            if (i >= targs.length) {
                 return tdecorate(arg, 'extraArg', hit, ctx._full);
             }
-            const { bound } = inner.args[i];
+            const { bound } = targs[i];
             if (bound && !typeMatches(arg, bound, ctx._full)) {
                 changed = true;
                 return tdecorate(arg, 'argWrongType', hit, ctx._full, [
@@ -173,15 +199,12 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             node = { ...node, args };
         }
 
-        let minArgs = inner.args.findIndex((arg) => arg.default_);
+        let minArgs = targs.findIndex((arg) => arg.default_);
         if (minArgs === -1) {
-            minArgs = inner.args.length;
+            minArgs = targs.length;
         }
 
-        if (
-            node.args.length < minArgs ||
-            node.args.length > inner.args.length
-        ) {
+        if (node.args.length < minArgs || node.args.length > targs.length) {
             return tdecorate(node, 'wrongNumberOfTypeArgs', hit, ctx._full);
         }
         return changed ? node : null;

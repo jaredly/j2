@@ -66,9 +66,9 @@ type hello = int
 @test:type(: hello) 10
 
 --[output:expected]--
-alias hello=h8bb3f2bbb72e129406007760fde8c48eb0e9cf5b int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias hello=h71dff831aa3829237024227a2b3a323aedaf48fa int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type hello = int
-// h8bb3f2bbb72e129406007760fde8c48eb0e9cf5b
+// h71dff831aa3829237024227a2b3a323aedaf48fa
 @test:type(:hello) 10
 // 10
 
@@ -79,9 +79,9 @@ type StringMe = <T: string>int;
 @test:type(:StringMe<"hello">) 10
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=h157cdf49f9ebaa5a0c5f37d1d6f289d8b0eff09a T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=hb7aaee3dd04f1e3813a33985eef551130d2c059d T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type StringMe = <T: string>int
-// h157cdf49f9ebaa5a0c5f37d1d6f289d8b0eff09a
+// hb7aaee3dd04f1e3813a33985eef551130d2c059d
 @test:type(:StringMe<@error:argWrongType(expected: :string) 20>) 10
 // 10
 @test:type(:StringMe<"hello">) 10
@@ -129,11 +129,11 @@ type x = "one" + string
 type Z = (<S: string>int)<x>
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f S=0 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 x=h7fc97c182cf17564c6c2cb6e862ca356e8f81abe
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f S=0 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 x=hb69f0f40f2b530ad4b31a4a73c176bed352120aa
 type x = "one" + string
-// h7fc97c182cf17564c6c2cb6e862ca356e8f81abe
+// hb69f0f40f2b530ad4b31a4a73c176bed352120aa
 type Z = (<S: string>int)<x>
-// h314d8f03199abc096f04758985366115ff81f828
+// h7cefd7d359358c7c7dab9a27db4e4321cb1e533c
 
 ==[string ops]==
 --[input:shouldFail]--
@@ -142,13 +142,13 @@ type Good = FancyArray<"ones and a suffix">
 type Bad = FancyArray<"something else">
 
 --[output:expected]--
-alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=0 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f FancyArray=h9f3eb62a0d900a19254f37185f895041cbb090c7 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=0 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f FancyArray=h6d6365331df1a0160982043b31ae92b9c4e06095 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 type FancyArray = <Element: "one" + string + "suffix">Array<Element>
-// h9f3eb62a0d900a19254f37185f895041cbb090c7
+// h6d6365331df1a0160982043b31ae92b9c4e06095
 type Good = FancyArray<"ones and a suffix">
-// hd1a7ad990b10198ebb1815e14c5a2b183a3db4c1
+// hea8103e5d3ab7971316c9ce8b44b168b3216ec01
 type Bad = FancyArray<@error:argWrongType(expected: :"one" + string + "suffix") "something else">
-// ha2e8d46ce22bcf801796edf386cab8249c139a79
+// h848399edc53542d0c3a1789ea5d3b248bc31ea6a
 
 ==[string ops_]==
 --[input:shouldFail]--
@@ -157,13 +157,13 @@ type Good = NumArray<20>
 type Bad = NumArray<5>
 
 --[output:expected]--
-alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=0 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f NumArray=h3e57f3be09a87a2da284db94a4e05fc719b28414 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=0 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f NumArray=h8d08c0a1c89df7f5368941f19c4d450c971f18fa uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
 type NumArray = <Element: 10 + uint>Array<Element>
-// h3e57f3be09a87a2da284db94a4e05fc719b28414
+// h8d08c0a1c89df7f5368941f19c4d450c971f18fa
 type Good = NumArray<@error:argWrongType(expected: :10 + uint) 20>
-// hbb67e60c6e5e3eb87d55633cbfac48ec433d7be6
+// hddaa4529177b2df433186e20be0801674d287d95
 type Bad = NumArray<@error:argWrongType(expected: :10 + uint) 5>
-// h2fccdfb50b3244d6e8da3670847bb82cc9db0dac
+// h276d55f69ec8f1ea2d3f53e06f6de590e4946ee4
 
 ==[New fixture]==
 --[input]--
@@ -172,4 +172,4 @@ type X = (<X: 10u>int)<5u + 5>
 --[output:expected]--
 alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f X=0
 type X = (<X: 10>int)<@error:argWrongType(expected: :10) (5 + 5)>
-// hd21223888b6b23b3af4fd87ee7e6ced829bef13c
+// hc8014298959950d07c05734578b16d23911a1ef3

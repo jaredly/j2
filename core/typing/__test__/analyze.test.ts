@@ -29,6 +29,9 @@ readdirSync(base)
                     if (!outputTast) {
                         throw new Error(`Unable to process the output??`);
                     }
+                    expect(fullOutput.trim()).toEqual(
+                        fullExpectedOutput.trim(),
+                    );
                     try {
                         expect({
                             ...clearLocs(checked),
@@ -37,22 +40,36 @@ readdirSync(base)
                             ...clearLocs(outputTast),
                             comments: [],
                         });
-                        expect(fullOutput.trim()).toEqual(
-                            fullExpectedOutput.trim(),
-                        );
                     } catch (err) {
-                        console.error(
-                            title +
-                                '\n' +
-                                builtins.join('\n') +
-                                '\n\n' +
-                                input +
-                                '\n\n-->\n\n' +
-                                newOutput,
-                        );
-                        console.error(JSON.stringify(clearLocs(checked)));
+                        console.error(fullOutput);
+                        console.error(fullExpectedOutput);
+                        // console.log(
+                        //     JSON.stringify({
+                        //         ...clearLocs(checked),
+                        //         comments: [],
+                        //     }),
+                        // );
+                        // console.log(
+                        //     JSON.stringify({
+                        //         ...clearLocs(outputTast),
+                        //         comments: [],
+                        //     }),
+                        // );
                         throw err;
                     }
+                    // } catch (err) {
+                    //     // console.error(
+                    //     //     title +
+                    //     //         '\n' +
+                    //     //         builtins.join('\n') +
+                    //     //         '\n\n' +
+                    //     //         input +
+                    //     //         '\n\n-->\n\n' +
+                    //     //         newOutput,
+                    //     // );
+                    //     // console.error(JSON.stringify(clearLocs(checked)));
+                    //     throw err;
+                    // }
                 }
             });
         });

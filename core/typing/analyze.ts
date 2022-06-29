@@ -11,6 +11,7 @@ import {
     File,
     Loc,
     RefKind,
+    TVar,
     Type,
 } from '../typed-ast';
 import { applyType, getType } from './getType';
@@ -18,9 +19,11 @@ import { analyze as analyzeApply } from '../elements/apply';
 import { analyze as analyzeConstants } from '../elements/constants';
 import { analyze as analyzeGenerics } from '../elements/generics';
 import { extract, idToString } from '../ids';
+import { typeToString } from '../../devui/Highlight';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
+    getTypeArgs(ref: RefKind): TVar[] | null;
     resolveType(type: Type): Type | null;
     typeByName(name: string): Type | null;
     _full: FullContext;
@@ -44,26 +47,14 @@ export const resolveType = (type: Type, ctx: FullContext): Type | null => {
         if (type.ref.type === 'Global') {
             const { idx, hash } = extract(type.ref.id);
             if (!ctx.types.hashed[hash]) {
-                // console.log('bad hash');
                 return null;
             }
             const t = ctx.types.hashed[hash][idx];
             if (!t) {
-                // console.log('bad idx');
                 return null;
             }
             if (t.type === 'user') {
-                // console.log('user ref, go deeper');
                 return resolveType(t.typ, ctx);
-            } else {
-                if (t.args.length) {
-                    return {
-                        type: 'TVars',
-                        args: t.args,
-                        inner: type,
-                        loc: noloc,
-                    };
-                }
             }
         }
     }
@@ -92,6 +83,19 @@ export const analyzeContext = (ctx: FullContext): Ctx => {
             return ref
                 ? { type: 'TRef', ref: ref, loc: noloc, args: [] }
                 : null;
+        },
+        getTypeArgs(ref) {
+            if (ref.type === 'Global') {
+                const { idx, hash } = extract(ref.id);
+                const t = ctx.types.hashed[hash][idx];
+                if (t.type === 'builtin') {
+                    return t.args;
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
         },
         _full: ctx,
     };

@@ -1,3 +1,4 @@
+import { typeToString } from '../../devui/Highlight';
 import { FullContext, noloc } from '../ctx';
 import { idsEqual } from '../ids';
 import { transformType, Visitor } from '../transform-tast';

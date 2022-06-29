@@ -6,15 +6,17 @@ import {
     addBuiltinType,
     FullContext,
     fullContext,
+    hashTypes,
     noloc,
 } from '../../ctx';
 import { TVar } from '../../elements/type';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
+import { idToString } from '../../ids';
 import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { transformFile, transformType, Visitor } from '../../transform-tast';
-import { File } from '../../typed-ast';
+import { File, RefKind } from '../../typed-ast';
 import { analyze, analyzeContext, Verify, verify } from '../analyze';
 import { getType } from '../getType';
 import { printCtx } from '../to-ast';
@@ -38,7 +40,15 @@ export type Fixture = {
     // i: number;
 };
 
-export const locClearVisitor: Visitor<null> = { Loc: () => noloc };
+export const locClearVisitor: Visitor<null> = {
+    Loc: () => noloc,
+    // RefKind(node) {
+    //     if (node.type === 'Global') {
+    //         return { ...node, id: idToString(node.id) as any } as RefKind;
+    //     }
+    //     return null;
+    // },
+};
 
 export const clearLocs = (ast: File) => {
     return transformFile(ast, locClearVisitor, null);
@@ -241,11 +251,12 @@ export function runFixture(
                 '// ' + cm,
             ]);
         } else if (top.type === 'TypeAlias') {
-            const hash = objectHash(
+            const hash = hashTypes(
                 top.elements.map((t) =>
                     transformType(t.type, locClearVisitor, null),
                 ),
             );
+            // console.log('Adding hashes', top.elements[0].name, hash);
             checked.comments.push([
                 {
                     ...top.loc,

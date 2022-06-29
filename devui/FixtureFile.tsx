@@ -98,13 +98,13 @@ export const FixtureFile = ({
                 ))}
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 {data.fixtures.map((fixture: Fixture, i) => (
-                    <div key={i}>
-                        <Link href={`#${name}/${i}`} key={i}>
-                            {fixture.title}
-                        </Link>
-                        <Link href={`#${name}/${i}/pin`} key={i}>
-                            Pin
-                        </Link>
+                    <div
+                        key={i}
+                        style={{ display: 'flex', flexDirection: 'row' }}
+                    >
+                        <Link href={`#${name}/${i}`}>{fixture.title}</Link>
+                        <div style={{ flex: 1 }} />
+                        <Link href={`#${name}/${i}/pin`}>Pin</Link>
                     </div>
                 ))}
             </div>
