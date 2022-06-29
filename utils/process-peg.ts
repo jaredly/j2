@@ -58,6 +58,7 @@ export const assembleRules = (
     };
 
     const ruleTagNames: string[] = [];
+    const emptyNames: string[] = [];
 
     rules.map(([rule, type, expr]) => {
         // extract out an _inner version, if the first of the union is a literal
@@ -98,6 +99,7 @@ export const assembleRules = (
                 type.type === 'TSTypeLiteral' && type.members.length === 2;
             if (isEmpty) {
                 typesFile.push(`// No data on ${rule.name}`);
+                emptyNames.push(rule.name);
             } else {
                 if (ruleTags.includes(rule.name)) {
                     ruleTagNames.push(rule.name);
@@ -142,6 +144,37 @@ export const assembleRules = (
                         ),
                     ),
                 ),
+            ),
+        ).code,
+    );
+
+    typesFile.push(
+        generate(
+            t.exportNamedDeclaration(
+                t.variableDeclaration('const', [
+                    t.variableDeclarator(
+                        {
+                            ...t.identifier(`AllTaggedTypeNames`),
+                            typeAnnotation: t.tsTypeAnnotation(
+                                t.tsArrayType(
+                                    t.tsIndexedAccessType(
+                                        t.tsTypeReference(
+                                            t.identifier('AllTaggedTypes'),
+                                        ),
+                                        t.tsLiteralType(
+                                            t.stringLiteral('type'),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        },
+                        t.arrayExpression(
+                            ruleTags
+                                .filter((x) => !emptyNames.includes(x))
+                                .map((name) => t.stringLiteral(name)),
+                        ),
+                    ),
+                ]),
             ),
         ).code,
     );

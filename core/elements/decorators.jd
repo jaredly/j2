@@ -1,0 +1,37 @@
+##[builtins]##
+//:decorator:whatsit
+//:decorator:onesit
+//:decorator:twosit
+//:decorator:decorated
+//:value:oneArg:(v: int) => string
+
+##[fixtures]##
+==[decorate something]==
+--[input]--
+@whatsit() 10
+@onesit() (@twosit() 20)
+
+--[output:expected]--
+alias onesit=ha1ea686a0f954591e6817d1e38eba3d7dcf85068 twosit=h8819c3a2c310a65e65204176616bcd32e68326b5 whatsit=haf4a9b4fd8c53f7ca2d2e2ce236ca5ef837fd4ed
+@whatsit() 10
+// 10
+@onesit() @twosit() 20
+// 20
+
+==[decorated apply target]==
+--[input]--
+(@decorated()oneArg)(10)
+
+--[output:expected]--
+alias decorated=h216be29e211ffb2bbb1ff40ab9718fad53bb9687 oneArg=h6c7b76e2a1fd1d300d0aa0993809744ac47efe81 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+(@decorated() oneArg)(10)
+// string
+
+==[unresolved]==
+--[input:shouldFail]--
+@decodeURI(:string)("http://example.com")
+
+--[output:expected]--
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+@decodeURI#[:unresolved:](:string) "http://example.com"
+// "http://example.com"

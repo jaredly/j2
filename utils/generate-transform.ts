@@ -2,21 +2,14 @@
 // - recognize that `is`, `location`, and `decorators` are common to all `Term`s,
 //   and so they can be done at the top level of `transformTerm`, instead of in every branch.
 
-import * as t from '@babel/types';
-import babel, { traverse } from '@babel/core';
-import fs from 'fs';
-import generate from '@babel/generator';
-import {
-    buildTransformFile,
-    Ctx,
-    generateCheckers,
-    getTypeName,
-    getUnionNames,
-    makeTransformer,
-} from './build-transform';
+import * as babel from '@babel/core';
+import * as fs from 'fs';
+import * as path from 'path';
+import { buildTransformFile, Ctx, generateCheckers } from './build-transform';
 
-const [_, __, inFile, outFile, visitorTypesRaw, ...distinguishTypesRaw] =
-    process.argv;
+// const inFile = './core/typed-ast.ts';
+const [_, __, inFile, outFile] = process.argv;
+
 const ast = babel.parse(fs.readFileSync(inFile, 'utf8'), {
     filename: inFile,
     presets: ['@babel/preset-typescript'],
@@ -26,16 +19,88 @@ if (!ast) {
 }
 const body = ast.program.body;
 
+const visitorNames: string[] = [];
+
+const imports: { source: string; imports: string[] }[] = [];
+
+body.forEach((stmt) => {
+    if (
+        stmt.type === 'ExportNamedDeclaration' &&
+        stmt.declaration &&
+        stmt.declaration.type === 'TSTypeAliasDeclaration'
+    ) {
+        visitorNames.push(stmt.declaration.id.name);
+    }
+    if (stmt.type === 'ImportDeclaration') {
+        if (stmt.source.type === 'StringLiteral') {
+            imports.push({
+                source: stmt.source.value,
+                imports: stmt.specifiers.map((spec) => spec.local.name),
+            });
+        }
+    }
+    if (stmt.type === 'ExportNamedDeclaration' && stmt.source) {
+        imports.push({
+            source: stmt.source.value,
+            imports: stmt.specifiers
+                .map((spec) =>
+                    spec.type === 'ExportSpecifier' ? spec.local.name : null,
+                )
+                .filter(Boolean) as string[],
+        });
+    }
+});
+
+imports.forEach((imp) => {
+    const filePath = path.join(
+        path.dirname(inFile),
+        imp.source + (imp.source.endsWith('.') ? '/index.ts' : '.ts'),
+    );
+    console.log(filePath);
+    if (!fs.existsSync(filePath)) {
+        return;
+    }
+
+    const ast = babel.parse(fs.readFileSync(filePath, 'utf8'), {
+        filename: inFile,
+        presets: ['@babel/preset-typescript'],
+    });
+    if (!ast) {
+        throw new Error(`unable to parse`);
+    }
+
+    ast.program.body.forEach((item) => {
+        if (
+            item.type === 'ExportNamedDeclaration' &&
+            item.declaration &&
+            item.declaration.type === 'TSTypeAliasDeclaration'
+        ) {
+            const name = item.declaration.id.name;
+            if (!visitorNames.includes(name)) {
+                visitorNames.push(name);
+                body.push(item);
+            }
+        }
+    });
+});
+
 const ctx: Ctx = {
     types: {},
-    visitorTypes: visitorTypesRaw.split('\n'),
+    visitorTypes: visitorNames,
     transformers: {},
     transformerStatus: {},
 };
 
 let text =
-    buildTransformFile(body, ctx) +
+    buildTransformFile(
+        body,
+        path
+            .relative(path.dirname(outFile), inFile)
+            .replace(/\.ts$/, '')
+            .replace(/^(?=[^.])/, './'),
+        ctx,
+    ) +
     '\n' +
-    generateCheckers(ctx, distinguishTypesRaw);
+    generateCheckers(ctx, []);
 
 fs.writeFileSync(outFile, text);

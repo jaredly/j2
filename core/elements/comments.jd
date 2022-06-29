@@ -1,0 +1,23 @@
+##[fixtures]##
+==[comments]==
+--[input]--
+// Comments
+toString( // inside
+// then
+	1, // after
+	// again
+)
+//last
+
+--[output:expected]--
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h0ac4106142a4522c2471a4bc4c3cc92ae5c381f8
+// Comments
+toString(
+    // inside
+    // then
+    1,
+    // after
+    // again
+)
+// string
+//last

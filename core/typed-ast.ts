@@ -1,6 +1,59 @@
-import { RefKind } from '.';
-import { Loc } from './grammar/base.parser';
-export { RefKind };
+import { Apply } from './elements/apply';
+import { Boolean, Number, TemplateString } from './elements/constants';
+import { DecoratedExpression } from './elements/decorators';
+import { TypeApplication } from './elements/generics';
+import { Type } from './elements/type';
+import { Id, idToString } from './ids';
+export type { Apply } from './elements/apply';
+export type {
+    Boolean,
+    Number,
+    String,
+    TemplateString,
+} from './elements/constants';
+export type {
+    DExpr,
+    DType,
+    DecoratedExpression,
+    Decorator,
+    DecoratorArg,
+    DecoratorDecl,
+} from './elements/decorators';
+export type {
+    TAdd,
+    TApply,
+    TDecorated,
+    TLambda,
+    TOps,
+    TOr,
+    TRef,
+    TSub,
+    TVar,
+    TVars,
+    Type,
+} from './elements/type';
+export type { Id } from './ids';
+export type { TypeApplication, TypeVariables } from './elements/generics';
+
+export type GlobalRef = {
+    type: 'Global';
+    id: Id;
+};
+export type RefKind =
+    | GlobalRef
+    | {
+          type: 'Local';
+          sym: number;
+      };
+
+export const refHash = (ref: RefKind) =>
+    ref.type === 'Global' ? 'h' + idToString(ref.id) : '' + ref.sym;
+
+export type Loc = {
+    start: { line: number; column: number; offset: number };
+    end: { line: number; column: number; offset: number };
+    idx: number;
+};
 
 export type File = {
     type: 'File';
@@ -8,26 +61,6 @@ export type File = {
     comments: Array<[Loc, string]>;
     loc: Loc;
 };
-
-// export type ErrorExpr = UnknownIdentifier;
-
-export type Decorator = {
-    type: 'Decorator';
-    id: { ref: RefKind | UnresolvedRef; loc: Loc };
-    args: Array<{ label: string | null; arg: DecoratorArg; loc: Loc }>;
-    loc: Loc;
-};
-export type DecoratorArg =
-    | {
-          type: 'Expr';
-          expr: Expression;
-          loc: Loc;
-      }
-    | {
-          type: 'Type';
-          typ: Type;
-          loc: Loc;
-      };
 
 export type UnresolvedRef = {
     type: 'Unresolved';
@@ -41,82 +74,28 @@ export type Ref = {
     kind: RefKind | UnresolvedRef;
 };
 
-export type Toplevel = {
+export type ToplevelExpression = {
     type: 'ToplevelExpression';
     expr: Expression;
     loc: Loc;
 };
-
-export type Expression = Apply | Number | Boolean | Ref | DecoratedExpression;
-
-// Might be an int or float
-// export type Number = {type: 'Number', loc: Location, value: number};
-
-export type DecoratedExpression = {
-    type: 'DecoratedExpression';
-    decorators: Array<Decorator>;
-    expr: Expression;
+export type Toplevel = ToplevelExpression | TypeAlias;
+export type TypeAlias = {
+    type: 'TypeAlias';
+    elements: Array<{ name: string; type: Type }>;
     loc: Loc;
 };
 
-export type Boolean = { type: 'Boolean'; loc: Loc; value: boolean };
-
-export type Number = {
-    type: 'Number';
-    loc: Loc;
-    value: number;
-    kind: 'Int' | 'Float' | null;
-};
-
-export type Apply = {
-    type: 'Apply';
-    target: Expression;
-    args: Array<Expression>;
-    loc: Loc;
-};
+export type Expression =
+    | Ref
+    | Apply
+    | Number
+    | Boolean
+    | TemplateString
+    | TypeApplication
+    | DecoratedExpression;
 
 export type Sym = { id: number; name: string };
-
-export type TRef = { type: 'TRef'; ref: RefKind | UnresolvedRef; loc: Loc };
-
-// @decorator() T
-export type TDecorated = {
-    type: 'TDecorated';
-    decorators: Array<Decorator>;
-    loc: Loc;
-};
-
-// Something<T>
-export type TApply = {
-    type: 'TApply';
-    target: Type;
-    args: Array<Type>;
-    loc: Loc;
-};
-
-// OK also how do I do ... type bounds
-// yeah that would be here.
-// <T, I, K>Something
-export type TVars = {
-    type: 'TVars';
-    args: Array<Sym>;
-    inner: Type;
-    loc: Loc;
-};
-
-// (arg: int, arg2: float) => string
-export type TLambda = {
-    type: 'TLambda';
-    args: Array<{ label: string; typ: Type }>;
-    result: Type;
-    loc: Loc;
-};
-
-// Ok so also, you can just drop an inline record declaration, right?
-
-export type Type = TRef | TDecorated | TApply | TVars | TLambda;
-
-// (T -> T) -> T // hm that would be Kinds yep.
 
 // export type
 /*

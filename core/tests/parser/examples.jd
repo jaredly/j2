@@ -1,26 +1,39 @@
-// Test cases are separated by double-newlines
-1
+// // Test cases are separated by double-newlines
+// 1
 
-toString#[hlmnop](1)
+// toString#[hlmnop](1)
 
-// before all
-toWhat(
-	// first
-	1, // here we are
-	inner(2, /* here */ 3), /* just chillin */
-	1.000001,
-	// last
-	true
-) // mid
-// here
-23
+// // before all
+// toWhat(
+// 	// first
+// 	1, // here we are
+// 	inner(2, /* here */ 3), /* just chillin */
+// 	1.000001,
+// 	// last
+// 	true
+// ) // mid
+// // here
+// 23
 
-// type error in the argument
-toString(@error(expected: :float, received: :bool) true)
+// // type error in the argument
+// toString(@error(expected: :float, received: :bool) true)
 
-(@hello() 10)(true)
+// (@hello() 10)(true)
 
-@nested(@decorator() 10) 20
+// @nested(@decorator() 10) 20
+
+// add(1, 2)
+
+// add(1.0, 2.0)
+
+// What
+toString(
+    true,
+    // Her
+);
+// AFter
+
+// 1(2);
 
 // id<int>(1)
 

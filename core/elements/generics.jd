@@ -1,0 +1,249 @@
+##[builtins]##
+//:value:hello:<T>(v: T) => T
+//:decorator:decorate
+//:value:multi:<A, B>(a: A, b: B) => A
+//:value:bounded:<A: int>(a: A) => A
+//:value:boundedDefault:<A: int, B: uint = 10>(a: A, b: B) => A
+//:value:takesInt:(a: int) => int
+//:type:Array:<Element, Length: uint>
+//:value:takesArray:(ar: Array<string, 10>) => int
+//:value:anArray:Array<string, 10>
+
+##[fixtures]##
+==[basic]==
+--[input]--
+hello<int>(10)
+
+--[output:expected]--
+alias hello=hf6e269898d7d9d035467350db13cfa38ac824c31 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+hello<int>(10)
+// int
+
+==[decorate target]==
+--[input]--
+(@decorate() hello)<10>(10)
+
+--[output:expected]--
+alias decorate=h5a7fc9170718190f9388084b28fb49f6cb4602fc hello=hf6e269898d7d9d035467350db13cfa38ac824c31
+(@decorate() hello)<10>(10)
+// 10
+
+==[multiple]==
+--[input]--
+multi<int, string>
+multi<int, string>(10, "hello")
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f multi=h088d53f5e3ddc6bf12a7e3054c4a52ebae49789d string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+multi<int, string>
+// (a: int, b: string) => int
+multi<int, string>(10, "hello")
+// int
+
+==[bounded]==
+--[input]--
+bounded<10>(10)
+
+--[output:expected]--
+alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d
+bounded<10>(10)
+// 10
+
+==[bound fail]==
+--[input:shouldFail]--
+bounded<string>("wat")
+
+--[output:expected]--
+alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+bounded<@error:argWrongType(expected: :int) string>("wat")
+// Error, no type!
+
+==[wrong args]==
+--[input:shouldFail]--
+bounded<int, string>(20)
+takesInt<int>(10)
+
+--[output:expected]--
+alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:extraArg=haae12b260f3d25abb4b67dfe8895a3c6fb00eb59 error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
+(@error:wrongNumberOfTypeArgs() bounded<int, @error:extraArg() string>)(20)
+// int
+(@error:notATypeVars() takesInt<int>)(10)
+// int
+
+==[arg default]==
+--[input:shouldFail]--
+@test:type(:Array<int, string, int>) 10
+
+--[output:expected]--
+alias Array=h8de4ecae93abe8de85536031f6f8a05742a6ee53 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f error:extraArg=haae12b260f3d25abb4b67dfe8895a3c6fb00eb59 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+@test:type(
+    :@error:wrongNumberOfTypeArgs() Array<
+        int,
+        @error:argWrongType(expected: :uint) string,
+        @error:extraArg() int,
+    >,
+) 10
+// 10
+
+==[taking a generic argument]==
+--[input:shouldFail]--
+takesArray(10)
+takesArray(anArray)
+
+--[output:expected]--
+alias anArray=h3b5b5f972e2903d7c82350fc80e38407c1f785a8 Array=h8de4ecae93abe8de85536031f6f8a05742a6ee53 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesArray=hcdd9a45603b52a498bc71cafbe9a0a4f62cb0d90
+takesArray(@error:argWrongType(expected: :Array<string, 10>) 10)
+// int
+takesArray(anArray)
+// int
+
+==[chained]==
+--[input]--
+type x=<A: int><B: int>int
+type y=x<int><10>
+
+--[output:expected]--
+alias A=0 B=1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f x=h76602ee41a08e2edba682eb6776d017ce70e3d46
+type x = <A: int><B: int>int
+// h76602ee41a08e2edba682eb6776d017ce70e3d46
+type y = x<int><10>
+// hb524a15e72630d986e26b6c121dff74070815f6c
+
+==[parnes]==
+--[input]--
+type Array = <Element, Length: uint>int
+type x = (@test:type() Array)<int, 10>
+
+--[output:expected]--
+alias Array=h4feaf39a99a90707fada926a966f38a11aeb3436 Element=0 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f Length=1 test:type=he071eaec952a7917f20d1828e42268ca3a10c513 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+type Array = <Element, Length: uint>int
+// h4feaf39a99a90707fada926a966f38a11aeb3436
+type x = (@test:type() Array)<int, 10>
+// h1fde7b7d111724355995b36d6edfb9d73916edf1
+
+==[variance?]==
+--[input]--
+type One = (v: int) => int
+type Two = (v: 10) => int
+// Should Three accept Two? NO
+// Should Four accept One? YES
+type Three = (l: One) => string // might pass any int to it
+type Four = (l: Two) => string // will only pass 10 to it
+
+// ## OK now to the actual question ##
+type OneInt = <T: int>(v: T) => string
+type OneTen = <T: 10>(v: T) => string
+type TOneInt = (v: OneInt) => string
+type TOneTen = (v: OneTen) => string
+// ## Does TOneInt accept TOneTen? NO
+// ## Does TOneTen accept TOneInt? YES
+// ## We know that 10 matches int, but int does not match 10.
+// ## I would expect it to reverse here?
+type TwoInt = <T: int>(v: (m: T) => string) => string
+type TwoTen = <T: 10>(v: (m: T) => string) => string
+// ## And then I think it would reverse again here?
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f One=h6cc1e83ecff1ae7cbe23824d00229b426a62f235 OneInt=h4eba6c68dc9e4706dcf096c17b01463cf3ed3ee5 OneTen=h808c3f89dd23701a6d69a45fff3b2574bd24e468 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=0 Two=h3fee2326fc5e919eb89933cedcdb1db0df2df747
+type One = (v: int) => int
+// h6cc1e83ecff1ae7cbe23824d00229b426a62f235
+type Two = (v: 10) => int
+// h3fee2326fc5e919eb89933cedcdb1db0df2df747
+// Should Three accept Two? NO
+// Should Four accept One? YES
+type Three = (l: One) => string
+// hb45b1301f36c2ef5723d4580adc97fbe0b5cb00a
+// might pass any int to it
+type Four = (l: Two) => string
+// h2cbb8cae19ba2637cd9a2d153e11feaa5f57b9e7
+// will only pass 10 to it
+// ## OK now to the actual question ##
+type OneInt = <T: int>(v: T) => string
+// h4eba6c68dc9e4706dcf096c17b01463cf3ed3ee5
+type OneTen = <T: 10>(v: T) => string
+// h808c3f89dd23701a6d69a45fff3b2574bd24e468
+type TOneInt = (v: OneInt) => string
+// h7558c7000029c6de1244e1a0da9a730c206711eb
+type TOneTen = (v: OneTen) => string
+// h9cb7f14c8d171c0efe31a08bd2a2dc972fc2b0e3
+// ## Does TOneInt accept TOneTen? NO
+// ## Does TOneTen accept TOneInt? YES
+// ## We know that 10 matches int, but int does not match 10.
+// ## I would expect it to reverse here?
+type TwoInt = <T: int>(v: (m: T) => string) => string
+// h657504e1f58943fcd9d627cf288fa3127e66a5a5
+type TwoTen = <T: 10>(v: (m: T) => string) => string
+// h0b63d786183988162739df55b704fa390a0ca363
+// ## And then I think it would reverse again here?
+
+==[New fixture_]==
+--[input]--
+type IntA = (x: int) => string
+type TenA =  (x: 10) => string
+// # First we have basic variance. IntA can be passed to something expected a TenA, but not reversed.
+type IntR = (x: string) => int
+type TenR = (x: string) => 10
+// # On the other hand, something producing an int can't be given to someone expecting something that produces a 10.
+type Int = <T: int>(x: T) => T
+type Ten = <T: 10>(x: T) => T
+// # BUT, on the final hand, once you lock it down to something concrete, the return value isn't "maybe a subset of T", it's precisely T. Ok so I don't think we have to get fancy.
+// 
+// ### OK, so Something T
+type TInt = (v: Int) => string
+type TTen = (v: Ten) => string
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f Int=h762bdb6daf30c8cf4d06834def33d38f5994c973 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=0 Ten=h26cb87feddd5376ee40c0b5f8154d86f6ddbad4d
+type IntA = (x: int) => string
+// h392ee2896a1a8696b1d9a8a99bdd44d207fdbfcf
+type TenA = (x: 10) => string
+// h66b127c9a32c26185380b65f415fab7e3238dc8a
+// # First we have basic variance. IntA can be passed to something expected a TenA, but not reversed.
+type IntR = (x: string) => int
+// hd87322a917a99488ea50d079584551676f0fe624
+type TenR = (x: string) => 10
+// h1b4eb70993d7d185864dbfe6fa144e150314d434
+// # On the other hand, something producing an int can't be given to someone expecting something that produces a 10.
+type Int = <T: int>(x: T) => T
+// h762bdb6daf30c8cf4d06834def33d38f5994c973
+type Ten = <T: 10>(x: T) => T
+// h26cb87feddd5376ee40c0b5f8154d86f6ddbad4d
+// # BUT, on the final hand, once you lock it down to something concrete, the return value isn't "maybe a subset of T", it's precisely T. Ok so I don't think we have to get fancy.
+//
+// ### OK, so Something T
+type TInt = (v: Int) => string
+// h7db71040c6cd92a148b4b9561b7137cfc8e82b5d
+type TTen = (v: Ten) => string
+// h55529be99583c99d50288f1f7bd3bd8bb4e375dd
+
+==[default arg type]==
+--[input]--
+type DArray = <Element, Length: uint = uint>int
+type Marray = DArray<int>
+// type TArray = DArray<int, 10>
+
+--[output:expected]--
+alias DArray=hb33d9cb4adbb39fc98f7847e4c6099099cc8e59c Element=0 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f Length=1 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+type DArray = <Element, Length: uint = uint>int
+// hb33d9cb4adbb39fc98f7847e4c6099099cc8e59c
+type Marray = DArray<int>
+// hc9e6c4f46696b6ef86e081921755370ef0486b47
+// type TArray = DArray<int, 10>
+
+==[New fixture___]==
+--[input]--
+boundedDefault<int>
+
+--[output:expected]--
+alias boundedDefault=hc4316951341561217c1d42557785019239254ba1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+boundedDefault<int>
+// (a: int, b: 10) => int
+
+==[generic arg works]==
+--[input]--
+takesArray(anArray)
+
+--[output:expected]--
+alias anArray=h3b5b5f972e2903d7c82350fc80e38407c1f785a8 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takesArray=hcdd9a45603b52a498bc71cafbe9a0a4f62cb0d90
+takesArray(anArray)
+// int

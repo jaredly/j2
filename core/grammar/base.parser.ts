@@ -1,5 +1,4 @@
-// @ts-ignore
-import {parse} from './base.parser-untyped.js'
+import {parse} from './base.parser-untyped'
 
 export type Loc = {
     start: {line: number, column: number, offset: number},
@@ -18,9 +17,119 @@ export type _lineEnd = string;
 
 export type _EOF = string;
 
-export type Toplevel = Expression;
+export type Toplevel = TypeAlias | Expression;
 
 export type Expression = DecoratedExpression;
+
+export type Atom = Number | Boolean | Identifier | ParenedExpression | TemplateString;
+
+export type ParenedExpression = {
+  type: "ParenedExpression";
+  loc: Loc;
+  expr: Expression;
+};
+
+export type Identifier = {
+  type: "Identifier";
+  loc: Loc;
+  text: string;
+  hash: (string | string | string | string) | null;
+};
+
+// No data on IdText
+
+// No data on NamespacedIdText
+
+// No data on JustSym
+
+// No data on HashRef
+
+// No data on BuiltinHash
+
+// No data on UnresolvedHash
+
+export type Apply_inner = {
+  type: "Apply";
+  loc: Loc;
+  target: Atom;
+  suffixes: Suffix[];
+};
+
+export type Apply = Apply_inner | Atom;
+
+export type Suffix = CallSuffix | TypeApplicationSuffix;
+
+export type CallSuffix = {
+  type: "CallSuffix";
+  loc: Loc;
+  args: CommaExpr | null;
+};
+
+export type CommaExpr = {
+  type: "CommaExpr";
+  loc: Loc;
+  items: Expression[];
+};
+
+export type newline = string;
+
+export type _nonnewline = string;
+
+export type _ = string;
+
+export type __ = string;
+
+export type comment = multiLineComment | lineComment;
+
+export type multiLineComment = string;
+
+export type lineComment = string;
+
+export type finalLineComment = string;
+
+export type Boolean = {
+  type: "Boolean";
+  loc: Loc;
+  v: "true" | "false";
+};
+
+export type Number = {
+  type: "Number";
+  loc: Loc;
+  contents: string;
+};
+
+export type String = {
+  type: "String";
+  loc: Loc;
+  text: string;
+};
+
+export type TemplateString = {
+  type: "TemplateString";
+  loc: Loc;
+  first: string;
+  rest: TemplatePair[];
+};
+
+export type TemplatePair = {
+  type: "TemplatePair";
+  loc: Loc;
+  wrap: TemplateWrap;
+  suffix: string;
+};
+
+export type TemplateWrap = {
+  type: "TemplateWrap";
+  loc: Loc;
+  expr: Expression;
+};
+
+export type tplStringChars = string;
+
+export type stringChar = string;
+
+// No data on escapedChar
 
 export type DecoratedExpression_inner = {
   type: "DecoratedExpression";
@@ -42,7 +151,7 @@ export type DecoratorId = {
   type: "DecoratorId";
   loc: Loc;
   text: string;
-  hash: string | null;
+  hash: (string | string) | null;
 };
 
 export type DecoratorArgs = {
@@ -72,87 +181,158 @@ export type DecExpr = {
   expr: Expression;
 };
 
-export type Type = {
-  type: "Type";
+export type TypeApplicationSuffix = {
+  type: "TypeApplicationSuffix";
+  loc: Loc;
+  vbls: TypeAppVbls;
+};
+
+export type TypeAppVbls = {
+  type: "TypeAppVbls";
+  loc: Loc;
+  items: Type[];
+};
+
+export type TypeVariables = {
+  type: "TypeVariables";
+  loc: Loc;
+  vbls: TypeVbls;
+  body: Expression;
+};
+
+export type TypeVbls = {
+  type: "TypeVbls";
+  loc: Loc;
+  items: TypeVbl[];
+};
+
+export type TypeVbl = {
+  type: "TypeVbl";
+  loc: Loc;
+  vbl: Identifier;
+  bound: Type | null;
+};
+
+export type Type = TOps;
+
+export type TDecorated = {
+  type: "TDecorated";
+  loc: Loc;
+  decorators: Decorator[];
+  inner: TApply;
+};
+
+export type TApply_inner = {
+  type: "TApply";
+  loc: Loc;
+  inner: TAtom;
+  args: TComma[];
+};
+
+export type TApply = TApply_inner | TAtom;
+
+export type TAtom = TRef | Number | String | TLambda | TVars | TParens;
+
+export type TRef = {
+  type: "TRef";
   loc: Loc;
   text: string;
-  hash: (string | string | string) | null;
+  hash: (string | string | string | string) | null;
+  args: TApply | null;
 };
 
-export type Apply_inner = {
-  type: "Apply";
+export type TVars = {
+  type: "TVars";
   loc: Loc;
-  target: Atom;
-  suffixes: Suffix[];
+  args: TBargs;
+  inner: Type;
 };
 
-export type Apply = Apply_inner | Atom;
-
-export type Atom = Number | Boolean | Identifier | ParenedExpression;
-
-export type ParenedExpression = {
-  type: "ParenedExpression";
+export type TBargs = {
+  type: "TBargs";
   loc: Loc;
-  expr: Expression;
+  items: TBArg[];
 };
 
-export type Suffix = Parens;
-
-export type Parens = {
-  type: "Parens";
+export type TBArg = {
+  type: "TBArg";
   loc: Loc;
-  args: CommaExpr | null;
+  label: string;
+  hash: string;
+  bound: Type | null;
+  default_: Type | null;
 };
 
-export type CommaExpr = {
-  type: "CommaExpr";
+export type TOps_inner = {
+  type: "TOps";
   loc: Loc;
-  items: Expression[];
+  left: TOpInner;
+  right: TRight[];
 };
 
-export type Boolean = {
-  type: "Boolean";
+export type TOps = TOps_inner | TOpInner;
+
+export type TRight = {
+  type: "TRight";
   loc: Loc;
-  v: "true" | "false";
+  top: string;
+  right: TOpInner;
 };
 
-export type Number = {
-  type: "Number";
+export type top = "-" | "+";
+
+export type TOpInner = TDecorated | TApply;
+
+export type TComma = {
+  type: "TComma";
   loc: Loc;
-  contents: string;
+  items: Type[];
 };
 
-export type Identifier = {
-  type: "Identifier";
+export type TParens = {
+  type: "TParens";
   loc: Loc;
-  text: string;
-  hash: (string | string | string) | null;
+  inner: Type;
 };
 
-// No data on IdText
+export type TArg = {
+  type: "TArg";
+  loc: Loc;
+  label: string | null;
+  typ: Type;
+};
 
-// No data on JustSym
+export type TArgs = {
+  type: "TArgs";
+  loc: Loc;
+  items: TArg[];
+};
 
-// No data on HashRef
+export type TLambda = {
+  type: "TLambda";
+  loc: Loc;
+  args: TArgs | null;
+  result: Type;
+};
 
-// No data on BuiltinHash
+export type TypeAlias = {
+  type: "TypeAlias";
+  loc: Loc;
+  items: TypePair[];
+};
 
-export type newline = string;
+export type TypePair = {
+  type: "TypePair";
+  loc: Loc;
+  name: string;
+  typ: Type;
+};
 
-export type _nonnewline = string;
+export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | CallSuffix | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TDecorated | TApply_inner | TRef | TVars | TBargs | TBArg | TOps_inner | TRight | TComma | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
 
-export type _ = string;
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Identifier", "Apply", "CallSuffix", "CommaExpr", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TDecorated", "TApply", "TRef", "TVars", "TBargs", "TBArg", "TOps", "TRight", "TComma", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
 
-export type __ = string;
-
-export type comment = multiLineComment | lineComment;
-
-export type multiLineComment = string;
-
-export type lineComment = string;
-
-export type finalLineComment = string;
-
-export type AllTaggedTypes = File | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Type | Apply_inner | ParenedExpression | Parens | CommaExpr | Boolean | Number | Identifier;
-
-export const parseTyped = (input: string): File => parse(input)
+// @ts-ignore
+export const parseFile = (input: string): File => parse(input, {startRule: 'File'});
+// @ts-ignore
+export const parseType = (input: string): Type => parse(input, {startRule: 'Type'});

@@ -1,8 +1,360 @@
 
+Ok what Im doing now:
+
+- [x] type aliases
+- [x] TDecorated, so we can make bound errors more visible
+- [x] check bounds! awesome
+- [x] tapply at the tast level
+- [x] tapply at the ast level?
+- [x] typeMatch for ... tvars?
+- [x] defaults
+- [ ] pin
+- [ ] TYPE ARITHMATIC
+- [ ] then enums? Could be fun. At that point recursive types make sense.
+- [ ] records! and tuples.
+
+
+Printing (<T>int)<T> isn't quite right
+
+
+
+- [ ] type aliases! And let's make sure that mutually recursive types work
+	- Can I even do those without records yet? No idea. like, functions seem weird
+```ts
+type X = () => Y
+type Y = () => x
+```
+Ok so yeah technically that works. without combining it with records or tuples or something it seems quite useless.
+
+
+# DEVUI MUST HAVES
+
+- [ ] when just the aliases change, but the printed output doesn't, indicate that somehow. Maybe just have a diff view? Could be good.
+- [ ] the sidebar should indicate files that have failing fixtures.
+	Which means I need to pull all calculations up to the top level,
+	and load all fixture files.
+- [ ] I'd love to have individual fixture-level builtins too.
+
+
+# Big Things To Add
+
+## Better Fixture Setup
+
+hmm I do think I need a fixture UI now.
+or ... something. yeah jest just really isn't cutting the mustard.
+What I want:
+- hot reloading (vite probably?)
+- button to commit all
+- show diffs, show json if asked.
+
+hmm ok
+vite
+JSON
+stringify
+parsing .. and stuff ...
+
+
+
+## Elements
+
+### [-] Generics (TVars TApply TypeApplication TypeVariables)
+- [x] TVars
+- [x] TypeApplication
+- [ ] oh TApply, I think we need it
+	Yeah for like `Array<int>`
+- [ ] Defaults!
+	- [x] builtin types need type args
+	- hmmm ok so also, I'm not sure about types
+	- errors:
+		- defaults need to not be followed by non-defaults
+		- hmmm anything else?
+- [ ] 
+- [ ] TypeVariables (we don't need this until we have lambdas)
+... I'm not sure that I need TApply?
+
+### [ ] Now let's try type mathsss
+
+
+
+### [ ] Oh toplevel defines
+
+`define` maybe? or just a toplevel `what =`, idk.
+
+### Record types!
+And defining records of course
+`struct`? or `record`? might be nice to call things what they are.
+
+### Type Aliases
+I think `getType` would resolve these? Yeah.
+`type Under10Arr = <T>Array<T> where .length = 10 - usize`
+
+### BinOps and such
+- `let + = add`
+
+So things that are apply's
+
+
+### Attributes (modeled as fn application)
+
+### oh lol control flow right
+- if/else
+- switch
+- let my folks
+- loop/recur I think? idk
+
+### Type Refinement madness
+- [x] allow specifying constant types
+- [x] "hello" gets inferred as "hello" not string
+- [ ] oh but "hello" needs to .. work as the type of things
+- [ ] get everything together such that the type of (+) results in
+	`1 + 2` to have the type `1 + 2`.
+	`+: <A: int, B: int>(a: A, b: B): A + B => a + b`
+	also, types should collapse reasonably, like `2 + int` is still just `int`,
+	but `2 + uint` is `2 + uint`.
+- [ ] do the subtypings
+- [ ] I definitely want something like Array.length = 5, or Array.length = 5 + uint
+
+## Bigger things
+
+### Generate like typescript and stuff
+
+### TAST -> IR probably?
+
+This ... is where effects get eliminated. right?
+and blocks get flattened, where `if`s are statements not expressions.
+
+but we probably still have refined types?
+because I think it's here that we'd turn some recursive functions into loops,
+and also some loopys into fixed loops? like glsl compatible.
+
+### IR optimizations right
+
+seems like it would be good
+also maybe monomorphization happens here?
+
+# Thinking about GLSL
+
+I'm hoping the type refinement will be all I need to make things groovy.
+
+# Thinking about microcontrollers
+
+I just need to generate C++, right?
+which means ... some amount of malloc/free?
+I guess I managed to get away with no heap memory in my pen plotter stuff so far, by just using
+a fixed-length global array that I mutated.
+so, how do I keep track of what allocation strategy I'm going to use?
+
+Roc's platforms are very cool. A very nice way to separate out the pure from the side effects.
+
+what would it look like to ... turn my setup, and loop, and such ...
+have the State object ... hmm .... I guess
+if I use Setup to set up the state object, behind the scenes I could define
+it as a static global.
+And then the Loop function just takes the state, and returns a new one ... and as long as
+we disallow recursive types, that means the sum of the Loop function can have no reason
+to allocate outside of the stack.
+which is interesting.
+I guess I could do the arena allocator trick.
+
+anyway
+
+one thing going on there is a fixed-length array.
+What if I have a ... max-length array? would that even make sense?
+```
+type State = {
+	steps: Array<Step> where .length = 1000 - uint,
+}
+```
+that's kindof interesting.
+but actually, a fixed-length array should be just as doable
+```
+type State = {
+	steps: Array<Step> where .length = 1000
+}
+```
+
+I guess I'd have a `set(arr, idx, v)` that would "return" a new array, unless I knew I could
+get away with mutating it?
+eh idk, seems a little convoluted.
+maybe I should try to raise it up to the platform level? but that would be too much I think.
+orr I could just use a linked list like a reasonable person. given that I don't need random access.
+but that would mean heap allocation.
+
+# Thinking about React
+
+It would be quite nice to have drop-in react support.
+it would be very cool to autogen runtime type checkers to validate incoming values 🤔
+although if we have typescript, that can represent much of what we'll be using. so maybe its fine.
+
+so like
+do I imagine a "platform" kindof setup?
+
+What would it look like to use typescript-annotated components directly inline? and such.
+
+Alternatively, what would it look like to keep everything pure on my end, essentially passing a
+POJO data structure over to the TS side, which gets inflated into react components? a la elm ui.
+oh right, elm has its own virtualdom impl.
+i guess cljs is the more react-compatible idea. but it does side effects.
+
+so, it would have to be an opaque type, right?
+`createComponent<Props>(fn: (props) => ReactComponent, props: Props) => ReactComponent`
+is that all we need?
+I guess the various hooks would have to be wrapped as well.
+but that's all fine.
+Native components are a little interesting, because there's different allowed props
+based on which string is passed. I guess I'll just do wrappers for all of them
+`createNativeDiv(props: DivProps) => ReactComponent` etc.
+Anyway, seems like that would get the job done!
+OH Wait I can use an enum
+`createNative(props: NativeProps)`
+```
+enum NativeProps {
+	DivProps,
+	SpanProps,
+	... etc
+}
+```
+so `createNative(DivProps{})` gets the job done for you. I like that a lot.
+
+dunno about jsx though. is it worth it?
+prolly not.
+
+
+
+# Thinking about tests for things
+
+## Apply
+
+So, if we're applying, and there are unspecified type variables ...
+also, like, if we change an argument, which would change the ~inferred type variable.
+then what?
+OH RIGHT that's where autofixers come it.
+AWSOME
+so we have an autofixer that's like "this arg type is wrong, you could either change the type param over here
+or change the whatsit over there"
+
+So anyway, when first pass happens, do we already try to infer stuff?
+hmmm. might have annoying cascading consequences if I don't?
+but tbh I could add that later.
+
+
+
+
+
+
+
+- [x] use the `analyze` from `constants.ts`
+- [ ] start ... tracking the path of things? Should `ctx` always have a path component? Seems like a decent idea.
+- [x] actually use the `grammar` exports from elements
+- [x] actually use the `fixtures` exports from elements
+- [x] move as much as possible into `elements`
+- [x] split up fixtures, colocate yes please.
+	Would it make sense to just have them be parallel files?
+	tbh that might be the best way to do it. ...
+- [x] I want to be outputting the `type` of each toplevel.
+	- as a comment? Seems like a reasonable approach.
+	- yeah I guess it's fine.
+- [ ] support parsing & printing lambdas
+	- [ ] and TApply
+	- [ ] and TVars
+- [ ] do analyze pass for types, decorating unresolved ones? hmm or actually I want a "verify" pass, I think.
+	- also if the "type" that something ends up being from getType is not a valid type, it should be null, right?
+
+- [x] actually resolve decorators
+- [ ] I might want to think about de-duping hashes in the output.
+	they're getting pretty verbose.
+	- hmmm so 'alias' would be a single mapping.
+- [x] oh fix a transformer bug
+
+- [x] test passing lambdas
+- [ ] ok lol I do need to dehash things this is getting ridiculous
+	- should I have there be an actual syntax for this?
+		maybe a toplevel macro or something?
+		or just `alias something #[hashashash]`
+		hmm should I /try/ to oneliner them?
+		I could also condense to emojis, with like `e` prefix.
+
+High-level goal: I want fixtures to really exercise
+each of the things I have going on.
+In order to do that, I want to be able to declare
+ephemeral "builtin"s, including builtin decorators, types, and values.
+This will happen via a fixture preamble.
+In order to make it work, I need to be able to parse lambda types.
+
+- [ ] automate exporting all element types through typed-ast.ts
+
+
+## Transformer
+
+I want, before we call e.g. transformApply,
+to first check for visitor.Expression_Apply, and
+call it if it exists. If what we get is different,
+then we .... hmmm ...
+hm maybe what we do is ...
+make an earlier switch?
+dunno how I feel about that really.
+
+because that would, give it another chance to get traversed ...
+.. and I do want that to be the default, I think.
+Because the alternative is that it wouldn't even be a post-op. It
+would prevent traversal altogether.
+
+
+```ts
+visitor.Expression_${name}
+
+const subTransformer = visitor[`Expression_${node.type}`]
+if (subTransformer) {
+	const transformed = subTransformer(node, ctx)
+}
+```
+
+## TExpr here we come
+
+this might end horribly. But at least I'm getting in early.
+
+
+- tref -> add string and int literals
+- make a .. toy function that accepts some string & int literals
+- make a way to indicate in the title of a fixture whether it should "clear"
+
+
+
+
+
+##
+
+- [x] STRINGSSS Follow the TODO brick road
+
+- [x] do test cases, and coverage
+	- [x] huh yeah I guess jest will be the easiest way to do that. ok fine.
+		I can always have a separate cmd that will run the tests w/o jest if I want to.
+- [ ] String literals! Gotta have 'em. And I think I'll stick with all strings are template strings.
+	`${}` just makes sense. And the representation of "list of strings" and "list of things" also works for me.
+	Do I want to have special formatty whatsits? I ... don't really think so.
+	Do I want format strings? like I don't think I do.
+	You can pipe it through a formatter function.
+	hmm should I make a pipe? I reall probably should. |>? sure. As a simple "pass to a fn"
+	with no fancy argument munging? Yeah. `->` does enough that's fancy, I should think.
+	and |> dec vs |> dec(places: 2)? |> dec()... seems more wordy than I want.
+	%0.2f ... hmm. idk maybe at some point I'll make a c-formatter macro.
+
+	Ok, and then once I have string literals I can actually report errors lol.
+- [ ] hmmmm then do we do generic functions? Well as soon as I have full coverage of everything so far.
+
+...
+oh, so ...
+my transform generator, needs to know that Expression items
+can be transformed into other Expression items.
+Same with Types.
+For now I will cheat with any.
+hmmm so but also, if the Pre pass turns it into Not an Apply, we need to passs it immediately to the appropriate handler.
+
+
 Ok so now I ... should ...
 ... I guess if I have decorators I need
 ... to allow them to have types. So that I can report decorator errors.
-- [ ] eh ok let's just make the traversal-generator
+- [x] eh ok let's just make the traversal-generator
 - [ ] decorators have types now thanks
 - [ ] make a type error checker
 	- [ ] but first I think I need a generic mapper over the whole ast

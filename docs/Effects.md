@@ -1,5 +1,56 @@
 
 
+oooooh ok so antelang takes `k` and just makes it a keyword! Honestly that has some appeal.
+```
+handle_give_int (f: unit -> a with GiveInt) -> a =
+    handle f ()
+    | give_int str ->
+        if str == "zero"
+        then resume 0
+        else resume 123
+```
+
+Soooo
+```ts
+
+effect State<T> {
+	Get{} => T,
+	Set{value: T} => (),
+}
+
+// -> produces (essentially? Maybe literally?)
+enum State:Effect<T> {
+	Get{},
+	Set{value: T}
+}
+// And then:
+enum State:Full<T, Final> {
+	...State:Effect<T>,
+	Final{value: Final},
+}
+
+// Handle! Does it actually return a value? How would it?
+let rec loop = (current, fn) => {
+	switch handle!(fn) {
+		State:Effect::Get => resume!(current),
+		State:Effect::Set{value} => loop(value, () => resume!()),
+		State:Full::Final{value} => value,
+	}
+}
+
+// Alternatively, I could just do
+handle! fn {
+	State:Effect::Get => resume!(current),
+	State:Effect::Set{value} => loop(value, () => resume!()),
+	State:Full::Final{value} => value,
+}
+// which would still allow me to reuse switch syntax for the most part.
+```
+
+resuming must happen in the body of the switch
+
+
+
 Btw we're going to use `{* x *}` instead of `{x}`, to avoid collisions with records,
 and to allow separation off EffLambda and EffApply.
 

@@ -63,18 +63,18 @@ export const atom = (
     };
 };
 
-export const id = (text: string, id: string, kind: string, loc: Loc): PP => {
-    if (text == null) {
-        throw new Error(`ID with no text`);
-    }
-    return {
-        type: 'id',
-        text,
-        id,
-        kind,
-        loc,
-    };
-};
+// export const id = (text: string, id: string, kind: string, loc: Loc): PP => {
+//     if (text == null) {
+//         throw new Error(`ID with no text`);
+//     }
+//     return {
+//         type: 'id',
+//         text,
+//         id,
+//         kind,
+//         loc,
+//     };
+// };
 
 type Block = {
     type: 'block';
@@ -109,19 +109,19 @@ export type PP =
           attributes?: Array<string>;
           loc: Loc;
       }
-    | { type: 'id'; text: string; id: string; kind: string; loc: Loc }
+    // | { type: 'id'; text: string; id: string; kind: string; loc: Loc }
     | Block
     | Args
     | Items;
 
-export const isAtomic = (x: PP) => x.type === 'atom' || x.type === 'id';
+export const isAtomic = (x: PP) => x.type === 'atom'; // || x.type === 'id';
 
 export const crawl = (x: PP, fn: (p: PP) => PP): PP => {
     switch (x.type) {
         case 'atom':
             return fn(x);
-        case 'id':
-            return fn(x);
+        // case 'id':
+        //     return fn(x);
         case 'block':
             x = fn(x) as Block;
             return {
@@ -157,8 +157,8 @@ const width = (x: PP): number => {
             }
             // TODO: account for newlines?
             return x.text.length;
-        case 'id':
-            return x.text.length + 1 + x.id.length;
+        // case 'id':
+        //     return x.text.length + 1 + x.id.length;
         case 'items':
             return x.items.reduce((w, x) => width(x) + w, 0);
         default:
@@ -204,30 +204,30 @@ export const printToStringInner = (
         }
         return lines.join('\n' + white);
     }
-    if (pp.type === 'id') {
-        if (!pp.id) {
-            current.pos += pp.text.length;
-        } else {
-            current.pos += pp.text.length + 1 + pp.id.length;
-        }
-        current.line += pp.text.split(/\n/g).length - 1;
+    // if (pp.type === 'id') {
+    //     if (!pp.id) {
+    //         current.pos += pp.text.length;
+    //     } else {
+    //         current.pos += pp.text.length + 1 + pp.id.length;
+    //     }
+    //     current.line += pp.text.split(/\n/g).length - 1;
 
-        if (pp.loc.idx) {
-            sourceMap[pp.loc.idx] = {
-                start,
-                end: {
-                    line: current.line,
-                    column: current.pos,
-                },
-                idx: pp.loc.idx,
-            };
-        }
+    //     if (pp.loc.idx) {
+    //         sourceMap[pp.loc.idx] = {
+    //             start,
+    //             end: {
+    //                 line: current.line,
+    //                 column: current.pos,
+    //             },
+    //             idx: pp.loc.idx,
+    //         };
+    //     }
 
-        if (!pp.id) {
-            return pp.text;
-        }
-        return pp.text + '#' + pp.id;
-    }
+    //     if (!pp.id) {
+    //         return pp.text;
+    //     }
+    //     return pp.text + '#' + pp.id;
+    // }
     // Always breaks
     if (pp.type === 'block') {
         let res = '{';

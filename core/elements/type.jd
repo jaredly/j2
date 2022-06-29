@@ -1,0 +1,175 @@
+##[builtins]##
+//:value:hello:(v: "hello") => int
+//:value:ten:(v: 10) => int
+//:value:id:<T>(x: T) => T
+//:value:wantsId:(v: <T>(x: T) => T) => int
+//:type:Array:<Element>
+
+##[fixtures]##
+==[basic]==
+--[input]--
+@test:type(: bool) 10
+
+--[output:expected]--
+alias bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+@test:type(:bool) 10
+// 10
+
+==[constants]==
+--[input]--
+@test:type(: "hello", : 10) "target"
+
+--[output:expected]--
+alias test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+@test:type(:"hello", :10) "target"
+// "target"
+
+==[lambdas]==
+--[input]--
+@test:type(: () => 10, :(v: int, float) => int) "ok"
+
+--[output:expected]--
+alias float=h1c9cc9450fe2e869a48abaa5e4a85271e1625474 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+@test:type(:() => 10, :(v: int, float) => int) "ok"
+// "ok"
+
+==[tvars]==
+--[input]--
+@test:type(: <T>(v: T) => T) 10
+
+--[output:expected]--
+alias T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+@test:type(:<T>(v: T) => T) 10
+// 10
+
+==[unresovled]==
+--[input:shouldFail]--
+@test:type(: hello) 10
+
+--[output:expected]--
+alias test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+@test:type(:hello#[:unresolved:]) 10
+// 10
+
+==[arg default]==
+--[input]--
+@test:type(: <T: string, A: int = 10>(a: T, b: A) => A) 100
+
+--[output:expected]--
+alias A=1 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+@test:type(:<T: string, A: int = 10>(a: T, b: A) => A) 100
+// 100
+
+==[basic type alias]==
+--[input]--
+type hello = int
+@test:type(: hello) 10
+
+--[output:expected]--
+alias hello=h71dff831aa3829237024227a2b3a323aedaf48fa int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+type hello = int
+// h71dff831aa3829237024227a2b3a323aedaf48fa
+@test:type(:hello) 10
+// 10
+
+==[bound]==
+--[input:shouldFail]--
+type StringMe = <T: string>int;
+@test:type(:StringMe<20>) 10
+@test:type(:StringMe<"hello">) 10
+
+--[output:expected]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=hb7aaee3dd04f1e3813a33985eef551130d2c059d T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+type StringMe = <T: string>int
+// hb7aaee3dd04f1e3813a33985eef551130d2c059d
+@test:type(:StringMe<@error:argWrongType(expected: :string) 20>) 10
+// 10
+@test:type(:StringMe<"hello">) 10
+// 10
+
+==[decorate the type]==
+--[input]--
+@test:type(: @test:type() string) 10
+
+--[output:expected]--
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+@test:type(:@test:type() string) 10
+// 10
+
+==[literals]==
+--[input:shouldFail]--
+hello("hello")
+hello("ho")
+ten(10)
+ten(5)
+
+--[output:expected]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f hello=h4be83b97ef46480eb6f8573f2ab90ed7c5c8b1e5 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f ten=hf4f51e4cf24724da57c43defaba9896829117c9f
+hello("hello")
+// int
+hello(@error:argWrongType(expected: :"hello") "ho")
+// int
+ten(10)
+// int
+ten(@error:argWrongType(expected: :10) 5)
+// int
+
+==[rank 2 my folks]==
+--[input]--
+wantsId(id)
+
+--[output:expected]--
+alias id=hf5df74f88f6398e9901d80dd2392d8fffa98142d int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f wantsId=h3b8037c287f715e3d39f600ea453673b4ab5768c
+wantsId(id)
+// int
+
+==[string top]==
+--[input]--
+type x = "one" + string
+type Z = (<S: string>int)<x>
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f S=0 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 x=hb69f0f40f2b530ad4b31a4a73c176bed352120aa
+type x = "one" + string
+// hb69f0f40f2b530ad4b31a4a73c176bed352120aa
+type Z = (<S: string>int)<x>
+// h7cefd7d359358c7c7dab9a27db4e4321cb1e533c
+
+==[string ops]==
+--[input:shouldFail]--
+type FancyArray = <Element: "one" + string + "suffix">Array<Element>
+type Good = FancyArray<"ones and a suffix">
+type Bad = FancyArray<"something else">
+
+--[output:expected]--
+alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=0 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f FancyArray=h6d6365331df1a0160982043b31ae92b9c4e06095 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+type FancyArray = <Element: "one" + string + "suffix">Array<Element>
+// h6d6365331df1a0160982043b31ae92b9c4e06095
+type Good = FancyArray<"ones and a suffix">
+// hea8103e5d3ab7971316c9ce8b44b168b3216ec01
+type Bad = FancyArray<@error:argWrongType(expected: :"one" + string + "suffix") "something else">
+// h848399edc53542d0c3a1789ea5d3b248bc31ea6a
+
+==[string ops_]==
+--[input:shouldFail]--
+type NumArray = <Element: 10 + uint>Array<Element>
+type Good = NumArray<20>
+type Bad = NumArray<5>
+
+--[output:expected]--
+alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=0 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f NumArray=h8d08c0a1c89df7f5368941f19c4d450c971f18fa uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+type NumArray = <Element: 10 + uint>Array<Element>
+// h8d08c0a1c89df7f5368941f19c4d450c971f18fa
+type Good = NumArray<@error:argWrongType(expected: :10 + uint) 20>
+// hddaa4529177b2df433186e20be0801674d287d95
+type Bad = NumArray<@error:argWrongType(expected: :10 + uint) 5>
+// h276d55f69ec8f1ea2d3f53e06f6de590e4946ee4
+
+==[New fixture]==
+--[input]--
+type X = (<X: 10u>int)<5u + 5>
+
+--[output:expected]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f X=0
+type X = (<X: 10>int)<@error:argWrongType(expected: :10) (5 + 5)>
+// hc8014298959950d07c05734578b16d23911a1ef3
