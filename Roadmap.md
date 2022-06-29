@@ -3,6 +3,18 @@
 	- Lesson learned: hashing stuff takes time, so reparsing builtins was killing me.
 	- Now we have 2ms rerender instead of 40!
 
+
+# RECONSIDER
+
+What parts of the code have gotten ungainly?
+- [ ] updating fixtures when hashing changes (due to a modification of types) is super annoying.
+	- I want a cli function that is "update all fixtures that are the same modulo the aliases mapping"
+- [ ] fixture overview doesn't highlight failing fixtures
+- [ ] 
+
+
+
+
 Ok what Im doing now:
 
 - [x] type aliases

@@ -1,5 +1,11 @@
 import { readdirSync } from 'fs';
-import { clearLocs, loadFixtures, runFixture } from './fixture-utils';
+import { builtinContext } from '../../ctx';
+import {
+    clearLocs,
+    loadBuiltins,
+    loadFixtures,
+    runFixture,
+} from './fixture-utils';
 
 const base = __dirname + '/../../elements/';
 readdirSync(base)
@@ -9,6 +15,8 @@ readdirSync(base)
 
         describe('analyze ' + file, () => {
             const { file, hasOnly } = loadFixtures(fixtureFile);
+            const baseCtx = builtinContext.clone();
+            loadBuiltins(file.builtins, baseCtx);
 
             it.each(file.fixtures)('$title', (fixture) => {
                 let {
@@ -17,9 +25,10 @@ readdirSync(base)
                     output_expected,
                     builtins_deprecated: builtins,
                 } = fixture;
+
                 let { checked, newOutput, outputTast } = runFixture(
                     fixture,
-                    file.builtins,
+                    baseCtx,
                 );
 
                 const fullExpectedOutput = output_expected;
