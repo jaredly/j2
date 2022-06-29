@@ -490,5 +490,8 @@ export const serial = (x: any): any => {
     if (typeof x === 'function') {
         return 'function ' + x;
     }
+    if (typeof x === 'string') {
+        return JSON.stringify(x);
+    }
     return '' + x;
 };
