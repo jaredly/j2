@@ -299,7 +299,9 @@ export const ToAst = {
             return { ...inner, args: inner.args.concat([targs]) };
         }
         const in2: p.TAtom =
-            inner.type === 'TDecorated' || inner.type === 'TOps'
+            inner.type === 'TDecorated' ||
+            inner.type === 'TOps' ||
+            inner.type === 'TVars'
                 ? { type: 'TParens', inner: inner, loc }
                 : inner;
         return {
@@ -535,9 +537,11 @@ export const ToPP = {
         );
     },
     TApply({ args, inner, loc }: p.TApply_inner, ctx: PCtx): pp.PP {
+        const pinner = ctx.ToPP[inner.type](inner as any, ctx);
         return pp.items(
             [
-                ctx.ToPP[inner.type](inner as any, ctx),
+                // inner.type === 'TVars'
+                pinner,
                 ...args.map(({ items, loc }) =>
                     pp.args(
                         items.map((arg) => ctx.ToPP[arg.type](arg as any, ctx)),

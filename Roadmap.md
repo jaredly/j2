@@ -13,6 +13,8 @@ Ok what Im doing now:
 - [ ] records! and tuples.
 
 
+Printing (<T>int)<T> isn't quite right
+
 
 
 - [ ] type aliases! And let's make sure that mutually recursive types work

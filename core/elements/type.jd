@@ -132,7 +132,7 @@ type Z = (<S: string>int)<x>
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f S=0 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 x=h7fc97c182cf17564c6c2cb6e862ca356e8f81abe
 type x = "one" + string
 // h7fc97c182cf17564c6c2cb6e862ca356e8f81abe
-type Z = <S: string>int<x>
+type Z = (<S: string>int)<x>
 // h314d8f03199abc096f04758985366115ff81f828
 
 ==[string ops]==
@@ -171,5 +171,5 @@ type X = (<X: 10u>int)<5u + 5>
 
 --[output:expected]--
 alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f X=0
-type X = <X: 10>int<@error:argWrongType(expected: :10) (5 + 5)>
+type X = (<X: 10>int)<@error:argWrongType(expected: :10) (5 + 5)>
 // hd21223888b6b23b3af4fd87ee7e6ced829bef13c
