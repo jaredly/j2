@@ -85,7 +85,7 @@ alias Array=h8de4ecae93abe8de85536031f6f8a05742a6ee53 error:argWrongType=hfcfe64
 ) 10
 // 10
 
-==[New fixture]==
+==[taking a generic argument]==
 --[input:shouldFail]--
 takesArray(10)
 takesArray(anArray)

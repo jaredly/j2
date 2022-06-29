@@ -24,9 +24,11 @@ import { OneFixture } from './OneFixture';
 export const FixtureFile = ({
     name,
     listing,
+    pin,
 }: {
     name: string;
     listing: string[];
+    pin: number | null;
 }) => {
     let last = React.useRef(null as null | string);
     const [data, setData] = usePromise(
@@ -96,9 +98,14 @@ export const FixtureFile = ({
                 ))}
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 {data.fixtures.map((fixture: Fixture, i) => (
-                    <Link href={`#${name}/${i}`} key={i} block>
-                        {fixture.title}
-                    </Link>
+                    <div key={i}>
+                        <Link href={`#${name}/${i}`} key={i}>
+                            {fixture.title}
+                        </Link>
+                        <Link href={`#${name}/${i}/pin`} key={i}>
+                            Pin
+                        </Link>
+                    </div>
                 ))}
             </div>
 
@@ -198,21 +205,23 @@ export const FixtureFile = ({
                     )}
                     <Card.Divider css={{ marginBlock: '$6' }} />
 
-                    {data.fixtures.map((fixture: Fixture, i) => (
-                        <OneFixture
-                            builtins={data.builtins}
-                            portal={portal.current!}
-                            id={`${name}/${i}`}
-                            fixture={fixture}
-                            key={i}
-                            onChange={(fixture) => {
-                                console.log('chagne', fixture, i);
-                                const fixtures = data.fixtures.slice();
-                                fixtures[i] = fixture;
-                                setData({ ...data, fixtures });
-                            }}
-                        />
-                    ))}
+                    {data.fixtures.map((fixture: Fixture, i) =>
+                        pin == null || i == pin ? (
+                            <OneFixture
+                                key={i}
+                                builtins={data.builtins}
+                                portal={portal.current!}
+                                id={`${name}/${i}`}
+                                fixture={fixture}
+                                onChange={(fixture) => {
+                                    console.log('chagne', fixture, i);
+                                    const fixtures = data.fixtures.slice();
+                                    fixtures[i] = fixture;
+                                    setData({ ...data, fixtures });
+                                }}
+                            />
+                        ) : null,
+                    )}
                     <Spacer />
                     <Button
                         onPress={() => {

@@ -116,13 +116,12 @@ export const Highlight = ({
                               position: 'absolute',
                               top: hover.pos.y + 14,
                               left: hover.pos.x,
-                              width: 200,
+                              width: 600,
                               zIndex: 1000,
                               padding: '$4',
                               pointerEvents: 'none',
                           }}
                       >
-                          {/* {JSON.stringify(hover)} */}
                           {annotations
                               .filter(
                                   (ann) =>
@@ -131,7 +130,6 @@ export const Highlight = ({
                               )
                               .sort(
                                   (a, b) =>
-                                      // b.loc.start.offset - a.loc.start.offset
                                       a.loc.end.offset -
                                       a.loc.start.offset -
                                       (b.loc.end.offset - b.loc.start.offset),

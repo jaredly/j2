@@ -135,6 +135,7 @@ export const typeMatches = (
     while (candidate.type === 'TDecorated') {
         candidate = candidate.inner;
     }
+
     // if (expected.type === 'TOr') {
     //     if (candidate.type === 'TOr') {
     //         return candidate.elements.every((can) =>
@@ -155,6 +156,7 @@ export const typeMatches = (
     //     return false;
     // }
     // console.log(candidate, expected);
+
     switch (candidate.type) {
         case 'TVars': {
             if (

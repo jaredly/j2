@@ -41,7 +41,11 @@ const App = () => {
         return <>Loading...</>;
     }
     return hash ? (
-        <FixtureFile listing={listing} name={hash.split('/')[0]} />
+        <FixtureFile
+            listing={listing}
+            name={hash.split('/')[0]}
+            pin={hash.endsWith('/pin') ? +hash.split('/')[1] : null}
+        />
     ) : (
         <div
             style={{

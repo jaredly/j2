@@ -8,6 +8,7 @@ Ok what Im doing now:
 - [x] tapply at the ast level?
 - [x] typeMatch for ... tvars?
 - [x] defaults
+- [ ] pin
 - [ ] TYPE ARITHMATIC
 - [ ] then enums? Could be fun. At that point recursive types make sense.
 - [ ] records! and tuples.

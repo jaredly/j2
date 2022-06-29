@@ -164,6 +164,7 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             }
             if (!typeMatches(at, ttype.args[i].typ, ctx._full)) {
                 changed = true;
+                console.log(at, ttype.args[i].typ);
                 return decorate(arg, 'argWrongType', hit, ctx._full, [
                     {
                         label: 'expected',
