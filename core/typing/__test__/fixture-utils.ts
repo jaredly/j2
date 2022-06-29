@@ -4,8 +4,8 @@ import {
     addBuiltin,
     addBuiltinDecorator,
     addBuiltinType,
+    builtinContext,
     FullContext,
-    fullContext,
     hashTypes,
     noloc,
 } from '../../ctx';
@@ -188,10 +188,11 @@ export const parseRaw = (
 ): [File, FullContext] => {
     if (raw.startsWith('alias ')) {
         const idx = raw.indexOf('\n');
-        ctx.aliases = aliasesFromString(raw.slice(0, idx));
+        ctx = { ...ctx, aliases: aliasesFromString(raw.slice(0, idx)) };
         raw = raw.slice(idx + 1);
     }
-    const [file, tctx] = ctx.ToTast.File(fixComments(parseFile(raw)), ctx);
+    const ast = parseFile(raw);
+    const [file, tctx] = ctx.ToTast.File(fixComments(ast), ctx);
     return [file, tctx as FullContext];
 };
 
@@ -209,11 +210,9 @@ export type FixtureResult = {
 
 export function runFixture(
     { input, output_expected }: Fixture,
-    builtins: Builtin[],
+    baseCtx: FullContext,
 ): FixtureResult {
-    let ctx = fullContext();
-
-    loadBuiltins(builtins, ctx);
+    let ctx = baseCtx.clone();
 
     let tast;
     try {
@@ -256,7 +255,6 @@ export function runFixture(
                     transformType(t.type, locClearVisitor, null),
                 ),
             );
-            // console.log('Adding hashes', top.elements[0].name, hash);
             checked.comments.push([
                 {
                     ...top.loc,
@@ -274,8 +272,7 @@ export function runFixture(
 
     let outputTast;
 
-    let ctx2 = fullContext();
-    loadBuiltins(builtins, ctx2);
+    let ctx2 = baseCtx.clone();
     try {
         [outputTast, ctx2] = parseRaw(output_expected, ctx2);
     } catch (err) {
@@ -297,7 +294,7 @@ export function runFixture(
     };
 }
 
-function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
+export function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
     builtins.forEach((builtin) => {
         switch (builtin.kind) {
             case 'value':

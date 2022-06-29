@@ -9,13 +9,14 @@ import {
     Textarea,
 } from '@nextui-org/react';
 import * as React from 'react';
-import { FullContext } from '../core/ctx';
+import { builtinContext, FullContext } from '../core/ctx';
 import {
     Fixture,
     parseFixtureFile,
     serializeFixtureFile,
     serializeBuiltin,
     parseBuiltin,
+    loadBuiltins,
 } from '../core/typing/__test__/fixture-utils';
 import { colors } from './Highlight';
 import { usePromise } from './index';
@@ -58,6 +59,16 @@ export const FixtureFile = ({
     const [editBuiltins, setEditBuiltins] = React.useState(
         null as null | string,
     );
+
+    const ctx = React.useMemo(() => {
+        let ctx = builtinContext.clone();
+        console.log(ctx);
+        if (data) {
+            console.log('LAODIng builtins', data.builtins);
+            loadBuiltins(data.builtins, ctx);
+        }
+        return ctx;
+    }, [data?.builtins]);
 
     React.useEffect(() => {
         portal.current = document.createElement('div');
@@ -209,6 +220,7 @@ export const FixtureFile = ({
                         pin == null || i == pin ? (
                             <OneFixture
                                 key={i}
+                                ctx={ctx}
                                 builtins={data.builtins}
                                 portal={portal.current!}
                                 id={`${name}/${i}`}

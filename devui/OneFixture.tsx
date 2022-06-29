@@ -10,12 +10,13 @@ import {
 } from '@nextui-org/react';
 import equal from 'fast-deep-equal';
 import * as React from 'react';
-import { FullContext } from '../core/ctx';
+import { builtinContext, FullContext } from '../core/ctx';
 import { errorCount } from '../core/typing/analyze';
 import {
     Builtin,
     Fixture,
     FixtureResult,
+    loadBuiltins,
     runFixture,
 } from '../core/typing/__test__/fixture-utils';
 import { Editor } from './Editor';
@@ -26,9 +27,11 @@ export function OneFixture({
     onChange,
     portal,
     id,
+    ctx,
     builtins,
 }: {
     id: string;
+    ctx: FullContext;
     portal: HTMLDivElement;
     fixture: Fixture;
     onChange: (v: Fixture) => void;
@@ -44,17 +47,14 @@ export function OneFixture({
             try {
                 return {
                     type: 'success',
-                    result: runFixture(
-                        { ...fixture, input: editing },
-                        builtins,
-                    ),
+                    result: runFixture({ ...fixture, input: editing }, ctx),
                 };
             } catch (err) {
                 console.log(err);
             }
         }
         try {
-            return { type: 'success', result: runFixture(fixture, builtins) };
+            return { type: 'success', result: runFixture(fixture, ctx) };
         } catch (err) {
             return { type: 'error', error: err as Error };
         }

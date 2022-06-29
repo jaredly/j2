@@ -36,6 +36,8 @@ export type GlobalType =
     | { type: 'user'; typ: Type };
 
 export type FullContext = {
+    clone: () => FullContext;
+    symid: number;
     values: HashedNames<GlobalValue, Array<GlobalRef>>;
     types: HashedNames<GlobalType, GlobalRef>;
     decorators: HashedNames<
@@ -209,12 +211,33 @@ const resolve = (
     return [];
 };
 
-export const newContext = (aliases: FullContext['aliases']): FullContext => {
-    let symid = 0;
+export const newContext = (): FullContext => {
     const ctx: FullContext = {
+        clone() {
+            return {
+                ...this,
+                values: {
+                    hashed: { ...this.values.hashed },
+                    names: { ...this.values.names },
+                },
+                decorators: {
+                    hashed: { ...this.decorators.hashed },
+                    names: { ...this.decorators.names },
+                },
+                types: {
+                    hashed: { ...this.types.hashed },
+                    names: { ...this.types.names },
+                },
+                locals: this.locals.slice(),
+                aliases: { ...this.aliases },
+            };
+        },
+        symid: 0,
         locals: [],
-        aliases,
-        resetSym: () => (symid = 0),
+        aliases: {},
+        resetSym() {
+            this.symid = 0;
+        },
         decorators: { hashed: {}, names: {} },
         values: { hashed: {}, names: {} },
         types: { hashed: {}, names: {} },
@@ -241,7 +264,7 @@ export const newContext = (aliases: FullContext['aliases']): FullContext => {
         sym(name) {
             return {
                 name,
-                id: symid++,
+                id: this.symid++,
             };
         },
 
@@ -465,11 +488,13 @@ export const setupDefaults = (ctx: FullContext) => {
     // );
 };
 
-export const fullContext = (aliases: FullContext['aliases'] = {}) => {
-    const ctx = newContext(aliases);
+export const fullContext = () => {
+    const ctx = newContext();
     setupDefaults(ctx);
     return ctx;
 };
+
+export const builtinContext = fullContext();
 
 export const serial = (x: any): any => {
     if (Array.isArray(x)) {

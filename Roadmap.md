@@ -1,4 +1,8 @@
 
+- [x] wait perf is really bad
+	- Lesson learned: hashing stuff takes time, so reparsing builtins was killing me.
+	- Now we have 2ms rerender instead of 40!
+
 Ok what Im doing now:
 
 - [x] type aliases
@@ -9,17 +13,19 @@ Ok what Im doing now:
 - [x] typeMatch for ... tvars?
 - [x] defaults
 - [x] pin
-- [ ] TYPE ARITHMATIC
-	- [ ] hm 10 <- 5 + 5
+- [x] TYPE ARITHMATIC
+	- [x] hm 10 <- 5 + 5
 - [ ] then enums? Could be fun. At that point recursive types make sense.
 - [ ] records! and tuples.
+- [ ] ok eventually I have to do control structures. and, like ,lambdas
 
 
-Printing (<T>int)<T> isn't quite right
+- [x] Printing (<T>int)<T> isn't quite right
 
 
 
-- [ ] type aliases! And let's make sure that mutually recursive types work
+- [-] type aliases! 
+	- [ ] And let's make sure that mutually recursive types work
 	- Can I even do those without records yet? No idea. like, functions seem weird
 ```ts
 type X = () => Y
