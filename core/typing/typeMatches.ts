@@ -3,9 +3,11 @@ import { FullContext, noloc } from '../ctx';
 import { idsEqual } from '../ids';
 import { transformType, Visitor } from '../transform-tast';
 import {
+    Number,
     Ref,
     refHash,
     RefKind,
+    String,
     TApply,
     TLambda,
     TOps,
@@ -137,6 +139,13 @@ export const typeMatches = (
         candidate = candidate.inner;
     }
 
+    if (expected.type === 'TOps') {
+        expected = collapseOps(expected, ctx);
+    }
+    if (candidate.type === 'TOps') {
+        candidate = collapseOps(candidate, ctx);
+    }
+
     // if (expected.type === 'TOr') {
     //     if (candidate.type === 'TOr') {
     //         return candidate.elements.every((can) =>
@@ -159,6 +168,8 @@ export const typeMatches = (
     // console.log(candidate, expected);
 
     switch (candidate.type) {
+        case 'TDecorated':
+            return typeMatches(candidate.inner, expected, ctx);
         case 'TVars': {
             if (
                 expected.type !== 'TVars' ||
@@ -346,9 +357,10 @@ export const typeMatches = (
                     expected.value === candidate.value
                 );
             } else if (expected.type === 'TOps') {
-                if (candidate.kind !== 'UInt') {
-                    return false;
-                }
+                // if (candidate.kind !== 'UInt') {
+                //     return false;
+                // }
+                console.log('nops', expected);
                 let num = 0;
                 const mm = { max: false, min: false };
                 // let ismax = false;
@@ -403,4 +415,140 @@ export const typeMatches = (
                 );
             }
     }
+};
+
+const opKind = (
+    t: Type,
+    ctx: FullContext,
+): 'String' | 'Int' | 'Float' | 'UInt' | null => {
+    switch (t.type) {
+        case 'Number':
+            return t.kind;
+        case 'String':
+            return 'String';
+        case 'TRef':
+            if (isBuiltinType(t, 'string', ctx)) {
+                return 'String';
+            }
+            if (isBuiltinType(t, 'int', ctx)) {
+                return 'Int';
+            }
+            if (isBuiltinType(t, 'float', ctx)) {
+                return 'Float';
+            }
+            if (isBuiltinType(t, 'uint', ctx)) {
+                return 'UInt';
+            }
+    }
+    return null;
+};
+
+type vkind = 'String' | 'Int' | 'Float' | 'UInt';
+export const collapseOps = (t: TOps, ctx: FullContext): Type => {
+    let kinds: vkind[] = [];
+    let elements = [{ plus: true, val: t.left }].concat(
+        t.right.map(({ top, right }) => ({
+            plus: top === '+',
+            val: right,
+        })),
+    );
+    for (let el of elements) {
+        let k = opKind(el.val, ctx);
+        if (!k) {
+            return t;
+        }
+        if (!kinds.includes(k)) {
+            kinds.push(k);
+        }
+    }
+
+    if (!kinds.length) {
+        return t;
+    }
+
+    if (kinds.includes('String')) {
+        if (kinds.length !== 1) {
+            return t;
+        }
+        // Can't do string subtraction
+        if (elements.some((op) => !op.plus)) {
+            return t;
+        }
+        let condensed: typeof elements = [];
+        while (elements.length) {
+            const next = elements.shift()!;
+            let lid = condensed.length - 1;
+            if (next.val.type !== 'String') {
+                if (!condensed.length || condensed[lid].val.type === 'String') {
+                    condensed.push(next);
+                }
+                // Otherwise, the last one is already a full 'string' ref
+                continue;
+            }
+            if (!condensed.length || condensed[lid].val.type !== 'String') {
+                condensed.push(next);
+            } else {
+                const last = condensed[lid].val as String;
+                condensed[lid].val = {
+                    ...last,
+                    text: last.text + next.val.text,
+                };
+            }
+        }
+        if (!condensed[0].plus) {
+            console.warn('WAHT first is not plus');
+            return t;
+        }
+        if (condensed.length === 1) {
+            return condensed[0].val;
+        }
+        return {
+            ...t,
+            left: condensed[0].val,
+            right: condensed
+                .slice(1)
+                .map((el) => ({ top: el.plus ? '+' : '-', right: el.val })),
+        };
+    }
+
+    if (kinds.length !== 1) {
+        console.log('multiples, not dealing with right now');
+        return t;
+    }
+
+    let condensed: typeof elements = [];
+    while (elements.length) {
+        const next = elements.shift()!;
+        let lid = condensed.length - 1;
+        if (next.val.type === 'TRef') {
+            condensed.push(next);
+        } else if (!condensed.length || condensed[lid].val.type === 'TRef') {
+            condensed.push(next);
+        } else {
+            const last = condensed[lid].val as Number;
+            const num = next.val as Number;
+            if (last.kind !== num.kind) {
+                condensed.push(next);
+            } else {
+                condensed[lid].val = {
+                    ...last,
+                    value: last.value + num.value * (next.plus ? 1 : -1),
+                };
+            }
+        }
+    }
+    if (!condensed[0].plus) {
+        console.warn('WAHT first is not plus');
+        return t;
+    }
+    if (condensed.length === 1) {
+        return condensed[0].val;
+    }
+    return {
+        ...t,
+        left: condensed[0].val,
+        right: condensed
+            .slice(1)
+            .map((el) => ({ top: el.plus ? '+' : '-', right: el.val })),
+    };
 };

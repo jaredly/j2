@@ -165,11 +165,36 @@ type Good = NumArray<@error:argWrongType(expected: :10 + uint) 20>
 type Bad = NumArray<@error:argWrongType(expected: :10 + uint) 5>
 // h276d55f69ec8f1ea2d3f53e06f6de590e4946ee4
 
-==[New fixture]==
+==[type arithmetic]==
 --[input]--
-type X = (<X: 10u>int)<5u + 5>
+type X = (<X: 10 + int>int)<10 + 3>
+type X = (<X: 5 + 5>int)<10>
+type X = (<X: string + ".js">int)<"hello.js">
+
+type X = (<X: string + ".js">int)<"hi" + ".js">
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f X=0
-type X = (<X: 10>int)<@error:argWrongType(expected: :10) (5 + 5)>
-// hc8014298959950d07c05734578b16d23911a1ef3
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 X=0
+type X = (<X: 10 + int>int)<10 + 3>
+// h7229903b24c40acab2531db0fa17a01ec74df0fe
+type X = (<X: 5 + 5>int)<10>
+// h6a736900eec887b3faf7f1d3a45be842a62bd279
+type X = (<X: string + ".js">int)<"hello.js">
+// h4a3de00ab113949f15ff39dbf1abcc04933190af
+type X = (<X: string + ".js">int)<"hi" + ".js">
+// h9611b9eb33993c98028a2484c45b5c0a400cd0f4
+
+==[type arithmetic fail]==
+--[input:shouldFail]--
+type X = (<X: 10 + int>int)<5>
+type X = (<X: 10 + int>int)<int>
+type X = (<X: string + ".js">int)<string>
+
+--[output:expected]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 X=0
+type X = (<X: 10 + int>int)<@error:argWrongType(expected: :10 + int) 5>
+// h5b9db33c3e4e36cc589b14a5f03409fa8fd4b746
+type X = (<X: 10 + int>int)<@error:argWrongType(expected: :10 + int) int>
+// h59c4de508bc89e4b45d8bc027629fc897b855e67
+type X = (<X: string + ".js">int)<@error:argWrongType(expected: :string + ".js") string>
+// hb526339bbaf5aa4221ca9b188ef675a3fd941d0d
