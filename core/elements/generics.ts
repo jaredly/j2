@@ -152,7 +152,7 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         return changed ? { ...node, args } : node;
     },
     Type_TApply(node, { ctx, hit }) {
-        const inner = ctx.resolveType(node.target);
+        const inner = ctx.resolveAnalyzeType(node.target);
         if (!inner) {
             console.log('not resolved', node, ctx);
             return null;

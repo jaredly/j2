@@ -1,23 +1,18 @@
-import { typeToString } from '../../devui/Highlight';
-import { FullContext, noloc } from '../ctx';
-import { idsEqual } from '../ids';
+import { noloc } from '../ctx';
+import { Id, idsEqual } from '../ids';
 import { transformType, Visitor } from '../transform-tast';
 import {
     Number,
-    Ref,
-    refHash,
     RefKind,
     String,
     TApply,
     TLambda,
     TOps,
-    TOr,
     TRef,
     TVar,
     TVars,
     Type,
 } from '../typed-ast';
-import { resolveType } from './analyze';
 import { applyType } from './getType';
 
 export const refsEqual = (a: RefKind, b: RefKind): boolean => {
@@ -37,12 +32,18 @@ export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     return refsEqual(a, b);
 };
 
-export type Ctx = {};
+// TypeCtx? idk
+export type Ctx = {
+    isBuiltinType(t: Type, name: string): boolean;
+    getBuiltinRef(name: string): Type | null;
+    resolveRefsAndApplies(t: Type): Type | null;
+    getValueType(id: Id): Type | null;
+};
 
-export const isBuiltinType = (t: Type, name: string, ctx: FullContext) =>
-    t.type === 'TRef' &&
-    t.ref.type === 'Global' &&
-    refsEqual(t.ref, ctx.types.names[name]);
+// export const isBuiltinType = (t: Type, name: string, ctx: FullContext) =>
+//     t.type === 'TRef' &&
+//     t.ref.type === 'Global' &&
+//     refsEqual(t.ref, ctx.types.names[name]);
 
 // export const reduceConstant = (t: Type): Type => {
 //     if (t.type === 'TAdd') {
@@ -120,11 +121,11 @@ export const justAdds = (t: TOps): Type[] | null => {
 export const typeMatches = (
     candidate: Type,
     expected: Type,
-    ctx: FullContext,
+    ctx: Ctx,
 ): boolean => {
     // Ok I need like a "resolve refs" function
-    const c2 = resolveType(candidate, ctx)!;
-    const e2 = resolveType(expected, ctx);
+    const c2 = ctx.resolveRefsAndApplies(candidate)!;
+    const e2 = ctx.resolveRefsAndApplies(expected);
     if (c2 != null) {
         candidate = c2;
     }
@@ -232,12 +233,12 @@ export const typeMatches = (
         case 'TOps': {
             const adds = justAdds(candidate);
             if (
-                isBuiltinType(expected, 'string', ctx) &&
+                ctx.isBuiltinType(expected, 'string') &&
                 adds &&
                 adds.every(
                     (add) =>
                         add.type === 'String' ||
-                        isBuiltinType(add, 'string', ctx),
+                        ctx.isBuiltinType(add, 'string'),
                 )
             ) {
                 return true;
@@ -279,7 +280,7 @@ export const typeMatches = (
                                 return false;
                             }
                             pos = idx + ex.text.length;
-                        } else if (isBuiltinType(ex, 'string', ctx)) {
+                        } else if (ctx.isBuiltinType(ex, 'string')) {
                             exact = false;
                         } else {
                             return false;
@@ -291,7 +292,7 @@ export const typeMatches = (
                     return true;
                 }
                 default:
-                    return isBuiltinType(expected, 'string', ctx);
+                    return ctx.isBuiltinType(expected, 'string');
             }
         // Ooh if this is an alias, I need to resolve it?
         case 'TApply':
@@ -360,7 +361,7 @@ export const typeMatches = (
                 // if (candidate.kind !== 'UInt') {
                 //     return false;
                 // }
-                console.log('nops', expected);
+                // console.log('nops', expected);
                 let num = 0;
                 const mm = { max: false, min: false };
                 // let ismax = false;
@@ -385,7 +386,7 @@ export const typeMatches = (
                         //     num += el.value;
                         // }
                     } else if (
-                        isBuiltinType(el, candidate.kind.toLowerCase(), ctx)
+                        ctx.isBuiltinType(el, candidate.kind.toLowerCase())
                     ) {
                         mm[op === '+' ? 'min' : 'max'] = true;
                         // ismax = true;
@@ -404,14 +405,13 @@ export const typeMatches = (
                 if (
                     candidate.kind === 'Int' &&
                     candidate.value >= 0 &&
-                    isBuiltinType(expected, 'uint', ctx)
+                    ctx.isBuiltinType(expected, 'uint')
                 ) {
                     return true;
                 }
-                return isBuiltinType(
+                return ctx.isBuiltinType(
                     expected,
                     candidate.kind.toLowerCase(),
-                    ctx,
                 );
             }
     }
@@ -419,7 +419,7 @@ export const typeMatches = (
 
 const opKind = (
     t: Type,
-    ctx: FullContext,
+    ctx: Ctx,
 ): 'String' | 'Int' | 'Float' | 'UInt' | null => {
     switch (t.type) {
         case 'Number':
@@ -427,16 +427,16 @@ const opKind = (
         case 'String':
             return 'String';
         case 'TRef':
-            if (isBuiltinType(t, 'string', ctx)) {
+            if (ctx.isBuiltinType(t, 'string')) {
                 return 'String';
             }
-            if (isBuiltinType(t, 'int', ctx)) {
+            if (ctx.isBuiltinType(t, 'int')) {
                 return 'Int';
             }
-            if (isBuiltinType(t, 'float', ctx)) {
+            if (ctx.isBuiltinType(t, 'float')) {
                 return 'Float';
             }
-            if (isBuiltinType(t, 'uint', ctx)) {
+            if (ctx.isBuiltinType(t, 'uint')) {
                 return 'UInt';
             }
     }
@@ -444,7 +444,7 @@ const opKind = (
 };
 
 type vkind = 'String' | 'Int' | 'Float' | 'UInt';
-export const collapseOps = (t: TOps, ctx: FullContext): Type => {
+export const collapseOps = (t: TOps, ctx: Ctx): Type => {
     let kinds: vkind[] = [];
     let elements = [{ plus: true, val: t.left }].concat(
         t.right.map(({ top, right }) => ({
@@ -512,7 +512,7 @@ export const collapseOps = (t: TOps, ctx: FullContext): Type => {
     }
 
     if (kinds.length !== 1) {
-        console.log('multiples, not dealing with right now');
+        // console.log('multiples, not dealing with right now');
         return t;
     }
 

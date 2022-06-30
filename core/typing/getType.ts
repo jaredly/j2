@@ -2,9 +2,9 @@ import { FullContext, tref } from '../ctx';
 import { extract, idToString } from '../ids';
 import { transformType } from '../transform-tast';
 import { Expression, Type, TVars } from '../typed-ast';
-import { typeMatches } from './typeMatches';
+import { typeMatches, Ctx } from './typeMatches';
 
-export const applyType = (args: Type[], target: TVars, ctx: FullContext) => {
+export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
     let minArgs = target.args.findIndex((arg) => arg.default_);
     if (minArgs === -1) {
         minArgs = target.args.length;
@@ -48,7 +48,7 @@ export const applyType = (args: Type[], target: TVars, ctx: FullContext) => {
 };
 
 // UMM So btw this will resolve all TRefs? Maybe? hmm maybe not..
-export const getType = (expr: Expression, ctx: FullContext): Type | null => {
+export const getType = (expr: Expression, ctx: Ctx): Type | null => {
     switch (expr.type) {
         case 'TypeApplication': {
             const target = getType(expr.target, ctx);
@@ -63,16 +63,18 @@ export const getType = (expr: Expression, ctx: FullContext): Type | null => {
             if (expr.rest.length === 0) {
                 return { type: 'String', loc: expr.loc, text: expr.first };
             }
-            return tref(ctx.types.names['string']);
+            return ctx.getBuiltinRef('string');
         case 'Ref':
             switch (expr.kind.type) {
                 case 'Unresolved':
                     return null;
                 case 'Global':
-                    const { hash, idx } = extract(expr.kind.id);
+                    // const { hash, idx } = extract(expr.kind.id);
                     // Hmm so, what if what we get is
                     // an alias?
-                    return ctx.values.hashed[hash][idx].typ;
+                    // return ctx.getBuiltinRef('string');
+                    // return ctx.values.hashed[hash][idx].typ;
+                    return ctx.getValueType(expr.kind.id);
                 case 'Local':
                     throw new Error('not yet');
             }
@@ -83,7 +85,7 @@ export const getType = (expr: Expression, ctx: FullContext): Type | null => {
             }
             return typ.result;
         case 'Boolean':
-            return tref(ctx.types.names['bool']);
+            return ctx.getBuiltinRef('bool');
         case 'Number':
             return expr;
         case 'DecoratedExpression':

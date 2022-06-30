@@ -1,9 +1,10 @@
 import hashObject from 'object-hash';
 import { Ctx } from '.';
+import { Ctx as TCtx } from './typing/typeMatches';
 import { DecoratorDecl } from './elements/decorators';
 import { TVar } from './elements/type';
 import { Loc } from './grammar/base.parser';
-import { extract, toId } from './ids';
+import { extract, idsEqual, toId } from './ids';
 import { transformType } from './transform-tast';
 import {
     Expression,
@@ -17,6 +18,7 @@ import {
 } from './typed-ast';
 import { makeToTast } from './typing/to-tast';
 import { locClearVisitor } from './typing/__test__/fixture-utils';
+import { resolveAnalyzeType } from './typing/analyze';
 
 export type HashedNames<Contents, NameV> = {
     hashed: { [hash: string]: Array<Contents> };
@@ -49,7 +51,8 @@ export type FullContext = {
         types: { sym: Sym; bound: Type | null }[];
         values: { sym: Sym; type: Type }[];
     }[];
-} & Ctx;
+} & Ctx &
+    TCtx;
 
 export const addBuiltin = (
     ctx: FullContext,
@@ -211,6 +214,16 @@ const resolve = (
     return [];
 };
 
+export const refsEqual = (a: RefKind, b: RefKind): boolean => {
+    if (a.type !== b.type) {
+        return false;
+    }
+    if (a.type === 'Global') {
+        return b.type === 'Global' && idsEqual(a.id, b.id);
+    }
+    return b.type === 'Local' && a.sym === b.sym;
+};
+
 export const newContext = (): FullContext => {
     const ctx: FullContext = {
         clone() {
@@ -237,6 +250,24 @@ export const newContext = (): FullContext => {
         aliases: {},
         resetSym() {
             this.symid = 0;
+        },
+        isBuiltinType(t, name) {
+            return (
+                t.type === 'TRef' &&
+                t.ref.type === 'Global' &&
+                refsEqual(t.ref, ctx.types.names[name])
+            );
+        },
+        getBuiltinRef(name) {
+            const gref = ctx.types.names[name];
+            return gref ? tref(gref) : null;
+        },
+        resolveRefsAndApplies(t) {
+            return resolveAnalyzeType(t, this);
+        },
+        getValueType(id) {
+            const { hash, idx } = extract(id);
+            return this.values.hashed[hash][idx].typ;
         },
         decorators: { hashed: {}, names: {} },
         values: { hashed: {}, names: {} },

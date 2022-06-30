@@ -19,12 +19,11 @@ import { analyze as analyzeApply } from '../elements/apply';
 import { analyze as analyzeConstants } from '../elements/constants';
 import { analyze as analyzeGenerics } from '../elements/generics';
 import { extract, idToString } from '../ids';
-import { typeToString } from '../../devui/Highlight';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
     getTypeArgs(ref: RefKind): TVar[] | null;
-    resolveType(type: Type): Type | null;
+    resolveAnalyzeType(type: Type): Type | null;
     typeByName(name: string): Type | null;
     _full: FullContext;
 };
@@ -39,9 +38,12 @@ export type VisitorCtx = {
 // less flexible. Can't do Some<X><Y> even though you can
 // do let Some = <X><Y>int;
 // OK BACKUP.
-export const resolveType = (type: Type, ctx: FullContext): Type | null => {
+export const resolveAnalyzeType = (
+    type: Type,
+    ctx: FullContext,
+): Type | null => {
     if (type.type === 'TDecorated') {
-        return resolveType(type.inner, ctx);
+        return resolveAnalyzeType(type.inner, ctx);
     }
     if (type.type === 'TRef') {
         if (type.ref.type === 'Global') {
@@ -54,18 +56,18 @@ export const resolveType = (type: Type, ctx: FullContext): Type | null => {
                 return null;
             }
             if (t.type === 'user') {
-                return resolveType(t.typ, ctx);
+                return resolveAnalyzeType(t.typ, ctx);
             }
         }
     }
     if (type.type === 'TApply') {
-        const target = resolveType(type.target, ctx);
+        const target = resolveAnalyzeType(type.target, ctx);
         if (!target || target.type !== 'TVars') {
             // console.log('bad apply');
             return null;
         }
         const applied = applyType(type.args, target, ctx);
-        return applied ? resolveType(applied, ctx) : null;
+        return applied ? resolveAnalyzeType(applied, ctx) : null;
     }
     return type;
 };
@@ -75,8 +77,8 @@ export const analyzeContext = (ctx: FullContext): Ctx => {
         getType(expr: Expression) {
             return getType(expr, ctx);
         },
-        resolveType(type: Type) {
-            return resolveType(type, ctx);
+        resolveAnalyzeType(type: Type) {
+            return resolveAnalyzeType(type, ctx);
         },
         typeByName(name: string) {
             const ref = ctx.types.names[name];
