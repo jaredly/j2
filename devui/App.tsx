@@ -1,7 +1,6 @@
+import { Divider, Link } from '@nextui-org/react';
 import * as React from 'react';
-import { createRoot } from 'react-dom/client';
-import { NextUIProvider, createTheme, Link, Divider } from '@nextui-org/react';
-import { FixtureFile } from './FixtureFile';
+import { builtinContext, FullContext } from '../core/ctx';
 import {
     Builtin,
     Fixture,
@@ -11,7 +10,7 @@ import {
     parseFixtureFile,
     runFixture,
 } from '../core/typing/__test__/fixture-utils';
-import { builtinContext, FullContext } from '../core/ctx';
+import { FixtureFile } from './FixtureFile';
 import {
     CancelIcon,
     CheckmarkIcon,
@@ -196,7 +195,7 @@ export const App = () => {
                                   <div style={{ flex: 1 }} />
                                   <Link
                                       href={
-                                          '' + i == hashPin
+                                          '' + i === hashPin
                                               ? `#${hashName}/${i}`
                                               : `#${hashName}/${i}/pin`
                                       }

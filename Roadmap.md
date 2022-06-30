@@ -20,6 +20,7 @@ What parts of the code have gotten ungainly?
 
 
 
+
 Ok what Im doing now:
 
 - [x] type aliases
@@ -33,7 +34,7 @@ Ok what Im doing now:
 - [x] TYPE ARITHMATIC
 	- [x] hm 10 <- 5 + 5
 - [ ] then enums? Could be fun. At that point recursive types make sense.
-- [ ] records! and tuples.
+- [ ] records! and tuples. do we decide that tuples are just records with numbers for attributes? might as well
 - [ ] ok eventually I have to do control structures. and, like ,lambdas
 
 
