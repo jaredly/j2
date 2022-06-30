@@ -13,6 +13,7 @@ import * as React from 'react';
 import { builtinContext, FullContext } from '../core/ctx';
 import { errorCount } from '../core/typing/analyze';
 import {
+    aliasesFromString,
     Builtin,
     Fixture,
     FixtureResult,
@@ -63,7 +64,7 @@ export function OneFixture({
 
     const changed =
         newOutput.type === 'error' ||
-        output_expected !== newOutput.result.newOutput;
+        compare(output_expected, newOutput.result.newOutput);
 
     const numErrors =
         newOutput.type === 'error' ? 1 : errorCount(newOutput.result.verify);
@@ -302,7 +303,9 @@ export function OneFixture({
 
                         {newOutput.type === 'success' ? (
                             <>
-                                <Aliases aliases={newOutput.result.aliases} />
+                                <Aliases
+                                    aliases={parseAliases(output_expected)}
+                                />
                                 <Highlight
                                     portal={portal}
                                     text={output_expected}
@@ -322,15 +325,21 @@ export function OneFixture({
                     {changed && newOutput.type === 'success' ? (
                         <>
                             <Card.Divider css={{ marginBlock: '$6' }} />
-                            <Aliases aliases={newOutput.result.aliases} />
-                            <Highlight
-                                portal={portal}
-                                text={newOutput.result.newOutput}
-                                info={{
-                                    tast: newOutput.result.checked,
-                                    ctx: newOutput.result.ctx,
-                                }}
+                            <Aliases
+                                aliases={parseAliases(
+                                    newOutput.result.newOutput,
+                                )}
                             />
+                            {changed !== 'aliases' ? (
+                                <Highlight
+                                    portal={portal}
+                                    text={newOutput.result.newOutput}
+                                    info={{
+                                        tast: newOutput.result.checked,
+                                        ctx: newOutput.result.ctx,
+                                    }}
+                                />
+                            ) : null}
                         </>
                     ) : null}
                 </Card.Body>
@@ -338,6 +347,14 @@ export function OneFixture({
         </div>
     );
 }
+
+const parseAliases = (text: string) => {
+    if (text.startsWith('alias ')) {
+        const line = text.slice(0, text.indexOf('\n'));
+        return aliasesFromString(line);
+    }
+    return {};
+};
 
 const Aliases = ({ aliases }: { aliases: { [key: string]: string } }) => {
     return (
@@ -366,4 +383,24 @@ export const aliasesMatch = (
         Object.keys(one).length === Object.keys(two).length &&
         Object.keys(one).every((key) => one[key] === two[key])
     );
+};
+
+const splitAliases = (text: string): [string, string] => {
+    if (text.startsWith('alias ')) {
+        const idx = text.indexOf('\n');
+        return [text.slice(0, idx), text.slice(idx + 1)];
+    }
+    return ['', text];
+};
+
+export const compare = (one: string, two: string): boolean | 'aliases' => {
+    if (one == two) {
+        return false;
+    }
+    const [oneAliases, oneText] = splitAliases(one);
+    const [twoAliases, twoText] = splitAliases(two);
+    if (oneText === twoText) {
+        return 'aliases';
+    }
+    return true;
 };

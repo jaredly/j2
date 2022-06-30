@@ -10,7 +10,6 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { noloc } from '../ctx';
 import { makeApply } from './apply';
-import { getType } from '../typing/getType';
 
 export const grammar = `
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
@@ -99,7 +98,7 @@ export const ToPP = {
 
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     Expression_TypeApplication(node, { ctx, hit }) {
-        const target = getType(node.target, ctx);
+        const target = ctx.getType(node.target);
         if (!target) {
             return null;
         }

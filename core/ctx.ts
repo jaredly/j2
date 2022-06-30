@@ -597,8 +597,6 @@ export const fullContext = () => {
     return ctx;
 };
 
-export const builtinContext = fullContext();
-
 export const serial = (x: any): any => {
     if (Array.isArray(x)) {
         return '[' + x.map(serial).join(', ') + ']';
@@ -662,3 +660,5 @@ export const resolveAnalyzeType = (
     }
     return type;
 };
+
+export const builtinContext = fullContext();
