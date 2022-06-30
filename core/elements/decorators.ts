@@ -6,8 +6,8 @@ import * as pp from '../printer/pp';
 import * as t from '../typed-ast';
 import { Expression, Loc } from '../typed-ast';
 import { Ctx as ACtx } from '../typing/to-ast';
-import { filterUnresolved } from '../typing/to-tast';
 import { Type } from './type';
+import { filterUnresolved } from './base';
 
 export const grammar = `
 DecoratedExpression = decorators_drop:(Decorator _)* inner:Apply

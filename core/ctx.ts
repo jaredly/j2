@@ -59,7 +59,6 @@ type Internal = {
 export type FullContext = {
     clone: () => FullContext;
     extract: () => Internal;
-    withAliases: (aliases: { [readableName: string]: string }) => FullContext;
     [opaque]: Internal;
 } & Ctx &
     TCtx &

@@ -107,7 +107,7 @@ export const ToPP = {
     },
 };
 
-export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
+export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     Expression_Apply(node, { ctx, hit }) {
         if (
             node.target.type === 'Ref' &&

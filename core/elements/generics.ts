@@ -97,7 +97,7 @@ export const ToPP = {
     },
 };
 
-export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
+export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     Expression_TypeApplication(node, { ctx, hit }) {
         const target = getType(node.target, ctx);
         if (!target) {

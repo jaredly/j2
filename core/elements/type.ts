@@ -4,8 +4,9 @@ import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
-import { Ctx as TCtx, filterUnresolved } from '../typing/to-tast';
+import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
+import { filterUnresolved } from './base';
 
 export const grammar = `
 Type = TOps

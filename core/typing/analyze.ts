@@ -14,12 +14,9 @@ import {
     TVar,
     Type,
 } from '../typed-ast';
-import { applyType, getType } from './getType';
-import { analyze as analyzeApply } from '../elements/apply';
-import { analyze as analyzeConstants } from '../elements/constants';
-import { analyze as analyzeGenerics } from '../elements/generics';
 import { extract, Id, idsEqual, idToString } from '../ids';
 import { Ctx as TMCtx } from './typeMatches';
+import { analyzeVisitor } from './analyze.gen';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
@@ -138,15 +135,7 @@ export const decorate = (
 };
 
 export const analyze = (ast: File, ctx: Ctx): File => {
-    return transformFile(
-        ast,
-        {
-            ...analyzeApply,
-            ...analyzeConstants,
-            ...analyzeGenerics,
-        },
-        { ctx, hit: {} },
-    );
+    return transformFile(ast, analyzeVisitor(), { ctx, hit: {} });
 };
 
 export type Verify = {

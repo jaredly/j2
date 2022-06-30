@@ -7,27 +7,13 @@ import { ToPP as TypeToPP } from '../elements/type';
 import { ToPP as GenericsToPP } from '../elements/generics';
 import * as p from '../grammar/base.parser';
 import * as pp from './pp';
+import { makeToPP, ToPP } from './to-pp.gen';
+export { makeToPP, type ToPP } from './to-pp.gen';
 
 export type Ctx = {
     // hideIds: boolean;
     ToPP: ToPP;
 };
-
-export type ToPP = typeof GeneralToPP &
-    typeof ConstantsToPP &
-    typeof DecoratorsToPP &
-    typeof ApplyToPP &
-    typeof TypeToPP &
-    typeof GenericsToPP;
-
-export const makeToPP = (): ToPP => ({
-    ...GeneralToPP,
-    ...ConstantsToPP,
-    ...DecoratorsToPP,
-    ...GenericsToPP,
-    ...ApplyToPP,
-    ...TypeToPP,
-});
 
 export const newPPCtx = (hideIds: boolean): Ctx => ({
     // hideIds,

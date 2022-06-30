@@ -188,7 +188,9 @@ export const parseRaw = (
 ): [File, FullContext] => {
     if (raw.startsWith('alias ')) {
         const idx = raw.indexOf('\n');
-        ctx = ctx.withAliases(aliasesFromString(raw.slice(0, idx)));
+        ctx = ctx.withAliases(
+            aliasesFromString(raw.slice(0, idx)),
+        ) as FullContext;
         raw = raw.slice(idx + 1);
     }
     const ast = parseFile(raw);

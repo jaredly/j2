@@ -6,22 +6,8 @@ import { ToAst as TypeToAst } from '../elements/type';
 import { ToAst as GenericsToAst } from '../elements/generics';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
-
-export const makeToAst = (): ToAst => ({
-    ...ConstantsToAst,
-    ...GeneralToAst,
-    ...DecoratorsToAst,
-    ...ApplyToAst,
-    ...TypeToAst,
-    ...GenericsToAst,
-});
-
-export type ToAst = typeof ConstantsToAst &
-    typeof GeneralToAst &
-    typeof DecoratorsToAst &
-    typeof ApplyToAst &
-    typeof TypeToAst &
-    typeof GenericsToAst;
+import { makeToAst, ToAst } from './to-ast.gen';
+export { type ToAst } from './to-ast.gen';
 
 export type Ctx = {
     printRef: (
@@ -122,36 +108,4 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
         },
         ToAst: makeToAst(),
     };
-};
-
-export const GeneralToAst = {
-    File({ type, toplevels, loc, comments }: t.File, ctx: Ctx): p.File {
-        // TOOD: Go through and find all hashes, right?
-        // maybe when printing unresolved things, put `#[:unresolved:]` or something?
-        return {
-            type,
-            toplevels: toplevels.map((t) => ctx.ToAst[t.type](t as any, ctx)),
-            loc,
-            comments,
-        };
-    },
-    ToplevelExpression(
-        { type, expr, loc }: t.ToplevelExpression,
-        ctx: Ctx,
-    ): p.Toplevel {
-        return ctx.ToAst[expr.type](expr as any, ctx);
-    },
-
-    Ref({ type, kind, loc }: t.Ref, ctx: Ctx): p.Identifier {
-        if (kind.type === 'Unresolved') {
-            return {
-                type: 'Identifier',
-                text: kind.text,
-                hash: '#[:unresolved:]',
-                loc,
-            };
-        } else {
-            return ctx.printRef(kind, loc, 'value');
-        }
-    },
 };

@@ -42,7 +42,7 @@ export type TemplateString = {
 
 export type String = { type: 'String'; text: string; loc: Loc };
 
-export const analyze: Visitor<VisitorCtx> = {
+export const Analyze: Visitor<VisitorCtx> = {
     Expression_TemplateString(node, { ctx, hit }) {
         let changed = false;
         const rest: TemplateString['rest'] = node.rest.map(
