@@ -102,32 +102,37 @@ export const ToPP = {
         return pp.items(
             [
                 pp.text('[ ', noloc),
-                ...(t.cases?.items.map((c) => {
-                    if (c.type === 'TagDecl') {
-                        return pp.items(
-                            [
-                                pp.text(`\`${c.text}`, noloc),
-                                c.payload
-                                    ? pp.items(
-                                          [
-                                              pp.text('(', noloc),
-                                              ctx.ToPP[c.payload.inner.type](
-                                                  c.payload.inner as any,
-                                                  ctx,
-                                              ),
-                                              pp.text(')', noloc),
-                                          ],
-                                          c.loc,
-                                      )
-                                    : null,
-                                pp.text(' | ', noloc),
-                            ],
-                            c.loc,
-                        );
-                    } else {
-                        return ctx.ToPP[c.type](c as any, ctx);
-                    }
-                }) || []),
+                ...pp.interleave(
+                    t.cases?.items.map((c) => {
+                        if (c.type === 'TagDecl') {
+                            return pp.items(
+                                [
+                                    pp.text(`\`${c.text}`, noloc),
+                                    c.payload
+                                        ? pp.items(
+                                              [
+                                                  pp.text('(', noloc),
+                                                  ctx.ToPP[
+                                                      c.payload.inner.type
+                                                  ](
+                                                      c.payload.inner as any,
+                                                      ctx,
+                                                  ),
+                                                  pp.text(')', noloc),
+                                              ],
+                                              c.loc,
+                                          )
+                                        : null,
+                                    // pp.text(' | ', noloc),
+                                ],
+                                c.loc,
+                            );
+                        } else {
+                            return ctx.ToPP[c.type](c as any, ctx);
+                        }
+                    }) || [],
+                    ' | ',
+                ),
                 pp.text(' ]', noloc),
             ],
             t.loc,

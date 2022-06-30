@@ -45,6 +45,20 @@ export const block = (
     loc,
 });
 
+export const interleave = (items: Array<PP | null>, sep: string): PP[] => {
+    let res = [];
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item != null) {
+            res.push(item);
+            if (i < items.length - 1) {
+                res.push(atom(sep, item.loc));
+            }
+        }
+    }
+    return res;
+};
+
 export const atom = (
     text: string,
     loc: Loc,
@@ -92,6 +106,7 @@ type Args = {
     trailing: boolean;
     loc: Loc;
     rest?: PP;
+    mid?: string;
 }; // surrounded by ()
 
 type Items = {
