@@ -11,7 +11,7 @@ import {
     parseFixtureFile,
     runFixture,
 } from '../core/typing/__test__/fixture-utils';
-import { builtinContext } from '../core/ctx';
+import { builtinContext, FullContext } from '../core/ctx';
 
 export const usePromise = <T,>(
     fn: () => Promise<T>,
@@ -42,6 +42,7 @@ export const useHash = () => {
 export type Status = {
     name: string;
     file: FixtureFileType;
+    ctx: FullContext;
     results: Array<{
         result: FixtureResult;
         input: string;
@@ -66,6 +67,21 @@ export const ShowStatus = ({ status }: { status: Status }) => {
     return <span style={{ marginRight: 8 }}>{failures ? '🚨' : '✅'}</span>;
 };
 
+export const fileStatus = (name: string, file: FixtureFileType): Status => {
+    const ctx = builtinContext.clone();
+    loadBuiltins(file.builtins, ctx);
+    return {
+        name,
+        file,
+        ctx,
+        results: file.fixtures.map((f) => ({
+            result: runFixture(f, ctx),
+            builtins: file.builtins,
+            input: f.input,
+        })),
+    };
+};
+
 export const App = () => {
     const hash = useHash();
     const [listing] = usePromise<string[]>(
@@ -88,17 +104,7 @@ export const App = () => {
             const files = {} as { [key: string]: Status };
             fixtures.forEach((fixture, i) => {
                 const file = parseFixtureFile(fixture);
-                const ctx = builtinContext.clone();
-                loadBuiltins(file.builtins, ctx);
-                files[listing[i]] = {
-                    name: listing[i],
-                    file,
-                    results: file.fixtures.map((f) => ({
-                        result: runFixture(f, ctx),
-                        builtins: file.builtins,
-                        input: f.input,
-                    })),
-                };
+                files[listing[i]] = fileStatus(listing[i], file);
             });
             setFiles(files);
         });
@@ -176,10 +182,7 @@ export const App = () => {
                     data={files[hashName].file}
                     setData={(data) => {
                         const newFiles = { ...files };
-                        newFiles[hashName] = {
-                            ...newFiles[hashName],
-                            file: data,
-                        };
+                        newFiles[hashName] = fileStatus(hashName, data);
                         setFiles(newFiles);
                     }}
                     files={files}

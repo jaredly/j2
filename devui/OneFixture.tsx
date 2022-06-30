@@ -74,11 +74,7 @@ export function OneFixture({
         <div id={id} style={{ paddingTop: 24 }}>
             <Card
                 variant={'bordered'}
-                css={{
-                    borderColor: changed ? 'orange' : undefined,
-                    position: 'relative',
-                    borderRadius: 3,
-                }}
+                css={{ position: 'relative', borderRadius: 3 }}
             >
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                     {titleEdit ? (
@@ -123,6 +119,7 @@ export function OneFixture({
                             }}
                             onClick={() => setTitleEdit(title)}
                         >
+                            {changed ? '🚨 ' : ''}
                             {title}
                         </Text>
                     )}
