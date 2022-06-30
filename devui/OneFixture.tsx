@@ -1,28 +1,18 @@
-import {
-    Button,
-    Card,
-    Checkbox,
-    Input,
-    Link,
-    Spacer,
-    Text,
-    Textarea,
-} from '@nextui-org/react';
-import equal from 'fast-deep-equal';
+import { Button, Card, Checkbox, Input, Spacer, Text } from '@nextui-org/react';
 import * as React from 'react';
-import { builtinContext, FullContext } from '../core/ctx';
+import { FullContext } from '../core/ctx';
 import { errorCount } from '../core/typing/analyze';
 import {
     aliasesFromString,
     Builtin,
     Fixture,
     FixtureResult,
-    loadBuiltins,
     runFixture,
     splitAliases,
 } from '../core/typing/__test__/fixture-utils';
 import { Editor } from './Editor';
 import { Highlight } from './Highlight';
+import { CancelIcon } from './Icons';
 
 export function OneFixture({
     fixture,
@@ -119,7 +109,16 @@ export function OneFixture({
                             }}
                             onClick={() => setTitleEdit(title)}
                         >
-                            {changed ? '🚨 ' : ''}
+                            {changed ? (
+                                <CancelIcon
+                                    style={{
+                                        color: 'red',
+                                        marginRight: 8,
+                                        marginBottom: -2,
+                                    }}
+                                />
+                            ) : // <CheckmarkIcon style={{ color: 'green' }} />
+                            null}
                             {title}
                         </Text>
                     )}
@@ -206,97 +205,18 @@ export function OneFixture({
                             }
                         }}
                     />
-                    {/*editing != null ? (
-                        <Textarea
-                            autoFocus
-                            fullWidth
-                            aria-label="Input"
-                            style={{
-                                fontFamily: 'inherit',
-                                fontSize: 'inherit',
-                                padding: 0,
-                                margin: 0,
-                                flexShrink: 0,
-                            }}
-                            minRows={10}
-                            value={editing}
-                            onChange={(evt) => setEditing(evt.target.value)}
-                            onKeyDown={(evt) => {
-                                if (evt.key === 'Escape') {
-                                    setEditing(null);
-                                    if (
-                                        newOutput.type === 'error' ||
-                                        editing === newOutput.result.input
-                                    ) {
-                                        onChange({
-                                            ...fixture,
-                                            input: editing,
-                                        });
-                                    }
-                                } else if (evt.key === 'Enter' && evt.metaKey) {
-                                    evt.preventDefault();
-                                    if (
-                                        newOutput.type === 'error' ||
-                                        editing === newOutput.result.input
-                                    ) {
-                                        onChange({
-                                            ...fixture,
-                                            input: editing,
-                                        });
-                                    }
-                                }
-                            }}
-                            onBlur={() => {
-                                if (
-                                    newOutput.type === 'error' ||
-                                    editing === newOutput.result.input
-                                ) {
-                                    onChange({ ...fixture, input: editing });
-                                }
-                                setEditing(null);
-                            }}
-                        />
-                    ) : (
-                        <Highlight
-                            text={input}
-                            portal={portal}
-                            onClick={() => setEditing(input)}
-                        />
-                    )*/}
                     <Card.Divider css={{ marginBlock: '$6' }} />
                     <div style={{ position: 'relative' }}>
                         {numErrors != 0 ? (
-                            <Text
-                                css={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    right: 0,
-                                    flex: 1,
-                                    textAlign: 'right',
-                                    flexShrink: 0,
-                                    paddingRight: '$6',
-                                    paddingLeft: '$6',
-                                    backgroundColor: 'rgba(255,0,0,0.1)',
-                                }}
-                            >
-                                {numErrors} issue{numErrors > 1 ? 's' : ''}
-                            </Text>
+                            <TopRight
+                                text={`${numErrors} issue${
+                                    numErrors > 1 ? 's' : ''
+                                }`}
+                            />
                         ) : fixture.shouldFail ? (
-                            <Text
-                                css={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    right: 0,
-                                    flex: 1,
-                                    textAlign: 'right',
-                                    flexShrink: 0,
-                                    paddingRight: '$6',
-                                    paddingLeft: '$6',
-                                    backgroundColor: 'rgba(255,0,0,0.3)',
-                                }}
-                            >
-                                No errors, but expected failure
-                            </Text>
+                            <TopRight
+                                text={'No errors, but expected failure'}
+                            />
                         ) : null}
 
                         {newOutput.type === 'success' ? (
@@ -393,4 +313,24 @@ export const compare = (one: string, two: string): boolean | 'aliases' => {
         return 'aliases';
     }
     return true;
+};
+
+export const TopRight = ({ text }: { text: string }) => {
+    return (
+        <Text
+            css={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                flex: 1,
+                textAlign: 'right',
+                flexShrink: 0,
+                paddingRight: '$6',
+                paddingLeft: '$6',
+                backgroundColor: 'rgba(255,0,0,0.1)',
+            }}
+        >
+            {text}
+        </Text>
+    );
 };

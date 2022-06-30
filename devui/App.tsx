@@ -12,6 +12,12 @@ import {
     runFixture,
 } from '../core/typing/__test__/fixture-utils';
 import { builtinContext, FullContext } from '../core/ctx';
+import {
+    CancelIcon,
+    CheckmarkIcon,
+    PushpinIcon,
+    PushpinIconFilled,
+} from './Icons';
 
 export const usePromise = <T,>(
     fn: () => Promise<T>,
@@ -54,7 +60,15 @@ export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
     let failed =
         status.file.fixtures[idx].output_expected !==
         status.results[idx].result.newOutput;
-    return <span style={{ marginRight: 8 }}>{failed ? '🚨' : '✅'}</span>;
+    return (
+        <span style={{ marginRight: 8 }}>
+            {failed ? (
+                <CancelIcon style={{ color: 'red' }} />
+            ) : (
+                <CheckmarkIcon style={{ color: 'green' }} />
+            )}
+        </span>
+    );
 };
 
 export const ShowStatus = ({ status }: { status: Status }) => {
@@ -64,7 +78,15 @@ export const ShowStatus = ({ status }: { status: Status }) => {
             failures++;
         }
     });
-    return <span style={{ marginRight: 8 }}>{failures ? '🚨' : '✅'}</span>;
+    return (
+        <span style={{ marginRight: 8 }}>
+            {failures ? (
+                <CancelIcon style={{ color: 'red' }} />
+            ) : (
+                <CheckmarkIcon style={{ color: 'green' }} />
+            )}
+        </span>
+    );
 };
 
 export const fileStatus = (name: string, file: FixtureFileType): Status => {
@@ -114,7 +136,10 @@ export const App = () => {
         return <>Loading...</>;
     }
 
-    const hashName = hash.split('/')[0];
+    const hashParts = hash.split('/');
+    const hashName = hashParts[0];
+    const hashPin =
+        hashParts.length === 3 && hashParts[2] === 'pin' && hashParts[1];
 
     return (
         <div
@@ -158,6 +183,7 @@ export const App = () => {
                                   style={{
                                       display: 'flex',
                                       flexDirection: 'row',
+                                      marginBottom: 8,
                                   }}
                               >
                                   <Link href={`#${hashName}/${i}`}>
@@ -168,8 +194,18 @@ export const App = () => {
                                       {fixture.title}
                                   </Link>
                                   <div style={{ flex: 1 }} />
-                                  <Link href={`#${hashName}/${i}/pin`}>
-                                      Pin
+                                  <Link
+                                      href={
+                                          '' + i == hashPin
+                                              ? `#${hashName}/${i}`
+                                              : `#${hashName}/${i}/pin`
+                                      }
+                                  >
+                                      {'' + i === hashPin ? (
+                                          <PushpinIconFilled color="green" />
+                                      ) : (
+                                          <PushpinIcon />
+                                      )}
                                   </Link>
                               </div>
                           ),

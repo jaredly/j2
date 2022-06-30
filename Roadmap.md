@@ -12,7 +12,7 @@ What parts of the code have gotten ungainly?
 - [x] oh wait I really need sync to also sync the ToXYs as well
 - [x] make it clear when only aliases changed
 
-- [ ] fixture overview doesn't highlight failing fixtures
+- [x] fixture overview doesn't highlight failing fixtures
 - [x] test coverage is pretty good though, that's nice.
 - [x] I've been pretty fast & loose with FullContext. It would be good to rein that in.
 	Like, have `typeMatches` only take a subset, you know.
