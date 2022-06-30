@@ -23,12 +23,7 @@ readdirSync(base)
         loadBuiltins(file.builtins, baseCtx);
 
         file.fixtures.forEach((fixture, i) => {
-            let {
-                title,
-                input,
-                output_expected,
-                builtins_deprecated: builtins,
-            } = fixture;
+            let { title, output_expected } = fixture;
 
             let result = runFixture(fixture, baseCtx);
 
@@ -47,29 +42,6 @@ readdirSync(base)
 
             failures++;
             console.log(`[failure] ${fname}:${i} ${title}`);
-
-            // const fullExpectedOutput = output_expected;
-            // const fullOutput = newOutput;
-
-            // if (output_expected && (!hasOnly || title.includes('[only]'))) {
-            //     if (!outputTast) {
-            //         throw new Error(`Unable to process the output??`);
-            //     }
-            //     expect(fullOutput.trim()).toEqual(fullExpectedOutput.trim());
-            //     try {
-            //         expect({
-            //             ...clearLocs(checked),
-            //             comments: [],
-            //         }).toEqual({
-            //             ...clearLocs(outputTast),
-            //             comments: [],
-            //         });
-            //     } catch (err) {
-            //         console.error(fullOutput);
-            //         console.error(fullExpectedOutput);
-            //         throw err;
-            //     }
-            // }
         });
 
         if (failures === 0 && updates > 0) {
