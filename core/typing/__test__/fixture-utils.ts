@@ -1,10 +1,8 @@
 import * as fs from 'fs';
-import objectHash from 'object-hash';
 import {
     addBuiltin,
     addBuiltinDecorator,
     addBuiltinType,
-    builtinContext,
     FullContext,
     hashTypes,
     noloc,
@@ -12,15 +10,13 @@ import {
 import { TVar } from '../../elements/type-vbls';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
-import { idToString } from '../../ids';
 import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { transformFile, transformType, Visitor } from '../../transform-tast';
-import { File, RefKind } from '../../typed-ast';
+import { File } from '../../typed-ast';
 import { analyze, Verify, verify } from '../analyze';
 import { getType } from '../getType';
 import { printCtx } from '../to-ast';
-import { Ctx } from '../to-tast';
 
 export type FixtureFile = {
     builtins: Builtin[];
@@ -111,6 +107,14 @@ export const aliasesFromString = (raw: string) => {
             acc[key] = value;
             return acc;
         }, {} as { [key: string]: string });
+};
+
+export const splitAliases = (text: string): [string, string] => {
+    if (text.startsWith('alias ')) {
+        const idx = text.indexOf('\n');
+        return [text.slice(0, idx), text.slice(idx + 1)];
+    }
+    return ['', text];
 };
 
 export const serializeFixtureFile = (file: FixtureFile) => {

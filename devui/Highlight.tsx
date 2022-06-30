@@ -297,7 +297,7 @@ export function sortLocs(locs: { loc: Loc; type: string }[]) {
 }
 
 export const typeToString = (t: Type, ctx: FullContext) => {
-    const actx = printCtx(ctx, true);
+    const actx = printCtx(ctx, false);
     const pctx = newPPCtx(false);
     const ast = actx.ToAst[t.type](t as any, actx);
     return printToString(pctx.ToPP[ast.type](ast as any, pctx), 100);

@@ -62,9 +62,7 @@ export const FixtureFile = ({
 
     const ctx = React.useMemo(() => {
         let ctx = builtinContext.clone();
-        console.log(ctx);
         if (data) {
-            console.log('LAODIng builtins', data.builtins);
             loadBuiltins(data.builtins, ctx);
         }
         return ctx;

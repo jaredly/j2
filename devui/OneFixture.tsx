@@ -19,6 +19,7 @@ import {
     FixtureResult,
     loadBuiltins,
     runFixture,
+    splitAliases,
 } from '../core/typing/__test__/fixture-utils';
 import { Editor } from './Editor';
 import { Highlight } from './Highlight';
@@ -383,14 +384,6 @@ export const aliasesMatch = (
         Object.keys(one).length === Object.keys(two).length &&
         Object.keys(one).every((key) => one[key] === two[key])
     );
-};
-
-const splitAliases = (text: string): [string, string] => {
-    if (text.startsWith('alias ')) {
-        const idx = text.indexOf('\n');
-        return [text.slice(0, idx), text.slice(idx + 1)];
-    }
-    return ['', text];
 };
 
 export const compare = (one: string, two: string): boolean | 'aliases' => {

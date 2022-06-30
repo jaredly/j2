@@ -52,33 +52,8 @@ readdirSync(base)
                     } catch (err) {
                         console.error(fullOutput);
                         console.error(fullExpectedOutput);
-                        // console.log(
-                        //     JSON.stringify({
-                        //         ...clearLocs(checked),
-                        //         comments: [],
-                        //     }),
-                        // );
-                        // console.log(
-                        //     JSON.stringify({
-                        //         ...clearLocs(outputTast),
-                        //         comments: [],
-                        //     }),
-                        // );
                         throw err;
                     }
-                    // } catch (err) {
-                    //     // console.error(
-                    //     //     title +
-                    //     //         '\n' +
-                    //     //         builtins.join('\n') +
-                    //     //         '\n\n' +
-                    //     //         input +
-                    //     //         '\n\n-->\n\n' +
-                    //     //         newOutput,
-                    //     // );
-                    //     // console.error(JSON.stringify(clearLocs(checked)));
-                    //     throw err;
-                    // }
                 }
             });
         });
