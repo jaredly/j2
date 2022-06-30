@@ -69,11 +69,6 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 case 'Unresolved':
                     return null;
                 case 'Global':
-                    // const { hash, idx } = extract(expr.kind.id);
-                    // Hmm so, what if what we get is
-                    // an alias?
-                    // return ctx.getBuiltinRef('string');
-                    // return ctx.values.hashed[hash][idx].typ;
                     return ctx.getValueType(expr.kind.id);
                 case 'Local':
                     throw new Error('not yet');

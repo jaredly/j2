@@ -18,104 +18,72 @@ import { applyType, getType } from './getType';
 import { analyze as analyzeApply } from '../elements/apply';
 import { analyze as analyzeConstants } from '../elements/constants';
 import { analyze as analyzeGenerics } from '../elements/generics';
-import { extract, idToString } from '../ids';
+import { extract, Id, idsEqual, idToString } from '../ids';
+import { Ctx as TMCtx } from './typeMatches';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
     getTypeArgs(ref: RefKind): TVar[] | null;
     resolveAnalyzeType(type: Type): Type | null;
     typeByName(name: string): Type | null;
-    _full: FullContext;
-};
+    getDecorator(name: string): RefKind[];
+    errorDecorators(): Id[];
+    resolve: (name: string, hash?: string | null) => Array<RefKind>;
+} & TMCtx;
 
 export type VisitorCtx = {
     ctx: Ctx;
     hit: {};
 };
 
-// ugh ok so because
-// i've tied application to TRef, it makes things
-// less flexible. Can't do Some<X><Y> even though you can
-// do let Some = <X><Y>int;
-// OK BACKUP.
-export const resolveAnalyzeType = (
-    type: Type,
-    ctx: FullContext,
-): Type | null => {
-    if (type.type === 'TDecorated') {
-        return resolveAnalyzeType(type.inner, ctx);
-    }
-    if (type.type === 'TRef') {
-        if (type.ref.type === 'Global') {
-            const { idx, hash } = extract(type.ref.id);
-            if (!ctx.types.hashed[hash]) {
-                return null;
-            }
-            const t = ctx.types.hashed[hash][idx];
-            if (!t) {
-                return null;
-            }
-            if (t.type === 'user') {
-                return resolveAnalyzeType(t.typ, ctx);
-            }
-        }
-    }
-    if (type.type === 'TApply') {
-        const target = resolveAnalyzeType(type.target, ctx);
-        if (!target || target.type !== 'TVars') {
-            // console.log('bad apply');
-            return null;
-        }
-        const applied = applyType(type.args, target, ctx);
-        return applied ? resolveAnalyzeType(applied, ctx) : null;
-    }
-    return type;
-};
-
-export const analyzeContext = (ctx: FullContext): Ctx => {
-    return {
-        getType(expr: Expression) {
-            return getType(expr, ctx);
-        },
-        resolveAnalyzeType(type: Type) {
-            return resolveAnalyzeType(type, ctx);
-        },
-        typeByName(name: string) {
-            const ref = ctx.types.names[name];
-            return ref
-                ? { type: 'TRef', ref: ref, loc: noloc, args: [] }
-                : null;
-        },
-        getTypeArgs(ref) {
-            if (ref.type === 'Global') {
-                const { idx, hash } = extract(ref.id);
-                const t = ctx.types.hashed[hash][idx];
-                if (t.type === 'builtin') {
-                    return t.args;
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        },
-        _full: ctx,
-    };
-};
+// export const analyzeContext = (ctx: FullContext): Ctx => {
+//     return {
+//         getType(expr: Expression) {
+//             return getType(expr, ctx);
+//         },
+//         resolveAnalyzeType(type: Type) {
+//             return resolveAnalyzeType(type, ctx);
+//         },
+//         typeByName(name: string) {
+//             const ref = ctx.types.names[name];
+//             return ref
+//                 ? { type: 'TRef', ref: ref, loc: noloc, args: [] }
+//                 : null;
+//         },
+//         getTypeArgs(ref) {
+//             if (ref.type === 'Global') {
+//                 const { idx, hash } = extract(ref.id);
+//                 const t = ctx.types.hashed[hash][idx];
+//                 if (t.type === 'builtin') {
+//                     return t.args;
+//                 } else {
+//                     return null;
+//                 }
+//             } else {
+//                 return null;
+//             }
+//         },
+//         _full: ctx,
+//     };
+// };
 
 export const tdecorate = (
     type: Type,
     tag: ErrorTag,
     hit: { [key: number]: boolean },
-    ctx: FullContext,
+    ctx: Ctx,
     args: Decorator['args'] = [],
 ): Type => {
     if (hit[type.loc.idx]) {
         return type;
     }
     hit[type.loc.idx] = true;
-    const abc = ctx.decorators.names[`error:${tag}`];
-    if (!abc || abc.length !== 1) {
+    // const abc = ctx.decorators.names[`error:${tag}`];
+    // if (!abc || abc.length !== 1) {
+    //     throw new Error(`can't resolve that decorator`);
+    // }
+    const refs = ctx.getDecorator(`error:${tag}`);
+    if (!refs || refs.length !== 1) {
         throw new Error(`can't resolve that decorator`);
     }
     return {
@@ -124,7 +92,7 @@ export const tdecorate = (
             {
                 type: 'Decorator',
                 id: {
-                    ref: abc[0],
+                    ref: refs[0],
                     loc: noloc,
                 },
                 args,
@@ -140,15 +108,15 @@ export const decorate = (
     expr: Expression,
     tag: ErrorTag,
     hit: { [key: number]: boolean },
-    ctx: FullContext,
+    ctx: Ctx,
     args: Decorator['args'] = [],
 ): DecoratedExpression | Expression => {
     if (hit[expr.loc.idx]) {
         return expr;
     }
     hit[expr.loc.idx] = true;
-    const abc = ctx.decorators.names[`error:${tag}`];
-    if (!abc || abc.length !== 1) {
+    const refs = ctx.getDecorator(`error:${tag}`);
+    if (!refs || refs.length !== 1) {
         throw new Error(`can't resolve that decorator`);
     }
     return {
@@ -157,7 +125,7 @@ export const decorate = (
             {
                 type: 'Decorator',
                 id: {
-                    ref: abc[0],
+                    ref: refs[0],
                     loc: noloc,
                 },
                 args,
@@ -212,13 +180,14 @@ export const verify = (ast: File, ctx: Ctx): Verify => {
         },
     };
 
-    const decoratorNames: { [key: string]: string } = {};
-    Object.keys(ctx._full.decorators.names).forEach((name) => {
-        const ids = ctx._full.decorators.names[name];
-        ids.forEach((id) => {
-            decoratorNames[idToString(id.id)] = name;
-        });
-    });
+    const errorDecorators = ctx.errorDecorators();
+    // const decoratorNames: { [key: string]: string } = {};
+    // Object.keys(ctx._full.decorators.names).forEach((name) => {
+    //     const ids = ctx._full.decorators.names[name];
+    //     ids.forEach((id) => {
+    //         decoratorNames[idToString(id.id)] = name;
+    //     });
+    // });
 
     transformFile(
         ast,
@@ -246,8 +215,11 @@ export const verify = (ast: File, ctx: Ctx): Verify => {
                     results.unresolved.decorator.push(node.loc);
                 }
                 if (node.id.ref.type === 'Global') {
-                    const name = decoratorNames[idToString(node.id.ref.id)];
-                    if (name && name.startsWith('error:')) {
+                    const id = node.id.ref.id;
+                    const isError = errorDecorators.some((x) =>
+                        idsEqual(x, id),
+                    );
+                    if (isError) {
                         results.errors.push(node.loc);
                     }
                 }

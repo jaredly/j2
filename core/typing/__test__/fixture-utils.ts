@@ -17,7 +17,7 @@ import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { transformFile, transformType, Visitor } from '../../transform-tast';
 import { File, RefKind } from '../../typed-ast';
-import { analyze, analyzeContext, Verify, verify } from '../analyze';
+import { analyze, Verify, verify } from '../analyze';
 import { getType } from '../getType';
 import { printCtx } from '../to-ast';
 import { Ctx } from '../to-tast';
@@ -188,7 +188,7 @@ export const parseRaw = (
 ): [File, FullContext] => {
     if (raw.startsWith('alias ')) {
         const idx = raw.indexOf('\n');
-        ctx = { ...ctx, aliases: aliasesFromString(raw.slice(0, idx)) };
+        ctx = ctx.withAliases(aliasesFromString(raw.slice(0, idx)));
         raw = raw.slice(idx + 1);
     }
     const ast = parseFile(raw);
@@ -225,7 +225,7 @@ export function runFixture(
 
     const actx = printCtx(ctx);
 
-    const checked = analyze(tast, analyzeContext(ctx));
+    const checked = analyze(tast, ctx);
     checked.toplevels.forEach((top) => {
         if (top.type === 'ToplevelExpression') {
             const t = getType(top.expr, ctx);
@@ -286,10 +286,10 @@ export function runFixture(
         ctx2,
         input,
         checked,
-        verify: verify(checked, analyzeContext(ctx)),
+        verify: verify(checked, ctx),
         newOutput: aliasesToString(actx.backAliases) + newOutput,
         outputTast,
-        outputVerify: verify(outputTast, analyzeContext(ctx2)),
+        outputVerify: verify(outputTast, ctx2),
         aliases: actx.backAliases,
     };
 }

@@ -114,7 +114,7 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             node.target.kind.type === 'Unresolved'
         ) {
             // console.log('UNRESOLVE', node);
-            const resolved = ctx._full.resolve(node.target.kind.text, null);
+            const resolved = ctx.resolve(node.target.kind.text, null);
             if (resolved.length > 1) {
                 const argTypes = node.args.map((arg) => ctx.getType(arg));
                 if (argTypes.every(Boolean)) {
@@ -127,7 +127,7 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                             ttype?.type === 'TLambda' &&
                             ttype.args.length === argTypes.length &&
                             ttype.args.every((arg, i) =>
-                                typeMatches(argTypes[i]!, arg.typ, ctx._full),
+                                typeMatches(argTypes[i]!, arg.typ, ctx),
                             )
                         ) {
                             return {
@@ -151,11 +151,11 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             return null;
         }
         if (ttype?.type !== 'TLambda') {
-            return decorate(node, 'notAFunction', hit, ctx._full);
+            return decorate(node, 'notAFunction', hit, ctx);
         }
         const argTypes = node.args.map((arg) => ctx.getType(arg));
         if (ttype.args.length !== argTypes.length) {
-            return decorate(node, 'wrongNumberOfArgs', hit, ctx._full);
+            return decorate(node, 'wrongNumberOfArgs', hit, ctx);
         }
         let changed = false;
         const args = node.args.map((arg, i) => {
@@ -163,9 +163,9 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             if (at == null) {
                 return arg;
             }
-            if (!typeMatches(at, ttype.args[i].typ, ctx._full)) {
+            if (!typeMatches(at, ttype.args[i].typ, ctx)) {
                 changed = true;
-                return decorate(arg, 'argWrongType', hit, ctx._full, [
+                return decorate(arg, 'argWrongType', hit, ctx, [
                     {
                         label: 'expected',
                         arg: {

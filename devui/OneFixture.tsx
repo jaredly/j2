@@ -359,8 +359,8 @@ const Aliases = ({ aliases }: { aliases: { [key: string]: string } }) => {
 };
 
 export const aliasesMatch = (
-    one: FullContext['aliases'],
-    two: FullContext['aliases'],
+    one: { [key: string]: string },
+    two: { [key: string]: string },
 ) => {
     return (
         Object.keys(one).length === Object.keys(two).length &&

@@ -167,16 +167,15 @@ type Bad = NumArray<@error:argWrongType(expected: :10 + uint) 5>
 
 ==[type arithmetic]==
 --[input]--
-type X = (<X: 10 + int>int)<10 + 3>
+type X = (<X: 10 + int>int)<13>
 type X = (<X: 5 + 5>int)<10>
 type X = (<X: string + ".js">int)<"hello.js">
-
 type X = (<X: string + ".js">int)<"hi" + ".js">
 
 --[output:expected]--
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 X=0
-type X = (<X: 10 + int>int)<10 + 3>
-// h01b8143166fe78ab94e145baabefe7e0d5829139
+type X = (<X: 10 + int>int)<13>
+// hc591de2eef739b0ade4f8b7c27b384c9dd67f9ad
 type X = (<X: 5 + 5>int)<10>
 // h12b68bd7bc5f6d6ec7d0cb152815f7a2505147ce
 type X = (<X: string + ".js">int)<"hello.js">

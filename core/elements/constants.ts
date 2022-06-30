@@ -54,13 +54,13 @@ export const analyze: Visitor<VisitorCtx> = {
                 // about this more.
                 if (
                     expt &&
-                    !typeMatches(expt, ctx.typeByName('string')!, ctx._full)
+                    !typeMatches(expt, ctx.typeByName('string')!, ctx)
                 ) {
                     changed = true;
                     return {
                         suffix,
                         loc,
-                        expr: decorate(expr, 'notAString', hit, ctx._full),
+                        expr: decorate(expr, 'notAString', hit, ctx),
                     };
                 }
                 return { suffix, loc, expr };

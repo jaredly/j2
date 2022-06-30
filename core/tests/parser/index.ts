@@ -7,7 +7,7 @@ import { parseFile } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
 import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
-import { analyze, analyzeContext, verify } from '../../typing/analyze';
+import { analyze, verify } from '../../typing/analyze';
 import { printCtx } from '../../typing/to-ast';
 
 const file = join(process.cwd(), 'core/tests/parser/examples.jd');
@@ -19,8 +19,7 @@ export const parserTests = () => {
         if (file.toplevels.length) {
             const ctx = builtinContext.clone();
             const [typed, _] = ctx.ToTast.File(file, ctx);
-            const actx = analyzeContext(ctx);
-            const checked = analyze(typed, actx);
+            const checked = analyze(typed, ctx);
 
             console.log();
 

@@ -6,12 +6,12 @@ import { ToTast as GenericsToTast } from '../elements/generics';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 import { GlobalType, GlobalValue } from '../ctx';
+import { Ctx as ACtx } from './analyze';
 
 export type Ctx = {
     resetSym: () => void;
     typeForId: (id: t.Id) => GlobalType | null;
     valueForId: (id: t.Id) => GlobalValue | null;
-    resolve: (name: string, hash?: string | null) => Array<t.RefKind>;
     resolveType: (name: string, hash?: string | null) => t.RefKind | null;
     resolveDecorator: (name: string, hash?: string | null) => Array<t.RefKind>;
     // hmm
@@ -21,8 +21,7 @@ export type Ctx = {
     withLocalTypes: (locals: { sym: t.Sym; bound: t.Type | null }[]) => Ctx;
     withTypes: (types: { name: string; type: t.Type }[]) => Ctx;
     ToTast: ToTast;
-    aliases: { [readableName: string]: string };
-};
+} & ACtx;
 
 export type ToTast = typeof ConstantsToTast &
     typeof GeneralToTast &

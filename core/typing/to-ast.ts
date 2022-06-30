@@ -36,7 +36,7 @@ export type Ctx = {
     backAliases: { [key: string]: string };
 };
 
-export const printCtx = (ctx: FullContext, showIds: boolean = false): Ctx => {
+export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
     const backAliases: { [key: string]: string } = {};
     const aliases: { [key: string]: string } = {};
 
@@ -50,6 +50,8 @@ export const printCtx = (ctx: FullContext, showIds: boolean = false): Ctx => {
         backAliases[uniqueName] = key;
         aliases[key] = uniqueName;
     };
+
+    const ctx = fctx.extract();
 
     const reverse: { [key: string]: string } = {};
     Object.keys(ctx.values.names).forEach((name) => {
