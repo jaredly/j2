@@ -108,7 +108,7 @@ export const Highlight = ({
                     )}
                 </span>
             </Text>
-            {hover && annotations.length
+            {hover && annotations.length && portal
                 ? createPortal(
                       <Card
                           variant="bordered"

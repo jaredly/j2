@@ -49,6 +49,23 @@ export type Status = {
     }>;
 };
 
+export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
+    let failed =
+        status.file.fixtures[idx].output_expected !==
+        status.results[idx].result.newOutput;
+    return <span style={{ marginRight: 8 }}>{failed ? '🚨' : '✅'}</span>;
+};
+
+export const ShowStatus = ({ status }: { status: Status }) => {
+    let failures = 0;
+    status.file.fixtures.forEach((fixture, i) => {
+        if (fixture.output_expected !== status.results[i].result.newOutput) {
+            failures++;
+        }
+    });
+    return <span style={{ marginRight: 8 }}>{failures ? '🚨' : '✅'}</span>;
+};
+
 export const App = () => {
     const hash = useHash();
     const [listing] = usePromise<string[]>(
@@ -122,6 +139,7 @@ export const App = () => {
                                 fixture === hashName ? 'primary' : 'secondary'
                             }
                         >
+                            <ShowStatus status={files[fixture]} />
                             {fixture}
                         </Link>
                     ))}
@@ -136,11 +154,17 @@ export const App = () => {
                                       flexDirection: 'row',
                                   }}
                               >
-                                  <Link href={`#${name}/${i}`}>
+                                  <Link href={`#${hashName}/${i}`}>
+                                      <FixStatus
+                                          status={files[hashName]}
+                                          idx={i}
+                                      />
                                       {fixture.title}
                                   </Link>
                                   <div style={{ flex: 1 }} />
-                                  <Link href={`#${name}/${i}/pin`}>Pin</Link>
+                                  <Link href={`#${hashName}/${i}/pin`}>
+                                      Pin
+                                  </Link>
                               </div>
                           ),
                       )
@@ -163,35 +187,7 @@ export const App = () => {
                     pin={hash.endsWith('/pin') ? +hash.split('/')[1] : null}
                 />
             ) : (
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'stretch',
-                        flex: 1,
-                    }}
-                >
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            width: 200,
-                            padding: 16,
-                        }}
-                    >
-                        {listing.map((name) => (
-                            <Link
-                                key={name}
-                                href={`#${name}`}
-                                block
-                                color={name === hash ? 'primary' : 'secondary'}
-                            >
-                                {name}
-                            </Link>
-                        ))}
-                    </div>
-                    <div>Select a fixture</div>
-                </div>
+                <div style={{ flex: 1 }}>Select a fixture</div>
             )}
         </div>
     );
