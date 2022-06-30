@@ -99,6 +99,17 @@ DecType = ":" _ type_:Type
 DecExpr = expr:Expression 
 
 
+// enums.ts
+
+TEnum = "[" _ cases:EnumCases? _ "]"
+EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"? _
+EnumCase = TagDecl / Type // Star
+TagDecl = "\`" text:$IdText payload:TagPayload?
+// add '/ Record' here?
+TagPayload = "(" _ inner:Type _ ")"
+
+
+
 // generics.ts
 
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
@@ -109,24 +120,29 @@ TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
 TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
 
 
+// type-vbls.ts
+
+TApply = inner:TAtom args_drop:(_ "<" _ TComma _ ">")*
+TComma = first:Type rest:(_ "," _ Type)* _ ","?
+
+TVars = "<" _ args:TBargs _ ">" inner:Type
+TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
+TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Type)?
+
+
 // type.ts
 
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
-TApply = inner:TAtom args_drop:(_ "<" _ TComma _ ">")*
 
-TAtom = TRef / Number / String / TLambda / TVars / TParens
+TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum
 TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)? args:(TApply)?
-TVars = "<" _ args:TBargs _ ">" inner:Type
-TBargs = first:TBArg rest:(_ "," _ TBArg)* _ ","?
-TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Type)?
 
 TOps = left:TOpInner right_drop:TRight*
 TRight = _ top:$top _ right:TOpInner
 top = "-" / "+"
 TOpInner = TDecorated / TApply
 
-TComma = first:Type rest:(_ "," _ Type)* _ ","?
 TParens = "(" _ inner:Type _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type

@@ -169,6 +169,26 @@ export const typeMatches = (
     // console.log(candidate, expected);
 
     switch (candidate.type) {
+        case 'TEnum':
+            // So, ... we can always allow smaller, right?
+            // [] is part of anything?
+            // <T: int>(x) => T
+            // you call with m<10> and its fine
+            // <T: []>(x) => T
+            // means, ... this should be an enum, right?
+            // <T: [`One | `Two]>(x) => T,
+            // means ... if we handle `One and `Two we know
+            // we'll be prepared for anything.
+            // Yeah, ok so the passed-in type must be a subset.
+            // So is there a way to describe the "anything" enum?
+            // maybe that's the `*`.
+            // <T: [`One | `Two | *]>(x) => T
+            // I guess that's almost as good as no bound at all, right?
+            // well actually, it locks down the payloads for those two tags.
+            // 🤔 lots to think about there.
+            return false;
+        // return expected.type === 'TEnum' &&
+        // idsEqual(candidate.id, expected.id);
         case 'TDecorated':
             return typeMatches(candidate.inner, expected, ctx);
         case 'TVars': {

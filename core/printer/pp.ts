@@ -62,6 +62,7 @@ export const atom = (
         loc,
     };
 };
+export const text = atom;
 
 // export const id = (text: string, id: string, kind: string, loc: Loc): PP => {
 //     if (text == null) {

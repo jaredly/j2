@@ -17,6 +17,8 @@ import {
   Type,
   TRef,
   TLambda,
+  TEnum,
+  EnumCase,
   String,
   TVars,
   TVar,
@@ -158,15 +160,6 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TDecorated | [TDecorated | null, Ctx];
   TDecoratedPost?: (node: TDecorated, ctx: Ctx) => null | TDecorated;
-  TApply?: (
-    node: TApply,
-    ctx: Ctx
-  ) => null | false | TApply | [TApply | null, Ctx];
-  TApplyPost?: (node: TApply, ctx: Ctx) => null | TApply;
-  TVar?: (node: TVar, ctx: Ctx) => null | false | TVar | [TVar | null, Ctx];
-  TVarPost?: (node: TVar, ctx: Ctx) => null | TVar;
-  TVars?: (node: TVars, ctx: Ctx) => null | false | TVars | [TVars | null, Ctx];
-  TVarsPost?: (node: TVars, ctx: Ctx) => null | TVars;
   TLambda?: (
     node: TLambda,
     ctx: Ctx
@@ -182,6 +175,22 @@ export type Visitor<Ctx> = {
   TOrPost?: (node: TOr, ctx: Ctx) => null | TOr;
   Id?: (node: Id, ctx: Ctx) => null | false | Id | [Id | null, Ctx];
   IdPost?: (node: Id, ctx: Ctx) => null | Id;
+  TApply?: (
+    node: TApply,
+    ctx: Ctx
+  ) => null | false | TApply | [TApply | null, Ctx];
+  TApplyPost?: (node: TApply, ctx: Ctx) => null | TApply;
+  TVar?: (node: TVar, ctx: Ctx) => null | false | TVar | [TVar | null, Ctx];
+  TVarPost?: (node: TVar, ctx: Ctx) => null | TVar;
+  TVars?: (node: TVars, ctx: Ctx) => null | false | TVars | [TVars | null, Ctx];
+  TVarsPost?: (node: TVars, ctx: Ctx) => null | TVars;
+  TEnum?: (node: TEnum, ctx: Ctx) => null | false | TEnum | [TEnum | null, Ctx];
+  TEnumPost?: (node: TEnum, ctx: Ctx) => null | TEnum;
+  EnumCase?: (
+    node: EnumCase,
+    ctx: Ctx
+  ) => null | false | EnumCase | [EnumCase | null, Ctx];
+  EnumCasePost?: (node: EnumCase, ctx: Ctx) => null | EnumCase;
   Toplevel_ToplevelExpression?: (
     node: ToplevelExpression,
     ctx: Ctx
@@ -232,6 +241,10 @@ export type Visitor<Ctx> = {
   ) => null | false | Type | [Type | null, Ctx];
   Type_TLambda?: (
     node: TLambda,
+    ctx: Ctx
+  ) => null | false | Type | [Type | null, Ctx];
+  Type_TEnum?: (
+    node: TEnum,
     ctx: Ctx
   ) => null | false | Type | [Type | null, Ctx];
   Type_Number?: (
@@ -963,6 +976,156 @@ export const transformTLambda = <Ctx>(
   node = updatedNode;
   if (visitor.TLambdaPost) {
     const transformed = visitor.TLambdaPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformEnumCase = <Ctx>(
+  node: EnumCase,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): EnumCase => {
+  if (!node) {
+    throw new Error("No EnumCase provided");
+  }
+
+  const transformed = visitor.EnumCase ? visitor.EnumCase(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$payload = undefined;
+    const updatedNode$payload$current = node.payload;
+    if (updatedNode$payload$current != null) {
+      const updatedNode$payload$1$ = transformType(
+        updatedNode$payload$current,
+        visitor,
+        ctx
+      );
+      changed1 =
+        changed1 || updatedNode$payload$1$ !== updatedNode$payload$current;
+      updatedNode$payload = updatedNode$payload$1$;
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        payload: updatedNode$payload,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.EnumCasePost) {
+    const transformed = visitor.EnumCasePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTEnum = <Ctx>(
+  node: TEnum,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TEnum => {
+  if (!node) {
+    throw new Error("No TEnum provided");
+  }
+
+  const transformed = visitor.TEnum ? visitor.TEnum(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$cases = node.cases;
+    {
+      let changed2 = false;
+      const arr1 = node.cases.map((updatedNode$cases$item1) => {
+        let result = updatedNode$cases$item1;
+
+        switch (updatedNode$cases$item1.type) {
+          case "EnumCase": {
+            result = transformEnumCase(updatedNode$cases$item1, visitor, ctx);
+            changed2 = changed2 || result !== updatedNode$cases$item1;
+            break;
+          }
+
+          default: {
+            // let changed3 = false;
+
+            const result$2node = transformType(
+              updatedNode$cases$item1,
+              visitor,
+              ctx
+            );
+            changed2 = changed2 || result$2node !== updatedNode$cases$item1;
+            result = result$2node;
+          }
+        }
+        return result;
+      });
+      if (changed2) {
+        updatedNode$cases = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        cases: updatedNode$cases,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TEnumPost) {
+    const transformed = visitor.TEnumPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }
@@ -1837,6 +2000,25 @@ export const transformType = <Ctx>(
       break;
     }
 
+    case "TEnum": {
+      const transformed = visitor.Type_TEnum
+        ? visitor.Type_TEnum(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "Number": {
       const transformed = visitor.Type_Number
         ? visitor.Type_Number(node, ctx)
@@ -1963,6 +2145,12 @@ export const transformType = <Ctx>(
 
     case "TLambda": {
       updatedNode = transformTLambda(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TEnum": {
+      updatedNode = transformTEnum(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

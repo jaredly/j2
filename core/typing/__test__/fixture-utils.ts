@@ -153,8 +153,8 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
         return {
             title,
             input: (items['input'] ?? items['input:shouldFail'])?.trim() ?? '',
-            output_expected: items['output:expected']?.trim(),
-            output_failed: items['output:failed']?.trim(),
+            output_expected: items['output:expected']?.trim() ?? '',
+            output_failed: items['output:failed']?.trim() ?? '',
             shouldFail: 'input:shouldFail' in items,
 
             // No longer needed

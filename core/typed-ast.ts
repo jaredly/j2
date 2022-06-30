@@ -31,7 +31,7 @@ export type {
     TRef,
     TSub,
     Type,
-} from './elements/type';
+} from './elements/type';export type { EnumCase, TEnum } from './elements/enums';
 
 export type GlobalRef = {
     type: 'Global';
