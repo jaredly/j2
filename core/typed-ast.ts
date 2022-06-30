@@ -4,6 +4,7 @@ import { DecoratedExpression } from './elements/decorators';
 import { TypeApplication } from './elements/generics';
 import { Type } from './elements/type';
 import { Id, idToString } from './ids';
+export type { Id };
 export type { Apply } from './elements/apply';
 export type {
     Boolean,
@@ -19,21 +20,18 @@ export type {
     DecoratorArg,
     DecoratorDecl,
 } from './elements/decorators';
+export type { TypeApplication, TypeVariables } from './elements/generics';
+export type { TApply, TVar, TVars } from './elements/type-vbls';
 export type {
     TAdd,
-    TApply,
     TDecorated,
     TLambda,
     TOps,
     TOr,
     TRef,
     TSub,
-    TVar,
-    TVars,
     Type,
 } from './elements/type';
-export type { Id } from './ids';
-export type { TypeApplication, TypeVariables } from './elements/generics';
 
 export type GlobalRef = {
     type: 'Global';

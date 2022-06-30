@@ -5,6 +5,23 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx } from '../typing/to-tast';
 
+export const grammar = `
+
+
+_lineEnd = '\n' / _EOF
+
+_EOF = !.
+
+Toplevel = TypeAlias / Expression
+
+Expression = DecoratedExpression
+
+Identifier = text:$IdText hash:($JustSym / $HashRef / $ShortRef / $BuiltinHash / $UnresolvedHash)?
+
+IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
+
+`;
+
 export const ToTast = {
     File({ toplevels, loc, comments }: p.File, ctx: Ctx): [t.File, Ctx] {
         // Do we forbid toplevel expressions from having a value?

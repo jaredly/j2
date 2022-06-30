@@ -9,7 +9,7 @@
 What parts of the code have gotten ungainly?
 - [ ] updating fixtures when hashing changes (due to a modification of types) is super annoying.
 	- I want a cli function that is "update all fixtures that are the same modulo the aliases mapping"
-= [ ] oh wait I really need sync to also sync the ToXYs as well
+= [x] oh wait I really need sync to also sync the ToXYs as well
 - [ ] fixture overview doesn't highlight failing fixtures
 - [x] test coverage is pretty good though, that's nice.
 - [x] I've been pretty fast & loose with FullContext. It would be good to rein that in.

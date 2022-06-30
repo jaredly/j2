@@ -8,15 +8,9 @@
 
 File = toplevels:(_ Toplevel _nonnewline ';'? _lineEnd)* _ finalLineComment? 
 
-_lineEnd = '\n' / _EOF
-
-_EOF = !.
-
 // Declaration = name:$IdText _ type:Type
 
-Toplevel = TypeAlias / Expression
 
-Expression = DecoratedExpression
 
 
 
@@ -25,9 +19,6 @@ Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString
 ParenedExpression = "(" _ expr:Expression _ ")"
 
 
-Identifier = text:$IdText hash:($JustSym / $HashRef / $ShortRef / $BuiltinHash / $UnresolvedHash)?
-
-IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 NamespacedIdText "identifier" = $IdText (":" IdText)*
 
 JustSym = "#[" [0-9]+ "]"

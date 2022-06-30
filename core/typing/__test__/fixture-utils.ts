@@ -9,7 +9,7 @@ import {
     hashTypes,
     noloc,
 } from '../../ctx';
-import { TVar } from '../../elements/type';
+import { TVar } from '../../elements/type-vbls';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
 import { idToString } from '../../ids';

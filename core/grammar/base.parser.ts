@@ -13,14 +13,6 @@ export type File = {
   toplevels: Toplevel[];
 };
 
-export type _lineEnd = string;
-
-export type _EOF = string;
-
-export type Toplevel = TypeAlias | Expression;
-
-export type Expression = DecoratedExpression;
-
 export type Atom = Number | Boolean | Identifier | ParenedExpression | TemplateString;
 
 export type ParenedExpression = {
@@ -29,20 +21,13 @@ export type ParenedExpression = {
   expr: Expression;
 };
 
-export type Identifier = {
-  type: "Identifier";
-  loc: Loc;
-  text: string;
-  hash: (string | string | string | string) | null;
-};
-
-// No data on IdText
-
 // No data on NamespacedIdText
 
 // No data on JustSym
 
 // No data on HashRef
+
+// No data on ShortRef
 
 // No data on BuiltinHash
 
@@ -70,6 +55,23 @@ export type CommaExpr = {
   loc: Loc;
   items: Expression[];
 };
+
+export type _lineEnd = string;
+
+export type _EOF = string;
+
+export type Toplevel = TypeAlias | Expression;
+
+export type Expression = DecoratedExpression;
+
+export type Identifier = {
+  type: "Identifier";
+  loc: Loc;
+  text: string;
+  hash: (string | string | string | string | string) | null;
+};
+
+// No data on IdText
 
 export type newline = string;
 
@@ -328,9 +330,9 @@ export type TypePair = {
   typ: Type;
 };
 
-export type AllTaggedTypes = File | ParenedExpression | Identifier | Apply_inner | CallSuffix | CommaExpr | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TDecorated | TApply_inner | TRef | TVars | TBargs | TBArg | TOps_inner | TRight | TComma | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
+export type AllTaggedTypes = File | ParenedExpression | Apply_inner | CallSuffix | CommaExpr | Identifier | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TDecorated | TApply_inner | TRef | TVars | TBargs | TBArg | TOps_inner | TRight | TComma | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
 
-export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Identifier", "Apply", "CallSuffix", "CommaExpr", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TDecorated", "TApply", "TRef", "TVars", "TBargs", "TBArg", "TOps", "TRight", "TComma", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "ParenedExpression", "Apply", "CallSuffix", "CommaExpr", "Identifier", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TDecorated", "TApply", "TRef", "TVars", "TBargs", "TBArg", "TOps", "TRight", "TComma", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
 
 // @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});

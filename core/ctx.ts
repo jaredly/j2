@@ -3,7 +3,7 @@ import { Ctx } from '.';
 import { Ctx as TCtx } from './typing/typeMatches';
 import { Ctx as ACtx } from './typing/analyze';
 import { DecoratorDecl } from './elements/decorators';
-import { TVar } from './elements/type';
+import { TVar } from './elements/type-vbls';
 import { Loc } from './grammar/base.parser';
 import { extract, Id, idsEqual, toId } from './ids';
 import { transformType } from './transform-tast';
