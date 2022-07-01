@@ -17,10 +17,12 @@ import {
 import { extract, Id, idsEqual, idToString } from '../ids';
 import { Ctx as TMCtx } from './typeMatches';
 import { analyzeVisitor } from './analyze.gen';
+import { TopTypeKind } from './to-tast';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
     getTypeArgs(ref: RefKind): TVar[] | null;
+    getTopKind(idx: number): TopTypeKind | null;
     resolveAnalyzeType(type: Type): Type | null;
     typeByName(name: string): Type | null;
     getDecorator(name: string): RefKind[];

@@ -41,10 +41,18 @@ type Internal = {
         | { type: 'user'; typ: 0; decl: DecoratorDecl },
         Array<GlobalRef>
     >;
+    // Used in the first traversal & resolving
+    // After that, we use syms
     locals: {
         types: { sym: Sym; bound: Type | null }[];
         values: { sym: Sym; type: Type }[];
     }[];
+    syms: {
+        types: { [key: number]: Type | null };
+        // lots of questions about how Type variables
+        // get inferred
+        values: { [key: number]: Type };
+    };
     toplevel: null | Toplevel;
 };
 
@@ -274,6 +282,7 @@ export const newContext = (): FullContext => {
             aliases: {},
             locals: [],
             symid: 0,
+            syms: { types: {}, values: {} },
             decorators: { hashed: {}, names: {} },
             values: { hashed: {}, names: {} },
             types: { hashed: {}, names: {} },
@@ -285,19 +294,22 @@ export const newContext = (): FullContext => {
         },
 
         getBound(sym) {
-            console.log('get bound', sym, this[opaque].locals);
+            if (this[opaque].syms.types[sym] !== undefined) {
+                return this[opaque].syms.types[sym];
+            }
             for (let { types } of this[opaque].locals) {
-                console.log('locals', types);
                 for (let t of types) {
                     if (t.sym.id === sym) {
                         return t.bound;
                     }
                 }
             }
+            console.error('Failed to find bound for', sym);
             return null;
         },
         resetSym() {
             this[opaque].symid = 0;
+            this[opaque].syms = { types: {}, values: {} };
         },
         isBuiltinType(t, name) {
             return (
@@ -347,6 +359,9 @@ export const newContext = (): FullContext => {
         // Modifiers
         withLocalTypes(types) {
             const locals: Internal['locals'][0] = { types, values: [] };
+            types.forEach((t) => {
+                this[opaque].syms.types[t.sym.id] = t.bound;
+            });
             return {
                 ...this,
                 [opaque]: {
@@ -387,6 +402,12 @@ export const newContext = (): FullContext => {
         },
         resolveAnalyzeType(type: Type) {
             return resolveAnalyzeType(type, this);
+        },
+        getTopKind(idx) {
+            if (this[opaque].toplevel?.type === 'Type') {
+                return this[opaque].toplevel.items[idx].kind;
+            }
+            return null;
         },
         typeByName(name: string) {
             const ref = this[opaque].types.names[name];

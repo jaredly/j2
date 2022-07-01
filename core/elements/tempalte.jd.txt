@@ -1,0 +1,6 @@
+##[builtins]##
+
+##[fixtures]##
+==[basic]==
+--[input]--
+// hello

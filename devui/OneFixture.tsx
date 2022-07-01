@@ -99,6 +99,7 @@ export function OneFixture({
                         />
                     ) : (
                         <Text
+                            color="#aaa"
                             css={{
                                 cursor: 'pointer',
                                 fontWeight: '$light',

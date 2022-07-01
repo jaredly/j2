@@ -83,7 +83,6 @@ export const ToTast = {
             ctx.ToTast[arg.type](arg as any, ctx),
         );
         let innerCtx = ctx.withLocalTypes(targs);
-        console.log('tvars', targs, innerCtx);
         return {
             type: 'TVars',
             args: targs,

@@ -20,16 +20,17 @@ alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 Node=r1 T=0 Tree=r0
 type Tree = <T>[ Node<T> | `Leaf(T) ]
 and Node = <T>[ `Tree(Array<Tree<T>>) ]
 
-==[some enum exprs]==
---[input]--
-`What(10)
-`Hello(`Folks)
+==[validate enum cases]==
+--[input:shouldFail]--
+type y = Array<10>
+type z = [`Z]
+type x = [int | `Hello | y | z]
 
 --[output:expected]--
-`What(10)
-// [ `What(10) ]
-`Hello(`Folks)
-// [ `Hello([ `Folks ]) ]
+alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f y=h1b0e8917e6173706d1c1e1863436851ee8877ebb z=h8814ccad96ec30bc8dfe674ddabb1600cdd09d64
+type y = Array<10>
+type z = [ `Z ]
+type x = [ @error:argWrongType() int | `Hello | @error:argWrongType() y | z ]
 
 ==[recursive bound propagation]==
 --[input]--
@@ -51,6 +52,6 @@ type X = <T: int>[ `Hello(X<@error:argWrongType(expected: :int) "string">) ]
 --[input]--
 type X = <T: int>[ `X(X<T>) ]
 
---[output:failed]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f T=0 X=r0
-type X = <T: int>[ `X(X<@error:argWrongType(expected: :int) T>) ]
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f T=0 X=r0
+type X = <T: int>[ `X(X<T>) ]

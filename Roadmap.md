@@ -6,9 +6,14 @@
 
 # ENUM Next Steps
 
-- [ ] Ohhh ok so I think I want to /actually/ split out TCtx from TACtx and such.
+- [-] Ohhh ok so I think I want to /actually/ split out TCtx from TACtx and such.
 	Which means I want a "library" that'll be shared.
+	- turns out that might be super hard
 
+- [ ] SO I'm getting a lot of fixtures, and I probably want to split fixture files up
+	unto a file tree, you know?
+
+- [x] recursive type bounds, make it work!
 - [ ] validate elements of the enum
 	- hmm need to know whether the /recur/ thing is an enum type or something else
 		so that we can reject it. Which means we need a 'parse just enough to figure out

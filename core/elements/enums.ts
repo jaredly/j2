@@ -4,7 +4,7 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { Ctx } from '../typing/analyze';
+import { Ctx, tdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
 
@@ -137,4 +137,50 @@ export const ToPP = {
     },
 };
 
-export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {};
+const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
+    // We'll special case 'recur ref that's applied'
+    if (
+        c.type === 'TApply' &&
+        c.target.type === 'TRef' &&
+        c.target.ref.type === 'Recur'
+    ) {
+        return ctx.getTopKind(c.target.ref.idx) === 'enum';
+    }
+    const resolved = ctx.resolveAnalyzeType(c);
+    if (!resolved) {
+        return false;
+    }
+    c = resolved;
+    switch (c.type) {
+        case 'Number':
+        case 'String':
+        case 'TOps':
+        case 'TLambda':
+        case 'TVars':
+        // These are taken care of by resolveAnalyzeType
+        case 'TDecorated':
+        case 'TApply':
+            return false;
+        case 'TEnum':
+            return true;
+        case 'TRef':
+            if (c.ref.type === 'Recur') {
+                return ctx.getTopKind(c.ref.idx) === 'enum';
+            }
+            return false;
+    }
+};
+
+export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
+    TEnum(node, ctx): null | t.TEnum {
+        let changed = false;
+        const cases = node.cases.map((k) => {
+            if (k.type !== 'EnumCase' && !isValidEnumCase(k, ctx.ctx)) {
+                changed = true;
+                return tdecorate(k, 'argWrongType', ctx.hit, ctx.ctx);
+            }
+            return k;
+        });
+        return changed ? { ...node, cases } : null;
+    },
+};

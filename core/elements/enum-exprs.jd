@@ -1,0 +1,11 @@
+##[fixtures]##
+==[basic]==
+--[input]--
+`What(10)
+`Hello(`Folks)
+
+--[output:expected]--
+`What(10)
+// [ `What(10) ]
+`Hello(`Folks)
+// [ `Hello([ `Folks ]) ]

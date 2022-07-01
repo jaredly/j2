@@ -29,7 +29,7 @@ alias decorate=h5a7fc9170718190f9388084b28fb49f6cb4602fc hello=hf6e269898d7d9d03
 (@decorate() hello)<10>(10)
 // 10
 
-==[multiple]==
+==[multiple args]==
 --[input]--
 multi<int, string>
 multi<int, string>(10, "hello")
@@ -199,13 +199,13 @@ type TTen = (v: Ten) => string
 --[input]--
 type DArray = <Element, Length: uint = uint>int
 type Marray = DArray<int>
-// type TArray = DArray<int, 10>
+type TArray = DArray<int, 10>
 
 --[output:expected]--
 alias DArray=h2e071faf3d824e5b58693ca6e0adf4c58e0c5f0e Element=0 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f Length=1 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
 type DArray = <Element, Length: uint = uint>int
 type Marray = DArray<int>
-// type TArray = DArray<int, 10>
+type TArray = DArray<int, 10>
 
 ==[New fixture___]==
 --[input]--
