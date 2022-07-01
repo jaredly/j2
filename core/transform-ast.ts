@@ -1253,26 +1253,8 @@ export const transformEnum = <Ctx>(
 
     const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
     changed1 = changed1 || updatedNode$loc !== node.loc;
-
-    let updatedNode$payload = null;
-    const updatedNode$payload$current = node.payload;
-    if (updatedNode$payload$current != null) {
-      const updatedNode$payload$1$ = transformExpression(
-        updatedNode$payload$current,
-        visitor,
-        ctx
-      );
-      changed1 =
-        changed1 || updatedNode$payload$1$ !== updatedNode$payload$current;
-      updatedNode$payload = updatedNode$payload$1$;
-    }
-
     if (changed1) {
-      updatedNode = {
-        ...updatedNode,
-        loc: updatedNode$loc,
-        payload: updatedNode$payload,
-      };
+      updatedNode = { ...updatedNode, loc: updatedNode$loc };
       changed0 = true;
     }
   }

@@ -10,7 +10,7 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 
 export const grammar = `
-Enum = "\`" text:$IdText payload:("(" _ Expression _ ")")?
+Enum = "\`" text:$IdText payload:("(" _ Expression? _ ")")?
 `;
 
 export type Enum = {
@@ -57,7 +57,7 @@ export const ToPP = {
                           [
                               pp.text('(', t.loc),
                               ctx.ToPP[t.payload.type](t.payload as any, ctx),
-                              pp.text('(', t.loc),
+                              pp.text(')', t.loc),
                           ],
                           t.loc,
                       )

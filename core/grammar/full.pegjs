@@ -95,7 +95,7 @@ DecExpr = expr:Expression
 
 // enum-exprs.ts
 
-Enum = "\`" text:$IdText payload:("(" _ Expression _ ")")?
+Enum = "\`" text:$IdText payload:("(" _ Expression? _ ")")?
 
 
 // enums.ts

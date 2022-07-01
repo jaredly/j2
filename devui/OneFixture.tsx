@@ -41,10 +41,9 @@ export function OneFixture({
                     type: 'success',
                     result: runFixture({ ...fixture, input: editing }, ctx),
                 };
-            } catch (err) {
-                console.log(err);
-            }
+            } catch (err) {}
         }
+        // hmmmmm I think I'd rather the fallback be "the last successful one"
         try {
             return { type: 'success', result: runFixture(fixture, ctx) };
         } catch (err) {

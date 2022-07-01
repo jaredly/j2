@@ -24,4 +24,5 @@ type Tree = <T>[ `Tree(Array<@error:notATypeVars() Tree#[:unresolved:]<T>>) | `L
 `What
 
 --[output:expected]--
-// hello
+`What
+// Error, no type!

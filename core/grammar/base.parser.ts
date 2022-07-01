@@ -187,7 +187,7 @@ export type Enum = {
   type: "Enum";
   loc: Loc;
   text: string;
-  payload: Expression | null;
+  payload: (Expression | null) | null;
 };
 
 export type TEnum = {
