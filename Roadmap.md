@@ -15,6 +15,21 @@
 
 
 - 🤔 should I make a 'checkType' annotation or something? @type(:hello)
+	- `@expect:type(:sometype) expr`
+	- `@expect:matches(:10) int`
+		hmm
+
+- [x] basic shouldMatch / shouldNotMatch / shouldBe
+- [ ] better assertion
+
+
+
+Ok, so I feel like there are two kinds of tests.
+Fixture tests (input / expected output)
+
+and
+
+'types' 
 
 
 - [x] ok folks, local fixture-level builtins

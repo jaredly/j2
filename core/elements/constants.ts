@@ -12,7 +12,7 @@ import { typeMatches } from '../typing/typeMatches';
 
 export const grammar = `
 Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
-Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?) "u"?
+Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)? "u"?)
 
 String = "\"" text:$(stringChar*) "\""
 TemplateString = "\"" first:$tplStringChars rest:TemplatePair* "\""
@@ -96,7 +96,7 @@ export const ToTast = {
     Number({ loc, contents }: p.Number, ctx: Ctx): t.Number {
         return {
             type: 'Number',
-            value: +contents,
+            value: +(contents.endsWith('u') ? contents.slice(0, -1) : contents),
             loc,
             kind: contents.includes('.')
                 ? 'Float'

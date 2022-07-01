@@ -3,7 +3,7 @@ import { Ctx } from '.';
 import { DecoratorDecl } from './elements/decorators';
 import { TVar } from './elements/type-vbls';
 import { Loc } from './grammar/base.parser';
-import { extract, Id, idsEqual, toId } from './ids';
+import { extract, Id, idsEqual, idToString, toId } from './ids';
 import { transformType } from './transform-tast';
 import { Expression, GlobalRef, RefKind, Sym, TVars, Type } from './typed-ast';
 import { Ctx as ACtx } from './typing/analyze';
@@ -69,7 +69,7 @@ export const addBuiltin = (
     name: string,
     typ: Type,
     unique = 0,
-): RefKind => {
+): GlobalRef => {
     const hash = hashObject({ name, typ, unique });
     const ref: RefKind = { type: 'Global', id: toId(hash, 0) };
     if (ctx[opaque].values.names.hasOwnProperty(name)) {
@@ -86,7 +86,7 @@ export const addBuiltinDecorator = (
     name: string,
     typ: 0,
     unique = 0,
-): RefKind => {
+): GlobalRef => {
     const hash = hashObject({ name, typ, unique });
     const ref: GlobalRef = { type: 'Global', id: toId(hash, 0) };
     if (ctx[opaque].decorators.names.hasOwnProperty(name)) {
@@ -103,7 +103,7 @@ export const addBuiltinType = (
     name: string,
     args: TVar[],
     unique = 0,
-): RefKind => {
+): GlobalRef => {
     const hash = hashObject({ name, args, unique });
     const ref: RefKind = { type: 'Global', id: toId(hash, 0) };
     ctx[opaque].types.names[name] = ref;
@@ -437,6 +437,15 @@ export const newContext = (): FullContext => {
         getDecorator(name) {
             return this[opaque].decorators.names[name] ?? [];
         },
+        // decoratorNames() {
+        //     const result: { [hash: string]: string } = {};
+        //     Object.keys(this[opaque].decorators.names).forEach((name) => {
+        //         this[opaque].decorators.names[name].forEach((r) => {
+        //             result[idToString(r.id)] = name;
+        //         });
+        //     });
+        //     return result;
+        // },
         errorDecorators() {
             const result: Id[] = [];
             Object.keys(this[opaque].decorators.names).forEach((name) => {

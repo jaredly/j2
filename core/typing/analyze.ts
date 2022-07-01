@@ -27,6 +27,7 @@ export type Ctx = {
     typeByName(name: string): Type | null;
     getDecorator(name: string): RefKind[];
     errorDecorators(): Id[];
+    // decoratorNames(): { [key: string]: string };
     resolve: (name: string, hash?: string | null) => Array<RefKind>;
 } & TMCtx;
 

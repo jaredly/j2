@@ -9,7 +9,7 @@ import {
 
 const base = __dirname + '/../../elements/';
 readdirSync(base)
-    .filter((x) => x.endsWith('.jd'))
+    .filter((x) => x.endsWith('.fixture.jd'))
     .forEach((file) => {
         const fixtureFile = base + file;
 

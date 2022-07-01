@@ -27,6 +27,22 @@ IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 
 `;
 
+export const typeToplevel = (t: p.TypeAlias, ctx: Ctx): Toplevel => {
+    return {
+        type: 'Type',
+        items: t.items.map((t) => {
+            const kind = determineKind(t.typ, ctx);
+            if (t.typ.type === 'TVars') {
+                const args = t.typ.args.items.map((arg) =>
+                    ctx.ToTast[arg.type](arg, ctx),
+                );
+                return { name: t.name, args, kind };
+            }
+            return { name: t.name, args: [], kind };
+        }),
+    };
+};
+
 export const ToTast = {
     File({ toplevels, loc, comments }: p.File, ctx: Ctx): [t.File, Ctx] {
         // Do we forbid toplevel expressions from having a value?
@@ -37,19 +53,7 @@ export const ToTast = {
             ctx.resetSym();
             let config: null | Toplevel = null;
             if (t.type === 'TypeAlias') {
-                config = {
-                    type: 'Type',
-                    items: t.items.map((t) => {
-                        const kind = determineKind(t.typ, ctx);
-                        if (t.typ.type === 'TVars') {
-                            const args = t.typ.args.items.map((arg) =>
-                                ctx.ToTast[arg.type](arg, ctx),
-                            );
-                            return { name: t.name, args, kind };
-                        }
-                        return { name: t.name, args: [], kind };
-                    }),
-                };
+                config = typeToplevel(t, ctx);
                 // Need to reset again, so the args get the same syms
                 // when we parse them again
                 ctx.resetSym();
