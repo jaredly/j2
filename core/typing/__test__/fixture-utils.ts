@@ -29,11 +29,6 @@ export type Fixture = {
     output_expected: string;
     output_failed: string;
     shouldFail: boolean;
-
-    failing_deprecated: boolean;
-    aliases_deprecated: { [key: string]: string };
-    builtins_deprecated: Builtin[];
-    // i: number;
 };
 
 export const locClearVisitor: Visitor<null> = {
@@ -127,11 +122,8 @@ export const serializeFixtureFile = (file: FixtureFile) => {
             {
                 [fixture.shouldFail ? 'input:shouldFail' : 'input']:
                     fixture.input,
-                'output:expected':
-                    (fixture.output_expected?.startsWith('alias ')
-                        ? ''
-                        : aliasesToString(fixture.aliases_deprecated)) +
-                    fixture.output_expected,
+                'output:expected': fixture.output_expected,
+                'output:failed': fixture.output_failed,
             },
             '-',
         );
@@ -156,11 +148,6 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
             output_expected: items['output:expected']?.trim() ?? '',
             output_failed: items['output:failed']?.trim() ?? '',
             shouldFail: 'input:shouldFail' in items,
-
-            // No longer needed
-            aliases_deprecated: {}, // this will come from the output
-            builtins_deprecated: [], // nope as well
-            failing_deprecated: false, // comes from output_failed
         };
     });
     return {
@@ -215,7 +202,7 @@ export type FixtureResult = {
 };
 
 export function runFixture(
-    { input, output_expected }: Fixture,
+    { input, output_expected, output_failed }: Fixture,
     baseCtx: FullContext,
 ): FixtureResult {
     let ctx = baseCtx.clone();
@@ -278,11 +265,13 @@ export function runFixture(
 
     let outputTast;
 
+    let output = output_expected ? output_expected : output_failed;
+
     let ctx2 = baseCtx.clone();
     try {
-        [outputTast, ctx2] = parseRaw(output_expected, ctx2);
+        [outputTast, ctx2] = parseRaw(output, ctx2);
     } catch (err) {
-        console.log(output_expected);
+        console.log(output);
         console.log(err);
         throw err;
     }

@@ -11,6 +11,24 @@ import { File, Loc, refHash, Type } from '../core/typed-ast';
 import { getType } from '../core/typing/getType';
 import { printCtx } from '../core/typing/to-ast';
 
+export const colors: {
+    [key in keyof Visitor<null>]: string;
+} = {
+    TagDecl: '#33ff4e',
+    TRef: 'green',
+    String: '#afa',
+    TemplateString: '#afa',
+    TemplatePair: '#afa',
+    TBArg: 'magenta',
+    Number: 'cyan',
+    Boolean: 'cyan',
+    Identifier: 'teal',
+    comment: 'green',
+    Decorator: 'orange',
+    DecoratorId: '#ffbf88',
+    TemplateWrap: 'yellow',
+};
+
 export const Highlight = ({
     text,
     info,
@@ -143,23 +161,6 @@ export const Highlight = ({
                 : null}
         </div>
     );
-};
-
-export const colors: {
-    [key in keyof Visitor<null>]: string;
-} = {
-    TRef: 'green',
-    String: '#afa',
-    TemplateString: '#afa',
-    TemplatePair: '#afa',
-    TBArg: 'magenta',
-    Number: 'cyan',
-    Boolean: 'cyan',
-    Identifier: 'teal',
-    comment: 'green',
-    Decorator: 'orange',
-    DecoratorId: '#ffbf88',
-    TemplateWrap: 'yellow',
 };
 
 const visitor: Visitor<Array<{ loc: Loc; type: string }>> = {};

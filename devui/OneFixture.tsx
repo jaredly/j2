@@ -12,7 +12,7 @@ import {
 } from '../core/typing/__test__/fixture-utils';
 import { Editor } from './Editor';
 import { Highlight } from './Highlight';
-import { CancelIcon } from './Icons';
+import { CancelIcon, ReportProblemIcon } from './Icons';
 
 export function OneFixture({
     fixture,
@@ -29,8 +29,10 @@ export function OneFixture({
     onChange: (v: Fixture) => void;
     builtins: Builtin[];
 }) {
-    const { title, input, output_expected } = fixture;
+    const { title, input, output_expected, output_failed } = fixture;
     const [editing, setEditing] = React.useState(null as null | string);
+
+    const prevOutput = output_expected ? output_expected : output_failed;
 
     const newOutput = React.useMemo(():
         | { type: 'error'; error: Error }
@@ -54,7 +56,7 @@ export function OneFixture({
 
     const changed =
         newOutput.type === 'error' ||
-        compare(output_expected, newOutput.result.newOutput);
+        compare(prevOutput, newOutput.result.newOutput);
 
     const numErrors =
         newOutput.type === 'error' ? 1 : errorCount(newOutput.result.verify);
@@ -109,6 +111,14 @@ export function OneFixture({
                             onClick={() => setTitleEdit(title)}
                         >
                             {changed ? (
+                                <ReportProblemIcon
+                                    style={{
+                                        color: 'orange',
+                                        marginRight: 8,
+                                        marginBottom: -2,
+                                    }}
+                                />
+                            ) : output_failed === prevOutput ? (
                                 <CancelIcon
                                     style={{
                                         color: 'red',
@@ -116,8 +126,7 @@ export function OneFixture({
                                         marginBottom: -2,
                                     }}
                                 />
-                            ) : // <CheckmarkIcon style={{ color: 'green' }} />
-                            null}
+                            ) : null}
                             {title}
                         </Text>
                     )}
@@ -127,8 +136,53 @@ export function OneFixture({
                             textAlign: 'right',
                             // paddingRight: 12,
                             // paddingTop: 4,
+                            display: 'flex',
+                            justifyContent: 'flex-end',
                         }}
                     >
+                        {newOutput.type === 'success' ? (
+                            <>
+                                <Button
+                                    size={'xs'}
+                                    disabled={
+                                        !changed &&
+                                        newOutput.result.newOutput ===
+                                            fixture.output_expected
+                                    }
+                                    onPress={() => {
+                                        onChange({
+                                            ...fixture,
+                                            output_expected:
+                                                newOutput.result.newOutput,
+                                            output_failed: '',
+                                        });
+                                    }}
+                                >
+                                    Accept
+                                </Button>
+                                <Spacer x={0.5} />
+                                <Button
+                                    size="xs"
+                                    color="secondary"
+                                    disabled={
+                                        !changed &&
+                                        fixture.output_expected === ''
+                                    }
+                                    onPress={() => {
+                                        // So if the old one is rejected, we overwrite
+                                        // but if the old one is accepted, then we keep it around as "the right one"
+                                        onChange({
+                                            ...fixture,
+                                            output_failed:
+                                                newOutput.result.newOutput,
+                                            output_expected: '',
+                                        });
+                                    }}
+                                >
+                                    Reject
+                                </Button>
+                            </>
+                        ) : null}
                         <Checkbox
                             css={{
                                 backgroundColor:
@@ -148,44 +202,6 @@ export function OneFixture({
                             }
                         />
                     </div>
-                    {changed && newOutput.type === 'success' ? (
-                        <>
-                            <Button
-                                size={'xs'}
-                                onPress={() => {
-                                    onChange({
-                                        ...fixture,
-                                        output_expected:
-                                            newOutput.result.newOutput,
-                                        aliases_deprecated:
-                                            newOutput.result.aliases,
-                                        failing_deprecated: false,
-                                    });
-                                }}
-                            >
-                                Accept
-                            </Button>
-                            <Spacer x={0.5} />
-                            <Button
-                                size="xs"
-                                color="secondary"
-                                onPress={() => {
-                                    // So if the old one is rejected, we overwrite
-                                    // but if the old one is accepted, then we keep it around as "the right one"
-                                    onChange({
-                                        ...fixture,
-                                        output_expected:
-                                            newOutput.result.newOutput,
-                                        aliases_deprecated:
-                                            newOutput.result.aliases,
-                                        failing_deprecated: true,
-                                    });
-                                }}
-                            >
-                                Reject
-                            </Button>
-                        </>
-                    ) : null}
                 </div>
                 <Card.Body css={{ display: 'flex', fontFamily: '$mono' }}>
                     <Editor
@@ -220,12 +236,10 @@ export function OneFixture({
 
                         {newOutput.type === 'success' ? (
                             <>
-                                <Aliases
-                                    aliases={parseAliases(output_expected)}
-                                />
+                                <Aliases aliases={parseAliases(prevOutput)} />
                                 <Highlight
                                     portal={portal}
-                                    text={output_expected}
+                                    text={prevOutput}
                                     info={{
                                         tast: newOutput.result.outputTast,
                                         ctx: newOutput.result.ctx2,

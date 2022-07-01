@@ -21,7 +21,10 @@ What parts of the code have gotten ungainly?
 # ENUMS
 
 - [x] enum basic type parsing
-- [ ] enum expression parsing
+- [x] enum expression parsing
+- [ ] WAIT need to be able to reject fixtures. or like. mark them as "pending"?	
+	like there is a difference. "under construction". maybe the triangle warning icon
+- [ ] analyze/validate enum types, and enum expressions
 - [ ] recursive types!
 - [ ] typeMatches for enums
 

@@ -72,3 +72,17 @@ export function PushpinIconFilled(props: React.SVGProps<SVGSVGElement>) {
         </svg>
     );
 }
+
+export function ReportProblemIcon(props: React.SVGProps<SVGSVGElement>) {
+    return (
+        <svg
+            viewBox="0 0 48 48"
+            fill="currentColor"
+            height="1em"
+            width="1em"
+            {...props}
+        >
+            <path d="M2 42h44L24 4 2 42zm24-6h-4v-4h4v4zm0-8h-4v-8h4v8z" />
+        </svg>
+    );
+}

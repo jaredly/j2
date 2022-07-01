@@ -210,10 +210,6 @@ export const FixtureFile = ({
                                     output_expected: '// hello',
                                     output_failed: '',
                                     shouldFail: false,
-                                    // nope
-                                    failing_deprecated: false,
-                                    aliases_deprecated: {},
-                                    builtins_deprecated: [],
                                 },
                             ]),
                         });

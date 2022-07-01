@@ -16,6 +16,7 @@ import {
     CheckmarkIcon,
     PushpinIcon,
     PushpinIconFilled,
+    ReportProblemIcon,
 } from './Icons';
 
 export const usePromise = <T,>(
@@ -56,12 +57,16 @@ export type Status = {
 };
 
 export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
-    let failed =
-        status.file.fixtures[idx].output_expected !==
-        status.results[idx].result.newOutput;
+    const result = status.results[idx].result;
+    const fixture = status.file.fixtures[idx];
+    const prev = fixture.output_expected
+        ? fixture.output_expected
+        : fixture.output_failed;
     return (
         <span style={{ marginRight: 8 }}>
-            {failed ? (
+            {prev !== result.newOutput ? (
+                <ReportProblemIcon style={{ color: 'orange' }} />
+            ) : fixture.output_failed ? (
                 <CancelIcon style={{ color: 'red' }} />
             ) : (
                 <CheckmarkIcon style={{ color: 'green' }} />
@@ -72,14 +77,22 @@ export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
 
 export const ShowStatus = ({ status }: { status: Status }) => {
     let failures = 0;
+    let changes = 0;
     status.file.fixtures.forEach((fixture, i) => {
-        if (fixture.output_expected !== status.results[i].result.newOutput) {
+        const prev = fixture.output_expected
+            ? fixture.output_expected
+            : fixture.output_failed;
+        if (prev !== status.results[i].result.newOutput) {
+            changes++;
+        } else if (fixture.output_failed) {
             failures++;
         }
     });
     return (
         <span style={{ marginRight: 8 }}>
-            {failures ? (
+            {changes ? (
+                <ReportProblemIcon style={{ color: 'orange' }} />
+            ) : failures ? (
                 <CancelIcon style={{ color: 'red' }} />
             ) : (
                 <CheckmarkIcon style={{ color: 'green' }} />

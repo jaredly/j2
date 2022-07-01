@@ -4,17 +4,18 @@
 ##[fixtures]##
 ==[basic parsing]==
 --[input]--
-type x = [`hi | `what]
+type x = [`hi | `what(int)]
 
 --[output:expected]--
-type x = [ `hi | `what ]
-// h2af0c58ba220ae0004c83eb8a7c786f899463fc3
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+type x = [ `hi | `what(int) ]
+// h502f26e3c383817111c749be6202d13055f2278b
 
 ==[recursive!]==
 --[input]--
 type Tree = <T>[`Tree(Array<Tree<T>>) | `Leaf(T)]
 
---[output:expected]--
+--[output:failed]--
 alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 T=0
 type Tree = <T>[ `Tree(Array<@error:notATypeVars() Tree#[:unresolved:]<T>>) | `Leaf(T) ]
 // h4724ea60f52375a9e03476a4c410f6f8739376c3
@@ -23,6 +24,6 @@ type Tree = <T>[ `Tree(Array<@error:notATypeVars() Tree#[:unresolved:]<T>>) | `L
 --[input]--
 `What
 
---[output:expected]--
+--[output:failed]--
 `What
 // Error, no type!
