@@ -18,6 +18,7 @@ import {
     parseBuiltin,
     loadBuiltins,
     FixtureFile as FixtureFileType,
+    Builtin,
 } from '../core/typing/__test__/fixture-utils';
 import { colors } from './Highlight';
 import { Status, usePromise } from './App';
@@ -64,10 +65,6 @@ export const FixtureFile = ({
 
     const portal = React.useRef(null as null | HTMLDivElement);
 
-    const [editBuiltins, setEditBuiltins] = React.useState(
-        null as null | string,
-    );
-
     // const data = files[name].file;
     // const setData = (file: FixtureFileType) => {};
 
@@ -106,78 +103,16 @@ export const FixtureFile = ({
                     // margin: '$12',
                 }}
             >
-                {editBuiltins != null ? (
-                    <div>
-                        <Textarea
-                            autoFocus
-                            fullWidth
-                            minRows={5}
-                            label="Builtins"
-                            value={editBuiltins}
-                            onChange={(evt) =>
-                                setEditBuiltins(evt.target.value)
-                            }
-                            onKeyDown={(evt) => {
-                                if (evt.key === 'Escape') {
-                                    setEditBuiltins(null);
-                                    evt.preventDefault();
-                                    setData({
-                                        ...data,
-                                        builtins: editBuiltins
-                                            .split('\n')
-                                            .map(parseBuiltin),
-                                    });
-                                } else if (evt.key === 'Enter' && evt.metaKey) {
-                                    setEditBuiltins(null);
-                                    evt.preventDefault();
-                                    setData({
-                                        ...data,
-                                        builtins: editBuiltins
-                                            .split('\n')
-                                            .map(parseBuiltin),
-                                    });
-                                }
-                            }}
-                            onBlur={() => {
-                                setData({
-                                    ...data,
-                                    builtins: editBuiltins
-                                        .split('\n')
-                                        .map(parseBuiltin),
-                                });
-                                setEditBuiltins(null);
-                            }}
-                        />
-                    </div>
-                ) : (
-                    <div
-                        onClick={() =>
-                            setEditBuiltins(
-                                data.builtins.map(serializeBuiltin).join('\n'),
-                            )
-                        }
-                    >
-                        <Text css={{ fontFamily: '$mono' }} small>
-                            Builtins:
-                            {data.builtins.map((item, i) => (
-                                <span
-                                    key={i}
-                                    style={{
-                                        marginLeft: 8,
-                                        color:
-                                            item.kind === 'decorator'
-                                                ? colors.DecoratorId
-                                                : item.kind === 'type'
-                                                ? colors.TRef
-                                                : colors.Identifier,
-                                    }}
-                                >
-                                    {item.name}
-                                </span>
-                            ))}
-                        </Text>
-                    </div>
-                )}
+                <ShowBuiltins
+                    setBuiltins={(builtins) =>
+                        setData({
+                            ...data,
+                            builtins,
+                        })
+                    }
+                    builtins={data.builtins}
+                />
+
                 <Card.Divider css={{ marginBlock: '$6' }} />
 
                 {data.fixtures.map((fixture: Fixture, i) =>
@@ -210,6 +145,7 @@ export const FixtureFile = ({
                                     output_expected: '// hello',
                                     output_failed: '',
                                     shouldFail: false,
+                                    builtins: [],
                                 },
                             ]),
                         });
@@ -219,5 +155,72 @@ export const FixtureFile = ({
                 </Button>
             </Container>
         </Container>
+    );
+};
+
+export const ShowBuiltins = ({
+    setBuiltins,
+    builtins,
+}: {
+    builtins: Builtin[];
+    setBuiltins: (builtins: Builtin[]) => void;
+}) => {
+    const [editBuiltins, setEditBuiltins] = React.useState(
+        null as null | string,
+    );
+
+    return editBuiltins != null ? (
+        <div>
+            <Textarea
+                autoFocus
+                fullWidth
+                minRows={5}
+                label="Builtins"
+                value={editBuiltins}
+                onChange={(evt) => setEditBuiltins(evt.target.value)}
+                onKeyDown={(evt) => {
+                    if (evt.key === 'Escape') {
+                        setEditBuiltins(null);
+                        evt.preventDefault();
+                        setBuiltins(editBuiltins.split('\n').map(parseBuiltin));
+                    } else if (evt.key === 'Enter' && evt.metaKey) {
+                        setEditBuiltins(null);
+                        evt.preventDefault();
+                        setBuiltins(editBuiltins.split('\n').map(parseBuiltin));
+                    }
+                }}
+                onBlur={() => {
+                    setBuiltins(editBuiltins.split('\n').map(parseBuiltin));
+                    setEditBuiltins(null);
+                }}
+            />
+        </div>
+    ) : (
+        <div
+            onClick={() =>
+                setEditBuiltins(builtins.map(serializeBuiltin).join('\n'))
+            }
+        >
+            <Text css={{ fontFamily: '$mono' }} small>
+                Builtins:
+                {!builtins.length ? ' no builtins' : ''}
+                {builtins.map((item, i) => (
+                    <span
+                        key={i}
+                        style={{
+                            marginLeft: 8,
+                            color:
+                                item.kind === 'decorator'
+                                    ? colors.DecoratorId
+                                    : item.kind === 'type'
+                                    ? colors.TRef
+                                    : colors.Identifier,
+                        }}
+                    >
+                        {item.name}
+                    </span>
+                ))}
+            </Text>
+        </div>
     );
 };

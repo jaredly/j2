@@ -26,6 +26,7 @@ export type FixtureFile = {
 export type Fixture = {
     title: string;
     input: string;
+    builtins: Builtin[];
     output_expected: string;
     output_failed: string;
     shouldFail: boolean;
@@ -124,6 +125,7 @@ export const serializeFixtureFile = (file: FixtureFile) => {
                     fixture.input,
                 'output:expected': fixture.output_expected,
                 'output:failed': fixture.output_failed,
+                builtins: fixture.builtins.map(serializeBuiltin).join('\n'),
             },
             '-',
         );
@@ -148,6 +150,12 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
             output_expected: items['output:expected']?.trim() ?? '',
             output_failed: items['output:failed']?.trim() ?? '',
             shouldFail: 'input:shouldFail' in items,
+            builtins:
+                items['builtins']
+                    ?.trim()
+                    ?.split('\n')
+                    .filter(Boolean)
+                    .map(parseBuiltin) ?? [],
         };
     });
     return {
@@ -202,10 +210,11 @@ export type FixtureResult = {
 };
 
 export function runFixture(
-    { input, output_expected, output_failed }: Fixture,
+    { input, output_expected, output_failed, builtins }: Fixture,
     baseCtx: FullContext,
 ): FixtureResult {
     let ctx = baseCtx.clone();
+    loadBuiltins(builtins, ctx);
 
     let tast;
     try {
@@ -273,6 +282,7 @@ export function runFixture(
     let output = output_expected ? output_expected : output_failed;
 
     let ctx2 = baseCtx.clone();
+    loadBuiltins(builtins, ctx2);
     try {
         [outputTast, ctx2] = parseRaw(output, ctx2);
     } catch (err) {
@@ -298,9 +308,13 @@ export function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
     builtins.forEach((builtin) => {
         switch (builtin.kind) {
             case 'value':
-                const ast = parseType(builtin.type);
-                const tast = ctx.ToTast[ast.type](ast as any, ctx);
-                addBuiltin(ctx, builtin.name, tast);
+                try {
+                    const ast = parseType(builtin.type);
+                    const tast = ctx.ToTast[ast.type](ast as any, ctx);
+                    addBuiltin(ctx, builtin.name, tast);
+                } catch (err) {
+                    console.error(err);
+                }
                 break;
             case 'type': {
                 let args: TVar[] = [];

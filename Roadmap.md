@@ -13,14 +13,31 @@
 - [ ] SO I'm getting a lot of fixtures, and I probably want to split fixture files up
 	unto a file tree, you know?
 
+
+- 🤔 should I make a 'checkType' annotation or something? @type(:hello)
+
+
+- [x] ok folks, local fixture-level builtins
+- [ ] enum typeMatches
+- [ ] "open" enums ("*" or "..."). Does it make sense to have them, when a type vbl would work?
+	`<T>(x: [ ``What | T ]) => int`
+	problem here: that `T` needs a `bound`... like `[...]`. But then the question is, do we allow
+	that syntax in general?
+	when I'm thinking about monomorphising, ... I would ~like to be able to lock down enums,
+	because otherwise ... I'd need to do boxing or something to put them all in the same union?
+	right. hm like technically someone could do `[ ``X | [...] ]`, right? because I really don't
+	want differences between the `bound` things and normal types.
+
+	hmmmm. So, given that you can't get anything out, maybe it's fine?
+	we can try it at least. Ok, open enums are ok.
+
 - [x] recursive type bounds, make it work!
-- [ ] validate elements of the enum
+- [x] validate elements of the enum
 	- hmm need to know whether the /recur/ thing is an enum type or something else
 		so that we can reject it. Which means we need a 'parse just enough to figure out
 		what kind of thing this is'.
 - [ ] hm ok so to use the enum types, I'll have to make functions?
 	- yeah let's get lambdas going
-- [ ] typeMatches
 
 # RECONSIDER
 

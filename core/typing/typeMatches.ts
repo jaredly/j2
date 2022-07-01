@@ -2,10 +2,12 @@ import { noloc, refsEqual } from '../ctx';
 import { Id, idsEqual } from '../ids';
 import { transformType, Visitor } from '../transform-tast';
 import {
+    EnumCase,
     Number,
     RefKind,
     String,
     TApply,
+    TEnum,
     TLambda,
     TOps,
     TRef,
@@ -161,6 +163,51 @@ export const typeMatches = (
 
     switch (candidate.type) {
         case 'TEnum':
+            // [ `What ] matches [ `What | `Who ]
+            // So everything in candidate needs to match something
+            // in expected. And there need to not be any collisions name-wise
+            if (expected.type !== 'TEnum') {
+                return false;
+            }
+            const canEnums = expandEnumCases(candidate, ctx);
+            const expEnums = expandEnumCases(expected, ctx);
+            if (!canEnums || !expEnums) {
+                return false;
+            }
+            const canMap: { [key: string]: EnumCase } = {};
+            for (let kase of canEnums) {
+                if (canMap[kase.tag]) {
+                    return false;
+                }
+                canMap[kase.tag] = kase;
+            }
+            const expMap: { [key: string]: EnumCase } = {};
+            for (let kase of expEnums) {
+                if (expMap[kase.tag]) {
+                    return false;
+                }
+                expMap[kase.tag] = kase;
+            }
+
+            for (let kase of canEnums) {
+                if (!expMap[kase.tag]) {
+                    // OR if it's open, it's fine
+                    return false;
+                }
+                if (
+                    (kase.payload != null) !=
+                    (expMap[kase.tag].payload != null)
+                ) {
+                    return false;
+                }
+                if (
+                    kase.payload &&
+                    !typeMatches(kase.payload, expMap[kase.tag].payload!, ctx)
+                ) {
+                    return false;
+                }
+            }
+
             // So, ... we can always allow smaller, right?
             // [] is part of anything?
             // <T: int>(x) => T
@@ -178,7 +225,8 @@ export const typeMatches = (
             // well actually, it locks down the payloads for those two tags.
             // 🤔 lots to think about there.
             // oh and I guess the empty enum just can't be instantiated
-            return false;
+
+            return true;
         // return expected.type === 'TEnum' &&
         // idsEqual(candidate.id, expected.id);
         case 'TDecorated':
@@ -576,4 +624,25 @@ export const collapseOps = (t: TOps, ctx: Ctx): Type => {
             .slice(1)
             .map((el) => ({ top: el.plus ? '+' : '-', right: el.val })),
     };
+};
+
+export const expandEnumCases = (type: TEnum, ctx: Ctx): null | EnumCase[] => {
+    const cases: EnumCase[] = [];
+    for (let kase of type.cases) {
+        if (kase.type === 'EnumCase') {
+            cases.push(kase);
+        } else {
+            const res = ctx.resolveRefsAndApplies(kase);
+            if (res?.type === 'TEnum') {
+                const expanded = expandEnumCases(res, ctx);
+                if (!expanded) {
+                    return null;
+                }
+                cases.push(...expanded);
+            } else {
+                return null;
+            }
+        }
+    }
+    return cases;
 };

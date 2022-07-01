@@ -1,9 +1,5 @@
 ##[builtins]##
-//:value:twoArgs:(one: int, two: string) => string
 //:value:simple:() => string
-//:value:takeSimple:(simple: () => string) => string
-//:value:takeOneArg:(simple: (v: int) => string) => string
-//:value:takeIntle:(simple: () => int) => string
 //:value:oneArg:(v: int) => string
 //:value:takeIntArg:(fn: (v: int) => string) => string
 //:value:take10Arg:(fn: (v: 10) => string) => string
@@ -26,6 +22,8 @@ toString_h0(3.4)
 // string
 
 ==[multiple args]==
+--[builtins]--
+//:value:twoArgs:(one: int, two: string) => string
 --[input]--
 twoArgs(1, "hello")
 
@@ -35,6 +33,9 @@ twoArgs(1, "hello")
 // string
 
 ==[pass lambda]==
+--[builtins]--
+//:value:takeSimple:(simple: () => string) => string
+
 --[input]--
 takeSimple(simple)
 
@@ -44,6 +45,10 @@ takeSimple(simple)
 // string
 
 ==[pass wrong lambda]==
+--[builtins]--
+//:value:takeIntle:(simple: () => int) => string
+//:value:takeOneArg:(simple: (v: int) => string) => string
+
 --[input:shouldFail]--
 takeOneArg(simple)
 takeOneArg(oneArg)

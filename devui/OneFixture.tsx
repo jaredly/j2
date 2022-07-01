@@ -11,6 +11,7 @@ import {
     splitAliases,
 } from '../core/typing/__test__/fixture-utils';
 import { Editor } from './Editor';
+import { ShowBuiltins } from './FixtureFile';
 import { Highlight } from './Highlight';
 import { CancelIcon, ReportProblemIcon } from './Icons';
 
@@ -65,7 +66,11 @@ export function OneFixture({
         <div id={id} style={{ paddingTop: 24 }}>
             <Card
                 variant={'bordered'}
-                css={{ position: 'relative', borderRadius: 3 }}
+                css={{
+                    position: 'relative',
+                    borderRadius: 3,
+                    borderColor: changed ? 'orange' : undefined,
+                }}
             >
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                     {titleEdit ? (
@@ -212,6 +217,13 @@ export function OneFixture({
                     </div>
                 </div>
                 <Card.Body css={{ display: 'flex', fontFamily: '$mono' }}>
+                    <ShowBuiltins
+                        setBuiltins={(builtins) =>
+                            onChange({ ...fixture, builtins })
+                        }
+                        builtins={fixture.builtins}
+                    />
+                    <Card.Divider css={{ marginBlock: '$6' }} />
                     <Editor
                         text={editing ?? input}
                         onChange={setEditing}

@@ -9,3 +9,55 @@
 // [ `What(10) ]
 `Hello(`Folks)
 // [ `Hello([ `Folks ]) ]
+
+==[Calling functions]==
+--[input]--
+takeWhat(`What)
+takeWhatOrWho(`What)
+takeWhatOrWho(`Who)
+takeWhatOrWho(whatOrWho)
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takeWhat=h5562497b015bf52b1da75c6e05585ce7c851ddc1 takeWhatOrWho=h6e8c4e8b5cd3e78c9f518b165c2b0288206320a4 whatOrWho=h357977294dd00e99ab934f09cfcd2cbfdf13ee1f
+takeWhat(`What)
+// int
+takeWhatOrWho(`What)
+// int
+takeWhatOrWho(`Who)
+// int
+takeWhatOrWho(whatOrWho)
+// int
+
+--[builtins]--
+//:value:takeWhat:(v: [`What]) => int
+//:value:whatOrWho:[ `What | `Who ]
+//:value:takeWhatOrWho:(v: [`What | `Who]) => int
+
+==[Enum too large]==
+--[input:shouldFail]--
+takeWhat(whatOrWho)
+
+--[output:expected]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takeWhat=he13ee8aecc85b66b18ae0d535e66a3358c0cc1d9 whatOrWho=h357977294dd00e99ab934f09cfcd2cbfdf13ee1f
+takeWhat(@error:argWrongType(expected: :[ `What ]) whatOrWho)
+// int
+
+--[builtins]--
+//:value:takeWhat:(v: [ `What ]) => int
+//:value:whatOrWho:[ `What | `Who ]
+
+==[Payloads]==
+--[input]--
+whatNum(`What(110))
+whatTen(`What(10))
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f whatNum=h7c0e337f7748bf1ca7c84f0f1b64bc108a50cab2 whatTen=h9ea8e9ad421086b33fcf8b289d20814b6227199a
+whatNum(`What(110))
+// int
+whatTen(`What(10))
+// int
+
+--[builtins]--
+//:value:whatTen:(v: [`What(10) ]) => int
+//:value:whatNum:(v: [`What(int) ]) => int
