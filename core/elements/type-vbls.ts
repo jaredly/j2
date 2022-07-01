@@ -63,24 +63,23 @@ export const ToTast = {
         }
         return inner;
     },
+    TBArg({ label, hash, bound, default_, loc }: p.TBArg, ctx: TCtx): TVar {
+        const sym = hash
+            ? { name: label, id: +hash.slice(2, -1) }
+            : ctx.sym(label);
+        return {
+            sym,
+            bound: bound ? ctx.ToTast[bound.type](bound as any, ctx) : null,
+            default_: default_
+                ? ctx.ToTast[default_.type](default_ as any, ctx)
+                : null,
+            loc,
+        };
+    },
     TVars({ args, inner, loc }: p.TVars, ctx: TCtx): t.TVars {
         // TODO later args can refer to previous ones.
-        const targs = args.items.map(
-            ({ label, hash, bound, default_, loc }) => {
-                const sym = hash
-                    ? { name: label, id: +hash.slice(2, -1) }
-                    : ctx.sym(label);
-                return {
-                    sym,
-                    bound: bound
-                        ? ctx.ToTast[bound.type](bound as any, ctx)
-                        : null,
-                    default_: default_
-                        ? ctx.ToTast[default_.type](default_ as any, ctx)
-                        : null,
-                    loc,
-                };
-            },
+        const targs = args.items.map((arg) =>
+            ctx.ToTast[arg.type](arg as any, ctx),
         );
         return {
             type: 'TVars',

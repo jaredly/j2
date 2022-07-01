@@ -38,7 +38,15 @@ export const ToTast = {
             if (t.type === 'TypeAlias') {
                 config = {
                     type: 'Type',
-                    items: t.items.map((t) => ({ name: t.name, args: [] })),
+                    items: t.items.map((t) => {
+                        if (t.typ.type === 'TVars') {
+                            const args = t.typ.args.items.map((arg) =>
+                                ctx.ToTast[arg.type](arg, ctx),
+                            );
+                            return { name: t.name, args };
+                        }
+                        return { name: t.name, args: [] };
+                    }),
                 };
             }
             ctx = ctx.toplevelConfig(config);

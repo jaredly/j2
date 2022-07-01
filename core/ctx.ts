@@ -394,6 +394,7 @@ export const newContext = (): FullContext => {
             } else if (ref.type === 'Recur') {
                 const { toplevel } = this[opaque];
                 if (toplevel?.type === 'Type') {
+                    return toplevel.items[ref.idx].args;
                 }
                 return null;
             } else {

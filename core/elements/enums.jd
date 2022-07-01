@@ -16,9 +16,9 @@ type x = [ `hi | `what(int) ]
 type Tree = <T>[`Tree(Array<Tree<T>>) | `Leaf(T)]
 
 --[output:expected]--
-alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 T=0 Tree=r0
-type Tree = <T>[ `Tree(Array<@error:notATypeVars() Tree<T>>) | `Leaf(T) ]
-// h24fa88047e61490c922df10779ef64dfac4ae7e9
+alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 T=1 Tree=r0
+type Tree = <T>[ `Tree(Array<Tree<T>>) | `Leaf(T) ]
+// h70ce237fef28ff2242f5c8fd222a6a2e1e18eddb
 
 ==[New fixture]==
 --[input]--

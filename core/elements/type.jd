@@ -79,9 +79,9 @@ type StringMe = <T: string>int;
 @test:type(:StringMe<"hello">) 10
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=h0af32067f3903aca3f50b6f63928f6a239883e4a T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=hb09cc15bdc398baba57a3a1e0fb744833afaa39e T=1 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type StringMe = <T: string>int
-// h0af32067f3903aca3f50b6f63928f6a239883e4a
+// hb09cc15bdc398baba57a3a1e0fb744833afaa39e
 @test:type(:StringMe<@error:argWrongType(expected: :string) 20>) 10
 // 10
 @test:type(:StringMe<"hello">) 10
@@ -142,13 +142,13 @@ type Good = FancyArray<"ones and a suffix">
 type Bad = FancyArray<"something else">
 
 --[output:expected]--
-alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=0 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f FancyArray=h742485072b86dcad62ff2187ca3dca7811afce4e string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=1 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f FancyArray=h595f4fe854aae5786539feb5dc2e17e04ea17904 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 type FancyArray = <Element: "one" + string + "suffix">Array<Element>
-// h742485072b86dcad62ff2187ca3dca7811afce4e
+// h595f4fe854aae5786539feb5dc2e17e04ea17904
 type Good = FancyArray<"ones and a suffix">
-// hb158d1643dff08d6f4c44c1bf9744272caaadf0f
+// h970c3cd863ae852219dae62f708f5e2822377e8d
 type Bad = FancyArray<@error:argWrongType(expected: :"one" + string + "suffix") "something else">
-// h7724ccd4c3f917aef19c801b11e72405a54f818f
+// h4bf2faccd6c1a904ddce585ec42af4c5119ee7b1
 
 ==[string ops_]==
 --[input:shouldFail]--
@@ -157,13 +157,13 @@ type Good = NumArray<20>
 type Bad = NumArray<5>
 
 --[output:expected]--
-alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=0 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f NumArray=h11ed08761b64993f603a75b7049ac023df8e59d6 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=1 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f NumArray=h2780724f1db1ea61bd1baab0ba5eae95c9ba743e uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
 type NumArray = <Element: 10 + uint>Array<Element>
-// h11ed08761b64993f603a75b7049ac023df8e59d6
+// h2780724f1db1ea61bd1baab0ba5eae95c9ba743e
 type Good = NumArray<@error:argWrongType(expected: :10 + uint) 20>
-// hf3bcd52317dea609fe43f5cfd611fbb3d680da62
+// h2d9b2bc874b0594e072e4d925e29149d1eb1a21a
 type Bad = NumArray<@error:argWrongType(expected: :10 + uint) 5>
-// h217643d11f754be3ac2556870517e9e9842e84ab
+// hc61048ae49cfeb7c8ef4d45633c1a95596e25a90
 
 ==[type arithmetic]==
 --[input]--
