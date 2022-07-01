@@ -13,6 +13,7 @@ _lineEnd = '\n' / _EOF
 _EOF = !.
 
 Toplevel = TypeAlias / Expression
+TypeToplevel = TypeAlias / Type
 
 Expression = DecoratedExpression
 

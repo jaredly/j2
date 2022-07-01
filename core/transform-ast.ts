@@ -54,6 +54,8 @@ import {
   TagPayload,
   TComma,
   TRight,
+  TypeFile,
+  TypeToplevel,
   _lineEnd,
   _EOF,
   newline,
@@ -78,6 +80,11 @@ export type Visitor<Ctx> = {
   LocPost?: (node: Loc, ctx: Ctx) => null | Loc;
   File?: (node: File, ctx: Ctx) => null | false | File | [File | null, Ctx];
   FilePost?: (node: File, ctx: Ctx) => null | File;
+  TypeFile?: (
+    node: TypeFile,
+    ctx: Ctx
+  ) => null | false | TypeFile | [TypeFile | null, Ctx];
+  TypeFilePost?: (node: TypeFile, ctx: Ctx) => null | TypeFile;
   Apply_inner?: (
     node: Apply_inner,
     ctx: Ctx
@@ -112,6 +119,11 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | Toplevel | [Toplevel | null, Ctx];
   ToplevelPost?: (node: Toplevel, ctx: Ctx) => null | Toplevel;
+  TypeToplevel?: (
+    node: TypeToplevel,
+    ctx: Ctx
+  ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
+  TypeToplevelPost?: (node: TypeToplevel, ctx: Ctx) => null | TypeToplevel;
   Expression?: (
     node: Expression,
     ctx: Ctx
@@ -434,6 +446,10 @@ export type Visitor<Ctx> = {
     node: TypeAlias,
     ctx: Ctx
   ) => null | false | Toplevel | [Toplevel | null, Ctx];
+  TypeToplevel_TypeAlias?: (
+    node: TypeAlias,
+    ctx: Ctx
+  ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
   Atom_Number?: (
     node: Number,
     ctx: Ctx
@@ -516,6 +532,10 @@ export type Visitor<Ctx> = {
   ) => null | false | TOpInner | [TOpInner | null, Ctx];
   AllTaggedTypes_File?: (
     node: File,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TypeFile?: (
+    node: TypeFile,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_Apply?: (
@@ -4482,6 +4502,154 @@ export const transformFile = <Ctx>(
   return node;
 };
 
+export const transformTypeToplevel = <Ctx>(
+  node: TypeToplevel,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeToplevel => {
+  if (!node) {
+    throw new Error("No TypeToplevel provided");
+  }
+
+  const transformed = visitor.TypeToplevel
+    ? visitor.TypeToplevel(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  switch (node.type) {
+    case "TypeAlias": {
+      const transformed = visitor.TypeToplevel_TypeAlias
+        ? visitor.TypeToplevel_TypeAlias(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "TypeAlias": {
+      updatedNode = transformTypeAlias(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformType(node, visitor, ctx);
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeToplevelPost) {
+    const transformed = visitor.TypeToplevelPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTypeFile = <Ctx>(
+  node: TypeFile,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeFile => {
+  if (!node) {
+    throw new Error("No TypeFile provided");
+  }
+
+  const transformed = visitor.TypeFile ? visitor.TypeFile(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$toplevels = node.toplevels;
+    {
+      let changed2 = false;
+      const arr1 = node.toplevels.map((updatedNode$toplevels$item1) => {
+        const result = transformTypeToplevel(
+          updatedNode$toplevels$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$toplevels$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$toplevels = arr1;
+        changed1 = true;
+      }
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        toplevels: updatedNode$toplevels,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeFilePost) {
+    const transformed = visitor.TypeFilePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transform_lineEnd = <Ctx>(
   node: _lineEnd,
   visitor: Visitor<Ctx>,
@@ -5202,6 +5370,25 @@ export const transformAllTaggedTypes = <Ctx>(
     case "File": {
       const transformed = visitor.AllTaggedTypes_File
         ? visitor.AllTaggedTypes_File(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TypeFile": {
+      const transformed = visitor.AllTaggedTypes_TypeFile
+        ? visitor.AllTaggedTypes_TypeFile(node, ctx)
         : null;
       if (transformed != null) {
         if (Array.isArray(transformed)) {
@@ -6041,6 +6228,12 @@ export const transformAllTaggedTypes = <Ctx>(
   switch (node.type) {
     case "File": {
       updatedNode = transformFile(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TypeFile": {
+      updatedNode = transformTypeFile(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

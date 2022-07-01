@@ -7,6 +7,7 @@
 }
 
 File = toplevels:(_ Toplevel _nonnewline ';'? _lineEnd)* _ finalLineComment? 
+TypeFile = toplevels:(_ TypeToplevel _nonnewline ';'? _lineEnd)* _ finalLineComment? 
 
 // Declaration = name:$IdText _ type:Type
 

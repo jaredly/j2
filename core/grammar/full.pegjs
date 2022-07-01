@@ -7,6 +7,7 @@
 }
 
 File = toplevels:(_ Toplevel _nonnewline ';'? _lineEnd)* _ finalLineComment? 
+TypeFile = toplevels:(_ TypeToplevel _nonnewline ';'? _lineEnd)* _ finalLineComment? 
 
 // Declaration = name:$IdText _ type:Type
 
@@ -37,6 +38,7 @@ _lineEnd = '\n' / _EOF
 _EOF = !.
 
 Toplevel = TypeAlias / Expression
+TypeToplevel = TypeAlias / Type
 
 Expression = DecoratedExpression
 

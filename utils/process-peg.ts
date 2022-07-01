@@ -5,7 +5,10 @@ import { processExpression, ruleToType } from './process-peg-expression';
 
 export type RuleTriple = [peggy.ast.Rule, t.TSType, t.Expression | null];
 
-export const processRules = (rules: peggy.ast.Rule[]) => {
+export const processRules = (
+    rules: peggy.ast.Rule[],
+    collectComments: string[],
+) => {
     const alls: Array<RuleTriple> = [];
     const ruleTags: Array<string> = [];
     rules.forEach((rule, i) => {
@@ -18,7 +21,7 @@ export const processRules = (rules: peggy.ast.Rule[]) => {
                 ruleName: rule.name,
             },
             ruleTags,
-            i === 0,
+            collectComments.includes(rule.name),
         );
         alls.push([rule, type, expr]);
         // if (um.length) {
