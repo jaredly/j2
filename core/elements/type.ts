@@ -111,10 +111,13 @@ export const ToTast = {
         return {
             type: 'TypeAlias',
             loc,
-            elements: items.map((x) => ({
-                name: x.name,
-                type: ctx.ToTast[x.typ.type](x.typ as any, ctx),
-            })),
+            elements: items.map((x) => {
+                ctx.resetSym();
+                return {
+                    name: x.name,
+                    type: ctx.ToTast[x.typ.type](x.typ as any, ctx),
+                };
+            }),
         };
     },
     TOps({ loc, left, right }: p.TOps_inner, ctx: TCtx): TOps {
@@ -272,25 +275,22 @@ export const ToAst = {
 
 export const ToPP = {
     TypeAlias({ items, loc }: p.TypeAlias, ctx: PCtx): pp.PP {
-        return pp.items(
-            [
-                pp.atom('type ', loc),
+        const lines: pp.PP[] = [];
+        items.forEach(({ name, typ, loc }, i) => {
+            lines.push(
                 pp.items(
-                    items.map(({ name, typ }) =>
-                        pp.items(
-                            [
-                                pp.atom(name, typ.loc),
-                                pp.atom(' = ', typ.loc),
-                                ctx.ToPP[typ.type](typ as any, ctx),
-                            ],
-                            typ.loc,
-                        ),
-                    ),
+                    [
+                        pp.atom(i === 0 ? 'type ' : 'and ', loc),
+                        pp.atom(name, typ.loc),
+                        pp.atom(' = ', typ.loc),
+                        ctx.ToPP[typ.type](typ as any, ctx),
+                    ],
                     loc,
                 ),
-            ],
-            loc,
-        );
+            );
+        });
+
+        return pp.items(lines, loc, 'always');
     },
     TOps(type: p.TOps_inner, ctx: PCtx): pp.PP {
         return pp.items(

@@ -13,12 +13,14 @@ type x = [ `hi | `what(int) ]
 
 ==[recursive!]==
 --[input]--
-type Tree = <T>[`Tree(Array<Tree<T>>) | `Leaf(T)]
+type Tree = <T>[Node<T> | `Leaf(T)]
+and Node = <T>[`Tree(Array<Tree<T>>)]
 
 --[output:expected]--
-alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 T=1 Tree=r0
-type Tree = <T>[ `Tree(Array<Tree<T>>) | `Leaf(T) ]
-// h70ce237fef28ff2242f5c8fd222a6a2e1e18eddb
+alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 Node=r1 T=0 Tree=r0
+type Tree = <T>[ Node<T> | `Leaf(T) ]
+and Node = <T>[ `Tree(Array<Tree<T>>) ]
+// h6e363b0c2129f3163b2b6ee4148fd8eb1929af9c
 
 ==[New fixture]==
 --[input]--
