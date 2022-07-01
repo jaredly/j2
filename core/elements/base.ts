@@ -3,7 +3,7 @@ import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { Ctx, Toplevel } from '../typing/to-tast';
+import { Ctx, Toplevel, TopTypeKind } from '../typing/to-tast';
 
 export const grammar = `
 
@@ -39,15 +39,19 @@ export const ToTast = {
                 config = {
                     type: 'Type',
                     items: t.items.map((t) => {
+                        const kind = determineKind(t.typ, ctx);
                         if (t.typ.type === 'TVars') {
                             const args = t.typ.args.items.map((arg) =>
                                 ctx.ToTast[arg.type](arg, ctx),
                             );
-                            return { name: t.name, args };
+                            return { name: t.name, args, kind };
                         }
-                        return { name: t.name, args: [] };
+                        return { name: t.name, args: [], kind };
                     }),
                 };
+                // Need to reset again, so the args get the same syms
+                // when we parse them again
+                ctx.resetSym();
             }
             ctx = ctx.toplevelConfig(config);
             let top = ctx.ToTast.Toplevel(t as any, ctx);
@@ -167,3 +171,70 @@ export const ToPP = {
         );
     },
 };
+
+function determineKind(t: p.Type, ctx: Ctx): TopTypeKind {
+    switch (t.type) {
+        case 'Number':
+        case 'String':
+        case 'TOps':
+            return 'builtin';
+        case 'TDecorated':
+        case 'TVars':
+        case 'TParens':
+        case 'TApply':
+            return determineKind(t.inner, ctx);
+        case 'TEnum':
+            return 'enum';
+        case 'TLambda':
+            return 'lambda';
+        case 'TRef':
+            const ref = ctx.resolveType(t.text, t.hash);
+            if (!ref || ref.type === 'Recur' || ref.type === 'Local') {
+                return 'unknown';
+            }
+            const got = ctx.typeForId(ref.id);
+            if (!got) {
+                return 'unknown';
+            }
+            if (got?.type === 'builtin') {
+                return 'builtin';
+            }
+            return determineKindT(got.typ, ctx);
+    }
+}
+
+function determineKindT(t: t.Type, ctx: Ctx): TopTypeKind {
+    switch (t.type) {
+        case 'Number':
+        case 'String':
+        case 'TOps':
+            return 'builtin';
+        case 'TDecorated':
+        case 'TVars':
+            return determineKindT(t.inner, ctx);
+        case 'TApply':
+            return determineKindT(t.target, ctx);
+        case 'TEnum':
+            return 'enum';
+        case 'TLambda':
+            return 'lambda';
+        case 'TRef':
+            const ref = t.ref;
+            if (
+                !ref ||
+                ref.type === 'Recur' ||
+                ref.type === 'Local' ||
+                ref.type === 'Unresolved'
+            ) {
+                return 'unknown';
+            }
+            const got = ctx.typeForId(ref.id);
+            if (!got) {
+                return 'unknown';
+            }
+            if (got.type === 'builtin') {
+                return 'builtin';
+            }
+            return determineKindT(got?.typ, ctx);
+    }
+}

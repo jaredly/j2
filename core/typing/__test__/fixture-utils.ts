@@ -242,6 +242,11 @@ export function runFixture(
                 },
                 '// ' + cm,
             ]);
+            // TODO: surface the IDs of things in the UI.
+            // eh, and maybe as a suffix on the whole thing?
+            // That way we still know if the hashes change (which is maybe useful?)
+            // but we can easily split out those changing from other things.
+
             // } else if (top.type === 'TypeAlias') {
             //     const hash = hashTypes(
             //         top.elements.map((t) =>

@@ -284,6 +284,18 @@ export const newContext = (): FullContext => {
             return { ...this, [opaque]: { ...this[opaque], aliases } };
         },
 
+        getBound(sym) {
+            console.log('get bound', sym, this[opaque].locals);
+            for (let { types } of this[opaque].locals) {
+                console.log('locals', types);
+                for (let t of types) {
+                    if (t.sym.id === sym) {
+                        return t.bound;
+                    }
+                }
+            }
+            return null;
+        },
         resetSym() {
             this[opaque].symid = 0;
         },

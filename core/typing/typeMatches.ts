@@ -28,6 +28,7 @@ export type Ctx = {
     getBuiltinRef(name: string): Type | null;
     resolveRefsAndApplies(t: Type): Type | null;
     getValueType(id: Id): Type | null;
+    getBound(sym: number): Type | null;
 };
 
 // export const isBuiltinType = (t: Type, name: string, ctx: FullContext) =>
@@ -316,6 +317,19 @@ export const typeMatches = (
                 )
             );
         case 'TRef':
+            // console.log('tref', candidate);
+            // If this is a local ref, and it has a bound, then we can use the bound.
+            if (candidate.ref.type === 'Local') {
+                // TOHHH.
+                // If we've finished our 'transform' path,
+                // now we need a mapping of syms to ... bounds
+                // instaed of using the list of scopes.
+                const bound = ctx.getBound(candidate.ref.sym);
+                if (bound) {
+                    // console.log('got a bound', candidate, bound, expected);
+                    return typeMatches(bound, expected, ctx);
+                }
+            }
             return (
                 expected.type === 'TRef' &&
                 trefsEqual(candidate.ref, expected.ref)

@@ -28,5 +28,14 @@ export type Ctx = {
 } & ACtx;
 
 export type Toplevel =
-    | { type: 'Type'; items: { name: string; args: t.TVar[] }[] }
+    | {
+          type: 'Type';
+          items: {
+              name: string;
+              args: t.TVar[];
+              kind: TopTypeKind;
+          }[];
+      }
     | { type: 'Expr'; items: { name: string; type: t.Type }[] };
+
+export type TopTypeKind = 'enum' | 'record' | 'builtin' | 'lambda' | 'unknown';

@@ -4,6 +4,19 @@
 	- Now we have 2ms rerender instead of 40!
 
 
+# ENUM Next Steps
+
+- [ ] Ohhh ok so I think I want to /actually/ split out TCtx from TACtx and such.
+	Which means I want a "library" that'll be shared.
+
+- [ ] validate elements of the enum
+	- hmm need to know whether the /recur/ thing is an enum type or something else
+		so that we can reject it. Which means we need a 'parse just enough to figure out
+		what kind of thing this is'.
+- [ ] hm ok so to use the enum types, I'll have to make functions?
+	- yeah let's get lambdas going
+- [ ] typeMatches
+
 # RECONSIDER
 
 What parts of the code have gotten ungainly?

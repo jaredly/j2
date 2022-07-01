@@ -30,3 +30,27 @@ and Node = <T>[ `Tree(Array<Tree<T>>) ]
 // [ `What(10) ]
 `Hello(`Folks)
 // [ `Hello([ `Folks ]) ]
+
+==[recursive bound propagation]==
+--[input]--
+type What = <T: int>[ `Hello(What<10>) ]
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f T=0 What=r0
+type What = <T: int>[ `Hello(What<10>) ]
+
+==[recursive bound propagation, failure]==
+--[input:shouldFail]--
+type X = <T: int>[ `Hello(X<"string">) ]
+
+--[output:expected]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f T=0 X=r0
+type X = <T: int>[ `Hello(X<@error:argWrongType(expected: :int) "string">) ]
+
+==[recursive bound, own tvar]==
+--[input]--
+type X = <T: int>[ `X(X<T>) ]
+
+--[output:failed]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f T=0 X=r0
+type X = <T: int>[ `X(X<@error:argWrongType(expected: :int) T>) ]
