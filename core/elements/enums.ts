@@ -1,14 +1,12 @@
-import { Visitor } from '../transform-tast';
-import { decorate, tdecorate } from '../typing/analyze';
-import { Ctx } from '../typing/analyze';
-import { typeMatches } from '../typing/typeMatches';
-import * as t from '../typed-ast';
+import { noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
-import { Ctx as TCtx } from '../typing/to-tast';
+import { Visitor } from '../transform-tast';
+import * as t from '../typed-ast';
+import { Ctx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { noloc } from '../ctx';
+import { Ctx as TCtx } from '../typing/to-tast';
 
 // type State:Effect = <T>[ `Get | `Set(T) ]
 // type State:Full = <T, Final>[ State:Effect<T> | `Final(Final)]

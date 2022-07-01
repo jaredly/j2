@@ -28,8 +28,5 @@ export type Ctx = {
 } & ACtx;
 
 export type Toplevel =
-    | {
-          type: 'Type';
-          names: string[];
-      }
+    | { type: 'Type'; items: { name: string; args: t.TVar[] }[] }
     | { type: 'Expr'; items: { name: string; type: t.Type }[] };

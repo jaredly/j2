@@ -92,7 +92,7 @@ takesArray(10)
 takesArray(anArray)
 
 --[output:expected]--
-alias anArray=h3b5b5f972e2903d7c82350fc80e38407c1f785a8 Array=h8de4ecae93abe8de85536031f6f8a05742a6ee53 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesArray=hcdd9a45603b52a498bc71cafbe9a0a4f62cb0d90
+alias anArray=he3109f44b98fb07fb831ba6a1d2f34047deb6258 Array=h8de4ecae93abe8de85536031f6f8a05742a6ee53 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesArray=h8398f2442dd88143954c31fb3337a3ed6dd0edb7
 takesArray(@error:argWrongType(expected: :Array<string, 10>) 10)
 // int
 takesArray(anArray)
@@ -245,7 +245,7 @@ boundedDefault<int>
 takesArray(anArray)
 
 --[output:expected]--
-alias anArray=h3b5b5f972e2903d7c82350fc80e38407c1f785a8 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takesArray=hcdd9a45603b52a498bc71cafbe9a0a4f62cb0d90
+alias anArray=he3109f44b98fb07fb831ba6a1d2f34047deb6258 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takesArray=h8398f2442dd88143954c31fb3337a3ed6dd0edb7
 takesArray(anArray)
 // int
 

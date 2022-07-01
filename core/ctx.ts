@@ -1,25 +1,16 @@
 import hashObject from 'object-hash';
 import { Ctx } from '.';
-import { Ctx as TCtx } from './typing/typeMatches';
-import { Ctx as ACtx } from './typing/analyze';
 import { DecoratorDecl } from './elements/decorators';
 import { TVar } from './elements/type-vbls';
 import { Loc } from './grammar/base.parser';
 import { extract, Id, idsEqual, toId } from './ids';
 import { transformType } from './transform-tast';
-import {
-    Expression,
-    GlobalRef,
-    refHash,
-    RefKind,
-    Sym,
-    TLambda,
-    TVars,
-    Type,
-} from './typed-ast';
-import { makeToTast, Toplevel } from './typing/to-tast';
-import { locClearVisitor } from './typing/__test__/fixture-utils';
+import { Expression, GlobalRef, RefKind, Sym, TVars, Type } from './typed-ast';
+import { Ctx as ACtx } from './typing/analyze';
 import { applyType, getType } from './typing/getType';
+import { makeToTast, Toplevel } from './typing/to-tast';
+import { Ctx as TCtx } from './typing/typeMatches';
+import { locClearVisitor } from './typing/__test__/fixture-utils';
 
 export type HashedNames<Contents, NameV> = {
     hashed: { [hash: string]: Array<Contents> };
@@ -165,7 +156,7 @@ const resolveType = (
     rawHash?: string | null,
 ): RefKind | null => {
     if (ctx.toplevel?.type === 'Type') {
-        const idx = ctx.toplevel.names.indexOf(name);
+        const idx = ctx.toplevel.items.findIndex((v) => v.name === name);
         if (idx !== -1) {
             return { type: 'Recur', idx };
         }
@@ -400,6 +391,11 @@ export const newContext = (): FullContext => {
                 } else {
                     return null;
                 }
+            } else if (ref.type === 'Recur') {
+                const { toplevel } = this[opaque];
+                if (toplevel?.type === 'Type') {
+                }
+                return null;
             } else {
                 return null;
             }

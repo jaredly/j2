@@ -104,7 +104,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         }
         let targs: t.TVar[];
         if (target.type !== 'TVars') {
-            if (target.type === 'TRef' && target.ref.type === 'Global') {
+            if (target.type === 'TRef' && target.ref.type !== 'Unresolved') {
                 let got = ctx.getTypeArgs(target.ref);
                 if (got != null) {
                     targs = got;
@@ -162,7 +162,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
 
         let targs: t.TVar[];
         if (inner.type !== 'TVars') {
-            if (inner.type === 'TRef' && inner.ref.type === 'Global') {
+            if (inner.type === 'TRef' && inner.ref.type !== 'Unresolved') {
                 let got = ctx.getTypeArgs(inner.ref);
                 if (got != null) {
                     targs = got;

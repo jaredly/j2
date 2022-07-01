@@ -141,7 +141,14 @@ export function OneFixture({
                         }}
                     >
                         {newOutput.type === 'success' ? (
-                            <>
+                            <div
+                                style={{
+                                    marginTop: 4,
+                                    marginRight: 8,
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                }}
+                            >
                                 <Button
                                     size={'xs'}
                                     disabled={
@@ -181,7 +188,7 @@ export function OneFixture({
                                 >
                                     Reject
                                 </Button>
-                            </>
+                            </div>
                         ) : null}
                         <Checkbox
                             css={{

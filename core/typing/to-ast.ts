@@ -1,9 +1,4 @@
 import { FullContext } from '../ctx';
-import { ToAst as ConstantsToAst } from '../elements/constants';
-import { ToAst as DecoratorsToAst } from '../elements/decorators';
-import { ToAst as ApplyToAst } from '../elements/apply';
-import { ToAst as TypeToAst } from '../elements/type';
-import { ToAst as GenericsToAst } from '../elements/generics';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 import { makeToAst, ToAst } from './to-ast.gen';
@@ -60,6 +55,14 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             reverseType[sym.id] = sym.name;
         });
     });
+
+    const top = fctx.extract().toplevel;
+    if (top?.type === 'Type') {
+        top.items.forEach(({ name }, i) => {
+            reverseType['r' + i] = name;
+        });
+    }
+
     return {
         aliases,
         backAliases,
