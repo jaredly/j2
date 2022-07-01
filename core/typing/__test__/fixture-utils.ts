@@ -242,19 +242,19 @@ export function runFixture(
                 },
                 '// ' + cm,
             ]);
-        } else if (top.type === 'TypeAlias') {
-            const hash = hashTypes(
-                top.elements.map((t) =>
-                    transformType(t.type, locClearVisitor, null),
-                ),
-            );
-            checked.comments.push([
-                {
-                    ...top.loc,
-                    start: top.loc.end,
-                },
-                '// h' + hash,
-            ]);
+            // } else if (top.type === 'TypeAlias') {
+            //     const hash = hashTypes(
+            //         top.elements.map((t) =>
+            //             transformType(t.type, locClearVisitor, null),
+            //         ),
+            //     );
+            //     // checked.comments.push([
+            //     //     {
+            //     //         ...top.loc,
+            //     //         start: top.loc.end,
+            //     //     },
+            //     //     '// h' + hash,
+            //     // ]);
         }
     });
 

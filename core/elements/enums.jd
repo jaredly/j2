@@ -9,7 +9,6 @@ type x = [`hi | `what(int)]
 --[output:expected]--
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 type x = [ `hi | `what(int) ]
-// h502f26e3c383817111c749be6202d13055f2278b
 
 ==[recursive!]==
 --[input]--
@@ -20,12 +19,14 @@ and Node = <T>[`Tree(Array<Tree<T>>)]
 alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 Node=r1 T=0 Tree=r0
 type Tree = <T>[ Node<T> | `Leaf(T) ]
 and Node = <T>[ `Tree(Array<Tree<T>>) ]
-// h6e363b0c2129f3163b2b6ee4148fd8eb1929af9c
 
-==[New fixture]==
+==[some enum exprs]==
 --[input]--
-`What
+`What(10)
+`Hello(`Folks)
 
 --[output:expected]--
-`What
-// [ `What ]
+`What(10)
+// [ `What(10) ]
+`Hello(`Folks)
+// [ `Hello([ `Folks ]) ]

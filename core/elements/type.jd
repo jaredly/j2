@@ -68,7 +68,6 @@ type hello = int
 --[output:expected]--
 alias hello=h75177a7b7b2159da5e4d8a4898f1f344d3180b7d int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type hello = int
-// h75177a7b7b2159da5e4d8a4898f1f344d3180b7d
 @test:type(:hello) 10
 // 10
 
@@ -81,7 +80,6 @@ type StringMe = <T: string>int;
 --[output:expected]--
 alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 StringMe=h0af32067f3903aca3f50b6f63928f6a239883e4a T=0 test:type=he071eaec952a7917f20d1828e42268ca3a10c513
 type StringMe = <T: string>int
-// h0af32067f3903aca3f50b6f63928f6a239883e4a
 @test:type(:StringMe<@error:argWrongType(expected: :string) 20>) 10
 // 10
 @test:type(:StringMe<"hello">) 10
@@ -131,9 +129,7 @@ type Z = (<S: string>int)<x>
 --[output:expected]--
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f S=0 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 x=h3f9576868ae56c15b738de7e8ece75628693b1fd
 type x = "one" + string
-// h3f9576868ae56c15b738de7e8ece75628693b1fd
 type Z = (<S: string>int)<x>
-// he13799c2b452aa5ca2eae713a8d5be3b0b50cc5e
 
 ==[string ops]==
 --[input:shouldFail]--
@@ -144,11 +140,8 @@ type Bad = FancyArray<"something else">
 --[output:expected]--
 alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=0 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f FancyArray=h742485072b86dcad62ff2187ca3dca7811afce4e string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 type FancyArray = <Element: "one" + string + "suffix">Array<Element>
-// h742485072b86dcad62ff2187ca3dca7811afce4e
 type Good = FancyArray<"ones and a suffix">
-// hb158d1643dff08d6f4c44c1bf9744272caaadf0f
 type Bad = FancyArray<@error:argWrongType(expected: :"one" + string + "suffix") "something else">
-// h7724ccd4c3f917aef19c801b11e72405a54f818f
 
 ==[string ops_]==
 --[input:shouldFail]--
@@ -159,11 +152,8 @@ type Bad = NumArray<5>
 --[output:expected]--
 alias Array=h878b63dedabdbd925b1e6834dc5ffe5dc3931246 Element=0 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f NumArray=h11ed08761b64993f603a75b7049ac023df8e59d6 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
 type NumArray = <Element: 10 + uint>Array<Element>
-// h11ed08761b64993f603a75b7049ac023df8e59d6
 type Good = NumArray<@error:argWrongType(expected: :10 + uint) 20>
-// hf3bcd52317dea609fe43f5cfd611fbb3d680da62
 type Bad = NumArray<@error:argWrongType(expected: :10 + uint) 5>
-// h217643d11f754be3ac2556870517e9e9842e84ab
 
 ==[type arithmetic]==
 --[input]--
@@ -175,13 +165,9 @@ type X = (<X: string + ".js">int)<"hi" + ".js">
 --[output:expected]--
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 X=0
 type X = (<X: 10 + int>int)<13>
-// hc591de2eef739b0ade4f8b7c27b384c9dd67f9ad
 type X = (<X: 5 + 5>int)<10>
-// h12b68bd7bc5f6d6ec7d0cb152815f7a2505147ce
 type X = (<X: string + ".js">int)<"hello.js">
-// hc7a26b1d38e0e2e6f9693daeb61fe46eaef8e8fb
 type X = (<X: string + ".js">int)<"hi" + ".js">
-// ha7eb1212221c5f100582618eba6164d7442202b1
 
 ==[type arithmetic fail]==
 --[input:shouldFail]--
@@ -192,8 +178,5 @@ type X = (<X: string + ".js">int)<string>
 --[output:expected]--
 alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 X=0
 type X = (<X: 10 + int>int)<@error:argWrongType(expected: :10 + int) 5>
-// he1adeb06840252f78ae9ebdff5a79b4bc74c3623
 type X = (<X: 10 + int>int)<@error:argWrongType(expected: :10 + int) int>
-// hdcea48e3d8b2a9c0435d9e15346d8f12578ec54d
 type X = (<X: string + ".js">int)<@error:argWrongType(expected: :string + ".js") string>
-// hdfcb97e97100b689a62644eef7f93b0c1705eedf
