@@ -123,7 +123,6 @@ export const ToPP = {
                                               c.loc,
                                           )
                                         : null,
-                                    // pp.text(' | ', noloc),
                                 ],
                                 c.loc,
                             );

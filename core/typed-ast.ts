@@ -1,6 +1,7 @@
 import { Apply } from './elements/apply';
 import { Boolean, Number, TemplateString } from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
+import { Enum } from './elements/enum-exprs';
 import { TypeApplication } from './elements/generics';
 import { Type } from './elements/type';
 import { Id, idToString } from './ids';
@@ -31,7 +32,8 @@ export type {
     TRef,
     TSub,
     Type,
-} from './elements/type';export type { EnumCase, TEnum } from './elements/enums';
+} from './elements/type';
+export type { EnumCase, TEnum } from './elements/enums';export type { Enum } from './elements/enum-exprs';
 
 export type GlobalRef = {
     type: 'Global';
@@ -87,6 +89,7 @@ export type TypeAlias = {
 export type Expression =
     | Ref
     | Apply
+    | Enum
     | Number
     | Boolean
     | TemplateString

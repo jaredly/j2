@@ -18,6 +18,12 @@ What parts of the code have gotten ungainly?
 	Like, have `typeMatches` only take a subset, you know.
 
 
+# ENUMS
+
+- [x] enum basic type parsing
+- [ ] enum expression parsing
+- [ ] recursive types!
+- [ ] typeMatches for enums
 
 
 

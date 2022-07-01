@@ -18,6 +18,10 @@ Expression = DecoratedExpression
 
 Identifier = text:$IdText hash:($JustSym / $HashRef / $ShortRef / $BuiltinHash / $UnresolvedHash)?
 
+Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
+
+ParenedExpression = "(" _ expr:Expression _ ")"
+
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 
 `;

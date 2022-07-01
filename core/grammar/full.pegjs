@@ -10,15 +10,6 @@ File = toplevels:(_ Toplevel _nonnewline ';'? _lineEnd)* _ finalLineComment?
 
 // Declaration = name:$IdText _ type:Type
 
-
-
-
-
-Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString
-
-ParenedExpression = "(" _ expr:Expression _ ")"
-
-
 NamespacedIdText "identifier" = $IdText (":" IdText)*
 
 JustSym = "#[" [0-9]+ "]"
@@ -26,7 +17,6 @@ HashRef = "#[h" [0-9a-zA-Z]+ "]"
 ShortRef = "#[:" [0-9a-zA-Z]+ "]"
 BuiltinHash = "#[" ("builtin" / "b") "]"
 UnresolvedHash = "#[" ":unresolved:" "]"
-
 
 
 // apply.ts
@@ -50,6 +40,10 @@ Toplevel = TypeAlias / Expression
 Expression = DecoratedExpression
 
 Identifier = text:$IdText hash:($JustSym / $HashRef / $ShortRef / $BuiltinHash / $UnresolvedHash)?
+
+Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
+
+ParenedExpression = "(" _ expr:Expression _ ")"
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 
@@ -97,6 +91,11 @@ LabeledDecoratorArg = label:($IdText ":" _)? arg:DecoratorArg
 DecType = ":" _ type_:Type 
 // DecPat = "?" __ pattern:Pattern 
 DecExpr = expr:Expression 
+
+
+// enum-exprs.ts
+
+Enum = "\`" text:$IdText payload:("(" _ Expression _ ")")?
 
 
 // enums.ts

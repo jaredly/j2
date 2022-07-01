@@ -10,6 +10,7 @@ import {
   Ref,
   UnresolvedRef,
   Apply,
+  Enum,
   Number,
   Boolean,
   TemplateString,
@@ -138,6 +139,8 @@ export type Visitor<Ctx> = {
     node: DecoratedExpression,
     ctx: Ctx
   ) => null | DecoratedExpression;
+  Enum?: (node: Enum, ctx: Ctx) => null | false | Enum | [Enum | null, Ctx];
+  EnumPost?: (node: Enum, ctx: Ctx) => null | Enum;
   TypeApplication?: (
     node: TypeApplication,
     ctx: Ctx
@@ -205,6 +208,10 @@ export type Visitor<Ctx> = {
   ) => null | false | Expression | [Expression | null, Ctx];
   Expression_Apply?: (
     node: Apply,
+    ctx: Ctx
+  ) => null | false | Expression | [Expression | null, Ctx];
+  Expression_Enum?: (
+    node: Enum,
     ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
   Expression_Number?: (
@@ -623,6 +630,71 @@ export const transformApply = <Ctx>(
   node = updatedNode;
   if (visitor.ApplyPost) {
     const transformed = visitor.ApplyPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformEnum = <Ctx>(
+  node: Enum,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Enum => {
+  if (!node) {
+    throw new Error("No Enum provided");
+  }
+
+  const transformed = visitor.Enum ? visitor.Enum(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$payload = undefined;
+    const updatedNode$payload$current = node.payload;
+    if (updatedNode$payload$current != null) {
+      const updatedNode$payload$1$ = transformExpression(
+        updatedNode$payload$current,
+        visitor,
+        ctx
+      );
+      changed1 =
+        changed1 || updatedNode$payload$1$ !== updatedNode$payload$current;
+      updatedNode$payload = updatedNode$payload$1$;
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        payload: updatedNode$payload,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.EnumPost) {
+    const transformed = visitor.EnumPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }
@@ -2417,6 +2489,25 @@ export const transformExpression = <Ctx>(
       break;
     }
 
+    case "Enum": {
+      const transformed = visitor.Expression_Enum
+        ? visitor.Expression_Enum(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "Number": {
       const transformed = visitor.Expression_Number
         ? visitor.Expression_Number(node, ctx)
@@ -2524,6 +2615,12 @@ export const transformExpression = <Ctx>(
 
     case "Apply": {
       updatedNode = transformApply(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "Enum": {
+      updatedNode = transformEnum(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

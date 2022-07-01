@@ -29,6 +29,7 @@ import {
   TemplateString,
   TemplatePair,
   TemplateWrap,
+  Enum,
   Suffix,
   CallSuffix,
   CommaExpr,
@@ -77,16 +78,6 @@ export type Visitor<Ctx> = {
   LocPost?: (node: Loc, ctx: Ctx) => null | Loc;
   File?: (node: File, ctx: Ctx) => null | false | File | [File | null, Ctx];
   FilePost?: (node: File, ctx: Ctx) => null | File;
-  Atom?: (node: Atom, ctx: Ctx) => null | false | Atom | [Atom | null, Ctx];
-  AtomPost?: (node: Atom, ctx: Ctx) => null | Atom;
-  ParenedExpression?: (
-    node: ParenedExpression,
-    ctx: Ctx
-  ) => null | false | ParenedExpression | [ParenedExpression | null, Ctx];
-  ParenedExpressionPost?: (
-    node: ParenedExpression,
-    ctx: Ctx
-  ) => null | ParenedExpression;
   Apply_inner?: (
     node: Apply_inner,
     ctx: Ctx
@@ -131,6 +122,16 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | Identifier | [Identifier | null, Ctx];
   IdentifierPost?: (node: Identifier, ctx: Ctx) => null | Identifier;
+  Atom?: (node: Atom, ctx: Ctx) => null | false | Atom | [Atom | null, Ctx];
+  AtomPost?: (node: Atom, ctx: Ctx) => null | Atom;
+  ParenedExpression?: (
+    node: ParenedExpression,
+    ctx: Ctx
+  ) => null | false | ParenedExpression | [ParenedExpression | null, Ctx];
+  ParenedExpressionPost?: (
+    node: ParenedExpression,
+    ctx: Ctx
+  ) => null | ParenedExpression;
   newline?: (
     node: newline,
     ctx: Ctx
@@ -275,6 +276,8 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | DecExpr | [DecExpr | null, Ctx];
   DecExprPost?: (node: DecExpr, ctx: Ctx) => null | DecExpr;
+  Enum?: (node: Enum, ctx: Ctx) => null | false | Enum | [Enum | null, Ctx];
+  EnumPost?: (node: Enum, ctx: Ctx) => null | Enum;
   TEnum?: (node: TEnum, ctx: Ctx) => null | false | TEnum | [TEnum | null, Ctx];
   TEnumPost?: (node: TEnum, ctx: Ctx) => null | TEnum;
   EnumCases?: (
@@ -415,6 +418,22 @@ export type Visitor<Ctx> = {
     node: AllTaggedTypes,
     ctx: Ctx
   ) => null | AllTaggedTypes;
+  Apply_Apply?: (
+    node: Apply,
+    ctx: Ctx
+  ) => null | false | Apply | [Apply | null, Ctx];
+  Suffix_CallSuffix?: (
+    node: CallSuffix,
+    ctx: Ctx
+  ) => null | false | Suffix | [Suffix | null, Ctx];
+  Suffix_TypeApplicationSuffix?: (
+    node: TypeApplicationSuffix,
+    ctx: Ctx
+  ) => null | false | Suffix | [Suffix | null, Ctx];
+  Toplevel_TypeAlias?: (
+    node: TypeAlias,
+    ctx: Ctx
+  ) => null | false | Toplevel | [Toplevel | null, Ctx];
   Atom_Number?: (
     node: Number,
     ctx: Ctx
@@ -435,22 +454,10 @@ export type Visitor<Ctx> = {
     node: TemplateString,
     ctx: Ctx
   ) => null | false | Atom | [Atom | null, Ctx];
-  Apply_Apply?: (
-    node: Apply,
+  Atom_Enum?: (
+    node: Enum,
     ctx: Ctx
-  ) => null | false | Apply | [Apply | null, Ctx];
-  Suffix_CallSuffix?: (
-    node: CallSuffix,
-    ctx: Ctx
-  ) => null | false | Suffix | [Suffix | null, Ctx];
-  Suffix_TypeApplicationSuffix?: (
-    node: TypeApplicationSuffix,
-    ctx: Ctx
-  ) => null | false | Suffix | [Suffix | null, Ctx];
-  Toplevel_TypeAlias?: (
-    node: TypeAlias,
-    ctx: Ctx
-  ) => null | false | Toplevel | [Toplevel | null, Ctx];
+  ) => null | false | Atom | [Atom | null, Ctx];
   DecoratedExpression_DecoratedExpression?: (
     node: DecoratedExpression,
     ctx: Ctx
@@ -511,10 +518,6 @@ export type Visitor<Ctx> = {
     node: File,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-  AllTaggedTypes_ParenedExpression?: (
-    node: ParenedExpression,
-    ctx: Ctx
-  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_Apply?: (
     node: Apply,
     ctx: Ctx
@@ -529,6 +532,10 @@ export type Visitor<Ctx> = {
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_Identifier?: (
     node: Identifier,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_ParenedExpression?: (
+    node: ParenedExpression,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_Boolean?: (
@@ -581,6 +588,10 @@ export type Visitor<Ctx> = {
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_DecExpr?: (
     node: DecExpr,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_Enum?: (
+    node: Enum,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TEnum?: (
@@ -1210,6 +1221,72 @@ export const transformTemplateString = <Ctx>(
   return node;
 };
 
+export const transformEnum = <Ctx>(
+  node: Enum,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Enum => {
+  if (!node) {
+    throw new Error("No Enum provided");
+  }
+
+  const transformed = visitor.Enum ? visitor.Enum(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$payload = null;
+    const updatedNode$payload$current = node.payload;
+    if (updatedNode$payload$current != null) {
+      const updatedNode$payload$1$ = transformExpression(
+        updatedNode$payload$current,
+        visitor,
+        ctx
+      );
+      changed1 =
+        changed1 || updatedNode$payload$1$ !== updatedNode$payload$current;
+      updatedNode$payload = updatedNode$payload$1$;
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        payload: updatedNode$payload,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.EnumPost) {
+    const transformed = visitor.EnumPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformAtom = <Ctx>(
   node: Atom,
   visitor: Visitor<Ctx>,
@@ -1331,6 +1408,25 @@ export const transformAtom = <Ctx>(
       }
       break;
     }
+
+    case "Enum": {
+      const transformed = visitor.Atom_Enum
+        ? visitor.Atom_Enum(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
   }
 
   let updatedNode = node;
@@ -1360,10 +1456,16 @@ export const transformAtom = <Ctx>(
       break;
     }
 
+    case "TemplateString": {
+      updatedNode = transformTemplateString(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
     default: {
       // let changed1 = false;
 
-      const updatedNode$0node = transformTemplateString(node, visitor, ctx);
+      const updatedNode$0node = transformEnum(node, visitor, ctx);
       changed0 = changed0 || updatedNode$0node !== node;
       updatedNode = updatedNode$0node;
     }
@@ -5151,25 +5253,6 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
-    case "ParenedExpression": {
-      const transformed = visitor.AllTaggedTypes_ParenedExpression
-        ? visitor.AllTaggedTypes_ParenedExpression(node, ctx)
-        : null;
-      if (transformed != null) {
-        if (Array.isArray(transformed)) {
-          ctx = transformed[1];
-          if (transformed[0] != null) {
-            node = transformed[0];
-          }
-        } else if (transformed == false) {
-          return node;
-        } else {
-          node = transformed;
-        }
-      }
-      break;
-    }
-
     case "Apply": {
       const transformed = visitor.AllTaggedTypes_Apply
         ? visitor.AllTaggedTypes_Apply(node, ctx)
@@ -5230,6 +5313,25 @@ export const transformAllTaggedTypes = <Ctx>(
     case "Identifier": {
       const transformed = visitor.AllTaggedTypes_Identifier
         ? visitor.AllTaggedTypes_Identifier(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "ParenedExpression": {
+      const transformed = visitor.AllTaggedTypes_ParenedExpression
+        ? visitor.AllTaggedTypes_ParenedExpression(node, ctx)
         : null;
       if (transformed != null) {
         if (Array.isArray(transformed)) {
@@ -5477,6 +5579,25 @@ export const transformAllTaggedTypes = <Ctx>(
     case "DecExpr": {
       const transformed = visitor.AllTaggedTypes_DecExpr
         ? visitor.AllTaggedTypes_DecExpr(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "Enum": {
+      const transformed = visitor.AllTaggedTypes_Enum
+        ? visitor.AllTaggedTypes_Enum(node, ctx)
         : null;
       if (transformed != null) {
         if (Array.isArray(transformed)) {
@@ -5959,12 +6080,6 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
-    case "ParenedExpression": {
-      updatedNode = transformParenedExpression(node, visitor, ctx);
-      changed0 = changed0 || updatedNode !== node;
-      break;
-    }
-
     case "Apply": {
       updatedNode = transformApply_inner(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
@@ -5985,6 +6100,12 @@ export const transformAllTaggedTypes = <Ctx>(
 
     case "Identifier": {
       updatedNode = transformIdentifier(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "ParenedExpression": {
+      updatedNode = transformParenedExpression(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }
@@ -6063,6 +6184,12 @@ export const transformAllTaggedTypes = <Ctx>(
 
     case "DecExpr": {
       updatedNode = transformDecExpr(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "Enum": {
+      updatedNode = transformEnum(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }
