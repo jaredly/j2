@@ -8,6 +8,9 @@
 @type:shouldMatch(:10 + 10) 20
 @type:shouldNotMatch(:11 + 10) 20
 
+@type:shouldMatch(:10 + 10) (10 + 10)
+@type:shouldMatch(:int + 10) (10 + int)
+
 @type:shouldMatch(:uint)
 @type:shouldNotMatch(:int)
 @type:shouldNotMatch(:uint + 30)
