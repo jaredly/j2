@@ -88,6 +88,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
                     : kind === 'decorator'
                     ? reverseDecorator[hash]
                     : reverseType[hash];
+
             if (name && !showIds) {
                 if (!this.aliases[hash]) {
                     add(name, ref);

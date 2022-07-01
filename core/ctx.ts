@@ -17,7 +17,7 @@ import {
     TVars,
     Type,
 } from './typed-ast';
-import { makeToTast } from './typing/to-tast';
+import { makeToTast, Toplevel } from './typing/to-tast';
 import { locClearVisitor } from './typing/__test__/fixture-utils';
 import { applyType, getType } from './typing/getType';
 
@@ -54,6 +54,7 @@ type Internal = {
         types: { sym: Sym; bound: Type | null }[];
         values: { sym: Sym; type: Type }[];
     }[];
+    toplevel: null | Toplevel;
 };
 
 export type FullContext = {
@@ -163,6 +164,12 @@ const resolveType = (
     name: string,
     rawHash?: string | null,
 ): RefKind | null => {
+    if (ctx.toplevel?.type === 'Type') {
+        const idx = ctx.toplevel.names.indexOf(name);
+        if (idx !== -1) {
+            return { type: 'Recur', idx };
+        }
+    }
     if (rawHash || Object.hasOwn(ctx.aliases, name)) {
         const hash = parseHash(rawHash ?? ctx.aliases[name]);
         if (hash.type === 'sym') {
@@ -231,6 +238,9 @@ export const refsEqual = (a: RefKind, b: RefKind): boolean => {
     if (a.type === 'Global') {
         return b.type === 'Global' && idsEqual(a.id, b.id);
     }
+    if (a.type === 'Recur') {
+        return b.type === 'Recur' && a.idx === b.idx;
+    }
     return b.type === 'Local' && a.sym === b.sym;
 };
 
@@ -260,6 +270,12 @@ export const newContext = (): FullContext => {
                 [opaque]: cloneInternal(this[opaque]),
             };
         },
+        toplevelConfig(toplevel) {
+            return {
+                ...this,
+                [opaque]: { ...this[opaque], toplevel },
+            };
+        },
         extract() {
             return this[opaque];
         },
@@ -270,6 +286,7 @@ export const newContext = (): FullContext => {
             decorators: { hashed: {}, names: {} },
             values: { hashed: {}, names: {} },
             types: { hashed: {}, names: {} },
+            toplevel: null,
         },
 
         withAliases(aliases) {

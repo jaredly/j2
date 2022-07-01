@@ -2549,25 +2549,8 @@ export const transformTRef = <Ctx>(
 
     const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
     changed1 = changed1 || updatedNode$loc !== node.loc;
-
-    let updatedNode$args = null;
-    const updatedNode$args$current = node.args;
-    if (updatedNode$args$current != null) {
-      const updatedNode$args$1$ = transformTApply(
-        updatedNode$args$current,
-        visitor,
-        ctx
-      );
-      changed1 = changed1 || updatedNode$args$1$ !== updatedNode$args$current;
-      updatedNode$args = updatedNode$args$1$;
-    }
-
     if (changed1) {
-      updatedNode = {
-        ...updatedNode,
-        loc: updatedNode$loc,
-        args: updatedNode$args,
-      };
+      updatedNode = { ...updatedNode, loc: updatedNode$loc };
       changed0 = true;
     }
   }

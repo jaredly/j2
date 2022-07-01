@@ -14,7 +14,7 @@ Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
 TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum
-TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)? args:(TApply)?
+TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
 
 TOps = left:TOpInner right_drop:TRight*
 TRight = _ top:$top _ right:TOpInner
@@ -144,9 +144,7 @@ export const ToTast = {
             ),
         };
     },
-    // Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
-    // },
-    TRef(type: p.TRef, ctx: TCtx): TRef | TApply {
+    TRef(type: p.TRef, ctx: TCtx): Type {
         const hash = filterUnresolved(type.hash?.slice(2, -1));
         const resolved = ctx.resolveType(type.text, hash);
         const res: TRef = {
@@ -158,8 +156,6 @@ export const ToTast = {
             },
             loc: type.loc,
         };
-        if (type.args) {
-        }
         return res;
     },
     String({ type, loc, text }: p.String, ctx: TCtx): t.String {
@@ -198,8 +194,6 @@ export const ToAst = {
         };
     },
     TOps(type: TOps, ctx: TACtx): p.TOps_inner {
-        // left...
-        // right..
         return {
             type: 'TOps',
             loc: type.loc,
@@ -252,10 +246,9 @@ export const ToAst = {
             text,
             hash,
             loc,
-            args: null,
         };
     },
-    TLambda({ type, args, result, loc }: t.TLambda, ctx: TACtx): p.Type {
+    TLambda({ args, result, loc }: t.TLambda, ctx: TACtx): p.Type {
         return {
             type: 'TLambda',
             args: {
@@ -272,7 +265,7 @@ export const ToAst = {
             loc,
         };
     },
-    String({ type, loc, text }: t.String): p.String {
+    String({ loc, text }: t.String): p.String {
         return { type: 'String', loc, text };
     },
 };

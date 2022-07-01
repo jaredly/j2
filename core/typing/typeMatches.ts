@@ -1,4 +1,4 @@
-import { noloc } from '../ctx';
+import { noloc, refsEqual } from '../ctx';
 import { Id, idsEqual } from '../ids';
 import { transformType, Visitor } from '../transform-tast';
 import {
@@ -14,16 +14,6 @@ import {
     Type,
 } from '../typed-ast';
 import { applyType } from './getType';
-
-export const refsEqual = (a: RefKind, b: RefKind): boolean => {
-    if (a.type !== b.type) {
-        return false;
-    }
-    if (a.type === 'Global') {
-        return b.type === 'Global' && idsEqual(a.id, b.id);
-    }
-    return b.type === 'Local' && a.sym === b.sym;
-};
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -186,6 +176,7 @@ export const typeMatches = (
             // I guess that's almost as good as no bound at all, right?
             // well actually, it locks down the payloads for those two tags.
             // 🤔 lots to think about there.
+            // oh and I guess the empty enum just can't be instantiated
             return false;
         // return expected.type === 'TEnum' &&
         // idsEqual(candidate.id, expected.id);

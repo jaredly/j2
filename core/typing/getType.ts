@@ -70,6 +70,8 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                     return null;
                 case 'Global':
                     return ctx.getValueType(expr.kind.id);
+                case 'Recur':
+                    return null;
                 case 'Local':
                     throw new Error('not yet');
             }
@@ -85,5 +87,24 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             return expr;
         case 'DecoratedExpression':
             return getType(expr.expr, ctx);
+        case 'Enum': {
+            return {
+                type: 'TEnum',
+                loc: expr.loc,
+                cases: [
+                    {
+                        type: 'EnumCase',
+                        tag: expr.tag,
+                        loc: expr.loc,
+                        payload: expr.payload
+                            ? getType(expr.payload, ctx) ?? undefined
+                            : undefined,
+                    },
+                ],
+            };
+        }
+        default:
+            let _x: never = expr;
+            return null;
     }
 };

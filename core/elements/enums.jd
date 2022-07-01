@@ -15,10 +15,10 @@ type x = [ `hi | `what(int) ]
 --[input]--
 type Tree = <T>[`Tree(Array<Tree<T>>) | `Leaf(T)]
 
---[output:failed]--
+--[output:expected]--
 alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 T=0
 type Tree = <T>[ `Tree(Array<@error:notATypeVars() Tree#[:unresolved:]<T>>) | `Leaf(T) ]
-// h4724ea60f52375a9e03476a4c410f6f8739376c3
+// h5ffa47bb5155ee2830adf039bea6f826a14262a1
 
 ==[New fixture]==
 --[input]--

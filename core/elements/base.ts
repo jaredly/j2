@@ -3,7 +3,7 @@ import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { Ctx } from '../typing/to-tast';
+import { Ctx, Toplevel } from '../typing/to-tast';
 
 export const grammar = `
 
@@ -16,7 +16,7 @@ Toplevel = TypeAlias / Expression
 
 Expression = DecoratedExpression
 
-Identifier = text:$IdText hash:($JustSym / $HashRef / $ShortRef / $BuiltinHash / $UnresolvedHash)?
+Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $BuiltinHash / $UnresolvedHash)?
 
 Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
 
@@ -34,6 +34,14 @@ export const ToTast = {
         // deal with that when it comes
         let parsed = toplevels.map((t) => {
             ctx.resetSym();
+            let config: null | Toplevel = null;
+            if (t.type === 'TypeAlias') {
+                config = {
+                    type: 'Type',
+                    names: t.items.map((t) => t.name),
+                };
+            }
+            ctx = ctx.toplevelConfig(config);
             let top = ctx.ToTast.Toplevel(t as any, ctx);
             if (top.type === 'TypeAlias') {
                 ctx = ctx.withTypes(top.elements);

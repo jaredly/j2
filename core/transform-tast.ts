@@ -401,6 +401,9 @@ export const transformRefKind = <Ctx>(
 
     case "Local":
       break;
+
+    case "Recur":
+      break;
   }
 
   node = updatedNode;
@@ -927,6 +930,9 @@ export const transformTRef = <Ctx>(
       }
 
       case "Local":
+        break;
+
+      case "Recur":
         break;
 
       default: {
@@ -1693,6 +1699,9 @@ export const transformDecorator = <Ctx>(
         }
 
         case "Local":
+          break;
+
+        case "Recur":
           break;
 
         default: {

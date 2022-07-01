@@ -19,12 +19,7 @@ readdirSync(base)
             loadBuiltins(file.builtins, baseCtx);
 
             it.each(file.fixtures)('$title', (fixture) => {
-                let {
-                    title,
-                    input,
-                    output_expected,
-                    builtins_deprecated: builtins,
-                } = fixture;
+                let { title, input, output_expected } = fixture;
 
                 let { checked, newOutput, outputTast } = runFixture(
                     fixture,

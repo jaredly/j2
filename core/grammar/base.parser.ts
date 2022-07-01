@@ -17,6 +17,8 @@ export type File = {
 
 // No data on JustSym
 
+// No data on RecurHash
+
 // No data on HashRef
 
 // No data on ShortRef
@@ -60,7 +62,7 @@ export type Identifier = {
   type: "Identifier";
   loc: Loc;
   text: string;
-  hash: (string | string | string | string | string) | null;
+  hash: (string | string | string | string | string | string) | null;
 };
 
 export type Atom = Number | Boolean | Identifier | ParenedExpression | TemplateString | Enum;
@@ -301,8 +303,7 @@ export type TRef = {
   type: "TRef";
   loc: Loc;
   text: string;
-  hash: (string | string | string | string) | null;
-  args: TApply | null;
+  hash: (string | string | string | string | string) | null;
 };
 
 export type TOps_inner = {

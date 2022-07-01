@@ -13,6 +13,7 @@ File = toplevels:(_ Toplevel _nonnewline ';'? _lineEnd)* _ finalLineComment?
 NamespacedIdText "identifier" = $IdText (":" IdText)*
 
 JustSym = "#[" [0-9]+ "]"
+RecurHash = "#[r" [0-9]+ "]"
 HashRef = "#[h" [0-9a-zA-Z]+ "]"
 ShortRef = "#[:" [0-9a-zA-Z]+ "]"
 BuiltinHash = "#[" ("builtin" / "b") "]"
@@ -39,7 +40,7 @@ Toplevel = TypeAlias / Expression
 
 Expression = DecoratedExpression
 
-Identifier = text:$IdText hash:($JustSym / $HashRef / $ShortRef / $BuiltinHash / $UnresolvedHash)?
+Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $BuiltinHash / $UnresolvedHash)?
 
 Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
 
@@ -135,7 +136,7 @@ Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
 TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum
-TRef = text:($IdText) hash:($JustSym / $HashRef / $BuiltinHash / $UnresolvedHash)? args:(TApply)?
+TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
 
 TOps = left:TOpInner right_drop:TRight*
 TRight = _ top:$top _ right:TOpInner

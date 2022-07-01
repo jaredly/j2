@@ -33,7 +33,8 @@ export type {
     TSub,
     Type,
 } from './elements/type';
-export type { EnumCase, TEnum } from './elements/enums';export type { Enum } from './elements/enum-exprs';
+export type { EnumCase, TEnum } from './elements/enums';
+export type { Enum } from './elements/enum-exprs';
 
 export type GlobalRef = {
     type: 'Global';
@@ -44,10 +45,15 @@ export type RefKind =
     | {
           type: 'Local';
           sym: number;
-      };
+      }
+    | { type: 'Recur'; idx: number };
 
 export const refHash = (ref: RefKind) =>
-    ref.type === 'Global' ? 'h' + idToString(ref.id) : '' + ref.sym;
+    ref.type === 'Global'
+        ? 'h' + idToString(ref.id)
+        : ref.type === 'Recur'
+        ? 'r' + ref.idx
+        : '' + ref.sym;
 
 export type Loc = {
     start: { line: number; column: number; offset: number };
