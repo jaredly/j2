@@ -1,0 +1,6 @@
+
+@type:shouldMatch(: () => int) () => int
+@type:shouldMatch(: <A>(a: A) => A) <B>(a: B) => B
+// @type:shouldMatch(: <A: 10>(a: A) => A) <B: int>(a: B) => B
+@type:shouldMatch(: (a: 10) => int) (a: int) => int
+@type:shouldNotMatch(: (a: int) => int) (a: 10) => int
