@@ -14,5 +14,6 @@
 @type:shouldMatch(:uint)
 @type:shouldNotMatch(:int)
 @type:shouldNotMatch(:uint + 30)
-@type:shouldMatch(:uint + 10) 20u
+@type:shouldMatch(:uint + 10u)
+@type:shouldNotMatch(:uint + 21u) 20u
 

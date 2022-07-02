@@ -318,9 +318,12 @@ export const newContext = (): FullContext => {
                 refsEqual(t.ref, this[opaque].types.names[name])
             );
         },
+        // builtinNames
+        // getBuiltinNames
+
         getBuiltinRef(name) {
             const gref = this[opaque].types.names[name];
-            return gref ? tref(gref) : null;
+            return gref;
         },
         resolveRefsAndApplies(t) {
             return resolveAnalyzeType(t, this);

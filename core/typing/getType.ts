@@ -1,7 +1,7 @@
 import { FullContext, tref } from '../ctx';
 import { extract, idToString } from '../ids';
 import { transformType } from '../transform-tast';
-import { Expression, Type, TVars } from '../typed-ast';
+import { Expression, Type, TVars, GlobalRef } from '../typed-ast';
 import { typeMatches, Ctx } from './typeMatches';
 
 export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
@@ -47,6 +47,8 @@ export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
     );
 };
 
+const maybeTref = (ref: GlobalRef | null) => (ref ? tref(ref) : null);
+
 // UMM So btw this will resolve all TRefs? Maybe? hmm maybe not..
 export const getType = (expr: Expression, ctx: Ctx): Type | null => {
     switch (expr.type) {
@@ -63,7 +65,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             if (expr.rest.length === 0) {
                 return { type: 'String', loc: expr.loc, text: expr.first };
             }
-            return ctx.getBuiltinRef('string');
+            return maybeTref(ctx.getBuiltinRef('string'));
         case 'Ref':
             switch (expr.kind.type) {
                 case 'Unresolved':
@@ -82,7 +84,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             }
             return typ.result;
         case 'Boolean':
-            return ctx.getBuiltinRef('bool');
+            return maybeTref(ctx.getBuiltinRef('bool'));
         case 'Number':
             return expr;
         case 'DecoratedExpression':

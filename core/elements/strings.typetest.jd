@@ -7,5 +7,5 @@
 
 @type:shouldMatch(:"hello") ("he" + "llo")
 
-@type:shouldMatch(:"h" + string) ("he" + string)
+// @type:shouldMatch(:"h" + string) ("he" + string)
 

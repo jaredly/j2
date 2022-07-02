@@ -3,6 +3,7 @@ import { Id, idsEqual } from '../ids';
 import { transformType, Visitor } from '../transform-tast';
 import {
     EnumCase,
+    GlobalRef,
     Number,
     RefKind,
     String,
@@ -27,7 +28,7 @@ export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
 // TypeCtx? idk
 export type Ctx = {
     isBuiltinType(t: Type, name: string): boolean;
-    getBuiltinRef(name: string): Type | null;
+    getBuiltinRef(name: string): GlobalRef | null;
     resolveRefsAndApplies(t: Type): Type | null;
     getValueType(id: Id): Type | null;
     getBound(sym: number): Type | null;
@@ -99,6 +100,36 @@ yeah ok so same deal as fn args. they go backwards
 
 */
 
+export const stringAddsMatch = (
+    candidate: (string | true)[],
+    expected: (string | true)[],
+): boolean => {
+    // TODO: Be clever about this
+    // so that 'he' + string matches 'h' + string
+    return (
+        candidate.length === expected.length &&
+        candidate.every((c, i) => c === expected[i])
+    );
+};
+
+export const justStringAdds = (t: TOps, ctx: Ctx): (string | true)[] | null => {
+    const adds = justAdds(t);
+    if (!adds) {
+        return null;
+    }
+    const results: (string | true)[] = [];
+    adds.forEach((item) => {
+        if (item.type === 'String') {
+            results.push(item.text);
+        } else if (ctx.isBuiltinType(item, 'string')) {
+            results.push(true);
+        } else {
+            return null;
+        }
+    });
+    return results;
+};
+
 export const justAdds = (t: TOps): Type[] | null => {
     const results = [t.left];
     for (let { top, right } of t.right) {
@@ -109,6 +140,111 @@ export const justAdds = (t: TOps): Type[] | null => {
         }
     }
     return results;
+};
+
+type EOps = {
+    num: number;
+    mm: { upperLimit: boolean; lowerLimit: boolean };
+    kind: Number['kind'];
+};
+
+const numOps = (
+    expected: TOps | Number | TRef,
+    // kind: Number['kind'],
+    ctx: Ctx,
+): EOps | false => {
+    if (expected.type === 'Number') {
+        return {
+            num: expected.value,
+            mm: { upperLimit: true, lowerLimit: true },
+            kind: expected.kind,
+        };
+    }
+    let int = ctx.getBuiltinRef('int')!.id;
+    let uint = ctx.getBuiltinRef('uint')!.id;
+    let float = ctx.getBuiltinRef('float')!.id;
+    if (expected.type === 'TRef') {
+        if (expected.ref.type === 'Global') {
+            let kind: Number['kind'];
+            if (idsEqual(expected.ref.id, int)) {
+                kind = 'Int';
+            } else if (idsEqual(expected.ref.id, uint)) {
+                kind = 'UInt';
+            } else if (idsEqual(expected.ref.id, float)) {
+                kind = 'Float';
+            } else {
+                return false;
+            }
+
+            return {
+                num: 0,
+                mm: { upperLimit: false, lowerLimit: false },
+                kind,
+            };
+        }
+        return false;
+    }
+    let num = 0;
+    const mm = { upperLimit: true, lowerLimit: true };
+    // let ismax = false;
+    const elements = [{ op: '+', right: expected.left }].concat(
+        expected.right.map(({ top, right }) => ({
+            op: top,
+            right,
+        })),
+    );
+    let kind: Number['kind'] | null = null;
+
+    for (let i = 0; i < elements.length; i++) {
+        const { op, right: el } = elements[i];
+        if (el.type === 'Number') {
+            if (kind != null && el.kind !== kind) {
+                return false;
+            }
+            kind = el.kind;
+            if (op === '+') {
+                num += el.value;
+            } else {
+                num -= el.value;
+            }
+            continue;
+        }
+        if (el.type === 'TRef' && el.ref.type === 'Global') {
+            if (idsEqual(el.ref.id, int)) {
+                kind = 'Int';
+            } else if (idsEqual(el.ref.id, uint)) {
+                kind = 'UInt';
+            } else if (idsEqual(el.ref.id, float)) {
+                kind = 'Float';
+            } else {
+                return false;
+            }
+            mm[op === '+' ? 'upperLimit' : 'lowerLimit'] = false;
+            continue;
+        }
+    }
+    return { num, mm, kind: kind! };
+};
+
+export const eopsMatch = (candidate: EOps, expected: EOps): boolean => {
+    if (candidate.kind !== expected.kind) {
+        return false;
+    }
+    if (expected.mm.upperLimit && candidate.num > expected.num) {
+        return false;
+    }
+    if (expected.mm.lowerLimit && candidate.num < expected.num) {
+        return false;
+    }
+    // if (candidate.mm.upperLimit && )
+    if (!candidate.mm.upperLimit && expected.mm.upperLimit) {
+        return false;
+    }
+    if (!candidate.mm.lowerLimit && expected.mm.lowerLimit) {
+        return false;
+    }
+    // +num
+    return true;
 };
 
 export const typeMatches = (
@@ -291,17 +427,26 @@ export const typeMatches = (
                 )
             );
         case 'TOps': {
-            const adds = justAdds(candidate);
+            const adds = justStringAdds(candidate, ctx);
+            if (adds) {
+                if (ctx.isBuiltinType(expected, 'string')) {
+                    return true;
+                }
+                if (expected.type === 'TOps') {
+                    const exadds = justStringAdds(expected, ctx);
+                    return exadds ? stringAddsMatch(adds, exadds) : false;
+                }
+            }
+            const ops = numOps(candidate, ctx);
             if (
-                ctx.isBuiltinType(expected, 'string') &&
-                adds &&
-                adds.every(
-                    (add) =>
-                        add.type === 'String' ||
-                        ctx.isBuiltinType(add, 'string'),
-                )
+                expected.type === 'TOps' ||
+                expected.type === 'Number' ||
+                expected.type === 'TRef'
             ) {
-                return true;
+                const eops = numOps(expected, ctx);
+                if (ops && eops) {
+                    return eopsMatch(ops, eops);
+                }
             }
             // Probably need to "condense"?
             return (
@@ -333,23 +478,7 @@ export const typeMatches = (
                     if (!elements) {
                         return false;
                     }
-                    for (let ex of elements) {
-                        if (ex.type === 'String') {
-                            const idx = text.indexOf(ex.text, pos);
-                            if (idx === -1 || (exact && idx !== 0)) {
-                                return false;
-                            }
-                            pos = idx + ex.text.length;
-                        } else if (ctx.isBuiltinType(ex, 'string')) {
-                            exact = false;
-                        } else {
-                            return false;
-                        }
-                    }
-                    if (exact && pos !== text.length - 1) {
-                        return false; // extra trailing
-                    }
-                    return true;
+                    return stringOps(elements, text, pos, exact, ctx);
                 }
                 default:
                     return ctx.isBuiltinType(expected, 'string');
@@ -425,68 +554,52 @@ export const typeMatches = (
         // hmm if this is a number-kind of add ... it could get swallowed up into ... a full string
         // ... or things rather more complicated.
         case 'Number':
-            if (expected.type === 'Number') {
-                return (
-                    expected.kind === candidate.kind &&
-                    expected.value === candidate.value
-                );
-            } else if (expected.type === 'TOps') {
-                // if (candidate.kind !== 'UInt') {
-                //     return false;
-                // }
-                // console.log('nops', expected);
-                let num = 0;
-                const mm = { max: false, min: false };
-                // let ismax = false;
-                const elements = [{ op: '+', right: expected.left }].concat(
-                    expected.right.map(({ top, right }) => ({
-                        op: top,
-                        right,
-                    })),
-                );
-                for (let i = 0; i < elements.length; i++) {
-                    const { op, right: el } = elements[i];
-                    if (el.type === 'Number') {
-                        if (el.kind !== candidate.kind) {
-                            return false;
-                        }
-                        if (op === '+') {
-                            num += el.value;
-                        } else {
-                            num -= el.value;
-                        }
-                        // if (i === 0) {
-                        //     num += el.value;
-                        // }
-                    } else if (
-                        ctx.isBuiltinType(el, candidate.kind.toLowerCase())
-                    ) {
-                        mm[op === '+' ? 'min' : 'max'] = true;
-                        // ismax = true;
-                    } else {
-                        return false;
-                    }
+            const ops = numOps(candidate, ctx);
+            if (
+                expected.type === 'TOps' ||
+                expected.type === 'Number' ||
+                expected.type === 'TRef'
+            ) {
+                const eops = numOps(expected, ctx);
+                if (ops && eops) {
+                    return eopsMatch(ops, eops);
                 }
-                if (candidate.value <= num && mm.max) {
-                    return true;
-                }
-                if (candidate.value >= num && mm.min) {
-                    return true;
-                }
-                return candidate.value === num;
-            } else {
-                if (
-                    candidate.kind === 'Int' &&
-                    candidate.value >= 0 &&
-                    ctx.isBuiltinType(expected, 'uint')
-                ) {
-                    return true;
-                }
-                return ctx.isBuiltinType(
-                    expected,
-                    candidate.kind.toLowerCase(),
-                );
             }
+
+            return false;
+        // if (expected.type === 'Number') {
+        //     return (
+        //         expected.kind === candidate.kind &&
+        //         expected.value === candidate.value
+        //     );
+        // } else if (expected.type === 'TOps') {
+        //     const res = numOps(expected, ctx);
+        //     if (!res || res.kind !== candidate.kind) {
+        //         return false;
+        //     }
+        //     const { mm, num } = res;
+
+        //     console.log(candidate.value, mm, num);
+        //     if (candidate.value <= num && !mm.lowerLimit) {
+        //         return true;
+        //     }
+        //     if (candidate.value >= num && !mm.upperLimit) {
+        //         return true;
+        //     }
+        //     return candidate.value === num;
+        // } else {
+        //     if (
+        //         candidate.kind === 'Int' &&
+        //         candidate.value >= 0 &&
+        //         ctx.isBuiltinType(expected, 'uint')
+        //     ) {
+        //         return true;
+        //     }
+        //     return ctx.isBuiltinType(
+        //         expected,
+        //         candidate.kind.toLowerCase(),
+        //     );
+        // }
     }
 };
 
@@ -645,4 +758,30 @@ export const expandEnumCases = (type: TEnum, ctx: Ctx): null | EnumCase[] => {
         }
     }
     return cases;
+};
+
+export const stringOps = (
+    elements: Type[],
+    text: string,
+    pos: number,
+    exact: boolean,
+    ctx: Ctx,
+) => {
+    for (let ex of elements) {
+        if (ex.type === 'String') {
+            const idx = text.indexOf(ex.text, pos);
+            if (idx === -1 || (exact && idx !== 0)) {
+                return false;
+            }
+            pos = idx + ex.text.length;
+        } else if (ctx.isBuiltinType(ex, 'string')) {
+            exact = false;
+        } else {
+            return false;
+        }
+    }
+    if (exact && pos !== text.length - 1) {
+        return false; // extra trailing
+    }
+    return true;
 };
