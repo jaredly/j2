@@ -3,7 +3,8 @@
 @type:shouldMatch(:10)
 @type:shouldNotMatch(:string)
 @type:shouldNotMatch(:11)
-@type:shouldBe(:10) 10
+@type:shouldBe(:10)
+10
 
 @type:shouldMatch(:10 + 10) 20
 @type:shouldNotMatch(:11 + 10) 20
@@ -15,5 +16,6 @@
 @type:shouldNotMatch(:int)
 @type:shouldNotMatch(:uint + 30)
 @type:shouldMatch(:uint + 10u)
-@type:shouldNotMatch(:uint + 21u) 20u
+@type:shouldNotMatch(:uint + 21u)
+20u
 

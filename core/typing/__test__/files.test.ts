@@ -76,7 +76,7 @@ const assertions = {
     },
 };
 
-const base = __dirname + '/../../elements/';
+const base = __dirname + '/../../elements/typetest/';
 readdirSync(base)
     .filter((x) => x.endsWith('.typetest.jd'))
     .forEach((file) => {

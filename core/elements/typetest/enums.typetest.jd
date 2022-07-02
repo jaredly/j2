@@ -1,0 +1,17 @@
+
+@type:shouldMatch(:[`Hi]) [ `Hi ]
+
+@type:shouldNotMatch(:[ `One ])
+@type:shouldMatch(:[ `One | `Two ])
+[ `Two ]
+
+@type:shouldMatch(:[ `One | `Two ])
+@type:shouldNotMatch(:[ `One ])
+[ `One | `Two ]
+
+@type:shouldNotMatch(:[ `Hi(int) ]) [ `Hi(float) ]
+@type:shouldMatch(:[ `Hi(int) ]) ((<T>[ `Hi(T) ])<int>)
+
+// @type:shouldNotMatch(:[ `One | `Two ]) [ `Two | * ]
+// @type:shouldMatch(:[ `One | * ]) [ `One | `Two ]
+@type:shouldMatch(:[ `Hi(int) ]) [ `Hi(10) ]
