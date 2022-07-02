@@ -2,7 +2,7 @@
 // Also, this is where we try to do type-based resolution.
 // Should I separate the two steps? idk.
 
-import { ErrorTag, FullContext, noloc } from '../ctx';
+import { ErrorTag, FullContext, GlobalType, GlobalValue, noloc } from '../ctx';
 import { transformFile } from '../transform-tast';
 import {
     DecoratedExpression,
@@ -27,6 +27,12 @@ export type Ctx = {
     typeByName(name: string): Type | null;
     getDecorator(name: string): RefKind[];
     errorDecorators(): Id[];
+
+    typeForId: (id: Id) => GlobalType | null;
+    valueForId: (id: Id) => GlobalValue | null;
+    resolveType: (name: string, hash?: string | null) => RefKind | null;
+    resolveDecorator: (name: string, hash?: string | null) => Array<RefKind>;
+
     // decoratorNames(): { [key: string]: string };
     resolve: (name: string, hash?: string | null) => Array<RefKind>;
 } & TMCtx;

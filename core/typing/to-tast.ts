@@ -12,10 +12,6 @@ export { type ToTast, makeToTast } from './to-tast.gen';
 
 export type Ctx = {
     resetSym: () => void;
-    typeForId: (id: t.Id) => GlobalType | null;
-    valueForId: (id: t.Id) => GlobalValue | null;
-    resolveType: (name: string, hash?: string | null) => t.RefKind | null;
-    resolveDecorator: (name: string, hash?: string | null) => Array<t.RefKind>;
     // hmm
     // seems like the ctx probably wants a say in the assignment of symbol IDs.
     // to ensure there aren't collisions.

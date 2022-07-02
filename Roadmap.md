@@ -1,4 +1,8 @@
 
+- [ ] so there's something ... that I need to change about
+	writing & loading aliases
+- [ ] do I also need to add some tests for re-parsing?
+
 - [x] wait perf is really bad
 	- Lesson learned: hashing stuff takes time, so reparsing builtins was killing me.
 	- Now we have 2ms rerender instead of 40!
@@ -14,6 +18,8 @@
 OK so ... yeah my syms need to be unique.
 erg.
 
+whyyyyy is jest mad???
+need to figure out why runFixture isn't working consistently.
 
 
 # ENUM Next Steps

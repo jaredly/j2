@@ -13,7 +13,7 @@ readdirSync(base)
     .forEach((file) => {
         const fixtureFile = base + file;
 
-        describe('analyze ' + file, () => {
+        describe('fixture ' + file, () => {
             const { file, hasOnly } = loadFixtures(fixtureFile);
             const baseCtx = builtinContext.clone();
             loadBuiltins(file.builtins, baseCtx);

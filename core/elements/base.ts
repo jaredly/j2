@@ -2,6 +2,7 @@ import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
+import { Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx, Toplevel, TopTypeKind } from '../typing/to-tast';
 
@@ -27,7 +28,7 @@ IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 
 `;
 
-export const typeToplevelT = (t: t.TypeAlias, ctx: Ctx): Toplevel => {
+export const typeToplevelT = (t: t.TypeAlias, ctx: ACtx): Toplevel => {
     return {
         type: 'Type',
         items: t.elements.map((t) => {
@@ -137,7 +138,13 @@ export const ToAst = {
         // maybe when printing unresolved things, put `#[:unresolved:]` or something?
         return {
             type,
-            toplevels: toplevels.map((t) => ctx.ToAst[t.type](t as any, ctx)),
+            toplevels: toplevels.map((t) => {
+                let inner = ctx;
+                if (t.type === 'TypeAlias') {
+                    inner = ctx.withToplevel(typeToplevelT(t, ctx.actx));
+                }
+                return inner.ToAst[t.type](t as any, inner);
+            }),
             loc,
             comments,
         };
@@ -191,7 +198,7 @@ export const ToPP = {
     },
 };
 
-function determineKind(t: p.Type, ctx: Ctx): TopTypeKind {
+function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
     switch (t.type) {
         case 'Number':
         case 'String':
@@ -222,7 +229,7 @@ function determineKind(t: p.Type, ctx: Ctx): TopTypeKind {
     }
 }
 
-function determineKindT(t: t.Type, ctx: Ctx): TopTypeKind {
+function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
     switch (t.type) {
         case 'Number':
         case 'String':

@@ -51,11 +51,11 @@ type X = <T#[2]: int>[ `Hello(X#[r0]<@error:argWrongType(expected: :int) "string
 ==[recursive bound, own tvar]==
 --[input]--
 type X = <T: int>[ `X(X<T>) ]
-type M = (<What>[ `X(What) ])<int>
+type M = (<What>[ `X(What) | M ])<int>
 type N = int
 
 --[output:expected]--
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
-type X = <T#[2]: int>[ `X(N#[r0]<T#[2]>) ]
-type M = (<What#[3]>[ `X(What#[3]) ])<int>
+type X = <T#[2]: int>[ `X(X#[r0]<T#[2]>) ]
+type M = (<What#[3]>[ `X(What#[3]) | M#[r0] ])<int>
 type N = int

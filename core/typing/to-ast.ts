@@ -4,6 +4,7 @@ import * as t from '../typed-ast';
 import { makeToAst, ToAst } from './to-ast.gen';
 import { Toplevel } from './to-tast';
 export { type ToAst } from './to-ast.gen';
+import { Ctx as ACtx } from './analyze';
 
 export type Ctx = {
     printRef: (
@@ -16,6 +17,14 @@ export type Ctx = {
     recordSym: (sym: t.Sym, kind: 'value' | 'type') => void;
     aliases: { [key: string]: string };
     backAliases: { [key: string]: string };
+    withToplevel: (t: Toplevel) => Ctx;
+
+    reverse: {
+        decorators: { [key: string]: string };
+        types: { [key: string]: string };
+        values: { [key: string]: string };
+    };
+    actx: ACtx;
 };
 
 export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
@@ -36,43 +45,61 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
 
     const ctx = fctx.extract();
 
-    const reverse: { [key: string]: string } = {};
+    const reverse: Ctx['reverse'] = {
+        decorators: {},
+        types: {},
+        values: {},
+    };
     Object.keys(ctx.values.names).forEach((name) => {
         ctx.values.names[name].forEach((ref) => {
-            reverse[t.refHash(ref)] = name;
+            reverse.values[t.refHash(ref)] = name;
         });
     });
-    const reverseType: { [key: string]: string } = {};
     Object.keys(ctx.types.names).forEach((name) => {
-        reverseType[t.refHash(ctx.types.names[name])] = name;
+        reverse.types[t.refHash(ctx.types.names[name])] = name;
     });
-    const reverseDecorator: { [key: string]: string } = {};
     Object.keys(ctx.decorators.names).forEach((name) => {
         ctx.decorators.names[name].forEach((ref) => {
-            reverseDecorator[t.refHash(ref)] = name;
+            reverse.decorators[t.refHash(ref)] = name;
         });
     });
     ctx.locals.forEach(({ types, values }) => {
         types.forEach(({ sym, bound }) => {
-            reverseType[sym.id] = sym.name;
+            reverse.types[sym.id] = sym.name;
         });
     });
 
-    const top = fctx.extract().toplevel;
-    if (top?.type === 'Type') {
-        top.items.forEach(({ name }, i) => {
-            reverseType['r' + i] = name;
-        });
-    }
+    // HM: I need the ctx to be able to register the
+    // fact that we've just passed a new toplevel.
+
+    // const top = fctx.extract().toplevel;
+    // if (top?.type === 'Type') {
+    //     top.items.forEach(({ name }, i) => {
+    //         reverseType['r' + i] = name;
+    //     });
+    // }
 
     return {
+        actx: fctx,
+        reverse,
+
+        withToplevel(top) {
+            const reverse = { ...this.reverse };
+            if (top.type === 'Type') {
+                top.items.forEach((item, i) => {
+                    reverse.types[t.refHash({ type: 'Recur', idx: i })] =
+                        item.name;
+                });
+            }
+            return { ...this, reverse };
+        },
         aliases,
         backAliases,
         recordSym(sym, kind) {
             if (kind === 'value') {
-                reverse[sym.id] = sym.name;
+                this.reverse.values[sym.id] = sym.name;
             } else {
-                reverseType[sym.id] = sym.name;
+                this.reverse.types[sym.id] = sym.name;
             }
         },
         printSym(sym) {
@@ -89,10 +116,10 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             const hash = t.refHash(ref);
             const name =
                 kind === 'value'
-                    ? reverse[hash]
+                    ? this.reverse.values[hash]
                     : kind === 'decorator'
-                    ? reverseDecorator[hash]
-                    : reverseType[hash];
+                    ? this.reverse.decorators[hash]
+                    : this.reverse.types[hash];
 
             if (
                 name &&
