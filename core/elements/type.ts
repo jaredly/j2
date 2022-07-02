@@ -371,7 +371,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         const actx = (ctx.ctx as FullContext).toplevelConfig(
             typeToplevelT(node, ctx.ctx as FullContext),
         );
-        console.log(actx);
+        // console.log(actx);
         return [null, { ...ctx, ctx: actx }];
     },
     // Expression_Apply(node, { ctx, hit }) {

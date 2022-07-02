@@ -308,8 +308,8 @@ export const newContext = (): FullContext => {
             return null;
         },
         resetSym() {
-            this[opaque].symid = 0;
-            this[opaque].syms = { types: {}, values: {} };
+            // this[opaque].symid = 0;
+            // this[opaque].syms = { types: {}, values: {} };
         },
         isBuiltinType(t, name) {
             return (

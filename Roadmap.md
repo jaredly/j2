@@ -11,6 +11,10 @@
 - OK so aliases .. maybe I'll only start doing the aliases
   thing ... hm ...
 
+OK so ... yeah my syms need to be unique.
+erg.
+
+
 
 # ENUM Next Steps
 
