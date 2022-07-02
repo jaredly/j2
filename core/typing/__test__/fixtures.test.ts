@@ -15,10 +15,11 @@ readdirSync(base)
 
         describe('fixture ' + file, () => {
             const { file, hasOnly } = loadFixtures(fixtureFile);
-            const baseCtx = builtinContext.clone();
-            loadBuiltins(file.builtins, baseCtx);
 
             it.each(file.fixtures)('$title', (fixture) => {
+                const baseCtx = builtinContext.clone();
+                loadBuiltins(file.builtins, baseCtx);
+
                 let { title, input, output_expected } = fixture;
 
                 let { checked, newOutput, outputTast } = runFixture(
