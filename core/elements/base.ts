@@ -64,13 +64,13 @@ export const ToTast = {
         // We might forbid them from having outstanding effects though.
         // deal with that when it comes
         let parsed = toplevels.map((t) => {
-            ctx.resetSym();
+            // ctx.resetSym();
             let config: null | Toplevel = null;
             if (t.type === 'TypeAlias') {
                 config = typeToplevel(t, ctx);
                 // Need to reset again, so the args get the same syms
                 // when we parse them again
-                ctx.resetSym();
+                // ctx.resetSym();
             }
             ctx = ctx.toplevelConfig(config);
             let top = ctx.ToTast.Toplevel(t as any, ctx);

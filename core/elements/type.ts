@@ -113,7 +113,7 @@ export const ToTast = {
             type: 'TypeAlias',
             loc,
             elements: items.map((x) => {
-                ctx.resetSym();
+                // ctx.resetSym();
                 return {
                     name: x.name,
                     type: ctx.ToTast[x.typ.type](x.typ as any, ctx),
@@ -371,6 +371,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         const actx = (ctx.ctx as FullContext).toplevelConfig(
             typeToplevelT(node, ctx.ctx as FullContext),
         );
+        console.log(actx);
         return [null, { ...ctx, ctx: actx }];
     },
     // Expression_Apply(node, { ctx, hit }) {
