@@ -60,6 +60,9 @@ export const serializeSections = (
 
 export const loadSections = (data: string, char = '=') => {
     const sections: { [key: string]: string } = {};
+    if (!data) {
+        return sections;
+    }
     let section = '';
     let sectionName = '';
     for (const line of data.split('\n')) {
