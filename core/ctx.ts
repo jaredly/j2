@@ -120,8 +120,12 @@ export type Hash =
           type: 'global';
           hash: string;
           idx: number;
-      };
+      }
+    | { type: 'recur'; idx: number };
 const parseHash = (hash: string): Hash => {
+    if (hash.startsWith('r')) {
+        return { type: 'recur', idx: +hash.slice(1) };
+    }
     if (!hash.startsWith('h')) {
         return {
             type: 'sym',
@@ -144,6 +148,8 @@ const resolveDecorator = (
     if (rawHash || Object.hasOwn(ctx.aliases, name)) {
         const hash = parseHash(rawHash ?? ctx.aliases[name]);
         if (hash.type === 'sym') {
+            throw new Error('decorators can only be global');
+        } else if (hash.type === 'recur') {
             throw new Error('decorators can only be global');
         } else {
             const ref = ctx.decorators.hashed[hash.hash];
@@ -179,6 +185,8 @@ const resolveType = (
                     }
                 }
             }
+        } else if (hash.type === 'recur') {
+            return { type: 'Recur', idx: hash.idx };
         } else {
             const ref = ctx.types.hashed[hash.hash];
             if (ref && hash.idx < ref.length) {
@@ -209,7 +217,7 @@ const resolve = (
     if (rawHash || Object.hasOwn(ctx.aliases, name)) {
         // console.log('ok', name);
         const hash = parseHash(rawHash ?? ctx.aliases[name]);
-        if (hash.type === 'sym') {
+        if (hash.type === 'sym' || hash.type === 'recur') {
             throw new Error('not yet: ' + rawHash);
             // const ref = ctx.values.names[name]
             // if (ref) {
