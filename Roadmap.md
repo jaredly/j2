@@ -3,6 +3,14 @@
 	- Lesson learned: hashing stuff takes time, so reparsing builtins was killing me.
 	- Now we have 2ms rerender instead of 40!
 
+- Wait, hm, the resetSyms thing isn't quite working with
+	aliases. anddd the .. syms map thing isn't working
+	so figuring out what the toplevel is that a 'Recur' is
+	referencing.
+	Yeah so I'm losing names from other things
+- OK so aliases .. maybe I'll only start doing the aliases
+  thing ... hm ...
+
 
 # ENUM Next Steps
 

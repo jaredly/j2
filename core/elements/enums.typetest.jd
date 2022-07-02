@@ -3,5 +3,5 @@
 @type:shouldMatch(:[ `One | `Two ]) [ `One | `Two ]
 @type:shouldMatch(:[ `One | `Two ]) [ `Two ]
 @type:shouldNotMatch(:[ `One ]) [ `One | `Two ]
-@type:shouldNotMatch(:[`Hi(int)]) [ `Hi(float) ]
-
+@type:shouldNotMatch(:[ `Hi(int) ]) [ `Hi(float) ]
+@type:shouldMatch(:[ `Hi(int) ]) ((<T>[ `Hi(T) ])<int>)

@@ -27,6 +27,20 @@ IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 
 `;
 
+export const typeToplevelT = (t: t.TypeAlias, ctx: Ctx): Toplevel => {
+    return {
+        type: 'Type',
+        items: t.elements.map((t) => {
+            const kind = determineKindT(t.type, ctx);
+            if (t.type.type === 'TVars') {
+                const args = t.type.args;
+                return { name: t.name, args, kind };
+            }
+            return { name: t.name, args: [], kind };
+        }),
+    };
+};
+
 export const typeToplevel = (t: p.TypeAlias, ctx: Ctx): Toplevel => {
     return {
         type: 'Type',

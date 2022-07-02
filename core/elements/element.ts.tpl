@@ -27,7 +27,7 @@ export const ToPP = {
     // },
 };
 
-export const analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
+export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
     // Expression_Apply(node, { ctx, hit }) {
     // },
 };

@@ -6,8 +6,9 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { filterUnresolved } from './base';
+import { filterUnresolved, typeToplevel, typeToplevelT } from './base';
 import { TApply, TVars } from './type-vbls';
+import { FullContext } from '../ctx';
 
 export const grammar = `
 Type = TOps
@@ -366,6 +367,12 @@ export const ToPP = {
 };
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
+    TypeAlias(node, ctx) {
+        const actx = (ctx.ctx as FullContext).toplevelConfig(
+            typeToplevelT(node, ctx.ctx as FullContext),
+        );
+        return [null, { ...ctx, ctx: actx }];
+    },
     // Expression_Apply(node, { ctx, hit }) {
     // },
 };

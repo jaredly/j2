@@ -2,6 +2,7 @@ import { FullContext } from '../ctx';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 import { makeToAst, ToAst } from './to-ast.gen';
+import { Toplevel } from './to-tast';
 export { type ToAst } from './to-ast.gen';
 
 export type Ctx = {
@@ -25,6 +26,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
         let i = 2;
         let uniqueName = name;
         const key = t.refHash(ref);
+        // if (aliases[key])
         while (Object.hasOwn(backAliases, uniqueName)) {
             uniqueName = `${name}_${key.slice(0, i++)}`;
         }
@@ -74,7 +76,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             }
         },
         printSym(sym) {
-            if (showIds) {
+            if (showIds || true) {
                 return { label: sym.name, hash: `#[${sym.id}]` };
             }
             const hash = '' + sym.id;
@@ -92,7 +94,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
                     ? reverseDecorator[hash]
                     : reverseType[hash];
 
-            if (name && !showIds) {
+            if (name && !showIds && ref.type !== 'Local') {
                 if (!this.aliases[hash]) {
                     add(name, ref);
                 }
