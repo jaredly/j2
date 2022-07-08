@@ -63,7 +63,7 @@ export const highlightLocations = (
             locs.push({ loc, type: 'comment' });
         });
         transformFile(ast, visitor, locs);
-        console.log(locs);
+        // console.log(locs);
         return locs;
     } catch (err) {
         return [
@@ -98,7 +98,7 @@ export const Highlight = ({
 
     const marked = React.useMemo(() => {
         const locs = highlightLocations(text);
-        return locs && text.trim().length ? markUpTree(text, locs) : null;
+        return text.trim().length ? markUpTree(text, locs) : null;
     }, [text]);
 
     const annotations = React.useMemo(

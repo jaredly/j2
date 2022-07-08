@@ -22,6 +22,45 @@ export const getText = (node: HTMLDivElement) => {
     return text.join('\n');
 };
 
+export type HistItem = { text: string; pos: number; prevPos: number };
+export type History = { items: HistItem[]; idx: number };
+export const undo = ({
+    items,
+    idx,
+}: History): [History, { text: string; pos: number } | null] => {
+    if (idx < items.length - 1) {
+        // const { text } = items[items.length - 2 - idx];
+        // const { prevPos: pos } = items[items.length - 1 - idx];
+        return [{ items, idx: idx + 1 }, items[items.length - 2 - idx]];
+    }
+    return [{ items, idx: idx }, null];
+};
+export const redo = ({
+    items,
+    idx,
+}: History): [History, { text: string; pos: number } | null] => {
+    if (idx > 0) {
+        return [{ items, idx: idx - 1 }, items[items.length - idx]];
+    }
+    return [{ items, idx: idx }, null];
+};
+export const update = (
+    { items, idx }: History,
+    text: string,
+    pos: number,
+    prevPos: number,
+): History => {
+    return {
+        items: [...items.slice(0, items.length - idx), { text, pos, prevPos }],
+        idx: 0,
+    };
+};
+
+const initial = (v: string): History => ({
+    items: [{ text: v, pos: 0, prevPos: 0 }],
+    idx: 0,
+});
+
 export const Editor = ({
     ctx,
     text,
@@ -35,12 +74,13 @@ export const Editor = ({
 }) => {
     const ref = React.useRef(null as null | HTMLDivElement);
     const [editing, setEditing] = React.useState(false);
+
+    const history = React.useRef(initial(text));
+
     React.useEffect(() => {
         if (getText(ref.current!) !== text) {
-            console.log('up top!');
-
             const locs = highlightLocations(text);
-            if (locs && text.length) {
+            if (text.length) {
                 setHtmlAndClean(
                     ref.current!,
                     treeToHtmlLines(markUpTree(text, locs)),
@@ -60,6 +100,9 @@ export const Editor = ({
     }, [text]);
     const latest = React.useRef(text);
     latest.current = text;
+
+    const prevPos = React.useRef(0);
+
     React.useEffect(() => {
         if (!editing) {
             return;
@@ -70,7 +113,7 @@ export const Editor = ({
             attributes: true,
             characterData: true,
         };
-        const fn = () => {
+        const obsfn = () => {
             const sel = document.getSelection()!;
             if (!isAncestor(sel?.anchorNode, ref.current!)) {
                 setEditing(false);
@@ -80,20 +123,59 @@ export const Editor = ({
             const text = getText(ref.current!);
             if (text !== latest.current) {
                 onChange(text);
-            }
-            const locs = highlightLocations(text);
-            if (locs && text.length) {
                 const pos = getPos(ref.current!);
-                const html = treeToHtmlLines(markUpTree(text, locs));
+                history.current = update(
+                    history.current,
+                    text,
+                    pos,
+                    prevPos.current,
+                );
+                prevPos.current = pos;
                 obs.disconnect();
+                const locs = highlightLocations(text);
+                const html = treeToHtmlLines(markUpTree(text, locs));
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, pos);
                 obs.observe(ref.current!, options);
             }
         };
-        const obs = new MutationObserver(fn);
+        const obs = new MutationObserver(obsfn);
         obs.observe(ref.current!, options);
-        return () => obs.disconnect();
+
+        const keyfn = (evt: KeyboardEvent) => {
+            if (evt.metaKey && evt.key === 'z') {
+                evt.preventDefault();
+                let entry = null;
+                if (evt.shiftKey) {
+                    [history.current, entry] = redo(history.current);
+                } else {
+                    [history.current, entry] = undo(history.current);
+                }
+
+                if (entry == null) {
+                    return;
+                }
+                obs.disconnect();
+                const locs = highlightLocations(entry.text);
+                const html = treeToHtmlLines(markUpTree(entry.text, locs));
+                setHtmlAndClean(ref.current!, html);
+                setPos(ref.current!, entry.pos);
+                onChange(entry.text);
+                obs.observe(ref.current!, options);
+            }
+        };
+        document.addEventListener('keydown', keyfn);
+
+        const selfn = () => {
+            prevPos.current = getPos(ref.current!);
+        };
+        // document.addEventListener('selectionchange', selfn);
+
+        return () => {
+            obs.disconnect();
+            document.removeEventListener('keydown', keyfn);
+            document.removeEventListener('selectionchange', selfn);
+        };
     }, [editing]);
 
     return (
@@ -111,8 +193,8 @@ export const Editor = ({
                 minWidth: 50,
             }}
             onBlur={() => {
-                // setEditing(false);
-                // onBlur(getText(ref.current!));
+                setEditing(false);
+                onBlur(getText(ref.current!));
             }}
             onFocus={() => setEditing(true)}
             onKeyDown={(evt) => {

@@ -1,6 +1,16 @@
 
-- [ ] get highlighting working in the editor!
+- [x] get highlighting working in the editor!
+	- [x] indicate parser error location, could be fun
+		- would that be a 'zero-length span'? yeah looks like that would work
+			orr I could just use my current markup setup!
+			I'll probably expand it to allow underlines & popovers? Seems like it.
+			data-tooltip idk
+	- [x] undo/redo now have to be done manually!
+		- let's slap something together
+			it's ridiculous not to be able to undo
+	- [ ] can we do wavy underlines as well?
 - [ ] then get .typetest files going in the UI
+	- and .test
 
 
 - [x] so there's something ... that I need to change about

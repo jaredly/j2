@@ -1,10 +1,9 @@
 import { Loc } from '../core/typed-ast';
 import { Colorable } from './Highlight';
 
-export const markUpTree = (
-    text: string,
-    locs: Array<{ loc: Loc; type: Colorable }>,
-): Tree => {
+export type MarkupLoc = { loc: Loc; type: Colorable };
+
+export const markUpTree = (text: string, locs: Array<MarkupLoc>): Tree => {
     const points = sortLocs(locs);
     let pos = 0;
     let top: Tree = { type: 'tree', children: [], kind: 'File' };

@@ -5,14 +5,8 @@ import { typeToplevel } from '../../elements/base';
 import { parseTypeFile } from '../../grammar/base.parser';
 import { idToString } from '../../ids';
 import * as t from '../../typed-ast';
-import { Ctx, Toplevel } from '../to-tast';
+import { Ctx } from '../to-tast';
 import { typeMatches } from '../typeMatches';
-import {
-    clearLocs,
-    loadBuiltins,
-    loadFixtures,
-    runFixture,
-} from './fixture-utils';
 
 expect.extend({
     toMatchT(received, expected, ctx) {
