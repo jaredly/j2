@@ -3,7 +3,7 @@
 // Should I separate the two steps? idk.
 
 import { ErrorTag, FullContext, GlobalType, GlobalValue, noloc } from '../ctx';
-import { transformFile } from '../transform-tast';
+import { transformFile, transformToplevel } from '../transform-tast';
 import {
     DecoratedExpression,
     Decorator,
@@ -11,6 +11,7 @@ import {
     File,
     Loc,
     RefKind,
+    Toplevel,
     TVar,
     Type,
 } from '../typed-ast';
@@ -143,6 +144,10 @@ export const decorate = (
     };
 };
 
+export const analyzeTop = (ast: Toplevel, ctx: Ctx): Toplevel => {
+    return transformToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
+};
+
 export const analyze = (ast: File, ctx: Ctx): File => {
     return transformFile(ast, analyzeVisitor(), { ctx, hit: {} });
 };
@@ -190,6 +195,11 @@ export const verify = (ast: File, ctx: Ctx): Verify => {
     transformFile(
         ast,
         {
+            Toplevel(node) {
+                // ctx.toplevelConfig?
+                // ctx.resetSym()
+                return null;
+            },
             TRef(node) {
                 if (node.ref.type === 'Unresolved') {
                     results.unresolved.type.push(node.loc);

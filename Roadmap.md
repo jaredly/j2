@@ -1,6 +1,37 @@
 
-- [ ] so there's something ... that I need to change about
+- [x] so there's something ... that I need to change about
 	writing & loading aliases
+
+- [ ] "recursive bound, own tvar" isn't working
+	ohhhhhhhhhhhhhh ok so I see.
+	getBound is not working
+	we need to:
+	- to-tast and then immediately analyze, a given toplevel.
+	can't do the whole file and then go back and analyze.
+
+	because the syms mapping, of course.
+	
+	I think I'll need a way to 'recreate the syms mapping'
+	from an existing tast, for when I'm revalidating a dealio.
+	do I then also clear out all 'error' decorators? Seems
+	like I would.
+
+	Ok, so I do actually want the contexts to be different.
+	And ToABC.File isn't really the style that I want.
+	Just make a toplevel function to manage that stuff.
+
+	but a quick & dirty, to get tests passing, would still reuse
+	things.
+
+- [ ] would be nice to bring back sym aliases ...	
+
+
+ok maybe fixtures are only for ... errors?
+
+
+
+
+
 - [ ] do I also need to add some tests for re-parsing?
 
 - [x] wait perf is really bad

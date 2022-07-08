@@ -219,9 +219,9 @@ export function runFixture(
     let ctx = baseCtx.clone();
     loadBuiltins(builtins, ctx);
 
-    let tast;
+    let checked: File;
     try {
-        [tast, ctx] = parseRaw(input, ctx);
+        [checked, ctx] = parseRaw(input, ctx);
     } catch (err) {
         console.log('Failed to parse input:', input);
         console.log(err);
@@ -230,7 +230,7 @@ export function runFixture(
 
     const actx = printCtx(ctx);
 
-    const checked = analyze(tast, ctx);
+    // const checked = analyze(tast, ctx);
     checked.toplevels.forEach((top) => {
         if (top.type === 'ToplevelExpression') {
             const t = getType(top.expr, ctx);

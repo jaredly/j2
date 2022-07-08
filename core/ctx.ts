@@ -715,6 +715,13 @@ export const resolveAnalyzeType = (
                 return resolveAnalyzeType(t.typ, ctx);
             }
         }
+        if (type.ref.type === 'Local') {
+            const bound = ctx.getBound(type.ref.sym);
+            return bound;
+        }
+        // if (type.ref.type === 'Recur') {
+        //     ctx.getBound
+        // }
     }
     if (type.type === 'TApply') {
         const target = resolveAnalyzeType(type.target, ctx);

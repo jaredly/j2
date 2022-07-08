@@ -190,6 +190,15 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         arg: { type: 'DType', loc: noloc, typ: bound },
                         loc: noloc,
                     },
+                    // {
+                    //     label: 'received',
+                    //     arg: {
+                    //         type: 'DType',
+                    //         loc: noloc,
+                    //         typ: ctx.resolveRefsAndApplies(arg) ?? arg,
+                    //     },
+                    //     loc: noloc,
+                    // },
                 ]);
             }
             return arg;
