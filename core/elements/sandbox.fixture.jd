@@ -22,7 +22,7 @@ alias one=h75a4651f0e6841970290c6a4c7f547d57bb814ca string=hd978df838905e7e1bd7b
 // string
 
 ==[Kitchen Sink]==
---[input]--
+--[input:shouldFail]--
 // ## Types ##
 type x = 10 + 3
 type y = "hello" + ".js"

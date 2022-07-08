@@ -1,7 +1,8 @@
 import { Card, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { FullContext } from '../core/ctx';
+import { SyntaxError } from '../core/grammar/base.parser';
+import { FullContext, noloc } from '../core/ctx';
 import { AllTaggedTypeNames, parseFile } from '../core/grammar/base.parser';
 import { printToString } from '../core/printer/pp';
 import { newPPCtx } from '../core/printer/to-pp';
@@ -12,8 +13,10 @@ import { getType } from '../core/typing/getType';
 import { printCtx } from '../core/typing/to-ast';
 import { markUpTree, Tree as TreeT } from './markUpTree';
 
+export type Colorable = keyof Visitor<null> | 'Error';
+
 export const colors: {
-    [key in keyof Visitor<null>]: string;
+    [key in Colorable]?: string;
 } = {
     TagDecl: '#33ff4e',
     TRef: 'green',
@@ -28,20 +31,53 @@ export const colors: {
     Decorator: 'orange',
     DecoratorId: '#ffbf88',
     TemplateWrap: 'yellow',
+    Error: 'red',
 };
 
-export const highlightLocations = (text: string) => {
+const n = (n: number): Loc['start'] => ({ ...noloc.start, offset: n });
+
+export const highlightLocations = (
+    text: string,
+): { loc: Loc; type: Colorable }[] => {
+    if (text.length < -1) {
+        return [
+            { loc: { start: n(0), end: n(text.length), idx: 0 }, type: 'File' },
+            // {
+            //     loc: { start: n(0), end: n(err.location.start), idx: 0 },
+            //     type: 'error',
+            // },
+            {
+                loc: {
+                    start: n(5),
+                    end: n(text.length),
+                    idx: 0,
+                },
+                type: 'Number',
+            },
+        ];
+    }
     try {
         const ast = parseFile(text);
-        const locs: Array<{ loc: Loc; type: string }> = [];
+        const locs: Array<{ loc: Loc; type: keyof Visitor<null> }> = [];
         ast.comments.forEach(([loc, _]) => {
             locs.push({ loc, type: 'comment' });
         });
         transformFile(ast, visitor, locs);
+        console.log(locs);
         return locs;
     } catch (err) {
-        console.error(err);
-        return null;
+        return [
+            { loc: { start: n(0), end: n(text.length), idx: 0 }, type: 'File' },
+            {
+                loc: {
+                    start: n((err as SyntaxError).location.start.offset),
+                    end: n(text.length),
+                    idx: 0,
+                },
+                type: 'Error',
+            },
+        ];
+        // return null;
     }
 };
 

@@ -125,7 +125,7 @@ export const FixtureFile = ({
                             id={`${name}/${i}`}
                             fixture={fixture}
                             onChange={(fixture) => {
-                                console.log('chagne', fixture, i);
+                                // console.log('chagne', fixture, i);
                                 const fixtures = data.fixtures.slice();
                                 fixtures[i] = fixture;
                                 setData({ ...data, fixtures });

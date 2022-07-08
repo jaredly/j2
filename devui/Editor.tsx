@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
 import { Visitor } from '../core/transform-ast';
-import { colors, highlightLocations } from './Highlight';
+import { Colorable, colors, highlightLocations } from './Highlight';
 import { markUpTree, Tree } from './markUpTree';
 
 export const isAncestor = (child: Node | null, parent: Node) => {
@@ -93,18 +93,7 @@ export const Editor = ({
         };
         const obs = new MutationObserver(fn);
         obs.observe(ref.current!, options);
-        // let last = 0;
-        // let iid = setInterval(() => {
-        //     const pos = getPos(ref.current!);
-        //     if (pos !== last) {
-        //         console.log(pos);
-        //         last = pos;
-        //     }
-        // }, 100);
-        return () => {
-            obs.disconnect();
-            // clearInterval(iid);
-        };
+        return () => obs.disconnect();
     }, [editing]);
 
     return (
@@ -122,8 +111,8 @@ export const Editor = ({
                 minWidth: 50,
             }}
             onBlur={() => {
-                setEditing(false);
-                onBlur(getText(ref.current!));
+                // setEditing(false);
+                // onBlur(getText(ref.current!));
             }}
             onFocus={() => setEditing(true)}
             onKeyDown={(evt) => {
@@ -145,7 +134,7 @@ export const treeToHtml = (
     hover: null | [number, number],
 ): string => {
     return `<span class="${tree.kind}" style="color: ${
-        colors[tree.kind as keyof Visitor<null>] ?? '#aaa'
+        colors[tree.kind] ?? '#aaa'
     }">${tree.children
         .map((child, i) =>
             child.type === 'leaf'
@@ -155,10 +144,8 @@ export const treeToHtml = (
         .join('')}</span>`;
 };
 
-export const openSpan = (kind: keyof Visitor<null>) =>
-    `<span class="${kind}" style="color: ${
-        colors[kind as keyof Visitor<null>] ?? '#aaa'
-    }">`;
+export const openSpan = (kind: Colorable) =>
+    `<span class="${kind}" style="color: ${colors[kind] ?? '#aaa'}">`;
 
 export const treeToHtmlLines = (tree: Tree) => {
     return `<div>${treeToHtmlLinesInner(tree, [])}</div>`;
@@ -171,12 +158,9 @@ export const escapeLine = (line: string) => {
         .replace(/>/g, '&gt;');
 };
 
-export const treeToHtmlLinesInner = (
-    tree: Tree,
-    path: (keyof Visitor<null>)[],
-): string => {
+export const treeToHtmlLinesInner = (tree: Tree, path: Colorable[]): string => {
     // ohhh how do I deal with opening lines and closing ones
-    return `${openSpan(tree.kind as keyof Visitor<null>)}${tree.children
+    return `${openSpan(tree.kind)}${tree.children
         .map((child, i) =>
             child.type === 'leaf'
                 ? `<span data-span="${child.span[0]}:${
@@ -184,25 +168,12 @@ export const treeToHtmlLinesInner = (
                   }">${child.text
                       .split('\n')
                       .map(escapeLine)
-                      //   .join('\n')
-                      //   .replace(/\n\n+/g, (newlines) => {
-                      //       let res = '\n';
-                      //       for (let i = 0; i < newlines.length - 1; i++) {
-                      //           res += '<br/>\n';
-                      //       }
-                      //       return res;
-                      //   })
-                      //   .replaceAll(
-                      //       '\n',
                       .join(
                           path.map(() => '</span>').join('') +
                               '</div><div>' +
                               path.map(openSpan).join(''),
                       )}</span>`
-                : treeToHtmlLinesInner(
-                      child,
-                      path.concat([tree.kind as keyof Visitor<null>]),
-                  ),
+                : treeToHtmlLinesInner(child, path.concat([tree.kind])),
         )
         .join('')}</span>`;
 };

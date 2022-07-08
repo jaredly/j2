@@ -1,5 +1,9 @@
 import {parse} from './base.parser-untyped'
 
+export type SyntaxError = {
+    location: Loc;
+};
+
 export type Loc = {
     start: {line: number, column: number, offset: number},
     end: {line: number, column: number, offset: number},
