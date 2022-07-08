@@ -118,8 +118,14 @@ export const fileStatus = (name: string, file: FixtureFileType): Status => {
 
 export const App = () => {
     const hash = useHash();
+
     const [listing] = usePromise<string[]>(
         () => fetch('/element/').then((res) => res.json()),
+        [],
+    );
+
+    const [typetest] = usePromise<string[]>(
+        () => fetch('/element/typetest/').then((res) => res.json()),
         [],
     );
 

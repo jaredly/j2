@@ -72,7 +72,7 @@ const assertions = {
 
 const base = __dirname + '/../../elements/typetest/';
 readdirSync(base)
-    .filter((x) => x.endsWith('.typetest.jd'))
+    .filter((x) => x.endsWith('.jd'))
     .forEach((file) => {
         const fixtureFile = base + file;
 
