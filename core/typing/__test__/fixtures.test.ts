@@ -20,7 +20,7 @@ readdirSync(base)
                 const baseCtx = builtinContext.clone();
                 loadBuiltins(file.builtins, baseCtx);
 
-                let { title, input, output_expected } = fixture;
+                let { title, output_expected } = fixture;
 
                 let { checked, newOutput, outputTast } = runFixture(
                     fixture,

@@ -1,8 +1,12 @@
 
+- [ ] get highlighting working in the editor!
+- [ ] then get .typetest files going in the UI
+
+
 - [x] so there's something ... that I need to change about
 	writing & loading aliases
 
-- [ ] "recursive bound, own tvar" isn't working
+- [x] "recursive bound, own tvar" isn't working
 	ohhhhhhhhhhhhhh ok so I see.
 	getBound is not working
 	we need to:

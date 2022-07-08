@@ -7,6 +7,7 @@ import {
     hashTypes,
     noloc,
 } from '../../ctx';
+import { fileToTast } from '../../elements/base';
 import { TVar } from '../../elements/type-vbls';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
@@ -187,6 +188,7 @@ export const loadFixtures = (fixtureFile: string) => {
 export const parseRaw = (
     raw: string,
     ctx: FullContext,
+    analyze = true,
 ): [File, FullContext] => {
     if (raw.startsWith('alias ')) {
         const idx = raw.indexOf('\n');
@@ -196,7 +198,7 @@ export const parseRaw = (
         raw = raw.slice(idx + 1);
     }
     const ast = parseFile(raw);
-    const [file, tctx] = ctx.ToTast.File(fixComments(ast), ctx);
+    const [file, tctx] = fileToTast(fixComments(ast), ctx, analyze);
     return [file, tctx as FullContext];
 };
 
@@ -287,7 +289,7 @@ export function runFixture(
     let ctx2 = baseCtx.clone();
     loadBuiltins(builtins, ctx2);
     try {
-        [outputTast, ctx2] = parseRaw(output, ctx2);
+        [outputTast, ctx2] = parseRaw(output, ctx2, false);
     } catch (err) {
         console.log(output);
         console.log(err);

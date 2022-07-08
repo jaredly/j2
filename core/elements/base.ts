@@ -58,39 +58,43 @@ export const typeToplevel = (t: p.TypeAlias, ctx: Ctx): Toplevel => {
     };
 };
 
-export const ToTast = {
-    File({ toplevels, loc, comments }: p.File, ctx: Ctx): [t.File, Ctx] {
-        // Do we forbid toplevel expressions from having a value?
-        // I don't see why we would.
-        // We might forbid them from having outstanding effects though.
-        // deal with that when it comes
-        let parsed = toplevels.map((t) => {
+export const fileToTast = (
+    { toplevels, loc, comments }: p.File,
+    ctx: Ctx,
+    analyze = true,
+): [t.File, Ctx] => {
+    // Do we forbid toplevel expressions from having a value?
+    // I don't see why we would.
+    // We might forbid them from having outstanding effects though.
+    // deal with that when it comes
+    let parsed = toplevels.map((t) => {
+        ctx.resetSym();
+        let config: null | Toplevel = null;
+        if (t.type === 'TypeAlias') {
+            config = typeToplevel(t, ctx);
+            // Need to reset again, so the args get the same syms
+            // when we parse them again
             ctx.resetSym();
-            let config: null | Toplevel = null;
-            if (t.type === 'TypeAlias') {
-                config = typeToplevel(t, ctx);
-                // Need to reset again, so the args get the same syms
-                // when we parse them again
-                ctx.resetSym();
-            }
-            ctx = ctx.toplevelConfig(config);
-            let top = ctx.ToTast.Toplevel(t as any, ctx);
-            if (top.type === 'TypeAlias') {
-                ctx = ctx.withTypes(top.elements);
-            }
-            return analyzeTop(top, ctx);
-        });
-        return [
-            {
-                type: 'File',
-                toplevels: parsed,
-                comments,
-                loc,
-            },
-            ctx,
-        ];
-    },
+        }
+        ctx = ctx.toplevelConfig(config);
+        let top = ctx.ToTast.Toplevel(t as any, ctx);
+        if (top.type === 'TypeAlias') {
+            ctx = ctx.withTypes(top.elements);
+        }
+        return analyze ? analyzeTop(top, ctx) : top;
+    });
+    return [
+        {
+            type: 'File',
+            toplevels: parsed,
+            comments,
+            loc,
+        },
+        ctx,
+    ];
+};
 
+export const ToTast = {
     Toplevel(top: p.Toplevel, ctx: Ctx): t.Toplevel {
         if (top.type === 'TypeAlias') {
             return ctx.ToTast.TypeAlias(top, ctx);
