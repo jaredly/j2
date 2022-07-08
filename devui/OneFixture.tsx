@@ -7,6 +7,7 @@ import {
     Builtin,
     Fixture,
     FixtureResult,
+    loadBuiltins,
     runFixture,
     splitAliases,
 } from '../core/typing/__test__/fixture-utils';
@@ -34,6 +35,12 @@ export function OneFixture({
     const [editing, setEditing] = React.useState(null as null | string);
 
     const prevOutput = output_expected ? output_expected : output_failed;
+
+    const loadedCtx = React.useMemo(() => {
+        const cloned = ctx.clone();
+        loadBuiltins(fixture.builtins, cloned);
+        return cloned;
+    }, [fixture.builtins, ctx]);
 
     const newOutput = React.useMemo(():
         | { type: 'error'; error: Error }
@@ -227,6 +234,7 @@ export function OneFixture({
                     <Editor
                         text={editing ?? input}
                         onChange={setEditing}
+                        ctx={loadedCtx}
                         onBlur={(input) => {
                             setEditing(null);
                             if (

@@ -10,6 +10,7 @@ import * as tt from '../core/transform-tast';
 import { File, Loc, refHash, Type } from '../core/typed-ast';
 import { getType } from '../core/typing/getType';
 import { printCtx } from '../core/typing/to-ast';
+import { markUpTree, Tree as TreeT } from './markUpTree';
 
 export const colors: {
     [key in keyof Visitor<null>]: string;
@@ -29,6 +30,21 @@ export const colors: {
     TemplateWrap: 'yellow',
 };
 
+export const highlightLocations = (text: string) => {
+    try {
+        const ast = parseFile(text);
+        const locs: Array<{ loc: Loc; type: string }> = [];
+        ast.comments.forEach(([loc, _]) => {
+            locs.push({ loc, type: 'comment' });
+        });
+        transformFile(ast, visitor, locs);
+        return locs;
+    } catch (err) {
+        console.error(err);
+        return null;
+    }
+};
+
 export const Highlight = ({
     text,
     info,
@@ -40,27 +56,14 @@ export const Highlight = ({
     portal: HTMLDivElement;
     onClick?: () => void;
 }) => {
-    const parsed = React.useMemo(() => {
-        try {
-            if (text.startsWith('alias ')) {
-                text = text.slice(text.indexOf('\n') + 1);
-            }
-            const ast = parseFile(text);
-            const locs: Array<{ loc: Loc; type: string }> = [];
-            ast.comments.forEach(([loc, _]) => {
-                locs.push({ loc, type: 'comment' });
-            });
-            transformFile(ast, visitor, locs);
-            return locs;
-        } catch (err) {
-            console.error(err);
-            return null;
-        }
-    }, [text]);
+    if (text.startsWith('alias ')) {
+        text = text.slice(text.indexOf('\n') + 1);
+    }
 
     const marked = React.useMemo(() => {
-        return parsed && text.trim().length ? markUpTree(text, parsed) : null;
-    }, [parsed]);
+        const locs = highlightLocations(text);
+        return locs && text.trim().length ? markUpTree(text, locs) : null;
+    }, [text]);
 
     const annotations = React.useMemo(
         () => (info ? collectAnnotations(info.tast, info.ctx) : []),
@@ -171,65 +174,11 @@ AllTaggedTypeNames.forEach((name) => {
     };
 });
 
-type Tree = { type: 'tree'; kind: string; children: (Tree | Leaf)[] };
-type Leaf = { type: 'leaf'; span: [number, number]; text: string };
-
-const markUpTree = (text: string, locs: Array<{ loc: Loc; type: string }>) => {
-    const points = sortLocs(locs);
-    let pos = 0;
-    let top: Tree = { type: 'tree', children: [], kind: '' };
-    let stack: Tree[] = [top];
-    points.forEach(({ at, starts, ends }) => {
-        if (at > pos) {
-            stack[0].children.push({
-                type: 'leaf',
-                text: text.slice(pos, at),
-                span: [pos, at],
-            });
-        }
-        ends.forEach(() => {
-            stack.shift();
-        });
-        starts.forEach(({ type }) => {
-            const next: Tree = { type: 'tree', children: [], kind: type };
-            stack[0].children.push(next);
-            stack.unshift(next);
-            // const color = colors[type as keyof Visitor<null>];
-            // res += `<span class="${type}" style="color: ${color ?? '#aaa'}">`;
-        });
-
-        pos = at;
-    });
-    return top;
-};
-// const markUp = (text: string, locs: Array<{ loc: Loc; type: string }>) => {
-//     const points = sortLocs(locs);
-//     let pos = 0;
-//     let res = '';
-//     points.forEach(({ at, starts, ends }) => {
-//         if (at > pos) {
-//             res += `<span data-span="${pos}:${at}">${text.slice(
-//                 pos,
-//                 at,
-//             )}</span>`;
-//         }
-//         ends.forEach(({ type }) => {
-//             res += `</span>`;
-//         });
-//         starts.forEach(({ type }) => {
-//             const color = colors[type as keyof Visitor<null>];
-//             res += `<span class="${type}" style="color: ${color ?? '#aaa'}">`;
-//         });
-//         pos = at;
-//     });
-//     return res;
-// };
-
 export const Tree = ({
     tree,
     hover,
 }: {
-    tree: Tree;
+    tree: TreeT;
     hover: null | [number, number];
 }) => {
     return (
@@ -264,38 +213,6 @@ export const Tree = ({
         </span>
     );
 };
-
-export function sortLocs(locs: { loc: Loc; type: string }[]) {
-    let points: {
-        at: number;
-        starts: { type: string; size: number }[];
-        ends: { type: string; size: number }[];
-    }[] = [];
-    locs.forEach(({ loc, type }) => {
-        const size = loc.end.offset - loc.start.offset;
-        let sp =
-            points[loc.start.offset] ??
-            (points[loc.start.offset] = {
-                starts: [],
-                ends: [],
-                at: loc.start.offset,
-            });
-        sp.starts.push({ type, size });
-        let ep =
-            points[loc.end.offset] ??
-            (points[loc.end.offset] = {
-                starts: [],
-                ends: [],
-                at: loc.end.offset,
-            });
-        ep.ends.push({ type, size });
-    });
-    points.forEach(({ starts, ends }) => {
-        starts.sort((a, b) => b.size - a.size); // starts bigggest first
-        ends.sort((a, b) => a.size - b.size);
-    });
-    return points;
-}
 
 export const typeToString = (t: Type, ctx: FullContext) => {
     const actx = printCtx(ctx, false);
