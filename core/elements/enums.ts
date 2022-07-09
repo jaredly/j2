@@ -38,11 +38,6 @@ export type EnumCase = {
 
 export const ToTast = {
     TEnum(t: p.TEnum, ctx: TCtx): TEnum {
-        console.log(
-            'en',
-            t.loc.start.line,
-            t.cases?.items.some((m) => typeof m === 'string'),
-        );
         return {
             type: 'TEnum',
             open: t.cases?.items.some((m) => typeof m === 'string') ?? false,

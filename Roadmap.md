@@ -1,4 +1,32 @@
 
+# Now that typetests are working:
+
+- let's do a bunch of expression stuff?
+	- lambda, if, and binops
+	- that'll get me far enough that I can do interesting
+		recursive functions with interesting type math.
+
+	- then I can do `switch`
+	- and like effects idk
+
+	- we'll need ToIR
+
+IR does the following:
+- control flow as statements, not expressions
+	- switches as ifs
+- CPS transform of effects
+- monomorphise? maybe? but like not necessarily completely.
+	hm.
+
+
+
+
+
+
+
+
+#
+
 - [x] get highlighting working in the editor!
 	- [x] indicate parser error location, could be fun
 		- would that be a 'zero-length span'? yeah looks like that would work
@@ -19,8 +47,6 @@
 	- and .test
 	- seems like "listing" all of them at once makes sense?
 		but why would I do things that make sense lol
-
-- [ ] can we do wavy underlines as well?
 
 - [x] so there's something ... that I need to change about
 	writing & loading aliases
@@ -105,8 +131,8 @@ and
 
 
 - [x] ok folks, local fixture-level builtins
-- [ ] enum typeMatches
-- [ ] "open" enums ("*" or "..."). Does it make sense to have them, when a type vbl would work?
+- [x] enum typeMatches
+- [x] "open" enums ("*" or "..."). Does it make sense to have them, when a type vbl would work?
 	`<T>(x: [ ``What | T ]) => int`
 	problem here: that `T` needs a `bound`... like `[...]`. But then the question is, do we allow
 	that syntax in general?
@@ -147,9 +173,9 @@ What parts of the code have gotten ungainly?
 - [x] WAIT need to be able to reject fixtures. or like. mark them as "pending"?	
 	like there is a difference. "under construction". maybe the triangle warning icon
 - [x] recursive types!
-	- [ ] so, hm, I should ... know the 'kind' of the type. yeah.
-- [ ] analyze/validate enum types, and enum expressions
-- [ ] typeMatches for enums
+	- [x] so, hm, I should ... know the 'kind' of the type. yeah.
+- [x] analyze/validate enum types, and enum expressions
+- [x] typeMatches for enums
 
 
 
@@ -165,7 +191,7 @@ Ok what Im doing now:
 - [x] pin
 - [x] TYPE ARITHMATIC
 	- [x] hm 10 <- 5 + 5
-- [ ] then enums? Could be fun. At that point recursive types make sense.
+- [x] then enums? Could be fun. At that point recursive types make sense.
 - [ ] records! and tuples. do we decide that tuples are just records with numbers for attributes? might as well
 - [ ] ok eventually I have to do control structures. and, like ,lambdas
 
@@ -175,7 +201,7 @@ Ok what Im doing now:
 
 
 - [-] type aliases! 
-	- [ ] And let's make sure that mutually recursive types work
+	- [x] And let's make sure that mutually recursive types work
 	- Can I even do those without records yet? No idea. like, functions seem weird
 ```ts
 type X = () => Y

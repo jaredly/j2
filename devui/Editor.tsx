@@ -220,12 +220,17 @@ export const Editor = ({
     );
 };
 
-export const openSpan = (kind: Colorable) =>
-    `<span class="${kind}" style="color: ${colors[kind] ?? '#aaa'}${
-        kind === 'Error'
-            ? '; text-decoration: underline; text-decoration-style: wavy'
+export const openSpan = (hl: HL) =>
+    `<span class="${hl.type}" style="color: ${colors[hl.type] ?? '#aaa'}${
+        hl.underline
+            ? '; text-decoration: underline; text-decoration-style: wavy; text-decoration-color: ' +
+              hl.underline
             : ''
-    }">`;
+    }"${hl.prefix ? ` data-prefix="${hl.prefix.text}"` : ''}${
+        hl.prefix?.message
+            ? ` data-message="${hl.prefix.message}" title="${hl.prefix.message}"`
+            : ''
+    }>`;
 
 export const treeToHtmlLines = (tree: Tree) => {
     return `<div>${treeToHtmlLinesInner(tree, [])}</div>`;
@@ -238,9 +243,9 @@ export const escapeLine = (line: string) => {
         .replace(/>/g, '&gt;');
 };
 
-export const treeToHtmlLinesInner = (tree: Tree, path: Colorable[]): string => {
+export const treeToHtmlLinesInner = (tree: Tree, path: HL[]): string => {
     // ohhh how do I deal with opening lines and closing ones
-    return `${openSpan(tree.kind)}${tree.children
+    return `${openSpan(tree.hl)}${tree.children
         .map((child, i) =>
             child.type === 'leaf'
                 ? `<span data-span="${child.span[0]}:${
@@ -253,7 +258,7 @@ export const treeToHtmlLinesInner = (tree: Tree, path: Colorable[]): string => {
                               '</div><div>' +
                               path.map(openSpan).join(''),
                       )}</span>`
-                : treeToHtmlLinesInner(child, path.concat([tree.kind])),
+                : treeToHtmlLinesInner(child, path.concat([tree.hl])),
         )
         .join('')}</span>`;
 };

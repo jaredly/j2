@@ -1,12 +1,17 @@
+import { noloc } from '../core/ctx';
 import { Loc } from '../core/typed-ast';
-import { Colorable } from './Highlight';
+import { Colorable, HL } from './Highlight';
 
-export type MarkupLoc = { loc: Loc; type: Colorable };
+export type MarkupLoc = HL;
 
 export const markUpTree = (text: string, locs: Array<MarkupLoc>): Tree => {
     const points = sortLocs(locs);
     let pos = 0;
-    let top: Tree = { type: 'tree', children: [], kind: 'File' };
+    let top: Tree = {
+        type: 'tree',
+        children: [],
+        hl: { type: 'File', loc: noloc },
+    };
     let stack: Tree[] = [top];
     points.forEach(({ at, starts, ends }) => {
         if (at > pos && stack.length) {
@@ -20,8 +25,8 @@ export const markUpTree = (text: string, locs: Array<MarkupLoc>): Tree => {
             stack.shift();
         });
         if (stack.length) {
-            starts.forEach(({ type }) => {
-                const next: Tree = { type: 'tree', children: [], kind: type };
+            starts.forEach(({ hl }) => {
+                const next: Tree = { type: 'tree', children: [], hl };
                 stack[0].children.push(next);
                 stack.unshift(next);
             });
@@ -32,16 +37,17 @@ export const markUpTree = (text: string, locs: Array<MarkupLoc>): Tree => {
     return top;
 };
 
-export type Tree = { type: 'tree'; kind: Colorable; children: (Tree | Leaf)[] };
+export type Tree = { type: 'tree'; hl: HL; children: (Tree | Leaf)[] };
 export type Leaf = { type: 'leaf'; span: [number, number]; text: string };
 
-export function sortLocs(locs: { loc: Loc; type: Colorable }[]) {
+export function sortLocs(locs: HL[]) {
     let points: {
         at: number;
-        starts: { type: Colorable; size: number }[];
-        ends: { type: Colorable; size: number }[];
+        starts: { hl: HL; size: number }[];
+        ends: { hl: HL; size: number }[];
     }[] = [];
-    locs.forEach(({ loc, type }) => {
+    locs.forEach((hl) => {
+        const { loc } = hl;
         const size = loc.end.offset - loc.start.offset;
         let sp =
             points[loc.start.offset] ??
@@ -50,7 +56,7 @@ export function sortLocs(locs: { loc: Loc; type: Colorable }[]) {
                 ends: [],
                 at: loc.start.offset,
             });
-        sp.starts.push({ type, size });
+        sp.starts.push({ hl, size });
         let ep =
             points[loc.end.offset] ??
             (points[loc.end.offset] = {
@@ -58,7 +64,7 @@ export function sortLocs(locs: { loc: Loc; type: Colorable }[]) {
                 ends: [],
                 at: loc.end.offset,
             });
-        ep.ends.push({ type, size });
+        ep.ends.push({ hl, size });
     });
     points.forEach(({ starts, ends }) => {
         starts.sort((a, b) => b.size - a.size); // starts bigggest first

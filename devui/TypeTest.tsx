@@ -62,11 +62,27 @@ export const TypeTestView = ({
                                 return [];
                             }
                             const results = runTypeTest(v);
-                            return results.statuses
-                                .filter((x) => x.text != null)
-                                .map((status) => {
-                                    return { loc: status.loc, type: 'Error' };
-                                });
+                            return results.statuses.map((status) => {
+                                if (status.text) {
+                                    return {
+                                        loc: status.loc,
+                                        type: 'Error',
+                                        prefix: {
+                                            text: `🚨`,
+                                            message: status.text,
+                                        },
+                                        underline: 'red',
+                                    };
+                                } else {
+                                    return {
+                                        type: 'Success',
+                                        loc: status.loc,
+                                        prefix: {
+                                            text: `✅`,
+                                        },
+                                    };
+                                }
+                            });
                         }}
                         onBlur={(text) => {
                             try {

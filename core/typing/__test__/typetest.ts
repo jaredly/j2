@@ -95,6 +95,9 @@ export const runTypeTest = (ast: TypeFile): TypeTest => {
             if (type.type === 'TDecorated') {
                 const inner = type.inner;
                 type.decorators.forEach((d) => {
+                    if (d.id.ref.type !== 'Global') {
+                        return;
+                    }
                     const hash = idToString((d.id.ref as t.GlobalRef).id);
                     if (assertById[hash]) {
                         const msg = assertById[hash](
@@ -106,7 +109,7 @@ export const runTypeTest = (ast: TypeFile): TypeTest => {
                     }
                 });
             } else {
-                throw new Error('Not decorated?' + type.type);
+                // throw new Error('Not decorated?' + type.type);
             }
         }
     });

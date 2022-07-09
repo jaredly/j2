@@ -18,7 +18,7 @@ import { printCtx } from '../core/typing/to-ast';
 import { markUpTree, Tree as TreeT } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
 
-export type Colorable = keyof Visitor<null> | 'Error';
+export type Colorable = keyof Visitor<null> | 'Error' | 'Success';
 
 export const colors: {
     [key in Colorable]?: string;
@@ -36,12 +36,18 @@ export const colors: {
     Decorator: 'orange',
     DecoratorId: '#ffbf88',
     TemplateWrap: 'yellow',
-    Error: 'red',
+    // Error: 'red',
+    // Success: 'green',
 };
 
 const n = (n: number): Loc['start'] => ({ ...noloc.start, offset: n });
 
-export type HL = { loc: Loc; type: Colorable };
+export type HL = {
+    loc: Loc;
+    type: Colorable;
+    prefix?: { text: string; message?: string };
+    underline?: string;
+};
 
 export const highlightLocations = (
     text: string,
@@ -71,6 +77,9 @@ export const highlightLocations = (
         }
         return locs;
     } catch (err) {
+        if (!(err as SyntaxError).location) {
+            throw err;
+        }
         return [
             { loc: { start: n(0), end: n(text.length), idx: 0 }, type: 'File' },
             {
@@ -226,9 +235,9 @@ export const Tree = ({
 }) => {
     return (
         <span
-            className={tree.kind}
+            className={tree.hl.type}
             style={{
-                color: colors[tree.kind as keyof Visitor<null>] ?? '#aaa',
+                color: colors[tree.hl.type] ?? '#aaa',
             }}
         >
             {tree.children.map((child, i) =>
