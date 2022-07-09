@@ -5,11 +5,14 @@ import { printCtx } from '../core/typing/to-ast';
 import { newPPCtx } from '../core/printer/to-pp';
 import { injectComments } from '../core/elements/comments';
 import { printToString } from '../core/printer/pp';
+import { Card } from '@nextui-org/react';
 
 export const TypeTestView = ({
     test,
     onChange,
+    name,
 }: {
+    name: string;
     test: TypeTest;
     onChange: (v: TypeTest) => void;
 }) => {
@@ -21,7 +24,7 @@ export const TypeTestView = ({
             pctx.ToPP.TypeFile(ast, pctx),
             ast.comments.slice(),
         );
-        return printToString(pp, 100);
+        return printToString(pp, 100).replace(/[ \t]+$/gm, '');
     });
 
     return (
@@ -34,19 +37,39 @@ export const TypeTestView = ({
                 flex: 1,
             }}
         >
-            <Editor
-                typeFile
-                text={text}
-                ctx={test.ctx}
-                onBlur={(text) => {
-                    try {
-                        onChange(runTypeTest(text));
-                    } catch (err) {
-                        //
-                    }
+            <Card
+                variant={'bordered'}
+                css={{
+                    position: 'relative',
+                    borderRadius: 3,
                 }}
-                onChange={(text) => setText(text)}
-            />
+            >
+                <Card.Body
+                    css={{
+                        display: 'flex',
+                        fontFamily: '$mono',
+                        fontWeight: '$light',
+                    }}
+                >
+                    <Editor
+                        typeFile
+                        text={text}
+                        ctx={test.ctx}
+                        onBlur={(text) => {
+                            try {
+                                onChange(runTypeTest(text));
+                                fetch(`/elements/typetest/${name}`, {
+                                    method: 'POST',
+                                    body: text,
+                                });
+                            } catch (err) {
+                                //
+                            }
+                        }}
+                        onChange={(text) => setText(text)}
+                    />
+                </Card.Body>
+            </Card>
         </div>
     );
 };

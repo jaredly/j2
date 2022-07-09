@@ -303,6 +303,7 @@ export const App = () => {
                 />
             ) : files.typetest[hashName] ? (
                 <TypeTestView
+                    name={hashName}
                     key={hashName}
                     test={files.typetest[hashName]}
                     onChange={(data) => {

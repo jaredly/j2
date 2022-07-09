@@ -1,16 +1,14 @@
-
-@type:shouldMatch(:[`Hi]) [ `Hi ]
+@type:shouldMatch(:[ `Hi ]) [ `Hi ]
 
 @type:shouldNotMatch(:[ `One ])
-@type:shouldMatch(:[ `One | `Two ])
-[ `Two ]
+@type:shouldMatch(:[ `One | `Two ]) [ `Two ]
 
 @type:shouldMatch(:[ `One | `Two ])
-@type:shouldNotMatch(:[ `One ])
-[ `One | `Two ]
+@type:shouldNotMatch(:[ `One ]) [ `One | `Two ]
 
 @type:shouldNotMatch(:[ `Hi(int) ]) [ `Hi(float) ]
-@type:shouldMatch(:[ `Hi(int) ]) ((<T>[ `Hi(T) ])<int>)
+
+@type:shouldMatch(:[ `Hi(int) ]) (<T#[0]>[ `Hi(T#[0]) ])<int>
 
 // @type:shouldNotMatch(:[ `One | `Two ]) [ `Two | * ]
 // @type:shouldMatch(:[ `One | * ]) [ `One | `Two ]
