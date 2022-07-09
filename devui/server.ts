@@ -1,3 +1,4 @@
+import path from 'path';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { createServer, request } from 'http';
 import { createServer as vite } from 'vite';
@@ -9,19 +10,19 @@ import { createServer as vite } from 'vite';
     createServer((req, res) => {
         // OK so now we do the:
         // "read this if you can"
-        if (req.url?.startsWith('/element/')) {
-            if (req.url === '/element/') {
+        if (req.url?.startsWith('/elements/')) {
+            if (req.url.endsWith('/') && !req.url.includes('..')) {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
+                const at = path.join('./core/', req.url.slice(1, -1));
+                console.log(at);
                 return res.end(
                     JSON.stringify(
-                        readdirSync('./core/elements').filter((t) =>
-                            t.endsWith('.jd'),
-                        ),
+                        readdirSync(at).filter((t) => t.endsWith('.jd')),
                     ),
                 );
             }
-            const element = req.url.slice('/element/'.length);
-            if (!element.endsWith('.jd') || element.includes('/')) {
+            const element: string = req.url.slice('/elements/'.length);
+            if (!element.endsWith('.jd') || element.includes('..')) {
                 res.writeHead(400, { 'Content-Type': 'text/plain' });
                 return res.end('Invalid element name');
             }

@@ -88,12 +88,12 @@ readdirSync(base)
             });
 
             ast.toplevels.forEach((t) => {
-                // ctx.resetSym();
+                ctx.resetSym();
 
                 if (t.type === 'TypeAlias') {
                     // Need to reset again, so the args get the same syms
                     // when we parse them again
-                    // ctx.resetSym();
+                    ctx.resetSym();
                     ctx = ctx.toplevelConfig(
                         typeToplevel(t, ctx),
                     ) as FullContext;

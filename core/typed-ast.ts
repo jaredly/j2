@@ -68,6 +68,13 @@ export type File = {
     loc: Loc;
 };
 
+export type TypeFile = {
+    type: 'TypeFile';
+    toplevels: Array<Type | TypeAlias>;
+    comments: Array<[Loc, string]>;
+    loc: Loc;
+};
+
 export type UnresolvedRef = {
     type: 'Unresolved';
     text: string;

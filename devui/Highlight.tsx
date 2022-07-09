@@ -1,12 +1,16 @@
 import { Card, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { SyntaxError } from '../core/grammar/base.parser';
+import { parseTypeFile, SyntaxError } from '../core/grammar/base.parser';
 import { FullContext, noloc } from '../core/ctx';
 import { AllTaggedTypeNames, parseFile } from '../core/grammar/base.parser';
 import { printToString } from '../core/printer/pp';
 import { newPPCtx } from '../core/printer/to-pp';
-import { transformFile, Visitor } from '../core/transform-ast';
+import {
+    transformFile,
+    transformTypeFile,
+    Visitor,
+} from '../core/transform-ast';
 import * as tt from '../core/transform-tast';
 import { File, Loc, refHash, Type } from '../core/typed-ast';
 import { getType } from '../core/typing/getType';
@@ -38,6 +42,7 @@ const n = (n: number): Loc['start'] => ({ ...noloc.start, offset: n });
 
 export const highlightLocations = (
     text: string,
+    typeFile = false,
 ): { loc: Loc; type: Colorable }[] => {
     if (text.length < -1) {
         return [
@@ -57,13 +62,20 @@ export const highlightLocations = (
         ];
     }
     try {
-        const ast = parseFile(text);
         const locs: Array<{ loc: Loc; type: keyof Visitor<null> }> = [];
-        ast.comments.forEach(([loc, _]) => {
-            locs.push({ loc, type: 'comment' });
-        });
-        transformFile(ast, visitor, locs);
-        // console.log(locs);
+        if (typeFile) {
+            const ast = parseTypeFile(text);
+            ast.comments.forEach(([loc, _]) => {
+                locs.push({ loc, type: 'comment' });
+            });
+            transformTypeFile(ast, visitor, locs);
+        } else {
+            const ast = parseFile(text);
+            ast.comments.forEach(([loc, _]) => {
+                locs.push({ loc, type: 'comment' });
+            });
+            transformFile(ast, visitor, locs);
+        }
         return locs;
     } catch (err) {
         return [
@@ -86,18 +98,20 @@ export const Highlight = ({
     info,
     portal,
     onClick,
+    typeFile,
 }: {
     text: string;
     info?: { tast: File; ctx: FullContext };
     portal: HTMLDivElement;
     onClick?: () => void;
+    typeFile?: boolean;
 }) => {
     if (text.startsWith('alias ')) {
         text = text.slice(text.indexOf('\n') + 1);
     }
 
     const marked = React.useMemo(() => {
-        const locs = highlightLocations(text);
+        const locs = highlightLocations(text, typeFile);
         return text.trim().length ? markUpTree(text, locs) : null;
     }, [text]);
 

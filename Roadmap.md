@@ -8,10 +8,17 @@
 	- [x] undo/redo now have to be done manually!
 		- let's slap something together
 			it's ridiculous not to be able to undo
-	- [ ] can we do wavy underlines as well?
-- [ ] then get .typetest files going in the UI
-	- and .test
 
+- [ ] then get .typetest files going in the UI
+	- [x] TypeFile (to-tast to-ast to-pp)
+	- [ ] (string) => TypeTest
+	- [ ] show in the UI
+	- [ ] editor! with squigglies for failures
+	- and .test
+	- seems like "listing" all of them at once makes sense?
+		but why would I do things that make sense lol
+
+- [ ] can we do wavy underlines as well?
 
 - [x] so there's something ... that I need to change about
 	writing & loading aliases

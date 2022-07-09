@@ -2,7 +2,12 @@ import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
-import { analyze, analyzeTop, Ctx as ACtx } from '../typing/analyze';
+import {
+    analyze,
+    analyzeTop,
+    analyzeTypeTop,
+    Ctx as ACtx,
+} from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx, Toplevel, TopTypeKind } from '../typing/to-tast';
 
@@ -58,22 +63,46 @@ export const typeToplevel = (t: p.TypeAlias, ctx: Ctx): Toplevel => {
     };
 };
 
-export const fileToTast = (
-    { toplevels, loc, comments }: p.File,
+export const typeFileToTast = (
+    { toplevels, loc, comments }: p.TypeFile,
     ctx: Ctx,
     analyze = true,
-): [t.File, Ctx] => {
-    // Do we forbid toplevel expressions from having a value?
-    // I don't see why we would.
-    // We might forbid them from having outstanding effects though.
-    // deal with that when it comes
+): [t.TypeFile, Ctx] => {
     let parsed = toplevels.map((t) => {
         ctx.resetSym();
         let config: null | Toplevel = null;
         if (t.type === 'TypeAlias') {
             config = typeToplevel(t, ctx);
-            // Need to reset again, so the args get the same syms
-            // when we parse them again
+            ctx.resetSym();
+        }
+        ctx = ctx.toplevelConfig(config);
+        let top = ctx.ToTast.TypeToplevel(t as any, ctx);
+        if (top.type === 'TypeAlias') {
+            ctx = ctx.withTypes(top.elements);
+        }
+        return analyze ? analyzeTypeTop(top, ctx) : top;
+    });
+    return [
+        {
+            type: 'TypeFile',
+            toplevels: parsed,
+            comments,
+            loc,
+        },
+        ctx,
+    ];
+};
+
+export const fileToTast = (
+    { toplevels, loc, comments }: p.File,
+    ctx: Ctx,
+    analyze = true,
+): [t.File, Ctx] => {
+    let parsed = toplevels.map((t) => {
+        ctx.resetSym();
+        let config: null | Toplevel = null;
+        if (t.type === 'TypeAlias') {
+            config = typeToplevel(t, ctx);
             ctx.resetSym();
         }
         ctx = ctx.toplevelConfig(config);
@@ -104,6 +133,13 @@ export const ToTast = {
                 expr: ctx.ToTast[top.type](top as any, ctx),
                 loc: top.loc,
             };
+        }
+    },
+    TypeToplevel(top: p.TypeAlias | p.Type, ctx: Ctx): t.Type | t.TypeAlias {
+        if (top.type === 'TypeAlias') {
+            return ctx.ToTast.TypeAlias(top, ctx);
+        } else {
+            return ctx.ToTast[top.type](top as any, ctx);
         }
     },
     ParenedExpression(expr: p.ParenedExpression, ctx: Ctx): t.Expression {
@@ -153,6 +189,27 @@ export const ToAst = {
             comments,
         };
     },
+
+    TypeFile(
+        { type, toplevels, loc, comments }: t.TypeFile,
+        ctx: TACtx,
+    ): p.TypeFile {
+        // TOOD: Go through and find all hashes, right?
+        // maybe when printing unresolved things, put `#[:unresolved:]` or something?
+        return {
+            type,
+            toplevels: toplevels.map((t) => {
+                let inner = ctx;
+                if (t.type === 'TypeAlias') {
+                    inner = ctx.withToplevel(typeToplevelT(t, ctx.actx));
+                }
+                return inner.ToAst[t.type](t as any, inner);
+            }),
+            loc,
+            comments,
+        };
+    },
+
     ToplevelExpression(
         { type, expr, loc }: t.ToplevelExpression,
         ctx: TACtx,
@@ -178,6 +235,18 @@ export const ToPP = {
     File: (file: p.File, ctx: PCtx): pp.PP => {
         return pp.items(
             file.toplevels.map((t) => ctx.ToPP[t.type](t as any, ctx)),
+            file.loc,
+            'always',
+        );
+    },
+    TypeFile: (file: p.TypeFile, ctx: PCtx): pp.PP => {
+        return pp.items(
+            file.toplevels.map((t) =>
+                pp.items(
+                    [ctx.ToPP[t.type](t as any, ctx), pp.text('\n', file.loc)],
+                    t.loc,
+                ),
+            ),
             file.loc,
             'always',
         );

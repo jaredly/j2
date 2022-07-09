@@ -3,7 +3,12 @@
 // Should I separate the two steps? idk.
 
 import { ErrorTag, FullContext, GlobalType, GlobalValue, noloc } from '../ctx';
-import { transformFile, transformToplevel } from '../transform-tast';
+import {
+    transformFile,
+    transformToplevel,
+    transformType,
+    transformTypeAlias,
+} from '../transform-tast';
 import {
     DecoratedExpression,
     Decorator,
@@ -14,6 +19,7 @@ import {
     Toplevel,
     TVar,
     Type,
+    TypeAlias,
 } from '../typed-ast';
 import { extract, Id, idsEqual, idToString } from '../ids';
 import { Ctx as TMCtx } from './typeMatches';
@@ -142,6 +148,17 @@ export const decorate = (
         expr,
         loc: expr.loc,
     };
+};
+
+export const analyzeTypeTop = (
+    ast: TypeAlias | Type,
+    ctx: Ctx,
+): TypeAlias | Type => {
+    if (ast.type === 'TypeAlias') {
+        return transformTypeAlias(ast, analyzeVisitor(), { ctx, hit: {} });
+    } else {
+        return transformType(ast, analyzeVisitor(), { ctx, hit: {} });
+    }
 };
 
 export const analyzeTop = (ast: Toplevel, ctx: Ctx): Toplevel => {

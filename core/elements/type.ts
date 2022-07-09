@@ -313,7 +313,11 @@ export const ToPP = {
     TDecorated({ inner, decorators, loc }: p.TDecorated, ctx: PCtx): pp.PP {
         return pp.items(
             [
-                ...decorators.map((x) => ctx.ToPP[x.type](x as any, ctx)),
+                pp.items(
+                    decorators.map((x) => ctx.ToPP[x.type](x as any, ctx)),
+                    loc,
+                    'always',
+                ),
                 ctx.ToPP[inner.type](inner as any, ctx),
             ],
             loc,

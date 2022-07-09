@@ -10,7 +10,7 @@ export type Ctx = {
     ToPP: ToPP;
 };
 
-export const newPPCtx = (hideIds: boolean): Ctx => ({
+export const newPPCtx = (hideIds?: boolean): Ctx => ({
     // hideIds,
     ToPP: makeToPP(),
 });

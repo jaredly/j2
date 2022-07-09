@@ -209,7 +209,12 @@ export const ToPP = {
         const inn = ctx.ToPP[inner.type](inner as any, ctx);
         return pp.items(
             [
-                ...decorators.map((dec) => ctx.ToPP[dec.type](dec as any, ctx)),
+                pp.items(
+                    decorators.map((dec) =>
+                        ctx.ToPP[dec.type](dec as any, ctx),
+                    ),
+                    loc,
+                ),
                 inn,
             ],
             loc,

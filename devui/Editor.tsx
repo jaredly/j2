@@ -66,11 +66,13 @@ export const Editor = ({
     text,
     onBlur,
     onChange,
+    typeFile,
 }: {
     ctx: FullContext;
     text: string;
     onBlur: (text: string) => void;
     onChange: (v: string) => void;
+    typeFile?: boolean;
 }) => {
     const ref = React.useRef(null as null | HTMLDivElement);
     const [editing, setEditing] = React.useState(false);
@@ -79,7 +81,7 @@ export const Editor = ({
 
     React.useEffect(() => {
         if (getText(ref.current!) !== text) {
-            const locs = highlightLocations(text);
+            const locs = highlightLocations(text, typeFile);
             if (text.length) {
                 setHtmlAndClean(
                     ref.current!,
@@ -132,7 +134,7 @@ export const Editor = ({
                 );
                 prevPos.current = pos;
                 obs.disconnect();
-                const locs = highlightLocations(text);
+                const locs = highlightLocations(text, typeFile);
                 const html = treeToHtmlLines(markUpTree(text, locs));
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, pos);
@@ -156,7 +158,7 @@ export const Editor = ({
                     return;
                 }
                 obs.disconnect();
-                const locs = highlightLocations(entry.text);
+                const locs = highlightLocations(entry.text, typeFile);
                 const html = treeToHtmlLines(markUpTree(entry.text, locs));
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, entry.pos);

@@ -41,7 +41,7 @@ export const FixtureFile = ({
 
     // const [data, setData] = usePromise(
     //     () =>
-    //         fetch(`/element/${name}`)
+    //         fetch(`/elements/${name}`)
     //             .then((res) => res.text())
     //             .then((raw) => {
     //                 last.current = raw;
@@ -58,7 +58,7 @@ export const FixtureFile = ({
             return;
         }
         if (last.current) {
-            fetch(`/element/${name}`, { method: 'POST', body: serialized });
+            fetch(`/elements/${name}`, { method: 'POST', body: serialized });
         }
         last.current = serialized;
     }, [serialized]);
