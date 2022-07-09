@@ -312,6 +312,7 @@ export const typeMatches = (
             }
             const canMap: { [key: string]: EnumCase } = {};
             for (let kase of canEnums) {
+                // Multiple cases with the same name
                 if (canMap[kase.tag]) {
                     return false;
                 }
@@ -319,6 +320,7 @@ export const typeMatches = (
             }
             const expMap: { [key: string]: EnumCase } = {};
             for (let kase of expEnums) {
+                // Multiple cases with the same name
                 if (expMap[kase.tag]) {
                     return false;
                 }
@@ -327,13 +329,22 @@ export const typeMatches = (
 
             for (let kase of canEnums) {
                 if (!expMap[kase.tag]) {
-                    // OR if it's open, it's fine
+                    if (expected.open) {
+                        continue;
+                    }
+                    console.log(
+                        'no extra',
+                        kase.tag,
+                        expected.open,
+                        candidate.open,
+                    );
                     return false;
                 }
                 if (
                     (kase.payload != null) !=
                     (expMap[kase.tag].payload != null)
                 ) {
+                    console.log('payload diff');
                     return false;
                 }
                 if (
@@ -342,6 +353,9 @@ export const typeMatches = (
                 ) {
                     return false;
                 }
+            }
+            if (candidate.open && !expected.open) {
+                return false;
             }
 
             // So, ... we can always allow smaller, right?

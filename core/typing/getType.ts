@@ -93,6 +93,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             return {
                 type: 'TEnum',
                 loc: expr.loc,
+                open: false,
                 cases: [
                     {
                         type: 'EnumCase',

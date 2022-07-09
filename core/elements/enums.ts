@@ -14,16 +14,18 @@ import { Ctx as TCtx } from '../typing/to-tast';
 export const grammar = `
 TEnum = "[" _ cases:EnumCases? _ "]"
 EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"? _
-EnumCase = TagDecl / Type // Star
+EnumCase = TagDecl / Type / Star
 TagDecl = "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
 TagPayload = "(" _ inner:Type _ ")"
+Star = "*"
 
 `;
 
 export type TEnum = {
     type: 'TEnum';
     cases: Array<EnumCase | t.Type>;
+    open: boolean;
     loc: t.Loc;
 };
 
@@ -36,26 +38,37 @@ export type EnumCase = {
 
 export const ToTast = {
     TEnum(t: p.TEnum, ctx: TCtx): TEnum {
+        console.log(
+            'en',
+            t.loc.start.line,
+            t.cases?.items.some((m) => typeof m === 'string'),
+        );
         return {
             type: 'TEnum',
+            open: t.cases?.items.some((m) => typeof m === 'string') ?? false,
             cases:
-                t.cases?.items.map((c) => {
-                    if (c.type === 'TagDecl') {
-                        return {
-                            type: 'EnumCase',
-                            tag: c.text,
-                            payload: c.payload
-                                ? ctx.ToTast[c.payload.inner.type](
-                                      c.payload.inner as any,
-                                      ctx,
-                                  )
-                                : undefined,
-                            loc: c.loc,
-                        };
-                    } else {
-                        return ctx.ToTast[c.type](c as any, ctx);
-                    }
-                }) ?? [],
+                (t.cases?.items
+                    .map((c) => {
+                        if (typeof c === 'string') {
+                            return null;
+                        }
+                        if (c.type === 'TagDecl') {
+                            return {
+                                type: 'EnumCase',
+                                tag: c.text,
+                                payload: c.payload
+                                    ? ctx.ToTast[c.payload.inner.type](
+                                          c.payload.inner as any,
+                                          ctx,
+                                      )
+                                    : undefined,
+                                loc: c.loc,
+                            };
+                        } else {
+                            return ctx.ToTast[c.type](c as any, ctx);
+                        }
+                    })
+                    .filter(Boolean) as EnumCase[]) ?? [],
             loc: t.loc,
         };
     },
@@ -68,27 +81,29 @@ export const ToAst = {
             cases: {
                 type: 'EnumCases',
                 loc: t.loc,
-                items: t.cases.map((c): p.EnumCase | p.Type => {
-                    if (c.type === 'EnumCase') {
-                        return {
-                            type: 'TagDecl',
-                            text: c.tag,
-                            payload: c.payload
-                                ? {
-                                      type: 'TagPayload',
-                                      loc: c.loc,
-                                      inner: ctx.ToAst[c.payload.type](
-                                          c.payload as any,
-                                          ctx,
-                                      ),
-                                  }
-                                : null,
-                            loc: c.loc,
-                        };
-                    } else {
-                        return ctx.ToAst[c.type](c as any, ctx);
-                    }
-                }),
+                items: t.cases
+                    .map((c): p.EnumCase | p.Type => {
+                        if (c.type === 'EnumCase') {
+                            return {
+                                type: 'TagDecl',
+                                text: c.tag,
+                                payload: c.payload
+                                    ? {
+                                          type: 'TagPayload',
+                                          loc: c.loc,
+                                          inner: ctx.ToAst[c.payload.type](
+                                              c.payload as any,
+                                              ctx,
+                                          ),
+                                      }
+                                    : null,
+                                loc: c.loc,
+                            };
+                        } else {
+                            return ctx.ToAst[c.type](c as any, ctx);
+                        }
+                    })
+                    .concat(t.open ? ['*'] : []),
             },
             loc: t.loc,
         };
@@ -102,6 +117,9 @@ export const ToPP = {
                 pp.text('[ ', noloc),
                 ...pp.interleave(
                     t.cases?.items.map((c) => {
+                        if (typeof c === 'string') {
+                            return pp.text(c, noloc);
+                        }
                         if (c.type === 'TagDecl') {
                             return pp.items(
                                 [

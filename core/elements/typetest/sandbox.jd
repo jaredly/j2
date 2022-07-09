@@ -1,0 +1,1 @@
+@type:shouldNotMatch(:[ `One | `Two ]) [ `Two | * ] 

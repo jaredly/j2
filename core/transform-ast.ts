@@ -1,4 +1,5 @@
 import {
+  SyntaxError,
   Loc,
   File,
   Toplevel,
@@ -52,6 +53,7 @@ import {
   EnumCase,
   TagDecl,
   TagPayload,
+  Star,
   TComma,
   TRight,
   TypeFile,
@@ -76,6 +78,11 @@ import {
 } from "./grammar/base.parser";
 
 export type Visitor<Ctx> = {
+  SyntaxError?: (
+    node: SyntaxError,
+    ctx: Ctx
+  ) => null | false | SyntaxError | [SyntaxError | null, Ctx];
+  SyntaxErrorPost?: (node: SyntaxError, ctx: Ctx) => null | SyntaxError;
   Loc?: (node: Loc, ctx: Ctx) => null | false | Loc | [Loc | null, Ctx];
   LocPost?: (node: Loc, ctx: Ctx) => null | Loc;
   File?: (node: File, ctx: Ctx) => null | false | File | [File | null, Ctx];
@@ -312,6 +319,8 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TagPayload | [TagPayload | null, Ctx];
   TagPayloadPost?: (node: TagPayload, ctx: Ctx) => null | TagPayload;
+  Star?: (node: Star, ctx: Ctx) => null | false | Star | [Star | null, Ctx];
+  StarPost?: (node: Star, ctx: Ctx) => null | Star;
   TypeApplicationSuffix?: (
     node: TypeApplicationSuffix,
     ctx: Ctx
@@ -741,6 +750,56 @@ export const transformLoc = <Ctx>(
   node = updatedNode;
   if (visitor.LocPost) {
     const transformed = visitor.LocPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformSyntaxError = <Ctx>(
+  node: SyntaxError,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): SyntaxError => {
+  if (!node) {
+    throw new Error("No SyntaxError provided");
+  }
+
+  const transformed = visitor.SyntaxError
+    ? visitor.SyntaxError(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$location = transformLoc(node.location, visitor, ctx);
+    changed1 = changed1 || updatedNode$location !== node.location;
+    if (changed1) {
+      updatedNode = { ...updatedNode, location: updatedNode$location };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.SyntaxErrorPost) {
+    const transformed = visitor.SyntaxErrorPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }
@@ -3204,6 +3263,43 @@ export const transformTagDecl = <Ctx>(
   return node;
 };
 
+export const transformStar = <Ctx>(
+  node: Star,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Star => {
+  if (!node) {
+    throw new Error("No Star provided");
+  }
+
+  const transformed = visitor.Star ? visitor.Star(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+  const updatedNode = node;
+
+  node = updatedNode;
+  if (visitor.StarPost) {
+    const transformed = visitor.StarPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformEnumCase = <Ctx>(
   node: EnumCase,
   visitor: Visitor<Ctx>,
@@ -3260,10 +3356,70 @@ export const transformEnumCase = <Ctx>(
       break;
     }
 
+    case "TOps": {
+      updatedNode = transformTOps_inner(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TDecorated": {
+      updatedNode = transformTDecorated(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TApply": {
+      updatedNode = transformTApply_inner(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TRef": {
+      updatedNode = transformTRef(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "Number": {
+      updatedNode = transformNumber(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "String": {
+      updatedNode = transformString(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TLambda": {
+      updatedNode = transformTLambda(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TVars": {
+      updatedNode = transformTVars(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TParens": {
+      updatedNode = transformTParens(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TEnum": {
+      updatedNode = transformTEnum(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
     default: {
       // let changed1 = false;
 
-      const updatedNode$0node = transformType(node, visitor, ctx);
+      const updatedNode$0node = transformStar(node, visitor, ctx);
       changed0 = changed0 || updatedNode$0node !== node;
       updatedNode = updatedNode$0node;
     }

@@ -33,6 +33,7 @@ import {
   TOps,
   DecoratedExpression,
   TypeAlias,
+  TypeFile,
   DecoratorDecl,
   TypeVariables,
   TAdd,
@@ -55,6 +56,11 @@ export type Visitor<Ctx> = {
   LocPost?: (node: Loc, ctx: Ctx) => null | Loc;
   File?: (node: File, ctx: Ctx) => null | false | File | [File | null, Ctx];
   FilePost?: (node: File, ctx: Ctx) => null | File;
+  TypeFile?: (
+    node: TypeFile,
+    ctx: Ctx
+  ) => null | false | TypeFile | [TypeFile | null, Ctx];
+  TypeFilePost?: (node: TypeFile, ctx: Ctx) => null | TypeFile;
   UnresolvedRef?: (
     node: UnresolvedRef,
     ctx: Ctx
@@ -2976,6 +2982,95 @@ export const transformFile = <Ctx>(
   node = updatedNode;
   if (visitor.FilePost) {
     const transformed = visitor.FilePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTypeFile = <Ctx>(
+  node: TypeFile,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeFile => {
+  if (!node) {
+    throw new Error("No TypeFile provided");
+  }
+
+  const transformed = visitor.TypeFile ? visitor.TypeFile(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$toplevels = node.toplevels;
+    {
+      let changed2 = false;
+      const arr1 = node.toplevels.map((updatedNode$toplevels$item1) => {
+        let result = updatedNode$toplevels$item1;
+
+        switch (updatedNode$toplevels$item1.type) {
+          case "TypeAlias": {
+            result = transformTypeAlias(
+              updatedNode$toplevels$item1,
+              visitor,
+              ctx
+            );
+            changed2 = changed2 || result !== updatedNode$toplevels$item1;
+            break;
+          }
+
+          default: {
+            // let changed3 = false;
+
+            const result$2node = transformType(
+              updatedNode$toplevels$item1,
+              visitor,
+              ctx
+            );
+            changed2 = changed2 || result$2node !== updatedNode$toplevels$item1;
+            result = result$2node;
+          }
+        }
+        return result;
+      });
+      if (changed2) {
+        updatedNode$toplevels = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        toplevels: updatedNode$toplevels,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeFilePost) {
+    const transformed = visitor.TypeFilePost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }

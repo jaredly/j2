@@ -15,7 +15,7 @@
 	- [x] show in the UI
 	- [x] editor!
 	- [ ] dedup files.test.ts
-	- [ ] with squigglies for failures
+	- [x] with squigglies for failures
 	- and .test
 	- seems like "listing" all of them at once makes sense?
 		but why would I do things that make sense lol

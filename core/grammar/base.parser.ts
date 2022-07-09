@@ -217,7 +217,7 @@ export type EnumCases = {
   items: EnumCase[];
 };
 
-export type EnumCase = TagDecl | Type;
+export type EnumCase = TagDecl | Type | Star;
 
 export type TagDecl = {
   type: "TagDecl";
@@ -231,6 +231,8 @@ export type TagPayload = {
   loc: Loc;
   inner: Type;
 };
+
+export type Star = string;
 
 export type TypeApplicationSuffix = {
   type: "TypeApplicationSuffix";

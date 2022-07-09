@@ -30,6 +30,7 @@ export const assertions = {
             return 'should be a DType';
         }
         const arg = args[0] as t.DType;
+        console.log(inner, arg.typ);
         if (typeMatches(inner, arg.typ, ctx)) {
             return `should not match ${typeToString(arg.typ, ctx)}`;
         }

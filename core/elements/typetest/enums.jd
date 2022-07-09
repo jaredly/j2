@@ -10,6 +10,9 @@
 
 @type:shouldMatch(:[ `Hi(int) ]) (<T#[0]>[ `Hi(T#[0]) ])<int>
 
-// @type:shouldNotMatch(:[ `One | `Two ]) [ `Two | * ]
-// @type:shouldMatch(:[ `One | * ]) [ `One | `Two ]
+@type:shouldNotMatch(:[ `One | `Two ]) [ `Two | * ]
+
+@type:shouldMatch(:[ `One | * ])
+@type:shouldMatch(:[ * ]) [ `One | `Two ]
+
 @type:shouldMatch(:[ `Hi(int) ]) [ `Hi(10) ]

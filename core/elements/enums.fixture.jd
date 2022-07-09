@@ -27,7 +27,7 @@ type z = [`Z]
 type x = [int | `Hello | y | z]
 
 --[output:expected]--
-alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f y=h1b0e8917e6173706d1c1e1863436851ee8877ebb z=h8814ccad96ec30bc8dfe674ddabb1600cdd09d64
+alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f y=h1b0e8917e6173706d1c1e1863436851ee8877ebb z=hb5d906b1c904d6f7c6cc56054ef2fadb9d951d02
 type y = Array<10>
 type z = [ `Z ]
 type x = [ @error:argWrongType() int | `Hello | @error:argWrongType() y | z ]
