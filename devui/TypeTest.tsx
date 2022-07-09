@@ -6,6 +6,8 @@ import { newPPCtx } from '../core/printer/to-pp';
 import { injectComments } from '../core/elements/comments';
 import { printToString } from '../core/printer/pp';
 import { Card } from '@nextui-org/react';
+import { fixComments } from '../core/grammar/fixComments';
+import { parseTypeFile } from '../core/grammar/base.parser';
 
 export const TypeTestView = ({
     test,
@@ -55,9 +57,24 @@ export const TypeTestView = ({
                         typeFile
                         text={text}
                         ctx={test.ctx}
+                        extraLocs={(v) => {
+                            if (v.type === 'File') {
+                                return [];
+                            }
+                            const results = runTypeTest(v);
+                            return results.statuses
+                                .filter((x) => x.text != null)
+                                .map((status) => {
+                                    return { loc: status.loc, type: 'Error' };
+                                });
+                        }}
                         onBlur={(text) => {
                             try {
-                                onChange(runTypeTest(text));
+                                onChange(
+                                    runTypeTest(
+                                        fixComments(parseTypeFile(text)),
+                                    ),
+                                );
                                 fetch(`/elements/typetest/${name}`, {
                                     method: 'POST',
                                     body: text,

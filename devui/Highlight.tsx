@@ -16,6 +16,7 @@ import { File, Loc, refHash, Type } from '../core/typed-ast';
 import { getType } from '../core/typing/getType';
 import { printCtx } from '../core/typing/to-ast';
 import { markUpTree, Tree as TreeT } from './markUpTree';
+import * as p from '../core/grammar/base.parser';
 
 export type Colorable = keyof Visitor<null> | 'Error';
 
@@ -40,41 +41,33 @@ export const colors: {
 
 const n = (n: number): Loc['start'] => ({ ...noloc.start, offset: n });
 
+export type HL = { loc: Loc; type: Colorable };
+
 export const highlightLocations = (
     text: string,
     typeFile = false,
-): { loc: Loc; type: Colorable }[] => {
-    if (text.length < -1) {
-        return [
-            { loc: { start: n(0), end: n(text.length), idx: 0 }, type: 'File' },
-            // {
-            //     loc: { start: n(0), end: n(err.location.start), idx: 0 },
-            //     type: 'error',
-            // },
-            {
-                loc: {
-                    start: n(5),
-                    end: n(text.length),
-                    idx: 0,
-                },
-                type: 'Number',
-            },
-        ];
-    }
+    extraLocs?: (v: p.File | p.TypeFile) => HL[],
+): HL[] => {
     try {
-        const locs: Array<{ loc: Loc; type: keyof Visitor<null> }> = [];
+        const locs: HL[] = [];
         if (typeFile) {
-            const ast = parseTypeFile(text);
+            const ast = p.parseTypeFile(text);
             ast.comments.forEach(([loc, _]) => {
                 locs.push({ loc, type: 'comment' });
             });
             transformTypeFile(ast, visitor, locs);
+            if (extraLocs) {
+                locs.push(...extraLocs(ast));
+            }
         } else {
-            const ast = parseFile(text);
+            const ast = p.parseFile(text);
             ast.comments.forEach(([loc, _]) => {
                 locs.push({ loc, type: 'comment' });
             });
             transformFile(ast, visitor, locs);
+            if (extraLocs) {
+                locs.push(...extraLocs(ast));
+            }
         }
         return locs;
     } catch (err) {

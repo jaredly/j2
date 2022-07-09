@@ -3,6 +3,7 @@ import * as React from 'react';
 import { builtinContext, FullContext } from '../core/ctx';
 import { typeFileToTast } from '../core/elements/base';
 import { parseTypeFile } from '../core/grammar/base.parser';
+import { fixComments } from '../core/grammar/fixComments';
 import { Loc, Type, TypeAlias, TypeFile } from '../core/typed-ast';
 import {
     Builtin,
@@ -185,7 +186,9 @@ export const App = () => {
             });
             const typetestFiles = {} as Files['typetest'];
             typetestContents.forEach((contents, i) => {
-                typetestFiles[typetest[i]] = runTypeTest(contents);
+                typetestFiles[typetest[i]] = runTypeTest(
+                    fixComments(parseTypeFile(contents)),
+                );
             });
             setFiles({ fixtures: files, typetest: typetestFiles });
         });

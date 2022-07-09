@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
 import { Visitor } from '../core/transform-ast';
-import { Colorable, colors, highlightLocations } from './Highlight';
+import { Colorable, colors, highlightLocations, HL } from './Highlight';
 import { markUpTree, Tree } from './markUpTree';
+import * as p from '../core/grammar/base.parser';
 
 export const isAncestor = (child: Node | null, parent: Node) => {
     while (child) {
@@ -67,12 +68,14 @@ export const Editor = ({
     onBlur,
     onChange,
     typeFile,
+    extraLocs,
 }: {
     ctx: FullContext;
     text: string;
     onBlur: (text: string) => void;
     onChange: (v: string) => void;
     typeFile?: boolean;
+    extraLocs?: (v: p.File | p.TypeFile) => HL[];
 }) => {
     const ref = React.useRef(null as null | HTMLDivElement);
     const [editing, setEditing] = React.useState(false);
@@ -81,7 +84,7 @@ export const Editor = ({
 
     React.useEffect(() => {
         if (getText(ref.current!) !== text) {
-            const locs = highlightLocations(text, typeFile);
+            const locs = highlightLocations(text, typeFile, extraLocs);
             if (text.length) {
                 setHtmlAndClean(
                     ref.current!,
@@ -134,7 +137,7 @@ export const Editor = ({
                 );
                 prevPos.current = pos;
                 obs.disconnect();
-                const locs = highlightLocations(text, typeFile);
+                const locs = highlightLocations(text, typeFile, extraLocs);
                 const html = treeToHtmlLines(markUpTree(text, locs));
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, pos);
@@ -158,7 +161,11 @@ export const Editor = ({
                     return;
                 }
                 obs.disconnect();
-                const locs = highlightLocations(entry.text, typeFile);
+                const locs = highlightLocations(
+                    entry.text,
+                    typeFile,
+                    extraLocs,
+                );
                 const html = treeToHtmlLines(markUpTree(entry.text, locs));
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, entry.pos);
@@ -213,23 +220,12 @@ export const Editor = ({
     );
 };
 
-export const treeToHtml = (
-    tree: Tree,
-    hover: null | [number, number],
-): string => {
-    return `<span class="${tree.kind}" style="color: ${
-        colors[tree.kind] ?? '#aaa'
-    }">${tree.children
-        .map((child, i) =>
-            child.type === 'leaf'
-                ? `<span data-span="${child.span[0]}:${child.span[1]}">${child.text}</span>`
-                : treeToHtml(child, hover),
-        )
-        .join('')}</span>`;
-};
-
 export const openSpan = (kind: Colorable) =>
-    `<span class="${kind}" style="color: ${colors[kind] ?? '#aaa'}">`;
+    `<span class="${kind}" style="color: ${colors[kind] ?? '#aaa'}${
+        kind === 'Error'
+            ? '; text-decoration: underline; text-decoration-style: wavy'
+            : ''
+    }">`;
 
 export const treeToHtmlLines = (tree: Tree) => {
     return `<div>${treeToHtmlLinesInner(tree, [])}</div>`;

@@ -9,11 +9,13 @@
 		- let's slap something together
 			it's ridiculous not to be able to undo
 
-- [ ] then get .typetest files going in the UI
+- [x] then get .typetest files going in the UI
 	- [x] TypeFile (to-tast to-ast to-pp)
-	- [ ] (string) => TypeTest
-	- [ ] show in the UI
-	- [ ] editor! with squigglies for failures
+	- [x] (string) => TypeTest
+	- [x] show in the UI
+	- [x] editor!
+	- [ ] dedup files.test.ts
+	- [ ] with squigglies for failures
 	- and .test
 	- seems like "listing" all of them at once makes sense?
 		but why would I do things that make sense lol

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'fs';
 import { typeToString } from '../../../devui/Highlight';
 import { addBuiltinDecorator, builtinContext, FullContext } from '../../ctx';
 import { typeToplevel } from '../../elements/base';
-import { parseTypeFile } from '../../grammar/base.parser';
+import { File, parseTypeFile, TypeFile } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
 import { idToString } from '../../ids';
 import * as t from '../../typed-ast';
@@ -57,8 +57,9 @@ export type TypeTest = {
     ctx: FullContext;
 };
 
-export const runTypeTest = (text: string): TypeTest => {
-    const ast = fixComments(parseTypeFile(text));
+export const runInner = () => {};
+
+export const runTypeTest = (ast: TypeFile): TypeTest => {
     let ctx = builtinContext.clone();
 
     const assertById: { [key: string]: Function } = {};
@@ -100,7 +101,7 @@ export const runTypeTest = (text: string): TypeTest => {
                             inner,
                             ctx,
                         );
-                        statuses.push({ loc: type.loc, text: msg });
+                        statuses.push({ loc: d.loc, text: msg });
                     }
                 });
             } else {
