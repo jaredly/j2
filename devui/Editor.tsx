@@ -195,7 +195,7 @@ export const Editor = ({
             spellCheck={false}
             className="editor-ce"
             style={{
-                outline: editing ? '2px solid #f00' : 'none',
+                outline: editing ? '2px solid rgba(255,0,0,0.1)' : 'none',
                 padding: 4,
                 whiteSpace: 'pre-wrap',
                 minHeight: '1.5em',

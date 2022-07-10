@@ -1,7 +1,9 @@
+@type:shouldMatch(:() => int) () => int
 
-@type:shouldMatch(: () => int) () => int
-@type:shouldMatch(: <A>(a: A) => A) <B>(a: B) => B
-@type:shouldMatch(: (a: 10) => int) (a: int) => int
-@type:shouldNotMatch(: (a: int) => int) (a: 10) => int
+@type:shouldMatch(:<A#[1]>(a: A#[1]) => A#[1]) <B#[0]>(a: B#[0]) => B#[0]
 
-// @type:shouldMatch(: <A: 10>(a: A) => A) <B: int>(a: B) => B
+@type:shouldMatch(:(a: 10) => int) (a: int) => int
+
+@type:shouldNotMatch(:(a: int) => int) (a: 10) => int
+
+//@type:shouldMatch(:<A#[1]: 10>(a: A#[1]) => A#[1]) <B#[0]: int>(a: B#[0]) => B#[0]

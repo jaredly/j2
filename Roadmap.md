@@ -1,6 +1,8 @@
 
 # Now that typetests are working:
 
+- [ ] oh check our coverage my folks
+
 - let's do a bunch of expression stuff?
 	- lambda, if, and binops
 	- that'll get me far enough that I can do interesting
@@ -18,6 +20,13 @@ IR does the following:
 - monomorphise? maybe? but like not necessarily completely.
 	hm.
 
+
+- [ ] 🤔 do I want to be able to mark tests as "known failures?"
+	like "I'm going to be working on this"?
+	to distinguish from "unexpected failures"
+	⚠️ so it would get the warning sign?
+	or maybe just `@todo`? Then we could /flag/ if there's
+	a `@todo` test that's now working.
 
 
 
