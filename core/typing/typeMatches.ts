@@ -248,6 +248,21 @@ export const eopsMatch = (candidate: EOps, expected: EOps): boolean => {
     return true;
 };
 
+export const payloadsEqual = (
+    one: undefined | Type,
+    two: undefined | Type,
+    ctx: Ctx,
+) => {
+    if ((one != null) != (two != null)) {
+        console.log('payload diff');
+        return false;
+    }
+    if (one && !typeMatches(one, two!, ctx)) {
+        return false;
+    }
+    return true;
+};
+
 export const typeMatches = (
     candidate: Type,
     expected: Type,
@@ -314,7 +329,10 @@ export const typeMatches = (
             const canMap: { [key: string]: EnumCase } = {};
             for (let kase of canEnums) {
                 // Multiple cases with the same name
-                if (canMap[kase.tag]) {
+                if (
+                    canMap[kase.tag] &&
+                    !payloadsEqual(kase.payload, canMap[kase.tag].payload, ctx)
+                ) {
                     return false;
                 }
                 canMap[kase.tag] = kase;
@@ -342,15 +360,7 @@ export const typeMatches = (
                     return false;
                 }
                 if (
-                    (kase.payload != null) !=
-                    (expMap[kase.tag].payload != null)
-                ) {
-                    console.log('payload diff');
-                    return false;
-                }
-                if (
-                    kase.payload &&
-                    !typeMatches(kase.payload, expMap[kase.tag].payload!, ctx)
+                    !payloadsEqual(kase.payload, expMap[kase.tag].payload, ctx)
                 ) {
                     return false;
                 }

@@ -20,4 +20,5 @@
 type One = [ `A | `B ]
 
 @type:shouldMatch(:One) [ `A ]
+
 @type:shouldMatch(:One) [ `A | One ]

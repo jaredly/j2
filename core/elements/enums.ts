@@ -7,6 +7,7 @@ import * as t from '../typed-ast';
 import { Ctx, tdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
+import { expandEnumCases, payloadsEqual } from '../typing/typeMatches';
 
 // type State:Effect = <T>[ `Get | `Set(T) ]
 // type State:Full = <T, Final>[ State:Effect<T> | `Final(Final)]
@@ -194,10 +195,28 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         const cases = node.cases.map((k) => {
             if (k.type !== 'EnumCase' && !isValidEnumCase(k, ctx.ctx)) {
                 changed = true;
-                return tdecorate(k, 'argWrongType', ctx.hit, ctx.ctx);
+                return tdecorate(k, 'notAnEnum', ctx.hit, ctx.ctx);
             }
             return k;
         });
         return changed ? { ...node, cases } : null;
     },
+    // Type_TEnum(node, ctx) {
+    //     const enums = expandEnumCases(node, ctx.ctx);
+    //     if (!enums) {
+    //         return tdecorate(node, 'invalidEnum', ctx.hit, ctx.ctx);
+    //     }
+    //     const map: { [key: string]: EnumCase } = {};
+    //     for (let kase of enums) {
+    //         // Multiple cases with the same name
+    //         if (
+    //             map[kase.tag] &&
+    //             !payloadsEqual(kase.payload, map[kase.tag].payload, ctx.ctx)
+    //         ) {
+    //             return tdecorate(node, 'invalidEnum', ctx.hit, ctx.ctx);
+    //         }
+    //         map[kase.tag] = kase;
+    //     }
+    //     return null;
+    // },
 };

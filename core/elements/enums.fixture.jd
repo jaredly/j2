@@ -27,10 +27,10 @@ type z = [`Z]
 type x = [int | `Hello | y | z]
 
 --[output:expected]--
-alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f y=h1b0e8917e6173706d1c1e1863436851ee8877ebb z=hb5d906b1c904d6f7c6cc56054ef2fadb9d951d02
+alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 error:notAnEnum=hf16010a7ae4b37140f787a2e06b17030e8329fb3 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f y=h1b0e8917e6173706d1c1e1863436851ee8877ebb z=hb5d906b1c904d6f7c6cc56054ef2fadb9d951d02
 type y = Array<10>
 type z = [ `Z ]
-type x = [ @error:argWrongType() int | `Hello | @error:argWrongType() y | z ]
+type x = [ @error:notAnEnum() int | `Hello | @error:notAnEnum() y | z ]
 
 ==[recursive bound propagation]==
 --[input]--
@@ -68,7 +68,7 @@ type X = <T: int, N: string>[ `X(X<N, N>) ]
 alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 type X = <T#[0]: int, N#[1]: string>[ `X(X#[r0]<@error:argWrongType(expected: :int) N#[1], N#[1]>) ]
 
-==[New fixture]==
+==[enum join should indicate failure]==
 --[input:shouldFail]--
 type One = [`A | `B]
 type Two = [`A | One]
@@ -79,3 +79,20 @@ alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f One=h9e64a5fc10caacb63b17e70
 type One = [ `A | `B ]
 type Two = [ `A | One ]
 type Three = [ `A(int) | One ]
+
+==[duplicate recursive]==
+--[input:shouldFail]--
+type One = [`A | Two]
+and Two = [`A(int)]
+
+--[output:failed]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+type One = [ `A | Two#[r1] ]
+and Two = [ `A(int) ]
+
+==[self recursive]==
+--[input:shouldFail]--
+type Self = [`A | Self]
+
+--[output:failed]--
+type Self = [ `A | Self#[r0] ]
