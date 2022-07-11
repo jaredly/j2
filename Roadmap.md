@@ -1,4 +1,212 @@
 
+# Now that typetests are working:
+
+- [x] oh check our coverage my folks
+
+
+so
+here's a thing
+
+- [ ] when in the analyze phase, it's nice to be able to know what the ID is of the current toplevel type, for resolving rescursion.
+- [ ] ummm wait EnumCase needs to be decoratable. RecordItem will need to be too.
+- [ ] alsooo what about 
+
+
+
+
+- [ ] detect all kinds of more issues
+	- [ ] enum reusing tags
+	- [x] get type checking of recursive types working!
+	- [x] prevent infinite loop types from borking things
+		- [ ] add an annotation to make it obvious?
+			- like, if this type is just infinitely recursive, pull the plug
+			- yes definitely do that.
+
+- let's do a bunch of expression stuff?
+	- lambda, if, and binops
+	- that'll get me far enough that I can do interesting
+		recursive functions with interesting type math.
+
+	- then I can do `switch`
+	- and like effects idk
+
+	- we'll need ToIR
+
+IR does the following:
+- control flow as statements, not expressions
+	- switches as ifs
+- CPS transform of effects
+- monomorphise? maybe? but like not necessarily completely.
+	hm.
+
+
+- [ ] 🤔 do I want to be able to mark tests as "known failures?"
+	like "I'm going to be working on this"?
+	to distinguish from "unexpected failures"
+	⚠️ so it would get the warning sign?
+	or maybe just `@todo`? Then we could /flag/ if there's
+	a `@todo` test that's now working.
+
+
+
+
+
+
+
+#
+
+- [x] get highlighting working in the editor!
+	- [x] indicate parser error location, could be fun
+		- would that be a 'zero-length span'? yeah looks like that would work
+			orr I could just use my current markup setup!
+			I'll probably expand it to allow underlines & popovers? Seems like it.
+			data-tooltip idk
+	- [x] undo/redo now have to be done manually!
+		- let's slap something together
+			it's ridiculous not to be able to undo
+
+- [x] then get .typetest files going in the UI
+	- [x] TypeFile (to-tast to-ast to-pp)
+	- [x] (string) => TypeTest
+	- [x] show in the UI
+	- [x] editor!
+	- [ ] dedup files.test.ts
+	- [x] with squigglies for failures
+	- and .test
+	- seems like "listing" all of them at once makes sense?
+		but why would I do things that make sense lol
+
+- [x] so there's something ... that I need to change about
+	writing & loading aliases
+
+- [x] "recursive bound, own tvar" isn't working
+	ohhhhhhhhhhhhhh ok so I see.
+	getBound is not working
+	we need to:
+	- to-tast and then immediately analyze, a given toplevel.
+	can't do the whole file and then go back and analyze.
+
+	because the syms mapping, of course.
+	
+	I think I'll need a way to 'recreate the syms mapping'
+	from an existing tast, for when I'm revalidating a dealio.
+	do I then also clear out all 'error' decorators? Seems
+	like I would.
+
+	Ok, so I do actually want the contexts to be different.
+	And ToABC.File isn't really the style that I want.
+	Just make a toplevel function to manage that stuff.
+
+	but a quick & dirty, to get tests passing, would still reuse
+	things.
+
+- [ ] would be nice to bring back sym aliases ...	
+
+
+ok maybe fixtures are only for ... errors?
+
+
+
+
+
+- [ ] do I also need to add some tests for re-parsing?
+
+- [x] wait perf is really bad
+	- Lesson learned: hashing stuff takes time, so reparsing builtins was killing me.
+	- Now we have 2ms rerender instead of 40!
+
+- Wait, hm, the resetSyms thing isn't quite working with
+	aliases. anddd the .. syms map thing isn't working
+	so figuring out what the toplevel is that a 'Recur' is
+	referencing.
+	Yeah so I'm losing names from other things
+- OK so aliases .. maybe I'll only start doing the aliases
+  thing ... hm ...
+
+OK so ... yeah my syms need to be unique.
+erg.
+
+whyyyyy is jest mad???
+need to figure out why runFixture isn't working consistently.
+
+
+# ENUM Next Steps
+
+- [-] Ohhh ok so I think I want to /actually/ split out TCtx from TACtx and such.
+	Which means I want a "library" that'll be shared.
+	- turns out that might be super hard
+
+- [ ] SO I'm getting a lot of fixtures, and I probably want to split fixture files up
+	unto a file tree, you know?
+
+
+- 🤔 should I make a 'checkType' annotation or something? @type(:hello)
+	- `@expect:type(:sometype) expr`
+	- `@expect:matches(:10) int`
+		hmm
+
+- [x] basic shouldMatch / shouldNotMatch / shouldBe
+- [ ] better assertion
+
+
+
+Ok, so I feel like there are two kinds of tests.
+Fixture tests (input / expected output)
+
+and
+
+'types' 
+
+
+- [x] ok folks, local fixture-level builtins
+- [x] enum typeMatches
+- [x] "open" enums ("*" or "..."). Does it make sense to have them, when a type vbl would work?
+	`<T>(x: [ ``What | T ]) => int`
+	problem here: that `T` needs a `bound`... like `[...]`. But then the question is, do we allow
+	that syntax in general?
+	when I'm thinking about monomorphising, ... I would ~like to be able to lock down enums,
+	because otherwise ... I'd need to do boxing or something to put them all in the same union?
+	right. hm like technically someone could do `[ ``X | [...] ]`, right? because I really don't
+	want differences between the `bound` things and normal types.
+
+	hmmmm. So, given that you can't get anything out, maybe it's fine?
+	we can try it at least. Ok, open enums are ok.
+
+- [x] recursive type bounds, make it work!
+- [x] validate elements of the enum
+	- hmm need to know whether the /recur/ thing is an enum type or something else
+		so that we can reject it. Which means we need a 'parse just enough to figure out
+		what kind of thing this is'.
+- [ ] hm ok so to use the enum types, I'll have to make functions?
+	- yeah let's get lambdas going
+
+# RECONSIDER
+
+What parts of the code have gotten ungainly?
+- [x] updating fixtures when hashing changes (due to a modification of types) is super annoying.
+	- [x] I want a cli function that is "update all fixtures that are the same modulo the aliases mapping"
+- [x] oh wait I really need sync to also sync the ToXYs as well
+- [x] make it clear when only aliases changed
+
+- [x] fixture overview doesn't highlight failing fixtures
+- [x] test coverage is pretty good though, that's nice.
+- [x] I've been pretty fast & loose with FullContext. It would be good to rein that in.
+	Like, have `typeMatches` only take a subset, you know.
+
+
+# ENUMS
+
+- [x] enum basic type parsing
+- [x] enum expression parsing
+- [x] WAIT need to be able to reject fixtures. or like. mark them as "pending"?	
+	like there is a difference. "under construction". maybe the triangle warning icon
+- [x] recursive types!
+	- [x] so, hm, I should ... know the 'kind' of the type. yeah.
+- [x] analyze/validate enum types, and enum expressions
+- [x] typeMatches for enums
+
+
+
 Ok what Im doing now:
 
 - [x] type aliases
@@ -8,17 +216,20 @@ Ok what Im doing now:
 - [x] tapply at the ast level?
 - [x] typeMatch for ... tvars?
 - [x] defaults
-- [ ] pin
-- [ ] TYPE ARITHMATIC
-- [ ] then enums? Could be fun. At that point recursive types make sense.
-- [ ] records! and tuples.
+- [x] pin
+- [x] TYPE ARITHMATIC
+	- [x] hm 10 <- 5 + 5
+- [x] then enums? Could be fun. At that point recursive types make sense.
+- [ ] records! and tuples. do we decide that tuples are just records with numbers for attributes? might as well
+- [ ] ok eventually I have to do control structures. and, like ,lambdas
 
 
-Printing (<T>int)<T> isn't quite right
+- [x] Printing (<T>int)<T> isn't quite right
 
 
 
-- [ ] type aliases! And let's make sure that mutually recursive types work
+- [-] type aliases! 
+	- [x] And let's make sure that mutually recursive types work
 	- Can I even do those without records yet? No idea. like, functions seem weird
 ```ts
 type X = () => Y

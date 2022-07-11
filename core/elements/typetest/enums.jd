@@ -1,0 +1,42 @@
+@type:shouldMatch(:[ `Hi ]) [ `Hi ]
+
+@type:shouldNotMatch(:[ `One ])
+@type:shouldMatch(:[ `One | `Two ]) [ `Two ]
+
+@type:shouldMatch(:[ `One | `Two ])
+@type:shouldNotMatch(:[ `One ]) [ `One | `Two ]
+
+@type:shouldNotMatch(:[ `Hi(int) ]) [ `Hi(float) ]
+
+@type:shouldMatch(:[ `Hi(int) ]) (<T#[0]>[ `Hi(T#[0]) ])<int>
+
+@type:shouldNotMatch(:[ `One | `Two ]) [ `Two | * ]
+
+@type:shouldMatch(:[ `One | * ])
+@type:shouldMatch(:[ * ]) [ `One | `Two ]
+
+@type:shouldMatch(:[ `Hi(int) ]) [ `Hi(10) ]
+
+type One = [ `A | `B ]
+
+@type:shouldMatch(:One) [ `A ]
+
+@type:shouldMatch(:One) [ `A | One ]
+
+type Tree = [ Node#[r1] | `Leaf ]
+and Node = [ `Tree(Tree#[r0]) ]
+
+// Ok so the story here is: we need to replace all `#[r]` recursive references with the appropriate global reference
+// when hytrating the type. Right? Seems like that would do the trick...
+@type:shouldMatch(:Tree) [ `Leaf ]
+
+// These should not trigger an infinite loop 😂
+type X = Y#[r1]
+and Y = X#[r0]
+
+@type:shouldNotMatch(:X) 1
+
+type A = [ `A | B#[r1] ]
+and B = [ `B | A#[r0] ]
+
+@type:shouldNotMatch(:A) [ `A ]

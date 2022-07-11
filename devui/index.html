@@ -4,13 +4,21 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-        <title>Document</title>
+        <title>j2 fixtures</title>
         <link rel="favorite icon" href="favicon.png" />
         <style>
             html,
             body {
                 padding: 0;
                 margin: 0;
+            }
+            [data-prefix]::before {
+                content: attr(data-prefix);
+                padding-right: 4px;
+                font-size: 80%;
+            }
+            [data-message]::before {
+                cursor: pointer;
             }
         </style>
     </head>

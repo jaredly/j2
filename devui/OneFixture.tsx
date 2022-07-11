@@ -1,69 +1,80 @@
-import {
-    Button,
-    Card,
-    Checkbox,
-    Input,
-    Link,
-    Spacer,
-    Text,
-    Textarea,
-} from '@nextui-org/react';
-import equal from 'fast-deep-equal';
+import { Button, Card, Checkbox, Input, Spacer, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
 import { errorCount } from '../core/typing/analyze';
 import {
+    aliasesFromString,
     Builtin,
     Fixture,
     FixtureResult,
+    loadBuiltins,
     runFixture,
+    splitAliases,
 } from '../core/typing/__test__/fixture-utils';
 import { Editor } from './Editor';
+import { ShowBuiltins } from './FixtureFile';
 import { Highlight } from './Highlight';
+import { CancelIcon, ReportProblemIcon } from './Icons';
 
 export function OneFixture({
     fixture,
     onChange,
     portal,
     id,
+    isPinned,
+    ctx,
     builtins,
 }: {
+    isPinned: boolean;
     id: string;
+    ctx: FullContext;
     portal: HTMLDivElement;
     fixture: Fixture;
     onChange: (v: Fixture) => void;
     builtins: Builtin[];
 }) {
-    const { title, input, output_expected } = fixture;
+    const { title, input, output_expected, output_failed } = fixture;
     const [editing, setEditing] = React.useState(null as null | string);
+
+    const prevOutput = output_expected ? output_expected : output_failed;
+
+    const loadedCtx = React.useMemo(() => {
+        const cloned = ctx.clone();
+        loadBuiltins(fixture.builtins, cloned);
+        return cloned;
+    }, [fixture.builtins, ctx]);
 
     const newOutput = React.useMemo(():
         | { type: 'error'; error: Error }
         | { type: 'success'; result: FixtureResult } => {
+        if (isPinned) {
+            ctx = {
+                ...ctx,
+                debugger() {
+                    debugger;
+                },
+            };
+        }
         if (editing != null) {
             try {
                 return {
                     type: 'success',
-                    result: runFixture(
-                        { ...fixture, input: editing },
-                        builtins,
-                    ),
+                    result: runFixture({ ...fixture, input: editing }, ctx),
                 };
-            } catch (err) {
-                console.log(err);
-            }
+            } catch (err) {}
         }
+        // hmmmmm I think I'd rather the fallback be "the last successful one"
         try {
-            return { type: 'success', result: runFixture(fixture, builtins) };
+            return { type: 'success', result: runFixture(fixture, ctx) };
         } catch (err) {
             return { type: 'error', error: err as Error };
         }
-    }, [fixture, builtins, editing]);
+    }, [fixture, builtins, editing, isPinned]);
     const [titleEdit, setTitleEdit] = React.useState(null as null | string);
 
     const changed =
         newOutput.type === 'error' ||
-        output_expected !== newOutput.result.newOutput;
+        compare(prevOutput, newOutput.result.newOutput);
 
     const numErrors =
         newOutput.type === 'error' ? 1 : errorCount(newOutput.result.verify);
@@ -73,9 +84,9 @@ export function OneFixture({
             <Card
                 variant={'bordered'}
                 css={{
-                    borderColor: changed ? 'orange' : undefined,
                     position: 'relative',
                     borderRadius: 3,
+                    borderColor: changed ? 'orange' : undefined,
                 }}
             >
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
@@ -110,6 +121,7 @@ export function OneFixture({
                         />
                     ) : (
                         <Text
+                            color="#aaa"
                             css={{
                                 cursor: 'pointer',
                                 fontWeight: '$light',
@@ -121,6 +133,23 @@ export function OneFixture({
                             }}
                             onClick={() => setTitleEdit(title)}
                         >
+                            {changed ? (
+                                <ReportProblemIcon
+                                    style={{
+                                        color: 'orange',
+                                        marginRight: 8,
+                                        marginBottom: -2,
+                                    }}
+                                />
+                            ) : output_failed === prevOutput ? (
+                                <CancelIcon
+                                    style={{
+                                        color: 'red',
+                                        marginRight: 8,
+                                        marginBottom: -2,
+                                    }}
+                                />
+                            ) : null}
                             {title}
                         </Text>
                     )}
@@ -130,8 +159,60 @@ export function OneFixture({
                             textAlign: 'right',
                             // paddingRight: 12,
                             // paddingTop: 4,
+                            display: 'flex',
+                            justifyContent: 'flex-end',
                         }}
                     >
+                        {newOutput.type === 'success' ? (
+                            <div
+                                style={{
+                                    marginTop: 4,
+                                    marginRight: 8,
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                }}
+                            >
+                                <Button
+                                    size={'xs'}
+                                    disabled={
+                                        !changed &&
+                                        newOutput.result.newOutput ===
+                                            fixture.output_expected
+                                    }
+                                    onPress={() => {
+                                        onChange({
+                                            ...fixture,
+                                            output_expected:
+                                                newOutput.result.newOutput,
+                                            output_failed: '',
+                                        });
+                                    }}
+                                >
+                                    Accept
+                                </Button>
+                                <Spacer x={0.5} />
+                                <Button
+                                    size="xs"
+                                    color="secondary"
+                                    disabled={
+                                        !changed &&
+                                        fixture.output_expected === ''
+                                    }
+                                    onPress={() => {
+                                        // So if the old one is rejected, we overwrite
+                                        // but if the old one is accepted, then we keep it around as "the right one"
+                                        onChange({
+                                            ...fixture,
+                                            output_failed:
+                                                newOutput.result.newOutput,
+                                            output_expected: '',
+                                        });
+                                    }}
+                                >
+                                    Reject
+                                </Button>
+                            </div>
+                        ) : null}
                         <Checkbox
                             css={{
                                 backgroundColor:
@@ -151,49 +232,19 @@ export function OneFixture({
                             }
                         />
                     </div>
-                    {changed && newOutput.type === 'success' ? (
-                        <>
-                            <Button
-                                size={'xs'}
-                                onPress={() => {
-                                    onChange({
-                                        ...fixture,
-                                        output_expected:
-                                            newOutput.result.newOutput,
-                                        aliases_deprecated:
-                                            newOutput.result.aliases,
-                                        failing_deprecated: false,
-                                    });
-                                }}
-                            >
-                                Accept
-                            </Button>
-                            <Spacer x={0.5} />
-                            <Button
-                                size="xs"
-                                color="secondary"
-                                onPress={() => {
-                                    // So if the old one is rejected, we overwrite
-                                    // but if the old one is accepted, then we keep it around as "the right one"
-                                    onChange({
-                                        ...fixture,
-                                        output_expected:
-                                            newOutput.result.newOutput,
-                                        aliases_deprecated:
-                                            newOutput.result.aliases,
-                                        failing_deprecated: true,
-                                    });
-                                }}
-                            >
-                                Reject
-                            </Button>
-                        </>
-                    ) : null}
                 </div>
                 <Card.Body css={{ display: 'flex', fontFamily: '$mono' }}>
+                    <ShowBuiltins
+                        setBuiltins={(builtins) =>
+                            onChange({ ...fixture, builtins })
+                        }
+                        builtins={fixture.builtins}
+                    />
+                    <Card.Divider css={{ marginBlock: '$6' }} />
                     <Editor
                         text={editing ?? input}
                         onChange={setEditing}
+                        ctx={loadedCtx}
                         onBlur={(input) => {
                             setEditing(null);
                             if (
@@ -207,105 +258,26 @@ export function OneFixture({
                             }
                         }}
                     />
-                    {/*editing != null ? (
-                        <Textarea
-                            autoFocus
-                            fullWidth
-                            aria-label="Input"
-                            style={{
-                                fontFamily: 'inherit',
-                                fontSize: 'inherit',
-                                padding: 0,
-                                margin: 0,
-                                flexShrink: 0,
-                            }}
-                            minRows={10}
-                            value={editing}
-                            onChange={(evt) => setEditing(evt.target.value)}
-                            onKeyDown={(evt) => {
-                                if (evt.key === 'Escape') {
-                                    setEditing(null);
-                                    if (
-                                        newOutput.type === 'error' ||
-                                        editing === newOutput.result.input
-                                    ) {
-                                        onChange({
-                                            ...fixture,
-                                            input: editing,
-                                        });
-                                    }
-                                } else if (evt.key === 'Enter' && evt.metaKey) {
-                                    evt.preventDefault();
-                                    if (
-                                        newOutput.type === 'error' ||
-                                        editing === newOutput.result.input
-                                    ) {
-                                        onChange({
-                                            ...fixture,
-                                            input: editing,
-                                        });
-                                    }
-                                }
-                            }}
-                            onBlur={() => {
-                                if (
-                                    newOutput.type === 'error' ||
-                                    editing === newOutput.result.input
-                                ) {
-                                    onChange({ ...fixture, input: editing });
-                                }
-                                setEditing(null);
-                            }}
-                        />
-                    ) : (
-                        <Highlight
-                            text={input}
-                            portal={portal}
-                            onClick={() => setEditing(input)}
-                        />
-                    )*/}
                     <Card.Divider css={{ marginBlock: '$6' }} />
                     <div style={{ position: 'relative' }}>
                         {numErrors != 0 ? (
-                            <Text
-                                css={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    right: 0,
-                                    flex: 1,
-                                    textAlign: 'right',
-                                    flexShrink: 0,
-                                    paddingRight: '$6',
-                                    paddingLeft: '$6',
-                                    backgroundColor: 'rgba(255,0,0,0.1)',
-                                }}
-                            >
-                                {numErrors} issue{numErrors > 1 ? 's' : ''}
-                            </Text>
+                            <TopRight
+                                text={`${numErrors} issue${
+                                    numErrors > 1 ? 's' : ''
+                                }`}
+                            />
                         ) : fixture.shouldFail ? (
-                            <Text
-                                css={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    right: 0,
-                                    flex: 1,
-                                    textAlign: 'right',
-                                    flexShrink: 0,
-                                    paddingRight: '$6',
-                                    paddingLeft: '$6',
-                                    backgroundColor: 'rgba(255,0,0,0.3)',
-                                }}
-                            >
-                                No errors, but expected failure
-                            </Text>
+                            <TopRight
+                                text={'No errors, but expected failure'}
+                            />
                         ) : null}
 
                         {newOutput.type === 'success' ? (
                             <>
-                                <Aliases aliases={newOutput.result.aliases} />
+                                <Aliases aliases={parseAliases(prevOutput)} />
                                 <Highlight
                                     portal={portal}
-                                    text={output_expected}
+                                    text={prevOutput}
                                     info={{
                                         tast: newOutput.result.outputTast,
                                         ctx: newOutput.result.ctx2,
@@ -322,15 +294,21 @@ export function OneFixture({
                     {changed && newOutput.type === 'success' ? (
                         <>
                             <Card.Divider css={{ marginBlock: '$6' }} />
-                            <Aliases aliases={newOutput.result.aliases} />
-                            <Highlight
-                                portal={portal}
-                                text={newOutput.result.newOutput}
-                                info={{
-                                    tast: newOutput.result.checked,
-                                    ctx: newOutput.result.ctx,
-                                }}
+                            <Aliases
+                                aliases={parseAliases(
+                                    newOutput.result.newOutput,
+                                )}
                             />
+                            {changed !== 'aliases' ? (
+                                <Highlight
+                                    portal={portal}
+                                    text={newOutput.result.newOutput}
+                                    info={{
+                                        tast: newOutput.result.checked,
+                                        ctx: newOutput.result.ctx,
+                                    }}
+                                />
+                            ) : null}
                         </>
                     ) : null}
                 </Card.Body>
@@ -338,6 +316,14 @@ export function OneFixture({
         </div>
     );
 }
+
+const parseAliases = (text: string) => {
+    if (text.startsWith('alias ')) {
+        const line = text.slice(0, text.indexOf('\n'));
+        return aliasesFromString(line);
+    }
+    return {};
+};
 
 const Aliases = ({ aliases }: { aliases: { [key: string]: string } }) => {
     return (
@@ -359,11 +345,43 @@ const Aliases = ({ aliases }: { aliases: { [key: string]: string } }) => {
 };
 
 export const aliasesMatch = (
-    one: FullContext['aliases'],
-    two: FullContext['aliases'],
+    one: { [key: string]: string },
+    two: { [key: string]: string },
 ) => {
     return (
         Object.keys(one).length === Object.keys(two).length &&
         Object.keys(one).every((key) => one[key] === two[key])
+    );
+};
+
+export const compare = (one: string, two: string): boolean | 'aliases' => {
+    if (one == two) {
+        return false;
+    }
+    const [oneAliases, oneText] = splitAliases(one);
+    const [twoAliases, twoText] = splitAliases(two);
+    if (oneText === twoText) {
+        return 'aliases';
+    }
+    return true;
+};
+
+export const TopRight = ({ text }: { text: string }) => {
+    return (
+        <Text
+            css={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                flex: 1,
+                textAlign: 'right',
+                flexShrink: 0,
+                paddingRight: '$6',
+                paddingLeft: '$6',
+                backgroundColor: 'rgba(255,0,0,0.1)',
+            }}
+        >
+            {text}
+        </Text>
     );
 };

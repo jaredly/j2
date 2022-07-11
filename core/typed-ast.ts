@@ -1,9 +1,11 @@
 import { Apply } from './elements/apply';
 import { Boolean, Number, TemplateString } from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
+import { Enum } from './elements/enum-exprs';
 import { TypeApplication } from './elements/generics';
 import { Type } from './elements/type';
 import { Id, idToString } from './ids';
+export type { Id };
 export type { Apply } from './elements/apply';
 export type {
     Boolean,
@@ -19,21 +21,20 @@ export type {
     DecoratorArg,
     DecoratorDecl,
 } from './elements/decorators';
+export type { TypeApplication, TypeVariables } from './elements/generics';
+export type { TApply, TVar, TVars } from './elements/type-vbls';
 export type {
     TAdd,
-    TApply,
     TDecorated,
     TLambda,
     TOps,
     TOr,
     TRef,
     TSub,
-    TVar,
-    TVars,
     Type,
 } from './elements/type';
-export type { Id } from './ids';
-export type { TypeApplication, TypeVariables } from './elements/generics';
+export type { EnumCase, TEnum } from './elements/enums';
+export type { Enum } from './elements/enum-exprs';
 
 export type GlobalRef = {
     type: 'Global';
@@ -44,10 +45,17 @@ export type RefKind =
     | {
           type: 'Local';
           sym: number;
-      };
+      }
+    | { type: 'Recur'; idx: number };
 
-export const refHash = (ref: RefKind) =>
-    ref.type === 'Global' ? 'h' + idToString(ref.id) : '' + ref.sym;
+export const refHash = (ref: RefKind | UnresolvedRef) =>
+    ref.type === 'Global'
+        ? 'h' + idToString(ref.id)
+        : ref.type === 'Recur'
+        ? 'r' + ref.idx
+        : ref.type === 'Unresolved'
+        ? ':unresolved:' + ref.text + '#' + ref.hash
+        : '' + ref.sym;
 
 export type Loc = {
     start: { line: number; column: number; offset: number };
@@ -58,6 +66,13 @@ export type Loc = {
 export type File = {
     type: 'File';
     toplevels: Array<Toplevel>;
+    comments: Array<[Loc, string]>;
+    loc: Loc;
+};
+
+export type TypeFile = {
+    type: 'TypeFile';
+    toplevels: Array<Type | TypeAlias>;
     comments: Array<[Loc, string]>;
     loc: Loc;
 };
@@ -89,6 +104,7 @@ export type TypeAlias = {
 export type Expression =
     | Ref
     | Apply
+    | Enum
     | Number
     | Boolean
     | TemplateString

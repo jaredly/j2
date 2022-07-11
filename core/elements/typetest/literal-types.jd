@@ -1,0 +1,22 @@
+// Because of the -types suffix, this will be parsed
+// as a file of just toplevel types.
+// hm, I guess 'type aliases' and 'toplevel types'.
+@type:shouldMatch(:10) 10
+
+@type:shouldMatch(:5 + 10) (5 + 10)
+
+@type:shouldMatch(:10 + 5) (10 + 5)
+
+@type:shouldMatch(:10 + 5) 15
+
+@type:shouldMatch(:15) (10 + 5)
+
+@type:shouldMatch(:uint + 10u) 10u
+
+@type:shouldMatch(:uint + 10u) 11u
+
+@type:shouldNotMatch(:uint + 10) 9u
+
+// Decorators get discarded
+@type:shouldMatch(:@some#[:unresolved:]() 10)
+@other#[:unresolved:]() 10

@@ -1,0 +1,9 @@
+@type:shouldMatch(:string)
+@type:shouldNotMatch(:int)
+@type:shouldNotMatch(:string + "suffix")
+@type:shouldMatch(:"he" + string + "lo")
+@type:shouldBe(:"hello") "hello"
+
+@type:shouldMatch(:"hello") ("he" + "llo")
+
+// @type:shouldMatch(:"h" + string) ("he" + string)

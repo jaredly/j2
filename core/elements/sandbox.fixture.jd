@@ -1,0 +1,68 @@
+##[builtins]##
+//:value:hello:string
+//:value:one:string
+
+##[fixtures]##
+==[basic]==
+--[input]--
+hello
+
+--[output:expected]--
+alias hello=hfe91f1ef2452e6927118530ab0bc97677c300137 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+hello
+// string
+
+==[types]==
+--[input]--
+"${toString(10)} and ${one}"
+
+--[output:expected]--
+alias one=h75a4651f0e6841970290c6a4c7f547d57bb814ca string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h0ac4106142a4522c2471a4bc4c3cc92ae5c381f8
+"${toString(10)} and ${one}"
+// string
+
+==[Kitchen Sink]==
+--[input:shouldFail]--
+// ## Types ##
+type x = 10 + 3
+type y = "hello" + ".js"
+type z = <T: int>(x: T) => T
+type z2 = z<10>
+type boundFail = z<"hello">
+type over10 = <T: "test-" + string + ".js">(x: T) => int
+type x = over10<"test-hello.js">
+// ## Values ##
+"a string"
+"a template ${100} string"
+10.2
+10
+true
+
+--[output:expected]--
+alias bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f error:notAString=h78fb9682caf6cb8dc34febba83e591c06884dc73 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f over10=h67c6574fd6658fc96f46d0572d4d255e7d06afd0 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 z=h9c73bde69a9ef5ef73fece595b08bb30890e97fa
+// ## Types ##
+type x = 10 + 3
+type y = "hello" + ".js"
+type z = <T#[0]: int>(x: T#[0]) => T#[0]
+type z2 = z<10>
+type boundFail = z<@error:argWrongType(expected: :int) "hello">
+type over10 = <T#[0]: "test-" + string + ".js">(x: T#[0]) => int
+type x = over10<"test-hello.js">
+// ## Values ##
+"a string"
+// "a string"
+"a template ${@error:notAString() 100} string"
+// string
+10.2
+// 10.2
+10
+// 10
+true
+// bool
+
+==[New fixture_]==
+--[input]--
+// hello
+
+--[output:expected]--
+// hello

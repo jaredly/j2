@@ -1,32 +1,30 @@
-import { typeToString } from '../../devui/Highlight';
-import { FullContext, noloc } from '../ctx';
-import { idsEqual } from '../ids';
+import { noloc, refsEqual } from '../ctx';
+import { Id } from '../ids';
 import { transformType, Visitor } from '../transform-tast';
 import {
-    Ref,
+    EnumCase,
+    GlobalRef,
     refHash,
     RefKind,
     TApply,
+    TEnum,
     TLambda,
     TOps,
-    TOr,
     TRef,
     TVar,
     TVars,
     Type,
 } from '../typed-ast';
-import { resolveType } from './analyze';
 import { applyType } from './getType';
-
-export const refsEqual = (a: RefKind, b: RefKind): boolean => {
-    if (a.type !== b.type) {
-        return false;
-    }
-    if (a.type === 'Global') {
-        return b.type === 'Global' && idsEqual(a.id, b.id);
-    }
-    return b.type === 'Local' && a.sym === b.sym;
-};
+import {
+    collapseOps,
+    justStringAdds,
+    stringAddsMatch,
+    numOps,
+    eopsMatch,
+    justAdds,
+    stringOps,
+} from './ops';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -35,94 +33,45 @@ export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     return refsEqual(a, b);
 };
 
-export type Ctx = {};
+export type Ctx = {
+    isBuiltinType(t: Type, name: string): boolean;
+    getBuiltinRef(name: string): GlobalRef | null;
+    resolveRefsAndApplies(t: Type, path?: string[]): Type | null;
+    getValueType(id: Id): Type | null;
+    getBound(sym: number): Type | null;
+    log(...args: any[]): void;
+    /** Only triggers the devtools debugger if the fixture is pinned. */
+    debugger(): void;
+};
 
-export const isBuiltinType = (t: Type, name: string, ctx: FullContext) =>
-    t.type === 'TRef' &&
-    t.ref.type === 'Global' &&
-    refsEqual(t.ref, ctx.types.names[name]);
-
-// export const reduceConstant = (t: Type): Type => {
-//     if (t.type === 'TAdd') {
-//         if (t.elements[0].type === 'String') {
-//             let v = '';
-//             for (let el of t.elements) {
-//                 if (el.type !== 'String') {
-//                     return t;
-//                 }
-//                 v += el.text;
-//             }
-//             return { ...t, type: 'String', text: v };
-//         }
-//         if (t.elements[0].type === 'Number') {
-//             let v = 0;
-//             let k = t.elements[0].kind;
-//             for (let el of t.elements) {
-//                 if (el.type !== 'Number' || el.kind !== k) {
-//                     return t;
-//                 }
-//                 v += el.value;
-//             }
-//             return { ...t, type: 'Number', kind: k, value: v };
-//         }
-//     }
-//     if (t.type === 'TSub') {
-//         if (t.elements[0].type === 'Number') {
-//             let v = t.elements[0].value;
-//             let k = t.elements[0].kind;
-//             for (let i = 1; i < t.elements.length; i++) {
-//                 const el = t.elements[i];
-//                 if (el.type !== 'Number' || el.kind !== k) {
-//                     return t;
-//                 }
-//                 v -= el.value;
-//             }
-//             return { ...t, type: 'Number', kind: k, value: v };
-//         }
-//     }
-//     return t;
-// };
-
-// export const resolveRefs = (
-//     t: Type,
-//     ctx: FullContext,
-// ): Type => {
-//     while (t.type === 'TRef' && t.ref.type === 'Global') {
-//         const resolved = ctx.typeForId(t.ref.id)
-//         if (resolved)
-//     }
-//     return t
-// }
-
-// hmm
-// adding:
-/*
-
-hello(x: <T: int>{contents: (v: T) => int})
-yeah ok so same deal as fn args. they go backwards
-
-*/
-
-export const justAdds = (t: TOps): Type[] | null => {
-    const results = [t.left];
-    for (let { top, right } of t.right) {
-        if (top === '+') {
-            results.push(right);
-        } else {
-            return null;
-        }
+export const payloadsEqual = (
+    one: undefined | Type,
+    two: undefined | Type,
+    ctx: Ctx,
+    bidirectional: boolean,
+) => {
+    if ((one != null) != (two != null)) {
+        console.log('payload diff');
+        return false;
     }
-    return results;
+    if (!one || !two) {
+        return true;
+    }
+    // Need bidirectional equality in this case
+    return (
+        typeMatches(one, two, ctx) &&
+        (!bidirectional || typeMatches(two, one, ctx))
+    );
 };
 
 export const typeMatches = (
     candidate: Type,
     expected: Type,
-    ctx: FullContext,
+    ctx: Ctx,
 ): boolean => {
     // Ok I need like a "resolve refs" function
-    const c2 = resolveType(candidate, ctx)!;
-    const e2 = resolveType(expected, ctx);
+    const c2 = ctx.resolveRefsAndApplies(candidate)!;
+    const e2 = ctx.resolveRefsAndApplies(expected);
     if (c2 != null) {
         candidate = c2;
     }
@@ -135,6 +84,13 @@ export const typeMatches = (
     }
     while (candidate.type === 'TDecorated') {
         candidate = candidate.inner;
+    }
+
+    if (expected.type === 'TOps') {
+        expected = collapseOps(expected, ctx);
+    }
+    if (candidate.type === 'TOps') {
+        candidate = collapseOps(candidate, ctx);
     }
 
     // if (expected.type === 'TOr') {
@@ -159,6 +115,94 @@ export const typeMatches = (
     // console.log(candidate, expected);
 
     switch (candidate.type) {
+        case 'TEnum':
+            // [ `What ] matches [ `What | `Who ]
+            // So everything in candidate needs to match something
+            // in expected. And there need to not be any collisions name-wise
+            if (expected.type !== 'TEnum') {
+                return false;
+            }
+            const canEnums = expandEnumCases(candidate, ctx);
+            const expEnums = expandEnumCases(expected, ctx);
+            if (!canEnums || !expEnums) {
+                return false;
+            }
+            const canMap: { [key: string]: EnumCase } = {};
+            for (let kase of canEnums) {
+                // Multiple cases with the same name
+                if (
+                    canMap[kase.tag] &&
+                    !payloadsEqual(
+                        kase.payload,
+                        canMap[kase.tag].payload,
+                        ctx,
+                        true,
+                    )
+                ) {
+                    return false;
+                }
+                canMap[kase.tag] = kase;
+            }
+            const expMap: { [key: string]: EnumCase } = {};
+            for (let kase of expEnums) {
+                // Multiple cases with the same name
+                if (expMap[kase.tag]) {
+                    return false;
+                }
+                expMap[kase.tag] = kase;
+            }
+
+            for (let kase of canEnums) {
+                if (!expMap[kase.tag]) {
+                    if (expected.open) {
+                        continue;
+                    }
+                    console.log(
+                        'no extra',
+                        kase.tag,
+                        expected.open,
+                        candidate.open,
+                    );
+                    return false;
+                }
+                if (
+                    !payloadsEqual(
+                        kase.payload,
+                        expMap[kase.tag].payload,
+                        ctx,
+                        false,
+                    )
+                ) {
+                    return false;
+                }
+            }
+            if (candidate.open && !expected.open) {
+                return false;
+            }
+
+            // So, ... we can always allow smaller, right?
+            // [] is part of anything?
+            // <T: int>(x) => T
+            // you call with m<10> and its fine
+            // <T: []>(x) => T
+            // means, ... this should be an enum, right?
+            // <T: [`One | `Two]>(x) => T,
+            // means ... if we handle `One and `Two we know
+            // we'll be prepared for anything.
+            // Yeah, ok so the passed-in type must be a subset.
+            // So is there a way to describe the "anything" enum?
+            // maybe that's the `*`.
+            // <T: [`One | `Two | *]>(x) => T
+            // I guess that's almost as good as no bound at all, right?
+            // well actually, it locks down the payloads for those two tags.
+            // 🤔 lots to think about there.
+            // oh and I guess the empty enum just can't be instantiated
+
+            return true;
+        // return expected.type === 'TEnum' &&
+        // idsEqual(candidate.id, expected.id);
+        case 'TDecorated':
+            return typeMatches(candidate.inner, expected, ctx);
         case 'TVars': {
             if (
                 expected.type !== 'TVars' ||
@@ -219,17 +263,26 @@ export const typeMatches = (
                 )
             );
         case 'TOps': {
-            const adds = justAdds(candidate);
+            const adds = justStringAdds(candidate, ctx);
+            if (adds) {
+                if (ctx.isBuiltinType(expected, 'string')) {
+                    return true;
+                }
+                if (expected.type === 'TOps') {
+                    const exadds = justStringAdds(expected, ctx);
+                    return exadds ? stringAddsMatch(adds, exadds) : false;
+                }
+            }
+            const ops = numOps(candidate, ctx);
             if (
-                isBuiltinType(expected, 'string', ctx) &&
-                adds &&
-                adds.every(
-                    (add) =>
-                        add.type === 'String' ||
-                        isBuiltinType(add, 'string', ctx),
-                )
+                expected.type === 'TOps' ||
+                expected.type === 'Number' ||
+                expected.type === 'TRef'
             ) {
-                return true;
+                const eops = numOps(expected, ctx);
+                if (ops && eops) {
+                    return eopsMatch(ops, eops);
+                }
             }
             // Probably need to "condense"?
             return (
@@ -261,26 +314,10 @@ export const typeMatches = (
                     if (!elements) {
                         return false;
                     }
-                    for (let ex of elements) {
-                        if (ex.type === 'String') {
-                            const idx = text.indexOf(ex.text, pos);
-                            if (idx === -1 || (exact && idx !== 0)) {
-                                return false;
-                            }
-                            pos = idx + ex.text.length;
-                        } else if (isBuiltinType(ex, 'string', ctx)) {
-                            exact = false;
-                        } else {
-                            return false;
-                        }
-                    }
-                    if (exact && pos !== text.length - 1) {
-                        return false; // extra trailing
-                    }
-                    return true;
+                    return stringOps(elements, text, pos, exact, ctx);
                 }
                 default:
-                    return isBuiltinType(expected, 'string', ctx);
+                    return ctx.isBuiltinType(expected, 'string');
             }
         // Ooh if this is an alias, I need to resolve it?
         case 'TApply':
@@ -293,6 +330,19 @@ export const typeMatches = (
                 )
             );
         case 'TRef':
+            // console.log('tref', candidate);
+            // If this is a local ref, and it has a bound, then we can use the bound.
+            if (candidate.ref.type === 'Local') {
+                // TOHHH.
+                // If we've finished our 'transform' path,
+                // now we need a mapping of syms to ... bounds
+                // instaed of using the list of scopes.
+                const bound = ctx.getBound(candidate.ref.sym);
+                if (bound) {
+                    // console.log('got a bound', candidate, bound, expected);
+                    return typeMatches(bound, expected, ctx);
+                }
+            }
             return (
                 expected.type === 'TRef' &&
                 trefsEqual(candidate.ref, expected.ref)
@@ -340,67 +390,98 @@ export const typeMatches = (
         // hmm if this is a number-kind of add ... it could get swallowed up into ... a full string
         // ... or things rather more complicated.
         case 'Number':
-            if (expected.type === 'Number') {
-                return (
-                    expected.kind === candidate.kind &&
-                    expected.value === candidate.value
-                );
-            } else if (expected.type === 'TOps') {
-                if (candidate.kind !== 'UInt') {
-                    return false;
+            const ops = numOps(candidate, ctx);
+            if (
+                expected.type === 'TOps' ||
+                expected.type === 'Number' ||
+                expected.type === 'TRef'
+            ) {
+                const eops = numOps(expected, ctx);
+                if (ops && eops) {
+                    return eopsMatch(ops, eops);
                 }
-                let num = 0;
-                const mm = { max: false, min: false };
-                // let ismax = false;
-                const elements = [{ op: '+', right: expected.left }].concat(
-                    expected.right.map(({ top, right }) => ({
-                        op: top,
-                        right,
-                    })),
-                );
-                for (let i = 0; i < elements.length; i++) {
-                    const { op, right: el } = elements[i];
-                    if (el.type === 'Number') {
-                        if (el.kind !== candidate.kind) {
-                            return false;
-                        }
-                        if (op === '+') {
-                            num += el.value;
-                        } else {
-                            num -= el.value;
-                        }
-                        // if (i === 0) {
-                        //     num += el.value;
-                        // }
-                    } else if (
-                        isBuiltinType(el, candidate.kind.toLowerCase(), ctx)
-                    ) {
-                        mm[op === '+' ? 'min' : 'max'] = true;
-                        // ismax = true;
-                    } else {
-                        return false;
-                    }
-                }
-                if (candidate.value <= num && mm.max) {
-                    return true;
-                }
-                if (candidate.value >= num && mm.min) {
-                    return true;
-                }
-                return candidate.value === num;
-            } else {
-                if (
-                    candidate.kind === 'Int' &&
-                    candidate.value >= 0 &&
-                    isBuiltinType(expected, 'uint', ctx)
-                ) {
-                    return true;
-                }
-                return isBuiltinType(
-                    expected,
-                    candidate.kind.toLowerCase(),
-                    ctx,
-                );
             }
+
+            return false;
+        // if (expected.type === 'Number') {
+        //     return (
+        //         expected.kind === candidate.kind &&
+        //         expected.value === candidate.value
+        //     );
+        // } else if (expected.type === 'TOps') {
+        //     const res = numOps(expected, ctx);
+        //     if (!res || res.kind !== candidate.kind) {
+        //         return false;
+        //     }
+        //     const { mm, num } = res;
+
+        //     console.log(candidate.value, mm, num);
+        //     if (candidate.value <= num && !mm.lowerLimit) {
+        //         return true;
+        //     }
+        //     if (candidate.value >= num && !mm.upperLimit) {
+        //         return true;
+        //     }
+        //     return candidate.value === num;
+        // } else {
+        //     if (
+        //         candidate.kind === 'Int' &&
+        //         candidate.value >= 0 &&
+        //         ctx.isBuiltinType(expected, 'uint')
+        //     ) {
+        //         return true;
+        //     }
+        //     return ctx.isBuiltinType(
+        //         expected,
+        //         candidate.kind.toLowerCase(),
+        //     );
+        // }
     }
+};
+
+// ok so recursion checking ... right
+// like, if we pass through the same 'recur' thing multiple times...
+export const expandEnumCases = (
+    type: TEnum,
+    ctx: Ctx,
+    path: string[] = [],
+): null | EnumCase[] => {
+    const cases: EnumCase[] = [];
+    for (let kase of type.cases) {
+        if (kase.type === 'EnumCase') {
+            cases.push(kase);
+        } else {
+            const r = getRef(kase);
+            if (r) {
+                const k = refHash(r.ref);
+                if (path.includes(k)) {
+                    return null;
+                }
+                path = path.concat([k]);
+            }
+            const res = ctx.resolveRefsAndApplies(kase);
+            if (res?.type === 'TEnum') {
+                const expanded = expandEnumCases(res, ctx, path);
+                if (!expanded) {
+                    return null;
+                }
+                cases.push(...expanded);
+            } else {
+                return null;
+            }
+        }
+    }
+    return cases;
+};
+
+const getRef = (t: Type): TRef | null => {
+    switch (t.type) {
+        case 'TRef':
+            return t;
+        case 'TApply':
+            return getRef(t.target);
+        case 'TDecorated':
+            return getRef(t.inner);
+    }
+    return null;
 };

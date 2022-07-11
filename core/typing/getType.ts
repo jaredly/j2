@@ -1,10 +1,10 @@
 import { FullContext, tref } from '../ctx';
 import { extract, idToString } from '../ids';
 import { transformType } from '../transform-tast';
-import { Expression, Type, TVars } from '../typed-ast';
-import { typeMatches } from './typeMatches';
+import { Expression, Type, TVars, GlobalRef } from '../typed-ast';
+import { typeMatches, Ctx } from './typeMatches';
 
-export const applyType = (args: Type[], target: TVars, ctx: FullContext) => {
+export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
     let minArgs = target.args.findIndex((arg) => arg.default_);
     if (minArgs === -1) {
         minArgs = target.args.length;
@@ -13,6 +13,7 @@ export const applyType = (args: Type[], target: TVars, ctx: FullContext) => {
     const symbols: { [num: number]: Type } = {};
     // So, I'm kindof allowing them to apply more?
     if (args.length < minArgs) {
+        console.log('len');
         return null;
     }
     let failed = false;
@@ -28,9 +29,11 @@ export const applyType = (args: Type[], target: TVars, ctx: FullContext) => {
         }
     });
     if (failed) {
+        console.log('failure');
         return null;
     }
 
+    console.log('ok its going');
     // ok we need to transform the inner
     // target.args
     return transformType(
@@ -47,8 +50,10 @@ export const applyType = (args: Type[], target: TVars, ctx: FullContext) => {
     );
 };
 
+const maybeTref = (ref: GlobalRef | null) => (ref ? tref(ref) : null);
+
 // UMM So btw this will resolve all TRefs? Maybe? hmm maybe not..
-export const getType = (expr: Expression, ctx: FullContext): Type | null => {
+export const getType = (expr: Expression, ctx: Ctx): Type | null => {
     switch (expr.type) {
         case 'TypeApplication': {
             const target = getType(expr.target, ctx);
@@ -63,16 +68,15 @@ export const getType = (expr: Expression, ctx: FullContext): Type | null => {
             if (expr.rest.length === 0) {
                 return { type: 'String', loc: expr.loc, text: expr.first };
             }
-            return tref(ctx.types.names['string']);
+            return maybeTref(ctx.getBuiltinRef('string'));
         case 'Ref':
             switch (expr.kind.type) {
                 case 'Unresolved':
                     return null;
                 case 'Global':
-                    const { hash, idx } = extract(expr.kind.id);
-                    // Hmm so, what if what we get is
-                    // an alias?
-                    return ctx.values.hashed[hash][idx].typ;
+                    return ctx.getValueType(expr.kind.id);
+                case 'Recur':
+                    return null;
                 case 'Local':
                     throw new Error('not yet');
             }
@@ -83,10 +87,31 @@ export const getType = (expr: Expression, ctx: FullContext): Type | null => {
             }
             return typ.result;
         case 'Boolean':
-            return tref(ctx.types.names['bool']);
+            return maybeTref(ctx.getBuiltinRef('bool'));
         case 'Number':
             return expr;
         case 'DecoratedExpression':
             return getType(expr.expr, ctx);
+        case 'Enum': {
+            return {
+                type: 'TEnum',
+                loc: expr.loc,
+                open: false,
+                cases: [
+                    {
+                        type: 'EnumCase',
+                        tag: expr.tag,
+                        loc: expr.loc,
+                        decorators: [],
+                        payload: expr.payload
+                            ? getType(expr.payload, ctx) ?? undefined
+                            : undefined,
+                    },
+                ],
+            };
+        }
+        default:
+            let _x: never = expr;
+            return null;
     }
 };

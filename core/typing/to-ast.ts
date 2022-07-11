@@ -1,27 +1,10 @@
 import { FullContext } from '../ctx';
-import { ToAst as ConstantsToAst } from '../elements/constants';
-import { ToAst as DecoratorsToAst } from '../elements/decorators';
-import { ToAst as ApplyToAst } from '../elements/apply';
-import { ToAst as TypeToAst } from '../elements/type';
-import { ToAst as GenericsToAst } from '../elements/generics';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
-
-export const makeToAst = (): ToAst => ({
-    ...ConstantsToAst,
-    ...GeneralToAst,
-    ...DecoratorsToAst,
-    ...ApplyToAst,
-    ...TypeToAst,
-    ...GenericsToAst,
-});
-
-export type ToAst = typeof ConstantsToAst &
-    typeof GeneralToAst &
-    typeof DecoratorsToAst &
-    typeof ApplyToAst &
-    typeof TypeToAst &
-    typeof GenericsToAst;
+import { makeToAst, ToAst } from './to-ast.gen';
+import { Toplevel } from './to-tast';
+export { type ToAst } from './to-ast.gen';
+import { Ctx as ACtx } from './analyze';
 
 export type Ctx = {
     printRef: (
@@ -34,9 +17,17 @@ export type Ctx = {
     recordSym: (sym: t.Sym, kind: 'value' | 'type') => void;
     aliases: { [key: string]: string };
     backAliases: { [key: string]: string };
+    withToplevel: (t: Toplevel) => Ctx;
+
+    reverse: {
+        decorators: { [key: string]: string };
+        types: { [key: string]: string };
+        values: { [key: string]: string };
+    };
+    actx: ACtx;
 };
 
-export const printCtx = (ctx: FullContext, showIds: boolean = false): Ctx => {
+export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
     const backAliases: { [key: string]: string } = {};
     const aliases: { [key: string]: string } = {};
 
@@ -44,6 +35,7 @@ export const printCtx = (ctx: FullContext, showIds: boolean = false): Ctx => {
         let i = 2;
         let uniqueName = name;
         const key = t.refHash(ref);
+        // if (aliases[key])
         while (Object.hasOwn(backAliases, uniqueName)) {
             uniqueName = `${name}_${key.slice(0, i++)}`;
         }
@@ -51,39 +43,67 @@ export const printCtx = (ctx: FullContext, showIds: boolean = false): Ctx => {
         aliases[key] = uniqueName;
     };
 
-    const reverse: { [key: string]: string } = {};
+    const ctx = fctx.extract();
+
+    const reverse: Ctx['reverse'] = {
+        decorators: {},
+        types: {},
+        values: {},
+    };
     Object.keys(ctx.values.names).forEach((name) => {
         ctx.values.names[name].forEach((ref) => {
-            reverse[t.refHash(ref)] = name;
+            reverse.values[t.refHash(ref)] = name;
         });
     });
-    const reverseType: { [key: string]: string } = {};
     Object.keys(ctx.types.names).forEach((name) => {
-        reverseType[t.refHash(ctx.types.names[name])] = name;
+        reverse.types[t.refHash(ctx.types.names[name])] = name;
     });
-    const reverseDecorator: { [key: string]: string } = {};
     Object.keys(ctx.decorators.names).forEach((name) => {
         ctx.decorators.names[name].forEach((ref) => {
-            reverseDecorator[t.refHash(ref)] = name;
+            reverse.decorators[t.refHash(ref)] = name;
         });
     });
     ctx.locals.forEach(({ types, values }) => {
         types.forEach(({ sym, bound }) => {
-            reverseType[sym.id] = sym.name;
+            reverse.types[sym.id] = sym.name;
         });
     });
+
+    // HM: I need the ctx to be able to register the
+    // fact that we've just passed a new toplevel.
+
+    // const top = fctx.extract().toplevel;
+    // if (top?.type === 'Type') {
+    //     top.items.forEach(({ name }, i) => {
+    //         reverseType['r' + i] = name;
+    //     });
+    // }
+
     return {
+        actx: fctx,
+        reverse,
+
+        withToplevel(top) {
+            const reverse = { ...this.reverse };
+            if (top.type === 'Type') {
+                top.items.forEach((item, i) => {
+                    reverse.types[t.refHash({ type: 'Recur', idx: i })] =
+                        item.name;
+                });
+            }
+            return { ...this, reverse };
+        },
         aliases,
         backAliases,
         recordSym(sym, kind) {
             if (kind === 'value') {
-                reverse[sym.id] = sym.name;
+                this.reverse.values[sym.id] = sym.name;
             } else {
-                reverseType[sym.id] = sym.name;
+                this.reverse.types[sym.id] = sym.name;
             }
         },
         printSym(sym) {
-            if (showIds) {
+            if (showIds || true) {
                 return { label: sym.name, hash: `#[${sym.id}]` };
             }
             const hash = '' + sym.id;
@@ -96,11 +116,17 @@ export const printCtx = (ctx: FullContext, showIds: boolean = false): Ctx => {
             const hash = t.refHash(ref);
             const name =
                 kind === 'value'
-                    ? reverse[hash]
+                    ? this.reverse.values[hash]
                     : kind === 'decorator'
-                    ? reverseDecorator[hash]
-                    : reverseType[hash];
-            if (name && !showIds) {
+                    ? this.reverse.decorators[hash]
+                    : this.reverse.types[hash];
+
+            if (
+                name &&
+                !showIds &&
+                ref.type !== 'Local' &&
+                ref.type !== 'Recur'
+            ) {
                 if (!this.aliases[hash]) {
                     add(name, ref);
                 }
@@ -120,36 +146,4 @@ export const printCtx = (ctx: FullContext, showIds: boolean = false): Ctx => {
         },
         ToAst: makeToAst(),
     };
-};
-
-export const GeneralToAst = {
-    File({ type, toplevels, loc, comments }: t.File, ctx: Ctx): p.File {
-        // TOOD: Go through and find all hashes, right?
-        // maybe when printing unresolved things, put `#[:unresolved:]` or something?
-        return {
-            type,
-            toplevels: toplevels.map((t) => ctx.ToAst[t.type](t as any, ctx)),
-            loc,
-            comments,
-        };
-    },
-    ToplevelExpression(
-        { type, expr, loc }: t.ToplevelExpression,
-        ctx: Ctx,
-    ): p.Toplevel {
-        return ctx.ToAst[expr.type](expr as any, ctx);
-    },
-
-    Ref({ type, kind, loc }: t.Ref, ctx: Ctx): p.Identifier {
-        if (kind.type === 'Unresolved') {
-            return {
-                type: 'Identifier',
-                text: kind.text,
-                hash: '#[:unresolved:]',
-                loc,
-            };
-        } else {
-            return ctx.printRef(kind, loc, 'value');
-        }
-    },
 };

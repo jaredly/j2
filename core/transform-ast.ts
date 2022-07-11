@@ -1,4 +1,5 @@
 import {
+  SyntaxError,
   Loc,
   File,
   Toplevel,
@@ -29,6 +30,7 @@ import {
   TemplateString,
   TemplatePair,
   TemplateWrap,
+  Enum,
   Suffix,
   CallSuffix,
   CommaExpr,
@@ -46,8 +48,16 @@ import {
   TBargs,
   TBArg,
   TParens,
+  TEnum,
+  EnumCases,
+  EnumCase,
+  TagDecl,
+  TagPayload,
+  Star,
   TComma,
   TRight,
+  TypeFile,
+  TypeToplevel,
   _lineEnd,
   _EOF,
   newline,
@@ -68,42 +78,20 @@ import {
 } from "./grammar/base.parser";
 
 export type Visitor<Ctx> = {
+  SyntaxError?: (
+    node: SyntaxError,
+    ctx: Ctx
+  ) => null | false | SyntaxError | [SyntaxError | null, Ctx];
+  SyntaxErrorPost?: (node: SyntaxError, ctx: Ctx) => null | SyntaxError;
   Loc?: (node: Loc, ctx: Ctx) => null | false | Loc | [Loc | null, Ctx];
   LocPost?: (node: Loc, ctx: Ctx) => null | Loc;
   File?: (node: File, ctx: Ctx) => null | false | File | [File | null, Ctx];
   FilePost?: (node: File, ctx: Ctx) => null | File;
-  _lineEnd?: (
-    node: _lineEnd,
+  TypeFile?: (
+    node: TypeFile,
     ctx: Ctx
-  ) => null | false | _lineEnd | [_lineEnd | null, Ctx];
-  _lineEndPost?: (node: _lineEnd, ctx: Ctx) => null | _lineEnd;
-  _EOF?: (node: _EOF, ctx: Ctx) => null | false | _EOF | [_EOF | null, Ctx];
-  _EOFPost?: (node: _EOF, ctx: Ctx) => null | _EOF;
-  Toplevel?: (
-    node: Toplevel,
-    ctx: Ctx
-  ) => null | false | Toplevel | [Toplevel | null, Ctx];
-  ToplevelPost?: (node: Toplevel, ctx: Ctx) => null | Toplevel;
-  Expression?: (
-    node: Expression,
-    ctx: Ctx
-  ) => null | false | Expression | [Expression | null, Ctx];
-  ExpressionPost?: (node: Expression, ctx: Ctx) => null | Expression;
-  Atom?: (node: Atom, ctx: Ctx) => null | false | Atom | [Atom | null, Ctx];
-  AtomPost?: (node: Atom, ctx: Ctx) => null | Atom;
-  ParenedExpression?: (
-    node: ParenedExpression,
-    ctx: Ctx
-  ) => null | false | ParenedExpression | [ParenedExpression | null, Ctx];
-  ParenedExpressionPost?: (
-    node: ParenedExpression,
-    ctx: Ctx
-  ) => null | ParenedExpression;
-  Identifier?: (
-    node: Identifier,
-    ctx: Ctx
-  ) => null | false | Identifier | [Identifier | null, Ctx];
-  IdentifierPost?: (node: Identifier, ctx: Ctx) => null | Identifier;
+  ) => null | false | TypeFile | [TypeFile | null, Ctx];
+  TypeFilePost?: (node: TypeFile, ctx: Ctx) => null | TypeFile;
   Apply_inner?: (
     node: Apply_inner,
     ctx: Ctx
@@ -126,6 +114,43 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | CommaExpr | [CommaExpr | null, Ctx];
   CommaExprPost?: (node: CommaExpr, ctx: Ctx) => null | CommaExpr;
+  _lineEnd?: (
+    node: _lineEnd,
+    ctx: Ctx
+  ) => null | false | _lineEnd | [_lineEnd | null, Ctx];
+  _lineEndPost?: (node: _lineEnd, ctx: Ctx) => null | _lineEnd;
+  _EOF?: (node: _EOF, ctx: Ctx) => null | false | _EOF | [_EOF | null, Ctx];
+  _EOFPost?: (node: _EOF, ctx: Ctx) => null | _EOF;
+  Toplevel?: (
+    node: Toplevel,
+    ctx: Ctx
+  ) => null | false | Toplevel | [Toplevel | null, Ctx];
+  ToplevelPost?: (node: Toplevel, ctx: Ctx) => null | Toplevel;
+  TypeToplevel?: (
+    node: TypeToplevel,
+    ctx: Ctx
+  ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
+  TypeToplevelPost?: (node: TypeToplevel, ctx: Ctx) => null | TypeToplevel;
+  Expression?: (
+    node: Expression,
+    ctx: Ctx
+  ) => null | false | Expression | [Expression | null, Ctx];
+  ExpressionPost?: (node: Expression, ctx: Ctx) => null | Expression;
+  Identifier?: (
+    node: Identifier,
+    ctx: Ctx
+  ) => null | false | Identifier | [Identifier | null, Ctx];
+  IdentifierPost?: (node: Identifier, ctx: Ctx) => null | Identifier;
+  Atom?: (node: Atom, ctx: Ctx) => null | false | Atom | [Atom | null, Ctx];
+  AtomPost?: (node: Atom, ctx: Ctx) => null | Atom;
+  ParenedExpression?: (
+    node: ParenedExpression,
+    ctx: Ctx
+  ) => null | false | ParenedExpression | [ParenedExpression | null, Ctx];
+  ParenedExpressionPost?: (
+    node: ParenedExpression,
+    ctx: Ctx
+  ) => null | ParenedExpression;
   newline?: (
     node: newline,
     ctx: Ctx
@@ -270,6 +295,32 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | DecExpr | [DecExpr | null, Ctx];
   DecExprPost?: (node: DecExpr, ctx: Ctx) => null | DecExpr;
+  Enum?: (node: Enum, ctx: Ctx) => null | false | Enum | [Enum | null, Ctx];
+  EnumPost?: (node: Enum, ctx: Ctx) => null | Enum;
+  TEnum?: (node: TEnum, ctx: Ctx) => null | false | TEnum | [TEnum | null, Ctx];
+  TEnumPost?: (node: TEnum, ctx: Ctx) => null | TEnum;
+  EnumCases?: (
+    node: EnumCases,
+    ctx: Ctx
+  ) => null | false | EnumCases | [EnumCases | null, Ctx];
+  EnumCasesPost?: (node: EnumCases, ctx: Ctx) => null | EnumCases;
+  EnumCase?: (
+    node: EnumCase,
+    ctx: Ctx
+  ) => null | false | EnumCase | [EnumCase | null, Ctx];
+  EnumCasePost?: (node: EnumCase, ctx: Ctx) => null | EnumCase;
+  TagDecl?: (
+    node: TagDecl,
+    ctx: Ctx
+  ) => null | false | TagDecl | [TagDecl | null, Ctx];
+  TagDeclPost?: (node: TagDecl, ctx: Ctx) => null | TagDecl;
+  TagPayload?: (
+    node: TagPayload,
+    ctx: Ctx
+  ) => null | false | TagPayload | [TagPayload | null, Ctx];
+  TagPayloadPost?: (node: TagPayload, ctx: Ctx) => null | TagPayload;
+  Star?: (node: Star, ctx: Ctx) => null | false | Star | [Star | null, Ctx];
+  StarPost?: (node: Star, ctx: Ctx) => null | Star;
   TypeApplicationSuffix?: (
     node: TypeApplicationSuffix,
     ctx: Ctx
@@ -302,13 +353,6 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TypeVbl | [TypeVbl | null, Ctx];
   TypeVblPost?: (node: TypeVbl, ctx: Ctx) => null | TypeVbl;
-  Type?: (node: Type, ctx: Ctx) => null | false | Type | [Type | null, Ctx];
-  TypePost?: (node: Type, ctx: Ctx) => null | Type;
-  TDecorated?: (
-    node: TDecorated,
-    ctx: Ctx
-  ) => null | false | TDecorated | [TDecorated | null, Ctx];
-  TDecoratedPost?: (node: TDecorated, ctx: Ctx) => null | TDecorated;
   TApply_inner?: (
     node: TApply_inner,
     ctx: Ctx
@@ -319,10 +363,11 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TApply | [TApply | null, Ctx];
   TApplyPost?: (node: TApply, ctx: Ctx) => null | TApply;
-  TAtom?: (node: TAtom, ctx: Ctx) => null | false | TAtom | [TAtom | null, Ctx];
-  TAtomPost?: (node: TAtom, ctx: Ctx) => null | TAtom;
-  TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
-  TRefPost?: (node: TRef, ctx: Ctx) => null | TRef;
+  TComma?: (
+    node: TComma,
+    ctx: Ctx
+  ) => null | false | TComma | [TComma | null, Ctx];
+  TCommaPost?: (node: TComma, ctx: Ctx) => null | TComma;
   TVars?: (node: TVars, ctx: Ctx) => null | false | TVars | [TVars | null, Ctx];
   TVarsPost?: (node: TVars, ctx: Ctx) => null | TVars;
   TBargs?: (
@@ -332,6 +377,17 @@ export type Visitor<Ctx> = {
   TBargsPost?: (node: TBargs, ctx: Ctx) => null | TBargs;
   TBArg?: (node: TBArg, ctx: Ctx) => null | false | TBArg | [TBArg | null, Ctx];
   TBArgPost?: (node: TBArg, ctx: Ctx) => null | TBArg;
+  Type?: (node: Type, ctx: Ctx) => null | false | Type | [Type | null, Ctx];
+  TypePost?: (node: Type, ctx: Ctx) => null | Type;
+  TDecorated?: (
+    node: TDecorated,
+    ctx: Ctx
+  ) => null | false | TDecorated | [TDecorated | null, Ctx];
+  TDecoratedPost?: (node: TDecorated, ctx: Ctx) => null | TDecorated;
+  TAtom?: (node: TAtom, ctx: Ctx) => null | false | TAtom | [TAtom | null, Ctx];
+  TAtomPost?: (node: TAtom, ctx: Ctx) => null | TAtom;
+  TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
+  TRefPost?: (node: TRef, ctx: Ctx) => null | TRef;
   TOps_inner?: (
     node: TOps_inner,
     ctx: Ctx
@@ -351,11 +407,6 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | TOpInner | [TOpInner | null, Ctx];
   TOpInnerPost?: (node: TOpInner, ctx: Ctx) => null | TOpInner;
-  TComma?: (
-    node: TComma,
-    ctx: Ctx
-  ) => null | false | TComma | [TComma | null, Ctx];
-  TCommaPost?: (node: TComma, ctx: Ctx) => null | TComma;
   TParens?: (
     node: TParens,
     ctx: Ctx
@@ -388,10 +439,26 @@ export type Visitor<Ctx> = {
     node: AllTaggedTypes,
     ctx: Ctx
   ) => null | AllTaggedTypes;
+  Apply_Apply?: (
+    node: Apply,
+    ctx: Ctx
+  ) => null | false | Apply | [Apply | null, Ctx];
+  Suffix_CallSuffix?: (
+    node: CallSuffix,
+    ctx: Ctx
+  ) => null | false | Suffix | [Suffix | null, Ctx];
+  Suffix_TypeApplicationSuffix?: (
+    node: TypeApplicationSuffix,
+    ctx: Ctx
+  ) => null | false | Suffix | [Suffix | null, Ctx];
   Toplevel_TypeAlias?: (
     node: TypeAlias,
     ctx: Ctx
   ) => null | false | Toplevel | [Toplevel | null, Ctx];
+  TypeToplevel_TypeAlias?: (
+    node: TypeAlias,
+    ctx: Ctx
+  ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
   Atom_Number?: (
     node: Number,
     ctx: Ctx
@@ -412,18 +479,10 @@ export type Visitor<Ctx> = {
     node: TemplateString,
     ctx: Ctx
   ) => null | false | Atom | [Atom | null, Ctx];
-  Apply_Apply?: (
-    node: Apply,
+  Atom_Enum?: (
+    node: Enum,
     ctx: Ctx
-  ) => null | false | Apply | [Apply | null, Ctx];
-  Suffix_CallSuffix?: (
-    node: CallSuffix,
-    ctx: Ctx
-  ) => null | false | Suffix | [Suffix | null, Ctx];
-  Suffix_TypeApplicationSuffix?: (
-    node: TypeApplicationSuffix,
-    ctx: Ctx
-  ) => null | false | Suffix | [Suffix | null, Ctx];
+  ) => null | false | Atom | [Atom | null, Ctx];
   DecoratedExpression_DecoratedExpression?: (
     node: DecoratedExpression,
     ctx: Ctx
@@ -436,6 +495,14 @@ export type Visitor<Ctx> = {
     node: DecExpr,
     ctx: Ctx
   ) => null | false | DecoratorArg | [DecoratorArg | null, Ctx];
+  EnumCase_TagDecl?: (
+    node: TagDecl,
+    ctx: Ctx
+  ) => null | false | EnumCase | [EnumCase | null, Ctx];
+  EnumCase_Star?: (
+    node: Star,
+    ctx: Ctx
+  ) => null | false | EnumCase | [EnumCase | null, Ctx];
   TApply_TApply?: (
     node: TApply,
     ctx: Ctx
@@ -464,6 +531,10 @@ export type Visitor<Ctx> = {
     node: TParens,
     ctx: Ctx
   ) => null | false | TAtom | [TAtom | null, Ctx];
+  TAtom_TEnum?: (
+    node: TEnum,
+    ctx: Ctx
+  ) => null | false | TAtom | [TAtom | null, Ctx];
   TOps_TOps?: (
     node: TOps,
     ctx: Ctx
@@ -476,12 +547,8 @@ export type Visitor<Ctx> = {
     node: File,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-  AllTaggedTypes_ParenedExpression?: (
-    node: ParenedExpression,
-    ctx: Ctx
-  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-  AllTaggedTypes_Identifier?: (
-    node: Identifier,
+  AllTaggedTypes_TypeFile?: (
+    node: TypeFile,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_Apply?: (
@@ -494,6 +561,14 @@ export type Visitor<Ctx> = {
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_CommaExpr?: (
     node: CommaExpr,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_Identifier?: (
+    node: Identifier,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_ParenedExpression?: (
+    node: ParenedExpression,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_Boolean?: (
@@ -548,6 +623,30 @@ export type Visitor<Ctx> = {
     node: DecExpr,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_Enum?: (
+    node: Enum,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TEnum?: (
+    node: TEnum,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_EnumCases?: (
+    node: EnumCases,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TagDecl?: (
+    node: TagDecl,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TagPayload?: (
+    node: TagPayload,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_Star?: (
+    node: Star,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TypeApplicationSuffix?: (
     node: TypeApplicationSuffix,
     ctx: Ctx
@@ -568,16 +667,12 @@ export type Visitor<Ctx> = {
     node: TypeVbl,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-  AllTaggedTypes_TDecorated?: (
-    node: TDecorated,
-    ctx: Ctx
-  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TApply?: (
     node: TApply,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-  AllTaggedTypes_TRef?: (
-    node: TRef,
+  AllTaggedTypes_TComma?: (
+    node: TComma,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TVars?: (
@@ -592,16 +687,20 @@ export type Visitor<Ctx> = {
     node: TBArg,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TDecorated?: (
+    node: TDecorated,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_TRef?: (
+    node: TRef,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TOps?: (
     node: TOps,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TRight?: (
     node: TRight,
-    ctx: Ctx
-  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-  AllTaggedTypes_TComma?: (
-    node: TComma,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TParens?: (
@@ -659,6 +758,56 @@ export const transformLoc = <Ctx>(
   node = updatedNode;
   if (visitor.LocPost) {
     const transformed = visitor.LocPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformSyntaxError = <Ctx>(
+  node: SyntaxError,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): SyntaxError => {
+  if (!node) {
+    throw new Error("No SyntaxError provided");
+  }
+
+  const transformed = visitor.SyntaxError
+    ? visitor.SyntaxError(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$location = transformLoc(node.location, visitor, ctx);
+    changed1 = changed1 || updatedNode$location !== node.location;
+    if (changed1) {
+      updatedNode = { ...updatedNode, location: updatedNode$location };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.SyntaxErrorPost) {
+    const transformed = visitor.SyntaxErrorPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }
@@ -1159,6 +1308,54 @@ export const transformTemplateString = <Ctx>(
   return node;
 };
 
+export const transformEnum = <Ctx>(
+  node: Enum,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Enum => {
+  if (!node) {
+    throw new Error("No Enum provided");
+  }
+
+  const transformed = visitor.Enum ? visitor.Enum(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = { ...updatedNode, loc: updatedNode$loc };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.EnumPost) {
+    const transformed = visitor.EnumPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformAtom = <Ctx>(
   node: Atom,
   visitor: Visitor<Ctx>,
@@ -1280,6 +1477,25 @@ export const transformAtom = <Ctx>(
       }
       break;
     }
+
+    case "Enum": {
+      const transformed = visitor.Atom_Enum
+        ? visitor.Atom_Enum(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
   }
 
   let updatedNode = node;
@@ -1309,10 +1525,16 @@ export const transformAtom = <Ctx>(
       break;
     }
 
+    case "TemplateString": {
+      updatedNode = transformTemplateString(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
     default: {
       // let changed1 = false;
 
-      const updatedNode$0node = transformTemplateString(node, visitor, ctx);
+      const updatedNode$0node = transformEnum(node, visitor, ctx);
       changed0 = changed0 || updatedNode$0node !== node;
       updatedNode = updatedNode$0node;
     }
@@ -2414,25 +2636,8 @@ export const transformTRef = <Ctx>(
 
     const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
     changed1 = changed1 || updatedNode$loc !== node.loc;
-
-    let updatedNode$args = null;
-    const updatedNode$args$current = node.args;
-    if (updatedNode$args$current != null) {
-      const updatedNode$args$1$ = transformTApply(
-        updatedNode$args$current,
-        visitor,
-        ctx
-      );
-      changed1 = changed1 || updatedNode$args$1$ !== updatedNode$args$current;
-      updatedNode$args = updatedNode$args$1$;
-    }
-
     if (changed1) {
-      updatedNode = {
-        ...updatedNode,
-        loc: updatedNode$loc,
-        args: updatedNode$args,
-      };
+      updatedNode = { ...updatedNode, loc: updatedNode$loc };
       changed0 = true;
     }
   }
@@ -2945,6 +3150,480 @@ export const transformTParens = <Ctx>(
   return node;
 };
 
+export const transformTagPayload = <Ctx>(
+  node: TagPayload,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TagPayload => {
+  if (!node) {
+    throw new Error("No TagPayload provided");
+  }
+
+  const transformed = visitor.TagPayload ? visitor.TagPayload(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    const updatedNode$inner = transformType(node.inner, visitor, ctx);
+    changed1 = changed1 || updatedNode$inner !== node.inner;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        inner: updatedNode$inner,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TagPayloadPost) {
+    const transformed = visitor.TagPayloadPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTagDecl = <Ctx>(
+  node: TagDecl,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TagDecl => {
+  if (!node) {
+    throw new Error("No TagDecl provided");
+  }
+
+  const transformed = visitor.TagDecl ? visitor.TagDecl(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$decorators = node.decorators;
+    {
+      let changed2 = false;
+      const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
+        const result = transformDecorator(
+          updatedNode$decorators$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$decorators$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$decorators = arr1;
+        changed1 = true;
+      }
+    }
+
+    let updatedNode$payload = null;
+    const updatedNode$payload$current = node.payload;
+    if (updatedNode$payload$current != null) {
+      const updatedNode$payload$1$ = transformTagPayload(
+        updatedNode$payload$current,
+        visitor,
+        ctx
+      );
+      changed1 =
+        changed1 || updatedNode$payload$1$ !== updatedNode$payload$current;
+      updatedNode$payload = updatedNode$payload$1$;
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        decorators: updatedNode$decorators,
+        payload: updatedNode$payload,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TagDeclPost) {
+    const transformed = visitor.TagDeclPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformStar = <Ctx>(
+  node: Star,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Star => {
+  if (!node) {
+    throw new Error("No Star provided");
+  }
+
+  const transformed = visitor.Star ? visitor.Star(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = { ...updatedNode, loc: updatedNode$loc };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.StarPost) {
+    const transformed = visitor.StarPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformEnumCase = <Ctx>(
+  node: EnumCase,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): EnumCase => {
+  if (!node) {
+    throw new Error("No EnumCase provided");
+  }
+
+  const transformed = visitor.EnumCase ? visitor.EnumCase(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  switch (node.type) {
+    case "TagDecl": {
+      const transformed = visitor.EnumCase_TagDecl
+        ? visitor.EnumCase_TagDecl(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "Star": {
+      const transformed = visitor.EnumCase_Star
+        ? visitor.EnumCase_Star(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "TagDecl": {
+      updatedNode = transformTagDecl(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TOps": {
+      updatedNode = transformTOps_inner(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TDecorated": {
+      updatedNode = transformTDecorated(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TApply": {
+      updatedNode = transformTApply_inner(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TRef": {
+      updatedNode = transformTRef(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "Number": {
+      updatedNode = transformNumber(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "String": {
+      updatedNode = transformString(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TLambda": {
+      updatedNode = transformTLambda(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TVars": {
+      updatedNode = transformTVars(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TParens": {
+      updatedNode = transformTParens(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TEnum": {
+      updatedNode = transformTEnum(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformStar(node, visitor, ctx);
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.EnumCasePost) {
+    const transformed = visitor.EnumCasePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformEnumCases = <Ctx>(
+  node: EnumCases,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): EnumCases => {
+  if (!node) {
+    throw new Error("No EnumCases provided");
+  }
+
+  const transformed = visitor.EnumCases ? visitor.EnumCases(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformEnumCase(updatedNode$items$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        items: updatedNode$items,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.EnumCasesPost) {
+    const transformed = visitor.EnumCasesPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTEnum = <Ctx>(
+  node: TEnum,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TEnum => {
+  if (!node) {
+    throw new Error("No TEnum provided");
+  }
+
+  const transformed = visitor.TEnum ? visitor.TEnum(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$cases = null;
+    const updatedNode$cases$current = node.cases;
+    if (updatedNode$cases$current != null) {
+      const updatedNode$cases$1$ = transformEnumCases(
+        updatedNode$cases$current,
+        visitor,
+        ctx
+      );
+      changed1 = changed1 || updatedNode$cases$1$ !== updatedNode$cases$current;
+      updatedNode$cases = updatedNode$cases$1$;
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        cases: updatedNode$cases,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TEnumPost) {
+    const transformed = visitor.TEnumPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformTAtom = <Ctx>(
   node: TAtom,
   visitor: Visitor<Ctx>,
@@ -3085,6 +3764,25 @@ export const transformTAtom = <Ctx>(
       }
       break;
     }
+
+    case "TEnum": {
+      const transformed = visitor.TAtom_TEnum
+        ? visitor.TAtom_TEnum(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
   }
 
   let updatedNode = node;
@@ -3120,10 +3818,16 @@ export const transformTAtom = <Ctx>(
       break;
     }
 
+    case "TParens": {
+      updatedNode = transformTParens(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
     default: {
       // let changed1 = false;
 
-      const updatedNode$0node = transformTParens(node, visitor, ctx);
+      const updatedNode$0node = transformTEnum(node, visitor, ctx);
       changed0 = changed0 || updatedNode$0node !== node;
       updatedNode = updatedNode$0node;
     }
@@ -4011,6 +4715,154 @@ export const transformFile = <Ctx>(
   return node;
 };
 
+export const transformTypeToplevel = <Ctx>(
+  node: TypeToplevel,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeToplevel => {
+  if (!node) {
+    throw new Error("No TypeToplevel provided");
+  }
+
+  const transformed = visitor.TypeToplevel
+    ? visitor.TypeToplevel(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  switch (node.type) {
+    case "TypeAlias": {
+      const transformed = visitor.TypeToplevel_TypeAlias
+        ? visitor.TypeToplevel_TypeAlias(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "TypeAlias": {
+      updatedNode = transformTypeAlias(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformType(node, visitor, ctx);
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeToplevelPost) {
+    const transformed = visitor.TypeToplevelPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTypeFile = <Ctx>(
+  node: TypeFile,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TypeFile => {
+  if (!node) {
+    throw new Error("No TypeFile provided");
+  }
+
+  const transformed = visitor.TypeFile ? visitor.TypeFile(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$toplevels = node.toplevels;
+    {
+      let changed2 = false;
+      const arr1 = node.toplevels.map((updatedNode$toplevels$item1) => {
+        const result = transformTypeToplevel(
+          updatedNode$toplevels$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$toplevels$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$toplevels = arr1;
+        changed1 = true;
+      }
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        toplevels: updatedNode$toplevels,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TypeFilePost) {
+    const transformed = visitor.TypeFilePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transform_lineEnd = <Ctx>(
   node: _lineEnd,
   visitor: Visitor<Ctx>,
@@ -4747,28 +5599,9 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
-    case "ParenedExpression": {
-      const transformed = visitor.AllTaggedTypes_ParenedExpression
-        ? visitor.AllTaggedTypes_ParenedExpression(node, ctx)
-        : null;
-      if (transformed != null) {
-        if (Array.isArray(transformed)) {
-          ctx = transformed[1];
-          if (transformed[0] != null) {
-            node = transformed[0];
-          }
-        } else if (transformed == false) {
-          return node;
-        } else {
-          node = transformed;
-        }
-      }
-      break;
-    }
-
-    case "Identifier": {
-      const transformed = visitor.AllTaggedTypes_Identifier
-        ? visitor.AllTaggedTypes_Identifier(node, ctx)
+    case "TypeFile": {
+      const transformed = visitor.AllTaggedTypes_TypeFile
+        ? visitor.AllTaggedTypes_TypeFile(node, ctx)
         : null;
       if (transformed != null) {
         if (Array.isArray(transformed)) {
@@ -4826,6 +5659,44 @@ export const transformAllTaggedTypes = <Ctx>(
     case "CommaExpr": {
       const transformed = visitor.AllTaggedTypes_CommaExpr
         ? visitor.AllTaggedTypes_CommaExpr(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "Identifier": {
+      const transformed = visitor.AllTaggedTypes_Identifier
+        ? visitor.AllTaggedTypes_Identifier(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "ParenedExpression": {
+      const transformed = visitor.AllTaggedTypes_ParenedExpression
+        ? visitor.AllTaggedTypes_ParenedExpression(node, ctx)
         : null;
       if (transformed != null) {
         if (Array.isArray(transformed)) {
@@ -5089,6 +5960,120 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
+    case "Enum": {
+      const transformed = visitor.AllTaggedTypes_Enum
+        ? visitor.AllTaggedTypes_Enum(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TEnum": {
+      const transformed = visitor.AllTaggedTypes_TEnum
+        ? visitor.AllTaggedTypes_TEnum(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "EnumCases": {
+      const transformed = visitor.AllTaggedTypes_EnumCases
+        ? visitor.AllTaggedTypes_EnumCases(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TagDecl": {
+      const transformed = visitor.AllTaggedTypes_TagDecl
+        ? visitor.AllTaggedTypes_TagDecl(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TagPayload": {
+      const transformed = visitor.AllTaggedTypes_TagPayload
+        ? visitor.AllTaggedTypes_TagPayload(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "Star": {
+      const transformed = visitor.AllTaggedTypes_Star
+        ? visitor.AllTaggedTypes_Star(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "TypeApplicationSuffix": {
       const transformed = visitor.AllTaggedTypes_TypeApplicationSuffix
         ? visitor.AllTaggedTypes_TypeApplicationSuffix(node, ctx)
@@ -5184,25 +6169,6 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
-    case "TDecorated": {
-      const transformed = visitor.AllTaggedTypes_TDecorated
-        ? visitor.AllTaggedTypes_TDecorated(node, ctx)
-        : null;
-      if (transformed != null) {
-        if (Array.isArray(transformed)) {
-          ctx = transformed[1];
-          if (transformed[0] != null) {
-            node = transformed[0];
-          }
-        } else if (transformed == false) {
-          return node;
-        } else {
-          node = transformed;
-        }
-      }
-      break;
-    }
-
     case "TApply": {
       const transformed = visitor.AllTaggedTypes_TApply
         ? visitor.AllTaggedTypes_TApply(node, ctx)
@@ -5222,9 +6188,9 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
-    case "TRef": {
-      const transformed = visitor.AllTaggedTypes_TRef
-        ? visitor.AllTaggedTypes_TRef(node, ctx)
+    case "TComma": {
+      const transformed = visitor.AllTaggedTypes_TComma
+        ? visitor.AllTaggedTypes_TComma(node, ctx)
         : null;
       if (transformed != null) {
         if (Array.isArray(transformed)) {
@@ -5298,6 +6264,44 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
+    case "TDecorated": {
+      const transformed = visitor.AllTaggedTypes_TDecorated
+        ? visitor.AllTaggedTypes_TDecorated(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "TRef": {
+      const transformed = visitor.AllTaggedTypes_TRef
+        ? visitor.AllTaggedTypes_TRef(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "TOps": {
       const transformed = visitor.AllTaggedTypes_TOps
         ? visitor.AllTaggedTypes_TOps(node, ctx)
@@ -5320,25 +6324,6 @@ export const transformAllTaggedTypes = <Ctx>(
     case "TRight": {
       const transformed = visitor.AllTaggedTypes_TRight
         ? visitor.AllTaggedTypes_TRight(node, ctx)
-        : null;
-      if (transformed != null) {
-        if (Array.isArray(transformed)) {
-          ctx = transformed[1];
-          if (transformed[0] != null) {
-            node = transformed[0];
-          }
-        } else if (transformed == false) {
-          return node;
-        } else {
-          node = transformed;
-        }
-      }
-      break;
-    }
-
-    case "TComma": {
-      const transformed = visitor.AllTaggedTypes_TComma
-        ? visitor.AllTaggedTypes_TComma(node, ctx)
         : null;
       if (transformed != null) {
         if (Array.isArray(transformed)) {
@@ -5479,14 +6464,8 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
-    case "ParenedExpression": {
-      updatedNode = transformParenedExpression(node, visitor, ctx);
-      changed0 = changed0 || updatedNode !== node;
-      break;
-    }
-
-    case "Identifier": {
-      updatedNode = transformIdentifier(node, visitor, ctx);
+    case "TypeFile": {
+      updatedNode = transformTypeFile(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }
@@ -5505,6 +6484,18 @@ export const transformAllTaggedTypes = <Ctx>(
 
     case "CommaExpr": {
       updatedNode = transformCommaExpr(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "Identifier": {
+      updatedNode = transformIdentifier(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "ParenedExpression": {
+      updatedNode = transformParenedExpression(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }
@@ -5587,6 +6578,42 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
+    case "Enum": {
+      updatedNode = transformEnum(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TEnum": {
+      updatedNode = transformTEnum(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "EnumCases": {
+      updatedNode = transformEnumCases(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TagDecl": {
+      updatedNode = transformTagDecl(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TagPayload": {
+      updatedNode = transformTagPayload(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "Star": {
+      updatedNode = transformStar(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
     case "TypeApplicationSuffix": {
       updatedNode = transformTypeApplicationSuffix(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
@@ -5617,20 +6644,14 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
-    case "TDecorated": {
-      updatedNode = transformTDecorated(node, visitor, ctx);
-      changed0 = changed0 || updatedNode !== node;
-      break;
-    }
-
     case "TApply": {
       updatedNode = transformTApply_inner(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }
 
-    case "TRef": {
-      updatedNode = transformTRef(node, visitor, ctx);
+    case "TComma": {
+      updatedNode = transformTComma(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }
@@ -5653,6 +6674,18 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
+    case "TDecorated": {
+      updatedNode = transformTDecorated(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TRef": {
+      updatedNode = transformTRef(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
     case "TOps": {
       updatedNode = transformTOps_inner(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
@@ -5661,12 +6694,6 @@ export const transformAllTaggedTypes = <Ctx>(
 
     case "TRight": {
       updatedNode = transformTRight(node, visitor, ctx);
-      changed0 = changed0 || updatedNode !== node;
-      break;
-    }
-
-    case "TComma": {
-      updatedNode = transformTComma(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

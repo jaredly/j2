@@ -1,5 +1,6 @@
 import * as babel from '@babel/core';
 import * as fs from 'fs';
+import { syncTransforms } from './sync-transforms';
 
 const inFile = './core/typed-ast.ts';
 
@@ -19,7 +20,24 @@ ast.program.body.forEach((line) => {
     }
 });
 
-const replaces: { range: [number, number]; text: string; prev: string }[] = [];
+export type Replace = {
+    range: [number, number];
+    text: string;
+    prev: string;
+};
+
+const processReplaces = (replaces: Replace[], raw: string) => {
+    let off = 0;
+    replaces.forEach(({ range: [start, end], text }) => {
+        start += off;
+        end += off;
+        raw = raw.slice(0, start) + text + raw.slice(end);
+        off += text.length - (end - start);
+    });
+    return raw;
+};
+
+const replaces: Replace[] = [];
 
 const elements: string[] = fs
     .readdirSync('./core/elements')
@@ -62,15 +80,10 @@ elements.forEach((name) => {
 });
 
 if (replaces.length) {
-    let off = 0;
-    replaces.forEach(({ range: [start, end], text }) => {
-        start += off;
-        end += off;
-        raw = raw.slice(0, start) + text + raw.slice(end);
-        off += text.length - (end - start);
-    });
-    fs.writeFileSync('./core/typed-ast.ts', raw);
+    fs.writeFileSync('./core/typed-ast.ts', processReplaces(replaces, raw));
     console.log('Success');
 } else {
     console.log('No change');
 }
+
+syncTransforms();

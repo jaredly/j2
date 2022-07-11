@@ -12,7 +12,7 @@ import { typeMatches } from '../typing/typeMatches';
 
 export const grammar = `
 Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
-Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)?) "u"?
+Number "number" = _ contents:$("-"? [0-9]+ ("." [0-9]+)? "u"?)
 
 String = "\"" text:$(stringChar*) "\""
 TemplateString = "\"" first:$tplStringChars rest:TemplatePair* "\""
@@ -42,7 +42,7 @@ export type TemplateString = {
 
 export type String = { type: 'String'; text: string; loc: Loc };
 
-export const analyze: Visitor<VisitorCtx> = {
+export const Analyze: Visitor<VisitorCtx> = {
     Expression_TemplateString(node, { ctx, hit }) {
         let changed = false;
         const rest: TemplateString['rest'] = node.rest.map(
@@ -54,13 +54,13 @@ export const analyze: Visitor<VisitorCtx> = {
                 // about this more.
                 if (
                     expt &&
-                    !typeMatches(expt, ctx.typeByName('string')!, ctx._full)
+                    !typeMatches(expt, ctx.typeByName('string')!, ctx)
                 ) {
                     changed = true;
                     return {
                         suffix,
                         loc,
-                        expr: decorate(expr, 'notAString', hit, ctx._full),
+                        expr: decorate(expr, 'notAString', hit, ctx),
                     };
                 }
                 return { suffix, loc, expr };
@@ -96,7 +96,7 @@ export const ToTast = {
     Number({ loc, contents }: p.Number, ctx: Ctx): t.Number {
         return {
             type: 'Number',
-            value: +contents,
+            value: +(contents.endsWith('u') ? contents.slice(0, -1) : contents),
             loc,
             kind: contents.includes('.')
                 ? 'Float'

@@ -1,9 +1,5 @@
 ##[builtins]##
-//:value:twoArgs:(one: int, two: string) => string
 //:value:simple:() => string
-//:value:takeSimple:(simple: () => string) => string
-//:value:takeOneArg:(simple: (v: int) => string) => string
-//:value:takeIntle:(simple: () => int) => string
 //:value:oneArg:(v: int) => string
 //:value:takeIntArg:(fn: (v: int) => string) => string
 //:value:take10Arg:(fn: (v: 10) => string) => string
@@ -34,6 +30,9 @@ alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 twoArgs=h0f02217a611769b7
 twoArgs(1, "hello")
 // string
 
+--[builtins]--
+//:value:twoArgs:(one: int, two: string) => string
+
 ==[pass lambda]==
 --[input]--
 takeSimple(simple)
@@ -42,6 +41,9 @@ takeSimple(simple)
 alias simple=h65dbf0bf0a81f130770718771f42643e5fb6ac13 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takeSimple=hdc45749f4e265c12ceb62ea6db4d02a0386622c5
 takeSimple(simple)
 // string
+
+--[builtins]--
+//:value:takeSimple:(simple: () => string) => string
 
 ==[pass wrong lambda]==
 --[input:shouldFail]--
@@ -57,6 +59,10 @@ takeOneArg(oneArg)
 // string
 takeIntle(@error:argWrongType(expected: :() => int) simple)
 // string
+
+--[builtins]--
+//:value:takeIntle:(simple: () => int) => string
+//:value:takeOneArg:(simple: (v: int) => string) => string
 
 ==[arg type error]==
 --[input:shouldFail]--

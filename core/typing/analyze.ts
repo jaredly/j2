@@ -2,8 +2,13 @@
 // Also, this is where we try to do type-based resolution.
 // Should I separate the two steps? idk.
 
-import { ErrorTag, FullContext, noloc } from '../ctx';
-import { transformFile } from '../transform-tast';
+import { ErrorTag, FullContext, GlobalType, GlobalValue, noloc } from '../ctx';
+import {
+    transformFile,
+    transformToplevel,
+    transformType,
+    transformTypeAlias,
+} from '../transform-tast';
 import {
     DecoratedExpression,
     Decorator,
@@ -11,109 +16,83 @@ import {
     File,
     Loc,
     RefKind,
+    Toplevel,
     TVar,
     Type,
+    TypeAlias,
 } from '../typed-ast';
-import { applyType, getType } from './getType';
-import { analyze as analyzeApply } from '../elements/apply';
-import { analyze as analyzeConstants } from '../elements/constants';
-import { analyze as analyzeGenerics } from '../elements/generics';
-import { extract, idToString } from '../ids';
-import { typeToString } from '../../devui/Highlight';
+import { extract, Id, idsEqual, idToString } from '../ids';
+import { Ctx as TMCtx } from './typeMatches';
+import { analyzeVisitor } from './analyze.gen';
+import { TopTypeKind } from './to-tast';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
     getTypeArgs(ref: RefKind): TVar[] | null;
-    resolveType(type: Type): Type | null;
+    getTopKind(idx: number): TopTypeKind | null;
+    resolveAnalyzeType(type: Type): Type | null;
     typeByName(name: string): Type | null;
-    _full: FullContext;
-};
+    getDecorator(name: string): RefKind[];
+    errorDecorators(): Id[];
+
+    typeForId: (id: Id) => GlobalType | null;
+    valueForId: (id: Id) => GlobalValue | null;
+    resolveType: (name: string, hash?: string | null) => RefKind | null;
+    resolveDecorator: (name: string, hash?: string | null) => Array<RefKind>;
+
+    // decoratorNames(): { [key: string]: string };
+    resolve: (name: string, hash?: string | null) => Array<RefKind>;
+    // This should only be in the analyze, not in to-tast
+    resolveRecur(idx: number): Id | null;
+} & TMCtx;
 
 export type VisitorCtx = {
     ctx: Ctx;
     hit: {};
 };
 
-// ugh ok so because
-// i've tied application to TRef, it makes things
-// less flexible. Can't do Some<X><Y> even though you can
-// do let Some = <X><Y>int;
-// OK BACKUP.
-export const resolveType = (type: Type, ctx: FullContext): Type | null => {
-    if (type.type === 'TDecorated') {
-        return resolveType(type.inner, ctx);
+export const addDecorator = (
+    loc: Loc,
+    decorators: Decorator[],
+    tag: ErrorTag,
+    ctx: { hit: { [key: number]: boolean }; ctx: Ctx },
+    args: Decorator['args'] = [],
+) => {
+    if (ctx.hit[loc.idx]) {
+        return decorators;
     }
-    if (type.type === 'TRef') {
-        if (type.ref.type === 'Global') {
-            const { idx, hash } = extract(type.ref.id);
-            if (!ctx.types.hashed[hash]) {
-                return null;
-            }
-            const t = ctx.types.hashed[hash][idx];
-            if (!t) {
-                return null;
-            }
-            if (t.type === 'user') {
-                return resolveType(t.typ, ctx);
-            }
-        }
+    ctx.hit[loc.idx] = true;
+    const refs = ctx.ctx.getDecorator(`error:${tag}`);
+    if (!refs || refs.length !== 1) {
+        throw new Error(`Can't resolve ${tag}`);
     }
-    if (type.type === 'TApply') {
-        const target = resolveType(type.target, ctx);
-        if (!target || target.type !== 'TVars') {
-            // console.log('bad apply');
-            return null;
-        }
-        const applied = applyType(type.args, target, ctx);
-        return applied ? resolveType(applied, ctx) : null;
-    }
-    return type;
-};
-
-export const analyzeContext = (ctx: FullContext): Ctx => {
-    return {
-        getType(expr: Expression) {
-            return getType(expr, ctx);
+    return decorators.concat([
+        {
+            type: 'Decorator',
+            id: { ref: refs[0], loc: noloc },
+            args,
+            loc,
         },
-        resolveType(type: Type) {
-            return resolveType(type, ctx);
-        },
-        typeByName(name: string) {
-            const ref = ctx.types.names[name];
-            return ref
-                ? { type: 'TRef', ref: ref, loc: noloc, args: [] }
-                : null;
-        },
-        getTypeArgs(ref) {
-            if (ref.type === 'Global') {
-                const { idx, hash } = extract(ref.id);
-                const t = ctx.types.hashed[hash][idx];
-                if (t.type === 'builtin') {
-                    return t.args;
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        },
-        _full: ctx,
-    };
+    ]);
 };
 
 export const tdecorate = (
     type: Type,
     tag: ErrorTag,
     hit: { [key: number]: boolean },
-    ctx: FullContext,
+    ctx: Ctx,
     args: Decorator['args'] = [],
 ): Type => {
     if (hit[type.loc.idx]) {
         return type;
     }
     hit[type.loc.idx] = true;
-    const abc = ctx.decorators.names[`error:${tag}`];
-    if (!abc || abc.length !== 1) {
+    // const abc = ctx.decorators.names[`error:${tag}`];
+    // if (!abc || abc.length !== 1) {
+    //     throw new Error(`can't resolve that decorator`);
+    // }
+    const refs = ctx.getDecorator(`error:${tag}`);
+    if (!refs || refs.length !== 1) {
         throw new Error(`can't resolve that decorator`);
     }
     return {
@@ -122,7 +101,7 @@ export const tdecorate = (
             {
                 type: 'Decorator',
                 id: {
-                    ref: abc[0],
+                    ref: refs[0],
                     loc: noloc,
                 },
                 args,
@@ -138,15 +117,15 @@ export const decorate = (
     expr: Expression,
     tag: ErrorTag,
     hit: { [key: number]: boolean },
-    ctx: FullContext,
+    ctx: Ctx,
     args: Decorator['args'] = [],
 ): DecoratedExpression | Expression => {
     if (hit[expr.loc.idx]) {
         return expr;
     }
     hit[expr.loc.idx] = true;
-    const abc = ctx.decorators.names[`error:${tag}`];
-    if (!abc || abc.length !== 1) {
+    const refs = ctx.getDecorator(`error:${tag}`);
+    if (!refs || refs.length !== 1) {
         throw new Error(`can't resolve that decorator`);
     }
     return {
@@ -155,7 +134,7 @@ export const decorate = (
             {
                 type: 'Decorator',
                 id: {
-                    ref: abc[0],
+                    ref: refs[0],
                     loc: noloc,
                 },
                 args,
@@ -167,16 +146,23 @@ export const decorate = (
     };
 };
 
+export const analyzeTypeTop = (
+    ast: TypeAlias | Type,
+    ctx: Ctx,
+): TypeAlias | Type => {
+    if (ast.type === 'TypeAlias') {
+        return transformTypeAlias(ast, analyzeVisitor(), { ctx, hit: {} });
+    } else {
+        return transformType(ast, analyzeVisitor(), { ctx, hit: {} });
+    }
+};
+
+export const analyzeTop = (ast: Toplevel, ctx: Ctx): Toplevel => {
+    return transformToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
+};
+
 export const analyze = (ast: File, ctx: Ctx): File => {
-    return transformFile(
-        ast,
-        {
-            ...analyzeApply,
-            ...analyzeConstants,
-            ...analyzeGenerics,
-        },
-        { ctx, hit: {} },
-    );
+    return transformFile(ast, analyzeVisitor(), { ctx, hit: {} });
 };
 
 export type Verify = {
@@ -210,17 +196,23 @@ export const verify = (ast: File, ctx: Ctx): Verify => {
         },
     };
 
-    const decoratorNames: { [key: string]: string } = {};
-    Object.keys(ctx._full.decorators.names).forEach((name) => {
-        const ids = ctx._full.decorators.names[name];
-        ids.forEach((id) => {
-            decoratorNames[idToString(id.id)] = name;
-        });
-    });
+    const errorDecorators = ctx.errorDecorators();
+    // const decoratorNames: { [key: string]: string } = {};
+    // Object.keys(ctx._full.decorators.names).forEach((name) => {
+    //     const ids = ctx._full.decorators.names[name];
+    //     ids.forEach((id) => {
+    //         decoratorNames[idToString(id.id)] = name;
+    //     });
+    // });
 
     transformFile(
         ast,
         {
+            Toplevel(node) {
+                // ctx.toplevelConfig?
+                // ctx.resetSym()
+                return null;
+            },
             TRef(node) {
                 if (node.ref.type === 'Unresolved') {
                     results.unresolved.type.push(node.loc);
@@ -244,8 +236,11 @@ export const verify = (ast: File, ctx: Ctx): Verify => {
                     results.unresolved.decorator.push(node.loc);
                 }
                 if (node.id.ref.type === 'Global') {
-                    const name = decoratorNames[idToString(node.id.ref.id)];
-                    if (name && name.startsWith('error:')) {
+                    const id = node.id.ref.id;
+                    const isError = errorDecorators.some((x) =>
+                        idsEqual(x, id),
+                    );
+                    if (isError) {
                         results.errors.push(node.loc);
                     }
                 }

@@ -1,26 +1,23 @@
 import * as fs from 'fs';
-import objectHash from 'object-hash';
 import {
     addBuiltin,
     addBuiltinDecorator,
     addBuiltinType,
     FullContext,
-    fullContext,
     hashTypes,
     noloc,
 } from '../../ctx';
-import { TVar } from '../../elements/type';
+import { fileToTast } from '../../elements/base';
+import { TVar } from '../../elements/type-vbls';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
-import { idToString } from '../../ids';
 import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { transformFile, transformType, Visitor } from '../../transform-tast';
-import { File, RefKind } from '../../typed-ast';
-import { analyze, analyzeContext, Verify, verify } from '../analyze';
+import { File } from '../../typed-ast';
+import { analyze, Verify, verify } from '../analyze';
 import { getType } from '../getType';
 import { printCtx } from '../to-ast';
-import { Ctx } from '../to-tast';
 
 export type FixtureFile = {
     builtins: Builtin[];
@@ -30,14 +27,10 @@ export type FixtureFile = {
 export type Fixture = {
     title: string;
     input: string;
+    builtins: Builtin[];
     output_expected: string;
     output_failed: string;
     shouldFail: boolean;
-
-    failing_deprecated: boolean;
-    aliases_deprecated: { [key: string]: string };
-    builtins_deprecated: Builtin[];
-    // i: number;
 };
 
 export const locClearVisitor: Visitor<null> = {
@@ -68,6 +61,9 @@ export const serializeSections = (
 
 export const loadSections = (data: string, char = '=') => {
     const sections: { [key: string]: string } = {};
+    if (!data) {
+        return sections;
+    }
     let section = '';
     let sectionName = '';
     for (const line of data.split('\n')) {
@@ -113,6 +109,14 @@ export const aliasesFromString = (raw: string) => {
         }, {} as { [key: string]: string });
 };
 
+export const splitAliases = (text: string): [string, string] => {
+    if (text.startsWith('alias ')) {
+        const idx = text.indexOf('\n');
+        return [text.slice(0, idx), text.slice(idx + 1)];
+    }
+    return ['', text];
+};
+
 export const serializeFixtureFile = (file: FixtureFile) => {
     const fixmap: { [key: string]: string } = {};
     file.fixtures.forEach((fixture) => {
@@ -123,11 +127,9 @@ export const serializeFixtureFile = (file: FixtureFile) => {
             {
                 [fixture.shouldFail ? 'input:shouldFail' : 'input']:
                     fixture.input,
-                'output:expected':
-                    (fixture.output_expected?.startsWith('alias ')
-                        ? ''
-                        : aliasesToString(fixture.aliases_deprecated)) +
-                    fixture.output_expected,
+                'output:expected': fixture.output_expected,
+                'output:failed': fixture.output_failed,
+                builtins: fixture.builtins.map(serializeBuiltin).join('\n'),
             },
             '-',
         );
@@ -149,14 +151,15 @@ export const parseFixtureFile = (inputRaw: string): FixtureFile => {
         return {
             title,
             input: (items['input'] ?? items['input:shouldFail'])?.trim() ?? '',
-            output_expected: items['output:expected']?.trim(),
-            output_failed: items['output:failed']?.trim(),
+            output_expected: items['output:expected']?.trim() ?? '',
+            output_failed: items['output:failed']?.trim() ?? '',
             shouldFail: 'input:shouldFail' in items,
-
-            // No longer needed
-            aliases_deprecated: {}, // this will come from the output
-            builtins_deprecated: [], // nope as well
-            failing_deprecated: false, // comes from output_failed
+            builtins:
+                items['builtins']
+                    ?.trim()
+                    ?.split('\n')
+                    .filter(Boolean)
+                    .map(parseBuiltin) ?? [],
         };
     });
     return {
@@ -185,13 +188,17 @@ export const loadFixtures = (fixtureFile: string) => {
 export const parseRaw = (
     raw: string,
     ctx: FullContext,
+    analyze = true,
 ): [File, FullContext] => {
     if (raw.startsWith('alias ')) {
         const idx = raw.indexOf('\n');
-        ctx.aliases = aliasesFromString(raw.slice(0, idx));
+        ctx = ctx.withAliases(
+            aliasesFromString(raw.slice(0, idx)),
+        ) as FullContext;
         raw = raw.slice(idx + 1);
     }
-    const [file, tctx] = ctx.ToTast.File(fixComments(parseFile(raw)), ctx);
+    const ast = parseFile(raw);
+    const [file, tctx] = fileToTast(fixComments(ast), ctx, analyze);
     return [file, tctx as FullContext];
 };
 
@@ -208,16 +215,15 @@ export type FixtureResult = {
 };
 
 export function runFixture(
-    { input, output_expected }: Fixture,
-    builtins: Builtin[],
+    { input, output_expected, output_failed, builtins }: Fixture,
+    baseCtx: FullContext,
 ): FixtureResult {
-    let ctx = fullContext();
-
+    let ctx = baseCtx.clone();
     loadBuiltins(builtins, ctx);
 
-    let tast;
+    let checked: File;
     try {
-        [tast, ctx] = parseRaw(input, ctx);
+        [checked, ctx] = parseRaw(input, ctx);
     } catch (err) {
         console.log('Failed to parse input:', input);
         console.log(err);
@@ -226,7 +232,7 @@ export function runFixture(
 
     const actx = printCtx(ctx);
 
-    const checked = analyze(tast, analyzeContext(ctx));
+    // const checked = analyze(tast, ctx);
     checked.toplevels.forEach((top) => {
         if (top.type === 'ToplevelExpression') {
             const t = getType(top.expr, ctx);
@@ -250,20 +256,24 @@ export function runFixture(
                 },
                 '// ' + cm,
             ]);
-        } else if (top.type === 'TypeAlias') {
-            const hash = hashTypes(
-                top.elements.map((t) =>
-                    transformType(t.type, locClearVisitor, null),
-                ),
-            );
-            // console.log('Adding hashes', top.elements[0].name, hash);
-            checked.comments.push([
-                {
-                    ...top.loc,
-                    start: top.loc.end,
-                },
-                '// h' + hash,
-            ]);
+            // TODO: surface the IDs of things in the UI.
+            // eh, and maybe as a suffix on the whole thing?
+            // That way we still know if the hashes change (which is maybe useful?)
+            // but we can easily split out those changing from other things.
+
+            // } else if (top.type === 'TypeAlias') {
+            //     const hash = hashTypes(
+            //         top.elements.map((t) =>
+            //             transformType(t.type, locClearVisitor, null),
+            //         ),
+            //     );
+            //     // checked.comments.push([
+            //     //     {
+            //     //         ...top.loc,
+            //     //         start: top.loc.end,
+            //     //     },
+            //     //     '// h' + hash,
+            //     // ]);
         }
     });
 
@@ -274,12 +284,14 @@ export function runFixture(
 
     let outputTast;
 
-    let ctx2 = fullContext();
+    let output = output_expected ? output_expected : output_failed;
+
+    let ctx2 = baseCtx.clone();
     loadBuiltins(builtins, ctx2);
     try {
-        [outputTast, ctx2] = parseRaw(output_expected, ctx2);
+        [outputTast, ctx2] = parseRaw(output, ctx2, false);
     } catch (err) {
-        console.log(output_expected);
+        console.log(output);
         console.log(err);
         throw err;
     }
@@ -289,21 +301,25 @@ export function runFixture(
         ctx2,
         input,
         checked,
-        verify: verify(checked, analyzeContext(ctx)),
+        verify: verify(checked, ctx),
         newOutput: aliasesToString(actx.backAliases) + newOutput,
         outputTast,
-        outputVerify: verify(outputTast, analyzeContext(ctx2)),
+        outputVerify: verify(outputTast, ctx2),
         aliases: actx.backAliases,
     };
 }
 
-function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
+export function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
     builtins.forEach((builtin) => {
         switch (builtin.kind) {
             case 'value':
-                const ast = parseType(builtin.type);
-                const tast = ctx.ToTast[ast.type](ast as any, ctx);
-                addBuiltin(ctx, builtin.name, tast);
+                try {
+                    const ast = parseType(builtin.type);
+                    const tast = ctx.ToTast[ast.type](ast as any, ctx);
+                    addBuiltin(ctx, builtin.name, tast);
+                } catch (err) {
+                    console.error(err);
+                }
                 break;
             case 'type': {
                 let args: TVar[] = [];

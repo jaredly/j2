@@ -28,7 +28,10 @@ fs.writeFileSync('./core/grammar/full.pegjs', raw);
 
 const ast = peggy.parser.parse(raw);
 
-const { typesFile, grammarFile } = assembleRules(processRules(ast.rules), raw);
+const { typesFile, grammarFile } = assembleRules(
+    processRules(ast.rules, ['File', 'TypeFile']),
+    raw,
+);
 
 if (ast.initializer) {
     grammarFile.unshift('{\n' + ast.initializer.code + '\n}');
@@ -37,7 +40,7 @@ if (ast.initializer) {
 const jsOut = peggy.generate(grammarFile.join('\n\n'), {
     output: 'source',
     format: 'es',
-    allowedStartRules: ['File', 'Type'],
+    allowedStartRules: ['File', 'Type', 'TypeFile'],
 });
 
 fs.writeFileSync(
@@ -47,6 +50,10 @@ fs.writeFileSync(
 fs.writeFileSync(
     './core/grammar/base.parser.ts',
     `import {parse} from './base.parser-untyped'
+
+export type SyntaxError = {
+    location: Loc;
+};
 
 export type Loc = {
     start: {line: number, column: number, offset: number},
@@ -61,5 +68,7 @@ export type Loc = {
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});
 // @ts-ignore
 export const parseType = (input: string): Type => parse(input, {startRule: 'Type'});
+// @ts-ignore
+export const parseTypeFile = (input: string): TypeFile => parse(input, {startRule: 'TypeFile'});
 `,
 );

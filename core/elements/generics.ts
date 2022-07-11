@@ -10,7 +10,6 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { noloc } from '../ctx';
 import { makeApply } from './apply';
-import { getType } from '../typing/getType';
 
 export const grammar = `
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
@@ -97,23 +96,23 @@ export const ToPP = {
     },
 };
 
-export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
+export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     Expression_TypeApplication(node, { ctx, hit }) {
-        const target = getType(node.target, ctx._full);
+        const target = ctx.getType(node.target);
         if (!target) {
             return null;
         }
         let targs: t.TVar[];
         if (target.type !== 'TVars') {
-            if (target.type === 'TRef' && target.ref.type === 'Global') {
+            if (target.type === 'TRef' && target.ref.type !== 'Unresolved') {
                 let got = ctx.getTypeArgs(target.ref);
                 if (got != null) {
                     targs = got;
                 } else {
-                    return decorate(node, 'notATypeVars', hit, ctx._full);
+                    return decorate(node, 'notATypeVars', hit, ctx);
                 }
             } else {
-                return decorate(node, 'notATypeVars', hit, ctx._full);
+                return decorate(node, 'notATypeVars', hit, ctx);
             }
         } else {
             targs = target.args;
@@ -124,11 +123,11 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             const targ = targs[i];
             if (!targ) {
                 changed = true;
-                return tdecorate(arg, 'extraArg', hit, ctx._full);
+                return tdecorate(arg, 'extraArg', hit, ctx);
             }
-            if (targ.bound && !typeMatches(arg, targ.bound, ctx._full)) {
+            if (targ.bound && !typeMatches(arg, targ.bound, ctx)) {
                 changed = true;
-                return tdecorate(arg, 'argWrongType', hit, ctx._full, [
+                return tdecorate(arg, 'argWrongType', hit, ctx, [
                     {
                         label: 'expected',
                         arg: { type: 'DType', loc: noloc, typ: targ.bound },
@@ -146,15 +145,14 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         }
 
         if (node.args.length < minArgs || node.args.length > targs.length) {
-            return decorate(node, 'wrongNumberOfTypeArgs', hit, ctx._full);
+            return decorate(node, 'wrongNumberOfTypeArgs', hit, ctx);
         }
 
         return changed ? { ...node, args } : node;
     },
     Type_TApply(node, { ctx, hit }) {
-        const inner = ctx.resolveType(node.target);
+        const inner = ctx.resolveAnalyzeType(node.target);
         if (!inner) {
-            console.log('not resolved', node, ctx);
             return null;
         }
         // if (inner.type !== 'TVars') {
@@ -163,15 +161,15 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
 
         let targs: t.TVar[];
         if (inner.type !== 'TVars') {
-            if (inner.type === 'TRef' && inner.ref.type === 'Global') {
+            if (inner.type === 'TRef' && inner.ref.type !== 'Unresolved') {
                 let got = ctx.getTypeArgs(inner.ref);
                 if (got != null) {
                     targs = got;
                 } else {
-                    return tdecorate(node, 'notATypeVars', hit, ctx._full);
+                    return tdecorate(node, 'notATypeVars', hit, ctx);
                 }
             } else {
-                return tdecorate(node, 'notATypeVars', hit, ctx._full);
+                return tdecorate(node, 'notATypeVars', hit, ctx);
             }
         } else {
             targs = inner.args;
@@ -180,17 +178,26 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         let changed = false;
         const args = node.args.map((arg, i) => {
             if (i >= targs.length) {
-                return tdecorate(arg, 'extraArg', hit, ctx._full);
+                return tdecorate(arg, 'extraArg', hit, ctx);
             }
             const { bound } = targs[i];
-            if (bound && !typeMatches(arg, bound, ctx._full)) {
+            if (bound && !typeMatches(arg, bound, ctx)) {
                 changed = true;
-                return tdecorate(arg, 'argWrongType', hit, ctx._full, [
+                return tdecorate(arg, 'argWrongType', hit, ctx, [
                     {
                         label: 'expected',
                         arg: { type: 'DType', loc: noloc, typ: bound },
                         loc: noloc,
                     },
+                    // {
+                    //     label: 'received',
+                    //     arg: {
+                    //         type: 'DType',
+                    //         loc: noloc,
+                    //         typ: ctx.resolveRefsAndApplies(arg) ?? arg,
+                    //     },
+                    //     loc: noloc,
+                    // },
                 ]);
             }
             return arg;
@@ -205,7 +212,7 @@ export const analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         }
 
         if (node.args.length < minArgs || node.args.length > targs.length) {
-            return tdecorate(node, 'wrongNumberOfTypeArgs', hit, ctx._full);
+            return tdecorate(node, 'wrongNumberOfTypeArgs', hit, ctx);
         }
         return changed ? node : null;
     },
