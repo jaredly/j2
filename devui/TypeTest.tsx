@@ -61,7 +61,8 @@ export const TypeTestView = ({
                             if (v.type === 'File') {
                                 return [];
                             }
-                            const results = runTypeTest(v);
+                            const results = runTypeTest(v, true);
+                            console.log('extra', results.statuses);
                             return results.statuses.map((status) => {
                                 if (status.text) {
                                     return {

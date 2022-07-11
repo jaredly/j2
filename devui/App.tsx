@@ -182,15 +182,15 @@ export const App = () => {
             const old = window.console;
 
             // Silence console during others
-            if (hash.endsWith('/pin')) {
-                console.warn(`NOTE: suppressing logs from non-pinned items.`);
-                window.console = {
-                    ...old,
-                    log: () => {},
-                    warn: () => {},
-                    error: () => {},
-                };
-            }
+            // if (hash.endsWith('/pin')) {
+            console.warn(`NOTE: suppressing logs from non-pinned items.`);
+            window.console = {
+                ...old,
+                log: () => {},
+                warn: () => {},
+                error: () => {},
+            };
+            // }
 
             const files = {} as Files['fixtures'];
             fixtureContents.forEach((contents, i) => {

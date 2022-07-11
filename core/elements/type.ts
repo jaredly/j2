@@ -384,12 +384,10 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
     Type_TOps(node, ctx) {
         const adds = justStringAdds(node, ctx.ctx);
         if (adds) {
-            console.log('stringsadds');
             return null;
         }
         const ops = numOps(node, ctx.ctx);
         if (ops) {
-            console.log('numops');
             return null;
         }
 

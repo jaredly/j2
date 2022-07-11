@@ -51,7 +51,6 @@ export const payloadsEqual = (
     bidirectional: boolean,
 ) => {
     if ((one != null) != (two != null)) {
-        console.log('payload diff');
         return false;
     }
     if (!one || !two) {

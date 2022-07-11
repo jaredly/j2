@@ -15,7 +15,10 @@ export type TypeTest = {
 
 export const runInner = () => {};
 
-export const runTypeTest = (ast: TypeFile): TypeTest => {
+export const runTypeTest = (ast: TypeFile, debugFailures = false): TypeTest => {
+    const old = window.console;
+    const mock = old; // (window.console = { ...old, log() {}, warn() {}, error() {} });
+
     let ctx = builtinContext.clone();
 
     const assertById: { [key: string]: Function } = {};
@@ -48,6 +51,7 @@ export const runTypeTest = (ast: TypeFile): TypeTest => {
             let type = ctx.ToTast[t.type](t as any, ctx);
             tast.toplevels.push(type);
             if (type.type === 'TDecorated') {
+                let failed = false;
                 const inner = type.inner;
                 type.decorators.forEach((d) => {
                     if (d.id.ref.type !== 'Global') {
@@ -61,12 +65,30 @@ export const runTypeTest = (ast: TypeFile): TypeTest => {
                             ctx,
                         );
                         statuses.push({ loc: d.loc, text: msg });
+                        if (msg) {
+                            console.log('Hm', msg, failed);
+                        }
+                        failed = failed || !!msg;
                     }
                 });
+                if (failed && debugFailures) {
+                    let dctx = {
+                        ...ctx,
+                        debugger() {
+                            debugger;
+                        },
+                    };
+
+                    window.console = old;
+                    console.log('Rerunning with debugging enabled');
+                    dctx.ToTast[t.type](t as any, dctx);
+                    window.console = mock;
+                }
             } else {
                 // throw new Error('Not decorated?' + type.type);
             }
         }
     });
+    window.console = old;
     return { statuses, file: tast, ctx };
 };

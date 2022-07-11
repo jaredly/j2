@@ -214,7 +214,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         true,
                     )
                 ) {
-                    console.log('found it?', k.tag, k.loc.idx, ctx.hit);
+                    // console.log('found it?', k.tag, k.loc.idx, ctx.hit);
                     changed = true;
                     return {
                         ...k,
@@ -243,7 +243,6 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         return tdecorate(k, 'invalidEnum', ctx.hit, ctx.ctx);
                     }
                     for (let kase of expanded) {
-                        console.log(kase, used);
                         if (
                             used[kase.tag] &&
                             !payloadsEqual(
@@ -282,7 +281,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         }
                     }
                 } else {
-                    console.log('no resolve?', k);
+                    // console.log('no resolve?', k);
                 }
             }
             if (!isValidEnumCase(k, ctx.ctx)) {

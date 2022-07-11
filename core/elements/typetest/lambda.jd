@@ -6,4 +6,8 @@
 
 @type:shouldNotMatch(:(a: int) => int) (a: 10) => int
 
+@type:shouldMatch(:<A#[1]>() => A#[1]) <A#[0]>() => A#[0]
+
+@type:shouldMatch(:<A#[1]: int>() => A#[1]) <A#[0]: int>() => A#[0]
+
 //@type:shouldMatch(:<A#[1]: 10>(a: A#[1]) => A#[1]) <B#[0]: int>(a: B#[0]) => B#[0]

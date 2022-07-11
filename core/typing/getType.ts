@@ -29,11 +29,9 @@ export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
         }
     });
     if (failed) {
-        console.log('failure');
         return null;
     }
 
-    console.log('ok its going');
     // ok we need to transform the inner
     // target.args
     return transformType(
