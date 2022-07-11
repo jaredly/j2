@@ -22,3 +22,19 @@ type One = [ `A | `B ]
 @type:shouldMatch(:One) [ `A ]
 
 @type:shouldMatch(:One) [ `A | One ]
+
+type Tree = [ Node#[r1] | `Leaf ]
+and Node = [ `Tree(Tree#[r0]) ]
+
+// Ok so the story here is: we need to replace all `#[r]` recursive references with the appropriate global reference
+// when hytrating the type. Right? Seems like that would do the trick...
+@type:shouldMatch(:Tree) [ `Leaf ]
+
+// These should not trigger an infinite loop 😂
+type X = Y#[r1]
+and Y = X#[r0]
+@type:shouldNotMatch(:X) 1
+
+type A = [ `A | B#[r1] ]
+and B = [ `B | A#[r0] ]
+@type:shouldNotMatch(:A) [`A]

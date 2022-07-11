@@ -16,7 +16,7 @@ export const grammar = `
 TEnum = "[" _ cases:EnumCases? _ "]"
 EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"? _
 EnumCase = TagDecl / Type / Star
-TagDecl = "\`" text:$IdText payload:TagPayload?
+TagDecl = decorators:(Decorator _)* "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
 TagPayload = "(" _ inner:Type _ ")"
 Star = pseudo:"*"
@@ -192,8 +192,75 @@ const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     TEnum(node, ctx): null | t.TEnum {
         let changed = false;
+        let used: { [key: string]: EnumCase } = {};
         const cases = node.cases.map((k) => {
-            if (k.type !== 'EnumCase' && !isValidEnumCase(k, ctx.ctx)) {
+            if (k.type === 'EnumCase') {
+                if (
+                    used[k.tag] &&
+                    !payloadsEqual(
+                        used[k.tag].payload,
+                        k.payload,
+                        ctx.ctx,
+                        true,
+                    )
+                ) {
+                    // return tdecorate(
+                    //     k,
+                    //     'conflictingEnumTag',
+                    //     ctx.hit,
+                    //     ctx.ctx
+                    // )
+                }
+                used[k.tag] = k;
+                return k;
+            } else {
+                const res = ctx.ctx.resolveRefsAndApplies(k);
+                if (res?.type === 'TEnum') {
+                    const expanded = expandEnumCases(res, ctx.ctx);
+                    if (!expanded) {
+                        return tdecorate(k, 'invalidEnum', ctx.hit, ctx.ctx);
+                    }
+                    for (let kase of expanded) {
+                        console.log(kase, used);
+                        if (
+                            used[kase.tag] &&
+                            !payloadsEqual(
+                                kase.payload,
+                                used[kase.tag].payload,
+                                ctx.ctx,
+                                true,
+                            )
+                        ) {
+                            return tdecorate(
+                                k,
+                                'conflictingEnumTag',
+                                ctx.hit,
+                                ctx.ctx,
+                                [
+                                    {
+                                        label: 'tag',
+                                        arg: {
+                                            type: 'DExpr',
+                                            loc: k.loc,
+                                            expr: {
+                                                type: 'TemplateString',
+                                                first: kase.tag,
+                                                rest: [],
+                                                loc: k.loc,
+                                            },
+                                        },
+                                        loc: k.loc,
+                                    },
+                                ],
+                            );
+                        }
+                        used[kase.tag] = kase;
+                    }
+                } else {
+                    console.log('no resolve?', k);
+                }
+            }
+            if (!isValidEnumCase(k, ctx.ctx)) {
                 changed = true;
                 return tdecorate(k, 'notAnEnum', ctx.hit, ctx.ctx);
             }

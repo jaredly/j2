@@ -333,8 +333,8 @@ export const newContext = (): FullContext => {
             const gref = this[opaque].types.names[name];
             return gref;
         },
-        resolveRefsAndApplies(t) {
-            return resolveAnalyzeType(t, this);
+        resolveRefsAndApplies(t, path) {
+            return resolveAnalyzeType(t, this, path);
         },
         getValueType(id) {
             const { hash, idx } = extract(id);
@@ -540,9 +540,9 @@ export const errors = {
     notAString: 6,
     notATypeVars: 1,
     invalidOps: 0,
-    // invalidEnum: 0,
+    invalidEnum: 0,
     notAnEnum: 0,
-    conflictingEnumTag: 0,
+    conflictingEnumTag: 1,
 };
 export type ErrorTag = keyof typeof errors;
 
@@ -701,12 +701,17 @@ export const serial = (x: any): any => {
 export const resolveAnalyzeType = (
     type: Type,
     ctx: FullContext,
+    path: string[] = [],
 ): Type | null => {
     if (type.type === 'TDecorated') {
-        return resolveAnalyzeType(type.inner, ctx);
+        return resolveAnalyzeType(type.inner, ctx, path);
     }
     if (type.type === 'TRef') {
         if (type.ref.type === 'Global') {
+            const k = idToString(type.ref.id);
+            if (path.includes(k)) {
+                return null;
+            }
             const { idx, hash } = extract(type.ref.id);
             if (!ctx[opaque].types.hashed[hash]) {
                 return null;
@@ -716,7 +721,28 @@ export const resolveAnalyzeType = (
                 return null;
             }
             if (t.type === 'user') {
-                return resolveAnalyzeType(t.typ, ctx);
+                return resolveAnalyzeType(
+                    transformType<null>(
+                        t.typ,
+                        {
+                            TRef(node, ctx) {
+                                if (node.ref.type === 'Recur') {
+                                    return {
+                                        ...node,
+                                        ref: {
+                                            type: 'Global',
+                                            id: toId(hash, node.ref.idx),
+                                        },
+                                    };
+                                }
+                                return null;
+                            },
+                        },
+                        null,
+                    ),
+                    ctx,
+                    path.concat(idToString(type.ref.id)),
+                );
             }
         }
         if (type.ref.type === 'Local') {
@@ -728,13 +754,13 @@ export const resolveAnalyzeType = (
         // }
     }
     if (type.type === 'TApply') {
-        const target = resolveAnalyzeType(type.target, ctx);
+        const target = resolveAnalyzeType(type.target, ctx, path);
         if (!target || target.type !== 'TVars') {
             // console.log('bad apply');
             return null;
         }
         const applied = applyType(type.args, target, ctx);
-        return applied ? resolveAnalyzeType(applied, ctx) : null;
+        return applied ? resolveAnalyzeType(applied, ctx, path) : null;
     }
     return type;
 };

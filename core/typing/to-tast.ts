@@ -1,14 +1,7 @@
-import { ToTast as ConstantsToTast } from '../elements/constants';
-import { ToTast as DecoratorsToTast } from '../elements/decorators';
-import { ToTast as ApplyToTast } from '../elements/apply';
-import { ToTast as TypeToTast } from '../elements/type';
-import { ToTast as GenericsToTast } from '../elements/generics';
-import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
-import { GlobalType, GlobalValue } from '../ctx';
 import { Ctx as ACtx } from './analyze';
 import { ToTast } from './to-tast.gen';
-export { type ToTast, makeToTast } from './to-tast.gen';
+export { makeToTast, type ToTast } from './to-tast.gen';
 
 export type Ctx = {
     resetSym: () => void;
@@ -26,6 +19,10 @@ export type Ctx = {
 export type Toplevel =
     | {
           type: 'Type';
+          // TODO: This shouldn't be optional,
+          // it should be never there for to-tast,
+          // and always there for analyze.
+          id?: t.Id;
           items: {
               name: string;
               args: t.TVar[];

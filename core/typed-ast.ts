@@ -48,11 +48,13 @@ export type RefKind =
       }
     | { type: 'Recur'; idx: number };
 
-export const refHash = (ref: RefKind) =>
+export const refHash = (ref: RefKind | UnresolvedRef) =>
     ref.type === 'Global'
         ? 'h' + idToString(ref.id)
         : ref.type === 'Recur'
         ? 'r' + ref.idx
+        : ref.type === 'Unresolved'
+        ? ':unresolved:' + ref.text + '#' + ref.hash
         : '' + ref.sym;
 
 export type Loc = {

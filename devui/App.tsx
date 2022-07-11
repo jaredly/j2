@@ -179,6 +179,18 @@ export const App = () => {
                 ),
             ),
         ]).then(([fixtureContents, typetestContents]) => {
+            const old = window.console;
+
+            // Silence console during others
+            if (hash.endsWith('/pin')) {
+                window.console = {
+                    ...old,
+                    log: () => {},
+                    warn: () => {},
+                    error: () => {},
+                };
+            }
+
             const files = {} as Files['fixtures'];
             fixtureContents.forEach((contents, i) => {
                 const file = parseFixtureFile(contents);
@@ -191,6 +203,8 @@ export const App = () => {
                 );
             });
             setFiles({ fixtures: files, typetest: typetestFiles });
+
+            console = old;
         });
     }, [listing]);
 

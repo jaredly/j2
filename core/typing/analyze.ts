@@ -49,37 +49,6 @@ export type VisitorCtx = {
     hit: {};
 };
 
-// export const analyzeContext = (ctx: FullContext): Ctx => {
-//     return {
-//         getType(expr: Expression) {
-//             return getType(expr, ctx);
-//         },
-//         resolveAnalyzeType(type: Type) {
-//             return resolveAnalyzeType(type, ctx);
-//         },
-//         typeByName(name: string) {
-//             const ref = ctx.types.names[name];
-//             return ref
-//                 ? { type: 'TRef', ref: ref, loc: noloc, args: [] }
-//                 : null;
-//         },
-//         getTypeArgs(ref) {
-//             if (ref.type === 'Global') {
-//                 const { idx, hash } = extract(ref.id);
-//                 const t = ctx.types.hashed[hash][idx];
-//                 if (t.type === 'builtin') {
-//                     return t.args;
-//                 } else {
-//                     return null;
-//                 }
-//             } else {
-//                 return null;
-//             }
-//         },
-//         _full: ctx,
-//     };
-// };
-
 export const tdecorate = (
     type: Type,
     tag: ErrorTag,

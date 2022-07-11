@@ -9,7 +9,7 @@ import { Ctx as TACtx } from '../typing/to-ast';
 import { filterUnresolved, typeToplevel, typeToplevelT } from './base';
 import { TApply, TVars } from './type-vbls';
 import { FullContext } from '../ctx';
-import { justStringAdds, numOps } from '../typing/typeMatches';
+import { justStringAdds, numOps } from '../typing/ops';
 
 export const grammar = `
 Type = TOps

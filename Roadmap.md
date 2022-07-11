@@ -1,7 +1,26 @@
 
 # Now that typetests are working:
 
-- [ ] oh check our coverage my folks
+- [x] oh check our coverage my folks
+
+
+so
+here's a thing
+
+- [ ] when in the analyze phase, it's nice to be able to know what the ID is of the current toplevel type, for resolving rescursion.
+- [ ] ummm wait EnumCase needs to be decoratable. RecordItem will need to be too.
+- [ ] alsooo what about 
+
+
+
+
+- [ ] detect all kinds of more issues
+	- [ ] enum reusing tags
+	- [x] get type checking of recursive types working!
+	- [x] prevent infinite loop types from borking things
+		- [ ] add an annotation to make it obvious?
+			- like, if this type is just infinitely recursive, pull the plug
+			- yes definitely do that.
 
 - let's do a bunch of expression stuff?
 	- lambda, if, and binops

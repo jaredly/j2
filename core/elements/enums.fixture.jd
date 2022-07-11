@@ -96,3 +96,32 @@ type Self = [`A | Self]
 
 --[output:failed]--
 type Self = [ `A | Self#[r0] ]
+
+==[infinite]==
+--[input:shouldFail]--
+type X = Y#[r1]
+and Y = X#[r0]
+
+type M = @type:shouldMatch(:X) 1
+
+type A = [ `A | B#[r1] ]
+and B = [ `B | A#[r0] ]
+
+type N = @type:shouldMatch(:A) [`A]
+
+--[output:failed]--
+alias A=ha7d22ed06bfa4f8db40cde871402addda29f6dcb X=h2a44c6ce7a7328fee222979f96c5792b0583f64e
+type X = Y#[r1]
+and Y = X#[r0]
+type M = @type:shouldMatch#[:unresolved:](:X) 1
+type A = [ `A | B#[r1] ]
+and B = [ `B | A#[r0] ]
+type N = @type:shouldMatch#[:unresolved:](:A) [ `A ]
+
+==[duplicate]==
+--[input:shouldFail]--
+type X = [`A | `A(int)]
+
+--[output:failed]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+type X = [ `A | `A(int) ]
