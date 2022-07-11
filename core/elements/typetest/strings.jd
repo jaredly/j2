@@ -1,4 +1,3 @@
-
 @type:shouldMatch(:string)
 @type:shouldNotMatch(:int)
 @type:shouldNotMatch(:string + "suffix")
@@ -8,4 +7,3 @@
 @type:shouldMatch(:"hello") ("he" + "llo")
 
 // @type:shouldMatch(:"h" + string) ("he" + string)
-

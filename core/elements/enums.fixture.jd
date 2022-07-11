@@ -67,3 +67,15 @@ type X = <T: int, N: string>[ `X(X<N, N>) ]
 --[output:expected]--
 alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 type X = <T#[0]: int, N#[1]: string>[ `X(X#[r0]<@error:argWrongType(expected: :int) N#[1], N#[1]>) ]
+
+==[New fixture]==
+--[input:shouldFail]--
+type One = [`A | `B]
+type Two = [`A | One]
+type Three = [`A(int) | One]
+
+--[output:failed]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f One=h9e64a5fc10caacb63b17e70f46f1ffdadfd3fbb0
+type One = [ `A | `B ]
+type Two = [ `A | One ]
+type Three = [ `A(int) | One ]

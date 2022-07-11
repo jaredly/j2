@@ -539,6 +539,7 @@ export const errors = {
     argWrongType: 5,
     notAString: 6,
     notATypeVars: 1,
+    invalidOps: 0,
 };
 export type ErrorTag = keyof typeof errors;
 

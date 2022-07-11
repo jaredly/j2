@@ -118,7 +118,7 @@ export const justStringAdds = (t: TOps, ctx: Ctx): (string | true)[] | null => {
         return null;
     }
     const results: (string | true)[] = [];
-    adds.forEach((item) => {
+    for (let item of adds) {
         if (item.type === 'String') {
             results.push(item.text);
         } else if (ctx.isBuiltinType(item, 'string')) {
@@ -126,7 +126,7 @@ export const justStringAdds = (t: TOps, ctx: Ctx): (string | true)[] | null => {
         } else {
             return null;
         }
-    });
+    }
     return results;
 };
 
@@ -148,7 +148,7 @@ type EOps = {
     kind: Number['kind'];
 };
 
-const numOps = (
+export const numOps = (
     expected: TOps | Number | TRef,
     // kind: Number['kind'],
     ctx: Ctx,
@@ -222,6 +222,7 @@ const numOps = (
             mm[op === '+' ? 'upperLimit' : 'lowerLimit'] = false;
             continue;
         }
+        return false;
     }
     return { num, mm, kind: kind! };
 };

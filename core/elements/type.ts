@@ -1,5 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { Ctx as ACtx } from '../typing/analyze';
+import { Ctx as ACtx, tdecorate } from '../typing/analyze';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -9,6 +9,7 @@ import { Ctx as TACtx } from '../typing/to-ast';
 import { filterUnresolved, typeToplevel, typeToplevelT } from './base';
 import { TApply, TVars } from './type-vbls';
 import { FullContext } from '../ctx';
+import { justStringAdds, numOps } from '../typing/typeMatches';
 
 export const grammar = `
 Type = TOps
@@ -377,6 +378,21 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         );
         // console.log(actx);
         return [null, { ...ctx, ctx: actx }];
+    },
+    Type_TOps(node, ctx) {
+        // console.log('checking tops', node);
+        const adds = justStringAdds(node, ctx.ctx);
+        if (adds) {
+            console.log('stringsadds');
+            return null;
+        }
+        const ops = numOps(node, ctx.ctx);
+        if (ops) {
+            console.log('numops');
+            return null;
+        }
+
+        return tdecorate(node, 'invalidOps', ctx.hit, ctx.ctx);
     },
     // Expression_Apply(node, { ctx, hit }) {
     // },

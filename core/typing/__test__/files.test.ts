@@ -29,13 +29,13 @@ readdirSync(base)
                 if (t.type === 'TypeAlias') {
                     // Need to reset again, so the args get the same syms
                     // when we parse them again
-                    ctx.resetSym();
                     ctx = ctx.toplevelConfig(
                         typeToplevel(t, ctx),
                     ) as FullContext;
                     let top = ctx.ToTast.TypeAlias(t, ctx);
                     ctx = ctx.withTypes(top.elements) as FullContext;
                 } else {
+                    ctx = ctx.toplevelConfig(null) as FullContext;
                     let type = ctx.ToTast[t.type](t as any, ctx);
                     if (type.type === 'TDecorated') {
                         const inner = type.inner;

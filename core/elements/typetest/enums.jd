@@ -16,3 +16,8 @@
 @type:shouldMatch(:[ * ]) [ `One | `Two ]
 
 @type:shouldMatch(:[ `Hi(int) ]) [ `Hi(10) ]
+
+type One = [ `A | `B ]
+
+@type:shouldMatch(:One) [ `A ]
+@type:shouldMatch(:One) [ `A | One ]

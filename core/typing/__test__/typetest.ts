@@ -39,12 +39,12 @@ export const runTypeTest = (ast: TypeFile): TypeTest => {
         if (t.type === 'TypeAlias') {
             // Need to reset again, so the args get the same syms
             // when we parse them again
-            ctx.resetSym();
             ctx = ctx.toplevelConfig(typeToplevel(t, ctx)) as FullContext;
             let top = ctx.ToTast.TypeAlias(t, ctx);
             tast.toplevels.push(top);
             ctx = ctx.withTypes(top.elements) as FullContext;
         } else {
+            ctx = ctx.toplevelConfig(null) as FullContext;
             let type = ctx.ToTast[t.type](t as any, ctx);
             tast.toplevels.push(type);
             if (type.type === 'TDecorated') {

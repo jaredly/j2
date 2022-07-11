@@ -180,3 +180,11 @@ alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67c
 type X = (<X#[0]: 10 + int>int)<@error:argWrongType(expected: :10 + int) 5>
 type X = (<X#[0]: 10 + int>int)<@error:argWrongType(expected: :10 + int) int>
 type X = (<X#[0]: string + ".js">int)<@error:argWrongType(expected: :string + ".js") string>
+
+==[New fixture]==
+--[input:shouldFail]--
+type X = "hi" + 3
+
+--[output:expected]--
+alias error:invalidOps=h5b2cd4121f17aafc0e0add71bffc73cdaed46019
+type X = @error:invalidOps() ("hi" + 3)
