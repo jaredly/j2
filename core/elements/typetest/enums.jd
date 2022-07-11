@@ -33,8 +33,10 @@ and Node = [ `Tree(Tree#[r0]) ]
 // These should not trigger an infinite loop 😂
 type X = Y#[r1]
 and Y = X#[r0]
+
 @type:shouldNotMatch(:X) 1
 
 type A = [ `A | B#[r1] ]
 and B = [ `B | A#[r0] ]
-@type:shouldNotMatch(:A) [`A]
+
+@type:shouldNotMatch(:A) [ `A ]
