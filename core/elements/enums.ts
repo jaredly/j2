@@ -252,6 +252,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                                 true,
                             )
                         ) {
+                            changed = true;
                             return tdecorate(
                                 k,
                                 'conflictingEnumTag',
@@ -275,7 +276,9 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                                 ],
                             );
                         }
-                        used[kase.tag] = kase;
+                        if (!used[kase.tag]) {
+                            used[kase.tag] = kase;
+                        }
                     }
                 } else {
                     console.log('no resolve?', k);

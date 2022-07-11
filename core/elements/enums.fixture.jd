@@ -73,12 +73,16 @@ type X = <T#[0]: int, N#[1]: string>[ `X(X#[r0]<@error:argWrongType(expected: :i
 type One = [`A | `B]
 type Two = [`A | One]
 type Three = [`A(int) | One]
+type Four = [ `A(int)]
+type Five = [One | Four]
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f One=h3ab180fda5303b065a4bbf9b8ec23df40d83636a
+alias error:conflictingEnumTag=h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec Four=hfbfd4d194279c72bb9c377f367cf241b9c616849 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f One=h3ab180fda5303b065a4bbf9b8ec23df40d83636a
 type One = [ `A | `B ]
 type Two = [ `A | One ]
-type Three = [ `A(int) | One ]
+type Three = [ `A(int) | @error:conflictingEnumTag(tag: "A") One ]
+type Four = [ `A(int) ]
+type Five = [ One | @error:conflictingEnumTag(tag: "A") Four ]
 
 ==[duplicate recursive]==
 --[input:shouldFail]--
@@ -128,12 +132,12 @@ type X = [ `A | @error:conflictingEnumTag() `A(int) ]
 
 ==[New fixture]==
 --[input:shouldFail]--
-type A = [ `A ]
-type B = [ A | `A(int) ]
-type C = [ `A(int) | A]
+type A = [ `Awe ]
+type B = [ A | `Awe(int) ] 
+type C = [ `Awe(int) | A]
 
 --[output:expected]--
-alias A=hc169e6e1b7d3deabdb4f4dc9599f1b5eb041e07a error:conflictingEnumTag=h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
-type A = [ `A ]
-type B = [ A | @error:conflictingEnumTag() `A(int) ]
-type C = [ `A(int) | A ]
+alias A=hb5bc2b50d14c16cc0502a9fc8587a1c720291fb5 error:conflictingEnumTag=h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+type A = [ `Awe ]
+type B = [ A | @error:conflictingEnumTag() `Awe(int) ]
+type C = [ `Awe(int) | @error:conflictingEnumTag(tag: "Awe") A ]
