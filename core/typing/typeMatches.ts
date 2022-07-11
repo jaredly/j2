@@ -39,6 +39,9 @@ export type Ctx = {
     resolveRefsAndApplies(t: Type, path?: string[]): Type | null;
     getValueType(id: Id): Type | null;
     getBound(sym: number): Type | null;
+    log(...args: any[]): void;
+    /** Only triggers the devtools debugger if the fixture is pinned. */
+    debugger(): void;
 };
 
 export const payloadsEqual = (

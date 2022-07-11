@@ -239,6 +239,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                 if (res?.type === 'TEnum') {
                     const expanded = expandEnumCases(res, ctx.ctx);
                     if (!expanded) {
+                        changed = true;
                         return tdecorate(k, 'invalidEnum', ctx.hit, ctx.ctx);
                     }
                     for (let kase of expanded) {

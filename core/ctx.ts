@@ -272,6 +272,10 @@ const cloneInternal = (internal: Internal) => ({
 
 export const newContext = (): FullContext => {
     const ctx: FullContext = {
+        log(...args) {
+            console.log(...args);
+        },
+        debugger() {},
         clone() {
             return {
                 ...this,
@@ -566,6 +570,7 @@ export const errors = {
     invalidEnum: 0,
     notAnEnum: 0,
     conflictingEnumTag: 1,
+    invalidType: 0,
 };
 export type ErrorTag = keyof typeof errors;
 

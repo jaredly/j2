@@ -118,6 +118,7 @@ export const FixtureFile = ({
                 {data.fixtures.map((fixture: Fixture, i) =>
                     pin == null || i == pin ? (
                         <OneFixture
+                            isPinned={i == pin}
                             key={i}
                             ctx={ctx}
                             builtins={data.builtins}

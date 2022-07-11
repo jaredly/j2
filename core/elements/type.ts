@@ -372,6 +372,15 @@ export const ToPP = {
 };
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
+    Type_TRef(node, ctx) {
+        if (node.ref.type === 'Unresolved' || node.ref.type === 'Local') {
+            return null;
+        }
+        if (!ctx.ctx.resolveRefsAndApplies(node)) {
+            return tdecorate(node, 'invalidType', ctx.hit, ctx.ctx);
+        }
+        return null;
+    },
     Type_TOps(node, ctx) {
         const adds = justStringAdds(node, ctx.ctx);
         if (adds) {

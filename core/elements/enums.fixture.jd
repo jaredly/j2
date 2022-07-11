@@ -51,13 +51,13 @@ type X = <T#[0]: int>[ `Hello(X#[r0]<@error:argWrongType(expected: :int) "string
 ==[recursive bound, own tvar]==
 --[input]--
 type X = <T: int>[ `X(X<T>) ]
-type M = (<What>[ `X(What) | M ])<int>
+type M = (<What>[ `X(What) | `Z(M) ])<int>
 type N = int
 
 --[output:expected]--
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 type X = <T#[0]: int>[ `X(X#[r0]<T#[0]>) ]
-type M = (<What#[0]>[ `X(What#[0]) | M#[r0] ])<int>
+type M = (<What#[0]>[ `X(What#[0]) | `Z(M#[r0]) ])<int>
 type N = int
 
 ==[recursive bound, wrong tvar]==
@@ -98,29 +98,24 @@ and Two = [ `A(int) ]
 --[input:shouldFail]--
 type Self = [`A | Self]
 
---[output:failed]--
-type Self = [ `A | Self#[r0] ]
+--[output:expected]--
+alias error:invalidEnum=h49fbf0ea340043d002204371f9e00926593bae65
+type Self = [ `A | @error:invalidEnum() Self#[r0] ]
 
 ==[infinite]==
 --[input:shouldFail]--
 type X = Y#[r1]
 and Y = X#[r0]
 
-type M = @type:shouldMatch(:X) 1
-
 type A = [ `A | B#[r1] ]
 and B = [ `B | A#[r0] ]
-
-type N = @type:shouldMatch(:A) [`A]
 
 --[output:expected]--
-alias A=hf4ee6237a5cd26cce0b66e59f09fcd350ebc987d X=h2a44c6ce7a7328fee222979f96c5792b0583f64e
-type X = Y#[r1]
-and Y = X#[r0]
-type M = @type:shouldMatch#[:unresolved:](:X) 1
-type A = [ `A | B#[r1] ]
-and B = [ `B | A#[r0] ]
-type N = @type:shouldMatch#[:unresolved:](:A) [ `A ]
+alias error:invalidEnum=h49fbf0ea340043d002204371f9e00926593bae65 error:invalidType=h8ad8219d907bce91b14c7d3e00812287b0ab7056
+type X = @error:invalidType() Y#[r1]
+and Y = @error:invalidType() X#[r0]
+type A = [ `A | @error:invalidEnum() B#[r1] ]
+and B = [ `B | @error:invalidEnum() A#[r0] ]
 
 ==[duplicate]==
 --[input:shouldFail]--

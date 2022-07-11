@@ -153,7 +153,6 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     Type_TApply(node, { ctx, hit }) {
         const inner = ctx.resolveAnalyzeType(node.target);
         if (!inner) {
-            console.log('not resolved', node.target, ctx);
             return null;
         }
         // if (inner.type !== 'TVars') {

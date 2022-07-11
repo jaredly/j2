@@ -21,9 +21,11 @@ export function OneFixture({
     onChange,
     portal,
     id,
+    isPinned,
     ctx,
     builtins,
 }: {
+    isPinned: boolean;
     id: string;
     ctx: FullContext;
     portal: HTMLDivElement;
@@ -45,6 +47,14 @@ export function OneFixture({
     const newOutput = React.useMemo(():
         | { type: 'error'; error: Error }
         | { type: 'success'; result: FixtureResult } => {
+        if (isPinned) {
+            ctx = {
+                ...ctx,
+                debugger() {
+                    debugger;
+                },
+            };
+        }
         if (editing != null) {
             try {
                 return {
@@ -59,7 +69,7 @@ export function OneFixture({
         } catch (err) {
             return { type: 'error', error: err as Error };
         }
-    }, [fixture, builtins, editing]);
+    }, [fixture, builtins, editing, isPinned]);
     const [titleEdit, setTitleEdit] = React.useState(null as null | string);
 
     const changed =

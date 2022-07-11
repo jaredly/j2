@@ -63,7 +63,6 @@ export const resolveAnalyzeType = (
         }
         if (type.ref.type === 'Recur') {
             const id = ctx.resolveRecur(type.ref.idx);
-            console.log('going in', type, ctx);
             if (id) {
                 return resolveAnalyzeType(
                     { ...type, ref: { type: 'Global', id } },
@@ -77,7 +76,6 @@ export const resolveAnalyzeType = (
     if (type.type === 'TApply') {
         const target = resolveAnalyzeType(type.target, ctx, path);
         if (!target || target.type !== 'TVars') {
-            console.log('bad apply', target);
             return null;
         }
         const applied = applyType(type.args, target, ctx);
