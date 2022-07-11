@@ -20,15 +20,15 @@ import {
   TLambda,
   TEnum,
   EnumCase,
+  Decorator,
+  DecoratorArg,
+  DExpr,
+  DType,
   String,
   TVars,
   TVar,
   Sym,
   TDecorated,
-  Decorator,
-  DecoratorArg,
-  DExpr,
-  DType,
   TApply,
   TOps,
   DecoratedExpression,
@@ -1067,6 +1067,344 @@ export const transformTLambda = <Ctx>(
   return node;
 };
 
+export const transformDExpr = <Ctx>(
+  node: DExpr,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): DExpr => {
+  if (!node) {
+    throw new Error("No DExpr provided");
+  }
+
+  const transformed = visitor.DExpr ? visitor.DExpr(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+    changed1 = changed1 || updatedNode$expr !== node.expr;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        expr: updatedNode$expr,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.DExprPost) {
+    const transformed = visitor.DExprPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformDType = <Ctx>(
+  node: DType,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): DType => {
+  if (!node) {
+    throw new Error("No DType provided");
+  }
+
+  const transformed = visitor.DType ? visitor.DType(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$typ = transformType(node.typ, visitor, ctx);
+    changed1 = changed1 || updatedNode$typ !== node.typ;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        typ: updatedNode$typ,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.DTypePost) {
+    const transformed = visitor.DTypePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformDecoratorArg = <Ctx>(
+  node: DecoratorArg,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): DecoratorArg => {
+  if (!node) {
+    throw new Error("No DecoratorArg provided");
+  }
+
+  const transformed = visitor.DecoratorArg
+    ? visitor.DecoratorArg(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  switch (node.type) {
+    case "DExpr": {
+      const transformed = visitor.DecoratorArg_DExpr
+        ? visitor.DecoratorArg_DExpr(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "DType": {
+      const transformed = visitor.DecoratorArg_DType
+        ? visitor.DecoratorArg_DType(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "DExpr": {
+      updatedNode = transformDExpr(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformDType(node, visitor, ctx);
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.DecoratorArgPost) {
+    const transformed = visitor.DecoratorArgPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformDecorator = <Ctx>(
+  node: Decorator,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Decorator => {
+  if (!node) {
+    throw new Error("No Decorator provided");
+  }
+
+  const transformed = visitor.Decorator ? visitor.Decorator(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$id = node.id;
+    {
+      let changed2 = false;
+
+      let updatedNode$id$ref = node.id.ref;
+
+      switch (node.id.ref.type) {
+        case "Global": {
+          updatedNode$id$ref = transformGlobalRef(node.id.ref, visitor, ctx);
+          changed2 = changed2 || updatedNode$id$ref !== node.id.ref;
+          break;
+        }
+
+        case "Local":
+          break;
+
+        case "Recur":
+          break;
+
+        default: {
+          // let changed3 = false;
+
+          const updatedNode$id$ref$2node = transformUnresolvedRef(
+            node.id.ref,
+            visitor,
+            ctx
+          );
+          changed2 = changed2 || updatedNode$id$ref$2node !== node.id.ref;
+          updatedNode$id$ref = updatedNode$id$ref$2node;
+        }
+      }
+
+      const updatedNode$id$loc = transformLoc(node.id.loc, visitor, ctx);
+      changed2 = changed2 || updatedNode$id$loc !== node.id.loc;
+      if (changed2) {
+        updatedNode$id = {
+          ...updatedNode$id,
+          ref: updatedNode$id$ref,
+          loc: updatedNode$id$loc,
+        };
+        changed1 = true;
+      }
+    }
+
+    let updatedNode$args = node.args;
+    {
+      let changed2 = false;
+      const arr1 = node.args.map((updatedNode$args$item1) => {
+        let result = updatedNode$args$item1;
+        {
+          let changed3 = false;
+
+          const result$arg = transformDecoratorArg(
+            updatedNode$args$item1.arg,
+            visitor,
+            ctx
+          );
+          changed3 = changed3 || result$arg !== updatedNode$args$item1.arg;
+
+          const result$loc = transformLoc(
+            updatedNode$args$item1.loc,
+            visitor,
+            ctx
+          );
+          changed3 = changed3 || result$loc !== updatedNode$args$item1.loc;
+          if (changed3) {
+            result = { ...result, arg: result$arg, loc: result$loc };
+            changed2 = true;
+          }
+        }
+
+        return result;
+      });
+      if (changed2) {
+        updatedNode$args = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        id: updatedNode$id,
+        args: updatedNode$args,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.DecoratorPost) {
+    const transformed = visitor.DecoratorPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformEnumCase = <Ctx>(
   node: EnumCase,
   visitor: Visitor<Ctx>,
@@ -1097,6 +1435,24 @@ export const transformEnumCase = <Ctx>(
   {
     let changed1 = false;
 
+    let updatedNode$decorators = node.decorators;
+    {
+      let changed2 = false;
+      const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
+        const result = transformDecorator(
+          updatedNode$decorators$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$decorators$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$decorators = arr1;
+        changed1 = true;
+      }
+    }
+
     let updatedNode$payload = undefined;
     const updatedNode$payload$current = node.payload;
     if (updatedNode$payload$current != null) {
@@ -1115,6 +1471,7 @@ export const transformEnumCase = <Ctx>(
     if (changed1) {
       updatedNode = {
         ...updatedNode,
+        decorators: updatedNode$decorators,
         payload: updatedNode$payload,
         loc: updatedNode$loc,
       };
@@ -1448,344 +1805,6 @@ export const transformTVars = <Ctx>(
   node = updatedNode;
   if (visitor.TVarsPost) {
     const transformed = visitor.TVarsPost(node, ctx);
-    if (transformed != null) {
-      node = transformed;
-    }
-  }
-  return node;
-};
-
-export const transformDExpr = <Ctx>(
-  node: DExpr,
-  visitor: Visitor<Ctx>,
-  ctx: Ctx
-): DExpr => {
-  if (!node) {
-    throw new Error("No DExpr provided");
-  }
-
-  const transformed = visitor.DExpr ? visitor.DExpr(node, ctx) : null;
-  if (transformed === false) {
-    return node;
-  }
-  if (transformed != null) {
-    if (Array.isArray(transformed)) {
-      ctx = transformed[1];
-      if (transformed[0] != null) {
-        node = transformed[0];
-      }
-    } else {
-      node = transformed;
-    }
-  }
-
-  let changed0 = false;
-
-  let updatedNode = node;
-  {
-    let changed1 = false;
-
-    const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
-    changed1 = changed1 || updatedNode$expr !== node.expr;
-
-    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-    changed1 = changed1 || updatedNode$loc !== node.loc;
-    if (changed1) {
-      updatedNode = {
-        ...updatedNode,
-        expr: updatedNode$expr,
-        loc: updatedNode$loc,
-      };
-      changed0 = true;
-    }
-  }
-
-  node = updatedNode;
-  if (visitor.DExprPost) {
-    const transformed = visitor.DExprPost(node, ctx);
-    if (transformed != null) {
-      node = transformed;
-    }
-  }
-  return node;
-};
-
-export const transformDType = <Ctx>(
-  node: DType,
-  visitor: Visitor<Ctx>,
-  ctx: Ctx
-): DType => {
-  if (!node) {
-    throw new Error("No DType provided");
-  }
-
-  const transformed = visitor.DType ? visitor.DType(node, ctx) : null;
-  if (transformed === false) {
-    return node;
-  }
-  if (transformed != null) {
-    if (Array.isArray(transformed)) {
-      ctx = transformed[1];
-      if (transformed[0] != null) {
-        node = transformed[0];
-      }
-    } else {
-      node = transformed;
-    }
-  }
-
-  let changed0 = false;
-
-  let updatedNode = node;
-  {
-    let changed1 = false;
-
-    const updatedNode$typ = transformType(node.typ, visitor, ctx);
-    changed1 = changed1 || updatedNode$typ !== node.typ;
-
-    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-    changed1 = changed1 || updatedNode$loc !== node.loc;
-    if (changed1) {
-      updatedNode = {
-        ...updatedNode,
-        typ: updatedNode$typ,
-        loc: updatedNode$loc,
-      };
-      changed0 = true;
-    }
-  }
-
-  node = updatedNode;
-  if (visitor.DTypePost) {
-    const transformed = visitor.DTypePost(node, ctx);
-    if (transformed != null) {
-      node = transformed;
-    }
-  }
-  return node;
-};
-
-export const transformDecoratorArg = <Ctx>(
-  node: DecoratorArg,
-  visitor: Visitor<Ctx>,
-  ctx: Ctx
-): DecoratorArg => {
-  if (!node) {
-    throw new Error("No DecoratorArg provided");
-  }
-
-  const transformed = visitor.DecoratorArg
-    ? visitor.DecoratorArg(node, ctx)
-    : null;
-  if (transformed === false) {
-    return node;
-  }
-  if (transformed != null) {
-    if (Array.isArray(transformed)) {
-      ctx = transformed[1];
-      if (transformed[0] != null) {
-        node = transformed[0];
-      }
-    } else {
-      node = transformed;
-    }
-  }
-
-  let changed0 = false;
-
-  switch (node.type) {
-    case "DExpr": {
-      const transformed = visitor.DecoratorArg_DExpr
-        ? visitor.DecoratorArg_DExpr(node, ctx)
-        : null;
-      if (transformed != null) {
-        if (Array.isArray(transformed)) {
-          ctx = transformed[1];
-          if (transformed[0] != null) {
-            node = transformed[0];
-          }
-        } else if (transformed == false) {
-          return node;
-        } else {
-          node = transformed;
-        }
-      }
-      break;
-    }
-
-    case "DType": {
-      const transformed = visitor.DecoratorArg_DType
-        ? visitor.DecoratorArg_DType(node, ctx)
-        : null;
-      if (transformed != null) {
-        if (Array.isArray(transformed)) {
-          ctx = transformed[1];
-          if (transformed[0] != null) {
-            node = transformed[0];
-          }
-        } else if (transformed == false) {
-          return node;
-        } else {
-          node = transformed;
-        }
-      }
-      break;
-    }
-  }
-
-  let updatedNode = node;
-
-  switch (node.type) {
-    case "DExpr": {
-      updatedNode = transformDExpr(node, visitor, ctx);
-      changed0 = changed0 || updatedNode !== node;
-      break;
-    }
-
-    default: {
-      // let changed1 = false;
-
-      const updatedNode$0node = transformDType(node, visitor, ctx);
-      changed0 = changed0 || updatedNode$0node !== node;
-      updatedNode = updatedNode$0node;
-    }
-  }
-
-  node = updatedNode;
-  if (visitor.DecoratorArgPost) {
-    const transformed = visitor.DecoratorArgPost(node, ctx);
-    if (transformed != null) {
-      node = transformed;
-    }
-  }
-  return node;
-};
-
-export const transformDecorator = <Ctx>(
-  node: Decorator,
-  visitor: Visitor<Ctx>,
-  ctx: Ctx
-): Decorator => {
-  if (!node) {
-    throw new Error("No Decorator provided");
-  }
-
-  const transformed = visitor.Decorator ? visitor.Decorator(node, ctx) : null;
-  if (transformed === false) {
-    return node;
-  }
-  if (transformed != null) {
-    if (Array.isArray(transformed)) {
-      ctx = transformed[1];
-      if (transformed[0] != null) {
-        node = transformed[0];
-      }
-    } else {
-      node = transformed;
-    }
-  }
-
-  let changed0 = false;
-
-  let updatedNode = node;
-  {
-    let changed1 = false;
-
-    let updatedNode$id = node.id;
-    {
-      let changed2 = false;
-
-      let updatedNode$id$ref = node.id.ref;
-
-      switch (node.id.ref.type) {
-        case "Global": {
-          updatedNode$id$ref = transformGlobalRef(node.id.ref, visitor, ctx);
-          changed2 = changed2 || updatedNode$id$ref !== node.id.ref;
-          break;
-        }
-
-        case "Local":
-          break;
-
-        case "Recur":
-          break;
-
-        default: {
-          // let changed3 = false;
-
-          const updatedNode$id$ref$2node = transformUnresolvedRef(
-            node.id.ref,
-            visitor,
-            ctx
-          );
-          changed2 = changed2 || updatedNode$id$ref$2node !== node.id.ref;
-          updatedNode$id$ref = updatedNode$id$ref$2node;
-        }
-      }
-
-      const updatedNode$id$loc = transformLoc(node.id.loc, visitor, ctx);
-      changed2 = changed2 || updatedNode$id$loc !== node.id.loc;
-      if (changed2) {
-        updatedNode$id = {
-          ...updatedNode$id,
-          ref: updatedNode$id$ref,
-          loc: updatedNode$id$loc,
-        };
-        changed1 = true;
-      }
-    }
-
-    let updatedNode$args = node.args;
-    {
-      let changed2 = false;
-      const arr1 = node.args.map((updatedNode$args$item1) => {
-        let result = updatedNode$args$item1;
-        {
-          let changed3 = false;
-
-          const result$arg = transformDecoratorArg(
-            updatedNode$args$item1.arg,
-            visitor,
-            ctx
-          );
-          changed3 = changed3 || result$arg !== updatedNode$args$item1.arg;
-
-          const result$loc = transformLoc(
-            updatedNode$args$item1.loc,
-            visitor,
-            ctx
-          );
-          changed3 = changed3 || result$loc !== updatedNode$args$item1.loc;
-          if (changed3) {
-            result = { ...result, arg: result$arg, loc: result$loc };
-            changed2 = true;
-          }
-        }
-
-        return result;
-      });
-      if (changed2) {
-        updatedNode$args = arr1;
-        changed1 = true;
-      }
-    }
-
-    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-    changed1 = changed1 || updatedNode$loc !== node.loc;
-    if (changed1) {
-      updatedNode = {
-        ...updatedNode,
-        id: updatedNode$id,
-        args: updatedNode$args,
-        loc: updatedNode$loc,
-      };
-      changed0 = true;
-    }
-  }
-
-  node = updatedNode;
-  if (visitor.DecoratorPost) {
-    const transformed = visitor.DecoratorPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }

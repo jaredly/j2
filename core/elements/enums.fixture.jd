@@ -132,7 +132,7 @@ type A = [ `A ]
 type B = [ A | `A(int) ]
 type C = [ `A(int) | A]
 
---[output:failed]--
+--[output:expected]--
 alias A=hc169e6e1b7d3deabdb4f4dc9599f1b5eb041e07a error:conflictingEnumTag=h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 type A = [ `A ]
 type B = [ A | @error:conflictingEnumTag() `A(int) ]
