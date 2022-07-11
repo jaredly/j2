@@ -13,6 +13,7 @@ export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
     const symbols: { [num: number]: Type } = {};
     // So, I'm kindof allowing them to apply more?
     if (args.length < minArgs) {
+        console.log('len');
         return null;
     }
     let failed = false;
@@ -28,9 +29,11 @@ export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
         }
     });
     if (failed) {
+        console.log('failure');
         return null;
     }
 
+    console.log('ok its going');
     // ok we need to transform the inner
     // target.args
     return transformType(

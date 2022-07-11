@@ -22,13 +22,13 @@ export type Toplevel =
           // TODO: This shouldn't be optional,
           // it should be never there for to-tast,
           // and always there for analyze.
-          id?: t.Id;
+          hash?: string;
           items: {
               name: string;
               args: t.TVar[];
               kind: TopTypeKind;
           }[];
       }
-    | { type: 'Expr'; items: { name: string; type: t.Type }[] };
+    | { type: 'Expr'; hash?: string; items: { name: string; type: t.Type }[] };
 
 export type TopTypeKind = 'enum' | 'record' | 'builtin' | 'lambda' | 'unknown';

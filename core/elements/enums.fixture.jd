@@ -89,9 +89,9 @@ type Five = [ One | @error:conflictingEnumTag(tag: "A") Four ]
 type One = [`A | Two]
 and Two = [`A(int)]
 
---[output:failed]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
-type One = [ `A | Two#[r1] ]
+--[output:expected]--
+alias error:conflictingEnumTag=h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+type One = [ `A | @error:conflictingEnumTag(tag: "A") Two#[r1] ]
 and Two = [ `A(int) ]
 
 ==[self recursive]==

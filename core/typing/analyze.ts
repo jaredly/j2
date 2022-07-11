@@ -42,6 +42,8 @@ export type Ctx = {
 
     // decoratorNames(): { [key: string]: string };
     resolve: (name: string, hash?: string | null) => Array<RefKind>;
+    // This should only be in the analyze, not in to-tast
+    resolveRecur(idx: number): Id | null;
 } & TMCtx;
 
 export type VisitorCtx = {

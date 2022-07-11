@@ -3,11 +3,12 @@ import { Ctx } from '.';
 import { DecoratorDecl } from './elements/decorators';
 import { TVar } from './elements/type-vbls';
 import { Loc } from './grammar/base.parser';
-import { extract, Id, idsEqual, idToString, toId } from './ids';
+import { extract, Id, idsEqual, toId } from './ids';
+import { resolveAnalyzeType } from './resolveAnalyzeType';
 import { transformType } from './transform-tast';
 import { Expression, GlobalRef, RefKind, Sym, TVars, Type } from './typed-ast';
 import { Ctx as ACtx } from './typing/analyze';
-import { applyType, getType } from './typing/getType';
+import { getType } from './typing/getType';
 import { makeToTast, Toplevel } from './typing/to-tast';
 import { Ctx as TCtx } from './typing/typeMatches';
 import { locClearVisitor } from './typing/__test__/fixture-utils';
@@ -29,7 +30,7 @@ export type GlobalType =
       }
     | { type: 'user'; typ: Type };
 
-const opaque = Symbol('opaque');
+export const opaque = Symbol('opaque');
 
 type Internal = {
     symid: number;
@@ -278,6 +279,9 @@ export const newContext = (): FullContext => {
             };
         },
         toplevelConfig(toplevel) {
+            if (toplevel && this[opaque].toplevel?.hash) {
+                toplevel.hash = this[opaque].toplevel.hash;
+            }
             return {
                 ...this,
                 [opaque]: { ...this[opaque], toplevel },
@@ -404,6 +408,9 @@ export const newContext = (): FullContext => {
                     id: toId(hash, i),
                 };
             });
+            if (ctx.toplevel?.type === 'Type') {
+                ctx.toplevel.hash = hash;
+            }
             return { ...this, [opaque]: ctx };
         },
 
@@ -413,6 +420,22 @@ export const newContext = (): FullContext => {
         },
         resolveAnalyzeType(type: Type) {
             return resolveAnalyzeType(type, this);
+        },
+        resolveRecur(idx) {
+            if (this[opaque].toplevel?.type === 'Type') {
+                const hash = this[opaque].toplevel.hash;
+                if (hash) {
+                    return toId(hash, idx);
+                } else {
+                    console.log(
+                        'no hash on toplevel sry',
+                        this[opaque].toplevel,
+                    );
+                }
+            } else {
+                console.log('cant resolve recur', this[opaque].toplevel, idx);
+            }
+            return null;
         },
         getTopKind(idx) {
             if (this[opaque].toplevel?.type === 'Type') {
@@ -691,78 +714,6 @@ export const serial = (x: any): any => {
         return JSON.stringify(x);
     }
     return '' + x;
-};
-
-// ugh ok so because
-// i've tied application to TRef, it makes things
-// less flexible. Can't do Some<X><Y> even though you can
-// do let Some = <X><Y>int;
-// OK BACKUP.
-export const resolveAnalyzeType = (
-    type: Type,
-    ctx: FullContext,
-    path: string[] = [],
-): Type | null => {
-    if (type.type === 'TDecorated') {
-        return resolveAnalyzeType(type.inner, ctx, path);
-    }
-    if (type.type === 'TRef') {
-        if (type.ref.type === 'Global') {
-            const k = idToString(type.ref.id);
-            if (path.includes(k)) {
-                return null;
-            }
-            const { idx, hash } = extract(type.ref.id);
-            if (!ctx[opaque].types.hashed[hash]) {
-                return null;
-            }
-            const t = ctx[opaque].types.hashed[hash][idx];
-            if (!t) {
-                return null;
-            }
-            if (t.type === 'user') {
-                return resolveAnalyzeType(
-                    transformType<null>(
-                        t.typ,
-                        {
-                            TRef(node, ctx) {
-                                if (node.ref.type === 'Recur') {
-                                    return {
-                                        ...node,
-                                        ref: {
-                                            type: 'Global',
-                                            id: toId(hash, node.ref.idx),
-                                        },
-                                    };
-                                }
-                                return null;
-                            },
-                        },
-                        null,
-                    ),
-                    ctx,
-                    path.concat(idToString(type.ref.id)),
-                );
-            }
-        }
-        if (type.ref.type === 'Local') {
-            const bound = ctx.getBound(type.ref.sym);
-            return bound;
-        }
-        // if (type.ref.type === 'Recur') {
-        //     ctx.getBound
-        // }
-    }
-    if (type.type === 'TApply') {
-        const target = resolveAnalyzeType(type.target, ctx, path);
-        if (!target || target.type !== 'TVars') {
-            // console.log('bad apply');
-            return null;
-        }
-        const applied = applyType(type.args, target, ctx);
-        return applied ? resolveAnalyzeType(applied, ctx, path) : null;
-    }
-    return type;
 };
 
 export const builtinContext = fullContext();

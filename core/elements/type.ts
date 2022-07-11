@@ -372,15 +372,7 @@ export const ToPP = {
 };
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
-    TypeAlias(node, ctx) {
-        const actx = (ctx.ctx as FullContext).toplevelConfig(
-            typeToplevelT(node, ctx.ctx as FullContext),
-        );
-        // console.log(actx);
-        return [null, { ...ctx, ctx: actx }];
-    },
     Type_TOps(node, ctx) {
-        // console.log('checking tops', node);
         const adds = justStringAdds(node, ctx.ctx);
         if (adds) {
             console.log('stringsadds');
@@ -394,6 +386,4 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
 
         return tdecorate(node, 'invalidOps', ctx.hit, ctx.ctx);
     },
-    // Expression_Apply(node, { ctx, hit }) {
-    // },
 };
