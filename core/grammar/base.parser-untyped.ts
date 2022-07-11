@@ -495,10 +495,11 @@ function peg$parse(input, options) {
     items: [first, ...rest.map(element => element[3])]
   };
 };
-  var peg$f35 = function(text, payload) {
+  var peg$f35 = function(decorators, text, payload) {
   return {
     type: "TagDecl",
     loc: myLocation(),
+    decorators: decorators.map(element => element[0]),
     text,
     payload
   };
@@ -3350,31 +3351,55 @@ function peg$parse(input, options) {
   }
 
   function peg$parseTagDecl() {
-    var s0, s1, s2, s3;
+    var s0, s1, s2, s3, s4;
 
     s0 = peg$currPos;
+    s1 = [];
+    s2 = peg$currPos;
+    s3 = peg$parseDecorator();
+    if (s3 !== peg$FAILED) {
+      s4 = peg$parse_();
+      s3 = [s3, s4];
+      s2 = s3;
+    } else {
+      peg$currPos = s2;
+      s2 = peg$FAILED;
+    }
+    while (s2 !== peg$FAILED) {
+      s1.push(s2);
+      s2 = peg$currPos;
+      s3 = peg$parseDecorator();
+      if (s3 !== peg$FAILED) {
+        s4 = peg$parse_();
+        s3 = [s3, s4];
+        s2 = s3;
+      } else {
+        peg$currPos = s2;
+        s2 = peg$FAILED;
+      }
+    }
     if (input.charCodeAt(peg$currPos) === 96) {
-      s1 = peg$c27;
+      s2 = peg$c27;
       peg$currPos++;
     } else {
-      s1 = peg$FAILED;
+      s2 = peg$FAILED;
       if (peg$silentFails === 0) { peg$fail(peg$e35); }
     }
-    if (s1 !== peg$FAILED) {
-      s2 = peg$currPos;
-      s3 = peg$parseIdText();
-      if (s3 !== peg$FAILED) {
-        s2 = input.substring(s2, peg$currPos);
+    if (s2 !== peg$FAILED) {
+      s3 = peg$currPos;
+      s4 = peg$parseIdText();
+      if (s4 !== peg$FAILED) {
+        s3 = input.substring(s3, peg$currPos);
       } else {
-        s2 = s3;
+        s3 = s4;
       }
-      if (s2 !== peg$FAILED) {
-        s3 = peg$parseTagPayload();
-        if (s3 === peg$FAILED) {
-          s3 = null;
+      if (s3 !== peg$FAILED) {
+        s4 = peg$parseTagPayload();
+        if (s4 === peg$FAILED) {
+          s4 = null;
         }
         peg$savedPos = s0;
-        s0 = peg$f35(s2, s3);
+        s0 = peg$f35(s1, s3, s4);
       } else {
         peg$currPos = s0;
         s0 = peg$FAILED;

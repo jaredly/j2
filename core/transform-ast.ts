@@ -3238,6 +3238,24 @@ export const transformTagDecl = <Ctx>(
     const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
     changed1 = changed1 || updatedNode$loc !== node.loc;
 
+    let updatedNode$decorators = node.decorators;
+    {
+      let changed2 = false;
+      const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
+        const result = transformDecorator(
+          updatedNode$decorators$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$decorators$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$decorators = arr1;
+        changed1 = true;
+      }
+    }
+
     let updatedNode$payload = null;
     const updatedNode$payload$current = node.payload;
     if (updatedNode$payload$current != null) {
@@ -3255,6 +3273,7 @@ export const transformTagDecl = <Ctx>(
       updatedNode = {
         ...updatedNode,
         loc: updatedNode$loc,
+        decorators: updatedNode$decorators,
         payload: updatedNode$payload,
       };
       changed0 = true;

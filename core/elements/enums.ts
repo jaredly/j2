@@ -4,7 +4,7 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { Ctx, tdecorate } from '../typing/analyze';
+import { addDecorator, Ctx, tdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { expandEnumCases, payloadsEqual } from '../typing/typeMatches';
@@ -33,6 +33,7 @@ export type TEnum = {
 export type EnumCase = {
     type: 'EnumCase';
     tag: string;
+    decorators: Array<t.Decorator>;
     payload?: t.Type;
     loc: t.Loc;
 };
@@ -52,6 +53,9 @@ export const ToTast = {
                             return {
                                 type: 'EnumCase',
                                 tag: c.text,
+                                decorators: c.decorators.map((d) =>
+                                    ctx.ToTast[d.type](d as any, ctx),
+                                ),
                                 payload: c.payload
                                     ? ctx.ToTast[c.payload.inner.type](
                                           c.payload.inner as any,
@@ -83,6 +87,9 @@ export const ToAst = {
                             return {
                                 type: 'TagDecl',
                                 text: c.tag,
+                                decorators: c.decorators.map((d) =>
+                                    ctx.ToAst[d.type](d, ctx),
+                                ),
                                 payload: c.payload
                                     ? {
                                           type: 'TagPayload',
@@ -123,6 +130,9 @@ export const ToPP = {
                         if (c.type === 'TagDecl') {
                             return pp.items(
                                 [
+                                    ...c.decorators.map((d) =>
+                                        ctx.ToPP[d.type](d as any, ctx),
+                                    ),
                                     pp.text(`\`${c.text}`, noloc),
                                     c.payload
                                         ? pp.items(
@@ -204,6 +214,17 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         true,
                     )
                 ) {
+                    console.log('found it?', k.tag, k.loc.idx, ctx.hit);
+                    changed = true;
+                    return {
+                        ...k,
+                        decorators: addDecorator(
+                            k.loc,
+                            k.decorators,
+                            'conflictingEnumTag',
+                            ctx,
+                        ),
+                    };
                     // return tdecorate(
                     //     k,
                     //     'conflictingEnumTag',

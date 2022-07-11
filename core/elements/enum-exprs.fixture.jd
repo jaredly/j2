@@ -18,7 +18,7 @@ takeWhatOrWho(`Who)
 takeWhatOrWho(whatOrWho)
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takeWhat=h14f348b943df99b4c29d2d261458fbcce5d50efe takeWhatOrWho=h73a13535a7ddb601cf0053f80555e60c83eec01d whatOrWho=h7505527dd6206c9abd0aaf6d1ad5278653e2c333
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takeWhat=hcd85de6a1facbf2c1efb33da755b321680e36ac0 takeWhatOrWho=hec17aa97b0206ca8dff97b9503182d31f5ee9cfa whatOrWho=h75f1fc730ce550f6a810507b53f871dcb253bcc1
 takeWhat(`What)
 // int
 takeWhatOrWho(`What)
@@ -38,7 +38,7 @@ takeWhatOrWho(whatOrWho)
 takeWhat(whatOrWho)
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takeWhat=hca46af4dc197ec7435261dd0469c675180d757c6 whatOrWho=h7505527dd6206c9abd0aaf6d1ad5278653e2c333
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takeWhat=hc1ddb2c963e54ef87d12bad3be77c118e2fca6dd whatOrWho=h75f1fc730ce550f6a810507b53f871dcb253bcc1
 takeWhat(@error:argWrongType(expected: :[ `What ]) whatOrWho)
 // int
 
@@ -52,7 +52,7 @@ whatNum(`What(110))
 whatTen(`What(10))
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f whatNum=hc695ad6c205fd28585468c73e88ae752be8f6a4e whatTen=h2fde9a3f05bee710df811ef84bea31be2ae282ef
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f whatNum=hed7f1742a075998ffaaf39fd584a3cb31c2df29d whatTen=hb6a4ee646daa689f2ce7cc5cb71f48c02c4532fd
 whatNum(`What(110))
 // int
 whatTen(`What(10))

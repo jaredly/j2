@@ -1,3 +1,12 @@
+
+
+I had a thought.
+What if we could represent recursive types independent
+of a toplevel definition?
+Like it would just indicate "how many levels up do we loop"?
+
+----
+
 hmmm not totally sure about this tbh.
 How would I determine that e.g. L4 and L5 are equivalent?
 

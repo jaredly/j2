@@ -183,6 +183,7 @@ export const App = () => {
 
             // Silence console during others
             if (hash.endsWith('/pin')) {
+                console.warn(`NOTE: suppressing logs from non-pinned items.`);
                 window.console = {
                     ...old,
                     log: () => {},
@@ -204,7 +205,7 @@ export const App = () => {
             });
             setFiles({ fixtures: files, typetest: typetestFiles });
 
-            console = old;
+            window.console = old;
         });
     }, [listing]);
 

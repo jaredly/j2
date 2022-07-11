@@ -222,6 +222,7 @@ export type EnumCase = TagDecl | Type | Star;
 export type TagDecl = {
   type: "TagDecl";
   loc: Loc;
+  decorators: Decorator[];
   text: string;
   payload: TagPayload | null;
 };

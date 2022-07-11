@@ -149,6 +149,7 @@ export const FixtureFile = ({
                                 },
                             ]),
                         });
+                        location.hash = `#${name}/${data.fixtures.length}`;
                     }}
                 >
                     Add fixture

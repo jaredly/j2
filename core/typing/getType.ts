@@ -99,6 +99,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                         type: 'EnumCase',
                         tag: expr.tag,
                         loc: expr.loc,
+                        decorators: [],
                         payload: expr.payload
                             ? getType(expr.payload, ctx) ?? undefined
                             : undefined,

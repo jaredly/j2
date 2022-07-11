@@ -49,6 +49,31 @@ export type VisitorCtx = {
     hit: {};
 };
 
+export const addDecorator = (
+    loc: Loc,
+    decorators: Decorator[],
+    tag: ErrorTag,
+    ctx: { hit: { [key: number]: boolean }; ctx: Ctx },
+    args: Decorator['args'] = [],
+) => {
+    if (ctx.hit[loc.idx]) {
+        return decorators;
+    }
+    ctx.hit[loc.idx] = true;
+    const refs = ctx.ctx.getDecorator(`error:${tag}`);
+    if (!refs || refs.length !== 1) {
+        throw new Error(`Can't resolve ${tag}`);
+    }
+    return decorators.concat([
+        {
+            type: 'Decorator',
+            id: { ref: refs[0], loc: noloc },
+            args,
+            loc,
+        },
+    ]);
+};
+
 export const tdecorate = (
     type: Type,
     tag: ErrorTag,
