@@ -499,6 +499,10 @@ export type Visitor<Ctx> = {
     node: TagDecl,
     ctx: Ctx
   ) => null | false | EnumCase | [EnumCase | null, Ctx];
+  EnumCase_Star?: (
+    node: Star,
+    ctx: Ctx
+  ) => null | false | EnumCase | [EnumCase | null, Ctx];
   TApply_TApply?: (
     node: TApply,
     ctx: Ctx
@@ -637,6 +641,10 @@ export type Visitor<Ctx> = {
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TagPayload?: (
     node: TagPayload,
+    ctx: Ctx
+  ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+  AllTaggedTypes_Star?: (
+    node: Star,
     ctx: Ctx
   ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
   AllTaggedTypes_TypeApplicationSuffix?: (
@@ -3288,7 +3296,18 @@ export const transformStar = <Ctx>(
   }
 
   let changed0 = false;
-  const updatedNode = node;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = { ...updatedNode, loc: updatedNode$loc };
+      changed0 = true;
+    }
+  }
 
   node = updatedNode;
   if (visitor.StarPost) {
@@ -3330,6 +3349,25 @@ export const transformEnumCase = <Ctx>(
     case "TagDecl": {
       const transformed = visitor.EnumCase_TagDecl
         ? visitor.EnumCase_TagDecl(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "Star": {
+      const transformed = visitor.EnumCase_Star
+        ? visitor.EnumCase_Star(node, ctx)
         : null;
       if (transformed != null) {
         if (Array.isArray(transformed)) {
@@ -5998,6 +6036,25 @@ export const transformAllTaggedTypes = <Ctx>(
       break;
     }
 
+    case "Star": {
+      const transformed = visitor.AllTaggedTypes_Star
+        ? visitor.AllTaggedTypes_Star(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "TypeApplicationSuffix": {
       const transformed = visitor.AllTaggedTypes_TypeApplicationSuffix
         ? visitor.AllTaggedTypes_TypeApplicationSuffix(node, ctx)
@@ -6528,6 +6585,12 @@ export const transformAllTaggedTypes = <Ctx>(
 
     case "TagPayload": {
       updatedNode = transformTagPayload(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "Star": {
+      updatedNode = transformStar(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

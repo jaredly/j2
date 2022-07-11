@@ -9,7 +9,6 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { noloc } from '../ctx';
-import { typeToString } from '../../devui/Highlight';
 
 export const grammar = `
 Apply = target:Atom suffixes_drop:Suffix*

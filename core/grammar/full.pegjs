@@ -109,7 +109,7 @@ EnumCase = TagDecl / Type / Star
 TagDecl = "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
 TagPayload = "(" _ inner:Type _ ")"
-Star = "*"
+Star = pseudo:"*"
 
 
 

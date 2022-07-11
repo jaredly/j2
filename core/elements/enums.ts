@@ -18,7 +18,7 @@ EnumCase = TagDecl / Type / Star
 TagDecl = "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
 TagPayload = "(" _ inner:Type _ ")"
-Star = "*"
+Star = pseudo:"*"
 
 `;
 
@@ -40,11 +40,11 @@ export const ToTast = {
     TEnum(t: p.TEnum, ctx: TCtx): TEnum {
         return {
             type: 'TEnum',
-            open: t.cases?.items.some((m) => typeof m === 'string') ?? false,
+            open: t.cases?.items.some((m) => m.type === 'Star') ?? false,
             cases:
                 (t.cases?.items
                     .map((c) => {
-                        if (typeof c === 'string') {
+                        if (c.type === 'Star') {
                             return null;
                         }
                         if (c.type === 'TagDecl') {
@@ -98,7 +98,11 @@ export const ToAst = {
                             return ctx.ToAst[c.type](c as any, ctx);
                         }
                     })
-                    .concat(t.open ? ['*'] : []),
+                    .concat(
+                        t.open
+                            ? [{ type: 'Star', pseudo: '*', loc: noloc }]
+                            : [],
+                    ),
             },
             loc: t.loc,
         };
@@ -112,8 +116,8 @@ export const ToPP = {
                 pp.text('[ ', noloc),
                 ...pp.interleave(
                     t.cases?.items.map((c) => {
-                        if (typeof c === 'string') {
-                            return pp.text(c, noloc);
+                        if (c.type === 'Star') {
+                            return pp.text('*', noloc);
                         }
                         if (c.type === 'TagDecl') {
                             return pp.items(

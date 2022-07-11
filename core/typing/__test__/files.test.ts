@@ -1,74 +1,10 @@
 import { readdirSync, readFileSync } from 'fs';
-import { typeToString } from '../../../devui/Highlight';
 import { addBuiltinDecorator, builtinContext, FullContext } from '../../ctx';
 import { typeToplevel } from '../../elements/base';
 import { parseTypeFile } from '../../grammar/base.parser';
 import { idToString } from '../../ids';
 import * as t from '../../typed-ast';
-import { Ctx } from '../to-tast';
-import { typeMatches } from '../typeMatches';
-
-expect.extend({
-    toMatchT(received, expected, ctx) {
-        if (typeMatches(received, expected, ctx)) {
-            return {
-                message: () =>
-                    `${typeToString(
-                        received,
-                        ctx,
-                    )} should not match ${typeToString(
-                        expected,
-                        ctx,
-                    )} ${JSON.stringify(received)}`,
-                pass: true,
-            };
-        } else {
-            return {
-                message: () =>
-                    `${typeToString(received, ctx)} should match ${typeToString(
-                        expected,
-                        ctx,
-                    )}`,
-                pass: false,
-            };
-        }
-    },
-});
-
-interface CustomMatchers<R = unknown> {
-    toMatchT(one: t.Type, ctx: Ctx): R;
-}
-
-declare global {
-    namespace jest {
-        interface Expect extends CustomMatchers {}
-        interface Matchers<R> extends CustomMatchers<R> {}
-        interface InverseAsymmetricMatchers extends CustomMatchers {}
-    }
-}
-
-const assertions = {
-    shouldMatch(args: t.DecoratorArg[], inner: t.Type, ctx: Ctx) {
-        expect(args).toHaveLength(1);
-        expect(args[0].type).toBe('DType');
-        const arg = args[0] as t.DType;
-        expect(inner).toMatchT(arg.typ, ctx);
-    },
-    shouldNotMatch(args: t.DecoratorArg[], inner: t.Type, ctx: Ctx) {
-        expect(args).toHaveLength(1);
-        expect(args[0].type).toBe('DType');
-        const arg = args[0] as t.DType;
-        expect(inner).not.toMatchT(arg.typ, ctx);
-        // expect(typeMatches(inner, arg.typ, ctx)).toBeFalsy();
-    },
-    shouldBe(args: t.DecoratorArg[], inner: t.Type, ctx: Ctx) {
-        expect(args).toHaveLength(1);
-        expect(args[0].type).toBe('DType');
-        const arg = args[0] as t.DType;
-        expect(typeMatches(inner, arg.typ, ctx)).toBeTruthy();
-        expect(typeMatches(arg.typ, inner, ctx)).toBeTruthy();
-    },
-};
+import { assertions } from './utils';
 
 const base = __dirname + '/../../elements/typetest/';
 readdirSync(base)
@@ -114,11 +50,12 @@ readdirSync(base)
                                         (d.id.ref as t.GlobalRef).id,
                                     );
                                     if (assertById[hash]) {
-                                        assertById[hash](
+                                        const err = assertById[hash](
                                             d.args.map((arg) => arg.arg),
                                             inner,
                                             ctx,
                                         );
+                                        expect(err).toBeUndefined();
                                     }
                                 },
                             );
