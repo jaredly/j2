@@ -53,6 +53,7 @@ export const runTypeTest = (ast: TypeFile, debugFailures = false): TypeTest => {
             if (type.type === 'TDecorated') {
                 let failed = false;
                 const inner = type.inner;
+
                 type.decorators.forEach((d) => {
                     if (d.id.ref.type !== 'Global') {
                         return;
@@ -65,12 +66,10 @@ export const runTypeTest = (ast: TypeFile, debugFailures = false): TypeTest => {
                             ctx,
                         );
                         statuses.push({ loc: d.loc, text: msg });
-                        if (msg) {
-                            console.log('Hm', msg, failed);
-                        }
                         failed = failed || !!msg;
                     }
                 });
+
                 if (failed && debugFailures) {
                     let dctx = {
                         ...ctx,
@@ -82,6 +81,21 @@ export const runTypeTest = (ast: TypeFile, debugFailures = false): TypeTest => {
                     window.console = old;
                     console.log('Rerunning with debugging enabled');
                     dctx.ToTast[t.type](t as any, dctx);
+
+                    type.decorators.forEach((d) => {
+                        if (d.id.ref.type !== 'Global') {
+                            return;
+                        }
+                        const hash = idToString((d.id.ref as t.GlobalRef).id);
+                        if (assertById[hash]) {
+                            assertById[hash](
+                                d.args.map((arg) => arg.arg),
+                                inner,
+                                dctx,
+                            );
+                        }
+                    });
+
                     window.console = mock;
                 }
             } else {

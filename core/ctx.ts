@@ -309,6 +309,20 @@ export const newContext = (): FullContext => {
             return { ...this, [opaque]: { ...this[opaque], aliases } };
         },
 
+        withBounds(bounds) {
+            const types = {
+                ...this[opaque].syms.types,
+                ...bounds,
+            };
+            return {
+                ...this,
+                [opaque]: {
+                    ...this[opaque],
+                    syms: { ...this[opaque].syms, types },
+                },
+            };
+        },
+
         getBound(sym) {
             if (this[opaque].syms.types[sym] !== undefined) {
                 return this[opaque].syms.types[sym];

@@ -42,6 +42,7 @@ export type Ctx = {
     log(...args: any[]): void;
     /** Only triggers the devtools debugger if the fixture is pinned. */
     debugger(): void;
+    withBounds(bounds: { [sym: number]: Type | null }): Ctx;
 };
 
 export const payloadsEqual = (
@@ -92,6 +93,7 @@ export const typeMatches = (
         candidate = collapseOps(candidate, ctx);
     }
 
+    // console.log('at', candidate, expected);
     // if (expected.type === 'TOr') {
     //     if (candidate.type === 'TOr') {
     //         return candidate.elements.every((can) =>
@@ -222,6 +224,7 @@ export const typeMatches = (
                     },
                 )
             ) {
+                console.log('bad args');
                 return false;
             }
             let maxSym = 0;
@@ -239,13 +242,22 @@ export const typeMatches = (
             };
             transformType(expected, visit, null);
             transformType(candidate, visit, null);
-            let newTypes: TRef[] = expected.args.map((_, i) => ({
-                type: 'TRef',
-                loc: noloc,
-                ref: { type: 'Local', sym: maxSym + i + 1 },
-            }));
+            const bounds: { [key: number]: Type | null } = {};
+            let newTypes: TRef[] = expected.args.map((arg, i) => {
+                const sym = maxSym + i + 1;
+                bounds[sym] = arg.bound;
+                return {
+                    type: 'TRef',
+                    loc: noloc,
+                    ref: { type: 'Local', sym: sym },
+                };
+            });
+            ctx = ctx.withBounds(bounds);
             const capp = applyType(newTypes, candidate, ctx);
             const eapp = applyType(newTypes, expected, ctx);
+            // Ohhhhhhhh failed to find bound.
+            // console.log(newTypes);
+            // console.log('applied=in', capp, eapp);
             return capp != null && eapp != null && typeMatches(capp, eapp, ctx);
         }
         case 'TLambda':
