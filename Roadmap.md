@@ -1,4 +1,69 @@
 
+# Now...
+
+So, obivious things before we can really go anywhere:
+
+- Q: what code do I want to be writing?
+	like, what do I want to make
+
+C++ for microcontrollers. Meaning I really need to be able to
+monomorphize all of these enums.
+either that, or I make a monotype for all enums?
+seems really wasteful.
+well, I guess I could determine the ~maximum size for any
+given generic enum function. tbh that might not be terrible.
+But also then I might need to figure out allocation
+which I don't really want to do
+
+TSX for react interfaces. I would quite like to be able to
+dovetail. although useState being inherently side-effectful
+isn't awesome.
+yeah ok I could use virtual-dom or snabbdom, seems like at
+least a way to get started.
+
+golang for servers, would be very cool.
+
+glsl for shaders, definitely want to get that running again.
+will need to figure out a story for lambdas.
+OH I wonder if I could piggy-back on enums?
+
+like
+somehow have some big old dispatchlambda
+
+```
+// This is all of the lambdas that take these args
+// and have this return type
+type Scope = [
+	`hashOfScope(id1: number, scope: idkrecord)
+]
+function lambda[hashOfArgs](scope: Scope, arg1: int, arg2: string){
+	switch (scope) {
+		`hashOfScope(id, scope) => {
+
+		}
+	}
+})
+```
+
+so, um, yeah; I do kindof want to have a transform that's like
+"tear through IR, and at the end we have no lambdas.
+
+now is that happening at the IR level?
+or the TAST?
+
+similarly, is the effects -> CPS transform happening
+at the IR level? or the TAST?
+
+because I feel like when we bottom out with the `handle!`,
+we do need like variable reassignment.
+
+but idk we could probably get away with doing nearly all of it at the TAST level.
+
+same with monomorphizing.
+
+
+
+
 # Now that typetests are working:
 
 - [x] oh check our coverage my folks
@@ -7,18 +72,19 @@
 so
 here's a thing
 
-- [ ] when in the analyze phase, it's nice to be able to know what the ID is of the current toplevel type, for resolving rescursion.
-- [ ] ummm wait EnumCase needs to be decoratable. RecordItem will need to be too.
-- [ ] alsooo what about 
+- [x] when in the analyze phase, it's nice to be able to know what the ID is of the current toplevel type, for resolving rescursion.
+- [x] ummm wait EnumCase needs to be decoratable. RecordItem will need to be too.
 
 
 
 
-- [ ] detect all kinds of more issues
-	- [ ] enum reusing tags
+
+
+- [x] detect all kinds of more issues
+	- [x] enum reusing tags
 	- [x] get type checking of recursive types working!
 	- [x] prevent infinite loop types from borking things
-		- [ ] add an annotation to make it obvious?
+		- [x] add an annotation to make it obvious?
 			- like, if this type is just infinitely recursive, pull the plug
 			- yes definitely do that.
 

@@ -5,6 +5,8 @@ Things I'm getting:
 - multiple dispatch without any ambiguity
 	ok yeah that is quite nice to have
 - indelible track record of everything you've done
+	- yeah this is a big deal. Change an implementation without
+		having to worry about the places it's being used.
 - incremental building for free99
 	- at least up until monomorphization
 

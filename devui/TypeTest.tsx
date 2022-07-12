@@ -9,6 +9,17 @@ import { Card } from '@nextui-org/react';
 import { fixComments } from '../core/grammar/fixComments';
 import { parseTypeFile } from '../core/grammar/base.parser';
 
+const refmt = (test: TypeTest) => {
+    const actx = printCtx(test.ctx);
+    const ast = actx.ToAst.TypeFile(test.file, actx);
+    const pctx = newPPCtx();
+    const pp = injectComments(
+        pctx.ToPP.TypeFile(ast, pctx),
+        ast.comments.slice(),
+    );
+    return printToString(pp, 100).replace(/[ \t]+$/gm, '');
+};
+
 export const TypeTestView = ({
     test,
     onChange,
@@ -18,16 +29,7 @@ export const TypeTestView = ({
     test: TypeTest;
     onChange: (v: TypeTest) => void;
 }) => {
-    const [text, setText] = React.useState(() => {
-        const actx = printCtx(test.ctx);
-        const ast = actx.ToAst.TypeFile(test.file, actx);
-        const pctx = newPPCtx();
-        const pp = injectComments(
-            pctx.ToPP.TypeFile(ast, pctx),
-            ast.comments.slice(),
-        );
-        return printToString(pp, 100).replace(/[ \t]+$/gm, '');
-    });
+    const [text, setText] = React.useState(() => refmt(test));
 
     return (
         <div
@@ -86,15 +88,16 @@ export const TypeTestView = ({
                             });
                         }}
                         onBlur={(text) => {
+                            const ran = runTypeTest(
+                                fixComments(parseTypeFile(text)),
+                            );
+                            const fmt = refmt(ran);
                             try {
-                                onChange(
-                                    runTypeTest(
-                                        fixComments(parseTypeFile(text)),
-                                    ),
-                                );
+                                onChange(ran);
+                                setText(fmt);
                                 fetch(`/elements/typetest/${name}`, {
                                     method: 'POST',
-                                    body: text,
+                                    body: fmt,
                                 });
                             } catch (err) {
                                 //
