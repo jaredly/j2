@@ -1,7 +1,49 @@
 
 # Now...
 
-So, obivious things before we can really go anywhere:
+I think I want to get rid of the enum `*` star.
+
+So, obvious things before we can really go anywhere:
+- [ ] lambdas lol
+- [ ] records & tuples
+- [ ] let (it would be nice not to have non-expressions)
+	egh but then again, I don't really want to support expr-level
+	let. it needs braces.
+- [ ] arrays. whatayathink
+- [ ] could be nice to have a `Map` type builtin
+- [ ] switch
+- [ ] if/else
+
+then we get around to `Array<int> where .length = 10u`
+
+ok also,
+can I design my algebraic effects, so that it solves the
+Error collection problem?
+
+e.g. we can infer the types of errors that you're going to
+be coming up with.
+
+So there's the `$Error<T>` effect.
+And people are raising `$Error`s, but with different
+payloads. BUT they're enums.
+so we want to infer that we've got:
+```
+$Error<[ `Some(x) | `Other ]>
+```
+when doing `raise!($Error<``Some(x)>)` and `raise!($Error<``Other>)`.
+
+like, that would be quite cool.
+
+
+anyway here's a question:
+Is it critical to handle all of the parts of an effect together?
+Could I concievably have a single-handle thing,
+that just does either `Get` or `pure`, and another one that
+does `Set` or `pure`?
+Again here I think I need to just dive into the manual CPS
+version of the effects stuff. So I can remember the particulars.
+
+
 
 - Q: what code do I want to be writing?
 	like, what do I want to make
@@ -61,6 +103,12 @@ but idk we could probably get away with doing nearly all of it at the TAST level
 
 same with monomorphizing.
 
+now, these whole-program-optimizing functions would be working
+on the level of ... the whole program. the whole library.
+
+I'd like to go through the effects paper examples,
+and do a manual rewrite to CPS.
+see what it takes.
 
 
 
