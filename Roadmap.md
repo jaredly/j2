@@ -1,7 +1,33 @@
 
+ok I actually think I'm ready to try representing
+effects, pre-sugar.
+ok but yeah I should make function literals a thing.
+and then I'll need switches or something at some point.
+
+alsooo tuples are needed to represent the bodies of the fns.
+
+- [ ] tuples & records (attributes etc)
+	- `.hello` is the fn `<T>(x: {hello: T, *}) => T`
+
+- [ ] lambdas
+	- basic patterns
+
+- [ ] blocks
+
+- [ ] lets?
+
+- [ ] switches maybeee
+
+
+
+
+
+
 # Now...
 
 I think I want to get rid of the enum `*` star.
+(not ready too yet tho, might be nice)
+
 
 So, obvious things before we can really go anywhere:
 - [ ] lambdas lol

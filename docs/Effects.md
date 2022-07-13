@@ -1,5 +1,296 @@
 
 
+
+Ok, so once I have `Task<>` style effects ...
+what do I have next?
+
+```
+(a) ={X}> b
+is the same as
+(a) => Task<X, b>
+```
+
+which seems fine?
+
+ok so the really nice thing is that I don't need any type-level magic for it, right?
+I mean, especially if ...
+
+ok, so I'm considering doing "auto-task-magic".
+so, no special syntax needed.
+BUT then we would need a special syntax to /not/ task-magic.
+but then, what's the cost of having special syntax?
+
+hello!()
+
+it can be nice to know that your call might not be forwarded.
+
+yeah, I feel like: If you're going to be making them representable
+as part of the normal language, it's weird to auto-dealio them.
+orr
+I could have some hint at the fn level
+that tasks will be dealt with harshly.
+oh but then
+you might want to
+combine tasks
+and then what do you do
+
+ok?()
+
+there's the ol' question mark
+
+ok!()
+
+ok, so I feel like
+
+if a fn has a `!` function, then return values will be wrapped.
+
+so there is a little bit of function color going on
+but it's ~easy to go back & forth. hopefully.
+
+## Handle ##
+
+ok anyway, what does handling them look like?
+
+```
+type Store = <Value>['Get((), Value) | 'Set(Value, ())]
+// <Value, E: effect, R>(v: Value, task: () ={E | Store<Value>}> R)
+let provide = <V, E, R>(v, task) => switch task() {
+	'Get((), k) => provide<V, E, R>(v, () => k(v))
+	'Set(v, k) => provide<V, E, R>(v, k)
+	// ok, and we'll be able to infer
+	// that the other parts of E are just passed through
+	// and 'Return as well
+	// So it's fine?
+	v => v
+	// Not needed, it'll just pass through
+	// 'Return(v) => 'Return(v)
+}
+
+
+let subjugate = <Sub: const string>(task) => switch task() {
+	'Get((), k) => '{"Get:" + sub}((), k)
+	'Set(v, k) => '{"Set:" + sub}(v, k)
+	// is the same as x => x
+	// *
+	// maybe too early for that sugar idk
+	x => x
+}
+
+let provideSub = <V, E, R, Sub: const string>(v, task) => switch task() {
+	'{"Get:" + Sub}((), k) => provideSub<>(v, () => k(v))
+	'{"Set:" + Sub}(v, k) => provideSub<>(v, k)
+	x => x
+}
+
+
+```
+
+
+
+
+
+hmm I think I want a type bound that's like `effect`,
+which is "the kind of thing you can put in `Task`".
+So the weird thing is that ... you wouldn't really produce
+a value that matches type `effect`.
+Is that too weird? idk
+
+OH also, `Task<['Failure(string, never)], int>` means
+one of the options will be `'Failure(string)`. btw.
+
+
+
+
+
+
+
+-- thnking thgouth effects as tags ---
+
+So, what if I model effects as tasks
+in such a way
+that they can be modeled in-universe as enums
+and then
+we could also have syntax for
+'call this function as a task'
+
+```
+
+also, [ 'One(['A]) | 'One(['B]) ] 
+equals [ 'One(['A | 'B])]
+
+
+
+
+fn!(a, b, c)
+
+is like
+
+fn(a,b,c).then(() => everything else)
+
+type X = [
+	'Failure(string)
+	| 'Return(int)
+	| 'PartyParty((v: string) => X)
+	]
+
+
+let x = () => {
+	print!("What is your name?");
+	let name = getName!();
+	print!("What is your age?");
+	let age = getAge!();
+	"${name} is ${age as string} years old"
+}
+
+type Task<E: [*], T> = [ E | 'Return(T) ]
+
+[ 'Print(string, () => *)
+| 'Readline((v: string) => *)
+| 'Return(string)]
+
+let getName = (): ['Readline((v: string) => ['Return(string)])] => {
+	'Readline(name => 'Return(name))
+}
+
+let getAge = (): ['Readline((v: string) => ['Return(int)])] => {
+	'Readline(name => 'Return(parseIntOrElse(name)))
+}
+
+let print = (v: string) => 'Print(v, () => 'Return(()))
+
+let x = () => {
+	'Print("What is your name?", () => {
+		'Readline(name => {
+			'Print("What is your age?", () => {
+				'Readline()
+			})
+		})
+	})
+}
+
+
+/// soooo the hmmmmm
+thenn would need to
+bascially .. pass through ..
+so yeah, "Task" needs to line up all the 'return' values,right?
+
+[ 'Print(string, () => *)
+| 'Readline((), (v: string) => *)
+| 'Return(string)]
+
+and * is ^ some more?
+so like, 'Return(X), and then otherwise all enums have a tuple payload
+where the second is a function ...
+
+does this have to just be ... a ... keyword?
+because I don't think I can express that type constraint
+and I definitely don't think I can write that function.
+
+Task<[
+	'Print(string, ()) |
+	'Failure({0: string}) |
+	'Readline((), string)
+], returnValue>
+
+() ={'Print(string, ()), 'Failure(string)}> string
+
+let x = () => {
+	print("What is your name?") andThen () => {
+		getName() andThen (name) => {
+			print("What is your age?") andThen () => {
+				getAge() andThen (age) => {
+					'Return("${name} is ${age as string} years old")
+				}
+			}
+		}
+	}
+}
+
+andThen takes a Task<A, X> and (X) => Task<B, Y> and returns a Task<[A | B], Y>
+
+... I think that makes sense?
+
+and so the question of: can you do sufficient type unification
+to make this happy?
+
+so a runtime function, that checks the values
+
+now, if you *could* do it at runtime, that would be cool
+like, what are the monad functions that people do
+eh nvm
+
+ok yeah so we need to be able to unify
+[ 'Print(string, () => Task<[], int>)
+| 'Failure(string, never)
+| 'Readline((), string => Task<[], int>)]
+
+with
+
+Task<['Print(string, ()) | 'Failure(string, never) | 'Readline((), string)], int>
+
+```
+
+Ok so failures, make sure that works
+like
+
+```
+['Failure({0: string})]
+
+can align with a task returning anything.
+Task<[*], *>
+```
+
+SO:
+
+```
+does fail!("Error")
+
+let fail = value => `Failure(value);
+
+fail!("Error")
+
+becomes
+
+fail("Error") andThen (() => {})
+
+but if it's in the final position, it won't need the `andThen`
+
+
+
+
+ok but so
+
+are we going to go hard on unification?
+like
+
+[ 'Failure({x: ['A]}) | 'Failure({x: ['B]}) ]
+
+becomes
+
+[ 'Failure({x: [ 'A | 'B ]}) ]
+
+?
+
+I mean, it seems like I would indeed want that.
+
+someone's going to say that would be harder to make a machine representation for.
+and like, probably. but that's fine
+
+ok so like a `unifyTypes` fn
+
+
+
+
+
+
+
+
+
+
+
+--- Antelang stuff ---
+
+
 oooooh ok so antelang takes `k` and just makes it a keyword! Honestly that has some appeal.
 ```
 handle_give_int (f: unit -> a with GiveInt) -> a =
