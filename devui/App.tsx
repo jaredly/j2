@@ -150,7 +150,7 @@ export const App = () => {
     const [listing] = usePromise<{ fixtures: string[]; typetest: string[] }>(
         () =>
             Promise.all([
-                fetch('/elements/').then((res) => res.json()),
+                fetch('/elements/fixtures/').then((res) => res.json()),
                 fetch('/elements/typetest/').then((res) => res.json()),
             ]).then(([fixtures, typetest]) => ({ fixtures, typetest })),
         [],
@@ -170,7 +170,7 @@ export const App = () => {
         Promise.all([
             Promise.all(
                 fixtures.map((line) =>
-                    fetch(`/elements/${line}`).then((v) => v.text()),
+                    fetch(`/elements/fixtures/${line}`).then((v) => v.text()),
                 ),
             ),
             Promise.all(
