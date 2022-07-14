@@ -204,7 +204,7 @@ export type Enum = {
   type: "Enum";
   loc: Loc;
   text: string;
-  payload: (Expression | null) | null;
+  payload: (CommaExpr | null) | null;
 };
 
 export type TEnum = {

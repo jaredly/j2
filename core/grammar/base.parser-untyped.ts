@@ -3276,7 +3276,7 @@ function peg$parse(input, options) {
         }
         if (s4 !== peg$FAILED) {
           s5 = peg$parse_();
-          s6 = peg$parseDecoratedExpression();
+          s6 = peg$parseCommaExpr();
           if (s6 === peg$FAILED) {
             s6 = null;
           }

@@ -8,9 +8,10 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
+import { maybeTuple } from './base';
 
 export const grammar = `
-Enum = "\`" text:$IdText payload:("(" _ Expression? _ ")")?
+Enum = "\`" text:$IdText payload:("(" _ CommaExpr? _ ")")?
 `;
 
 export type Enum = {
@@ -25,9 +26,7 @@ export const ToTast = {
         return {
             type: 'Enum',
             tag: t.text,
-            payload: t.payload
-                ? ctx.ToTast[t.payload.type](t.payload as any, ctx)
-                : undefined,
+            payload: t.payload ? maybeTuple(t.payload, t.loc, ctx) : undefined,
             loc: t.loc,
         };
     },
@@ -35,12 +34,22 @@ export const ToTast = {
 
 export const ToAst = {
     Enum(t: t.Enum, ctx: TACtx): p.Enum {
+        const inner = t.payload
+            ? ctx.ToAst[t.payload.type](t.payload as any, ctx)
+            : undefined;
         return {
             type: 'Enum',
             text: t.tag,
-            payload: t.payload
-                ? ctx.ToAst[t.payload.type](t.payload as any, ctx)
-                : null,
+            payload:
+                inner?.type === 'ParenedExpression'
+                    ? inner.items
+                    : inner
+                    ? {
+                          type: 'CommaExpr',
+                          items: [inner],
+                          loc: t.loc,
+                      }
+                    : null,
             loc: t.loc,
         };
     },
@@ -53,13 +62,11 @@ export const ToPP = {
                 pp.text('`', t.loc),
                 pp.text(t.text, t.loc),
                 t.payload
-                    ? pp.items(
-                          [
-                              pp.text('(', t.loc),
-                              ctx.ToPP[t.payload.type](t.payload as any, ctx),
-                              pp.text(')', t.loc),
-                          ],
-                          t.loc,
+                    ? pp.args(
+                          t.payload.items.map((item) =>
+                              ctx.ToPP[item.type](item as any, ctx),
+                          ),
+                          t.payload.loc,
                       )
                     : null,
             ],

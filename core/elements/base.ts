@@ -144,24 +144,7 @@ export const ToTast = {
         }
     },
     ParenedExpression(expr: p.ParenedExpression, ctx: Ctx): t.Expression {
-        if (expr.items?.items.length === 1) {
-            return ctx.ToTast[expr.items.items[0].type](
-                expr.items.items[0] as any,
-                ctx,
-            );
-        }
-        return {
-            type: 'Record',
-            spreads: [],
-            loc: expr.loc,
-            items:
-                expr.items?.items.map((item, i) => ({
-                    type: 'RecordKeyValue',
-                    key: i.toString(),
-                    value: ctx.ToTast[item.type](item as any, ctx),
-                    loc: item.loc,
-                })) ?? [],
-        };
+        return maybeTuple(expr.items, expr.loc, ctx);
     },
     // Expression(expr: p.Expression, typ: Type | null, ctx: Ctx): Expression {
     //     return ctx.ToTast[expr.type](expr as any, typ, ctx);
@@ -189,6 +172,28 @@ export const ToTast = {
 
 export const filterUnresolved = (v: string | null | undefined) =>
     v == null || v === ':unresolved:' ? null : v;
+
+export const maybeTuple = (
+    items: null | p.CommaExpr,
+    loc: t.Loc,
+    ctx: Ctx,
+): t.Expression => {
+    if (items?.items.length === 1) {
+        return ctx.ToTast[items.items[0].type](items.items[0] as any, ctx);
+    }
+    return {
+        type: 'Record',
+        spreads: [],
+        loc,
+        items:
+            items?.items.map((item, i) => ({
+                type: 'RecordKeyValue',
+                key: i.toString(),
+                value: ctx.ToTast[item.type](item as any, ctx),
+                loc: item.loc,
+            })) ?? [],
+    };
+};
 
 export const ToAst = {
     File({ type, toplevels, loc, comments }: t.File, ctx: TACtx): p.File {
