@@ -277,6 +277,8 @@ function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
         case 'String':
         case 'TOps':
             return 'builtin';
+        case 'TRecord':
+            return 'record';
         case 'TDecorated':
         case 'TVars':
         case 'TParens':
@@ -315,6 +317,8 @@ function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
             return determineKindT(t.target, ctx);
         case 'TEnum':
             return 'enum';
+        case 'TRecord':
+            return 'record';
         case 'TLambda':
             return 'lambda';
         case 'TRef':

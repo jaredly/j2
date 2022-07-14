@@ -6,6 +6,9 @@ and then I'll need switches or something at some point.
 
 alsooo tuples are needed to represent the bodies of the fns.
 
+- [ ] ok so I do want to take a little check through the files
+	see if there are things I need to split out into elements more
+
 - [ ] tuples & records (attributes etc)
 	- `.hello` is the fn `<T>(x: {hello: T, *}) => T`
 

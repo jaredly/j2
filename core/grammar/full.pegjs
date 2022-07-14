@@ -104,7 +104,7 @@ Enum = "\`" text:$IdText payload:("(" _ Expression? _ ")")?
 // enums.ts
 
 TEnum = "[" _ cases:EnumCases? _ "]"
-EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"? _
+EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"?
 EnumCase = TagDecl / Type / Star
 TagDecl = decorators:(Decorator _)* "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
@@ -123,6 +123,16 @@ TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
 TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
 
 
+// records.ts
+
+TRecord = "{" _ items:TRecordItems? _ "}"
+TRecordItems = first:TRecordItem rest:(_ "," _ TRecordItem)* _ ","?
+TRecordItem = TRecordSpread / TRecordKeyValue / Star
+TRecordSpread = "..." _ inner:Type
+TRecordKeyValue = key:$IdText _ ":" _ value:Type
+
+
+
 // type-vbls.ts
 
 TApply = inner:TAtom args_drop:(_ "<" _ TComma _ ">")*
@@ -138,7 +148,7 @@ TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Typ
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum
+TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
 
 TOps = left:TOpInner right_drop:TRight*

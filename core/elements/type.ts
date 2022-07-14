@@ -15,7 +15,7 @@ export const grammar = `
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum
+TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
 
 TOps = left:TOpInner right_drop:TRight*
@@ -81,6 +81,7 @@ export type Type =
     | TVars
     | TDecorated
     | TApply
+    | t.TRecord
     | TOps;
 
 // | TApply | TDecorated | TApply | TVars

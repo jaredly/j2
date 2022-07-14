@@ -6,6 +6,7 @@ import { readdirSync, readFileSync, writeFileSync } from 'fs';
 // if it has a ToAst, make sure it's imported into to-ast & included.
 
 const names = {
+    // typeMatches: 'core/typing/typeMatches.gen.ts',
     ToAst: 'core/typing/to-ast.gen.ts',
     ToTast: 'core/typing/to-tast.gen.ts',
     ToPP: 'core/printer/to-pp.gen.ts',
@@ -13,6 +14,7 @@ const names = {
 };
 
 const elements: { [key in keyof typeof names]: string[] } = {
+    // typeMatches: [],
     ToAst: [],
     ToTast: [],
     ToPP: [],

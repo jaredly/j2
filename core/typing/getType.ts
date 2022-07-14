@@ -51,6 +51,9 @@ export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
 const maybeTref = (ref: GlobalRef | null) => (ref ? tref(ref) : null);
 
 // UMM So btw this will resolve all TRefs? Maybe? hmm maybe not..
+
+// ok so anyway
+// this could maybe do a ...visitor kind of thing as well.
 export const getType = (expr: Expression, ctx: Ctx): Type | null => {
     switch (expr.type) {
         case 'TypeApplication': {

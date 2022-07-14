@@ -199,9 +199,16 @@ export const App = () => {
             });
             const typetestFiles = {} as Files['typetest'];
             typetestContents.forEach((contents, i) => {
-                typetestFiles[typetest[i]] = runTypeTest(
-                    fixComments(parseTypeFile(contents)),
-                );
+                try {
+                    typetestFiles[typetest[i]] = runTypeTest(
+                        fixComments(parseTypeFile(contents)),
+                    );
+                } catch (err) {
+                    old.error('Failed to parse typetest', err);
+                    // typetestFiles[typetest[i]] = runTypeTest(
+                    //     fixComments(parseTypeFile(contents)),
+                    // );
+                }
             });
             setFiles({ fixtures: files, typetest: typetestFiles });
 
