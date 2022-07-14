@@ -15,9 +15,9 @@ alsooo tuples are needed to represent the bodies of the fns.
 	- [x] parse, print, validate
 - [ ] enum unify
 	- [x] very basic, not really enough
-	- [ ] the full thing, all deep in it
-		- could I 
-- [ ] pretty parsing tuples
+	- [x] decent unification
+	- [ ] lambdas and tvars and whatnot
+- [x] pretty parsing tuples as enum bits
 
 - [ ] tuples & records (attributes etc)
 	- `.hello` is the fn `<T>(x: {hello: T, *}) => T`

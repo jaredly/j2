@@ -43,14 +43,16 @@ and B = [ `B | A#[r0] ]
 
 @type:shouldNotMatch(:A) [ `A ]
 
-type N = [ `A((int, float)) ]
+type N = [ `A(int, float) ]
 
 @type:shouldMatch(:{x: [ `A | `B ]}) {x: [ `A ]}
 
 // Unification!
-@type:shouldMatch(:[ `Failure([ `TooBad | `Timeout | `C ]) ]) [ `Failure([ `TooBad ]) | `Failure([ `Timeout ]) ]
+@type:shouldMatch(:[ `Failure([ `TooBad | `Timeout | `C ]) ]) [ `Failure([ `TooBad ]) | `Failure(
+    [ `Timeout ],
+) ]
 
-@type:shouldMatch(:[ `Failure(([ `TooBad | `Timeout | `C ], int)) ]) [ `Failure(([ `TooBad ], int)) | `Failure((
+@type:shouldMatch(:[ `Failure([ `TooBad | `Timeout | `C ], int) ]) [ `Failure([ `TooBad ], int) | `Failure(
     [ `Timeout ],
     int,
-)) ]
+) ]

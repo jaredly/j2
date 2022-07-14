@@ -67,32 +67,40 @@ export const ToTast = {
     },
 };
 
+export const recordAsTuple = (t: TRecord) => {
+    if (!t.open && t.spreads.length == 0) {
+        let nums = [];
+        for (let item of t.items) {
+            const i = parseInt(item.key);
+            if (i.toString() === item.key && !isNaN(i)) {
+                nums[i] = item.value;
+            }
+        }
+
+        let good = true;
+        for (let i = 0; i < t.items.length; i++) {
+            if (!nums[i]) {
+                good = false;
+                break;
+            }
+        }
+
+        if (good) {
+            return nums;
+        }
+    }
+    return null;
+};
+
 export const ToAst = {
     TRecord: (t: TRecord, ctx: TACtx): p.Type => {
-        if (!t.open && t.spreads.length == 0) {
-            let nums = [];
-            for (let item of t.items) {
-                const i = parseInt(item.key);
-                if (i.toString() === item.key && !isNaN(i)) {
-                    nums[i] = item.value;
-                }
-            }
-
-            let good = true;
-            for (let i = 0; i < t.items.length; i++) {
-                if (!nums[i]) {
-                    good = false;
-                    break;
-                }
-            }
-
-            if (good) {
-                return {
-                    type: 'TParens',
-                    loc: t.loc,
-                    items: nums.map((v) => ctx.ToAst[v.type](v as any, ctx)),
-                };
-            }
+        const tup = recordAsTuple(t);
+        if (tup) {
+            return {
+                type: 'TParens',
+                loc: t.loc,
+                items: tup.map((v) => ctx.ToAst[v.type](v as any, ctx)),
+            };
         }
         return {
             type: 'TRecord',

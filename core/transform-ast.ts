@@ -3266,13 +3266,25 @@ export const transformTagPayload = <Ctx>(
     const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
     changed1 = changed1 || updatedNode$loc !== node.loc;
 
-    const updatedNode$inner = transformType(node.inner, visitor, ctx);
-    changed1 = changed1 || updatedNode$inner !== node.inner;
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformType(updatedNode$items$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
     if (changed1) {
       updatedNode = {
         ...updatedNode,
         loc: updatedNode$loc,
-        inner: updatedNode$inner,
+        items: updatedNode$items,
       };
       changed0 = true;
     }

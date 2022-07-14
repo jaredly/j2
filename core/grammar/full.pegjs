@@ -109,7 +109,7 @@ EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"?
 EnumCase = TagDecl / Type / Star
 TagDecl = decorators:(Decorator _)* "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
-TagPayload = "(" _ inner:Type _ ")"
+TagPayload = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
 Star = pseudo:"*"
 
 

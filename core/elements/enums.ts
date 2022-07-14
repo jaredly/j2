@@ -10,6 +10,7 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TMCtx, unifyPayloads } from '../typing/typeMatches';
 import { unifyTypes } from '../typing/unifyTypes';
 import { expandEnumCases, payloadsEqual } from '../typing/typeMatches';
+import { recordAsTuple } from './records';
 
 // type State:Effect = <T>[ `Get | `Set(T) ]
 // type State:Full = <T, Final>[ State:Effect<T> | `Final(Final)]
@@ -20,7 +21,7 @@ EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"?
 EnumCase = TagDecl / Type / Star
 TagDecl = decorators:(Decorator _)* "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
-TagPayload = "(" _ inner:Type _ ")"
+TagPayload = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
 Star = pseudo:"*"
 
 `;
@@ -59,10 +60,28 @@ export const ToTast = {
                                     ctx.ToTast[d.type](d as any, ctx),
                                 ),
                                 payload: c.payload
-                                    ? ctx.ToTast[c.payload.inner.type](
-                                          c.payload.inner as any,
-                                          ctx,
-                                      )
+                                    ? c.payload.items.length === 1
+                                        ? ctx.ToTast[c.payload.items[0].type](
+                                              c.payload.items[0] as any,
+                                              ctx,
+                                          )
+                                        : {
+                                              type: 'TRecord',
+                                              loc: noloc,
+                                              spreads: [],
+                                              open: false,
+                                              items: c.payload.items.map(
+                                                  (p, i) => ({
+                                                      type: 'TRecordKeyValue',
+                                                      loc: noloc,
+                                                      key: i.toString(),
+                                                      value: ctx.ToTast[p.type](
+                                                          p as any,
+                                                          ctx,
+                                                      ),
+                                                  }),
+                                              ),
+                                          }
                                     : undefined,
                                 loc: c.loc,
                             };
@@ -96,9 +115,10 @@ export const ToAst = {
                                     ? {
                                           type: 'TagPayload',
                                           loc: c.loc,
-                                          inner: ctx.ToAst[c.payload.type](
-                                              c.payload as any,
+                                          items: enumPayload(
+                                              c.payload,
                                               ctx,
+                                              c.loc,
                                           ),
                                       }
                                     : null,
@@ -137,20 +157,29 @@ export const ToPP = {
                                     ),
                                     pp.text(`\`${c.text}`, noloc),
                                     c.payload
-                                        ? pp.items(
-                                              [
-                                                  pp.text('(', noloc),
-                                                  ctx.ToPP[
-                                                      c.payload.inner.type
-                                                  ](
-                                                      c.payload.inner as any,
+                                        ? pp.args(
+                                              c.payload.items.map((item) =>
+                                                  ctx.ToPP[item.type](
+                                                      item as any,
                                                       ctx,
                                                   ),
-                                                  pp.text(')', noloc),
-                                              ],
-                                              c.loc,
+                                              ),
+                                              c.payload.loc,
                                           )
-                                        : null,
+                                        : // pp.items(
+                                          //       [
+                                          //           pp.text('(', noloc),
+                                          //           ctx.ToPP[
+                                          //               c.payload.inner.type
+                                          //           ](
+                                          //               c.payload.inner as any,
+                                          //               ctx,
+                                          //           ),
+                                          //           pp.text(')', noloc),
+                                          //       ],
+                                          //       c.loc,
+                                          //   )
+                                          null,
                                 ],
                                 c.loc,
                             );
@@ -422,3 +451,13 @@ export const unifyEnums = (
         cases: Object.values(expMap),
     };
 };
+
+function enumPayload(payload: t.Type, ctx: TACtx, loc: t.Loc): p.TOps[] {
+    if (payload.type === 'TRecord') {
+        const tuple = recordAsTuple(payload);
+        if (tuple) {
+            return tuple.map((t) => ctx.ToAst[t.type](t as any, ctx));
+        }
+    }
+    return [ctx.ToAst[payload.type](payload as any, ctx)];
+}

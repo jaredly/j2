@@ -232,7 +232,7 @@ export type TagDecl = {
 export type TagPayload = {
   type: "TagPayload";
   loc: Loc;
-  inner: Type;
+  items: Type[];
 };
 
 export type Star = {
