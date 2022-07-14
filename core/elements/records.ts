@@ -1,7 +1,8 @@
 import { Visitor } from '../transform-tast';
 import { decorate, tdecorate } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
-import { getRef, typeMatches, unifyTypes } from '../typing/typeMatches';
+import { getRef, typeMatches } from '../typing/typeMatches';
+import { unifyTypes } from '../typing/unifyTypes';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';

@@ -19,6 +19,8 @@
 
 @type:shouldMatch(:[ `Hi(int) ]) [ `Hi(10) | `Hi(int) ]
 
+@type:shouldMatch(:[ * ]) [ `Failure(([ `TooBad ], int)) | `Failure(([ `Timeout ], int)) ]
+
 type One = [ `A | `B ]
 
 @type:shouldMatch(:One) [ `A ]

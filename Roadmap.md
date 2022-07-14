@@ -14,6 +14,9 @@ alsooo tuples are needed to represent the bodies of the fns.
 - [x] tuple types
 	- [x] parse, print, validate
 - [ ] enum unify
+	- [x] very basic, not really enough
+	- [ ] the full thing, all deep in it
+		- could I 
 - [ ] pretty parsing tuples
 
 - [ ] tuples & records (attributes etc)

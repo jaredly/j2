@@ -28,6 +28,7 @@ import {
     justAdds,
     stringOps,
 } from './ops';
+import { unifyTypes } from './unifyTypes';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -48,6 +49,18 @@ export type Ctx = {
     withBounds(bounds: { [sym: number]: Type | null }): Ctx;
 };
 
+export const unifyPayloads = (
+    one: undefined | Type,
+    two: undefined | Type,
+    ctx: Ctx,
+): false | null | Type => {
+    if (!one || !two) {
+        return one || two ? false : null;
+    }
+    const res = unifyTypes(one, two, ctx);
+    return res == null ? false : res;
+};
+
 export const payloadsEqual = (
     one: undefined | Type,
     two: undefined | Type,
@@ -65,18 +78,6 @@ export const payloadsEqual = (
         typeMatches(one, two, ctx) &&
         (!bidirectional || typeMatches(two, one, ctx))
     );
-};
-
-// For now, just take the greater of the two.
-// To do this right, we need to allow enums to unify. [`A] [`B] -> [`A | `B]
-export const unifyTypes = (candidate: Type, expected: Type, ctx: Ctx) => {
-    if (typeMatches(candidate, expected, ctx)) {
-        return expected;
-    }
-    if (typeMatches(expected, candidate, ctx)) {
-        return candidate;
-    }
-    return null;
 };
 
 export const typeMatches = (

@@ -7,7 +7,8 @@ import * as t from '../typed-ast';
 import { addDecorator, Ctx, tdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { Ctx as TMCtx } from '../typing/typeMatches';
+import { Ctx as TMCtx, unifyPayloads } from '../typing/typeMatches';
+import { unifyTypes } from '../typing/unifyTypes';
 import { expandEnumCases, payloadsEqual } from '../typing/typeMatches';
 
 // type State:Effect = <T>[ `Get | `Set(T) ]
@@ -308,6 +309,26 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     // },
 };
 
+export const enumCaseMap = (canEnums: EnumCase[], ctx: TMCtx) => {
+    const canMap: { [key: string]: EnumCase } = {};
+    for (let kase of canEnums) {
+        if (canMap[kase.tag]) {
+            const un = unifyPayloads(
+                kase.payload,
+                canMap[kase.tag].payload,
+                ctx,
+            );
+            if (un == false) {
+                return false;
+            }
+            canMap[kase.tag] = { ...kase, payload: un ?? undefined };
+        } else {
+            canMap[kase.tag] = kase;
+        }
+    }
+    return canMap;
+};
+
 export const enumTypeMatches = (
     candidate: TEnum,
     expected: t.Type,
@@ -324,24 +345,13 @@ export const enumTypeMatches = (
     if (!canEnums || !expEnums) {
         return false;
     }
-    const canMap: { [key: string]: EnumCase } = {};
-    for (let kase of canEnums) {
-        // Multiple cases with the same name
-        if (
-            canMap[kase.tag] &&
-            !payloadsEqual(kase.payload, canMap[kase.tag].payload, ctx, true)
-        ) {
-            return false;
-        }
-        canMap[kase.tag] = kase;
+    const canMap = enumCaseMap(canEnums, ctx);
+    if (!canMap) {
+        return false;
     }
-    const expMap: { [key: string]: EnumCase } = {};
-    for (let kase of expEnums) {
-        // Multiple cases with the same name
-        if (expMap[kase.tag]) {
-            return false;
-        }
-        expMap[kase.tag] = kase;
+    const expMap = enumCaseMap(expEnums, ctx);
+    if (!expMap) {
+        return false;
     }
 
     for (let kase of canEnums) {
