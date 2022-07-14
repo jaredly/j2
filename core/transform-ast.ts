@@ -3986,11 +3986,26 @@ export const transformTRecordKeyValue = <Ctx>(
 
     const updatedNode$value = transformType(node.value, visitor, ctx);
     changed1 = changed1 || updatedNode$value !== node.value;
+
+    let updatedNode$default_ = null;
+    const updatedNode$default_$current = node.default_;
+    if (updatedNode$default_$current != null) {
+      const updatedNode$default_$1$ = transformExpression(
+        updatedNode$default_$current,
+        visitor,
+        ctx
+      );
+      changed1 =
+        changed1 || updatedNode$default_$1$ !== updatedNode$default_$current;
+      updatedNode$default_ = updatedNode$default_$1$;
+    }
+
     if (changed1) {
       updatedNode = {
         ...updatedNode,
         loc: updatedNode$loc,
         value: updatedNode$value,
+        default_: updatedNode$default_,
       };
       changed0 = true;
     }

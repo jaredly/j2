@@ -1,5 +1,5 @@
 import { FullContext, tref } from '../ctx';
-import { allRecordItems } from '../elements/records';
+import { allRecordItems, TRecordKeyValue } from '../elements/records';
 import { extract, idToString } from '../ids';
 import { transformType } from '../transform-tast';
 import { Expression, Type, TVars, GlobalRef } from '../typed-ast';
@@ -95,7 +95,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
         case 'DecoratedExpression':
             return getType(expr.expr, ctx);
         case 'Record': {
-            let alls: { [key: string]: Type } = {};
+            let alls: { [key: string]: TRecordKeyValue } = {};
             for (let spread of expr.spreads) {
                 const t = getType(spread, ctx);
                 if (!t || t.type !== 'TRecord') {
@@ -109,18 +109,19 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 if (!t) {
                     return null;
                 }
-                alls[item.key] = t;
+                alls[item.key] = {
+                    type: 'TRecordKeyValue',
+                    value: t,
+                    key: item.key,
+                    loc: item.loc,
+                    default_: null,
+                };
             }
             return {
                 type: 'TRecord',
                 loc: expr.loc,
                 spreads: [],
-                items: Object.entries(alls).map(([key, value]) => ({
-                    type: 'TRecordKeyValue',
-                    loc: expr.loc,
-                    key: key,
-                    value: value,
-                })),
+                items: Object.values(alls),
                 open: false,
             };
         }

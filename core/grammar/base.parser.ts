@@ -325,6 +325,7 @@ export type TRecordKeyValue = {
   loc: Loc;
   key: string;
   value: Type;
+  default_: Expression | null;
 };
 
 export type TApply_inner = {

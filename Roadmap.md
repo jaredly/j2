@@ -31,7 +31,7 @@ what do I lose?
 probably some things.
 
 - [x] tuple expr parse & print
-- [ ] enum tuple pretty
+- [x] enum tuple pretty
 - [ ] enum record pretty?
 
 - [ ] ifs

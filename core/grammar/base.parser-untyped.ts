@@ -609,12 +609,13 @@ function peg$parse(input, options) {
     inner
   };
 };
-  var peg$f50 = function(key, value) {
+  var peg$f50 = function(key, value, default_) {
   return {
     type: "TRecordKeyValue",
     loc: myLocation(),
     key,
-    value
+    value,
+    default_: default_ ? default_[3] : default_
   };
 };
   var peg$f51 = function(inner, args_drop) {
@@ -4279,7 +4280,7 @@ function peg$parse(input, options) {
   }
 
   function peg$parseTRecordKeyValue() {
-    var s0, s1, s2, s3, s4, s5;
+    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
 
     s0 = peg$currPos;
     s1 = peg$currPos;
@@ -4302,8 +4303,34 @@ function peg$parse(input, options) {
         s4 = peg$parse_();
         s5 = peg$parseTOps();
         if (s5 !== peg$FAILED) {
+          s6 = peg$currPos;
+          s7 = peg$parse_();
+          if (input.charCodeAt(peg$currPos) === 61) {
+            s8 = peg$c35;
+            peg$currPos++;
+          } else {
+            s8 = peg$FAILED;
+            if (peg$silentFails === 0) { peg$fail(peg$e43); }
+          }
+          if (s8 !== peg$FAILED) {
+            s9 = peg$parse_();
+            s10 = peg$parseDecoratedExpression();
+            if (s10 !== peg$FAILED) {
+              s7 = [s7, s8, s9, s10];
+              s6 = s7;
+            } else {
+              peg$currPos = s6;
+              s6 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s6;
+            s6 = peg$FAILED;
+          }
+          if (s6 === peg$FAILED) {
+            s6 = null;
+          }
           peg$savedPos = s0;
-          s0 = peg$f50(s1, s5);
+          s0 = peg$f50(s1, s5, s6);
         } else {
           peg$currPos = s0;
           s0 = peg$FAILED;

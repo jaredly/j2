@@ -17,7 +17,7 @@ TRecord = "{" _ items:TRecordItems? _ "}"
 TRecordItems = first:TRecordItem rest:(_ "," _ TRecordItem)* _ ","?
 TRecordItem = TRecordSpread / TRecordKeyValue / Star
 TRecordSpread = "..." _ inner:Type
-TRecordKeyValue = key:$AttrText _ ":" _ value:Type
+TRecordKeyValue = key:$AttrText _ ":" _ value:Type default_:(_ "=" _ Expression)?
 
 `;
 
@@ -33,6 +33,7 @@ export type TRecordKeyValue = {
     type: 'TRecordKeyValue';
     key: string;
     value: t.Type;
+    default_: t.Expression | null;
     loc: t.Loc;
 };
 
@@ -51,6 +52,12 @@ export const ToTast = {
                     type: 'TRecordKeyValue',
                     key: item.key,
                     value: ctx.ToTast[item.value.type](item.value as any, ctx),
+                    default_: item.default_
+                        ? ctx.ToTast[item.default_.type](
+                              item.default_ as any,
+                              ctx,
+                          )
+                        : null,
                     loc: item.loc,
                 });
             } else {
@@ -125,6 +132,12 @@ export const ToAst = {
                             type: 'TRecordKeyValue',
                             loc: item.loc,
                             key: item.key,
+                            default_: item.default_
+                                ? ctx.ToAst[item.default_.type](
+                                      item.default_ as any,
+                                      ctx,
+                                  )
+                                : null,
                             value: ctx.ToAst[item.value.type](
                                 item.value as any,
                                 ctx,
@@ -156,6 +169,18 @@ export const ToPP = {
                                     item.value as any,
                                     ctx,
                                 ),
+                                item.default_
+                                    ? pp.items(
+                                          [
+                                              pp.text(' = ', item.loc),
+                                              ctx.ToPP[item.default_.type](
+                                                  item.default_ as any,
+                                                  ctx,
+                                              ),
+                                          ],
+                                          item.loc,
+                                      )
+                                    : null,
                             ],
                             item.loc,
                         );
@@ -226,21 +251,16 @@ export const unifyRecords = (
         if (!eitems[key]) {
             return false;
         }
-        const un = unifyTypes(citems[key], eitems[key], ctx);
+        const un = unifyTypes(citems[key].value, eitems[key].value, ctx);
         if (un === false) {
             return false;
         }
-        citems[key] = un;
+        citems[key] = { ...citems[key], value: un };
     }
     return {
         ...candidate,
         spreads: [],
-        items: Object.keys(citems).map((k) => ({
-            type: 'TRecordKeyValue',
-            key: k,
-            value: citems[k],
-            loc: noloc,
-        })),
+        items: Object.keys(citems).map((k) => citems[k]),
     };
 };
 
@@ -260,13 +280,18 @@ export const recordMatches = (
     if (!citems || !eitems) {
         return false;
     }
-    const cnum = Object.keys(citems).length;
-    const eenum = Object.keys(eitems).length;
-    if (cnum < eenum) {
-        return false;
-    }
-    if (cnum > eenum && !expected.open) {
-        return false;
+    // const cnum = Object.keys(citems).length;
+    // const eenum = Object.keys(eitems).length;
+    // if (cnum < eenum) {
+    //     return false;
+    // }
+    // if (cnum > eenum && !expected.open) {
+    //     return false;
+    // }
+    for (const key of Object.keys(eitems)) {
+        if (!citems[key] && !eitems[key].default_) {
+            return false;
+        }
     }
     for (const key of Object.keys(citems)) {
         if (!eitems[key]) {
@@ -275,7 +300,7 @@ export const recordMatches = (
             }
             return false;
         }
-        if (!typeMatches(citems[key], eitems[key], ctx)) {
+        if (!typeMatches(citems[key].value, eitems[key].value, ctx)) {
             return false;
         }
     }
@@ -286,8 +311,8 @@ export const allRecordItems = (
     record: TRecord,
     ctx: TMCtx,
     path: string[] = [],
-): null | { [key: string]: t.Type } => {
-    const items: { [key: string]: t.Type } = {};
+): null | { [key: string]: t.TRecordKeyValue } => {
+    const items: { [key: string]: t.TRecordKeyValue } = {};
     for (const spread of record.spreads) {
         const resolved = ctx.resolveRefsAndApplies(spread);
         if (!resolved || resolved.type !== 'TRecord') {
@@ -312,7 +337,7 @@ export const allRecordItems = (
         }
     }
     for (const item of record.items) {
-        items[item.key] = item.value;
+        items[item.key] = item;
     }
     return items;
 };

@@ -139,7 +139,7 @@ TRecord = "{" _ items:TRecordItems? _ "}"
 TRecordItems = first:TRecordItem rest:(_ "," _ TRecordItem)* _ ","?
 TRecordItem = TRecordSpread / TRecordKeyValue / Star
 TRecordSpread = "..." _ inner:Type
-TRecordKeyValue = key:$AttrText _ ":" _ value:Type
+TRecordKeyValue = key:$AttrText _ ":" _ value:Type default_:(_ "=" _ Expression)?
 
 
 

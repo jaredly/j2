@@ -146,6 +146,7 @@ export const ToTast = {
                 items?.items.map((x, i) => ({
                     type: 'TRecordKeyValue',
                     key: i.toString(),
+                    default_: null,
                     value: ctx.ToTast[x.type](x as any, ctx),
                     loc: x.loc,
                 })) ?? [],
