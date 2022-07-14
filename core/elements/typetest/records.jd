@@ -8,6 +8,7 @@
 @type:shouldMatch(:{hi: int, *}) {hi: int, ho: int}
 
 @type:shouldNotMatch(:{hi: int, ho: int})
+@type:shouldNotMatch(:{...int})
 @type:shouldMatch(:{hi: int}) {hi: 10}
 
 type HasName = {name: string}
