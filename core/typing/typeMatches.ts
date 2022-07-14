@@ -1,4 +1,7 @@
 import { noloc, refsEqual } from '../ctx';
+import { enumTypeMatches } from '../elements/enums';
+import { recordMatches } from '../elements/records';
+import { tvarsMatches } from '../elements/type-vbls';
 import { Id } from '../ids';
 import { transformType, Visitor } from '../transform-tast';
 import {
@@ -25,6 +28,7 @@ import {
     justAdds,
     stringOps,
 } from './ops';
+import { unifyTypes } from './unifyTypes';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -43,6 +47,17 @@ export type Ctx = {
     /** Only triggers the devtools debugger if the fixture is pinned. */
     debugger(): void;
     withBounds(bounds: { [sym: number]: Type | null }): Ctx;
+};
+
+export const unifyPayloads = (
+    one: undefined | Type,
+    two: undefined | Type,
+    ctx: Ctx,
+): false | null | Type => {
+    if (!one || !two) {
+        return one || two ? false : null;
+    }
+    return unifyTypes(one, two, ctx);
 };
 
 export const payloadsEqual = (
@@ -116,149 +131,14 @@ export const typeMatches = (
     // console.log(candidate, expected);
 
     switch (candidate.type) {
+        case 'TRecord':
+            return recordMatches(candidate, expected, ctx);
         case 'TEnum':
-            // [ `What ] matches [ `What | `Who ]
-            // So everything in candidate needs to match something
-            // in expected. And there need to not be any collisions name-wise
-            if (expected.type !== 'TEnum') {
-                return false;
-            }
-            const canEnums = expandEnumCases(candidate, ctx);
-            const expEnums = expandEnumCases(expected, ctx);
-            if (!canEnums || !expEnums) {
-                return false;
-            }
-            const canMap: { [key: string]: EnumCase } = {};
-            for (let kase of canEnums) {
-                // Multiple cases with the same name
-                if (
-                    canMap[kase.tag] &&
-                    !payloadsEqual(
-                        kase.payload,
-                        canMap[kase.tag].payload,
-                        ctx,
-                        true,
-                    )
-                ) {
-                    return false;
-                }
-                canMap[kase.tag] = kase;
-            }
-            const expMap: { [key: string]: EnumCase } = {};
-            for (let kase of expEnums) {
-                // Multiple cases with the same name
-                if (expMap[kase.tag]) {
-                    return false;
-                }
-                expMap[kase.tag] = kase;
-            }
-
-            for (let kase of canEnums) {
-                if (!expMap[kase.tag]) {
-                    if (expected.open) {
-                        continue;
-                    }
-                    console.log(
-                        'no extra',
-                        kase.tag,
-                        expected.open,
-                        candidate.open,
-                    );
-                    return false;
-                }
-                if (
-                    !payloadsEqual(
-                        kase.payload,
-                        expMap[kase.tag].payload,
-                        ctx,
-                        false,
-                    )
-                ) {
-                    return false;
-                }
-            }
-            if (candidate.open && !expected.open) {
-                return false;
-            }
-
-            // So, ... we can always allow smaller, right?
-            // [] is part of anything?
-            // <T: int>(x) => T
-            // you call with m<10> and its fine
-            // <T: []>(x) => T
-            // means, ... this should be an enum, right?
-            // <T: [`One | `Two]>(x) => T,
-            // means ... if we handle `One and `Two we know
-            // we'll be prepared for anything.
-            // Yeah, ok so the passed-in type must be a subset.
-            // So is there a way to describe the "anything" enum?
-            // maybe that's the `*`.
-            // <T: [`One | `Two | *]>(x) => T
-            // I guess that's almost as good as no bound at all, right?
-            // well actually, it locks down the payloads for those two tags.
-            // 🤔 lots to think about there.
-            // oh and I guess the empty enum just can't be instantiated
-
-            return true;
-        // return expected.type === 'TEnum' &&
-        // idsEqual(candidate.id, expected.id);
+            return enumTypeMatches(candidate, expected, ctx);
         case 'TDecorated':
             return typeMatches(candidate.inner, expected, ctx);
         case 'TVars': {
-            if (
-                expected.type !== 'TVars' ||
-                expected.args.length !== candidate.args.length ||
-                !expected.args.every(
-                    // True if the bounds align
-                    (arg, i) => {
-                        const carg: TVar = (candidate as TVars).args[i];
-                        if (!arg.bound) {
-                            return !carg.bound;
-                        }
-                        if (!carg.bound) {
-                            return true; // bounded is a subset of unbounded
-                        }
-
-                        // REVERSED! For Variance
-                        return typeMatches(arg.bound, carg.bound!, ctx);
-                    },
-                )
-            ) {
-                console.log('bad args');
-                return false;
-            }
-            let maxSym = 0;
-            const visit: Visitor<null> = {
-                TRef(node) {
-                    if (node.ref.type === 'Local') {
-                        maxSym = Math.max(maxSym, node.ref.sym);
-                    }
-                    return null;
-                },
-                TVar(node, ctx) {
-                    maxSym = Math.max(maxSym, node.sym.id);
-                    return null;
-                },
-            };
-            transformType(expected, visit, null);
-            transformType(candidate, visit, null);
-            const bounds: { [key: number]: Type | null } = {};
-            let newTypes: TRef[] = expected.args.map((arg, i) => {
-                const sym = maxSym + i + 1;
-                bounds[sym] = arg.bound;
-                return {
-                    type: 'TRef',
-                    loc: noloc,
-                    ref: { type: 'Local', sym: sym },
-                };
-            });
-            ctx = ctx.withBounds(bounds);
-            const capp = applyType(newTypes, candidate, ctx);
-            const eapp = applyType(newTypes, expected, ctx);
-            // Ohhhhhhhh failed to find bound.
-            // console.log(newTypes);
-            // console.log('applied=in', capp, eapp);
-            return capp != null && eapp != null && typeMatches(capp, eapp, ctx);
+            return tvarsMatches(candidate, expected, ctx);
         }
         case 'TLambda':
             return (
@@ -485,7 +365,7 @@ export const expandEnumCases = (
     return cases;
 };
 
-const getRef = (t: Type): TRef | null => {
+export const getRef = (t: Type): TRef | null => {
     switch (t.type) {
         case 'TRef':
             return t;

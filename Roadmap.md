@@ -6,6 +6,19 @@ and then I'll need switches or something at some point.
 
 alsooo tuples are needed to represent the bodies of the fns.
 
+- [x] ok so I do want to take a little check through the files
+	see if there are things I need to split out into elements more
+
+- [x] record types
+	- [x] parse, print, validate
+- [x] tuple types
+	- [x] parse, print, validate
+- [ ] enum unify
+	- [x] very basic, not really enough
+	- [x] decent unification
+	- [ ] lambdas and tvars and whatnot
+- [x] pretty parsing tuples as enum bits
+
 - [ ] tuples & records (attributes etc)
 	- `.hello` is the fn `<T>(x: {hello: T, *}) => T`
 
@@ -18,6 +31,15 @@ alsooo tuples are needed to represent the bodies of the fns.
 
 - [ ] switches maybeee
 
+
+
+
+
+# Thoughts about recursion
+
+What if I did have `recurse up 1 level` or `up 2 levels`
+on a type scene?
+That would make it possible to have anonymous recursive types.
 
 
 

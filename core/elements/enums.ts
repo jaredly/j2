@@ -7,18 +7,21 @@ import * as t from '../typed-ast';
 import { addDecorator, Ctx, tdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
+import { Ctx as TMCtx, unifyPayloads } from '../typing/typeMatches';
+import { unifyTypes } from '../typing/unifyTypes';
 import { expandEnumCases, payloadsEqual } from '../typing/typeMatches';
+import { recordAsTuple } from './records';
 
 // type State:Effect = <T>[ `Get | `Set(T) ]
 // type State:Full = <T, Final>[ State:Effect<T> | `Final(Final)]
 
 export const grammar = `
 TEnum = "[" _ cases:EnumCases? _ "]"
-EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"? _
+EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"?
 EnumCase = TagDecl / Type / Star
 TagDecl = decorators:(Decorator _)* "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
-TagPayload = "(" _ inner:Type _ ")"
+TagPayload = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
 Star = pseudo:"*"
 
 `;
@@ -57,10 +60,28 @@ export const ToTast = {
                                     ctx.ToTast[d.type](d as any, ctx),
                                 ),
                                 payload: c.payload
-                                    ? ctx.ToTast[c.payload.inner.type](
-                                          c.payload.inner as any,
-                                          ctx,
-                                      )
+                                    ? c.payload.items.length === 1
+                                        ? ctx.ToTast[c.payload.items[0].type](
+                                              c.payload.items[0] as any,
+                                              ctx,
+                                          )
+                                        : {
+                                              type: 'TRecord',
+                                              loc: noloc,
+                                              spreads: [],
+                                              open: false,
+                                              items: c.payload.items.map(
+                                                  (p, i) => ({
+                                                      type: 'TRecordKeyValue',
+                                                      loc: noloc,
+                                                      key: i.toString(),
+                                                      value: ctx.ToTast[p.type](
+                                                          p as any,
+                                                          ctx,
+                                                      ),
+                                                  }),
+                                              ),
+                                          }
                                     : undefined,
                                 loc: c.loc,
                             };
@@ -94,9 +115,10 @@ export const ToAst = {
                                     ? {
                                           type: 'TagPayload',
                                           loc: c.loc,
-                                          inner: ctx.ToAst[c.payload.type](
-                                              c.payload as any,
+                                          items: enumPayload(
+                                              c.payload,
                                               ctx,
+                                              c.loc,
                                           ),
                                       }
                                     : null,
@@ -135,20 +157,29 @@ export const ToPP = {
                                     ),
                                     pp.text(`\`${c.text}`, noloc),
                                     c.payload
-                                        ? pp.items(
-                                              [
-                                                  pp.text('(', noloc),
-                                                  ctx.ToPP[
-                                                      c.payload.inner.type
-                                                  ](
-                                                      c.payload.inner as any,
+                                        ? pp.args(
+                                              c.payload.items.map((item) =>
+                                                  ctx.ToPP[item.type](
+                                                      item as any,
                                                       ctx,
                                                   ),
-                                                  pp.text(')', noloc),
-                                              ],
-                                              c.loc,
+                                              ),
+                                              c.payload.loc,
                                           )
-                                        : null,
+                                        : // pp.items(
+                                          //       [
+                                          //           pp.text('(', noloc),
+                                          //           ctx.ToPP[
+                                          //               c.payload.inner.type
+                                          //           ](
+                                          //               c.payload.inner as any,
+                                          //               ctx,
+                                          //           ),
+                                          //           pp.text(')', noloc),
+                                          //       ],
+                                          //       c.loc,
+                                          //   )
+                                          null,
                                 ],
                                 c.loc,
                             );
@@ -188,6 +219,7 @@ const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
         // These are taken care of by resolveAnalyzeType
         case 'TDecorated':
         case 'TApply':
+        case 'TRecord':
             return false;
         case 'TEnum':
             return true;
@@ -240,7 +272,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                     const expanded = expandEnumCases(res, ctx.ctx);
                     if (!expanded) {
                         changed = true;
-                        return tdecorate(k, 'invalidEnum', ctx.hit, ctx.ctx);
+                        return tdecorate(k, 'invalidEnum', ctx);
                     }
                     for (let kase of expanded) {
                         if (
@@ -253,28 +285,22 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                             )
                         ) {
                             changed = true;
-                            return tdecorate(
-                                k,
-                                'conflictingEnumTag',
-                                ctx.hit,
-                                ctx.ctx,
-                                [
-                                    {
-                                        label: 'tag',
-                                        arg: {
-                                            type: 'DExpr',
-                                            loc: k.loc,
-                                            expr: {
-                                                type: 'TemplateString',
-                                                first: kase.tag,
-                                                rest: [],
-                                                loc: k.loc,
-                                            },
-                                        },
+                            return tdecorate(k, 'conflictingEnumTag', ctx, [
+                                {
+                                    label: 'tag',
+                                    arg: {
+                                        type: 'DExpr',
                                         loc: k.loc,
+                                        expr: {
+                                            type: 'TemplateString',
+                                            first: kase.tag,
+                                            rest: [],
+                                            loc: k.loc,
+                                        },
                                     },
-                                ],
-                            );
+                                    loc: k.loc,
+                                },
+                            ]);
                         }
                         if (!used[kase.tag]) {
                             used[kase.tag] = kase;
@@ -286,7 +312,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             }
             if (!isValidEnumCase(k, ctx.ctx)) {
                 changed = true;
-                return tdecorate(k, 'notAnEnum', ctx.hit, ctx.ctx);
+                return tdecorate(k, 'notAnEnum', ctx);
             }
             return k;
         });
@@ -311,3 +337,127 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     //     return null;
     // },
 };
+
+export const enumCaseMap = (canEnums: EnumCase[], ctx: TMCtx) => {
+    const canMap: { [key: string]: EnumCase } = {};
+    for (let kase of canEnums) {
+        if (canMap[kase.tag]) {
+            const un = unifyPayloads(
+                kase.payload,
+                canMap[kase.tag].payload,
+                ctx,
+            );
+            if (un == false) {
+                return false;
+            }
+            canMap[kase.tag] = { ...kase, payload: un ?? undefined };
+        } else {
+            canMap[kase.tag] = kase;
+        }
+    }
+    return canMap;
+};
+
+export const enumTypeMatches = (
+    candidate: TEnum,
+    expected: t.Type,
+    ctx: TMCtx,
+) => {
+    // [ `What ] matches [ `What | `Who ]
+    // So everything in candidate needs to match something
+    // in expected. And there need to not be any collisions name-wise
+    if (expected.type !== 'TEnum') {
+        return false;
+    }
+    const canEnums = expandEnumCases(candidate, ctx);
+    const expEnums = expandEnumCases(expected, ctx);
+    if (!canEnums || !expEnums) {
+        return false;
+    }
+    const canMap = enumCaseMap(canEnums, ctx);
+    if (!canMap) {
+        return false;
+    }
+    const expMap = enumCaseMap(expEnums, ctx);
+    if (!expMap) {
+        return false;
+    }
+
+    for (let kase of canEnums) {
+        if (!expMap[kase.tag]) {
+            if (expected.open) {
+                continue;
+            }
+            console.log('no extra', kase.tag, expected.open, candidate.open);
+            return false;
+        }
+        if (
+            !payloadsEqual(kase.payload, expMap[kase.tag].payload, ctx, false)
+        ) {
+            return false;
+        }
+    }
+    if (candidate.open && !expected.open) {
+        return false;
+    }
+
+    return true;
+};
+
+export const unifyEnums = (
+    candidate: TEnum,
+    expected: t.Type,
+    ctx: TMCtx,
+): false | t.Type => {
+    // [ `What ] matches [ `What | `Who ]
+    // So everything in candidate needs to match something
+    // in expected. And there need to not be any collisions name-wise
+    if (expected.type !== 'TEnum') {
+        return false;
+    }
+    const canEnums = expandEnumCases(candidate, ctx);
+    const expEnums = expandEnumCases(expected, ctx);
+    if (!canEnums || !expEnums) {
+        return false;
+    }
+    const canMap = enumCaseMap(canEnums, ctx);
+    if (!canMap) {
+        return false;
+    }
+    const expMap = enumCaseMap(expEnums, ctx);
+    if (!expMap) {
+        return false;
+    }
+
+    for (let kase of canEnums) {
+        if (!expMap[kase.tag]) {
+            expMap[kase.tag] = kase;
+        } else {
+            const unified = unifyPayloads(
+                kase.payload,
+                expMap[kase.tag].payload,
+                ctx,
+            );
+            if (unified === false) {
+                return false;
+            }
+            expMap[kase.tag] = { ...kase, payload: unified ?? undefined };
+        }
+    }
+
+    return {
+        ...candidate,
+        open: candidate.open || expected.open,
+        cases: Object.values(expMap),
+    };
+};
+
+function enumPayload(payload: t.Type, ctx: TACtx, loc: t.Loc): p.TOps[] {
+    if (payload.type === 'TRecord') {
+        const tuple = recordAsTuple(payload);
+        if (tuple) {
+            return tuple.map((t) => ctx.ToAst[t.type](t as any, ctx));
+        }
+    }
+    return [ctx.ToAst[payload.type](payload as any, ctx)];
+}

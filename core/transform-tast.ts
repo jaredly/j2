@@ -30,6 +30,8 @@ import {
   Sym,
   TDecorated,
   TApply,
+  TRecord,
+  TRecordKeyValue,
   TOps,
   DecoratedExpression,
   TypeAlias,
@@ -200,6 +202,19 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | EnumCase | [EnumCase | null, Ctx];
   EnumCasePost?: (node: EnumCase, ctx: Ctx) => null | EnumCase;
+  TRecord?: (
+    node: TRecord,
+    ctx: Ctx
+  ) => null | false | TRecord | [TRecord | null, Ctx];
+  TRecordPost?: (node: TRecord, ctx: Ctx) => null | TRecord;
+  TRecordKeyValue?: (
+    node: TRecordKeyValue,
+    ctx: Ctx
+  ) => null | false | TRecordKeyValue | [TRecordKeyValue | null, Ctx];
+  TRecordKeyValuePost?: (
+    node: TRecordKeyValue,
+    ctx: Ctx
+  ) => null | TRecordKeyValue;
   Toplevel_ToplevelExpression?: (
     node: ToplevelExpression,
     ctx: Ctx
@@ -278,6 +293,10 @@ export type Visitor<Ctx> = {
   ) => null | false | Type | [Type | null, Ctx];
   Type_TApply?: (
     node: TApply,
+    ctx: Ctx
+  ) => null | false | Type | [Type | null, Ctx];
+  Type_TRecord?: (
+    node: TRecord,
     ctx: Ctx
   ) => null | false | Type | [Type | null, Ctx];
   Type_TOps?: (
@@ -1957,6 +1976,148 @@ export const transformTApply = <Ctx>(
   return node;
 };
 
+export const transformTRecordKeyValue = <Ctx>(
+  node: TRecordKeyValue,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TRecordKeyValue => {
+  if (!node) {
+    throw new Error("No TRecordKeyValue provided");
+  }
+
+  const transformed = visitor.TRecordKeyValue
+    ? visitor.TRecordKeyValue(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$value = transformType(node.value, visitor, ctx);
+    changed1 = changed1 || updatedNode$value !== node.value;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        value: updatedNode$value,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TRecordKeyValuePost) {
+    const transformed = visitor.TRecordKeyValuePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTRecord = <Ctx>(
+  node: TRecord,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TRecord => {
+  if (!node) {
+    throw new Error("No TRecord provided");
+  }
+
+  const transformed = visitor.TRecord ? visitor.TRecord(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformTRecordKeyValue(
+          updatedNode$items$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
+    let updatedNode$spreads = node.spreads;
+    {
+      let changed2 = false;
+      const arr1 = node.spreads.map((updatedNode$spreads$item1) => {
+        const result = transformType(updatedNode$spreads$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$spreads$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$spreads = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        items: updatedNode$items,
+        spreads: updatedNode$spreads,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TRecordPost) {
+    const transformed = visitor.TRecordPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformTOps = <Ctx>(
   node: TOps,
   visitor: Visitor<Ctx>,
@@ -2220,6 +2381,25 @@ export const transformType = <Ctx>(
       break;
     }
 
+    case "TRecord": {
+      const transformed = visitor.Type_TRecord
+        ? visitor.Type_TRecord(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "TOps": {
       const transformed = visitor.Type_TOps
         ? visitor.Type_TOps(node, ctx)
@@ -2287,6 +2467,12 @@ export const transformType = <Ctx>(
 
     case "TApply": {
       updatedNode = transformTApply(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "TRecord": {
+      updatedNode = transformTRecord(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

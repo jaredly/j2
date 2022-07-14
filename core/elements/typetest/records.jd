@@ -1,0 +1,19 @@
+@type:shouldNotMatch(:int)
+@type:shouldMatch(:{hi: int}) {hi: int}
+
+@type:shouldMatch(:{hi: int, *})
+@type:shouldNotMatch(:{hi: int}) {hi: int, *}
+
+@type:shouldNotMatch(:{hi: int})
+@type:shouldMatch(:{hi: int, *}) {hi: int, ho: int}
+
+@type:shouldNotMatch(:{hi: int, ho: int})
+@type:shouldNotMatch(:{...int})
+@type:shouldMatch(:{hi: int}) {hi: 10}
+
+type HasName = {name: string}
+
+@type:shouldMatch(:{...HasName, age: int}) {name: string, age: int}
+
+@type:shouldMatch(:{...(10, int), 2: float})
+@type:shouldMatch(:(10, int, float)) (10, int, float)

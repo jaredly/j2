@@ -585,6 +585,8 @@ export const errors = {
     notAnEnum: 0,
     conflictingEnumTag: 1,
     invalidType: 0,
+    notARecord: 0,
+    invalidRecord: 0,
 };
 export type ErrorTag = keyof typeof errors;
 

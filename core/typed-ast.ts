@@ -34,7 +34,7 @@ export type {
     Type,
 } from './elements/type';
 export type { EnumCase, TEnum } from './elements/enums';
-export type { Enum } from './elements/enum-exprs';
+export type { Enum } from './elements/enum-exprs';export type { TRecord, TRecordKeyValue } from './elements/records';
 
 export type GlobalRef = {
     type: 'Global';

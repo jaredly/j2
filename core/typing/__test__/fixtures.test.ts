@@ -7,7 +7,7 @@ import {
     runFixture,
 } from './fixture-utils';
 
-const base = __dirname + '/../../elements/';
+const base = __dirname + '/../../elements/fixtures/';
 readdirSync(base)
     .filter((x) => x.endsWith('.fixture.jd'))
     .forEach((file) => {

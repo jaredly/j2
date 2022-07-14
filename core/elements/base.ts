@@ -30,6 +30,7 @@ Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
 ParenedExpression = "(" _ expr:Expression _ ")"
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
+AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 `;
 
@@ -277,11 +278,17 @@ function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
         case 'String':
         case 'TOps':
             return 'builtin';
+        case 'TRecord':
+            return 'record';
         case 'TDecorated':
         case 'TVars':
-        case 'TParens':
         case 'TApply':
             return determineKind(t.inner, ctx);
+        case 'TParens':
+            if (t.items.length === 1) {
+                return determineKind(t.items[0], ctx);
+            }
+            return 'record';
         case 'TEnum':
             return 'enum';
         case 'TLambda':
@@ -315,6 +322,8 @@ function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
             return determineKindT(t.target, ctx);
         case 'TEnum':
             return 'enum';
+        case 'TRecord':
+            return 'record';
         case 'TLambda':
             return 'lambda';
         case 'TRef':

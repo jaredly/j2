@@ -49,6 +49,7 @@ Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
 ParenedExpression = "(" _ expr:Expression _ ")"
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
+AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 
 
@@ -104,11 +105,11 @@ Enum = "\`" text:$IdText payload:("(" _ Expression? _ ")")?
 // enums.ts
 
 TEnum = "[" _ cases:EnumCases? _ "]"
-EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"? _
+EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"?
 EnumCase = TagDecl / Type / Star
 TagDecl = decorators:(Decorator _)* "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
-TagPayload = "(" _ inner:Type _ ")"
+TagPayload = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
 Star = pseudo:"*"
 
 
@@ -121,6 +122,16 @@ TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
 TypeVariables = "<" _ vbls:TypeVbls ">" _ body:Expression
 TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
 TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
+
+
+// records.ts
+
+TRecord = "{" _ items:TRecordItems? _ "}"
+TRecordItems = first:TRecordItem rest:(_ "," _ TRecordItem)* _ ","?
+TRecordItem = TRecordSpread / TRecordKeyValue / Star
+TRecordSpread = "..." _ inner:Type
+TRecordKeyValue = key:$AttrText _ ":" _ value:Type
+
 
 
 // type-vbls.ts
@@ -138,7 +149,7 @@ TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Typ
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum
+TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
 
 TOps = left:TOpInner right_drop:TRight*
@@ -146,7 +157,7 @@ TRight = _ top:$top _ right:TOpInner
 top = "-" / "+"
 TOpInner = TDecorated / TApply
 
-TParens = "(" _ inner:Type _ ")"
+TParens = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _

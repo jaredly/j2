@@ -15,7 +15,7 @@ export const grammar = `
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum
+TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
 
 TOps = left:TOpInner right_drop:TRight*
@@ -23,7 +23,7 @@ TRight = _ top:$top _ right:TOpInner
 top = "-" / "+"
 TOpInner = TDecorated / TApply
 
-TParens = "(" _ inner:Type _ ")"
+TParens = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
@@ -81,6 +81,7 @@ export type Type =
     | TVars
     | TDecorated
     | TApply
+    | t.TRecord
     | TOps;
 
 // | TApply | TDecorated | TApply | TVars
@@ -103,7 +104,7 @@ export const asApply = (t: p.Type): p.TApply =>
     t.type === 'TDecorated' || t.type === 'TOps'
         ? {
               type: 'TParens',
-              inner: t,
+              items: [t],
               loc: t.loc,
           }
         : t;
@@ -133,8 +134,22 @@ export const ToTast = {
             })),
         };
     },
-    TParens({ loc, inner }: p.TParens, ctx: TCtx): t.Type {
-        return ctx.ToTast[inner.type](inner as any, ctx);
+    TParens({ loc, items }: p.TParens, ctx: TCtx): t.Type {
+        if (items.length === 1) {
+            return ctx.ToTast[items[0].type](items[0] as any, ctx);
+        }
+        return {
+            type: 'TRecord',
+            loc,
+            spreads: [],
+            items: items.map((x, i) => ({
+                type: 'TRecordKeyValue',
+                key: i.toString(),
+                value: ctx.ToTast[x.type](x as any, ctx),
+                loc: x.loc,
+            })),
+            open: false,
+        };
     },
     TDecorated(
         { loc, inner, decorators }: p.TDecorated,
@@ -229,7 +244,7 @@ export const ToAst = {
                 inner: {
                     type: 'TParens',
                     loc: inner.loc,
-                    inner,
+                    items: [inner],
                 },
                 decorators,
             };
@@ -353,15 +368,19 @@ export const ToPP = {
             loc,
         );
     },
-    TParens({ inner, loc }: p.TParens, ctx: PCtx): pp.PP {
-        return pp.items(
-            [
-                pp.atom('(', loc),
-                ctx.ToPP[inner.type](inner as any, ctx),
-                pp.atom(')', loc),
-            ],
+    TParens({ items, loc }: p.TParens, ctx: PCtx): pp.PP {
+        return pp.args(
+            items.map((x) => ctx.ToPP[x.type](x as any, ctx)),
             loc,
         );
+        // return pp.items(
+        //     [
+        //         pp.atom('(', loc),
+        //         ctx.ToPP[items.type](items as any, ctx),
+        //         pp.atom(')', loc),
+        //     ],
+        //     loc,
+        // );
     },
     TRef(type: p.TRef, ctx: PCtx): pp.PP {
         return pp.atom(type.text + (type.hash ?? ''), type.loc);
@@ -377,7 +396,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             return null;
         }
         if (!ctx.ctx.resolveRefsAndApplies(node)) {
-            return tdecorate(node, 'invalidType', ctx.hit, ctx.ctx);
+            return tdecorate(node, 'invalidType', ctx);
         }
         return null;
     },
@@ -391,6 +410,6 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             return null;
         }
 
-        return tdecorate(node, 'invalidOps', ctx.hit, ctx.ctx);
+        return tdecorate(node, 'invalidOps', ctx);
     },
 };

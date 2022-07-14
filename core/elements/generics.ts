@@ -123,11 +123,11 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             const targ = targs[i];
             if (!targ) {
                 changed = true;
-                return tdecorate(arg, 'extraArg', hit, ctx);
+                return tdecorate(arg, 'extraArg', { hit, ctx });
             }
             if (targ.bound && !typeMatches(arg, targ.bound, ctx)) {
                 changed = true;
-                return tdecorate(arg, 'argWrongType', hit, ctx, [
+                return tdecorate(arg, 'argWrongType', { hit, ctx }, [
                     {
                         label: 'expected',
                         arg: { type: 'DType', loc: noloc, typ: targ.bound },
@@ -166,10 +166,10 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                 if (got != null) {
                     targs = got;
                 } else {
-                    return tdecorate(node, 'notATypeVars', hit, ctx);
+                    return tdecorate(node, 'notATypeVars', { hit, ctx });
                 }
             } else {
-                return tdecorate(node, 'notATypeVars', hit, ctx);
+                return tdecorate(node, 'notATypeVars', { hit, ctx });
             }
         } else {
             targs = inner.args;
@@ -178,12 +178,12 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         let changed = false;
         const args = node.args.map((arg, i) => {
             if (i >= targs.length) {
-                return tdecorate(arg, 'extraArg', hit, ctx);
+                return tdecorate(arg, 'extraArg', { hit, ctx });
             }
             const { bound } = targs[i];
             if (bound && !typeMatches(arg, bound, ctx)) {
                 changed = true;
-                return tdecorate(arg, 'argWrongType', hit, ctx, [
+                return tdecorate(arg, 'argWrongType', { hit, ctx }, [
                     {
                         label: 'expected',
                         arg: { type: 'DType', loc: noloc, typ: bound },
@@ -212,7 +212,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         }
 
         if (node.args.length < minArgs || node.args.length > targs.length) {
-            return tdecorate(node, 'wrongNumberOfTypeArgs', hit, ctx);
+            return tdecorate(node, 'wrongNumberOfTypeArgs', { hit, ctx });
         }
         return changed ? node : null;
     },

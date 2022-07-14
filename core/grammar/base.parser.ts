@@ -88,6 +88,8 @@ export type ParenedExpression = {
 
 // No data on IdText
 
+export type AttrText = string;
+
 export type newline = string;
 
 export type _nonnewline = string;
@@ -230,7 +232,7 @@ export type TagDecl = {
 export type TagPayload = {
   type: "TagPayload";
   loc: Loc;
-  inner: Type;
+  items: Type[];
 };
 
 export type Star = {
@@ -269,6 +271,33 @@ export type TypeVbl = {
   loc: Loc;
   vbl: Identifier;
   bound: Type | null;
+};
+
+export type TRecord = {
+  type: "TRecord";
+  loc: Loc;
+  items: TRecordItems | null;
+};
+
+export type TRecordItems = {
+  type: "TRecordItems";
+  loc: Loc;
+  items: TRecordItem[];
+};
+
+export type TRecordItem = TRecordSpread | TRecordKeyValue | Star;
+
+export type TRecordSpread = {
+  type: "TRecordSpread";
+  loc: Loc;
+  inner: Type;
+};
+
+export type TRecordKeyValue = {
+  type: "TRecordKeyValue";
+  loc: Loc;
+  key: string;
+  value: Type;
 };
 
 export type TApply_inner = {
@@ -317,7 +346,7 @@ export type TDecorated = {
   inner: TApply;
 };
 
-export type TAtom = TRef | Number | String | TLambda | TVars | TParens | TEnum;
+export type TAtom = TRef | Number | String | TLambda | TVars | TParens | TEnum | TRecord;
 
 export type TRef = {
   type: "TRef";
@@ -349,7 +378,7 @@ export type TOpInner = TDecorated | TApply;
 export type TParens = {
   type: "TParens";
   loc: Loc;
-  inner: Type;
+  items: Type[];
 };
 
 export type TArg = {
@@ -385,9 +414,9 @@ export type TypePair = {
   typ: Type;
 };
 
-export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | Identifier | ParenedExpression | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
+export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | Identifier | ParenedExpression | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
 
-export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "Identifier", "ParenedExpression", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "Identifier", "ParenedExpression", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
 
 // @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});
