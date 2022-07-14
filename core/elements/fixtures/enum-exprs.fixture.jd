@@ -3,6 +3,7 @@
 --[input]--
 `What(10)
 `Hello(`Folks)
+`Two((1,2))
 
 --[output:expected]--
 `What(10)

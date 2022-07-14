@@ -46,7 +46,7 @@ Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $
 
 Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum / Record
 
-ParenedExpression = "(" _ expr:Expression _ ")"
+ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 AttrText "attribute" = $([0-9a-z-A-Z_]+)
@@ -166,7 +166,7 @@ TRight = _ top:$top _ right:TOpInner
 top = "-" / "+"
 TOpInner = TDecorated / TApply
 
-TParens = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
+TParens = "(" _ items:TComma? _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _

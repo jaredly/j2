@@ -99,7 +99,11 @@ export const ToAst = {
             return {
                 type: 'TParens',
                 loc: t.loc,
-                items: tup.map((v) => ctx.ToAst[v.type](v as any, ctx)),
+                items: {
+                    type: 'TComma',
+                    items: tup.map((v) => ctx.ToAst[v.type](v as any, ctx)),
+                    loc: t.loc,
+                },
             };
         }
         return {

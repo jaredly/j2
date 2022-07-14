@@ -27,6 +27,7 @@ import {
   Boolean,
   Identifier,
   ParenedExpression,
+  CommaExpr,
   TemplateString,
   TemplatePair,
   TemplateWrap,
@@ -38,7 +39,6 @@ import {
   RecordKeyValue,
   Suffix,
   CallSuffix,
-  CommaExpr,
   TypeApplicationSuffix,
   TypeAppVbls,
   TApply,
@@ -53,6 +53,7 @@ import {
   TBargs,
   TBArg,
   TParens,
+  TComma,
   TEnum,
   EnumCases,
   EnumCase,
@@ -64,7 +65,6 @@ import {
   TRecordSpread,
   TRecordKeyValue,
   Star,
-  TComma,
   TRight,
   TypeFile,
   TypeToplevel,
@@ -1196,6 +1196,77 @@ export const transformIdentifier = <Ctx>(
   return node;
 };
 
+export const transformCommaExpr = <Ctx>(
+  node: CommaExpr,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): CommaExpr => {
+  if (!node) {
+    throw new Error("No CommaExpr provided");
+  }
+
+  const transformed = visitor.CommaExpr ? visitor.CommaExpr(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformExpression(
+          updatedNode$items$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        items: updatedNode$items,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.CommaExprPost) {
+    const transformed = visitor.CommaExprPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
 export const transformParenedExpression = <Ctx>(
   node: ParenedExpression,
   visitor: Visitor<Ctx>,
@@ -1231,13 +1302,23 @@ export const transformParenedExpression = <Ctx>(
     const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
     changed1 = changed1 || updatedNode$loc !== node.loc;
 
-    const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
-    changed1 = changed1 || updatedNode$expr !== node.expr;
+    let updatedNode$items = null;
+    const updatedNode$items$current = node.items;
+    if (updatedNode$items$current != null) {
+      const updatedNode$items$1$ = transformCommaExpr(
+        updatedNode$items$current,
+        visitor,
+        ctx
+      );
+      changed1 = changed1 || updatedNode$items$1$ !== updatedNode$items$current;
+      updatedNode$items = updatedNode$items$1$;
+    }
+
     if (changed1) {
       updatedNode = {
         ...updatedNode,
         loc: updatedNode$loc,
-        expr: updatedNode$expr,
+        items: updatedNode$items,
       };
       changed0 = true;
     }
@@ -2046,77 +2127,6 @@ export const transformAtom = <Ctx>(
   node = updatedNode;
   if (visitor.AtomPost) {
     const transformed = visitor.AtomPost(node, ctx);
-    if (transformed != null) {
-      node = transformed;
-    }
-  }
-  return node;
-};
-
-export const transformCommaExpr = <Ctx>(
-  node: CommaExpr,
-  visitor: Visitor<Ctx>,
-  ctx: Ctx
-): CommaExpr => {
-  if (!node) {
-    throw new Error("No CommaExpr provided");
-  }
-
-  const transformed = visitor.CommaExpr ? visitor.CommaExpr(node, ctx) : null;
-  if (transformed === false) {
-    return node;
-  }
-  if (transformed != null) {
-    if (Array.isArray(transformed)) {
-      ctx = transformed[1];
-      if (transformed[0] != null) {
-        node = transformed[0];
-      }
-    } else {
-      node = transformed;
-    }
-  }
-
-  let changed0 = false;
-
-  let updatedNode = node;
-  {
-    let changed1 = false;
-
-    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-    changed1 = changed1 || updatedNode$loc !== node.loc;
-
-    let updatedNode$items = node.items;
-    {
-      let changed2 = false;
-      const arr1 = node.items.map((updatedNode$items$item1) => {
-        const result = transformExpression(
-          updatedNode$items$item1,
-          visitor,
-          ctx
-        );
-        changed2 = changed2 || result !== updatedNode$items$item1;
-        return result;
-      });
-      if (changed2) {
-        updatedNode$items = arr1;
-        changed1 = true;
-      }
-    }
-
-    if (changed1) {
-      updatedNode = {
-        ...updatedNode,
-        loc: updatedNode$loc,
-        items: updatedNode$items,
-      };
-      changed0 = true;
-    }
-  }
-
-  node = updatedNode;
-  if (visitor.CommaExprPost) {
-    const transformed = visitor.CommaExprPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }
@@ -3598,16 +3608,16 @@ export const transformTVars = <Ctx>(
   return node;
 };
 
-export const transformTParens = <Ctx>(
-  node: TParens,
+export const transformTComma = <Ctx>(
+  node: TComma,
   visitor: Visitor<Ctx>,
   ctx: Ctx
-): TParens => {
+): TComma => {
   if (!node) {
-    throw new Error("No TParens provided");
+    throw new Error("No TComma provided");
   }
 
-  const transformed = visitor.TParens ? visitor.TParens(node, ctx) : null;
+  const transformed = visitor.TComma ? visitor.TComma(node, ctx) : null;
   if (transformed === false) {
     return node;
   }
@@ -3643,6 +3653,71 @@ export const transformTParens = <Ctx>(
         updatedNode$items = arr1;
         changed1 = true;
       }
+    }
+
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        loc: updatedNode$loc,
+        items: updatedNode$items,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.TCommaPost) {
+    const transformed = visitor.TCommaPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformTParens = <Ctx>(
+  node: TParens,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): TParens => {
+  if (!node) {
+    throw new Error("No TParens provided");
+  }
+
+  const transformed = visitor.TParens ? visitor.TParens(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+
+    let updatedNode$items = null;
+    const updatedNode$items$current = node.items;
+    if (updatedNode$items$current != null) {
+      const updatedNode$items$1$ = transformTComma(
+        updatedNode$items$current,
+        visitor,
+        ctx
+      );
+      changed1 = changed1 || updatedNode$items$1$ !== updatedNode$items$current;
+      updatedNode$items = updatedNode$items$1$;
     }
 
     if (changed1) {
@@ -4767,73 +4842,6 @@ export const transformTAtom = <Ctx>(
   node = updatedNode;
   if (visitor.TAtomPost) {
     const transformed = visitor.TAtomPost(node, ctx);
-    if (transformed != null) {
-      node = transformed;
-    }
-  }
-  return node;
-};
-
-export const transformTComma = <Ctx>(
-  node: TComma,
-  visitor: Visitor<Ctx>,
-  ctx: Ctx
-): TComma => {
-  if (!node) {
-    throw new Error("No TComma provided");
-  }
-
-  const transformed = visitor.TComma ? visitor.TComma(node, ctx) : null;
-  if (transformed === false) {
-    return node;
-  }
-  if (transformed != null) {
-    if (Array.isArray(transformed)) {
-      ctx = transformed[1];
-      if (transformed[0] != null) {
-        node = transformed[0];
-      }
-    } else {
-      node = transformed;
-    }
-  }
-
-  let changed0 = false;
-
-  let updatedNode = node;
-  {
-    let changed1 = false;
-
-    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-    changed1 = changed1 || updatedNode$loc !== node.loc;
-
-    let updatedNode$items = node.items;
-    {
-      let changed2 = false;
-      const arr1 = node.items.map((updatedNode$items$item1) => {
-        const result = transformType(updatedNode$items$item1, visitor, ctx);
-        changed2 = changed2 || result !== updatedNode$items$item1;
-        return result;
-      });
-      if (changed2) {
-        updatedNode$items = arr1;
-        changed1 = true;
-      }
-    }
-
-    if (changed1) {
-      updatedNode = {
-        ...updatedNode,
-        loc: updatedNode$loc,
-        items: updatedNode$items,
-      };
-      changed0 = true;
-    }
-  }
-
-  node = updatedNode;
-  if (visitor.TCommaPost) {
-    const transformed = visitor.TCommaPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }

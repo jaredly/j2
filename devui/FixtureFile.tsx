@@ -187,15 +187,30 @@ export const ShowBuiltins = ({
                     if (evt.key === 'Escape') {
                         setEditBuiltins(null);
                         evt.preventDefault();
-                        setBuiltins(editBuiltins.split('\n').map(parseBuiltin));
+                        setBuiltins(
+                            editBuiltins
+                                .split('\n')
+                                .filter(Boolean)
+                                .map(parseBuiltin),
+                        );
                     } else if (evt.key === 'Enter' && evt.metaKey) {
                         setEditBuiltins(null);
                         evt.preventDefault();
-                        setBuiltins(editBuiltins.split('\n').map(parseBuiltin));
+                        setBuiltins(
+                            editBuiltins
+                                .split('\n')
+                                .filter(Boolean)
+                                .map(parseBuiltin),
+                        );
                     }
                 }}
                 onBlur={() => {
-                    setBuiltins(editBuiltins.split('\n').map(parseBuiltin));
+                    setBuiltins(
+                        editBuiltins
+                            .split('\n')
+                            .filter(Boolean)
+                            .map(parseBuiltin),
+                    );
                     setEditBuiltins(null);
                 }}
             />

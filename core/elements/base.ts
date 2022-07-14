@@ -27,7 +27,7 @@ Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $
 
 Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum / Record
 
-ParenedExpression = "(" _ expr:Expression _ ")"
+ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 AttrText "attribute" = $([0-9a-z-A-Z_]+)
@@ -144,7 +144,24 @@ export const ToTast = {
         }
     },
     ParenedExpression(expr: p.ParenedExpression, ctx: Ctx): t.Expression {
-        return ctx.ToTast[expr.expr.type](expr.expr as any, ctx);
+        if (expr.items?.items.length === 1) {
+            return ctx.ToTast[expr.items.items[0].type](
+                expr.items.items[0] as any,
+                ctx,
+            );
+        }
+        return {
+            type: 'Record',
+            spreads: [],
+            loc: expr.loc,
+            items:
+                expr.items?.items.map((item, i) => ({
+                    type: 'RecordKeyValue',
+                    key: i.toString(),
+                    value: ctx.ToTast[item.type](item as any, ctx),
+                    loc: item.loc,
+                })) ?? [],
+        };
     },
     // Expression(expr: p.Expression, typ: Type | null, ctx: Ctx): Expression {
     //     return ctx.ToTast[expr.type](expr as any, typ, ctx);
@@ -252,13 +269,10 @@ export const ToPP = {
             'always',
         );
     },
-    ParenedExpression({ loc, expr }: p.ParenedExpression, ctx: PCtx): pp.PP {
-        return pp.items(
-            [
-                pp.atom('(', loc),
-                ctx.ToPP[expr.type](expr as any, ctx),
-                pp.atom(')', loc),
-            ],
+    ParenedExpression({ loc, items }: p.ParenedExpression, ctx: PCtx): pp.PP {
+        return pp.args(
+            items?.items.map((item) => ctx.ToPP[item.type](item as any, ctx)) ??
+                [],
             loc,
         );
     },
@@ -285,8 +299,8 @@ function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
         case 'TApply':
             return determineKind(t.inner, ctx);
         case 'TParens':
-            if (t.items.length === 1) {
-                return determineKind(t.items[0], ctx);
+            if (t.items?.items.length === 1) {
+                return determineKind(t.items.items[0], ctx);
             }
             return 'record';
         case 'TEnum':

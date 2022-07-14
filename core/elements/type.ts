@@ -23,7 +23,7 @@ TRight = _ top:$top _ right:TOpInner
 top = "-" / "+"
 TOpInner = TDecorated / TApply
 
-TParens = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
+TParens = "(" _ items:TComma? _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
@@ -104,7 +104,7 @@ export const asApply = (t: p.Type): p.TApply =>
     t.type === 'TDecorated' || t.type === 'TOps'
         ? {
               type: 'TParens',
-              items: [t],
+              items: { type: 'TComma', items: [t], loc: t.loc },
               loc: t.loc,
           }
         : t;
@@ -135,19 +135,20 @@ export const ToTast = {
         };
     },
     TParens({ loc, items }: p.TParens, ctx: TCtx): t.Type {
-        if (items.length === 1) {
-            return ctx.ToTast[items[0].type](items[0] as any, ctx);
+        if (items?.items.length === 1) {
+            return ctx.ToTast[items.items[0].type](items.items[0] as any, ctx);
         }
         return {
             type: 'TRecord',
             loc,
             spreads: [],
-            items: items.map((x, i) => ({
-                type: 'TRecordKeyValue',
-                key: i.toString(),
-                value: ctx.ToTast[x.type](x as any, ctx),
-                loc: x.loc,
-            })),
+            items:
+                items?.items.map((x, i) => ({
+                    type: 'TRecordKeyValue',
+                    key: i.toString(),
+                    value: ctx.ToTast[x.type](x as any, ctx),
+                    loc: x.loc,
+                })) ?? [],
             open: false,
         };
     },
@@ -244,7 +245,7 @@ export const ToAst = {
                 inner: {
                     type: 'TParens',
                     loc: inner.loc,
-                    items: [inner],
+                    items: { type: 'TComma', items: [inner], loc: inner.loc },
                 },
                 decorators,
             };
@@ -370,7 +371,7 @@ export const ToPP = {
     },
     TParens({ items, loc }: p.TParens, ctx: PCtx): pp.PP {
         return pp.args(
-            items.map((x) => ctx.ToPP[x.type](x as any, ctx)),
+            items?.items.map((x) => ctx.ToPP[x.type](x as any, ctx)) ?? [],
             loc,
         );
         // return pp.items(

@@ -60,7 +60,15 @@ export const makeApply = (
     if (inner.type === 'DecoratedExpression') {
         return {
             type: 'Apply',
-            target: { type: 'ParenedExpression', expr: inner, loc },
+            target: {
+                type: 'ParenedExpression',
+                items: {
+                    type: 'CommaExpr',
+                    items: [inner],
+                    loc,
+                },
+                loc,
+            },
             suffixes: [suffix],
             loc,
         };

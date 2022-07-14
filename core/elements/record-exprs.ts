@@ -9,6 +9,7 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
+import { allRecordItems } from './records';
 
 export const grammar = `
 Record = "{" _ items:RecordItems? _ "}"
@@ -58,8 +59,47 @@ export const ToTast = {
     },
 };
 
+const recordExprAsTuple = (t: Record) => {
+    if (t.spreads.length == 0) {
+        let nums = [];
+        for (let item of t.items) {
+            const i = parseInt(item.key);
+            if (i.toString() === item.key && !isNaN(i)) {
+                nums[i] = item.value;
+            }
+        }
+
+        let good = true;
+        for (let i = 0; i < t.items.length; i++) {
+            if (!nums[i]) {
+                good = false;
+                break;
+            }
+        }
+
+        if (good) {
+            return nums;
+        }
+    }
+    return null;
+};
+
 export const ToAst = {
-    Record(record: Record, ctx: TACtx): p.Record {
+    Record(record: Record, ctx: TACtx): p.Atom {
+        const nums = recordExprAsTuple(record);
+        if (nums) {
+            return {
+                type: 'ParenedExpression',
+                items: {
+                    type: 'CommaExpr',
+                    items: nums.map((item) =>
+                        ctx.ToAst[item.type](item as any, ctx),
+                    ),
+                    loc: record.loc,
+                },
+                loc: record.loc,
+            };
+        }
         return {
             type: 'Record',
             loc: record.loc,
@@ -134,6 +174,22 @@ export const ToPP = {
 };
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
+    Record(node, ctx) {
+        let changed = false;
+        const spreads = node.spreads.map((spread) => {
+            const t = ctx.ctx.getType(spread);
+            if (!t || t?.type !== 'TRecord') {
+                changed = true;
+                return decorate(spread, 'notARecord', ctx.hit, ctx.ctx);
+            }
+            if (allRecordItems(t, ctx.ctx) == null) {
+                changed = true;
+                return decorate(spread, 'invalidRecord', ctx.hit, ctx.ctx);
+            }
+            return spread;
+        });
+        return changed ? { ...node, spreads } : null;
+    },
     // Expression_Apply(node, { ctx, hit }) {
     // },
 };

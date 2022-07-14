@@ -83,7 +83,7 @@ export type Atom = Number | Boolean | Identifier | ParenedExpression | TemplateS
 export type ParenedExpression = {
   type: "ParenedExpression";
   loc: Loc;
-  expr: Expression;
+  items: CommaExpr | null;
 };
 
 // No data on IdText
@@ -405,7 +405,7 @@ export type TOpInner = TDecorated | TApply;
 export type TParens = {
   type: "TParens";
   loc: Loc;
-  items: Type[];
+  items: TComma | null;
 };
 
 export type TArg = {

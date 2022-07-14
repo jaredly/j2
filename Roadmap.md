@@ -13,11 +13,35 @@ alsooo tuples are needed to represent the bodies of the fns.
 	- [x] parse, print, validate
 - [x] tuple types
 	- [x] parse, print, validate
-- [ ] enum unify
+- [.] enum unify
 	- [x] very basic, not really enough
 	- [x] decent unification
 	- [ ] lambdas and tvars and whatnot
 - [x] pretty parsing tuples as enum bits
+
+- [x] record expr parse & print
+- [x] record analyze
+- [ ] record default values!!
+	- anything special here? I don't think so.
+
+DO I WANT functions to be single-argument?
+What do I gain?
+idk
+what do I lose?
+probably some things.
+
+- [x] tuple expr parse & print
+- [ ] enum tuple pretty
+- [ ] enum record pretty?
+
+- [ ] ifs
+- [ ] binops ... lets and suches
+- [ ] lambdas
+
+- [ ] so, a fundamental type that is 'attr'? and it's a fn that gets
+  the attribute of that name? because we're not declaring these things
+	anymore. hm that dashes my hopes of declaring things like `let .ok = ...`
+	but that's probably fine. I could always do `let ->ok =`.
 
 - [ ] tuples & records (attributes etc)
 	- `.hello` is the fn `<T>(x: {hello: T, *}) => T`
