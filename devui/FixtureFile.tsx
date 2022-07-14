@@ -58,7 +58,10 @@ export const FixtureFile = ({
             return;
         }
         if (last.current) {
-            fetch(`/elements/${name}`, { method: 'POST', body: serialized });
+            fetch(`/elements/fixtures/${name}`, {
+                method: 'POST',
+                body: serialized,
+            });
         }
         last.current = serialized;
     }, [serialized]);

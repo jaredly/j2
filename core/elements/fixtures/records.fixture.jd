@@ -1,8 +1,24 @@
-##[builtins]##
-
 ##[fixtures]##
 ==[basic]==
 --[input]--
 type X = {hi: int};
 type Y = {...X, ho: int};
-type Z = {...y, hi: float};
+type Z = {...Y, hi: float};
+
+--[output:expected]--
+alias float=h1c9cc9450fe2e869a48abaa5e4a85271e1625474 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f X=h46da0d14da60b28fde9051f1dd0eae2ed11281e4 Y=h3f46b7078b27700ef26c955f56f69226258fd021
+type X = {hi: int}
+type Y = {...X, ho: int}
+type Z = {...Y, hi: float}
+
+==[failures]==
+--[input:shouldFail]--
+type X = {...X}
+type Y = {...int}
+type Z = {...{...Z}}
+
+--[output:expected]--
+alias error:invalidRecord=h506e7785537a789d79fa3a8c084d3fffe5751757 error:notARecord=hd698a9fde2a4cf1505e7a7bbb328bed86802f545 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+type X = {...@error:invalidRecord() X#[r0]}
+type Y = {...@error:notARecord() int}
+type Z = {...@error:invalidRecord() {...@error:invalidRecord() Z#[r0]}}

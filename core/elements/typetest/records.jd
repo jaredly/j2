@@ -14,3 +14,6 @@
 type HasName = {name: string}
 
 @type:shouldMatch(:{...HasName, age: int}) {name: string, age: int}
+
+@type:shouldMatch(:{...(10, int), 2: float})
+@type:shouldMatch(:(10, int, float)) (10, int, float)

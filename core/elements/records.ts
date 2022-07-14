@@ -16,7 +16,7 @@ TRecord = "{" _ items:TRecordItems? _ "}"
 TRecordItems = first:TRecordItem rest:(_ "," _ TRecordItem)* _ ","?
 TRecordItem = TRecordSpread / TRecordKeyValue / Star
 TRecordSpread = "..." _ inner:Type
-TRecordKeyValue = key:$IdText _ ":" _ value:Type
+TRecordKeyValue = key:$AttrText _ ":" _ value:Type
 
 `;
 
@@ -67,7 +67,32 @@ export const ToTast = {
 };
 
 export const ToAst = {
-    TRecord: (t: TRecord, ctx: TACtx): p.TRecord => {
+    TRecord: (t: TRecord, ctx: TACtx): p.Type => {
+        if (!t.open && t.spreads.length == 0) {
+            let nums = [];
+            for (let item of t.items) {
+                const i = parseInt(item.key);
+                if (i.toString() === item.key && !isNaN(i)) {
+                    nums[i] = item.value;
+                }
+            }
+
+            let good = true;
+            for (let i = 0; i < t.items.length; i++) {
+                if (!nums[i]) {
+                    good = false;
+                    break;
+                }
+            }
+
+            if (good) {
+                return {
+                    type: 'TParens',
+                    loc: t.loc,
+                    items: nums.map((v) => ctx.ToAst[v.type](v as any, ctx)),
+                };
+            }
+        }
         return {
             type: 'TRecord',
             loc: t.loc,

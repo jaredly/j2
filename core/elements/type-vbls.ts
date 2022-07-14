@@ -108,7 +108,7 @@ export const ToAst = {
             inner.type === 'TDecorated' ||
             inner.type === 'TOps' ||
             inner.type === 'TVars'
-                ? { type: 'TParens', inner: inner, loc }
+                ? { type: 'TParens', items: [inner], loc }
                 : inner;
         return {
             type: 'TApply',

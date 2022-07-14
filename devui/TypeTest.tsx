@@ -64,7 +64,7 @@ export const TypeTestView = ({
                                 return [];
                             }
                             const results = runTypeTest(v, true);
-                            console.log('extra', results.statuses);
+                            // console.log('extra', results.statuses);
                             return results.statuses.map((status) => {
                                 if (status.text) {
                                     return {

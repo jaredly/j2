@@ -49,6 +49,7 @@ Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
 ParenedExpression = "(" _ expr:Expression _ ")"
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
+AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 
 
@@ -129,7 +130,7 @@ TRecord = "{" _ items:TRecordItems? _ "}"
 TRecordItems = first:TRecordItem rest:(_ "," _ TRecordItem)* _ ","?
 TRecordItem = TRecordSpread / TRecordKeyValue / Star
 TRecordSpread = "..." _ inner:Type
-TRecordKeyValue = key:$IdText _ ":" _ value:Type
+TRecordKeyValue = key:$AttrText _ ":" _ value:Type
 
 
 
@@ -156,7 +157,7 @@ TRight = _ top:$top _ right:TOpInner
 top = "-" / "+"
 TOpInner = TDecorated / TApply
 
-TParens = "(" _ inner:Type _ ")"
+TParens = "(" _ first:Type rest:(_ ", " _ Type)* _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _

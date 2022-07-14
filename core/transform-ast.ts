@@ -65,6 +65,7 @@ import {
   TypeToplevel,
   _lineEnd,
   _EOF,
+  AttrText,
   newline,
   _nonnewline,
   _,
@@ -156,6 +157,11 @@ export type Visitor<Ctx> = {
     node: ParenedExpression,
     ctx: Ctx
   ) => null | ParenedExpression;
+  AttrText?: (
+    node: AttrText,
+    ctx: Ctx
+  ) => null | false | AttrText | [AttrText | null, Ctx];
+  AttrTextPost?: (node: AttrText, ctx: Ctx) => null | AttrText;
   newline?: (
     node: newline,
     ctx: Ctx
@@ -3193,13 +3199,25 @@ export const transformTParens = <Ctx>(
     const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
     changed1 = changed1 || updatedNode$loc !== node.loc;
 
-    const updatedNode$inner = transformType(node.inner, visitor, ctx);
-    changed1 = changed1 || updatedNode$inner !== node.inner;
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformType(updatedNode$items$item1, visitor, ctx);
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
     if (changed1) {
       updatedNode = {
         ...updatedNode,
         loc: updatedNode$loc,
-        inner: updatedNode$inner,
+        items: updatedNode$items,
       };
       changed0 = true;
     }
@@ -5399,6 +5417,43 @@ export const transform_EOF = <Ctx>(
   node = updatedNode;
   if (visitor._EOFPost) {
     const transformed = visitor._EOFPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformAttrText = <Ctx>(
+  node: AttrText,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): AttrText => {
+  if (!node) {
+    throw new Error("No AttrText provided");
+  }
+
+  const transformed = visitor.AttrText ? visitor.AttrText(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+  const updatedNode = node;
+
+  node = updatedNode;
+  if (visitor.AttrTextPost) {
+    const transformed = visitor.AttrTextPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }

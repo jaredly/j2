@@ -88,6 +88,8 @@ export type ParenedExpression = {
 
 // No data on IdText
 
+export type AttrText = string;
+
 export type newline = string;
 
 export type _nonnewline = string;
@@ -376,7 +378,7 @@ export type TOpInner = TDecorated | TApply;
 export type TParens = {
   type: "TParens";
   loc: Loc;
-  inner: Type;
+  items: Type[];
 };
 
 export type TArg = {
