@@ -19,8 +19,6 @@
 
 @type:shouldMatch(:[ `Hi(int) ]) [ `Hi(10) | `Hi(int) ]
 
-@type:shouldMatch(:[ * ]) [ `Failure(([ `TooBad ], int)) | `Failure(([ `Timeout ], int)) ]
-
 type One = [ `A | `B ]
 
 @type:shouldMatch(:One) [ `A ]
@@ -48,3 +46,11 @@ and B = [ `B | A#[r0] ]
 type N = [ `A((int, float)) ]
 
 @type:shouldMatch(:{x: [ `A | `B ]}) {x: [ `A ]}
+
+// Unification!
+@type:shouldMatch(:[ `Failure([ `TooBad | `Timeout | `C ]) ]) [ `Failure([ `TooBad ]) | `Failure([ `Timeout ]) ]
+
+@type:shouldMatch(:[ `Failure(([ `TooBad | `Timeout | `C ], int)) ]) [ `Failure(([ `TooBad ], int)) | `Failure((
+    [ `Timeout ],
+    int,
+)) ]

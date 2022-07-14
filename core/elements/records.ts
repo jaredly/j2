@@ -189,11 +189,53 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     },
 };
 
+export const unifyRecords = (
+    candidate: TRecord,
+    expected: t.Type,
+    ctx: TMCtx,
+): false | t.Type => {
+    if (expected.type !== 'TRecord') {
+        return false;
+    }
+    if (candidate.open !== expected.open) {
+        return false;
+    }
+    const citems = allRecordItems(candidate, ctx);
+    const eitems = allRecordItems(expected, ctx);
+    if (!citems || !eitems) {
+        return false;
+    }
+    const cnum = Object.keys(citems).length;
+    const eenum = Object.keys(eitems).length;
+    if (cnum !== eenum) {
+        return false;
+    }
+    for (const key of Object.keys(citems)) {
+        if (!eitems[key]) {
+            return false;
+        }
+        const un = unifyTypes(citems[key], eitems[key], ctx);
+        if (un === false) {
+            return false;
+        }
+        citems[key] = un;
+    }
+    return {
+        ...candidate,
+        spreads: [],
+        items: Object.keys(citems).map((k) => ({
+            type: 'TRecordKeyValue',
+            key: k,
+            value: citems[k],
+            loc: noloc,
+        })),
+    };
+};
+
 export const recordMatches = (
     candidate: TRecord,
     expected: t.Type,
     ctx: TMCtx,
-    path: string[] = [],
 ) => {
     if (expected.type !== 'TRecord') {
         return false;

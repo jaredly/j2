@@ -372,23 +372,53 @@ export const enumTypeMatches = (
         return false;
     }
 
-    // So, ... we can always allow smaller, right?
-    // [] is part of anything?
-    // <T: int>(x) => T
-    // you call with m<10> and its fine
-    // <T: []>(x) => T
-    // means, ... this should be an enum, right?
-    // <T: [`One | `Two]>(x) => T,
-    // means ... if we handle `One and `Two we know
-    // we'll be prepared for anything.
-    // Yeah, ok so the passed-in type must be a subset.
-    // So is there a way to describe the "anything" enum?
-    // maybe that's the `*`.
-    // <T: [`One | `Two | *]>(x) => T
-    // I guess that's almost as good as no bound at all, right?
-    // well actually, it locks down the payloads for those two tags.
-    // 🤔 lots to think about there.
-    // oh and I guess the empty enum just can't be instantiated
-
     return true;
+};
+
+export const unifyEnums = (
+    candidate: TEnum,
+    expected: t.Type,
+    ctx: TMCtx,
+): false | t.Type => {
+    // [ `What ] matches [ `What | `Who ]
+    // So everything in candidate needs to match something
+    // in expected. And there need to not be any collisions name-wise
+    if (expected.type !== 'TEnum') {
+        return false;
+    }
+    const canEnums = expandEnumCases(candidate, ctx);
+    const expEnums = expandEnumCases(expected, ctx);
+    if (!canEnums || !expEnums) {
+        return false;
+    }
+    const canMap = enumCaseMap(canEnums, ctx);
+    if (!canMap) {
+        return false;
+    }
+    const expMap = enumCaseMap(expEnums, ctx);
+    if (!expMap) {
+        return false;
+    }
+
+    for (let kase of canEnums) {
+        if (!expMap[kase.tag]) {
+            expMap[kase.tag] = kase;
+        } else {
+            const unified = unifyPayloads(
+                kase.payload,
+                expMap[kase.tag].payload,
+                ctx,
+            );
+            if (unified === false) {
+                return false;
+            }
+            expMap[kase.tag] = { ...kase, payload: unified ?? undefined };
+        }
+    }
+
+    return {
+        ...candidate,
+        open: candidate.open || expected.open,
+        cases: Object.values(expMap),
+    };
 };

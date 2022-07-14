@@ -57,8 +57,7 @@ export const unifyPayloads = (
     if (!one || !two) {
         return one || two ? false : null;
     }
-    const res = unifyTypes(one, two, ctx);
-    return res == null ? false : res;
+    return unifyTypes(one, two, ctx);
 };
 
 export const payloadsEqual = (
