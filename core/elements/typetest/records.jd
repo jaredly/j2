@@ -1,4 +1,8 @@
+@type:shouldNotMatch(:int)
 @type:shouldMatch(:{hi: int}) {hi: int}
+
+@type:shouldMatch(:{hi: int, *})
+@type:shouldNotMatch(:{hi: int}) {hi: int, *}
 
 @type:shouldNotMatch(:{hi: int})
 @type:shouldMatch(:{hi: int, *}) {hi: int, ho: int}

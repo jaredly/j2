@@ -1,0 +1,8 @@
+##[builtins]##
+
+##[fixtures]##
+==[basic]==
+--[input]--
+type X = {hi: int};
+type Y = {...X, ho: int};
+type Z = {...y, hi: float};
