@@ -11,6 +11,8 @@ import {
   UnresolvedRef,
   Apply,
   Enum,
+  Record,
+  RecordKeyValue,
   Number,
   Boolean,
   TemplateString,
@@ -186,6 +188,19 @@ export type Visitor<Ctx> = {
   TOrPost?: (node: TOr, ctx: Ctx) => null | TOr;
   Id?: (node: Id, ctx: Ctx) => null | false | Id | [Id | null, Ctx];
   IdPost?: (node: Id, ctx: Ctx) => null | Id;
+  Record?: (
+    node: Record,
+    ctx: Ctx
+  ) => null | false | Record | [Record | null, Ctx];
+  RecordPost?: (node: Record, ctx: Ctx) => null | Record;
+  RecordKeyValue?: (
+    node: RecordKeyValue,
+    ctx: Ctx
+  ) => null | false | RecordKeyValue | [RecordKeyValue | null, Ctx];
+  RecordKeyValuePost?: (
+    node: RecordKeyValue,
+    ctx: Ctx
+  ) => null | RecordKeyValue;
   TApply?: (
     node: TApply,
     ctx: Ctx
@@ -233,6 +248,10 @@ export type Visitor<Ctx> = {
   ) => null | false | Expression | [Expression | null, Ctx];
   Expression_Enum?: (
     node: Enum,
+    ctx: Ctx
+  ) => null | false | Expression | [Expression | null, Ctx];
+  Expression_Record?: (
+    node: Record,
     ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
   Expression_Number?: (
@@ -723,6 +742,152 @@ export const transformEnum = <Ctx>(
   node = updatedNode;
   if (visitor.EnumPost) {
     const transformed = visitor.EnumPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformRecordKeyValue = <Ctx>(
+  node: RecordKeyValue,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): RecordKeyValue => {
+  if (!node) {
+    throw new Error("No RecordKeyValue provided");
+  }
+
+  const transformed = visitor.RecordKeyValue
+    ? visitor.RecordKeyValue(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$value = transformExpression(node.value, visitor, ctx);
+    changed1 = changed1 || updatedNode$value !== node.value;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        value: updatedNode$value,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.RecordKeyValuePost) {
+    const transformed = visitor.RecordKeyValuePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformRecord = <Ctx>(
+  node: Record,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): Record => {
+  if (!node) {
+    throw new Error("No Record provided");
+  }
+
+  const transformed = visitor.Record ? visitor.Record(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformRecordKeyValue(
+          updatedNode$items$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
+    let updatedNode$spreads = node.spreads;
+    {
+      let changed2 = false;
+      const arr1 = node.spreads.map((updatedNode$spreads$item1) => {
+        const result = transformExpression(
+          updatedNode$spreads$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$spreads$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$spreads = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        items: updatedNode$items,
+        spreads: updatedNode$spreads,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.RecordPost) {
+    const transformed = visitor.RecordPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }
@@ -2728,6 +2893,25 @@ export const transformExpression = <Ctx>(
       break;
     }
 
+    case "Record": {
+      const transformed = visitor.Expression_Record
+        ? visitor.Expression_Record(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
     case "Number": {
       const transformed = visitor.Expression_Number
         ? visitor.Expression_Number(node, ctx)
@@ -2841,6 +3025,12 @@ export const transformExpression = <Ctx>(
 
     case "Enum": {
       updatedNode = transformEnum(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "Record": {
+      updatedNode = transformRecord(node, visitor, ctx);
       changed0 = changed0 || updatedNode !== node;
       break;
     }

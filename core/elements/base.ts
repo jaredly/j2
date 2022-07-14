@@ -25,7 +25,7 @@ Expression = DecoratedExpression
 
 Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $BuiltinHash / $UnresolvedHash)?
 
-Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
+Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum / Record
 
 ParenedExpression = "(" _ expr:Expression _ ")"
 

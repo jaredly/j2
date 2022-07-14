@@ -1,0 +1,31 @@
+##[fixtures]##
+==[basic]==
+--[input]--
+{x: 10, y: "hl", x: 2}
+
+--[output:expected]--
+{x: 10, y: "hl", x: 2}
+// {x: 2, y: "hl"}
+
+==[New fixture]==
+--[input]--
+{...{x: 10}, y: 100}
+
+--[output:expected]--
+{...{x: 10}, y: 100}
+// {x: 10, y: 100}
+
+==[New fixture_]==
+--[input:shouldFail]--
+{...10}
+
+--[output:failed]--
+{...10}
+// Error, no type!
+
+==[New fixture__]==
+--[input]--
+// hello
+
+--[output:expected]--
+// hello

@@ -44,7 +44,7 @@ Expression = DecoratedExpression
 
 Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $BuiltinHash / $UnresolvedHash)?
 
-Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
+Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum / Record
 
 ParenedExpression = "(" _ expr:Expression _ ")"
 
@@ -122,6 +122,15 @@ TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
 TypeVariables = "<" _ vbls:TypeVbls ">" _ body:Expression
 TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
 TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
+
+
+// record-exprs.ts
+
+Record = "{" _ items:RecordItems? _ "}"
+RecordItems = first:RecordItem rest:(_ "," _ RecordItem)* _ ","?
+RecordItem = RecordSpread / RecordKeyValue
+RecordSpread = "..." _ inner:Expression
+RecordKeyValue = key:$AttrText _ ":" _ value:Expression
 
 
 // records.ts

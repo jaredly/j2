@@ -278,7 +278,7 @@ export const recordMatches = (
     return true;
 };
 
-const allRecordItems = (
+export const allRecordItems = (
     record: TRecord,
     ctx: TMCtx,
     path: string[] = [],
