@@ -1,7 +1,7 @@
 import { Visitor } from '../transform-tast';
 import { decorate, tdecorate } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
-import { typeMatches, unifyTypes } from '../typing/typeMatches';
+import { getRef, typeMatches, unifyTypes } from '../typing/typeMatches';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -141,12 +141,33 @@ export const ToPP = {
     },
 };
 
-export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {};
+export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
+    TRecord(node, ctx) {
+        let changed = false;
+
+        const spreads = node.spreads.map((spread) => {
+            const res = ctx.ctx.resolveRefsAndApplies(spread);
+            if (!res || res.type !== 'TRecord') {
+                changed = true;
+                return tdecorate(spread, 'notARecord', ctx);
+            }
+            const all = allRecordItems(res, ctx.ctx);
+            if (!all) {
+                changed = true;
+                return tdecorate(spread, 'invalidRecord', ctx);
+            }
+            return spread;
+        });
+
+        return changed ? { ...node, spreads } : node;
+    },
+};
 
 export const recordMatches = (
     candidate: TRecord,
     expected: t.Type,
     ctx: TMCtx,
+    path: string[] = [],
 ) => {
     if (expected.type !== 'TRecord') {
         return false;
@@ -184,6 +205,7 @@ export const recordMatches = (
 const allRecordItems = (
     record: TRecord,
     ctx: TMCtx,
+    path: string[] = [],
 ): null | { [key: string]: t.Type } => {
     const items: { [key: string]: t.Type } = {};
     for (const spread of record.spreads) {
@@ -191,7 +213,17 @@ const allRecordItems = (
         if (!resolved || resolved.type !== 'TRecord') {
             return null;
         }
-        const inner = allRecordItems(resolved, ctx);
+
+        const r = getRef(spread);
+        if (r) {
+            const k = t.refHash(r.ref);
+            if (path.includes(k)) {
+                return null;
+            }
+            path = path.concat([k]);
+        }
+
+        const inner = allRecordItems(resolved, ctx, path);
         if (!inner) {
             return null;
         }

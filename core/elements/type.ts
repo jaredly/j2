@@ -378,7 +378,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             return null;
         }
         if (!ctx.ctx.resolveRefsAndApplies(node)) {
-            return tdecorate(node, 'invalidType', ctx.hit, ctx.ctx);
+            return tdecorate(node, 'invalidType', ctx);
         }
         return null;
     },
@@ -392,6 +392,6 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             return null;
         }
 
-        return tdecorate(node, 'invalidOps', ctx.hit, ctx.ctx);
+        return tdecorate(node, 'invalidOps', ctx);
     },
 };

@@ -365,7 +365,7 @@ export const expandEnumCases = (
     return cases;
 };
 
-const getRef = (t: Type): TRef | null => {
+export const getRef = (t: Type): TRef | null => {
     switch (t.type) {
         case 'TRef':
             return t;

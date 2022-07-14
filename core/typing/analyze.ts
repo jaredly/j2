@@ -79,8 +79,7 @@ export const addDecorator = (
 export const tdecorate = (
     type: Type,
     tag: ErrorTag,
-    hit: { [key: number]: boolean },
-    ctx: Ctx,
+    { hit, ctx }: { hit: { [key: number]: boolean }; ctx: Ctx },
     args: Decorator['args'] = [],
 ): Type => {
     if (hit[type.loc.idx]) {

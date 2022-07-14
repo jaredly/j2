@@ -242,7 +242,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                     const expanded = expandEnumCases(res, ctx.ctx);
                     if (!expanded) {
                         changed = true;
-                        return tdecorate(k, 'invalidEnum', ctx.hit, ctx.ctx);
+                        return tdecorate(k, 'invalidEnum', ctx);
                     }
                     for (let kase of expanded) {
                         if (
@@ -255,28 +255,22 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                             )
                         ) {
                             changed = true;
-                            return tdecorate(
-                                k,
-                                'conflictingEnumTag',
-                                ctx.hit,
-                                ctx.ctx,
-                                [
-                                    {
-                                        label: 'tag',
-                                        arg: {
-                                            type: 'DExpr',
-                                            loc: k.loc,
-                                            expr: {
-                                                type: 'TemplateString',
-                                                first: kase.tag,
-                                                rest: [],
-                                                loc: k.loc,
-                                            },
-                                        },
+                            return tdecorate(k, 'conflictingEnumTag', ctx, [
+                                {
+                                    label: 'tag',
+                                    arg: {
+                                        type: 'DExpr',
                                         loc: k.loc,
+                                        expr: {
+                                            type: 'TemplateString',
+                                            first: kase.tag,
+                                            rest: [],
+                                            loc: k.loc,
+                                        },
                                     },
-                                ],
-                            );
+                                    loc: k.loc,
+                                },
+                            ]);
                         }
                         if (!used[kase.tag]) {
                             used[kase.tag] = kase;
@@ -288,7 +282,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             }
             if (!isValidEnumCase(k, ctx.ctx)) {
                 changed = true;
-                return tdecorate(k, 'notAnEnum', ctx.hit, ctx.ctx);
+                return tdecorate(k, 'notAnEnum', ctx);
             }
             return k;
         });

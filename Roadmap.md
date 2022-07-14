@@ -25,6 +25,15 @@ alsooo tuples are needed to represent the bodies of the fns.
 
 
 
+# Thoughts about recursion
+
+What if I did have `recurse up 1 level` or `up 2 levels`
+on a type scene?
+That would make it possible to have anonymous recursive types.
+
+
+
+
 
 # Now...
 
