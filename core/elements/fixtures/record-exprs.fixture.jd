@@ -5,6 +5,7 @@
 (1, 2)
 ()
 {}
+{tag: "Something", payload: 200}
 
 --[output:expected]--
 {x: 10, y: "hl", x: 2}
@@ -15,6 +16,8 @@
 // ()
 ()
 // ()
+{tag: "Something", payload: 200}
+// {tag: "Something", payload: 200}
 
 ==[New fixture]==
 --[input]--
