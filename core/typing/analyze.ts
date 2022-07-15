@@ -8,6 +8,7 @@ import {
     transformToplevel,
     transformType,
     transformTypeAlias,
+    Visitor,
 } from '../transform-tast';
 import {
     DecoratedExpression,
@@ -184,69 +185,61 @@ export const errorCount = (v: Verify): number => {
     );
 };
 
-export const verify = (ast: File, ctx: Ctx): Verify => {
-    const results: Verify = {
-        errors: [],
-        untypedExpression: [],
-        unresolved: {
-            type: [],
-            decorator: [],
-            value: [],
+export const verifyVisitor = (results: Verify, ctx: Ctx): Visitor<null> => {
+    const errorDecorators = ctx.errorDecorators();
+    return {
+        Toplevel(node) {
+            // ctx.toplevelConfig?
+            // ctx.resetSym()
+            return null;
+        },
+        TRef(node) {
+            if (node.ref.type === 'Unresolved') {
+                results.unresolved.type.push(node.loc);
+            }
+            return null;
+        },
+        Ref(node) {
+            if (node.kind.type === 'Unresolved') {
+                results.unresolved.value.push(node.loc);
+            }
+            return null;
+        },
+        Expression(node) {
+            if (!ctx.getType(node)) {
+                results.untypedExpression.push(node.loc);
+            }
+            return null;
+        },
+        Decorator(node) {
+            if (node.id.ref.type === 'Unresolved') {
+                results.unresolved.decorator.push(node.loc);
+            }
+            if (node.id.ref.type === 'Global') {
+                const id = node.id.ref.id;
+                const isError = errorDecorators.some((x) => idsEqual(x, id));
+                if (isError) {
+                    results.errors.push(node.loc);
+                }
+            }
+            return null;
         },
     };
+};
 
-    const errorDecorators = ctx.errorDecorators();
-    // const decoratorNames: { [key: string]: string } = {};
-    // Object.keys(ctx._full.decorators.names).forEach((name) => {
-    //     const ids = ctx._full.decorators.names[name];
-    //     ids.forEach((id) => {
-    //         decoratorNames[idToString(id.id)] = name;
-    //     });
-    // });
+export const initVerify = () => ({
+    errors: [],
+    untypedExpression: [],
+    unresolved: {
+        type: [],
+        decorator: [],
+        value: [],
+    },
+});
 
-    transformFile(
-        ast,
-        {
-            Toplevel(node) {
-                // ctx.toplevelConfig?
-                // ctx.resetSym()
-                return null;
-            },
-            TRef(node) {
-                if (node.ref.type === 'Unresolved') {
-                    results.unresolved.type.push(node.loc);
-                }
-                return null;
-            },
-            Ref(node) {
-                if (node.kind.type === 'Unresolved') {
-                    results.unresolved.value.push(node.loc);
-                }
-                return null;
-            },
-            Expression(node) {
-                if (!ctx.getType(node)) {
-                    results.untypedExpression.push(node.loc);
-                }
-                return null;
-            },
-            Decorator(node) {
-                if (node.id.ref.type === 'Unresolved') {
-                    results.unresolved.decorator.push(node.loc);
-                }
-                if (node.id.ref.type === 'Global') {
-                    const id = node.id.ref.id;
-                    const isError = errorDecorators.some((x) =>
-                        idsEqual(x, id),
-                    );
-                    if (isError) {
-                        results.errors.push(node.loc);
-                    }
-                }
-                return null;
-            },
-        },
-        null,
-    );
+export const verify = (ast: File, ctx: Ctx): Verify => {
+    const results: Verify = initVerify();
+
+    transformFile(ast, verifyVisitor(results, ctx), null);
     return results;
 };

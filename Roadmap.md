@@ -7,6 +7,8 @@ something different.
 This is where we would realize default values.
 
 
+oh btw `[]` is uncreatable, and so is effectively `never`.
+
 
 ok I actually think I'm ready to try representing
 effects, pre-sugar.

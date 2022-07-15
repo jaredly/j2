@@ -230,6 +230,10 @@ export const openSpan = (hl: HL) =>
         hl.prefix?.message
             ? ` data-message="${hl.prefix.message}" title="${hl.prefix.message}"`
             : ''
+    }${hl.suffix ? ` data-suffix="${hl.suffix.text}"` : ''}${
+        hl.suffix?.message
+            ? ` data-suffix-message="${hl.suffix.message}" title="${hl.suffix.message}"`
+            : ''
     }>`;
 
 export const treeToHtmlLines = (tree: Tree) => {

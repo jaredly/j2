@@ -404,22 +404,6 @@ export const ToJS = {
             ),
         ]);
     },
-    IRecord({ items, spreads, loc }: t.IRecord, ctx: JCtx): b.Expression {
-        return b.objectExpression(
-            spreads
-                .map((spread): b.ObjectProperty | b.SpreadElement =>
-                    b.spreadElement(ctx.ToJS.IExpression(spread, ctx)),
-                )
-                .concat(
-                    items.map((item): b.ObjectProperty | b.SpreadElement => {
-                        return b.objectProperty(
-                            b.identifier(item.key),
-                            ctx.ToJS.IExpression(item.value, ctx),
-                        );
-                    }),
-                ),
-        );
-    },
 };
 
 export const ToIR = {

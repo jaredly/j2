@@ -31,8 +31,6 @@ CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
 // base.ts
 
-
-
 _lineEnd = '\n' / _EOF
 
 _EOF = !.

@@ -38,6 +38,12 @@ import {
   DecoratedExpression,
   TypeAlias,
   TypeFile,
+  IExpression,
+  IApply,
+  ITemplateString,
+  IEnum,
+  IRecord,
+  IRecordKeyValue,
   DecoratorDecl,
   TypeVariables,
   TAdd,
@@ -95,10 +101,20 @@ export type Visitor<Ctx> = {
     ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
   ExpressionPost?: (node: Expression, ctx: Ctx) => null | Expression;
+  IExpression?: (
+    node: IExpression,
+    ctx: Ctx
+  ) => null | false | IExpression | [IExpression | null, Ctx];
+  IExpressionPost?: (node: IExpression, ctx: Ctx) => null | IExpression;
   Sym?: (node: Sym, ctx: Ctx) => null | false | Sym | [Sym | null, Ctx];
   SymPost?: (node: Sym, ctx: Ctx) => null | Sym;
   Apply?: (node: Apply, ctx: Ctx) => null | false | Apply | [Apply | null, Ctx];
   ApplyPost?: (node: Apply, ctx: Ctx) => null | Apply;
+  IApply?: (
+    node: IApply,
+    ctx: Ctx
+  ) => null | false | IApply | [IApply | null, Ctx];
+  IApplyPost?: (node: IApply, ctx: Ctx) => null | IApply;
   Boolean?: (
     node: Boolean,
     ctx: Ctx
@@ -117,6 +133,14 @@ export type Visitor<Ctx> = {
     node: TemplateString,
     ctx: Ctx
   ) => null | TemplateString;
+  ITemplateString?: (
+    node: ITemplateString,
+    ctx: Ctx
+  ) => null | false | ITemplateString | [ITemplateString | null, Ctx];
+  ITemplateStringPost?: (
+    node: ITemplateString,
+    ctx: Ctx
+  ) => null | ITemplateString;
   String?: (
     node: String,
     ctx: Ctx
@@ -151,6 +175,8 @@ export type Visitor<Ctx> = {
   ) => null | DecoratedExpression;
   Enum?: (node: Enum, ctx: Ctx) => null | false | Enum | [Enum | null, Ctx];
   EnumPost?: (node: Enum, ctx: Ctx) => null | Enum;
+  IEnum?: (node: IEnum, ctx: Ctx) => null | false | IEnum | [IEnum | null, Ctx];
+  IEnumPost?: (node: IEnum, ctx: Ctx) => null | IEnum;
   TypeApplication?: (
     node: TypeApplication,
     ctx: Ctx
@@ -201,6 +227,19 @@ export type Visitor<Ctx> = {
     node: RecordKeyValue,
     ctx: Ctx
   ) => null | RecordKeyValue;
+  IRecord?: (
+    node: IRecord,
+    ctx: Ctx
+  ) => null | false | IRecord | [IRecord | null, Ctx];
+  IRecordPost?: (node: IRecord, ctx: Ctx) => null | IRecord;
+  IRecordKeyValue?: (
+    node: IRecordKeyValue,
+    ctx: Ctx
+  ) => null | false | IRecordKeyValue | [IRecordKeyValue | null, Ctx];
+  IRecordKeyValuePost?: (
+    node: IRecordKeyValue,
+    ctx: Ctx
+  ) => null | IRecordKeyValue;
   TApply?: (
     node: TApply,
     ctx: Ctx
@@ -274,6 +313,34 @@ export type Visitor<Ctx> = {
     node: DecoratedExpression,
     ctx: Ctx
   ) => null | false | Expression | [Expression | null, Ctx];
+  IExpression_Ref?: (
+    node: Ref,
+    ctx: Ctx
+  ) => null | false | IExpression | [IExpression | null, Ctx];
+  IExpression_Number?: (
+    node: Number,
+    ctx: Ctx
+  ) => null | false | IExpression | [IExpression | null, Ctx];
+  IExpression_Boolean?: (
+    node: Boolean,
+    ctx: Ctx
+  ) => null | false | IExpression | [IExpression | null, Ctx];
+  IExpression_IApply?: (
+    node: IApply,
+    ctx: Ctx
+  ) => null | false | IExpression | [IExpression | null, Ctx];
+  IExpression_ITemplateString?: (
+    node: ITemplateString,
+    ctx: Ctx
+  ) => null | false | IExpression | [IExpression | null, Ctx];
+  IExpression_IEnum?: (
+    node: IEnum,
+    ctx: Ctx
+  ) => null | false | IExpression | [IExpression | null, Ctx];
+  IExpression_IRecord?: (
+    node: IRecord,
+    ctx: Ctx
+  ) => null | false | IExpression | [IExpression | null, Ctx];
   DecoratorArg_DExpr?: (
     node: DExpr,
     ctx: Ctx
@@ -3480,6 +3547,601 @@ export const transformTypeFile = <Ctx>(
   node = updatedNode;
   if (visitor.TypeFilePost) {
     const transformed = visitor.TypeFilePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformIApply = <Ctx>(
+  node: IApply,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): IApply => {
+  if (!node) {
+    throw new Error("No IApply provided");
+  }
+
+  const transformed = visitor.IApply ? visitor.IApply(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$target = transformIExpression(node.target, visitor, ctx);
+    changed1 = changed1 || updatedNode$target !== node.target;
+
+    let updatedNode$args = node.args;
+    {
+      let changed2 = false;
+      const arr1 = node.args.map((updatedNode$args$item1) => {
+        const result = transformIExpression(
+          updatedNode$args$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$args$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$args = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        target: updatedNode$target,
+        args: updatedNode$args,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.IApplyPost) {
+    const transformed = visitor.IApplyPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformITemplateString = <Ctx>(
+  node: ITemplateString,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): ITemplateString => {
+  if (!node) {
+    throw new Error("No ITemplateString provided");
+  }
+
+  const transformed = visitor.ITemplateString
+    ? visitor.ITemplateString(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$rest = node.rest;
+    {
+      let changed2 = false;
+      const arr1 = node.rest.map((updatedNode$rest$item1) => {
+        let result = updatedNode$rest$item1;
+        {
+          let changed3 = false;
+
+          const result$expr = transformIExpression(
+            updatedNode$rest$item1.expr,
+            visitor,
+            ctx
+          );
+          changed3 = changed3 || result$expr !== updatedNode$rest$item1.expr;
+
+          const result$loc = transformLoc(
+            updatedNode$rest$item1.loc,
+            visitor,
+            ctx
+          );
+          changed3 = changed3 || result$loc !== updatedNode$rest$item1.loc;
+          if (changed3) {
+            result = { ...result, expr: result$expr, loc: result$loc };
+            changed2 = true;
+          }
+        }
+
+        return result;
+      });
+      if (changed2) {
+        updatedNode$rest = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        rest: updatedNode$rest,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.ITemplateStringPost) {
+    const transformed = visitor.ITemplateStringPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformIEnum = <Ctx>(
+  node: IEnum,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): IEnum => {
+  if (!node) {
+    throw new Error("No IEnum provided");
+  }
+
+  const transformed = visitor.IEnum ? visitor.IEnum(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$payload = undefined;
+    const updatedNode$payload$current = node.payload;
+    if (updatedNode$payload$current != null) {
+      const updatedNode$payload$1$ = transformIExpression(
+        updatedNode$payload$current,
+        visitor,
+        ctx
+      );
+      changed1 =
+        changed1 || updatedNode$payload$1$ !== updatedNode$payload$current;
+      updatedNode$payload = updatedNode$payload$1$;
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        payload: updatedNode$payload,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.IEnumPost) {
+    const transformed = visitor.IEnumPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformIRecordKeyValue = <Ctx>(
+  node: IRecordKeyValue,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): IRecordKeyValue => {
+  if (!node) {
+    throw new Error("No IRecordKeyValue provided");
+  }
+
+  const transformed = visitor.IRecordKeyValue
+    ? visitor.IRecordKeyValue(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    const updatedNode$value = transformIExpression(node.value, visitor, ctx);
+    changed1 = changed1 || updatedNode$value !== node.value;
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        value: updatedNode$value,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.IRecordKeyValuePost) {
+    const transformed = visitor.IRecordKeyValuePost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformIRecord = <Ctx>(
+  node: IRecord,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): IRecord => {
+  if (!node) {
+    throw new Error("No IRecord provided");
+  }
+
+  const transformed = visitor.IRecord ? visitor.IRecord(node, ctx) : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  let updatedNode = node;
+  {
+    let changed1 = false;
+
+    let updatedNode$items = node.items;
+    {
+      let changed2 = false;
+      const arr1 = node.items.map((updatedNode$items$item1) => {
+        const result = transformIRecordKeyValue(
+          updatedNode$items$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$items$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$items = arr1;
+        changed1 = true;
+      }
+    }
+
+    let updatedNode$spreads = node.spreads;
+    {
+      let changed2 = false;
+      const arr1 = node.spreads.map((updatedNode$spreads$item1) => {
+        const result = transformIExpression(
+          updatedNode$spreads$item1,
+          visitor,
+          ctx
+        );
+        changed2 = changed2 || result !== updatedNode$spreads$item1;
+        return result;
+      });
+      if (changed2) {
+        updatedNode$spreads = arr1;
+        changed1 = true;
+      }
+    }
+
+    const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+    changed1 = changed1 || updatedNode$loc !== node.loc;
+    if (changed1) {
+      updatedNode = {
+        ...updatedNode,
+        items: updatedNode$items,
+        spreads: updatedNode$spreads,
+        loc: updatedNode$loc,
+      };
+      changed0 = true;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.IRecordPost) {
+    const transformed = visitor.IRecordPost(node, ctx);
+    if (transformed != null) {
+      node = transformed;
+    }
+  }
+  return node;
+};
+
+export const transformIExpression = <Ctx>(
+  node: IExpression,
+  visitor: Visitor<Ctx>,
+  ctx: Ctx
+): IExpression => {
+  if (!node) {
+    throw new Error("No IExpression provided");
+  }
+
+  const transformed = visitor.IExpression
+    ? visitor.IExpression(node, ctx)
+    : null;
+  if (transformed === false) {
+    return node;
+  }
+  if (transformed != null) {
+    if (Array.isArray(transformed)) {
+      ctx = transformed[1];
+      if (transformed[0] != null) {
+        node = transformed[0];
+      }
+    } else {
+      node = transformed;
+    }
+  }
+
+  let changed0 = false;
+
+  switch (node.type) {
+    case "Ref": {
+      const transformed = visitor.IExpression_Ref
+        ? visitor.IExpression_Ref(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "Number": {
+      const transformed = visitor.IExpression_Number
+        ? visitor.IExpression_Number(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "Boolean": {
+      const transformed = visitor.IExpression_Boolean
+        ? visitor.IExpression_Boolean(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "IApply": {
+      const transformed = visitor.IExpression_IApply
+        ? visitor.IExpression_IApply(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "ITemplateString": {
+      const transformed = visitor.IExpression_ITemplateString
+        ? visitor.IExpression_ITemplateString(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "IEnum": {
+      const transformed = visitor.IExpression_IEnum
+        ? visitor.IExpression_IEnum(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+
+    case "IRecord": {
+      const transformed = visitor.IExpression_IRecord
+        ? visitor.IExpression_IRecord(node, ctx)
+        : null;
+      if (transformed != null) {
+        if (Array.isArray(transformed)) {
+          ctx = transformed[1];
+          if (transformed[0] != null) {
+            node = transformed[0];
+          }
+        } else if (transformed == false) {
+          return node;
+        } else {
+          node = transformed;
+        }
+      }
+      break;
+    }
+  }
+
+  let updatedNode = node;
+
+  switch (node.type) {
+    case "Ref": {
+      updatedNode = transformRef(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "Number": {
+      updatedNode = transformNumber(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "Boolean": {
+      updatedNode = transformBoolean(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "IApply": {
+      updatedNode = transformIApply(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "ITemplateString": {
+      updatedNode = transformITemplateString(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    case "IEnum": {
+      updatedNode = transformIEnum(node, visitor, ctx);
+      changed0 = changed0 || updatedNode !== node;
+      break;
+    }
+
+    default: {
+      // let changed1 = false;
+
+      const updatedNode$0node = transformIRecord(node, visitor, ctx);
+      changed0 = changed0 || updatedNode$0node !== node;
+      updatedNode = updatedNode$0node;
+    }
+  }
+
+  node = updatedNode;
+  if (visitor.IExpressionPost) {
+    const transformed = visitor.IExpressionPost(node, ctx);
     if (transformed != null) {
       node = transformed;
     }

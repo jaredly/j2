@@ -1,7 +1,19 @@
+import generate from '@babel/generator';
 import { Button, Card, Checkbox, Input, Spacer, Text } from '@nextui-org/react';
 import * as React from 'react';
-import { FullContext } from '../core/ctx';
-import { errorCount } from '../core/typing/analyze';
+import { builtinContext, FullContext } from '../core/ctx';
+import { fileToTast } from '../core/elements/base';
+import { fixComments } from '../core/grammar/fixComments';
+import { iCtx } from '../core/ir/ir';
+import { jCtx } from '../core/ir/to-js';
+import { transformExpression } from '../core/transform-tast';
+import {
+    analyzeTop,
+    errorCount,
+    initVerify,
+    verify,
+    verifyVisitor,
+} from '../core/typing/analyze';
 import {
     aliasesFromString,
     Builtin,
@@ -13,7 +25,7 @@ import {
 } from '../core/typing/__test__/fixture-utils';
 import { Editor } from './Editor';
 import { ShowBuiltins } from './FixtureFile';
-import { Highlight } from './Highlight';
+import { Highlight, HL } from './Highlight';
 import { CancelIcon, ReportProblemIcon } from './Icons';
 
 export function OneFixture({
@@ -281,6 +293,65 @@ export function OneFixture({
                                     info={{
                                         tast: newOutput.result.outputTast,
                                         ctx: newOutput.result.ctx2,
+                                    }}
+                                    extraLocs={(ast) => {
+                                        console.log('ex', ast.type);
+                                        if (ast.type !== 'File') {
+                                            return [];
+                                        }
+
+                                        // TODO: Just be able to use newOutput
+                                        // with a source map for locs
+                                        const fctx = ctx.clone();
+                                        loadBuiltins(fixture.builtins, fctx);
+
+                                        const [file, tctx] = fileToTast(
+                                            fixComments(ast),
+                                            fctx,
+                                            true,
+                                        );
+                                        const ictx = iCtx();
+
+                                        const locs: HL[] = [];
+                                        file.toplevels.forEach((top) => {
+                                            if (
+                                                top.type !==
+                                                'ToplevelExpression'
+                                            ) {
+                                                return;
+                                            }
+
+                                            const v = initVerify();
+                                            transformExpression(
+                                                top.expr,
+                                                verifyVisitor(v, ctx),
+                                                null,
+                                            );
+                                            if (errorCount(v)) {
+                                                return;
+                                            }
+
+                                            const ir = ictx.ToIR[top.expr.type](
+                                                top.expr as any,
+                                                ictx,
+                                            );
+                                            const jctx = jCtx();
+                                            const js = jctx.ToJS.IExpression(
+                                                ir,
+                                                jctx,
+                                            );
+                                            const jsraw = generate(js).code;
+                                            locs.push({
+                                                loc: top.loc,
+                                                type: 'Success',
+                                                suffix: {
+                                                    text: '🏃‍♀️',
+                                                    message: jsraw,
+                                                },
+                                            });
+                                        });
+                                        console.log('ok', locs);
+                                        return locs;
                                     }}
                                 />
                             </>
