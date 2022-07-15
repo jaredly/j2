@@ -1,4 +1,13 @@
 
+Sooo at some point I'm going to need (mybe in the IR)
+a thing that inserts a `genConversionSomething` from the
+actual type to the expected type, in the case where
+we're in a subtype situation, and the receiver needs
+something different.
+This is where we would realize default values.
+
+
+
 ok I actually think I'm ready to try representing
 effects, pre-sugar.
 ok but yeah I should make function literals a thing.
@@ -21,7 +30,7 @@ alsooo tuples are needed to represent the bodies of the fns.
 
 - [x] record expr parse & print
 - [x] record analyze
-- [ ] record default values!!
+- [x] record default values!!
 	- anything special here? I don't think so.
 
 DO I WANT functions to be single-argument?
@@ -33,6 +42,8 @@ probably some things.
 - [x] tuple expr parse & print
 - [x] enum tuple pretty
 - [ ] enum record pretty?
+
+- [ ] lets get basic IR going before we get too carried away
 
 - [ ] ifs
 - [ ] binops ... lets and suches
@@ -77,7 +88,7 @@ I think I want to get rid of the enum `*` star.
 
 So, obvious things before we can really go anywhere:
 - [ ] lambdas lol
-- [ ] records & tuples
+- [x] records & tuples
 - [ ] let (it would be nice not to have non-expressions)
 	egh but then again, I don't really want to support expr-level
 	let. it needs braces.
@@ -87,6 +98,7 @@ So, obvious things before we can really go anywhere:
 - [ ] if/else
 
 then we get around to `Array<int> where .length = 10u`
+oh wait jk `Array<int, 10>` it's fine
 
 ok also,
 can I design my algebraic effects, so that it solves the

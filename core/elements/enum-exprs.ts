@@ -1,13 +1,11 @@
-import { Visitor } from '../transform-tast';
-import { decorate, tdecorate } from '../typing/analyze';
-import { Ctx } from '../typing/analyze';
-import { typeMatches } from '../typing/typeMatches';
-import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
-import { Ctx as TCtx } from '../typing/to-tast';
+import { Visitor } from '../transform-tast';
+import * as t from '../typed-ast';
+import { Ctx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
+import { Ctx as TCtx } from '../typing/to-tast';
 import { maybeTuple } from './base';
 
 export const grammar = `
@@ -18,6 +16,13 @@ export type Enum = {
     type: 'Enum';
     tag: string;
     payload?: t.Expression;
+    loc: t.Loc;
+};
+
+export type IEnum = {
+    type: 'IEnum';
+    tag: string;
+    payload?: t.IExpression;
     loc: t.Loc;
 };
 

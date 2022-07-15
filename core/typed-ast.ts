@@ -1,11 +1,16 @@
-import { Apply } from './elements/apply';
-import { Boolean, Number, TemplateString } from './elements/constants';
+import { Apply, IApply } from './elements/apply';
+import {
+    Boolean,
+    ITemplateString,
+    Number,
+    TemplateString,
+} from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
-import { Enum } from './elements/enum-exprs';
+import { Enum, IEnum } from './elements/enum-exprs';
 import { TypeApplication } from './elements/generics';
 import { Type } from './elements/type';
 import { Id, idToString } from './ids';
-import { Record } from './elements/record-exprs';
+import { IRecord, Record } from './elements/record-exprs';
 export type { Id };
 export type { Apply } from './elements/apply';
 export type {
@@ -114,6 +119,15 @@ export type Expression =
     | TemplateString
     | TypeApplication
     | DecoratedExpression;
+
+export type IExpression =
+    | Ref
+    | Number
+    | Boolean
+    | IApply
+    | ITemplateString
+    | IEnum
+    | IRecord;
 
 export type Sym = { id: number; name: string };
 

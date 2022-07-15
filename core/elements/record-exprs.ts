@@ -25,10 +25,25 @@ export type Record = {
     spreads: t.Expression[];
     loc: t.Loc;
 };
+
 export type RecordKeyValue = {
     type: 'RecordKeyValue';
     key: string;
     value: t.Expression;
+    loc: t.Loc;
+};
+
+export type IRecord = {
+    type: 'IRecord';
+    items: IRecordKeyValue[];
+    spreads: t.IExpression[];
+    loc: t.Loc;
+};
+
+export type IRecordKeyValue = {
+    type: 'IRecordKeyValue';
+    key: string;
+    value: t.IExpression;
     loc: t.Loc;
 };
 

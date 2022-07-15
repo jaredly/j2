@@ -40,6 +40,13 @@ export type TemplateString = {
     loc: Loc;
 };
 
+export type ITemplateString = {
+    type: 'ITemplateString';
+    first: string;
+    rest: Array<{ expr: t.IExpression; suffix: string; loc: Loc }>;
+    loc: Loc;
+};
+
 export type String = { type: 'String'; text: string; loc: Loc };
 
 export const Analyze: Visitor<VisitorCtx> = {

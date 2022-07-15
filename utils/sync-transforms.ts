@@ -11,6 +11,7 @@ const names = {
     ToTast: 'core/typing/to-tast.gen.ts',
     ToPP: 'core/printer/to-pp.gen.ts',
     Analyze: 'core/typing/analyze.gen.ts',
+    ToIR: 'core/ir/to-ir.gen.ts',
 };
 
 const elements: { [key in keyof typeof names]: string[] } = {
@@ -19,6 +20,7 @@ const elements: { [key in keyof typeof names]: string[] } = {
     ToTast: [],
     ToPP: [],
     Analyze: [],
+    ToIR: [],
 };
 
 const clean = (t: string) => t.replace(/[^a-zA-Z0-9_]/g, '');
