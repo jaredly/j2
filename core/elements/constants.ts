@@ -2,6 +2,7 @@ import { Ctx } from '..';
 import { noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
 import { Ctx as PCtx } from '../printer/to-pp';
+import { Ctx as ICtx } from '../ir/ir';
 import * as pp from '../printer/pp';
 import * as t from '../typed-ast';
 import { Expression, Loc } from '../typed-ast';
@@ -176,5 +177,45 @@ export const ToPP = {
     },
     Number(int: p.Number, ctx: PCtx): pp.PP {
         return pp.atom(int.contents, int.loc);
+    },
+};
+
+export const ToIR = {
+    Number: (x: t.Number) => x,
+    Boolean: (x: t.Boolean) => x,
+    Ref: (x: t.Ref) => x,
+    TemplateString(x: t.TemplateString, ctx: ICtx): t.ITemplateString {
+        return {
+            type: 'ITemplateString',
+            loc: x.loc,
+            first: x.first,
+            rest: x.rest.map((part) => ({
+                ...part,
+                expr: ctx.ToIR[part.expr.type](part.expr as any, ctx),
+            })),
+        };
+    },
+};
+
+import * as b from '@babel/types';
+import { Ctx as JCtx } from '../ir/to-js';
+import { idToString } from '../ids';
+export const ToJS = {
+    Number(x: t.Number): b.NumericLiteral {
+        return b.numericLiteral(x.value);
+    },
+    Boolean(x: t.Boolean): b.BooleanLiteral {
+        return b.booleanLiteral(x.value);
+    },
+    Ref(x: t.Ref): b.Identifier {
+        return b.identifier(t.refHash(x.kind));
+    },
+    ITemplateString(x: t.ITemplateString, ctx: JCtx): b.TemplateLiteral {
+        return b.templateLiteral(
+            [x.first]
+                .concat(x.rest.map((r) => r.suffix))
+                .map((t) => b.templateElement({ raw: t })),
+            x.rest.map((r) => ctx.ToJS[r.expr.type](r.expr as any, ctx)),
+        );
     },
 };

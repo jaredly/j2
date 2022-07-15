@@ -12,9 +12,10 @@ import { Type } from './elements/type';
 import { Id, idToString } from './ids';
 import { IRecord, Record } from './elements/record-exprs';
 export type { Id };
-export type { Apply } from './elements/apply';
+export type { Apply, IApply } from './elements/apply';
 export type {
     Boolean,
+    ITemplateString,
     Number,
     String,
     TemplateString,
@@ -40,9 +41,14 @@ export type {
     Type,
 } from './elements/type';
 export type { EnumCase, TEnum } from './elements/enums';
-export type { Enum } from './elements/enum-exprs';
+export type { Enum, IEnum } from './elements/enum-exprs';
 export type { TRecord, TRecordKeyValue } from './elements/records';
-export type { Record, RecordKeyValue } from './elements/record-exprs';
+export type {
+    IRecord,
+    IRecordKeyValue,
+    Record,
+    RecordKeyValue,
+} from './elements/record-exprs';
 
 export type GlobalRef = {
     type: 'Global';

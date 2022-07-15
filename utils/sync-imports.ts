@@ -14,7 +14,6 @@ let last = 0;
 const exports: { [source: string]: [number, number] } = {};
 ast.program.body.forEach((line) => {
     if (line.type === 'ExportNamedDeclaration' && line.source) {
-        // exports.push({ loc: line.loc!, source: line.source.value });
         exports[line.source.value] = [line.start!, line.end!];
         last = line.end!;
     }

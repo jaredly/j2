@@ -24,6 +24,13 @@ export type Apply = {
     loc: t.Loc;
 };
 
+export type IApply = {
+    type: 'IApply';
+    target: t.IExpression;
+    args: Array<t.IExpression>;
+    loc: t.Loc;
+};
+
 export const ToTast = {
     Apply(apply: p.Apply_inner, ctx: TCtx): t.Expression {
         let res = ctx.ToTast[apply.target.type](apply.target as any, ctx);

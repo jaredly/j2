@@ -2,6 +2,7 @@ import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
+import { Ctx as ICtx } from '../ir/ir';
 import {
     analyze,
     analyzeTop,
@@ -12,8 +13,6 @@ import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx, Toplevel, TopTypeKind } from '../typing/to-tast';
 
 export const grammar = `
-
-
 _lineEnd = '\n' / _EOF
 
 _EOF = !.
@@ -365,3 +364,112 @@ function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
             return determineKindT(got?.typ, ctx);
     }
 }
+
+import * as b from '@babel/types';
+import { Ctx as JCtx } from '../ir/to-js';
+export const ToJS = {
+    IExpression(expr: t.IExpression, ctx: JCtx): b.Expression {
+        switch (expr.type) {
+            case 'Number':
+                return ctx.ToJS.Number(expr);
+            case 'Boolean':
+                return ctx.ToJS.Boolean(expr);
+            case 'Ref':
+                return ctx.ToJS.Ref(expr);
+            case 'ITemplateString':
+                return ctx.ToJS.ITemplateString(expr, ctx);
+            case 'IApply':
+                return ctx.ToJS.IApply(expr, ctx);
+            case 'IEnum':
+                return ctx.ToJS.IEnum(expr, ctx);
+            case 'IRecord':
+                return ctx.ToJS.IRecord(expr, ctx);
+        }
+    },
+    IApply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
+        return b.callExpression(
+            ctx.ToJS.IExpression(target, ctx),
+            args.map((arg) => ctx.ToJS.IExpression(arg, ctx)),
+        );
+    },
+    IEnum({ tag, payload, loc }: t.IEnum, ctx: JCtx): b.Expression {
+        if (!payload) {
+            return b.stringLiteral(tag);
+        }
+        return b.objectExpression([
+            b.objectProperty(b.identifier('tag'), b.stringLiteral(tag)),
+            b.objectProperty(
+                b.identifier('payload'),
+                ctx.ToJS.IExpression(payload, ctx),
+            ),
+        ]);
+    },
+    IRecord({ items, spreads, loc }: t.IRecord, ctx: JCtx): b.Expression {
+        return b.objectExpression(
+            spreads
+                .map((spread): b.ObjectProperty | b.SpreadElement =>
+                    b.spreadElement(ctx.ToJS.IExpression(spread, ctx)),
+                )
+                .concat(
+                    items.map((item): b.ObjectProperty | b.SpreadElement => {
+                        return b.objectProperty(
+                            b.identifier(item.key),
+                            ctx.ToJS.IExpression(item.value, ctx),
+                        );
+                    }),
+                ),
+        );
+    },
+};
+
+export const ToIR = {
+    Apply({ args, loc, target }: t.Apply, ctx: ICtx): t.IApply {
+        return {
+            type: 'IApply',
+            loc,
+            args: args.map((arg) => ctx.ToIR[arg.type](arg as any, ctx)),
+            target: ctx.ToIR[target.type](target as any, ctx),
+        };
+    },
+    Enum({ loc, tag, payload }: t.Enum, ctx: ICtx): t.IEnum {
+        return {
+            type: 'IEnum',
+            loc,
+            tag,
+            payload: payload
+                ? ctx.ToIR[payload.type](payload as any, ctx)
+                : undefined,
+        };
+    },
+    Record({ loc, spreads, items }: t.Record, ctx: ICtx): t.IRecord {
+        return {
+            type: 'IRecord',
+            loc,
+            spreads: spreads.map((spread) =>
+                ctx.ToIR[spread.type](spread as any, ctx),
+            ),
+            items: items.map((item) => ({
+                ...item,
+                type: 'IRecordKeyValue',
+                value: ctx.ToIR[item.value.type](item.value as any, ctx),
+            })),
+        };
+    },
+    TypeApplication(
+        { loc, target, args }: t.TypeApplication,
+        ctx: ICtx,
+    ): t.IExpression {
+        // ugh this is gonna mess me up, right?
+        // like, ... idk maybe I do need to keep this in IR,
+        // at least to be able to know what types things are?
+        // on the other hand, maybe I can bake types at this point?
+        // like, monomorphizing is going to happen before this.
+        return ctx.ToIR[target.type](target as any, ctx);
+    },
+    DecoratedExpression(
+        { loc, expr }: t.DecoratedExpression,
+        ctx: ICtx,
+    ): t.IExpression {
+        return ctx.ToIR[expr.type](expr as any, ctx);
+    },
+};
