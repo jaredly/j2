@@ -324,7 +324,7 @@ export function OneFixture({
                                             const v = initVerify();
                                             transformExpression(
                                                 top.expr,
-                                                verifyVisitor(v, ctx),
+                                                verifyVisitor(v, fctx),
                                                 null,
                                             );
                                             if (errorCount(v)) {

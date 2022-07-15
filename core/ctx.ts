@@ -360,6 +360,10 @@ export const newContext = (): FullContext => {
         },
         getValueType(id) {
             const { hash, idx } = extract(id);
+            if (!this[opaque].values.hashed[hash]) {
+                return null;
+            }
+
             return this[opaque].values.hashed[hash][idx].typ;
         },
         typeForId(id) {
