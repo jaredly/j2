@@ -3,7 +3,10 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+- [ ] little cleanup, remove all of the `as any`s
+
 - [ ] binops
+	- [ ] parse/print/etc?
 - [ ] lambdas
 - [ ] ifs
 - [ ] lets

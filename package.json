@@ -7,6 +7,7 @@
         "start": "esbuild --bundle devui/server.ts --platform=node --external:vite | node -",
         "grammar": "esbuild --bundle utils/build-grammar.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "re-fixture": "esbuild --bundle utils/re-fixture.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
+        "macros": "esbuild --bundle utils/macros.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "-fix-ids": "esbuild --bundle utils/fix-ids.ts --platform=node --sourcemap=inline | node --enable-source-maps -",
         "fix-ids": "./utils/esrun.js utils/fix-ids.ts",
         "transform": "npm run sync; esbuild --bundle utils/generate-transform.ts --platform=node --sourcemap=inline | node --enable-source-maps - ./core/typed-ast.ts ./core/transform-tast.ts; prettier -w core/transform-tast.ts",

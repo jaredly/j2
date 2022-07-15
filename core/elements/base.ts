@@ -76,7 +76,7 @@ export const typeFileToTast = (
             ctx.resetSym();
         }
         ctx = ctx.toplevelConfig(config);
-        let top = ctx.ToTast.TypeToplevel(t as any, ctx);
+        let top = ctx.ToTast.TypeToplevel(t, ctx);
         if (top.type === 'TypeAlias') {
             ctx = ctx.withTypes(top.elements);
         }
@@ -106,7 +106,7 @@ export const fileToTast = (
             ctx.resetSym();
         }
         ctx = ctx.toplevelConfig(config);
-        let top = ctx.ToTast.Toplevel(t as any, ctx);
+        let top = ctx.ToTast.Toplevel(t, ctx);
         if (top.type === 'TypeAlias') {
             ctx = ctx.withTypes(top.elements);
         }
@@ -130,7 +130,7 @@ export const ToTast = {
         } else {
             return {
                 type: 'ToplevelExpression',
-                expr: ctx.ToTast[top.type](top as any, ctx),
+                expr: ctx.ToTast.Expression(top, ctx),
                 loc: top.loc,
             };
         }
@@ -146,7 +146,7 @@ export const ToTast = {
         return maybeTuple(expr.items, expr.loc, ctx);
     },
     // Expression(expr: p.Expression, typ: Type | null, ctx: Ctx): Expression {
-    //     return ctx.ToTast[expr.type](expr as any, typ, ctx);
+    //     return ctx.ToTast[expr.type](expr , typ, ctx);
     // },
     Identifier({ hash, loc, text }: p.Identifier, ctx: Ctx): t.Expression {
         // ok so here's where rubber meets road, right?
@@ -178,7 +178,7 @@ export const maybeTuple = (
     ctx: Ctx,
 ): t.Expression => {
     if (items?.items.length === 1) {
-        return ctx.ToTast[items.items[0].type](items.items[0] as any, ctx);
+        return ctx.ToTast.Expression(items.items[0], ctx);
     }
     return {
         type: 'Record',
@@ -188,7 +188,7 @@ export const maybeTuple = (
             items?.items.map((item, i) => ({
                 type: 'RecordKeyValue',
                 key: i.toString(),
-                value: ctx.ToTast[item.type](item as any, ctx),
+                value: ctx.ToTast.Expression(item, ctx),
                 loc: item.loc,
             })) ?? [],
     };
@@ -236,7 +236,7 @@ export const ToAst = {
         { type, expr, loc }: t.ToplevelExpression,
         ctx: TACtx,
     ): p.Toplevel {
-        return ctx.ToAst[expr.type](expr as any, ctx);
+        return ctx.ToAst.Expression(expr, ctx);
     },
 
     Ref({ type, kind, loc }: t.Ref, ctx: TACtx): p.Identifier {
@@ -275,8 +275,7 @@ export const ToPP = {
     },
     ParenedExpression({ loc, items }: p.ParenedExpression, ctx: PCtx): pp.PP {
         return pp.args(
-            items?.items.map((item) => ctx.ToPP[item.type](item as any, ctx)) ??
-                [],
+            items?.items.map((item) => ctx.ToPP.Expression(item, ctx)) ?? [],
             loc,
         );
     },

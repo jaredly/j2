@@ -118,7 +118,7 @@ export const ToTast = {
                 // ctx.resetSym();
                 return {
                     name: x.name,
-                    type: ctx.ToTast[x.typ.type](x.typ as any, ctx),
+                    type: ctx.ToTast.Type(x.typ, ctx),
                 };
             }),
         };
@@ -127,16 +127,16 @@ export const ToTast = {
         return {
             type: 'TOps',
             loc,
-            left: ctx.ToTast[left.type](left as any, ctx),
+            left: ctx.ToTast.Type(left, ctx),
             right: right.map((x) => ({
                 top: x.top as '+' | '-',
-                right: ctx.ToTast[x.right.type](x.right as any, ctx),
+                right: ctx.ToTast.Type(x.right, ctx),
             })),
         };
     },
     TParens({ loc, items }: p.TParens, ctx: TCtx): t.Type {
         if (items?.items.length === 1) {
-            return ctx.ToTast[items.items[0].type](items.items[0] as any, ctx);
+            return ctx.ToTast.Type(items.items[0], ctx);
         }
         return {
             type: 'TRecord',
@@ -147,7 +147,7 @@ export const ToTast = {
                     type: 'TRecordKeyValue',
                     key: i.toString(),
                     default_: null,
-                    value: ctx.ToTast[x.type](x as any, ctx),
+                    value: ctx.ToTast.Type(x, ctx),
                     loc: x.loc,
                 })) ?? [],
             open: false,
@@ -160,10 +160,8 @@ export const ToTast = {
         return {
             type: 'TDecorated',
             loc,
-            inner: ctx.ToTast[inner.type](inner as any, ctx),
-            decorators: decorators.map((x) =>
-                ctx.ToTast[x.type](x as any, ctx),
-            ),
+            inner: ctx.ToTast.Type(inner, ctx),
+            decorators: decorators.map((x) => ctx.ToTast.Decorator(x, ctx)),
         };
     },
     TRef(type: p.TRef, ctx: TCtx): Type {
@@ -188,12 +186,12 @@ export const ToTast = {
             type: 'TLambda',
             args:
                 args?.items.map(({ label, typ, loc }) => ({
-                    typ: ctx.ToTast[typ.type](typ as any, ctx),
+                    typ: ctx.ToTast.Type(typ, ctx),
                     label,
                     loc,
                 })) ?? [],
             loc,
-            result: ctx.ToTast[result.type](result as any, ctx),
+            result: ctx.ToTast.Type(result, ctx),
         };
     },
     // TArgs({ args, loc }: p.TArgs, ctx: TCtx): t.TArgs {
@@ -209,7 +207,7 @@ export const ToAst = {
                 ({ name, type }): p.TypePair => ({
                     type: 'TypePair',
                     name: name,
-                    typ: ctx.ToAst[type.type](type as any, ctx),
+                    typ: ctx.ToAst.Type(type, ctx),
                     loc,
                 }),
             ),
@@ -219,19 +217,19 @@ export const ToAst = {
         return {
             type: 'TOps',
             loc: type.loc,
-            left: asApply(ctx.ToAst[type.left.type](type.left as any, ctx)),
+            left: asApply(ctx.ToAst.Type(type.left, ctx)),
             right: type.right.map((x) => ({
                 type: 'TRight',
                 loc: type.loc,
                 top: x.top as '+' | '-',
-                right: asApply(ctx.ToAst[x.right.type](x.right as any, ctx)),
+                right: asApply(ctx.ToAst.Type(x.right, ctx)),
             })),
         };
     },
     TDecorated(type: TDecorated, ctx: TACtx): p.TDecorated {
-        const inner = ctx.ToAst[type.inner.type](type.inner as any, ctx);
+        const inner = ctx.ToAst.Type(type.inner, ctx);
         const decorators = type.decorators.map((x) =>
-            ctx.ToAst[x.type](x as any, ctx),
+            ctx.ToAst.Decorator(x, ctx),
         );
         if (inner.type === 'TDecorated') {
             return {
@@ -277,17 +275,17 @@ export const ToAst = {
                 items: args.map(({ label, typ, loc }) => ({
                     type: 'TArg',
                     label,
-                    typ: ctx.ToAst[typ.type](typ as any, ctx),
+                    typ: ctx.ToAst.Type(typ, ctx),
                     loc,
                 })),
                 type: 'TArgs',
                 loc,
             },
-            result: ctx.ToAst[result.type](result as any, ctx),
+            result: ctx.ToAst.Type(result, ctx),
             loc,
         };
     },
-    String({ loc, text }: t.String): p.String {
+    String({ loc, text }: t.String, ctx: TACtx): p.String {
         return { type: 'String', loc, text };
     },
 };
@@ -302,7 +300,7 @@ export const ToPP = {
                         pp.atom(i === 0 ? 'type ' : 'and ', loc),
                         pp.atom(name, typ.loc),
                         pp.atom(' = ', typ.loc),
-                        ctx.ToPP[typ.type](typ as any, ctx),
+                        ctx.ToPP.Type(typ, ctx),
                     ],
                     loc,
                 ),
@@ -314,12 +312,12 @@ export const ToPP = {
     TOps(type: p.TOps_inner, ctx: PCtx): pp.PP {
         return pp.items(
             [
-                ctx.ToPP[type.left.type](type.left as any, ctx),
+                ctx.ToPP.Type(type.left, ctx),
                 ...type.right.map((x) =>
                     pp.items(
                         [
                             pp.atom(' ' + x.top + ' ', x.loc),
-                            ctx.ToPP[x.right.type](x.right as any, ctx),
+                            ctx.ToPP.Type(x.right, ctx),
                         ],
                         x.loc,
                     ),
@@ -332,11 +330,11 @@ export const ToPP = {
         return pp.items(
             [
                 pp.items(
-                    decorators.map((x) => ctx.ToPP[x.type](x as any, ctx)),
+                    decorators.map((x) => ctx.ToPP.Decorator(x, ctx)),
                     loc,
                     'always',
                 ),
-                ctx.ToPP[inner.type](inner as any, ctx),
+                ctx.ToPP.Type(inner, ctx),
             ],
             loc,
         );
@@ -357,7 +355,7 @@ export const ToPP = {
                                           arg.loc,
                                       )
                                     : null,
-                                ctx.ToPP[arg.typ.type](arg.typ as any, ctx),
+                                ctx.ToPP.Type(arg.typ, ctx),
                             ],
                             loc,
                         ),
@@ -365,20 +363,20 @@ export const ToPP = {
                     args?.loc ?? loc,
                 ),
                 pp.atom(' => ', loc),
-                ctx.ToPP[result.type](result as any, ctx),
+                ctx.ToPP.Type(result, ctx),
             ],
             loc,
         );
     },
     TParens({ items, loc }: p.TParens, ctx: PCtx): pp.PP {
         return pp.args(
-            items?.items.map((x) => ctx.ToPP[x.type](x as any, ctx)) ?? [],
+            items?.items.map((x) => ctx.ToPP.Type(x, ctx)) ?? [],
             loc,
         );
         // return pp.items(
         //     [
         //         pp.atom('(', loc),
-        //         ctx.ToPP[items.type](items as any, ctx),
+        //         ctx.ToPP[items.type](items , ctx),
         //         pp.atom(')', loc),
         //     ],
         //     loc,
