@@ -199,7 +199,6 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { idToString } from '../ids';
 export const ToJS = {
     Number(x: t.Number): b.NumericLiteral {
         return b.numericLiteral(x.value);
@@ -215,7 +214,7 @@ export const ToJS = {
             [x.first]
                 .concat(x.rest.map((r) => r.suffix))
                 .map((t) => b.templateElement({ raw: t })),
-            x.rest.map((r) => ctx.ToJS[r.expr.type](r.expr as any, ctx)),
+            x.rest.map((r) => ctx.ToJS.IExpression(r.expr, ctx)),
         );
     },
 };

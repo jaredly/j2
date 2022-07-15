@@ -46,6 +46,7 @@ export type HL = {
     loc: Loc;
     type: Colorable;
     prefix?: { text: string; message?: string };
+    suffix?: { text: string; message?: string };
     underline?: string;
 };
 

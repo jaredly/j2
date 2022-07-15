@@ -4,7 +4,13 @@ import { createServer, request } from 'http';
 import { createServer as vite } from 'vite';
 
 (async () => {
-    const server = await vite({ root: './devui', server: { port: 3001 } });
+    const server = await vite({
+        root: './devui',
+        server: { port: 3001 },
+        define: {
+            'process.env': {},
+        },
+    });
     await server.listen();
 
     createServer((req, res) => {

@@ -99,6 +99,31 @@ export const recordAsTuple = (t: TRecord) => {
     return null;
 };
 
+export const irecordAsTuple = (t: t.IRecord) => {
+    if (t.spreads.length == 0) {
+        let nums = [];
+        for (let item of t.items) {
+            const i = parseInt(item.key);
+            if (i.toString() === item.key && !isNaN(i)) {
+                nums[i] = item.value;
+            }
+        }
+
+        let good = true;
+        for (let i = 0; i < t.items.length; i++) {
+            if (!nums[i]) {
+                good = false;
+                break;
+            }
+        }
+
+        if (good) {
+            return nums;
+        }
+    }
+    return null;
+};
+
 export const ToAst = {
     TRecord: (t: TRecord, ctx: TACtx): p.Type => {
         const tup = recordAsTuple(t);
@@ -340,4 +365,31 @@ export const allRecordItems = (
         items[item.key] = item;
     }
     return items;
+};
+
+import * as b from '@babel/types';
+import { Ctx as JCtx } from '../ir/to-js';
+export const ToJS = {
+    IRecord({ items, spreads, loc }: t.IRecord, ctx: JCtx): b.Expression {
+        const nums = irecordAsTuple({ items, spreads, loc, type: 'IRecord' });
+        if (nums) {
+            return b.arrayExpression(
+                nums.map((num) => ctx.ToJS.IExpression(num, ctx)),
+            );
+        }
+        return b.objectExpression(
+            spreads
+                .map((spread): b.ObjectProperty | b.SpreadElement =>
+                    b.spreadElement(ctx.ToJS.IExpression(spread, ctx)),
+                )
+                .concat(
+                    items.map((item): b.ObjectProperty | b.SpreadElement => {
+                        return b.objectProperty(
+                            b.identifier(item.key),
+                            ctx.ToJS.IExpression(item.value, ctx),
+                        );
+                    }),
+                ),
+        );
+    },
 };
