@@ -560,11 +560,7 @@ export const getAllUnionTypeMembers = (
     throw new Error(`Unexpected type ${t.type}`);
 };
 
-export function buildTransformFile(
-    body: t.Statement[],
-    relativeSource: string,
-    ctx: Ctx,
-) {
+export const loadTypes = (body: t.Statement[], types: Ctx['types']) => {
     body.forEach((stmt) => {
         if (
             stmt.type === 'ExportNamedDeclaration' &&
@@ -572,12 +568,20 @@ export function buildTransformFile(
             stmt.declaration.type === 'TSTypeAliasDeclaration'
         ) {
             // console.log(stmt.declaration.id.name);
-            ctx.types[stmt.declaration.id.name] = {
+            types[stmt.declaration.id.name] = {
                 type: stmt.declaration.typeAnnotation,
                 params: stmt.declaration.typeParameters || null,
             };
         }
     });
+};
+
+export function buildTransformFile(
+    body: t.Statement[],
+    relativeSource: string,
+    ctx: Ctx,
+) {
+    loadTypes(body, ctx.types);
 
     ctx.visitorTypes.forEach(
         (name) => (ctx.transformers[name] = makeTransformer(name, ctx)),

@@ -10,6 +10,13 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
 
+/*
+ToTast: [
+    [p.Suffix, t.Expression => t.Expression],
+    [p.Expression => t.Expression
+]
+*/
+
 export const ToTast = {
     Suffix(t: p.Suffix, next: t.Expression, ctx: TCtx): t.Expression {
         switch (t.type) {
