@@ -9,7 +9,7 @@ export type Ctx = {
     types: {
         [key: string]: {
             type: t.TSType;
-            params: t.TSTypeParameterDeclaration | null;
+            params: t.TSTypeParameterDeclaration | null | undefined;
         };
     };
     visitorTypes: string[];
@@ -407,7 +407,7 @@ export const unionTransformer = (
 
 export const subsituteTypeArgs = (
     type: t.TSType,
-    params: t.TSTypeParameterDeclaration | null,
+    params: t.TSTypeParameterDeclaration | null | undefined,
     args: t.TSTypeParameterInstantiation,
 ) => {
     if (!params) {
@@ -509,9 +509,9 @@ export const makeTransformer = (
     }`;
 };
 
-export const getUnionNames = (t: t.TSUnionType, ctx: Ctx) => {
+export const getUnionNames = (t: t.TSUnionType, types: Ctx['types']) => {
     const allTypes: Array<[string, t.TSTypeLiteral]> = [];
-    getAllUnionTypeMembers(allTypes, t, {}, ctx);
+    getAllUnionTypeMembers(allTypes, t, {}, types);
     return allTypes.map((n) => n[0]);
 };
 
@@ -519,7 +519,7 @@ export const getAllUnionTypeMembers = (
     allTypes: Array<[string, t.TSTypeLiteral]>,
     t: t.TSType,
     seen: { [key: string]: boolean },
-    ctx: Ctx,
+    types: Ctx['types'],
 ) => {
     if (t.type === 'TSTypeLiteral') {
         const names = t.members
@@ -534,7 +534,9 @@ export const getAllUnionTypeMembers = (
         return;
     }
     if (t.type === 'TSUnionType') {
-        t.types.forEach((t) => getAllUnionTypeMembers(allTypes, t, seen, ctx));
+        t.types.forEach((t) =>
+            getAllUnionTypeMembers(allTypes, t, seen, types),
+        );
         return;
     }
     if (t.type === 'TSTypeReference' && t.typeName.type === 'Identifier') {
@@ -542,13 +544,13 @@ export const getAllUnionTypeMembers = (
             return;
         }
         seen[t.typeName.name] = true;
-        console.log('-', t.typeName.name);
-        if (ctx.types[t.typeName.name]) {
+        // console.log('-', t.typeName.name);
+        if (types[t.typeName.name]) {
             getAllUnionTypeMembers(
                 allTypes,
-                ctx.types[t.typeName.name].type,
+                types[t.typeName.name].type,
                 seen,
-                ctx,
+                types,
             );
             return;
         }
@@ -556,8 +558,13 @@ export const getAllUnionTypeMembers = (
     if (t.type === 'TSNullKeyword') {
         throw new Error(`wat null`);
     }
-    console.log(JSON.stringify(t));
-    throw new Error(`Unexpected type ${t.type}`);
+    if (t.type === 'TSStringKeyword') {
+        // throw new Error(`wat string`);
+        return;
+    }
+    return;
+    // console.log(JSON.stringify(t));
+    // throw new Error(`Unexpected type ${t.type}`);
 };
 
 export const loadTypes = (body: t.Statement[], types: Ctx['types']) => {
@@ -667,7 +674,7 @@ export const generateCheckers = (ctx: Ctx, distinguishTypes: string[]) => {
             ' | ',
         )}): value is ${name} => {
         switch (value.type) {
-            ${getUnionNames(ctx.types[name].type as t.TSUnionType, ctx)
+            ${getUnionNames(ctx.types[name].type as t.TSUnionType, ctx.types)
                 .map((name) => `case "${name}":`)
                 .join('\n        ')}
                 return true
