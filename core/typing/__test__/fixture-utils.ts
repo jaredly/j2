@@ -1,3 +1,4 @@
+import generate from '@babel/generator';
 import * as fs from 'fs';
 import {
     addBuiltin,
@@ -11,6 +12,8 @@ import { fileToTast } from '../../elements/base';
 import { TVar } from '../../elements/type-vbls';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
+import { iCtx } from '../../ir/ir';
+import { jCtx } from '../../ir/to-js';
 import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { transformFile, transformType, Visitor } from '../../transform-tast';
@@ -246,6 +249,11 @@ export function runFixture(
                 ]);
                 return;
             }
+            const ictx = iCtx();
+            const ir = ictx.ToIR[top.expr.type](top.expr as any, ictx);
+            const jctx = jCtx();
+            const js = jctx.ToJS.IExpression(ir, jctx);
+            const jsraw = generate(js).code;
             const pp = newPPCtx(false);
             const ast = actx.ToAst[t.type](t as any, actx);
             const cm = printToString(pp.ToPP[ast.type](ast as any, pp), 200);
@@ -254,7 +262,7 @@ export function runFixture(
                     ...top.loc,
                     start: top.loc.end,
                 },
-                '// ' + cm,
+                '// ' + cm, // + ' ' + jsraw + ' */',
             ]);
             // TODO: surface the IDs of things in the UI.
             // eh, and maybe as a suffix on the whole thing?

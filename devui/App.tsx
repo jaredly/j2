@@ -1,4 +1,4 @@
-import { Divider, Link } from '@nextui-org/react';
+import { Divider, Link, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { builtinContext, FullContext } from '../core/ctx';
 import { typeFileToTast } from '../core/elements/base';
@@ -244,6 +244,7 @@ export const App = () => {
                     padding: 16,
                 }}
             >
+                <Text>Fixtures</Text>
                 {Object.keys(files.fixtures)
                     .sort()
                     .map((fixture) => (
@@ -260,6 +261,7 @@ export const App = () => {
                         </Link>
                     ))}
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
+                <Text>Type Tests</Text>
                 {Object.keys(files.typetest)
                     .sort()
                     .map((name) => (

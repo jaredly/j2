@@ -1,4 +1,5 @@
 import { FullContext, tref } from '../ctx';
+import { allRecordItems, TRecordKeyValue } from '../elements/records';
 import { extract, idToString } from '../ids';
 import { transformType } from '../transform-tast';
 import { Expression, Type, TVars, GlobalRef } from '../typed-ast';
@@ -93,6 +94,37 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             return expr;
         case 'DecoratedExpression':
             return getType(expr.expr, ctx);
+        case 'Record': {
+            let alls: { [key: string]: TRecordKeyValue } = {};
+            for (let spread of expr.spreads) {
+                const t = getType(spread, ctx);
+                if (!t || t.type !== 'TRecord') {
+                    return null;
+                }
+                const items = allRecordItems(t, ctx);
+                Object.assign(alls, items);
+            }
+            for (let item of expr.items) {
+                const t = getType(item.value, ctx);
+                if (!t) {
+                    return null;
+                }
+                alls[item.key] = {
+                    type: 'TRecordKeyValue',
+                    value: t,
+                    key: item.key,
+                    loc: item.loc,
+                    default_: null,
+                };
+            }
+            return {
+                type: 'TRecord',
+                loc: expr.loc,
+                spreads: [],
+                items: Object.values(alls),
+                open: false,
+            };
+        }
         case 'Enum': {
             return {
                 type: 'TEnum',

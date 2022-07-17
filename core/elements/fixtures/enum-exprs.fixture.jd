@@ -3,12 +3,15 @@
 --[input]--
 `What(10)
 `Hello(`Folks)
+`Two(1,2,3)
 
 --[output:expected]--
 `What(10)
 // [ `What(10) ]
 `Hello(`Folks)
 // [ `Hello([ `Folks ]) ]
+`Two(1, 2, 3)
+// [ `Two(1, 2, 3) ]
 
 ==[Calling functions]==
 --[input]--

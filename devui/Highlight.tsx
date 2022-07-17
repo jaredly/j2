@@ -1,4 +1,4 @@
-import { Card, Text } from '@nextui-org/react';
+import { Card, Popover, Text, Tooltip } from '@nextui-org/react';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { parseTypeFile, SyntaxError } from '../core/grammar/base.parser';
@@ -46,6 +46,7 @@ export type HL = {
     loc: Loc;
     type: Colorable;
     prefix?: { text: string; message?: string };
+    suffix?: { text: string; message?: string };
     underline?: string;
 };
 
@@ -101,19 +102,21 @@ export const Highlight = ({
     portal,
     onClick,
     typeFile,
+    extraLocs,
 }: {
     text: string;
     info?: { tast: File; ctx: FullContext };
     portal: HTMLDivElement;
     onClick?: () => void;
     typeFile?: boolean;
+    extraLocs?: (v: p.File | p.TypeFile) => HL[];
 }) => {
     if (text.startsWith('alias ')) {
         text = text.slice(text.indexOf('\n') + 1);
     }
 
     const marked = React.useMemo(() => {
-        const locs = highlightLocations(text, typeFile);
+        const locs = highlightLocations(text, typeFile, extraLocs);
         return text.trim().length ? markUpTree(text, locs) : null;
     }, [text]);
 
@@ -236,6 +239,8 @@ export const Tree = ({
     return (
         <span
             className={tree.hl.type}
+            // data-prefix={tree.hl.prefix ? tree.hl.prefix.text : undefined}
+            // data-suffix={tree.hl.suffix ? tree.hl.suffix.text : undefined}
             style={{
                 color: colors[tree.hl.type] ?? '#aaa',
             }}
@@ -262,6 +267,11 @@ export const Tree = ({
                     <Tree tree={child} key={i} hover={hover} />
                 ),
             )}
+            {tree.hl.suffix && tree.hl.suffix.message ? (
+                <Tooltip content={tree.hl.suffix.message}>
+                    <span>{tree.hl.suffix.text}</span>
+                </Tooltip>
+            ) : null}
         </span>
     );
 };

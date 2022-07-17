@@ -28,8 +28,6 @@ type One = [ `A | `B ]
 type Tree = [ Node#[r1] | `Leaf ]
 and Node = [ `Tree(Tree#[r0]) ]
 
-// Ok so the story here is: we need to replace all `#[r]` recursive references with the appropriate global reference
-// when hytrating the type. Right? Seems like that would do the trick...
 @type:shouldMatch(:Tree) [ `Leaf ]
 
 // These should not trigger an infinite loop 😂
@@ -48,7 +46,7 @@ type N = [ `A(int, float) ]
 @type:shouldMatch(:{x: [ `A | `B ]}) {x: [ `A ]}
 
 // Unification!
-@type:shouldMatch(:[ `Failure([ `TooBad | `Timeout | `C ]) ]) [ `Failure([ `TooBad ]) | `Failure(
+@type:shouldMatch(:[ `Failure([ `TooBad | `Timeout | `SomethingElse ]) ]) [ `Failure([ `TooBad ]) | `Failure(
     [ `Timeout ],
 ) ]
 

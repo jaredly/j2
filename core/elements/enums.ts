@@ -57,12 +57,12 @@ export const ToTast = {
                                 type: 'EnumCase',
                                 tag: c.text,
                                 decorators: c.decorators.map((d) =>
-                                    ctx.ToTast[d.type](d as any, ctx),
+                                    ctx.ToTast.Decorator(d, ctx),
                                 ),
                                 payload: c.payload
                                     ? c.payload.items.length === 1
-                                        ? ctx.ToTast[c.payload.items[0].type](
-                                              c.payload.items[0] as any,
+                                        ? ctx.ToTast.Type(
+                                              c.payload.items[0],
                                               ctx,
                                           )
                                         : {
@@ -75,8 +75,8 @@ export const ToTast = {
                                                       type: 'TRecordKeyValue',
                                                       loc: noloc,
                                                       key: i.toString(),
-                                                      value: ctx.ToTast[p.type](
-                                                          p as any,
+                                                      value: ctx.ToTast.Type(
+                                                          p,
                                                           ctx,
                                                       ),
                                                   }),
@@ -86,7 +86,7 @@ export const ToTast = {
                                 loc: c.loc,
                             };
                         } else {
-                            return ctx.ToTast[c.type](c as any, ctx);
+                            return ctx.ToTast.Type(c, ctx);
                         }
                     })
                     .filter(Boolean) as EnumCase[]) ?? [],
@@ -125,7 +125,7 @@ export const ToAst = {
                                 loc: c.loc,
                             };
                         } else {
-                            return ctx.ToAst[c.type](c as any, ctx);
+                            return ctx.ToAst.Type(c, ctx);
                         }
                     })
                     .concat(
@@ -153,16 +153,13 @@ export const ToPP = {
                             return pp.items(
                                 [
                                     ...c.decorators.map((d) =>
-                                        ctx.ToPP[d.type](d as any, ctx),
+                                        ctx.ToPP[d.type](d, ctx),
                                     ),
                                     pp.text(`\`${c.text}`, noloc),
                                     c.payload
                                         ? pp.args(
                                               c.payload.items.map((item) =>
-                                                  ctx.ToPP[item.type](
-                                                      item as any,
-                                                      ctx,
-                                                  ),
+                                                  ctx.ToPP.Type(item, ctx),
                                               ),
                                               c.payload.loc,
                                           )
@@ -172,7 +169,7 @@ export const ToPP = {
                                           //           ctx.ToPP[
                                           //               c.payload.inner.type
                                           //           ](
-                                          //               c.payload.inner as any,
+                                          //               c.payload.inner ,
                                           //               ctx,
                                           //           ),
                                           //           pp.text(')', noloc),
@@ -184,7 +181,7 @@ export const ToPP = {
                                 c.loc,
                             );
                         } else {
-                            return ctx.ToPP[c.type](c as any, ctx);
+                            return ctx.ToPP.Type(c, ctx);
                         }
                     }) || [],
                     ' | ',
@@ -456,8 +453,8 @@ function enumPayload(payload: t.Type, ctx: TACtx, loc: t.Loc): p.TOps[] {
     if (payload.type === 'TRecord') {
         const tuple = recordAsTuple(payload);
         if (tuple) {
-            return tuple.map((t) => ctx.ToAst[t.type](t as any, ctx));
+            return tuple.map((t) => ctx.ToAst.Type(t, ctx));
         }
     }
-    return [ctx.ToAst[payload.type](payload as any, ctx)];
+    return [ctx.ToAst.Type(payload, ctx)];
 }

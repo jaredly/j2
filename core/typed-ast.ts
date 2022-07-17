@@ -1,14 +1,21 @@
-import { Apply } from './elements/apply';
-import { Boolean, Number, TemplateString } from './elements/constants';
+import { Apply, IApply } from './elements/apply';
+import {
+    Boolean,
+    ITemplateString,
+    Number,
+    TemplateString,
+} from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
-import { Enum } from './elements/enum-exprs';
+import { Enum, IEnum } from './elements/enum-exprs';
 import { TypeApplication } from './elements/generics';
 import { Type } from './elements/type';
 import { Id, idToString } from './ids';
+import { IRecord, Record } from './elements/record-exprs';
 export type { Id };
-export type { Apply } from './elements/apply';
+export type { Apply, IApply } from './elements/apply';
 export type {
     Boolean,
+    ITemplateString,
     Number,
     String,
     TemplateString,
@@ -34,7 +41,14 @@ export type {
     Type,
 } from './elements/type';
 export type { EnumCase, TEnum } from './elements/enums';
-export type { Enum } from './elements/enum-exprs';export type { TRecord, TRecordKeyValue } from './elements/records';
+export type { Enum, IEnum } from './elements/enum-exprs';
+export type { TRecord, TRecordKeyValue } from './elements/records';
+export type {
+    IRecord,
+    IRecordKeyValue,
+    Record,
+    RecordKeyValue,
+} from './elements/record-exprs';
 
 export type GlobalRef = {
     type: 'Global';
@@ -70,9 +84,11 @@ export type File = {
     loc: Loc;
 };
 
+export type TypeToplevel = Type | TypeAlias;
+
 export type TypeFile = {
     type: 'TypeFile';
-    toplevels: Array<Type | TypeAlias>;
+    toplevels: Array<TypeToplevel>;
     comments: Array<[Loc, string]>;
     loc: Loc;
 };
@@ -105,11 +121,21 @@ export type Expression =
     | Ref
     | Apply
     | Enum
+    | Record
     | Number
     | Boolean
     | TemplateString
     | TypeApplication
     | DecoratedExpression;
+
+export type IExpression =
+    | Ref
+    | Number
+    | Boolean
+    | IApply
+    | ITemplateString
+    | IEnum
+    | IRecord;
 
 export type Sym = { id: number; name: string };
 

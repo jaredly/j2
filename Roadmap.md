@@ -1,4 +1,83 @@
 
+So, I probably want to be working toward running
+the effects examples
+and/or a nice error coalescing example.
+
+- [ ] little cleanup, remove all of the `as any`s
+
+- [ ] binops
+	- [ ] parse/print/etc?
+- [ ] lambdas
+- [ ] ifs
+- [ ] lets
+- [ ] have js gen use pretty names where possible
+- [ ] probably make some tests that compare the expected js output? Or something? hmmm or maybe just tests that run the one thing and run the other & expect them to be equal.
+
+OH also, what's my plan for equality?
+Now that I don't have nominal types, how would ... traits
+be defined?
+
+x ==#[b] y
+
+builtin eq might fail if the type isn't eqable
+
+
+ohhh also, we can have a type bound that's just `eq`, like
+"this can be eq'd with itself". e.g. doesn't contain a fn
+
+
+
+
+so we say that everything is auto-deep-equalable?
+seems likely
+and fns do by-reference comparison or just always false?
+hmmmmmm oh so Roc just disallows equality on things containing
+functions.
+
+but I do kindof want serde to be controllable ... at least a bit.
+hm oh maybe with annotations on the record? and stuff?
+yeah that sounds like probably it.
+like if you want custom serde, pop those on.
+
+ok anyway, so like
+how do we do like trait bounds?
+
+let hello = <T: $eq>(x: T) => {
+	T$eq(x, x)
+}
+
+let eqeeq = ()
+hello<hello & $eq=eqeeq>
+
+==#[???]
+a == b
+
+hmmm ok so what about just extra arguments
+
+type Eq = <T>{==: (x: T, y: T) => bool}
+
+let hello = <T, M>(x#[0]: T, y#[$1]: M, #[$2]:Eq<T>, #[3]:Eq<M>) => {
+	x ==#[$2] x
+}
+
+Should I have a `num` bound that meets all numeric types?
+
+
+
+
+--
+
+Sooo at some point I'm going to need (mybe in the IR)
+a thing that inserts a `genConversionSomething` from the
+actual type to the expected type, in the case where
+we're in a subtype situation, and the receiver needs
+something different.
+This is where we would realize default values.
+
+
+oh btw `[]` is uncreatable, and so is effectively `never`.
+
+
 ok I actually think I'm ready to try representing
 effects, pre-sugar.
 ok but yeah I should make function literals a thing.
@@ -13,11 +92,37 @@ alsooo tuples are needed to represent the bodies of the fns.
 	- [x] parse, print, validate
 - [x] tuple types
 	- [x] parse, print, validate
-- [ ] enum unify
+- [.] enum unify
 	- [x] very basic, not really enough
 	- [x] decent unification
 	- [ ] lambdas and tvars and whatnot
 - [x] pretty parsing tuples as enum bits
+
+- [x] record expr parse & print
+- [x] record analyze
+- [x] record default values!!
+	- anything special here? I don't think so.
+
+DO I WANT functions to be single-argument?
+What do I gain?
+idk
+what do I lose?
+probably some things.
+
+- [x] tuple expr parse & print
+- [x] enum tuple pretty
+- [ ] enum record pretty?
+
+- [ ] lets get basic IR going before we get too carried away
+
+- [ ] ifs
+- [ ] binops ... lets and suches
+- [ ] lambdas
+
+- [ ] so, a fundamental type that is 'attr'? and it's a fn that gets
+  the attribute of that name? because we're not declaring these things
+	anymore. hm that dashes my hopes of declaring things like `let .ok = ...`
+	but that's probably fine. I could always do `let ->ok =`.
 
 - [ ] tuples & records (attributes etc)
 	- `.hello` is the fn `<T>(x: {hello: T, *}) => T`
@@ -53,7 +158,7 @@ I think I want to get rid of the enum `*` star.
 
 So, obvious things before we can really go anywhere:
 - [ ] lambdas lol
-- [ ] records & tuples
+- [x] records & tuples
 - [ ] let (it would be nice not to have non-expressions)
 	egh but then again, I don't really want to support expr-level
 	let. it needs braces.
@@ -63,6 +168,7 @@ So, obvious things before we can really go anywhere:
 - [ ] if/else
 
 then we get around to `Array<int> where .length = 10u`
+oh wait jk `Array<int, 10>` it's fine
 
 ok also,
 can I design my algebraic effects, so that it solves the

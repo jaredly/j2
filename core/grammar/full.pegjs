@@ -31,8 +31,6 @@ CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 
 // base.ts
 
-
-
 _lineEnd = '\n' / _EOF
 
 _EOF = !.
@@ -44,9 +42,9 @@ Expression = DecoratedExpression
 
 Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $BuiltinHash / $UnresolvedHash)?
 
-Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
+Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum / Record
 
-ParenedExpression = "(" _ expr:Expression _ ")"
+ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 AttrText "attribute" = $([0-9a-z-A-Z_]+)
@@ -99,7 +97,7 @@ DecExpr = expr:Expression
 
 // enum-exprs.ts
 
-Enum = "\`" text:$IdText payload:("(" _ Expression? _ ")")?
+Enum = "\`" text:$IdText payload:("(" _ CommaExpr? _ ")")?
 
 
 // enums.ts
@@ -124,13 +122,22 @@ TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
 TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
 
 
+// record-exprs.ts
+
+Record = "{" _ items:RecordItems? _ "}"
+RecordItems = first:RecordItem rest:(_ "," _ RecordItem)* _ ","?
+RecordItem = RecordSpread / RecordKeyValue
+RecordSpread = "..." _ inner:Expression
+RecordKeyValue = key:$AttrText _ ":" _ value:Expression
+
+
 // records.ts
 
 TRecord = "{" _ items:TRecordItems? _ "}"
 TRecordItems = first:TRecordItem rest:(_ "," _ TRecordItem)* _ ","?
 TRecordItem = TRecordSpread / TRecordKeyValue / Star
 TRecordSpread = "..." _ inner:Type
-TRecordKeyValue = key:$AttrText _ ":" _ value:Type
+TRecordKeyValue = key:$AttrText _ ":" _ value:Type default_:(_ "=" _ Expression)?
 
 
 
@@ -157,7 +164,7 @@ TRight = _ top:$top _ right:TOpInner
 top = "-" / "+"
 TOpInner = TDecorated / TApply
 
-TParens = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
+TParens = "(" _ items:TComma? _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _

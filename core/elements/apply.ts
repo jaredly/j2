@@ -24,12 +24,19 @@ export type Apply = {
     loc: t.Loc;
 };
 
+export type IApply = {
+    type: 'IApply';
+    target: t.IExpression;
+    args: Array<t.IExpression>;
+    loc: t.Loc;
+};
+
 export const ToTast = {
     Apply(apply: p.Apply_inner, ctx: TCtx): t.Expression {
-        let res = ctx.ToTast[apply.target.type](apply.target as any, ctx);
+        let res = ctx.ToTast.Expression(apply.target, ctx);
         while (apply.suffixes.length) {
             const next = apply.suffixes.shift()!;
-            res = ctx.ToTast[next.type](next as any, res, ctx);
+            res = ctx.ToTast.Suffix(next, res, ctx);
         }
         return res;
     },
@@ -39,7 +46,7 @@ export const ToTast = {
             target,
             args:
                 suffix.args?.items.map((arg) =>
-                    ctx.ToTast[arg.type](arg as any, ctx),
+                    ctx.ToTast.Expression(arg, ctx),
                 ) ?? [],
             loc: {
                 ...suffix.loc,
@@ -60,7 +67,15 @@ export const makeApply = (
     if (inner.type === 'DecoratedExpression') {
         return {
             type: 'Apply',
-            target: { type: 'ParenedExpression', expr: inner, loc },
+            target: {
+                type: 'ParenedExpression',
+                items: {
+                    type: 'CommaExpr',
+                    items: [inner],
+                    loc,
+                },
+                loc,
+            },
             suffixes: [suffix],
             loc,
         };
@@ -71,12 +86,12 @@ export const makeApply = (
 export const ToAst = {
     Apply({ target, args, loc }: Apply, ctx: TACtx): p.Apply {
         return makeApply(
-            ctx.ToAst[target.type](target as any, ctx),
+            ctx.ToAst.Expression(target, ctx),
             {
                 type: 'CallSuffix',
                 args: {
                     type: 'CommaExpr',
-                    items: args.map((a) => ctx.ToAst[a.type](a as any, ctx)),
+                    items: args.map((a) => ctx.ToAst.Expression(a, ctx)),
                     loc,
                 },
                 loc,
@@ -90,17 +105,15 @@ export const ToPP = {
     Apply(apply: p.Apply_inner, ctx: PCtx): pp.PP {
         return pp.items(
             [
-                ctx.ToPP[apply.target.type](apply.target as any, ctx),
-                ...apply.suffixes.map((s) => ctx.ToPP[s.type](s as any, ctx)),
+                ctx.ToPP.Expression(apply.target, ctx),
+                ...apply.suffixes.map((s) => ctx.ToPP.Suffix(s, ctx)),
             ],
             apply.loc,
         );
     },
     CallSuffix(parens: p.CallSuffix, ctx: PCtx): pp.PP {
         return pp.args(
-            (parens.args?.items ?? []).map((a) =>
-                ctx.ToPP[a.type](a as any, ctx),
-            ),
+            (parens.args?.items ?? []).map((a) => ctx.ToPP.Expression(a, ctx)),
             parens.loc,
         );
     },

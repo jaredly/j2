@@ -2,6 +2,7 @@ import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
+import { Ctx as ICtx } from '../ir/ir';
 import {
     analyze,
     analyzeTop,
@@ -12,8 +13,6 @@ import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx, Toplevel, TopTypeKind } from '../typing/to-tast';
 
 export const grammar = `
-
-
 _lineEnd = '\n' / _EOF
 
 _EOF = !.
@@ -25,9 +24,9 @@ Expression = DecoratedExpression
 
 Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $BuiltinHash / $UnresolvedHash)?
 
-Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum
+Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum / Record
 
-ParenedExpression = "(" _ expr:Expression _ ")"
+ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 AttrText "attribute" = $([0-9a-z-A-Z_]+)
@@ -77,7 +76,7 @@ export const typeFileToTast = (
             ctx.resetSym();
         }
         ctx = ctx.toplevelConfig(config);
-        let top = ctx.ToTast.TypeToplevel(t as any, ctx);
+        let top = ctx.ToTast.TypeToplevel(t, ctx);
         if (top.type === 'TypeAlias') {
             ctx = ctx.withTypes(top.elements);
         }
@@ -107,7 +106,7 @@ export const fileToTast = (
             ctx.resetSym();
         }
         ctx = ctx.toplevelConfig(config);
-        let top = ctx.ToTast.Toplevel(t as any, ctx);
+        let top = ctx.ToTast.Toplevel(t, ctx);
         if (top.type === 'TypeAlias') {
             ctx = ctx.withTypes(top.elements);
         }
@@ -131,7 +130,7 @@ export const ToTast = {
         } else {
             return {
                 type: 'ToplevelExpression',
-                expr: ctx.ToTast[top.type](top as any, ctx),
+                expr: ctx.ToTast.Expression(top, ctx),
                 loc: top.loc,
             };
         }
@@ -140,14 +139,14 @@ export const ToTast = {
         if (top.type === 'TypeAlias') {
             return ctx.ToTast.TypeAlias(top, ctx);
         } else {
-            return ctx.ToTast[top.type](top as any, ctx);
+            return ctx.ToTast.Type(top, ctx);
         }
     },
     ParenedExpression(expr: p.ParenedExpression, ctx: Ctx): t.Expression {
-        return ctx.ToTast[expr.expr.type](expr.expr as any, ctx);
+        return maybeTuple(expr.items, expr.loc, ctx);
     },
     // Expression(expr: p.Expression, typ: Type | null, ctx: Ctx): Expression {
-    //     return ctx.ToTast[expr.type](expr as any, typ, ctx);
+    //     return ctx.ToTast[expr.type](expr , typ, ctx);
     // },
     Identifier({ hash, loc, text }: p.Identifier, ctx: Ctx): t.Expression {
         // ok so here's where rubber meets road, right?
@@ -173,6 +172,28 @@ export const ToTast = {
 export const filterUnresolved = (v: string | null | undefined) =>
     v == null || v === ':unresolved:' ? null : v;
 
+export const maybeTuple = (
+    items: null | p.CommaExpr,
+    loc: t.Loc,
+    ctx: Ctx,
+): t.Expression => {
+    if (items?.items.length === 1) {
+        return ctx.ToTast.Expression(items.items[0], ctx);
+    }
+    return {
+        type: 'Record',
+        spreads: [],
+        loc,
+        items:
+            items?.items.map((item, i) => ({
+                type: 'RecordKeyValue',
+                key: i.toString(),
+                value: ctx.ToTast.Expression(item, ctx),
+                loc: item.loc,
+            })) ?? [],
+    };
+};
+
 export const ToAst = {
     File({ type, toplevels, loc, comments }: t.File, ctx: TACtx): p.File {
         // TOOD: Go through and find all hashes, right?
@@ -184,7 +205,7 @@ export const ToAst = {
                 if (t.type === 'TypeAlias') {
                     inner = ctx.withToplevel(typeToplevelT(t, ctx.actx));
                 }
-                return inner.ToAst[t.type](t as any, inner);
+                return inner.ToAst.Toplevel(t, inner);
             }),
             loc,
             comments,
@@ -204,7 +225,7 @@ export const ToAst = {
                 if (t.type === 'TypeAlias') {
                     inner = ctx.withToplevel(typeToplevelT(t, ctx.actx));
                 }
-                return inner.ToAst[t.type](t as any, inner);
+                return inner.ToAst.TypeToplevel(t, inner);
             }),
             loc,
             comments,
@@ -215,7 +236,7 @@ export const ToAst = {
         { type, expr, loc }: t.ToplevelExpression,
         ctx: TACtx,
     ): p.Toplevel {
-        return ctx.ToAst[expr.type](expr as any, ctx);
+        return ctx.ToAst.Expression(expr, ctx);
     },
 
     Ref({ type, kind, loc }: t.Ref, ctx: TACtx): p.Identifier {
@@ -235,16 +256,22 @@ export const ToAst = {
 export const ToPP = {
     File: (file: p.File, ctx: PCtx): pp.PP => {
         return pp.items(
-            file.toplevels.map((t) => ctx.ToPP[t.type](t as any, ctx)),
+            file.toplevels.map((t) => ctx.ToPP.Toplevel(t, ctx)),
             file.loc,
             'always',
         );
+    },
+    Toplevel(top: p.Toplevel, ctx: PCtx): pp.PP {
+        if (top.type === 'TypeAlias') {
+            return ctx.ToPP.TypeAlias(top, ctx);
+        }
+        return ctx.ToPP.Expression(top, ctx);
     },
     TypeFile: (file: p.TypeFile, ctx: PCtx): pp.PP => {
         return pp.items(
             file.toplevels.map((t) =>
                 pp.items(
-                    [ctx.ToPP[t.type](t as any, ctx), pp.text('\n', file.loc)],
+                    [ctx.ToPP.TypeToplevel(t, ctx), pp.text('\n', file.loc)],
                     t.loc,
                 ),
             ),
@@ -252,13 +279,9 @@ export const ToPP = {
             'always',
         );
     },
-    ParenedExpression({ loc, expr }: p.ParenedExpression, ctx: PCtx): pp.PP {
-        return pp.items(
-            [
-                pp.atom('(', loc),
-                ctx.ToPP[expr.type](expr as any, ctx),
-                pp.atom(')', loc),
-            ],
+    ParenedExpression({ loc, items }: p.ParenedExpression, ctx: PCtx): pp.PP {
+        return pp.args(
+            items?.items.map((item) => ctx.ToPP.Expression(item, ctx)) ?? [],
             loc,
         );
     },
@@ -285,8 +308,8 @@ function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
         case 'TApply':
             return determineKind(t.inner, ctx);
         case 'TParens':
-            if (t.items.length === 1) {
-                return determineKind(t.items[0], ctx);
+            if (t.items?.items.length === 1) {
+                return determineKind(t.items.items[0], ctx);
             }
             return 'record';
         case 'TEnum':
@@ -346,3 +369,78 @@ function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
             return determineKindT(got?.typ, ctx);
     }
 }
+
+import * as b from '@babel/types';
+import { Ctx as JCtx } from '../ir/to-js';
+export const ToJS = {
+    IApply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
+        return b.callExpression(
+            ctx.ToJS.IExpression(target, ctx),
+            args.map((arg) => ctx.ToJS.IExpression(arg, ctx)),
+        );
+    },
+    IEnum({ tag, payload, loc }: t.IEnum, ctx: JCtx): b.Expression {
+        if (!payload) {
+            return b.stringLiteral(tag);
+        }
+        return b.objectExpression([
+            b.objectProperty(b.identifier('tag'), b.stringLiteral(tag)),
+            b.objectProperty(
+                b.identifier('payload'),
+                ctx.ToJS.IExpression(payload, ctx),
+            ),
+        ]);
+    },
+};
+
+export const ToIR = {
+    Apply({ args, loc, target }: t.Apply, ctx: ICtx): t.IApply {
+        return {
+            type: 'IApply',
+            loc,
+            args: args.map((arg) => ctx.ToIR[arg.type](arg as any, ctx)),
+            target: ctx.ToIR[target.type](target as any, ctx),
+        };
+    },
+    Enum({ loc, tag, payload }: t.Enum, ctx: ICtx): t.IEnum {
+        return {
+            type: 'IEnum',
+            loc,
+            tag,
+            payload: payload
+                ? ctx.ToIR[payload.type](payload as any, ctx)
+                : undefined,
+        };
+    },
+    Record({ loc, spreads, items }: t.Record, ctx: ICtx): t.IRecord {
+        return {
+            type: 'IRecord',
+            loc,
+            spreads: spreads.map((spread) =>
+                ctx.ToIR[spread.type](spread as any, ctx),
+            ),
+            items: items.map((item) => ({
+                ...item,
+                type: 'IRecordKeyValue',
+                value: ctx.ToIR[item.value.type](item.value as any, ctx),
+            })),
+        };
+    },
+    TypeApplication(
+        { loc, target, args }: t.TypeApplication,
+        ctx: ICtx,
+    ): t.IExpression {
+        // ugh this is gonna mess me up, right?
+        // like, ... idk maybe I do need to keep this in IR,
+        // at least to be able to know what types things are?
+        // on the other hand, maybe I can bake types at this point?
+        // like, monomorphizing is going to happen before this.
+        return ctx.ToIR[target.type](target as any, ctx);
+    },
+    DecoratedExpression(
+        { loc, expr }: t.DecoratedExpression,
+        ctx: ICtx,
+    ): t.IExpression {
+        return ctx.ToIR[expr.type](expr as any, ctx);
+    },
+};

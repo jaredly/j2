@@ -52,9 +52,7 @@ export const ToTast = {
         return {
             type: 'TypeApplication',
             target,
-            args: suffix.vbls.items.map((vbl) =>
-                ctx.ToTast[vbl.type](vbl as any, ctx),
-            ),
+            args: suffix.vbls.items.map((vbl) => ctx.ToTast.Type(vbl, ctx)),
             loc: { ...suffix.loc, start: target.loc.start },
         };
     },
@@ -66,14 +64,12 @@ export const ToAst = {
         ctx: TACtx,
     ): p.Apply_inner {
         return makeApply(
-            ctx.ToAst[target.type](target as any, ctx),
+            ctx.ToAst.Expression(target, ctx),
             {
                 type: 'TypeApplicationSuffix',
                 vbls: {
                     type: 'TypeAppVbls',
-                    items: args.map((arg) =>
-                        ctx.ToAst[arg.type](arg as any, ctx),
-                    ),
+                    items: args.map((arg) => ctx.ToAst.Type(arg, ctx)),
                     loc: noloc,
                 },
                 loc,
@@ -86,9 +82,7 @@ export const ToAst = {
 export const ToPP = {
     TypeApplicationSuffix(suffix: p.TypeApplicationSuffix, ctx: PCtx): pp.PP {
         return pp.args(
-            suffix.vbls.items.map((item) =>
-                ctx.ToPP[item.type](item as any, ctx),
-            ),
+            suffix.vbls.items.map((item) => ctx.ToPP.Type(item, ctx)),
             suffix.loc,
             '<',
             '>',

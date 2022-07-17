@@ -17,7 +17,7 @@ TRecord = "{" _ items:TRecordItems? _ "}"
 TRecordItems = first:TRecordItem rest:(_ "," _ TRecordItem)* _ ","?
 TRecordItem = TRecordSpread / TRecordKeyValue / Star
 TRecordSpread = "..." _ inner:Type
-TRecordKeyValue = key:$AttrText _ ":" _ value:Type
+TRecordKeyValue = key:$AttrText _ ":" _ value:Type default_:(_ "=" _ Expression)?
 
 `;
 
@@ -33,6 +33,7 @@ export type TRecordKeyValue = {
     type: 'TRecordKeyValue';
     key: string;
     value: t.Type;
+    default_: t.Expression | null;
     loc: t.Loc;
 };
 
@@ -43,14 +44,15 @@ export const ToTast = {
         let open = false;
         ast.items?.items.forEach((item) => {
             if (item.type === 'TRecordSpread') {
-                spreads.push(
-                    ctx.ToTast[item.inner.type](item.inner as any, ctx),
-                );
+                spreads.push(ctx.ToTast.Type(item.inner, ctx));
             } else if (item.type === 'TRecordKeyValue') {
                 items.push({
                     type: 'TRecordKeyValue',
                     key: item.key,
-                    value: ctx.ToTast[item.value.type](item.value as any, ctx),
+                    value: ctx.ToTast.Type(item.value, ctx),
+                    default_: item.default_
+                        ? ctx.ToTast.Expression(item.default_, ctx)
+                        : null,
                     loc: item.loc,
                 });
             } else {
@@ -92,6 +94,31 @@ export const recordAsTuple = (t: TRecord) => {
     return null;
 };
 
+export const irecordAsTuple = (t: t.IRecord) => {
+    if (t.spreads.length == 0) {
+        let nums = [];
+        for (let item of t.items) {
+            const i = parseInt(item.key);
+            if (i.toString() === item.key && !isNaN(i)) {
+                nums[i] = item.value;
+            }
+        }
+
+        let good = true;
+        for (let i = 0; i < t.items.length; i++) {
+            if (!nums[i]) {
+                good = false;
+                break;
+            }
+        }
+
+        if (good) {
+            return nums;
+        }
+    }
+    return null;
+};
+
 export const ToAst = {
     TRecord: (t: TRecord, ctx: TACtx): p.Type => {
         const tup = recordAsTuple(t);
@@ -99,7 +126,11 @@ export const ToAst = {
             return {
                 type: 'TParens',
                 loc: t.loc,
-                items: tup.map((v) => ctx.ToAst[v.type](v as any, ctx)),
+                items: {
+                    type: 'TComma',
+                    items: tup.map((v) => ctx.ToAst.Type(v, ctx)),
+                    loc: t.loc,
+                },
             };
         }
         return {
@@ -113,7 +144,7 @@ export const ToAst = {
                         (spread): p.TRecordItem => ({
                             type: 'TRecordSpread',
                             loc: spread.loc,
-                            inner: ctx.ToAst[spread.type](spread as any, ctx),
+                            inner: ctx.ToAst.Type(spread, ctx),
                         }),
                     ),
                     ...t.items.map(
@@ -121,10 +152,10 @@ export const ToAst = {
                             type: 'TRecordKeyValue',
                             loc: item.loc,
                             key: item.key,
-                            value: ctx.ToAst[item.value.type](
-                                item.value as any,
-                                ctx,
-                            ),
+                            default_: item.default_
+                                ? ctx.ToAst.Expression(item.default_, ctx)
+                                : null,
+                            value: ctx.ToAst.Type(item.value, ctx),
                         }),
                     ),
                     ...(t.open
@@ -148,10 +179,19 @@ export const ToPP = {
                             [
                                 pp.text(item.key, item.loc),
                                 pp.text(': ', item.loc),
-                                ctx.ToPP[item.value.type](
-                                    item.value as any,
-                                    ctx,
-                                ),
+                                ctx.ToPP.Type(item.value, ctx),
+                                item.default_
+                                    ? pp.items(
+                                          [
+                                              pp.text(' = ', item.loc),
+                                              ctx.ToPP.Expression(
+                                                  item.default_,
+                                                  ctx,
+                                              ),
+                                          ],
+                                          item.loc,
+                                      )
+                                    : null,
                             ],
                             item.loc,
                         );
@@ -159,10 +199,7 @@ export const ToPP = {
                         return pp.items(
                             [
                                 pp.text('...', item.loc),
-                                ctx.ToPP[item.inner.type](
-                                    item.inner as any,
-                                    ctx,
-                                ),
+                                ctx.ToPP.Type(item.inner, ctx),
                             ],
                             item.loc,
                         );
@@ -222,21 +259,16 @@ export const unifyRecords = (
         if (!eitems[key]) {
             return false;
         }
-        const un = unifyTypes(citems[key], eitems[key], ctx);
+        const un = unifyTypes(citems[key].value, eitems[key].value, ctx);
         if (un === false) {
             return false;
         }
-        citems[key] = un;
+        citems[key] = { ...citems[key], value: un };
     }
     return {
         ...candidate,
         spreads: [],
-        items: Object.keys(citems).map((k) => ({
-            type: 'TRecordKeyValue',
-            key: k,
-            value: citems[k],
-            loc: noloc,
-        })),
+        items: Object.keys(citems).map((k) => citems[k]),
     };
 };
 
@@ -256,13 +288,18 @@ export const recordMatches = (
     if (!citems || !eitems) {
         return false;
     }
-    const cnum = Object.keys(citems).length;
-    const eenum = Object.keys(eitems).length;
-    if (cnum < eenum) {
-        return false;
-    }
-    if (cnum > eenum && !expected.open) {
-        return false;
+    // const cnum = Object.keys(citems).length;
+    // const eenum = Object.keys(eitems).length;
+    // if (cnum < eenum) {
+    //     return false;
+    // }
+    // if (cnum > eenum && !expected.open) {
+    //     return false;
+    // }
+    for (const key of Object.keys(eitems)) {
+        if (!citems[key] && !eitems[key].default_) {
+            return false;
+        }
     }
     for (const key of Object.keys(citems)) {
         if (!eitems[key]) {
@@ -271,19 +308,19 @@ export const recordMatches = (
             }
             return false;
         }
-        if (!typeMatches(citems[key], eitems[key], ctx)) {
+        if (!typeMatches(citems[key].value, eitems[key].value, ctx)) {
             return false;
         }
     }
     return true;
 };
 
-const allRecordItems = (
+export const allRecordItems = (
     record: TRecord,
     ctx: TMCtx,
     path: string[] = [],
-): null | { [key: string]: t.Type } => {
-    const items: { [key: string]: t.Type } = {};
+): null | { [key: string]: t.TRecordKeyValue } => {
+    const items: { [key: string]: t.TRecordKeyValue } = {};
     for (const spread of record.spreads) {
         const resolved = ctx.resolveRefsAndApplies(spread);
         if (!resolved || resolved.type !== 'TRecord') {
@@ -308,7 +345,34 @@ const allRecordItems = (
         }
     }
     for (const item of record.items) {
-        items[item.key] = item.value;
+        items[item.key] = item;
     }
     return items;
+};
+
+import * as b from '@babel/types';
+import { Ctx as JCtx } from '../ir/to-js';
+export const ToJS = {
+    IRecord({ items, spreads, loc }: t.IRecord, ctx: JCtx): b.Expression {
+        const nums = irecordAsTuple({ items, spreads, loc, type: 'IRecord' });
+        if (nums) {
+            return b.arrayExpression(
+                nums.map((num) => ctx.ToJS.IExpression(num, ctx)),
+            );
+        }
+        return b.objectExpression(
+            spreads
+                .map((spread): b.ObjectProperty | b.SpreadElement =>
+                    b.spreadElement(ctx.ToJS.IExpression(spread, ctx)),
+                )
+                .concat(
+                    items.map((item): b.ObjectProperty | b.SpreadElement => {
+                        return b.objectProperty(
+                            b.identifier(item.key),
+                            ctx.ToJS.IExpression(item.value, ctx),
+                        );
+                    }),
+                ),
+        );
+    },
 };

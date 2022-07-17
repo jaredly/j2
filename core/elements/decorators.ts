@@ -64,7 +64,7 @@ export const ToTast = {
         const decorators = expr.decorators.map((d) =>
             ctx.ToTast.Decorator(d, ctx),
         );
-        let inner = ctx.ToTast[expr.inner.type](expr.inner as any, ctx);
+        let inner = ctx.ToTast.Expression(expr.inner, ctx);
         // Collapse nested decorated expressions
         if (inner.type === 'DecoratedExpression') {
             decorators.push(...inner.decorators);
@@ -104,27 +104,25 @@ export const ToTast = {
         { arg, label, loc }: p.LabeledDecoratorArg,
         ctx: Ctx,
     ): { loc: p.Loc; label: string | null; arg: t.DecoratorArg } {
-        if (arg.type === 'DecExpr') {
-            return {
-                label,
-                loc,
-                arg: {
-                    type: 'DExpr',
-                    expr: ctx.ToTast[arg.expr.type](arg.expr as any, ctx),
-                    loc: arg.loc,
-                },
-            };
-        } else {
-            return {
-                label,
-                loc,
-                arg: {
-                    type: 'DType',
-                    typ: ctx.ToTast[arg.type_.type](arg.type_ as any, ctx),
-                    loc: arg.loc,
-                },
-            };
-        }
+        return {
+            label,
+            loc,
+            arg: ctx.ToTast.DecoratorArg(arg, ctx),
+        };
+    },
+    DecExpr({ expr, loc }: p.DecExpr, ctx: Ctx): t.DExpr {
+        return {
+            type: 'DExpr',
+            expr: ctx.ToTast.Expression(expr, ctx),
+            loc: loc,
+        };
+    },
+    DecType({ type_, loc }: p.DecType, ctx: Ctx): t.DType {
+        return {
+            type: 'DType',
+            typ: ctx.ToTast.Type(type_, ctx),
+            loc: loc,
+        };
     },
 };
 
@@ -133,7 +131,7 @@ export const ToAst = {
         { type, decorators, expr, loc }: t.DecoratedExpression,
         ctx: ACtx,
     ): p.DecoratedExpression_inner {
-        const inner = ctx.ToAst[expr.type](expr as any, ctx);
+        const inner = ctx.ToAst.Expression(expr, ctx);
         if (inner.type === 'DecoratedExpression') {
             return {
                 ...inner,
@@ -171,25 +169,7 @@ export const ToAst = {
                         return {
                             type: 'LabeledDecoratorArg',
                             label,
-                            arg:
-                                arg.type === 'DExpr'
-                                    ? {
-                                          type: 'DecExpr',
-                                          expr: ctx.ToAst[arg.expr.type](
-                                              arg.expr as any,
-                                              ctx,
-                                          ),
-                                          loc: arg.loc,
-                                      }
-                                    : {
-                                          type: 'DecType',
-                                          // @ts-ignore
-                                          type_: ctx.ToAst[arg.typ.type](
-                                              arg.typ as any,
-                                              ctx,
-                                          ),
-                                          loc: arg.loc,
-                                      },
+                            arg: ctx.ToAst.DecoratorArg(arg, ctx),
                             loc,
                         };
                     },
@@ -199,6 +179,21 @@ export const ToAst = {
             loc,
         };
     },
+    DExpr({ type, expr, loc }: t.DExpr, ctx: ACtx): p.DecExpr {
+        return {
+            type: 'DecExpr',
+            expr: ctx.ToAst.Expression(expr, ctx),
+            loc: loc,
+        };
+    },
+    DType({ type, typ, loc }: t.DType, ctx: ACtx): p.DecType {
+        return {
+            type: 'DecType',
+            // @ts-ignore
+            type_: ctx.ToAst.Type(typ, ctx),
+            loc: loc,
+        };
+    },
 };
 
 export const ToPP = {
@@ -206,13 +201,11 @@ export const ToPP = {
         { inner, decorators, loc }: p.DecoratedExpression_inner,
         ctx: PCtx,
     ): pp.PP {
-        const inn = ctx.ToPP[inner.type](inner as any, ctx);
+        const inn = ctx.ToPP.Expression(inner, ctx);
         return pp.items(
             [
                 pp.items(
-                    decorators.map((dec) =>
-                        ctx.ToPP[dec.type](dec as any, ctx),
-                    ),
+                    decorators.map((dec) => ctx.ToPP[dec.type](dec, ctx)),
                     loc,
                 ),
                 inn,
@@ -234,7 +227,7 @@ export const ToPP = {
                                       pp.atom(': ', a.loc),
                                   ]
                                 : []
-                            ).concat([ctx.ToPP[a.arg.type](a.arg as any, ctx)]),
+                            ).concat([ctx.ToPP.DecoratorArg(a.arg, ctx)]),
                             a.loc,
                         );
                     }) ?? [],
@@ -246,12 +239,9 @@ export const ToPP = {
         );
     },
     DecExpr({ expr, loc }: p.DecExpr, ctx: PCtx): pp.PP {
-        return pp.items([ctx.ToPP[expr.type](expr as any, ctx)], loc);
+        return pp.items([ctx.ToPP.Expression(expr, ctx)], loc);
     },
     DecType({ type, type_, loc }: p.DecType, ctx: PCtx): pp.PP {
-        return pp.items(
-            [pp.atom(':', loc), ctx.ToPP[type_.type](type_ as any, ctx)],
-            loc,
-        );
+        return pp.items([pp.atom(':', loc), ctx.ToPP.Type(type_, ctx)], loc);
     },
 };

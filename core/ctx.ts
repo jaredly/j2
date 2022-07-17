@@ -360,6 +360,10 @@ export const newContext = (): FullContext => {
         },
         getValueType(id) {
             const { hash, idx } = extract(id);
+            if (!this[opaque].values.hashed[hash]) {
+                return null;
+            }
+
             return this[opaque].values.hashed[hash][idx].typ;
         },
         typeForId(id) {
@@ -596,6 +600,7 @@ uint
 float
 bool
 string
+eq
 `
     .trim()
     .split('\n');
@@ -659,51 +664,6 @@ export const setupDefaults = (ctx: FullContext) => {
             tref(named.float),
         ),
     );
-
-    addBuiltin(
-        ctx,
-        'literalTypes',
-        tlam(
-            [
-                {
-                    label: 'a',
-                    typ: { type: 'Number', kind: 'Int', loc: noloc, value: 20 },
-                    loc: noloc,
-                },
-                {
-                    label: 'a',
-                    typ: { type: 'String', loc: noloc, text: 'yep' },
-                    loc: noloc,
-                },
-            ],
-            tref(named.float),
-        ),
-    );
-
-    // addBuiltin(
-    //     ctx,
-    //     'addg',
-    //     tvars(
-    //         [
-    //             { id: 0, name: 'A' },
-    //             { id: 1, name: 'B' },
-    //         ],
-    //         tlam(
-    //             [
-    //                 { label: 'a', typ: tref({ type: 'Local', sym: 0 }) },
-    //                 { label: 'b', typ: tref({ type: 'Local', sym: 1 }) },
-    //             ],
-    //             {
-    //                 type: 'TAdd',
-    //                 loc: noloc,
-    //                 elements: [
-    //                     tref({ type: 'Local', sym: 0 }),
-    //                     tref({ type: 'Local', sym: 1 }),
-    //                 ],
-    //             },
-    //         ),
-    //     ),
-    // );
 };
 
 export const fullContext = () => {

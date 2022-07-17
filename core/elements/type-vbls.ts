@@ -45,7 +45,7 @@ export type TVars = {
 
 export const ToTast = {
     TApply(type: p.TApply_inner, ctx: TCtx): t.Type {
-        let inner = ctx.ToTast[type.inner.type](type.inner as any, ctx);
+        let inner = ctx.ToTast.Type(type.inner, ctx);
         if (!type.args.length) {
             return inner;
         }
@@ -56,10 +56,7 @@ export const ToTast = {
                 type: 'TApply',
                 target: inner,
                 loc: type.loc,
-                args:
-                    next.items.map((arg) =>
-                        ctx.ToTast[arg.type](arg as any, ctx),
-                    ) ?? [],
+                args: next.items.map((arg) => ctx.ToTast.Type(arg, ctx)) ?? [],
             };
         }
         return inner;
@@ -70,24 +67,20 @@ export const ToTast = {
             : ctx.sym(label);
         return {
             sym,
-            bound: bound ? ctx.ToTast[bound.type](bound as any, ctx) : null,
-            default_: default_
-                ? ctx.ToTast[default_.type](default_ as any, ctx)
-                : null,
+            bound: bound ? ctx.ToTast.Type(bound, ctx) : null,
+            default_: default_ ? ctx.ToTast.Type(default_, ctx) : null,
             loc,
         };
     },
     TVars({ args, inner, loc }: p.TVars, ctx: TCtx): t.TVars {
         // TODO later args can refer to previous ones in their `bound`
         // e.g <T, A: T>xyz
-        const targs = args.items.map((arg) =>
-            ctx.ToTast[arg.type](arg as any, ctx),
-        );
+        const targs = args.items.map((arg) => ctx.ToTast[arg.type](arg, ctx));
         let innerCtx = ctx.withLocalTypes(targs);
         return {
             type: 'TVars',
             args: targs,
-            inner: innerCtx.ToTast[inner.type](inner as any, innerCtx),
+            inner: innerCtx.ToTast.Type(inner, innerCtx),
             loc,
         };
     },
@@ -95,11 +88,11 @@ export const ToTast = {
 
 export const ToAst = {
     TApply({ target, args, loc }: TApply, ctx: TACtx): p.TApply_inner {
-        const inner: p.Type = ctx.ToAst[target.type](target as any, ctx);
+        const inner: p.Type = ctx.ToAst.Type(target, ctx);
         const targs: p.TComma = {
             type: 'TComma',
             loc,
-            items: args.map((arg) => ctx.ToAst[arg.type](arg as any, ctx)),
+            items: args.map((arg) => ctx.ToAst.Type(arg, ctx)),
         };
         if (inner.type === 'TApply') {
             return { ...inner, args: inner.args.concat([targs]) };
@@ -108,7 +101,11 @@ export const ToAst = {
             inner.type === 'TDecorated' ||
             inner.type === 'TOps' ||
             inner.type === 'TVars'
-                ? { type: 'TParens', items: [inner], loc }
+                ? {
+                      type: 'TParens',
+                      items: { type: 'TComma', items: [inner], loc },
+                      loc,
+                  }
                 : inner;
         return {
             type: 'TApply',
@@ -132,16 +129,14 @@ export const ToAst = {
                         // label: sym.name,
                         // hash: `#[${sym.id}]`,
                         default_: default_
-                            ? ctx.ToAst[default_.type](default_ as any, ctx)
+                            ? ctx.ToAst.Type(default_, ctx)
                             : null,
-                        bound: bound
-                            ? ctx.ToAst[bound.type](bound as any, ctx)
-                            : null,
+                        bound: bound ? ctx.ToAst.Type(bound, ctx) : null,
                         loc,
                     }),
                 ),
             },
-            inner: ctx.ToAst[type.inner.type](type.inner as any, ctx),
+            inner: ctx.ToAst.Type(type.inner, ctx),
             loc: type.loc,
         };
     },
@@ -161,10 +156,7 @@ export const ToPP = {
                                     ? pp.items(
                                           [
                                               pp.atom(': ', loc),
-                                              ctx.ToPP[bound.type](
-                                                  bound as any,
-                                                  ctx,
-                                              ),
+                                              ctx.ToPP.Type(bound, ctx),
                                           ],
                                           loc,
                                       )
@@ -173,10 +165,7 @@ export const ToPP = {
                                     ? pp.items(
                                           [
                                               pp.atom(' = ', loc),
-                                              ctx.ToPP[default_.type](
-                                                  default_ as any,
-                                                  ctx,
-                                              ),
+                                              ctx.ToPP.Type(default_, ctx),
                                           ],
                                           loc,
                                       )
@@ -189,20 +178,20 @@ export const ToPP = {
                     '<',
                     '>',
                 ),
-                ctx.ToPP[inner.type](inner as any, ctx),
+                ctx.ToPP.Type(inner, ctx),
             ],
             loc,
         );
     },
     TApply({ args, inner, loc }: p.TApply_inner, ctx: PCtx): pp.PP {
-        const pinner = ctx.ToPP[inner.type](inner as any, ctx);
+        const pinner = ctx.ToPP.Type(inner, ctx);
         return pp.items(
             [
                 // inner.type === 'TVars'
                 pinner,
                 ...args.map(({ items, loc }) =>
                     pp.args(
-                        items.map((arg) => ctx.ToPP[arg.type](arg as any, ctx)),
+                        items.map((arg) => ctx.ToPP.Type(arg, ctx)),
                         loc,
                         '<',
                         '>',

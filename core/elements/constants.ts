@@ -2,6 +2,7 @@ import { Ctx } from '..';
 import { noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
 import { Ctx as PCtx } from '../printer/to-pp';
+import { Ctx as ICtx } from '../ir/ir';
 import * as pp from '../printer/pp';
 import * as t from '../typed-ast';
 import { Expression, Loc } from '../typed-ast';
@@ -37,6 +38,13 @@ export type TemplateString = {
     type: 'TemplateString';
     first: string;
     rest: Array<{ expr: Expression; suffix: string; loc: Loc }>;
+    loc: Loc;
+};
+
+export type ITemplateString = {
+    type: 'ITemplateString';
+    first: string;
+    rest: Array<{ expr: t.IExpression; suffix: string; loc: Loc }>;
     loc: Loc;
 };
 
@@ -77,7 +85,7 @@ export const ToTast = {
             loc: ts.loc,
             first: ts.first,
             rest: ts.rest.map(({ wrap: { expr }, suffix, loc }) => ({
-                expr: ctx.ToTast[expr.type](expr as any, ctx),
+                expr: ctx.ToTast.Expression(expr, ctx),
                 suffix,
                 loc,
             })),
@@ -119,7 +127,7 @@ export const ToAst = {
             rest: rest.map(({ expr, suffix, loc }) => ({
                 type: 'TemplatePair',
                 wrap: {
-                    expr: ctx.ToAst[expr.type](expr as any, ctx),
+                    expr: ctx.ToAst.Expression(expr, ctx),
                     loc,
                     type: 'TemplateWrap',
                 },
@@ -154,7 +162,7 @@ export const ToPP = {
         }
         let items: pp.PP[] = [pp.atom(`"${ts.first}\${`, noloc)];
         ts.rest.forEach(({ wrap: { expr }, suffix, loc }, i) => {
-            items.push(ctx.ToPP[expr.type](expr as any, ctx));
+            items.push(ctx.ToPP.Expression(expr, ctx));
             items.push(
                 pp.atom(
                     '}' + suffix + (i === ts.rest.length - 1 ? '"' : '${'),
@@ -169,5 +177,44 @@ export const ToPP = {
     },
     Number(int: p.Number, ctx: PCtx): pp.PP {
         return pp.atom(int.contents, int.loc);
+    },
+};
+
+export const ToIR = {
+    Number: (x: t.Number, ctx: ICtx) => x,
+    Boolean: (x: t.Boolean, ctx: ICtx) => x,
+    Ref: (x: t.Ref, ctx: ICtx) => x,
+    TemplateString(x: t.TemplateString, ctx: ICtx): t.ITemplateString {
+        return {
+            type: 'ITemplateString',
+            loc: x.loc,
+            first: x.first,
+            rest: x.rest.map((part) => ({
+                ...part,
+                expr: ctx.ToIR[part.expr.type](part.expr as any, ctx),
+            })),
+        };
+    },
+};
+
+import * as b from '@babel/types';
+import { Ctx as JCtx } from '../ir/to-js';
+export const ToJS = {
+    Number(x: t.Number, ctx: JCtx): b.NumericLiteral {
+        return b.numericLiteral(x.value);
+    },
+    Boolean(x: t.Boolean, ctx: JCtx): b.BooleanLiteral {
+        return b.booleanLiteral(x.value);
+    },
+    Ref(x: t.Ref, ctx: JCtx): b.Identifier {
+        return b.identifier(t.refHash(x.kind));
+    },
+    ITemplateString(x: t.ITemplateString, ctx: JCtx): b.TemplateLiteral {
+        return b.templateLiteral(
+            [x.first]
+                .concat(x.rest.map((r) => r.suffix))
+                .map((t) => b.templateElement({ raw: t })),
+            x.rest.map((r) => ctx.ToJS.IExpression(r.expr, ctx)),
+        );
     },
 };
