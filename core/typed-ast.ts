@@ -84,9 +84,11 @@ export type File = {
     loc: Loc;
 };
 
+export type TypeToplevel = Type | TypeAlias;
+
 export type TypeFile = {
     type: 'TypeFile';
-    toplevels: Array<Type | TypeAlias>;
+    toplevels: Array<TypeToplevel>;
     comments: Array<[Loc, string]>;
     loc: Loc;
 };

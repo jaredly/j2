@@ -25,6 +25,50 @@ export const ToTast = {
         }
     },
 
+    TypeToplevel(node: p.TypeToplevel, ctx: TCtx): t.TypeToplevel {
+        switch (node.type) {
+            case 'TypeAlias':
+                return ctx.ToTast.TypeAlias(node, ctx);
+
+            case 'TOps':
+                return ctx.ToTast.TOps(node, ctx);
+
+            case 'TDecorated':
+                return ctx.ToTast.TDecorated(node, ctx);
+
+            case 'TApply':
+                return ctx.ToTast.TApply(node, ctx);
+
+            case 'TRef':
+                return ctx.ToTast.TRef(node, ctx);
+
+            case 'Number':
+                return ctx.ToTast.Number(node, ctx);
+
+            case 'String':
+                return ctx.ToTast.String(node, ctx);
+
+            case 'TLambda':
+                return ctx.ToTast.TLambda(node, ctx);
+
+            case 'TVars':
+                return ctx.ToTast.TVars(node, ctx);
+
+            case 'TParens':
+                return ctx.ToTast.TParens(node, ctx);
+
+            case 'TEnum':
+                return ctx.ToTast.TEnum(node, ctx);
+
+            case 'TRecord':
+                return ctx.ToTast.TRecord(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
     Expression(node: p.Expression, ctx: TCtx): t.Expression {
         switch (node.type) {
             case 'DecoratedExpression':
@@ -117,6 +161,47 @@ export const ToTast = {
 };
 
 export const ToAst = {
+    TypeToplevel(node: t.TypeToplevel, ctx: TACtx): p.TypeToplevel {
+        switch (node.type) {
+            case 'TRef':
+                return ctx.ToAst.TRef(node, ctx);
+
+            case 'TLambda':
+                return ctx.ToAst.TLambda(node, ctx);
+
+            case 'TEnum':
+                return ctx.ToAst.TEnum(node, ctx);
+
+            case 'Number':
+                return ctx.ToAst.Number(node, ctx);
+
+            case 'String':
+                return ctx.ToAst.String(node, ctx);
+
+            case 'TVars':
+                return ctx.ToAst.TVars(node, ctx);
+
+            case 'TDecorated':
+                return ctx.ToAst.TDecorated(node, ctx);
+
+            case 'TApply':
+                return ctx.ToAst.TApply(node, ctx);
+
+            case 'TRecord':
+                return ctx.ToAst.TRecord(node, ctx);
+
+            case 'TOps':
+                return ctx.ToAst.TOps(node, ctx);
+
+            case 'TypeAlias':
+                return ctx.ToAst.TypeAlias(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
     Toplevel(node: t.Toplevel, ctx: TACtx): p.Toplevel {
         switch (node.type) {
             case 'ToplevelExpression':
@@ -227,6 +312,50 @@ export const ToPP = {
 
             case 'TypeApplicationSuffix':
                 return ctx.ToPP.TypeApplicationSuffix(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    TypeToplevel(node: p.TypeToplevel, ctx: PCtx): pp.PP {
+        switch (node.type) {
+            case 'TypeAlias':
+                return ctx.ToPP.TypeAlias(node, ctx);
+
+            case 'TOps':
+                return ctx.ToPP.TOps(node, ctx);
+
+            case 'TDecorated':
+                return ctx.ToPP.TDecorated(node, ctx);
+
+            case 'TApply':
+                return ctx.ToPP.TApply(node, ctx);
+
+            case 'TRef':
+                return ctx.ToPP.TRef(node, ctx);
+
+            case 'Number':
+                return ctx.ToPP.Number(node, ctx);
+
+            case 'String':
+                return ctx.ToPP.String(node, ctx);
+
+            case 'TLambda':
+                return ctx.ToPP.TLambda(node, ctx);
+
+            case 'TVars':
+                return ctx.ToPP.TVars(node, ctx);
+
+            case 'TParens':
+                return ctx.ToPP.TParens(node, ctx);
+
+            case 'TEnum':
+                return ctx.ToPP.TEnum(node, ctx);
+
+            case 'TRecord':
+                return ctx.ToPP.TRecord(node, ctx);
 
             default:
                 let _: never = node;

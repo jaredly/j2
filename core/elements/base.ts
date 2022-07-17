@@ -139,7 +139,7 @@ export const ToTast = {
         if (top.type === 'TypeAlias') {
             return ctx.ToTast.TypeAlias(top, ctx);
         } else {
-            return ctx.ToTast[top.type](top as any, ctx);
+            return ctx.ToTast.Type(top, ctx);
         }
     },
     ParenedExpression(expr: p.ParenedExpression, ctx: Ctx): t.Expression {
@@ -205,7 +205,7 @@ export const ToAst = {
                 if (t.type === 'TypeAlias') {
                     inner = ctx.withToplevel(typeToplevelT(t, ctx.actx));
                 }
-                return inner.ToAst[t.type](t as any, inner);
+                return inner.ToAst.Toplevel(t, inner);
             }),
             loc,
             comments,
@@ -225,7 +225,7 @@ export const ToAst = {
                 if (t.type === 'TypeAlias') {
                     inner = ctx.withToplevel(typeToplevelT(t, ctx.actx));
                 }
-                return inner.ToAst[t.type](t as any, inner);
+                return inner.ToAst.TypeToplevel(t, inner);
             }),
             loc,
             comments,
@@ -256,16 +256,22 @@ export const ToAst = {
 export const ToPP = {
     File: (file: p.File, ctx: PCtx): pp.PP => {
         return pp.items(
-            file.toplevels.map((t) => ctx.ToPP[t.type](t as any, ctx)),
+            file.toplevels.map((t) => ctx.ToPP.Toplevel(t, ctx)),
             file.loc,
             'always',
         );
+    },
+    Toplevel(top: p.Toplevel, ctx: PCtx): pp.PP {
+        if (top.type === 'TypeAlias') {
+            return ctx.ToPP.TypeAlias(top, ctx);
+        }
+        return ctx.ToPP.Expression(top, ctx);
     },
     TypeFile: (file: p.TypeFile, ctx: PCtx): pp.PP => {
         return pp.items(
             file.toplevels.map((t) =>
                 pp.items(
-                    [ctx.ToPP[t.type](t as any, ctx), pp.text('\n', file.loc)],
+                    [ctx.ToPP.TypeToplevel(t, ctx), pp.text('\n', file.loc)],
                     t.loc,
                 ),
             ),

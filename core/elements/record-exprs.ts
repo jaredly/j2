@@ -50,14 +50,12 @@ export const ToTast = {
         const items: Record['items'] = [];
         ast.items?.items.forEach((item) => {
             if (item.type === 'RecordSpread') {
-                spreads.push(
-                    ctx.ToTast[item.inner.type](item.inner as any, ctx),
-                );
+                spreads.push(ctx.ToTast.Expression(item.inner, ctx));
             } else if (item.type === 'RecordKeyValue') {
                 items.push({
                     type: 'RecordKeyValue',
                     key: item.key,
-                    value: ctx.ToTast[item.value.type](item.value as any, ctx),
+                    value: ctx.ToTast.Expression(item.value, ctx),
                     loc: item.loc,
                 });
             }
@@ -104,9 +102,7 @@ export const ToAst = {
                 type: 'ParenedExpression',
                 items: {
                     type: 'CommaExpr',
-                    items: nums.map((item) =>
-                        ctx.ToAst[item.type](item as any, ctx),
-                    ),
+                    items: nums.map((item) => ctx.ToAst.Expression(item, ctx)),
                     loc: record.loc,
                 },
                 loc: record.loc,
@@ -121,7 +117,7 @@ export const ToAst = {
                     ...record.spreads.map(
                         (spread): p.RecordItem => ({
                             type: 'RecordSpread',
-                            inner: ctx.ToAst[spread.type](spread as any, ctx),
+                            inner: ctx.ToAst.Expression(spread, ctx),
                             loc: spread.loc,
                         }),
                     ),
@@ -130,10 +126,7 @@ export const ToAst = {
                             type: 'RecordKeyValue',
                             key: item.key,
                             loc: item.loc,
-                            value: ctx.ToAst[item.value.type](
-                                item.value as any,
-                                ctx,
-                            ),
+                            value: ctx.ToAst.Expression(item.value, ctx),
                         }),
                     ),
                 ],
@@ -155,10 +148,7 @@ export const ToPP = {
                             [
                                 pp.text(item.key, item.loc),
                                 pp.text(': ', item.loc),
-                                ctx.ToPP[item.value.type](
-                                    item.value as any,
-                                    ctx,
-                                ),
+                                ctx.ToPP.Expression(item.value, ctx),
                             ],
                             item.loc,
                         );
@@ -166,10 +156,7 @@ export const ToPP = {
                         return pp.items(
                             [
                                 pp.text('...', item.loc),
-                                ctx.ToPP[item.inner.type](
-                                    item.inner as any,
-                                    ctx,
-                                ),
+                                ctx.ToPP.Expression(item.inner, ctx),
                             ],
                             item.loc,
                         );

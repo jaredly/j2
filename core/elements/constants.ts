@@ -85,7 +85,7 @@ export const ToTast = {
             loc: ts.loc,
             first: ts.first,
             rest: ts.rest.map(({ wrap: { expr }, suffix, loc }) => ({
-                expr: ctx.ToTast[expr.type](expr as any, ctx),
+                expr: ctx.ToTast.Expression(expr, ctx),
                 suffix,
                 loc,
             })),
@@ -127,7 +127,7 @@ export const ToAst = {
             rest: rest.map(({ expr, suffix, loc }) => ({
                 type: 'TemplatePair',
                 wrap: {
-                    expr: ctx.ToAst[expr.type](expr as any, ctx),
+                    expr: ctx.ToAst.Expression(expr, ctx),
                     loc,
                     type: 'TemplateWrap',
                 },
@@ -162,7 +162,7 @@ export const ToPP = {
         }
         let items: pp.PP[] = [pp.atom(`"${ts.first}\${`, noloc)];
         ts.rest.forEach(({ wrap: { expr }, suffix, loc }, i) => {
-            items.push(ctx.ToPP[expr.type](expr as any, ctx));
+            items.push(ctx.ToPP.Expression(expr, ctx));
             items.push(
                 pp.atom(
                     '}' + suffix + (i === ts.rest.length - 1 ? '"' : '${'),

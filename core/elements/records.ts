@@ -44,19 +44,14 @@ export const ToTast = {
         let open = false;
         ast.items?.items.forEach((item) => {
             if (item.type === 'TRecordSpread') {
-                spreads.push(
-                    ctx.ToTast[item.inner.type](item.inner as any, ctx),
-                );
+                spreads.push(ctx.ToTast.Type(item.inner, ctx));
             } else if (item.type === 'TRecordKeyValue') {
                 items.push({
                     type: 'TRecordKeyValue',
                     key: item.key,
-                    value: ctx.ToTast[item.value.type](item.value as any, ctx),
+                    value: ctx.ToTast.Type(item.value, ctx),
                     default_: item.default_
-                        ? ctx.ToTast[item.default_.type](
-                              item.default_ as any,
-                              ctx,
-                          )
+                        ? ctx.ToTast.Expression(item.default_, ctx)
                         : null,
                     loc: item.loc,
                 });
@@ -133,7 +128,7 @@ export const ToAst = {
                 loc: t.loc,
                 items: {
                     type: 'TComma',
-                    items: tup.map((v) => ctx.ToAst[v.type](v as any, ctx)),
+                    items: tup.map((v) => ctx.ToAst.Type(v, ctx)),
                     loc: t.loc,
                 },
             };
@@ -149,7 +144,7 @@ export const ToAst = {
                         (spread): p.TRecordItem => ({
                             type: 'TRecordSpread',
                             loc: spread.loc,
-                            inner: ctx.ToAst[spread.type](spread as any, ctx),
+                            inner: ctx.ToAst.Type(spread, ctx),
                         }),
                     ),
                     ...t.items.map(
@@ -158,15 +153,9 @@ export const ToAst = {
                             loc: item.loc,
                             key: item.key,
                             default_: item.default_
-                                ? ctx.ToAst[item.default_.type](
-                                      item.default_ as any,
-                                      ctx,
-                                  )
+                                ? ctx.ToAst.Expression(item.default_, ctx)
                                 : null,
-                            value: ctx.ToAst[item.value.type](
-                                item.value as any,
-                                ctx,
-                            ),
+                            value: ctx.ToAst.Type(item.value, ctx),
                         }),
                     ),
                     ...(t.open
@@ -190,16 +179,13 @@ export const ToPP = {
                             [
                                 pp.text(item.key, item.loc),
                                 pp.text(': ', item.loc),
-                                ctx.ToPP[item.value.type](
-                                    item.value as any,
-                                    ctx,
-                                ),
+                                ctx.ToPP.Type(item.value, ctx),
                                 item.default_
                                     ? pp.items(
                                           [
                                               pp.text(' = ', item.loc),
-                                              ctx.ToPP[item.default_.type](
-                                                  item.default_ as any,
+                                              ctx.ToPP.Expression(
+                                                  item.default_,
                                                   ctx,
                                               ),
                                           ],
@@ -213,10 +199,7 @@ export const ToPP = {
                         return pp.items(
                             [
                                 pp.text('...', item.loc),
-                                ctx.ToPP[item.inner.type](
-                                    item.inner as any,
-                                    ctx,
-                                ),
+                                ctx.ToPP.Type(item.inner, ctx),
                             ],
                             item.loc,
                         );

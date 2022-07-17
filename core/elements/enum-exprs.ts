@@ -40,7 +40,7 @@ export const ToTast = {
 export const ToAst = {
     Enum(t: t.Enum, ctx: TACtx): p.Enum {
         const inner = t.payload
-            ? ctx.ToAst[t.payload.type](t.payload as any, ctx)
+            ? ctx.ToAst.Expression(t.payload, ctx)
             : undefined;
         return {
             type: 'Enum',
@@ -69,7 +69,7 @@ export const ToPP = {
                 t.payload
                     ? pp.args(
                           t.payload.items.map((item) =>
-                              ctx.ToPP[item.type](item as any, ctx),
+                              ctx.ToPP.Expression(item, ctx),
                           ),
                           t.payload.loc,
                       )
