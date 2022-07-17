@@ -2,15 +2,8 @@
 // - recognize that `is`, `location`, and `decorators` are common to all `Term`s,
 //   and so they can be done at the top level of `transformTerm`, instead of in every branch.
 
-import * as babel from '@babel/core';
 import * as fs from 'fs';
-import * as path from 'path';
-import {
-    buildTransformFile,
-    Ctx,
-    generateCheckers,
-    getUnionNames,
-} from './build-transform';
+import { Ctx, getUnionNames } from './build-transform';
 import { collectTypes } from './collect-types';
 
 const getAllUnions = (types: Ctx['types']) => {
@@ -42,7 +35,6 @@ const parserUnions = getAllUnions(parserTypes);
 const tastUnions = getAllUnions(tastTypes);
 
 const Parser: { [key: string]: string | false } = {
-    // Atom: 'Expression',
     EnumCase: false,
     Suffix: 'Expression',
     Atom: false,
@@ -58,6 +50,8 @@ const keys = Object.keys(parserUnions).filter(
 );
 console.log(Object.keys(parserUnions), keys);
 console.log(Object.keys(tastTypes));
+// console.log(tastUnions['Type']);
+// fail;
 
 const text = `
 import { Visitor } from '../transform-tast';

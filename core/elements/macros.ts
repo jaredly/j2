@@ -188,6 +188,15 @@ export const ToAst = {
             case 'TLambda':
                 return ctx.ToAst.TLambda(node, ctx);
 
+            case 'TEnum':
+                return ctx.ToAst.TEnum(node, ctx);
+
+            case 'Number':
+                return ctx.ToAst.Number(node, ctx);
+
+            case 'String':
+                return ctx.ToAst.String(node, ctx);
+
             case 'TVars':
                 return ctx.ToAst.TVars(node, ctx);
 
@@ -196,6 +205,9 @@ export const ToAst = {
 
             case 'TApply':
                 return ctx.ToAst.TApply(node, ctx);
+
+            case 'TRecord':
+                return ctx.ToAst.TRecord(node, ctx);
 
             case 'TOps':
                 return ctx.ToAst.TOps(node, ctx);

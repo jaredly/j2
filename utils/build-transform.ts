@@ -539,19 +539,28 @@ export const getAllUnionTypeMembers = (
         );
         return;
     }
-    if (t.type === 'TSTypeReference' && t.typeName.type === 'Identifier') {
-        if (seen[t.typeName.name]) {
+    if (t.type === 'TSTypeReference') {
+        let name;
+        if (
+            t.typeName.type === 'TSQualifiedName' &&
+            t.typeName.left.type === 'Identifier' &&
+            t.typeName.left.name === 't' &&
+            t.typeName.right.type === 'Identifier'
+        ) {
+            name = t.typeName.right.name;
+        } else if (t.typeName.type === 'Identifier') {
+            name = t.typeName.name;
+        }
+        if (!name) {
             return;
         }
-        seen[t.typeName.name] = true;
-        // console.log('-', t.typeName.name);
-        if (types[t.typeName.name]) {
-            getAllUnionTypeMembers(
-                allTypes,
-                types[t.typeName.name].type,
-                seen,
-                types,
-            );
+        if (seen[name]) {
+            return;
+        }
+        seen[name] = true;
+        // console.log('-', name);
+        if (types[name]) {
+            getAllUnionTypeMembers(allTypes, types[name].type, seen, types);
             return;
         }
     }
