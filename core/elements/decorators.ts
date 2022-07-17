@@ -104,27 +104,25 @@ export const ToTast = {
         { arg, label, loc }: p.LabeledDecoratorArg,
         ctx: Ctx,
     ): { loc: p.Loc; label: string | null; arg: t.DecoratorArg } {
-        if (arg.type === 'DecExpr') {
-            return {
-                label,
-                loc,
-                arg: {
-                    type: 'DExpr',
-                    expr: ctx.ToTast[arg.expr.type](arg.expr as any, ctx),
-                    loc: arg.loc,
-                },
-            };
-        } else {
-            return {
-                label,
-                loc,
-                arg: {
-                    type: 'DType',
-                    typ: ctx.ToTast[arg.type_.type](arg.type_ as any, ctx),
-                    loc: arg.loc,
-                },
-            };
-        }
+        return {
+            label,
+            loc,
+            arg: ctx.ToTast.DecoratorArg(arg, ctx),
+        };
+    },
+    DecExpr({ expr, loc }: p.DecExpr, ctx: Ctx): t.DExpr {
+        return {
+            type: 'DExpr',
+            expr: ctx.ToTast.Expression(expr, ctx),
+            loc: loc,
+        };
+    },
+    DecType({ type_, loc }: p.DecType, ctx: Ctx): t.DType {
+        return {
+            type: 'DType',
+            typ: ctx.ToTast.Type(type_, ctx),
+            loc: loc,
+        };
     },
 };
 
@@ -171,25 +169,7 @@ export const ToAst = {
                         return {
                             type: 'LabeledDecoratorArg',
                             label,
-                            arg:
-                                arg.type === 'DExpr'
-                                    ? {
-                                          type: 'DecExpr',
-                                          expr: ctx.ToAst[arg.expr.type](
-                                              arg.expr as any,
-                                              ctx,
-                                          ),
-                                          loc: arg.loc,
-                                      }
-                                    : {
-                                          type: 'DecType',
-                                          // @ts-ignore
-                                          type_: ctx.ToAst[arg.typ.type](
-                                              arg.typ as any,
-                                              ctx,
-                                          ),
-                                          loc: arg.loc,
-                                      },
+                            arg: ctx.ToAst.DecoratorArg(arg, ctx),
                             loc,
                         };
                     },
@@ -197,6 +177,21 @@ export const ToAst = {
                 loc,
             },
             loc,
+        };
+    },
+    DExpr({ type, expr, loc }: t.DExpr, ctx: ACtx): p.DecExpr {
+        return {
+            type: 'DecExpr',
+            expr: ctx.ToAst.Expression(expr, ctx),
+            loc: loc,
+        };
+    },
+    DType({ type, typ, loc }: t.DType, ctx: ACtx): p.DecType {
+        return {
+            type: 'DecType',
+            // @ts-ignore
+            type_: ctx.ToAst.Type(typ, ctx),
+            loc: loc,
         };
     },
 };
