@@ -10,6 +10,7 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
 import { Ctx as JCtx } from '../ir/to-js';
+import { Ctx as ICtx } from '../ir/ir';
 import * as b from '@babel/types';
 
 export const ToTast = {
@@ -448,6 +449,43 @@ export const ToPP = {
 
             case 'TRecord':
                 return ctx.ToPP.TRecord(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+};
+
+export const ToIR = {
+    Expression(node: t.Expression, ctx: ICtx): t.IExpression {
+        switch (node.type) {
+            case 'Ref':
+                return ctx.ToIR.Ref(node, ctx);
+
+            case 'Apply':
+                return ctx.ToIR.Apply(node, ctx);
+
+            case 'Enum':
+                return ctx.ToIR.Enum(node, ctx);
+
+            case 'Record':
+                return ctx.ToIR.Record(node, ctx);
+
+            case 'Number':
+                return ctx.ToIR.Number(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToIR.Boolean(node, ctx);
+
+            case 'TemplateString':
+                return ctx.ToIR.TemplateString(node, ctx);
+
+            case 'TypeApplication':
+                return ctx.ToIR.TypeApplication(node, ctx);
+
+            case 'DecoratedExpression':
+                return ctx.ToIR.DecoratedExpression(node, ctx);
 
             default:
                 let _: never = node;

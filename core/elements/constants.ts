@@ -181,9 +181,9 @@ export const ToPP = {
 };
 
 export const ToIR = {
-    Number: (x: t.Number) => x,
-    Boolean: (x: t.Boolean) => x,
-    Ref: (x: t.Ref) => x,
+    Number: (x: t.Number, ctx: ICtx) => x,
+    Boolean: (x: t.Boolean, ctx: ICtx) => x,
+    Ref: (x: t.Ref, ctx: ICtx) => x,
     TemplateString(x: t.TemplateString, ctx: ICtx): t.ITemplateString {
         return {
             type: 'ITemplateString',

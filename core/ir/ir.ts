@@ -1,5 +1,6 @@
 import * as t from '../typed-ast';
 import { makeToIR, ToIR } from './to-ir.gen';
+export type { ToIR };
 
 /*
 

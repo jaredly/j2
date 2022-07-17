@@ -50,8 +50,6 @@ const keys = Object.keys(parserUnions).filter(
 );
 console.log(Object.keys(parserUnions), keys);
 console.log(Object.keys(tastTypes));
-// console.log(tastUnions['Type']);
-// fail;
 
 const text = `
 import { Visitor } from '../transform-tast';
@@ -66,6 +64,7 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
 import { Ctx as JCtx } from '../ir/to-js';
+import { Ctx as ICtx } from '../ir/ir';
 import * as b from '@babel/types';
 
 
@@ -118,7 +117,6 @@ export const ToAst = {
 		`;
         })
         .join('\n')}
-
 }
 
 export const ToPP = {
@@ -132,6 +130,35 @@ export const ToPP = {
                         return `
 					case '${union}':
 						return ctx.ToPP.${union}(node, ctx);
+					`;
+                    })
+                    .join('\n')}
+				default:
+					let _: never = node;
+					throw new Error('Nope');
+			}
+		},
+		`;
+        })
+        .join('\n')}
+}
+
+export const ToIR = {
+	${Object.keys(tastUnions)
+        .filter(
+            (n) =>
+                !n.startsWith('I') && // && Taster[n] !== false
+                tastTypes['I' + n],
+        )
+        .map((type) => {
+            return `
+		${type}(node: t.${type}, ctx: ICtx): t.I${type} {
+			switch (node.type) {
+				${tastUnions[type]
+                    .map((union) => {
+                        return `
+					case '${union}':
+						return ctx.ToIR.${union}(node, ctx);
 					`;
                     })
                     .join('\n')}
