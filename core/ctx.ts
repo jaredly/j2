@@ -624,6 +624,43 @@ export const setupDefaults = (ctx: FullContext) => {
         addBuiltinDecorator(ctx, `error:` + tag, 0);
     });
     addBuiltinDecorator(ctx, `test:type`, 0);
+
+    addBuiltin(
+        ctx,
+        '+',
+        tlam(
+            [
+                { label: 'a', typ: tref(named.int), loc: noloc },
+                { label: 'b', typ: tref(named.int), loc: noloc },
+            ],
+            tref(named.int),
+        ),
+    );
+
+    addBuiltin(
+        ctx,
+        '+',
+        tlam(
+            [
+                { label: 'a', typ: tref(named.float), loc: noloc },
+                { label: 'b', typ: tref(named.float), loc: noloc },
+            ],
+            tref(named.float),
+        ),
+    );
+
+    addBuiltin(
+        ctx,
+        '*',
+        tlam(
+            [
+                { label: 'a', typ: tref(named.int), loc: noloc },
+                { label: 'b', typ: tref(named.int), loc: noloc },
+            ],
+            tref(named.int),
+        ),
+    );
+
     addBuiltin(
         ctx,
         'toString',

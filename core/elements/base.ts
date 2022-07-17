@@ -20,11 +20,13 @@ _EOF = !.
 Toplevel = TypeAlias / Expression
 TypeToplevel = TypeAlias / Type
 
-Expression = DecoratedExpression
+Expression = BinOp
 
-Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $BuiltinHash / $UnresolvedHash)?
+Identifier = text:$IdText hash:IdHash?
 
-Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum / Record
+IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
+
+Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -286,6 +288,21 @@ export const ToPP = {
         );
     },
     Identifier(identifier: p.Identifier, ctx: PCtx): pp.PP {
+        if (!identifier.text.match(/^[a-zA-Z_0-0]/)) {
+            return pp.items(
+                [
+                    pp.text('(', identifier.loc),
+                    pp.atom(
+                        // ctx.hideIds
+                        //     ? identifier.text :
+                        identifier.text + (identifier.hash ?? ''),
+                        identifier.loc,
+                    ),
+                    pp.text(')', identifier.loc),
+                ],
+                identifier.loc,
+            );
+        }
         return pp.atom(
             // ctx.hideIds
             //     ? identifier.text :

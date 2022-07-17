@@ -3,10 +3,21 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
-- [ ] little cleanup, remove all of the `as any`s
+- [x] little cleanup, remove all of the `as any`s
+	- [x] do some by hand
+	- [x] make a little macro system for generating some switch statements
+	- [x] get fed up, do a full codegen step for all aggregate types
+	- [x] YAYYY love it
 
 - [ ] binops
-	- [ ] parse/print/etc?
+	- [x] parse
+	- [-] totast
+		- [x] basic
+		- [ ] honor precendence
+	- [x] allow referencing binops like (*)
+	- [x] print with parens if appropriate in an apply
+	- [ ] print for real, with parens for precedence where needed
+	- [ ] print js too? like yeah
 - [ ] lambdas
 - [ ] ifs
 - [ ] lets

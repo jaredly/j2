@@ -131,13 +131,20 @@ export const ToAst = {
         { type, decorators, expr, loc }: t.DecoratedExpression,
         ctx: ACtx,
     ): p.DecoratedExpression_inner {
-        const inner = ctx.ToAst.Expression(expr, ctx);
+        let inner = ctx.ToAst.Expression(expr, ctx);
         if (inner.type === 'DecoratedExpression') {
             return {
                 ...inner,
                 decorators: decorators
                     .map((d) => ctx.ToAst[d.type](d, ctx))
                     .concat(inner.decorators),
+            };
+        }
+        if (inner.type === 'BinOp' || inner.type === 'WithUnary') {
+            inner = {
+                type: 'ParenedExpression',
+                items: { type: 'CommaExpr', items: [inner], loc: inner.loc },
+                loc: inner.loc,
             };
         }
         return {

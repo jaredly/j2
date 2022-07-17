@@ -74,6 +74,12 @@ export const ToTast = {
 
     Expression(node: p.Expression, ctx: TCtx): t.Expression {
         switch (node.type) {
+            case 'BinOp':
+                return ctx.ToTast.BinOp(node, ctx);
+
+            case 'WithUnary':
+                return ctx.ToTast.WithUnary(node, ctx);
+
             case 'DecoratedExpression':
                 return ctx.ToTast.DecoratedExpression(node, ctx);
 
@@ -88,6 +94,9 @@ export const ToTast = {
 
             case 'Identifier':
                 return ctx.ToTast.Identifier(node, ctx);
+
+            case 'ParenedOp':
+                return ctx.ToTast.ParenedOp(node, ctx);
 
             case 'ParenedExpression':
                 return ctx.ToTast.ParenedExpression(node, ctx);
@@ -368,6 +377,12 @@ export const ToPP = {
 
     Expression(node: p.Expression, ctx: PCtx): pp.PP {
         switch (node.type) {
+            case 'BinOp':
+                return ctx.ToPP.BinOp(node, ctx);
+
+            case 'WithUnary':
+                return ctx.ToPP.WithUnary(node, ctx);
+
             case 'DecoratedExpression':
                 return ctx.ToPP.DecoratedExpression(node, ctx);
 
@@ -382,6 +397,9 @@ export const ToPP = {
 
             case 'Identifier':
                 return ctx.ToPP.Identifier(node, ctx);
+
+            case 'ParenedOp':
+                return ctx.ToPP.ParenedOp(node, ctx);
 
             case 'ParenedExpression':
                 return ctx.ToPP.ParenedExpression(node, ctx);

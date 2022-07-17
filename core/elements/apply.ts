@@ -80,6 +80,17 @@ export const makeApply = (
             loc,
         };
     }
+    if (inner.type === 'BinOp' || inner.type === 'WithUnary') {
+        inner = {
+            type: 'ParenedExpression',
+            items: {
+                type: 'CommaExpr',
+                items: [inner],
+                loc,
+            },
+            loc,
+        };
+    }
     return { type: 'Apply', target: inner, suffixes: [suffix], loc };
 };
 

@@ -1,0 +1,14 @@
+##[fixtures]##
+==[basic]==
+--[input]--
+2 + 3 * 4
+(*)
+// hello
+
+--[output:failed]--
+alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h0220a608632738c67902e09a1b0ba3102ec3ebd0 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+(*)((+)(2, 3), 4)
+// int
+(*)
+// (a: int, b: int) => int
+// hello

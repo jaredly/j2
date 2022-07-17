@@ -69,16 +69,18 @@ export type Toplevel = TypeAlias | Expression;
 
 export type TypeToplevel = TypeAlias | Type;
 
-export type Expression = DecoratedExpression;
+export type Expression = BinOp;
 
 export type Identifier = {
   type: "Identifier";
   loc: Loc;
   text: string;
-  hash: (string | string | string | string | string | string) | null;
+  hash: IdHash | null;
 };
 
-export type Atom = Number | Boolean | Identifier | ParenedExpression | TemplateString | Enum | Record;
+export type IdHash = string;
+
+export type Atom = Number | Boolean | Identifier | ParenedOp | ParenedExpression | TemplateString | Enum | Record;
 
 export type ParenedExpression = {
   type: "ParenedExpression";
@@ -89,6 +91,57 @@ export type ParenedExpression = {
 // No data on IdText
 
 export type AttrText = string;
+
+export type BinOp_inner = {
+  type: "BinOp";
+  loc: Loc;
+  first: WithUnary;
+  rest: BinOpRight[];
+};
+
+export type BinOp = BinOp_inner | WithUnary;
+
+export type BinOpRight = {
+  type: "BinOpRight";
+  loc: Loc;
+  op: binopWithHash;
+  right: WithUnary;
+};
+
+export type WithUnary_inner = {
+  type: "WithUnary";
+  loc: Loc;
+  op: UnaryOpWithHash;
+  inner: DecoratedExpression;
+};
+
+export type WithUnary = WithUnary_inner | DecoratedExpression;
+
+export type UnaryOpWithHash = {
+  type: "UnaryOpWithHash";
+  loc: Loc;
+  op: UnaryOp;
+  hash: IdHash | null;
+};
+
+export type UnaryOp = "-" | "!";
+
+export type binopWithHash = {
+  type: "binopWithHash";
+  loc: Loc;
+  op: binop;
+  hash: IdHash | null;
+};
+
+export type binop = string;
+
+export type ParenedOp = {
+  type: "ParenedOp";
+  loc: Loc;
+  inner: binopWithHash;
+};
+
+export type Binop = Expression;
 
 export type newline = string;
 
@@ -442,9 +495,9 @@ export type TypePair = {
   typ: Type;
 };
 
-export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | Identifier | ParenedExpression | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | Record | RecordItems | RecordSpread | RecordKeyValue | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
+export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | Identifier | ParenedExpression | BinOp_inner | BinOpRight | WithUnary_inner | UnaryOpWithHash | binopWithHash | ParenedOp | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | Record | RecordItems | RecordSpread | RecordKeyValue | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
 
-export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "Identifier", "ParenedExpression", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "Record", "RecordItems", "RecordSpread", "RecordKeyValue", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "Identifier", "ParenedExpression", "BinOp", "BinOpRight", "WithUnary", "UnaryOpWithHash", "binopWithHash", "ParenedOp", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "Record", "RecordItems", "RecordSpread", "RecordKeyValue", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
 
 // @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});

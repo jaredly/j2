@@ -18,6 +18,13 @@ import {
     DecType,
     DecExpr,
     Expression,
+    BinOp,
+    BinOp_inner,
+    WithUnary,
+    WithUnary_inner,
+    UnaryOpWithHash,
+    UnaryOp,
+    IdHash,
     DecoratedExpression,
     DecoratedExpression_inner,
     Apply,
@@ -26,6 +33,9 @@ import {
     Number,
     Boolean,
     Identifier,
+    ParenedOp,
+    binopWithHash,
+    binop,
     ParenedExpression,
     CommaExpr,
     TemplateString,
@@ -41,6 +51,7 @@ import {
     CallSuffix,
     TypeApplicationSuffix,
     TypeAppVbls,
+    BinOpRight,
     TApply,
     TApply_inner,
     TAtom,
@@ -71,6 +82,7 @@ import {
     _lineEnd,
     _EOF,
     AttrText,
+    Binop,
     newline,
     _nonnewline,
     _,
@@ -155,6 +167,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Identifier | [Identifier | null, Ctx];
     IdentifierPost?: (node: Identifier, ctx: Ctx) => null | Identifier;
+    IdHash?: (
+        node: IdHash,
+        ctx: Ctx,
+    ) => null | false | IdHash | [IdHash | null, Ctx];
+    IdHashPost?: (node: IdHash, ctx: Ctx) => null | IdHash;
     Atom?: (node: Atom, ctx: Ctx) => null | false | Atom | [Atom | null, Ctx];
     AtomPost?: (node: Atom, ctx: Ctx) => null | Atom;
     ParenedExpression?: (
@@ -170,6 +187,67 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | AttrText | [AttrText | null, Ctx];
     AttrTextPost?: (node: AttrText, ctx: Ctx) => null | AttrText;
+    BinOp_inner?: (
+        node: BinOp_inner,
+        ctx: Ctx,
+    ) => null | false | BinOp_inner | [BinOp_inner | null, Ctx];
+    BinOp_innerPost?: (node: BinOp_inner, ctx: Ctx) => null | BinOp_inner;
+    BinOp?: (
+        node: BinOp,
+        ctx: Ctx,
+    ) => null | false | BinOp | [BinOp | null, Ctx];
+    BinOpPost?: (node: BinOp, ctx: Ctx) => null | BinOp;
+    BinOpRight?: (
+        node: BinOpRight,
+        ctx: Ctx,
+    ) => null | false | BinOpRight | [BinOpRight | null, Ctx];
+    BinOpRightPost?: (node: BinOpRight, ctx: Ctx) => null | BinOpRight;
+    WithUnary_inner?: (
+        node: WithUnary_inner,
+        ctx: Ctx,
+    ) => null | false | WithUnary_inner | [WithUnary_inner | null, Ctx];
+    WithUnary_innerPost?: (
+        node: WithUnary_inner,
+        ctx: Ctx,
+    ) => null | WithUnary_inner;
+    WithUnary?: (
+        node: WithUnary,
+        ctx: Ctx,
+    ) => null | false | WithUnary | [WithUnary | null, Ctx];
+    WithUnaryPost?: (node: WithUnary, ctx: Ctx) => null | WithUnary;
+    UnaryOpWithHash?: (
+        node: UnaryOpWithHash,
+        ctx: Ctx,
+    ) => null | false | UnaryOpWithHash | [UnaryOpWithHash | null, Ctx];
+    UnaryOpWithHashPost?: (
+        node: UnaryOpWithHash,
+        ctx: Ctx,
+    ) => null | UnaryOpWithHash;
+    UnaryOp?: (
+        node: UnaryOp,
+        ctx: Ctx,
+    ) => null | false | UnaryOp | [UnaryOp | null, Ctx];
+    UnaryOpPost?: (node: UnaryOp, ctx: Ctx) => null | UnaryOp;
+    binopWithHash?: (
+        node: binopWithHash,
+        ctx: Ctx,
+    ) => null | false | binopWithHash | [binopWithHash | null, Ctx];
+    binopWithHashPost?: (node: binopWithHash, ctx: Ctx) => null | binopWithHash;
+    binop?: (
+        node: binop,
+        ctx: Ctx,
+    ) => null | false | binop | [binop | null, Ctx];
+    binopPost?: (node: binop, ctx: Ctx) => null | binop;
+    ParenedOp?: (
+        node: ParenedOp,
+        ctx: Ctx,
+    ) => null | false | ParenedOp | [ParenedOp | null, Ctx];
+    ParenedOpPost?: (node: ParenedOp, ctx: Ctx) => null | ParenedOp;
+    Binop?: (
+        node: Binop,
+        ctx: Ctx,
+    ) => null | false | Binop | [Binop | null, Ctx];
+    BinopPost?: (node: Binop, ctx: Ctx) => null | Binop;
     newline?: (
         node: newline,
         ctx: Ctx,
@@ -561,6 +639,10 @@ export type Visitor<Ctx> = {
         node: Identifier,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    Atom_ParenedOp?: (
+        node: ParenedOp,
+        ctx: Ctx,
+    ) => null | false | Atom | [Atom | null, Ctx];
     Atom_ParenedExpression?: (
         node: ParenedExpression,
         ctx: Ctx,
@@ -577,6 +659,14 @@ export type Visitor<Ctx> = {
         node: Record,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    BinOp_BinOp?: (
+        node: BinOp,
+        ctx: Ctx,
+    ) => null | false | BinOp | [BinOp | null, Ctx];
+    WithUnary_WithUnary?: (
+        node: WithUnary,
+        ctx: Ctx,
+    ) => null | false | WithUnary | [WithUnary | null, Ctx];
     DecoratedExpression_DecoratedExpression?: (
         node: DecoratedExpression,
         ctx: Ctx,
@@ -687,6 +777,30 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypes_ParenedExpression?: (
         node: ParenedExpression,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypes_BinOp?: (
+        node: BinOp,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypes_BinOpRight?: (
+        node: BinOpRight,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypes_WithUnary?: (
+        node: WithUnary,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypes_UnaryOpWithHash?: (
+        node: UnaryOpWithHash,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypes_binopWithHash?: (
+        node: binopWithHash,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypes_ParenedOp?: (
+        node: ParenedOp,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypes_Boolean?: (
@@ -1070,6 +1184,152 @@ export const transformDecType = <Ctx>(
     return node;
 };
 
+export const transformUnaryOp = <Ctx>(
+    node: UnaryOp,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): UnaryOp => {
+    if (!node) {
+        throw new Error('No UnaryOp provided');
+    }
+
+    const transformed = visitor.UnaryOp ? visitor.UnaryOp(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.UnaryOpPost) {
+        const transformed = visitor.UnaryOpPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformIdHash = <Ctx>(
+    node: IdHash,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IdHash => {
+    if (!node) {
+        throw new Error('No IdHash provided');
+    }
+
+    const transformed = visitor.IdHash ? visitor.IdHash(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.IdHashPost) {
+        const transformed = visitor.IdHashPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformUnaryOpWithHash = <Ctx>(
+    node: UnaryOpWithHash,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): UnaryOpWithHash => {
+    if (!node) {
+        throw new Error('No UnaryOpWithHash provided');
+    }
+
+    const transformed = visitor.UnaryOpWithHash
+        ? visitor.UnaryOpWithHash(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$op = transformUnaryOp(node.op, visitor, ctx);
+        changed1 = changed1 || updatedNode$op !== node.op;
+
+        let updatedNode$hash = null;
+        const updatedNode$hash$current = node.hash;
+        if (updatedNode$hash$current != null) {
+            const updatedNode$hash$1$ = transformIdHash(
+                updatedNode$hash$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$hash$1$ !== updatedNode$hash$current;
+            updatedNode$hash = updatedNode$hash$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                op: updatedNode$op,
+                hash: updatedNode$hash,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.UnaryOpWithHashPost) {
+        const transformed = visitor.UnaryOpWithHashPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformNumber = <Ctx>(
     node: Number,
     visitor: Visitor<Ctx>,
@@ -1200,8 +1460,26 @@ export const transformIdentifier = <Ctx>(
 
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$hash = null;
+        const updatedNode$hash$current = node.hash;
+        if (updatedNode$hash$current != null) {
+            const updatedNode$hash$1$ = transformIdHash(
+                updatedNode$hash$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$hash$1$ !== updatedNode$hash$current;
+            updatedNode$hash = updatedNode$hash$1$;
+        }
+
         if (changed1) {
-            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                hash: updatedNode$hash,
+            };
             changed0 = true;
         }
     }
@@ -1209,6 +1487,174 @@ export const transformIdentifier = <Ctx>(
     node = updatedNode;
     if (visitor.IdentifierPost) {
         const transformed = visitor.IdentifierPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformbinop = <Ctx>(
+    node: binop,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): binop => {
+    if (!node) {
+        throw new Error('No binop provided');
+    }
+
+    const transformed = visitor.binop ? visitor.binop(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.binopPost) {
+        const transformed = visitor.binopPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformbinopWithHash = <Ctx>(
+    node: binopWithHash,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): binopWithHash => {
+    if (!node) {
+        throw new Error('No binopWithHash provided');
+    }
+
+    const transformed = visitor.binopWithHash
+        ? visitor.binopWithHash(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$op = transformbinop(node.op, visitor, ctx);
+        changed1 = changed1 || updatedNode$op !== node.op;
+
+        let updatedNode$hash = null;
+        const updatedNode$hash$current = node.hash;
+        if (updatedNode$hash$current != null) {
+            const updatedNode$hash$1$ = transformIdHash(
+                updatedNode$hash$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$hash$1$ !== updatedNode$hash$current;
+            updatedNode$hash = updatedNode$hash$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                op: updatedNode$op,
+                hash: updatedNode$hash,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.binopWithHashPost) {
+        const transformed = visitor.binopWithHashPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformParenedOp = <Ctx>(
+    node: ParenedOp,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ParenedOp => {
+    if (!node) {
+        throw new Error('No ParenedOp provided');
+    }
+
+    const transformed = visitor.ParenedOp ? visitor.ParenedOp(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$inner = transformbinopWithHash(
+            node.inner,
+            visitor,
+            ctx,
+        );
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                inner: updatedNode$inner,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ParenedOpPost) {
+        const transformed = visitor.ParenedOpPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2027,6 +2473,25 @@ export const transformAtom = <Ctx>(
             break;
         }
 
+        case 'ParenedOp': {
+            const transformed = visitor.Atom_ParenedOp
+                ? visitor.Atom_ParenedOp(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'ParenedExpression': {
             const transformed = visitor.Atom_ParenedExpression
                 ? visitor.Atom_ParenedExpression(node, ctx)
@@ -2121,6 +2586,12 @@ export const transformAtom = <Ctx>(
 
         case 'Identifier': {
             updatedNode = transformIdentifier(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'ParenedOp': {
+            updatedNode = transformParenedOp(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -2767,6 +3238,363 @@ export const transformDecoratedExpression = <Ctx>(
     return node;
 };
 
+export const transformWithUnary_inner = <Ctx>(
+    node: WithUnary_inner,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): WithUnary_inner => {
+    if (!node) {
+        throw new Error('No WithUnary_inner provided');
+    }
+
+    const transformed = visitor.WithUnary_inner
+        ? visitor.WithUnary_inner(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$op = transformUnaryOpWithHash(node.op, visitor, ctx);
+        changed1 = changed1 || updatedNode$op !== node.op;
+
+        const updatedNode$inner = transformDecoratedExpression(
+            node.inner,
+            visitor,
+            ctx,
+        );
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                op: updatedNode$op,
+                inner: updatedNode$inner,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.WithUnary_innerPost) {
+        const transformed = visitor.WithUnary_innerPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformWithUnary = <Ctx>(
+    node: WithUnary,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): WithUnary => {
+    if (!node) {
+        throw new Error('No WithUnary provided');
+    }
+
+    const transformed = visitor.WithUnary ? visitor.WithUnary(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'WithUnary': {
+            const transformed = visitor.WithUnary_WithUnary
+                ? visitor.WithUnary_WithUnary(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'WithUnary': {
+            updatedNode = transformWithUnary_inner(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformDecoratedExpression(
+                node,
+                visitor,
+                ctx,
+            );
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.WithUnaryPost) {
+        const transformed = visitor.WithUnaryPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformBinOpRight = <Ctx>(
+    node: BinOpRight,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): BinOpRight => {
+    if (!node) {
+        throw new Error('No BinOpRight provided');
+    }
+
+    const transformed = visitor.BinOpRight
+        ? visitor.BinOpRight(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$op = transformbinopWithHash(node.op, visitor, ctx);
+        changed1 = changed1 || updatedNode$op !== node.op;
+
+        const updatedNode$right = transformWithUnary(node.right, visitor, ctx);
+        changed1 = changed1 || updatedNode$right !== node.right;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                op: updatedNode$op,
+                right: updatedNode$right,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.BinOpRightPost) {
+        const transformed = visitor.BinOpRightPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformBinOp_inner = <Ctx>(
+    node: BinOp_inner,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): BinOp_inner => {
+    if (!node) {
+        throw new Error('No BinOp_inner provided');
+    }
+
+    const transformed = visitor.BinOp_inner
+        ? visitor.BinOp_inner(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$first = transformWithUnary(node.first, visitor, ctx);
+        changed1 = changed1 || updatedNode$first !== node.first;
+
+        let updatedNode$rest = node.rest;
+        {
+            let changed2 = false;
+            const arr1 = node.rest.map((updatedNode$rest$item1) => {
+                const result = transformBinOpRight(
+                    updatedNode$rest$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$rest$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$rest = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                first: updatedNode$first,
+                rest: updatedNode$rest,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.BinOp_innerPost) {
+        const transformed = visitor.BinOp_innerPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformBinOp = <Ctx>(
+    node: BinOp,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): BinOp => {
+    if (!node) {
+        throw new Error('No BinOp provided');
+    }
+
+    const transformed = visitor.BinOp ? visitor.BinOp(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'BinOp': {
+            const transformed = visitor.BinOp_BinOp
+                ? visitor.BinOp_BinOp(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'BinOp': {
+            updatedNode = transformBinOp_inner(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformWithUnary(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.BinOpPost) {
+        const transformed = visitor.BinOpPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformExpression = <Ctx>(
     node: Expression,
     visitor: Visitor<Ctx>,
@@ -2795,7 +3623,7 @@ export const transformExpression = <Ctx>(
 
     let changed0 = false;
 
-    const updatedNode = transformDecoratedExpression(node, visitor, ctx);
+    const updatedNode = transformBinOp(node, visitor, ctx);
     changed0 = changed0 || updatedNode !== node;
 
     node = updatedNode;
@@ -6016,6 +6844,45 @@ export const transformAttrText = <Ctx>(
     return node;
 };
 
+export const transformBinop = <Ctx>(
+    node: Binop,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Binop => {
+    if (!node) {
+        throw new Error('No Binop provided');
+    }
+
+    const transformed = visitor.Binop ? visitor.Binop(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    const updatedNode = transformExpression(node, visitor, ctx);
+    changed0 = changed0 || updatedNode !== node;
+
+    node = updatedNode;
+    if (visitor.BinopPost) {
+        const transformed = visitor.BinopPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformnewline = <Ctx>(
     node: newline,
     visitor: Visitor<Ctx>,
@@ -6783,6 +7650,120 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'ParenedExpression': {
             const transformed = visitor.AllTaggedTypes_ParenedExpression
                 ? visitor.AllTaggedTypes_ParenedExpression(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'BinOp': {
+            const transformed = visitor.AllTaggedTypes_BinOp
+                ? visitor.AllTaggedTypes_BinOp(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'BinOpRight': {
+            const transformed = visitor.AllTaggedTypes_BinOpRight
+                ? visitor.AllTaggedTypes_BinOpRight(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'WithUnary': {
+            const transformed = visitor.AllTaggedTypes_WithUnary
+                ? visitor.AllTaggedTypes_WithUnary(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'UnaryOpWithHash': {
+            const transformed = visitor.AllTaggedTypes_UnaryOpWithHash
+                ? visitor.AllTaggedTypes_UnaryOpWithHash(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'binopWithHash': {
+            const transformed = visitor.AllTaggedTypes_binopWithHash
+                ? visitor.AllTaggedTypes_binopWithHash(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'ParenedOp': {
+            const transformed = visitor.AllTaggedTypes_ParenedOp
+                ? visitor.AllTaggedTypes_ParenedOp(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -7734,6 +8715,42 @@ export const transformAllTaggedTypes = <Ctx>(
 
         case 'ParenedExpression': {
             updatedNode = transformParenedExpression(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'BinOp': {
+            updatedNode = transformBinOp_inner(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'BinOpRight': {
+            updatedNode = transformBinOpRight(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'WithUnary': {
+            updatedNode = transformWithUnary_inner(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'UnaryOpWithHash': {
+            updatedNode = transformUnaryOpWithHash(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'binopWithHash': {
+            updatedNode = transformbinopWithHash(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'ParenedOp': {
+            updatedNode = transformParenedOp(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }

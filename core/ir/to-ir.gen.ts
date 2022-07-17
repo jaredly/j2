@@ -1,12 +1,14 @@
 
 import { ToIR as base } from '../elements/base';
 import { ToIR as constants } from '../elements/constants';
+import { ToIR as macros } from '../elements/macros';
 
-export type ToIR = typeof base & typeof constants;
+export type ToIR = typeof base & typeof constants & typeof macros;
 
 export const makeToIR = (): ToIR => {
 	return {
 		...base,
-		...constants
+		...constants,
+		...macros
 	}
 }

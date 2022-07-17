@@ -38,16 +38,35 @@ _EOF = !.
 Toplevel = TypeAlias / Expression
 TypeToplevel = TypeAlias / Type
 
-Expression = DecoratedExpression
+Expression = BinOp
 
-Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $BuiltinHash / $UnresolvedHash)?
+Identifier = text:$IdText hash:IdHash?
 
-Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum / Record
+IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
+
+Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
 IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
 AttrText "attribute" = $([0-9a-z-A-Z_]+)
+
+
+
+// binops.ts
+
+BinOp = first:WithUnary rest_drop:BinOpRight* 
+BinOpRight = __ op:binopWithHash __ right:WithUnary
+WithUnary = op_drop:UnaryOpWithHash? inner:DecoratedExpression
+UnaryOpWithHash = op:UnaryOp hash:IdHash?
+UnaryOp = "-" / "!"
+
+binopWithHash = op:binop hash:IdHash?
+binop = $(!"//" [+*^/<>=|&-]+)
+
+ParenedOp = "(" _ inner:binopWithHash _ ")"
+
+Binop = Expression
 
 
 
