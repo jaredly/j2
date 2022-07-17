@@ -6,7 +6,7 @@
     "scripts": {
         "start": "esbuild --bundle devui/server.ts --platform=node --external:vite | node -",
         "grammar": "./utils/esrun.js utils/build-grammar.ts",
-        "aggregates": "./utils/esrun.js utils/aggregates.ts",
+        "aggregates": "./utils/esrun.js utils/aggregates.ts; prettier -w core/elements/macros.ts",
         "re-fixture": "./utils/esrun.js utils/re-fixture.ts",
         "macros": "./utils/esrun.js utils/macros.ts",
         "-fix-ids": "./utils/esrun.js utils/fix-ids.ts",
