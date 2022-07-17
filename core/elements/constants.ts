@@ -200,13 +200,13 @@ export const ToIR = {
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 export const ToJS = {
-    Number(x: t.Number): b.NumericLiteral {
+    Number(x: t.Number, ctx: JCtx): b.NumericLiteral {
         return b.numericLiteral(x.value);
     },
-    Boolean(x: t.Boolean): b.BooleanLiteral {
+    Boolean(x: t.Boolean, ctx: JCtx): b.BooleanLiteral {
         return b.booleanLiteral(x.value);
     },
-    Ref(x: t.Ref): b.Identifier {
+    Ref(x: t.Ref, ctx: JCtx): b.Identifier {
         return b.identifier(t.refHash(x.kind));
     },
     ITemplateString(x: t.ITemplateString, ctx: JCtx): b.TemplateLiteral {

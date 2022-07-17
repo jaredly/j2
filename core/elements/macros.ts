@@ -9,6 +9,8 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
+import { Ctx as JCtx } from '../ir/to-js';
+import * as b from '@babel/types';
 
 export const ToTast = {
     Suffix(node: p.Suffix, next: t.Expression, ctx: TCtx): t.Expression {
@@ -446,6 +448,37 @@ export const ToPP = {
 
             case 'TRecord':
                 return ctx.ToPP.TRecord(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+};
+
+export const ToJS = {
+    IExpression(node: t.IExpression, ctx: JCtx): b.Expression {
+        switch (node.type) {
+            case 'Ref':
+                return ctx.ToJS.Ref(node, ctx);
+
+            case 'Number':
+                return ctx.ToJS.Number(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToJS.Boolean(node, ctx);
+
+            case 'IApply':
+                return ctx.ToJS.IApply(node, ctx);
+
+            case 'ITemplateString':
+                return ctx.ToJS.ITemplateString(node, ctx);
+
+            case 'IEnum':
+                return ctx.ToJS.IEnum(node, ctx);
+
+            case 'IRecord':
+                return ctx.ToJS.IRecord(node, ctx);
 
             default:
                 let _: never = node;

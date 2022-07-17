@@ -373,24 +373,6 @@ function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 export const ToJS = {
-    IExpression(expr: t.IExpression, ctx: JCtx): b.Expression {
-        switch (expr.type) {
-            case 'Number':
-                return ctx.ToJS.Number(expr);
-            case 'Boolean':
-                return ctx.ToJS.Boolean(expr);
-            case 'Ref':
-                return ctx.ToJS.Ref(expr);
-            case 'ITemplateString':
-                return ctx.ToJS.ITemplateString(expr, ctx);
-            case 'IApply':
-                return ctx.ToJS.IApply(expr, ctx);
-            case 'IEnum':
-                return ctx.ToJS.IEnum(expr, ctx);
-            case 'IRecord':
-                return ctx.ToJS.IRecord(expr, ctx);
-        }
-    },
     IApply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
         return b.callExpression(
             ctx.ToJS.IExpression(target, ctx),

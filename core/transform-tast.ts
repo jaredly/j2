@@ -37,6 +37,7 @@ import {
     TOps,
     DecoratedExpression,
     TypeAlias,
+    TypeToplevel,
     TypeFile,
     IExpression,
     IApply,
@@ -66,6 +67,11 @@ export type Visitor<Ctx> = {
     LocPost?: (node: Loc, ctx: Ctx) => null | Loc;
     File?: (node: File, ctx: Ctx) => null | false | File | [File | null, Ctx];
     FilePost?: (node: File, ctx: Ctx) => null | File;
+    TypeToplevel?: (
+        node: TypeToplevel,
+        ctx: Ctx,
+    ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
+    TypeToplevelPost?: (node: TypeToplevel, ctx: Ctx) => null | TypeToplevel;
     TypeFile?: (
         node: TypeFile,
         ctx: Ctx,
@@ -287,6 +293,10 @@ export type Visitor<Ctx> = {
         node: TRecordKeyValue,
         ctx: Ctx,
     ) => null | TRecordKeyValue;
+    TypeToplevel_TypeAlias?: (
+        node: TypeAlias,
+        ctx: Ctx,
+    ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
     Toplevel_ToplevelExpression?: (
         node: ToplevelExpression,
         ctx: Ctx,
@@ -3553,6 +3563,83 @@ export const transformFile = <Ctx>(
     return node;
 };
 
+export const transformTypeToplevel = <Ctx>(
+    node: TypeToplevel,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TypeToplevel => {
+    if (!node) {
+        throw new Error('No TypeToplevel provided');
+    }
+
+    const transformed = visitor.TypeToplevel
+        ? visitor.TypeToplevel(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'TypeAlias': {
+            const transformed = visitor.TypeToplevel_TypeAlias
+                ? visitor.TypeToplevel_TypeAlias(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'TypeAlias': {
+            updatedNode = transformTypeAlias(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformType(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TypeToplevelPost) {
+        const transformed = visitor.TypeToplevelPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformTypeFile = <Ctx>(
     node: TypeFile,
     visitor: Visitor<Ctx>,
@@ -3587,34 +3674,12 @@ export const transformTypeFile = <Ctx>(
         {
             let changed2 = false;
             const arr1 = node.toplevels.map((updatedNode$toplevels$item1) => {
-                let result = updatedNode$toplevels$item1;
-
-                switch (updatedNode$toplevels$item1.type) {
-                    case 'TypeAlias': {
-                        result = transformTypeAlias(
-                            updatedNode$toplevels$item1,
-                            visitor,
-                            ctx,
-                        );
-                        changed2 =
-                            changed2 || result !== updatedNode$toplevels$item1;
-                        break;
-                    }
-
-                    default: {
-                        // let changed3 = false;
-
-                        const result$2node = transformType(
-                            updatedNode$toplevels$item1,
-                            visitor,
-                            ctx,
-                        );
-                        changed2 =
-                            changed2 ||
-                            result$2node !== updatedNode$toplevels$item1;
-                        result = result$2node;
-                    }
-                }
+                const result = transformTypeToplevel(
+                    updatedNode$toplevels$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$toplevels$item1;
                 return result;
             });
             if (changed2) {

@@ -65,6 +65,8 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
+import { Ctx as JCtx } from '../ir/to-js';
+import * as b from '@babel/types';
 
 
 export const ToTast = {
@@ -141,6 +143,32 @@ export const ToPP = {
 		`;
         })
         .join('\n')}
+}
+
+export const ToJS = {
+	${Object.keys(tastUnions)
+        .filter((n) => n.startsWith('I'))
+        .map((type) => {
+            return `
+		${type}(node: t.${type}, ctx: JCtx): b.${type.slice(1)} {
+			switch (node.type) {
+				${tastUnions[type]
+                    .map((union) => {
+                        return `
+					case '${union}':
+						return ctx.ToJS.${union}(node, ctx);
+					`;
+                    })
+                    .join('\n')}
+				default:
+					let _: never = node;
+					throw new Error('Nope');
+			}
+		},
+		`;
+        })
+        .join('\n')}
+
 }
 
 
