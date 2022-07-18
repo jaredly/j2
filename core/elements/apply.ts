@@ -96,6 +96,51 @@ export const makeApply = (
 
 export const ToAst = {
     Apply({ target, args, loc }: Apply, ctx: TACtx): p.Apply {
+        if (target.type === 'TypeApplication') {
+            const ttype = ctx.actx.getType(target.target);
+            const argTypes = args.map((arg) => ctx.actx.getType(arg));
+            if (
+                argTypes.every(Boolean) &&
+                ttype?.type === 'TVars' &&
+                ttype.inner.type === 'TLambda'
+            ) {
+                const auto = autoTypeApply(
+                    { type: 'Apply', loc, args, target: target.target },
+                    ttype.args,
+                    ttype.inner.args.map((t) => t.typ),
+                    argTypes as t.Type[],
+                    ctx.actx,
+                );
+                if (auto) {
+                    const targs = (auto.target as t.TypeApplication).args;
+                    if (
+                        targs.length === target.args.length &&
+                        targs.every(
+                            (targ, i) =>
+                                typeMatches(targ, target.args[i], ctx.actx) &&
+                                typeMatches(target.args[i], targ, ctx.actx),
+                        )
+                    ) {
+                        return makeApply(
+                            ctx.ToAst.Expression(target.target, ctx),
+                            {
+                                type: 'CallSuffix',
+                                args: {
+                                    type: 'CommaExpr',
+                                    items: args.map((a) =>
+                                        ctx.ToAst.Expression(a, ctx),
+                                    ),
+                                    loc,
+                                },
+                                loc,
+                            },
+                            loc,
+                        );
+                    }
+                }
+            }
+        }
+
         return makeApply(
             ctx.ToAst.Expression(target, ctx),
             {

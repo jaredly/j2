@@ -26,7 +26,7 @@ hello<int>(10)
 
 --[output:expected]--
 alias decorate=h5a7fc9170718190f9388084b28fb49f6cb4602fc hello=h58311696346f109be57c65ced074624324a4a5d1
-(@decorate() hello)<10>(10)
+(@decorate() hello)(10)
 // 10
 
 ==[multiple args]==
@@ -44,11 +44,14 @@ multi<int, string>(10, "hello")
 ==[bounded]==
 --[input]--
 bounded<10>(10)
+bounded<int>(10)
 
 --[output:expected]--
-alias bounded=h4207f6d968916c763613ab7e7d383d2732a82ac9
-bounded<10>(10)
+alias bounded=h4207f6d968916c763613ab7e7d383d2732a82ac9 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+bounded(10)
 // 10
+bounded<int>(10)
+// int
 
 ==[bound fail]==
 --[input:shouldFail]--
@@ -231,5 +234,5 @@ iadd(10, 20)
 
 --[output:expected]--
 alias iadd=hc77e92301772e2ac145296b642b1c522b071d07e
-iadd<10, 20>(10, 20)
+iadd(10, 20)
 // 30

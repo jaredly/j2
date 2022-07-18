@@ -5,7 +5,7 @@
 
 --[output:expected]--
 alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
-(+)<2, int>(2, (*)(3, 4))
+(+)(2, (*)(3, 4))
 // 2 + int
 
 ==[New fixture]==
@@ -15,7 +15,7 @@ alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb
 
 --[output:expected]--
 alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
-(+)<5, 4>((+)<2, 3>(2, 3), 4)
+(+)((+)(2, 3), 4)
 // 9
-(+)<2 + int, 5>((+)<2, int>(2, (*)(3, (+)<1, 4>(1, 4))), 5)
+(+)((+)(2, (*)(3, (+)(1, 4))), 5)
 // (2 + int) + 5
