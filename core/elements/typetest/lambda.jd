@@ -11,7 +11,7 @@
 @type:shouldMatch(:<A#[1]: int>() => A#[1]) <A#[0]: int>() => A#[0]
 
 @type:shouldNotMatch(:<A#[1]: int, B#[1]: float>() => B#[1]) <A#[0]: int, B#[1]: float>() => A#[0]
-@type:shouldMatch(:<A#[1]: int, B#[1]: float>() => B#[1])
-<A#[0]: int, B#[1]: float>() => A#[1]
+
+@type:shouldMatch(:<A#[1]: int, B#[1]: float>() => B#[1]) <A#[0]: int, B#[1]: float>() => B#[1]
 
 //@type:shouldMatch(:<A#[1]: 10>(a: A#[1]) => A#[1]) <B#[0]: int>(a: B#[0]) => B#[0]

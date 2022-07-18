@@ -8,7 +8,7 @@ alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb
 2 + 3 * 4
 // 2 + int
 
-==[New fixture]==
+==[various binops]==
 --[input]--
 2+3+4
 2 + 3 * (1+4)+5
@@ -23,7 +23,7 @@ alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb
 1 * 2 + 3 * 4 + 5 * 6
 // (int + int) + int
 
-==[New fixture_]==
+==[lots of precedence]==
 --[input]--
 1 * (2 + 3) * (3 + 4)
 
@@ -41,7 +41,7 @@ alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb bool=h62d1b70cb3ae567d8df7d48
 2 == 3
 // bool
 
-==[New fixture__]==
+==[something that isn't eq]==
 --[input:shouldFail]--
 what == 2
 

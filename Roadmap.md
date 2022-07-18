@@ -1,4 +1,12 @@
 
+WHAT IS MY
+current north star
+
+- getting a basic Task / async/await / error coalescence story going
+- getting some kind of UI framework going
+- GLSL PLSSS
+
+
 So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
@@ -35,6 +43,7 @@ So ... what about
 		Because, once I get fancy, it might be hard to go back.
 		Although my precedence tree rebalancing dealio does seem
 		very slick & simple to understand.
+
 - [ ] lambdas
 - [ ] ifs
 - [ ] lets
