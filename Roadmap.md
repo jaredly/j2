@@ -3,6 +3,11 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+
+So ... what about
+- [ ] ... having a `TEmpty` type. would be good. For when there's an `apply` that needs application
+
+
 - [x] normal (reolved) apply, let it infer type args
 - [x] oh I need to support Expression_ApplyPost in transformer
 - [x] when printing apply's, drop type args if inferrable
@@ -24,7 +29,7 @@ and/or a nice error coalescing example.
 	- [x] print js too? like yeah
 	- [x] binops w/ type variables, so
 		<A: int, B: int>(a: A, b: B) => A + B
-	- [ ] eq! <A: eq>(a: A, b: A) => bool
+	- [x] eq! <A: eq>(a: A, b: A) => bool
 	- [ ] ohhhh am I going to need multiple & divide at the type level?
 		Or, am I just going to have fanciness for + and -?
 		Because, once I get fancy, it might be hard to go back.

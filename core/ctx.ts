@@ -595,6 +595,7 @@ export const errors = {
     invalidType: 0,
     notARecord: 0,
     invalidRecord: 0,
+    needsTypeVariables: 0,
 };
 export type ErrorTag = keyof typeof errors;
 

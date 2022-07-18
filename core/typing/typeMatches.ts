@@ -86,6 +86,10 @@ export const hasFunctions = (t: Type, ctx: Ctx): boolean => {
             },
             TRef(node, _) {
                 const resolved = ctx.resolveRefsAndApplies(node);
+                // Probably still global
+                if (resolved?.type === 'TRef') {
+                    return false;
+                }
                 found =
                     found || (resolved ? hasFunctions(resolved, ctx) : true);
                 return false;

@@ -40,5 +40,21 @@ export const unifyTypes = (one: Type, two: Type, ctx: Ctx): false | Type => {
     if (typeMatches(two, one, ctx)) {
         return one;
     }
+
+    if (
+        one.type === 'Number' &&
+        two.type === 'Number' &&
+        one.kind === two.kind
+    ) {
+        const ref = ctx.getBuiltinRef(one.kind.toLowerCase());
+        if (ref) {
+            return {
+                type: 'TRef',
+                ref,
+                loc: one.loc,
+            };
+        }
+    }
+
     return false;
 };

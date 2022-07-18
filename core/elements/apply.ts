@@ -1,5 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { decorate } from '../typing/analyze';
+import { decorate, tdecorate } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
 import { typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
@@ -10,6 +10,7 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { noloc } from '../ctx';
 import { opLevel } from './binops';
+import { unifyTypes } from '../typing/unifyTypes';
 
 export const grammar = `
 Apply = target:Atom suffixes_drop:Suffix*
@@ -374,6 +375,38 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             return null;
         }
         if (ttype?.type !== 'TLambda') {
+            if (ttype.type === 'TVars') {
+                return {
+                    ...node,
+                    target: decorate(
+                        node.target,
+                        'needsTypeVariables',
+                        hit,
+                        ctx,
+                    ),
+                };
+
+                // return {
+                //     ...node,
+                //     target: {
+                //         type: 'TypeApplication',
+                //         target: node.target,
+                //         args: ttype.args.map((t) =>
+                //             tdecorate(
+                //                 {
+                //                     type: 'TEnum',
+                //                     cases: [],
+                //                     loc: t.loc,
+                //                     open: false,
+                //                 },
+                //                 'invalidType',
+                //                 { ctx, hit },
+                //             ),
+                //         ),
+                //         loc: node.loc,
+                //     },
+                // };
+            }
             return decorate(node, 'notAFunction', hit, ctx);
         }
         const argTypes = node.args.map((arg) => ctx.getType(arg));
@@ -411,8 +444,8 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
 export const inferVarsFromArgs = (
     vars: t.TVar[],
     args: t.Type[],
-): null | { [key: number]: number } => {
-    const mapping: { [sym: number]: false | number } = {};
+): null | { [key: number]: number[] } => {
+    const mapping: { [sym: number]: false | number[] } = {};
     vars.forEach((v) => {
         mapping[v.sym.id] = false;
     });
@@ -420,14 +453,30 @@ export const inferVarsFromArgs = (
         const arg = args[i];
         if (arg.type === 'TRef' && arg.ref.type === 'Local') {
             if (mapping[arg.ref.sym] === false) {
-                mapping[arg.ref.sym] = i;
+                mapping[arg.ref.sym] = [i];
+            } else if (mapping[arg.ref.sym] != null) {
+                (mapping[arg.ref.sym] as number[]).push(i);
             }
         }
     }
     if (Object.keys(mapping).every((k) => mapping[+k] !== false)) {
-        return mapping as { [sym: number]: number };
+        return mapping as { [sym: number]: number[] };
     }
     return null;
+};
+
+export const unifiedTypes = (argTypes: t.Type[], idx: number[], ctx: Ctx) => {
+    let t = argTypes[idx[0]];
+    for (let i = 1; i < idx.length; i++) {
+        let unified = unifyTypes(t, argTypes[idx[i]], ctx);
+        if (unified) {
+            t = unified;
+        }
+    }
+    // if (idx.length > 1) {
+    //     ctx.debugger();
+    // }
+    return t;
 };
 
 export const autoTypeApply = (
@@ -443,7 +492,11 @@ export const autoTypeApply = (
         vars.every(
             (arg, i) =>
                 !arg.bound ||
-                typeMatches(argTypes[mapping[arg.sym.id]]!, arg.bound, ctx),
+                typeMatches(
+                    unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
+                    arg.bound,
+                    ctx,
+                ),
         )
     ) {
         return {
@@ -451,7 +504,9 @@ export const autoTypeApply = (
             target: {
                 type: 'TypeApplication',
                 target: node.target,
-                args: vars.map((arg) => argTypes[mapping[arg.sym.id]]!),
+                args: vars.map((arg) =>
+                    unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
+                ),
                 loc: node.target.loc,
             },
         };

@@ -143,7 +143,7 @@ export const ToPP = {
     TEnum(t: p.TEnum, ctx: PCtx): pp.PP {
         return pp.items(
             [
-                pp.text('[ ', noloc),
+                pp.text('[' + (t.cases?.items.length ? ' ' : ''), noloc),
                 ...pp.interleave(
                     t.cases?.items.map((c) => {
                         if (c.type === 'Star') {
@@ -186,7 +186,7 @@ export const ToPP = {
                     }) || [],
                     ' | ',
                 ),
-                pp.text(' ]', noloc),
+                pp.text((t.cases?.items.length ? ' ' : '') + ']', noloc),
             ],
             t.loc,
         );
