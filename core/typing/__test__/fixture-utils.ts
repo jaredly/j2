@@ -323,7 +323,7 @@ export function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
             case 'value':
                 try {
                     const ast = parseType(builtin.type);
-                    const tast = ctx.ToTast[ast.type](ast as any, ctx);
+                    const tast = ctx.ToTast.Type(ast, ctx);
                     addBuiltin(ctx, builtin.name, tast);
                 } catch (err) {
                     console.error(err);
@@ -333,7 +333,7 @@ export function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
                 let args: TVar[] = [];
                 if (builtin.args) {
                     const ast = parseType(builtin.args + 'ok');
-                    const tast = ctx.ToTast[ast.type](ast as any, ctx);
+                    const tast = ctx.ToTast.Type(ast, ctx);
                     if (tast.type === 'TVars') {
                         args = tast.args.map((arg) => ({ ...arg, loc: noloc }));
                     }
