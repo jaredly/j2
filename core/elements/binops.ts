@@ -12,7 +12,7 @@ import { Ctx as TMCtx } from '../typing/typeMatches';
 
 export const grammar = `
 BinOp = first:WithUnary rest_drop:BinOpRight* 
-BinOpRight = __ op:binopWithHash __ right:WithUnary
+BinOpRight = _ op:binopWithHash _ right:WithUnary
 WithUnary = op_drop:UnaryOpWithHash? inner:DecoratedExpression
 UnaryOpWithHash = op:UnaryOp hash:IdHash?
 UnaryOp = "-" / "!"
@@ -43,32 +43,50 @@ export const ToTast = {
         return inner;
     },
     BinOp(ast: p.BinOp_inner, ctx: TCtx): t.Expression {
-        let inner = ctx.ToTast.Expression(ast.first, ctx);
-        ast.rest.forEach((right) => {
-            right.op;
-            right.right;
-            const target = ctx.ToTast.Identifier(
+        let first = ctx.ToTast.Expression(ast.first, ctx);
+        let rest = ast.rest.map(({ op, right, loc }) => ({
+            // op: op.op,
+            level: opLevel(op.op),
+            loc,
+            right: ctx.ToTast.Expression(right, ctx),
+            op: ctx.ToTast.Identifier(
                 {
-                    ...right.op,
-                    text: right.op.op,
+                    loc: op.loc,
+                    hash: op.hash,
+                    text: op.op,
                     type: 'Identifier',
                 },
                 ctx,
-            );
-            inner = {
-                type: 'Apply',
-                target,
-                args: [inner, ctx.ToTast.Expression(right.right, ctx)],
-                loc: right.loc,
-            };
-        });
+            ),
+        }));
 
-        /*
-        OK steps here:
-        - make a tree of the binop elements, by precendence
-        - do normal resolution
-        */
-        return inner;
+        const tree = arrangeIntoLevels(first, rest);
+        return treeToExpr(tree);
+
+        // let inner = ctx.ToTast.Expression(ast.first, ctx);
+        // ast.rest.forEach((right) => {
+        //     const target = ctx.ToTast.Identifier(
+        //         {
+        //             ...right.op,
+        //             text: right.op.op,
+        //             type: 'Identifier',
+        //         },
+        //         ctx,
+        //     );
+        //     inner = {
+        //         type: 'Apply',
+        //         target,
+        //         args: [inner, ctx.ToTast.Expression(right.right, ctx)],
+        //         loc: right.loc,
+        //     };
+        // });
+
+        // /*
+        // OK steps here:
+        // - make a tree of the binop elements, by precendence
+        // - do normal resolution
+        // */
+        // return inner;
     },
     // Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
     // },
@@ -107,3 +125,204 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
     // Expression_Apply(node, { ctx, hit }) {
     // },
 };
+
+// loosest at the top, tightest at the bottom
+export const precedence = [
+    ['&'],
+    ['|'],
+    ['='],
+    ['>', '<'],
+    ['+', '-'],
+    ['/', '*'],
+    ['^'],
+];
+
+let opLevel = (op: string) => {
+    for (let i = 0; i < precedence.length; i++) {
+        if (precedence[i].includes(op[0])) {
+            return i;
+        }
+    }
+    return precedence.length;
+};
+
+// OK SO
+// we have {type: 'group', op, items}
+// all things are left-associative I think
+//
+// Oh so what if, I start out with
+// putting then just at the ~same level,
+// and then I go through and rebalance?
+
+/*
+
+1
+    + 2
+        * 3
+            + 4
+
+
+1 + (2 * (3 + 4))
+
+((1 + 2) * 3) + 4
+
+*/
+
+type Op = {
+    type: 'op';
+    left: Tree;
+    op: t.Expression;
+    right: Tree;
+    level: number;
+    loc: t.Loc;
+};
+type Single = { type: 'single'; expr: t.Expression };
+type Tree = Op | Single;
+
+const treeToExpr = (tree: Tree): t.Expression => {
+    if (tree.type === 'single') {
+        return tree.expr;
+    }
+    const left = treeToExpr(tree.left);
+    const right = treeToExpr(tree.right);
+    return {
+        type: 'Apply',
+        target: tree.op,
+        args: [left, right],
+        loc: {
+            start: left.loc.start,
+            end: right.loc.end,
+            idx: tree.op.loc.idx,
+        },
+    };
+};
+
+const arrangeIntoLevels = (
+    first: t.Expression,
+    rest: {
+        level: number;
+        right: t.Expression;
+        op: t.Expression;
+        loc: t.Loc;
+    }[],
+) => {
+    let current: Tree = {
+        type: 'op',
+        loc: rest[0].loc,
+        level: rest[0].level,
+        left: { type: 'single', expr: first },
+        op: rest[0].op,
+        right: { type: 'single', expr: rest[0].right },
+    };
+    rest.slice(1).forEach(({ loc, level, right, op }) => {
+        current = {
+            type: 'op',
+            loc,
+            level,
+            left: current,
+            op,
+            right: { type: 'single', expr: right },
+        };
+    });
+    let root: Tree = current;
+    let count = 0;
+    while (true) {
+        const updated: Tree | null = rebalanceTree(root);
+        if (updated == null) {
+            break;
+        }
+        if (count++ > 1000) {
+            throw new Error(`Too much churn rebalancing ops tree`);
+        }
+        root = updated;
+    }
+    return root;
+};
+
+/*
+
+          A
+        /   \
+       B     C
+      / \   / \
+     D   E F   G
+
+     if B needs to be higher than A
+
+       B
+      / \
+     D   A
+       /   \
+      E     C
+           / \
+          F   G
+
+
+LOWER "level number" should be "HIGHER" in the tree
+*/
+
+type BNode<Op, Leaf> = {
+    type: 'op';
+    left: BTree<Op, Leaf>;
+    op: Op;
+    loc: t.Loc;
+    right: BTree<Op, Leaf>;
+    level: number;
+};
+type BLeaf<T> = { type: 'single'; expr: T };
+type BTree<Op, Leaf> = BNode<Op, Leaf> | BLeaf<Leaf>;
+
+// Returns null if unchanged
+export const rebalanceTree = <Op, Leaf>(
+    tree: BTree<Op, Leaf>,
+): BTree<Op, Leaf> | null => {
+    if (tree.type === 'single') {
+        return null;
+    }
+    const left = rebalanceTree(tree.left);
+    const ll = left ?? tree.left;
+    if (ll.type === 'op' && ll.level < tree.level) {
+        return {
+            ...ll,
+            right: {
+                ...tree,
+                left: ll.right,
+            },
+        };
+    }
+    const right = rebalanceTree(tree.right);
+    const rr = right ?? tree.right;
+    if (rr.type === 'op' && rr.level <= tree.level) {
+        return {
+            ...rr,
+            left: {
+                ...tree,
+                right: rr.left,
+            },
+        };
+    }
+    return left || right ? { ...tree, left: ll, right: rr } : null;
+};
+
+// const arrangeIntoLevels_ = (
+//     first: t.Expression,
+//     rest: {
+//         level: number;
+//         right: t.Expression;
+//         op: t.Expression;
+//     }[],
+// ) => {
+//     let root: Tree = {
+//         type: 'op',
+//         level: rest[0].level,
+//         left: { type: 'single', expr: first },
+//         op: rest[0].op,
+//         right: { type: 'single', expr: rest[0].right },
+//     };
+//     let path: Op[] = [root];
+//     rest.slice(1).forEach(({ level, right, op }) => {
+//         const last = path[path.length - 1];
+//         if (level < last.level) {
+//         }
+//     });
+// };

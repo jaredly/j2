@@ -131,7 +131,7 @@ export const ToPP = {
 };
 
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
-    Expression_Apply(node, { ctx, hit }) {
+    ApplyPost(node, { ctx, hit }) {
         if (
             node.target.type === 'Ref' &&
             node.target.kind.type === 'Unresolved'
@@ -160,11 +160,13 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         }
                     }
                 }
-                // STOPSHIP
-                // debugger;
+                // ctx.debugger();
             }
             // Check if there are multiples
         }
+        return null;
+    },
+    Expression_Apply(node, { ctx, hit }) {
         // Otherwise, try to get the type of the target & compare to the args
         const ttype = ctx.getType(node.target);
         if (!ttype) {

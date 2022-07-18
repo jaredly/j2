@@ -56,7 +56,7 @@ AttrText "attribute" = $([0-9a-z-A-Z_]+)
 // binops.ts
 
 BinOp = first:WithUnary rest_drop:BinOpRight* 
-BinOpRight = __ op:binopWithHash __ right:WithUnary
+BinOpRight = _ op:binopWithHash _ right:WithUnary
 WithUnary = op_drop:UnaryOpWithHash? inner:DecoratedExpression
 UnaryOpWithHash = op:UnaryOp hash:IdHash?
 UnaryOp = "-" / "!"
