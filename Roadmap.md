@@ -3,7 +3,8 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
-- [ ] normal (reolved) apply, let it infer type args
+- [x] normal (reolved) apply, let it infer type args
+- [x] oh I need to support Expression_ApplyPost in transformer
 - [ ] when printing apply's, drop type args if inferrable
 
 - [x] little cleanup, remove all of the `as any`s

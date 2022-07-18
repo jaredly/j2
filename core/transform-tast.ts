@@ -297,126 +297,175 @@ export type Visitor<Ctx> = {
         node: TypeAlias,
         ctx: Ctx,
     ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
+    TypeToplevelPost_TypeAlias?: (
+        node: TypeAlias,
+        ctx: Ctx,
+    ) => null | TypeToplevel;
     Toplevel_ToplevelExpression?: (
         node: ToplevelExpression,
         ctx: Ctx,
     ) => null | false | Toplevel | [Toplevel | null, Ctx];
+    ToplevelPost_ToplevelExpression?: (
+        node: ToplevelExpression,
+        ctx: Ctx,
+    ) => null | Toplevel;
     Toplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
     ) => null | false | Toplevel | [Toplevel | null, Ctx];
+    ToplevelPost_TypeAlias?: (node: TypeAlias, ctx: Ctx) => null | Toplevel;
     Expression_Ref?: (
         node: Ref,
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Ref?: (node: Ref, ctx: Ctx) => null | Expression;
     Expression_Apply?: (
         node: Apply,
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Apply?: (node: Apply, ctx: Ctx) => null | Expression;
     Expression_Enum?: (
         node: Enum,
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Enum?: (node: Enum, ctx: Ctx) => null | Expression;
     Expression_Record?: (
         node: Record,
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Record?: (node: Record, ctx: Ctx) => null | Expression;
     Expression_Number?: (
         node: Number,
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Number?: (node: Number, ctx: Ctx) => null | Expression;
     Expression_Boolean?: (
         node: Boolean,
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Boolean?: (node: Boolean, ctx: Ctx) => null | Expression;
     Expression_TemplateString?: (
         node: TemplateString,
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_TemplateString?: (
+        node: TemplateString,
+        ctx: Ctx,
+    ) => null | Expression;
     Expression_TypeApplication?: (
         node: TypeApplication,
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_TypeApplication?: (
+        node: TypeApplication,
+        ctx: Ctx,
+    ) => null | Expression;
     Expression_DecoratedExpression?: (
         node: DecoratedExpression,
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_DecoratedExpression?: (
+        node: DecoratedExpression,
+        ctx: Ctx,
+    ) => null | Expression;
     IExpression_Ref?: (
         node: Ref,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_Ref?: (node: Ref, ctx: Ctx) => null | IExpression;
     IExpression_Number?: (
         node: Number,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_Number?: (node: Number, ctx: Ctx) => null | IExpression;
     IExpression_Boolean?: (
         node: Boolean,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_Boolean?: (node: Boolean, ctx: Ctx) => null | IExpression;
     IExpression_IApply?: (
         node: IApply,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_IApply?: (node: IApply, ctx: Ctx) => null | IExpression;
     IExpression_ITemplateString?: (
         node: ITemplateString,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_ITemplateString?: (
+        node: ITemplateString,
+        ctx: Ctx,
+    ) => null | IExpression;
     IExpression_IEnum?: (
         node: IEnum,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_IEnum?: (node: IEnum, ctx: Ctx) => null | IExpression;
     IExpression_IRecord?: (
         node: IRecord,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_IRecord?: (node: IRecord, ctx: Ctx) => null | IExpression;
     DecoratorArg_DExpr?: (
         node: DExpr,
         ctx: Ctx,
     ) => null | false | DecoratorArg | [DecoratorArg | null, Ctx];
+    DecoratorArgPost_DExpr?: (node: DExpr, ctx: Ctx) => null | DecoratorArg;
     DecoratorArg_DType?: (
         node: DType,
         ctx: Ctx,
     ) => null | false | DecoratorArg | [DecoratorArg | null, Ctx];
+    DecoratorArgPost_DType?: (node: DType, ctx: Ctx) => null | DecoratorArg;
     Type_TRef?: (
         node: TRef,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TRef?: (node: TRef, ctx: Ctx) => null | Type;
     Type_TLambda?: (
         node: TLambda,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TLambda?: (node: TLambda, ctx: Ctx) => null | Type;
     Type_TEnum?: (
         node: TEnum,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TEnum?: (node: TEnum, ctx: Ctx) => null | Type;
     Type_Number?: (
         node: Number,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
+    TypePost_Number?: (node: Number, ctx: Ctx) => null | Type;
     Type_String?: (
         node: String,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
+    TypePost_String?: (node: String, ctx: Ctx) => null | Type;
     Type_TVars?: (
         node: TVars,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TVars?: (node: TVars, ctx: Ctx) => null | Type;
     Type_TDecorated?: (
         node: TDecorated,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TDecorated?: (node: TDecorated, ctx: Ctx) => null | Type;
     Type_TApply?: (
         node: TApply,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TApply?: (node: TApply, ctx: Ctx) => null | Type;
     Type_TRecord?: (
         node: TRecord,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TRecord?: (node: TRecord, ctx: Ctx) => null | Type;
     Type_TOps?: (
         node: TOps,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TOps?: (node: TOps, ctx: Ctx) => null | Type;
 };
 export const transformId = <Ctx>(
     node: Id,
@@ -1560,6 +1609,28 @@ export const transformDecoratorArg = <Ctx>(
             const updatedNode$0node = transformDType(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'DExpr': {
+            const transformed = visitor.DecoratorArgPost_DExpr
+                ? visitor.DecoratorArgPost_DExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DType': {
+            const transformed = visitor.DecoratorArgPost_DType
+                ? visitor.DecoratorArgPost_DType(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -2819,6 +2890,108 @@ export const transformType = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'TRef': {
+            const transformed = visitor.TypePost_TRef
+                ? visitor.TypePost_TRef(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TLambda': {
+            const transformed = visitor.TypePost_TLambda
+                ? visitor.TypePost_TLambda(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TEnum': {
+            const transformed = visitor.TypePost_TEnum
+                ? visitor.TypePost_TEnum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Number': {
+            const transformed = visitor.TypePost_Number
+                ? visitor.TypePost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'String': {
+            const transformed = visitor.TypePost_String
+                ? visitor.TypePost_String(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TVars': {
+            const transformed = visitor.TypePost_TVars
+                ? visitor.TypePost_TVars(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TDecorated': {
+            const transformed = visitor.TypePost_TDecorated
+                ? visitor.TypePost_TDecorated(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TApply': {
+            const transformed = visitor.TypePost_TApply
+                ? visitor.TypePost_TApply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecord': {
+            const transformed = visitor.TypePost_TRecord
+                ? visitor.TypePost_TRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TOps': {
+            const transformed = visitor.TypePost_TOps
+                ? visitor.TypePost_TOps(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.TypePost) {
         const transformed = visitor.TypePost(node, ctx);
@@ -3250,6 +3423,98 @@ export const transformExpression = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'Ref': {
+            const transformed = visitor.ExpressionPost_Ref
+                ? visitor.ExpressionPost_Ref(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Apply': {
+            const transformed = visitor.ExpressionPost_Apply
+                ? visitor.ExpressionPost_Apply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Enum': {
+            const transformed = visitor.ExpressionPost_Enum
+                ? visitor.ExpressionPost_Enum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Record': {
+            const transformed = visitor.ExpressionPost_Record
+                ? visitor.ExpressionPost_Record(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Number': {
+            const transformed = visitor.ExpressionPost_Number
+                ? visitor.ExpressionPost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Boolean': {
+            const transformed = visitor.ExpressionPost_Boolean
+                ? visitor.ExpressionPost_Boolean(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TemplateString': {
+            const transformed = visitor.ExpressionPost_TemplateString
+                ? visitor.ExpressionPost_TemplateString(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeApplication': {
+            const transformed = visitor.ExpressionPost_TypeApplication
+                ? visitor.ExpressionPost_TypeApplication(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecoratedExpression': {
+            const transformed = visitor.ExpressionPost_DecoratedExpression
+                ? visitor.ExpressionPost_DecoratedExpression(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.ExpressionPost) {
         const transformed = visitor.ExpressionPost(node, ctx);
@@ -3483,6 +3748,28 @@ export const transformToplevel = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'ToplevelExpression': {
+            const transformed = visitor.ToplevelPost_ToplevelExpression
+                ? visitor.ToplevelPost_ToplevelExpression(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAlias': {
+            const transformed = visitor.ToplevelPost_TypeAlias
+                ? visitor.ToplevelPost_TypeAlias(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.ToplevelPost) {
         const transformed = visitor.ToplevelPost(node, ctx);
@@ -3627,6 +3914,18 @@ export const transformTypeToplevel = <Ctx>(
             const updatedNode$0node = transformType(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'TypeAlias': {
+            const transformed = visitor.TypeToplevelPost_TypeAlias
+                ? visitor.TypeToplevelPost_TypeAlias(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -4307,6 +4606,78 @@ export const transformIExpression = <Ctx>(
             const updatedNode$0node = transformIRecord(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Ref': {
+            const transformed = visitor.IExpressionPost_Ref
+                ? visitor.IExpressionPost_Ref(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Number': {
+            const transformed = visitor.IExpressionPost_Number
+                ? visitor.IExpressionPost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Boolean': {
+            const transformed = visitor.IExpressionPost_Boolean
+                ? visitor.IExpressionPost_Boolean(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'IApply': {
+            const transformed = visitor.IExpressionPost_IApply
+                ? visitor.IExpressionPost_IApply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ITemplateString': {
+            const transformed = visitor.IExpressionPost_ITemplateString
+                ? visitor.IExpressionPost_ITemplateString(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'IEnum': {
+            const transformed = visitor.IExpressionPost_IEnum
+                ? visitor.IExpressionPost_IEnum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'IRecord': {
+            const transformed = visitor.IExpressionPost_IRecord
+                ? visitor.IExpressionPost_IRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 

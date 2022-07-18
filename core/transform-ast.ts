@@ -611,386 +611,650 @@ export type Visitor<Ctx> = {
         node: Apply,
         ctx: Ctx,
     ) => null | false | Apply | [Apply | null, Ctx];
+    ApplyPost_Apply?: (node: Apply, ctx: Ctx) => null | Apply;
     Suffix_CallSuffix?: (
         node: CallSuffix,
         ctx: Ctx,
     ) => null | false | Suffix | [Suffix | null, Ctx];
+    SuffixPost_CallSuffix?: (node: CallSuffix, ctx: Ctx) => null | Suffix;
     Suffix_TypeApplicationSuffix?: (
         node: TypeApplicationSuffix,
         ctx: Ctx,
     ) => null | false | Suffix | [Suffix | null, Ctx];
+    SuffixPost_TypeApplicationSuffix?: (
+        node: TypeApplicationSuffix,
+        ctx: Ctx,
+    ) => null | Suffix;
     Toplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
     ) => null | false | Toplevel | [Toplevel | null, Ctx];
+    ToplevelPost_TypeAlias?: (node: TypeAlias, ctx: Ctx) => null | Toplevel;
     TypeToplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
     ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
+    TypeToplevelPost_TypeAlias?: (
+        node: TypeAlias,
+        ctx: Ctx,
+    ) => null | TypeToplevel;
     Atom_Number?: (
         node: Number,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Number?: (node: Number, ctx: Ctx) => null | Atom;
     Atom_Boolean?: (
         node: Boolean,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Boolean?: (node: Boolean, ctx: Ctx) => null | Atom;
     Atom_Identifier?: (
         node: Identifier,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Identifier?: (node: Identifier, ctx: Ctx) => null | Atom;
     Atom_ParenedOp?: (
         node: ParenedOp,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_ParenedOp?: (node: ParenedOp, ctx: Ctx) => null | Atom;
     Atom_ParenedExpression?: (
         node: ParenedExpression,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_ParenedExpression?: (
+        node: ParenedExpression,
+        ctx: Ctx,
+    ) => null | Atom;
     Atom_TemplateString?: (
         node: TemplateString,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_TemplateString?: (node: TemplateString, ctx: Ctx) => null | Atom;
     Atom_Enum?: (
         node: Enum,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Enum?: (node: Enum, ctx: Ctx) => null | Atom;
     Atom_Record?: (
         node: Record,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Record?: (node: Record, ctx: Ctx) => null | Atom;
     BinOp_BinOp?: (
         node: BinOp,
         ctx: Ctx,
     ) => null | false | BinOp | [BinOp | null, Ctx];
+    BinOpPost_BinOp?: (node: BinOp, ctx: Ctx) => null | BinOp;
     WithUnary_WithUnary?: (
         node: WithUnary,
         ctx: Ctx,
     ) => null | false | WithUnary | [WithUnary | null, Ctx];
+    WithUnaryPost_WithUnary?: (node: WithUnary, ctx: Ctx) => null | WithUnary;
     DecoratedExpression_DecoratedExpression?: (
         node: DecoratedExpression,
         ctx: Ctx,
     ) => null | false | DecoratedExpression | [DecoratedExpression | null, Ctx];
+    DecoratedExpressionPost_DecoratedExpression?: (
+        node: DecoratedExpression,
+        ctx: Ctx,
+    ) => null | DecoratedExpression;
     DecoratorArg_DecType?: (
         node: DecType,
         ctx: Ctx,
     ) => null | false | DecoratorArg | [DecoratorArg | null, Ctx];
+    DecoratorArgPost_DecType?: (node: DecType, ctx: Ctx) => null | DecoratorArg;
     DecoratorArg_DecExpr?: (
         node: DecExpr,
         ctx: Ctx,
     ) => null | false | DecoratorArg | [DecoratorArg | null, Ctx];
+    DecoratorArgPost_DecExpr?: (node: DecExpr, ctx: Ctx) => null | DecoratorArg;
     EnumCase_TagDecl?: (
         node: TagDecl,
         ctx: Ctx,
     ) => null | false | EnumCase | [EnumCase | null, Ctx];
+    EnumCasePost_TagDecl?: (node: TagDecl, ctx: Ctx) => null | EnumCase;
     EnumCase_Star?: (
         node: Star,
         ctx: Ctx,
     ) => null | false | EnumCase | [EnumCase | null, Ctx];
+    EnumCasePost_Star?: (node: Star, ctx: Ctx) => null | EnumCase;
     RecordItem_RecordSpread?: (
         node: RecordSpread,
         ctx: Ctx,
     ) => null | false | RecordItem | [RecordItem | null, Ctx];
+    RecordItemPost_RecordSpread?: (
+        node: RecordSpread,
+        ctx: Ctx,
+    ) => null | RecordItem;
     RecordItem_RecordKeyValue?: (
         node: RecordKeyValue,
         ctx: Ctx,
     ) => null | false | RecordItem | [RecordItem | null, Ctx];
+    RecordItemPost_RecordKeyValue?: (
+        node: RecordKeyValue,
+        ctx: Ctx,
+    ) => null | RecordItem;
     TRecordItem_TRecordSpread?: (
         node: TRecordSpread,
         ctx: Ctx,
     ) => null | false | TRecordItem | [TRecordItem | null, Ctx];
+    TRecordItemPost_TRecordSpread?: (
+        node: TRecordSpread,
+        ctx: Ctx,
+    ) => null | TRecordItem;
     TRecordItem_TRecordKeyValue?: (
         node: TRecordKeyValue,
         ctx: Ctx,
     ) => null | false | TRecordItem | [TRecordItem | null, Ctx];
+    TRecordItemPost_TRecordKeyValue?: (
+        node: TRecordKeyValue,
+        ctx: Ctx,
+    ) => null | TRecordItem;
     TRecordItem_Star?: (
         node: Star,
         ctx: Ctx,
     ) => null | false | TRecordItem | [TRecordItem | null, Ctx];
+    TRecordItemPost_Star?: (node: Star, ctx: Ctx) => null | TRecordItem;
     TApply_TApply?: (
         node: TApply,
         ctx: Ctx,
     ) => null | false | TApply | [TApply | null, Ctx];
+    TApplyPost_TApply?: (node: TApply, ctx: Ctx) => null | TApply;
     TAtom_TRef?: (
         node: TRef,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TRef?: (node: TRef, ctx: Ctx) => null | TAtom;
     TAtom_Number?: (
         node: Number,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_Number?: (node: Number, ctx: Ctx) => null | TAtom;
     TAtom_String?: (
         node: String,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_String?: (node: String, ctx: Ctx) => null | TAtom;
     TAtom_TLambda?: (
         node: TLambda,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TLambda?: (node: TLambda, ctx: Ctx) => null | TAtom;
     TAtom_TVars?: (
         node: TVars,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TVars?: (node: TVars, ctx: Ctx) => null | TAtom;
     TAtom_TParens?: (
         node: TParens,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TParens?: (node: TParens, ctx: Ctx) => null | TAtom;
     TAtom_TEnum?: (
         node: TEnum,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TEnum?: (node: TEnum, ctx: Ctx) => null | TAtom;
     TAtom_TRecord?: (
         node: TRecord,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TRecord?: (node: TRecord, ctx: Ctx) => null | TAtom;
     TOps_TOps?: (
         node: TOps,
         ctx: Ctx,
     ) => null | false | TOps | [TOps | null, Ctx];
+    TOpsPost_TOps?: (node: TOps, ctx: Ctx) => null | TOps;
     TOpInner_TDecorated?: (
         node: TDecorated,
         ctx: Ctx,
     ) => null | false | TOpInner | [TOpInner | null, Ctx];
+    TOpInnerPost_TDecorated?: (node: TDecorated, ctx: Ctx) => null | TOpInner;
     AllTaggedTypes_File?: (
         node: File,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_File?: (node: File, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TypeFile?: (
         node: TypeFile,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeFile?: (
+        node: TypeFile,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Apply?: (
         node: Apply,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Apply?: (node: Apply, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_CallSuffix?: (
         node: CallSuffix,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_CallSuffix?: (
+        node: CallSuffix,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_CommaExpr?: (
         node: CommaExpr,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_CommaExpr?: (
+        node: CommaExpr,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Identifier?: (
         node: Identifier,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Identifier?: (
+        node: Identifier,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_ParenedExpression?: (
         node: ParenedExpression,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_ParenedExpression?: (
+        node: ParenedExpression,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_BinOp?: (
         node: BinOp,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_BinOp?: (node: BinOp, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_BinOpRight?: (
         node: BinOpRight,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_BinOpRight?: (
+        node: BinOpRight,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_WithUnary?: (
         node: WithUnary,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_WithUnary?: (
+        node: WithUnary,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_UnaryOpWithHash?: (
         node: UnaryOpWithHash,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_UnaryOpWithHash?: (
+        node: UnaryOpWithHash,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_binopWithHash?: (
         node: binopWithHash,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_binopWithHash?: (
+        node: binopWithHash,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_ParenedOp?: (
         node: ParenedOp,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_ParenedOp?: (
+        node: ParenedOp,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Boolean?: (
         node: Boolean,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Boolean?: (
+        node: Boolean,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Number?: (
         node: Number,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Number?: (
+        node: Number,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_String?: (
         node: String,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_String?: (
+        node: String,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TemplateString?: (
         node: TemplateString,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TemplateString?: (
+        node: TemplateString,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TemplatePair?: (
         node: TemplatePair,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TemplatePair?: (
+        node: TemplatePair,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TemplateWrap?: (
         node: TemplateWrap,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TemplateWrap?: (
+        node: TemplateWrap,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_DecoratedExpression?: (
         node: DecoratedExpression,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_DecoratedExpression?: (
+        node: DecoratedExpression,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Decorator?: (
         node: Decorator,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Decorator?: (
+        node: Decorator,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_DecoratorId?: (
         node: DecoratorId,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_DecoratorId?: (
+        node: DecoratorId,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_DecoratorArgs?: (
         node: DecoratorArgs,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_DecoratorArgs?: (
+        node: DecoratorArgs,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_LabeledDecoratorArg?: (
         node: LabeledDecoratorArg,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_LabeledDecoratorArg?: (
+        node: LabeledDecoratorArg,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_DecType?: (
         node: DecType,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_DecType?: (
+        node: DecType,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_DecExpr?: (
         node: DecExpr,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_DecExpr?: (
+        node: DecExpr,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Enum?: (
         node: Enum,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Enum?: (node: Enum, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TEnum?: (
         node: TEnum,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TEnum?: (node: TEnum, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_EnumCases?: (
         node: EnumCases,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_EnumCases?: (
+        node: EnumCases,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TagDecl?: (
         node: TagDecl,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TagDecl?: (
+        node: TagDecl,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TagPayload?: (
         node: TagPayload,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TagPayload?: (
+        node: TagPayload,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Star?: (
         node: Star,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Star?: (node: Star, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TypeApplicationSuffix?: (
         node: TypeApplicationSuffix,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeApplicationSuffix?: (
+        node: TypeApplicationSuffix,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TypeAppVbls?: (
         node: TypeAppVbls,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeAppVbls?: (
+        node: TypeAppVbls,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TypeVariables?: (
         node: TypeVariables,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeVariables?: (
+        node: TypeVariables,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TypeVbls?: (
         node: TypeVbls,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeVbls?: (
+        node: TypeVbls,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TypeVbl?: (
         node: TypeVbl,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeVbl?: (
+        node: TypeVbl,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Record?: (
         node: Record,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Record?: (
+        node: Record,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_RecordItems?: (
         node: RecordItems,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_RecordItems?: (
+        node: RecordItems,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_RecordSpread?: (
         node: RecordSpread,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_RecordSpread?: (
+        node: RecordSpread,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_RecordKeyValue?: (
         node: RecordKeyValue,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_RecordKeyValue?: (
+        node: RecordKeyValue,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRecord?: (
         node: TRecord,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRecord?: (
+        node: TRecord,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRecordItems?: (
         node: TRecordItems,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRecordItems?: (
+        node: TRecordItems,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRecordSpread?: (
         node: TRecordSpread,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRecordSpread?: (
+        node: TRecordSpread,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRecordKeyValue?: (
         node: TRecordKeyValue,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRecordKeyValue?: (
+        node: TRecordKeyValue,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TApply?: (
         node: TApply,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TApply?: (
+        node: TApply,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TComma?: (
         node: TComma,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TComma?: (
+        node: TComma,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TVars?: (
         node: TVars,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TVars?: (node: TVars, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TBargs?: (
         node: TBargs,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TBargs?: (
+        node: TBargs,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TBArg?: (
         node: TBArg,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TBArg?: (node: TBArg, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TDecorated?: (
         node: TDecorated,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TDecorated?: (
+        node: TDecorated,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRef?: (
         node: TRef,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRef?: (node: TRef, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TOps?: (
         node: TOps,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TOps?: (node: TOps, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TRight?: (
         node: TRight,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRight?: (
+        node: TRight,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TParens?: (
         node: TParens,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TParens?: (
+        node: TParens,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TArg?: (
         node: TArg,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TArg?: (node: TArg, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TArgs?: (
         node: TArgs,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TArgs?: (node: TArgs, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TLambda?: (
         node: TLambda,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TLambda?: (
+        node: TLambda,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeAlias?: (
+        node: TypeAlias,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TypePair?: (
         node: TypePair,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypePair?: (
+        node: TypePair,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
 };
 export const transformLoc = <Ctx>(
     node: Loc,
@@ -2240,6 +2504,28 @@ export const transformRecordItem = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'RecordSpread': {
+            const transformed = visitor.RecordItemPost_RecordSpread
+                ? visitor.RecordItemPost_RecordSpread(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'RecordKeyValue': {
+            const transformed = visitor.RecordItemPost_RecordKeyValue
+                ? visitor.RecordItemPost_RecordKeyValue(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.RecordItemPost) {
         const transformed = visitor.RecordItemPost(node, ctx);
@@ -2623,6 +2909,88 @@ export const transformAtom = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'Number': {
+            const transformed = visitor.AtomPost_Number
+                ? visitor.AtomPost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Boolean': {
+            const transformed = visitor.AtomPost_Boolean
+                ? visitor.AtomPost_Boolean(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Identifier': {
+            const transformed = visitor.AtomPost_Identifier
+                ? visitor.AtomPost_Identifier(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ParenedOp': {
+            const transformed = visitor.AtomPost_ParenedOp
+                ? visitor.AtomPost_ParenedOp(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ParenedExpression': {
+            const transformed = visitor.AtomPost_ParenedExpression
+                ? visitor.AtomPost_ParenedExpression(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TemplateString': {
+            const transformed = visitor.AtomPost_TemplateString
+                ? visitor.AtomPost_TemplateString(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Enum': {
+            const transformed = visitor.AtomPost_Enum
+                ? visitor.AtomPost_Enum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Record': {
+            const transformed = visitor.AtomPost_Record
+                ? visitor.AtomPost_Record(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.AtomPost) {
         const transformed = visitor.AtomPost(node, ctx);
@@ -2919,6 +3287,28 @@ export const transformSuffix = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'CallSuffix': {
+            const transformed = visitor.SuffixPost_CallSuffix
+                ? visitor.SuffixPost_CallSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeApplicationSuffix': {
+            const transformed = visitor.SuffixPost_TypeApplicationSuffix
+                ? visitor.SuffixPost_TypeApplicationSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.SuffixPost) {
         const transformed = visitor.SuffixPost(node, ctx);
@@ -3068,6 +3458,18 @@ export const transformApply = <Ctx>(
             const updatedNode$0node = transformAtom(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Apply': {
+            const transformed = visitor.ApplyPost_Apply
+                ? visitor.ApplyPost_Apply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -3228,6 +3630,22 @@ export const transformDecoratedExpression = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'DecoratedExpression': {
+            const transformed =
+                visitor.DecoratedExpressionPost_DecoratedExpression
+                    ? visitor.DecoratedExpressionPost_DecoratedExpression(
+                          updatedNode,
+                          ctx,
+                      )
+                    : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.DecoratedExpressionPost) {
         const transformed = visitor.DecoratedExpressionPost(node, ctx);
@@ -3369,6 +3787,18 @@ export const transformWithUnary = <Ctx>(
             );
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'WithUnary': {
+            const transformed = visitor.WithUnaryPost_WithUnary
+                ? visitor.WithUnaryPost_WithUnary(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -3585,6 +4015,18 @@ export const transformBinOp = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'BinOp': {
+            const transformed = visitor.BinOpPost_BinOp
+                ? visitor.BinOpPost_BinOp(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.BinOpPost) {
         const transformed = visitor.BinOpPost(node, ctx);
@@ -3774,6 +4216,28 @@ export const transformDecoratorArg = <Ctx>(
             const updatedNode$0node = transformDecExpr(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'DecType': {
+            const transformed = visitor.DecoratorArgPost_DecType
+                ? visitor.DecoratorArgPost_DecType(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecExpr': {
+            const transformed = visitor.DecoratorArgPost_DecExpr
+                ? visitor.DecoratorArgPost_DecExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -5074,6 +5538,38 @@ export const transformTRecordItem = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'TRecordSpread': {
+            const transformed = visitor.TRecordItemPost_TRecordSpread
+                ? visitor.TRecordItemPost_TRecordSpread(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecordKeyValue': {
+            const transformed = visitor.TRecordItemPost_TRecordKeyValue
+                ? visitor.TRecordItemPost_TRecordKeyValue(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Star': {
+            const transformed = visitor.TRecordItemPost_Star
+                ? visitor.TRecordItemPost_Star(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.TRecordItemPost) {
         const transformed = visitor.TRecordItemPost(node, ctx);
@@ -5370,6 +5866,28 @@ export const transformEnumCase = <Ctx>(
             const updatedNode$0node = transformStar(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'TagDecl': {
+            const transformed = visitor.EnumCasePost_TagDecl
+                ? visitor.EnumCasePost_TagDecl(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Star': {
+            const transformed = visitor.EnumCasePost_Star
+                ? visitor.EnumCasePost_Star(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -5754,6 +6272,88 @@ export const transformTAtom = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'TRef': {
+            const transformed = visitor.TAtomPost_TRef
+                ? visitor.TAtomPost_TRef(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Number': {
+            const transformed = visitor.TAtomPost_Number
+                ? visitor.TAtomPost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'String': {
+            const transformed = visitor.TAtomPost_String
+                ? visitor.TAtomPost_String(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TLambda': {
+            const transformed = visitor.TAtomPost_TLambda
+                ? visitor.TAtomPost_TLambda(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TVars': {
+            const transformed = visitor.TAtomPost_TVars
+                ? visitor.TAtomPost_TVars(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TParens': {
+            const transformed = visitor.TAtomPost_TParens
+                ? visitor.TAtomPost_TParens(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TEnum': {
+            const transformed = visitor.TAtomPost_TEnum
+                ? visitor.TAtomPost_TEnum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecord': {
+            const transformed = visitor.TAtomPost_TRecord
+                ? visitor.TAtomPost_TRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.TAtomPost) {
         const transformed = visitor.TAtomPost(node, ctx);
@@ -5906,6 +6506,18 @@ export const transformTApply = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'TApply': {
+            const transformed = visitor.TApplyPost_TApply
+                ? visitor.TApplyPost_TApply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.TApplyPost) {
         const transformed = visitor.TApplyPost(node, ctx);
@@ -6054,6 +6666,18 @@ export const transformTOpInner = <Ctx>(
             const updatedNode$0node = transformTApply(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'TDecorated': {
+            const transformed = visitor.TOpInnerPost_TDecorated
+                ? visitor.TOpInnerPost_TDecorated(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -6261,6 +6885,18 @@ export const transformTOps = <Ctx>(
             const updatedNode$0node = transformTOpInner(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'TOps': {
+            const transformed = visitor.TOpsPost_TOps
+                ? visitor.TOpsPost_TOps(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -6504,6 +7140,18 @@ export const transformToplevel = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'TypeAlias': {
+            const transformed = visitor.ToplevelPost_TypeAlias
+                ? visitor.ToplevelPost_TypeAlias(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.ToplevelPost) {
         const transformed = visitor.ToplevelPost(node, ctx);
@@ -6649,6 +7297,18 @@ export const transformTypeToplevel = <Ctx>(
             const updatedNode$0node = transformType(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'TypeAlias': {
+            const transformed = visitor.TypeToplevelPost_TypeAlias
+                ? visitor.TypeToplevelPost_TypeAlias(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -9041,6 +9701,617 @@ export const transformAllTaggedTypes = <Ctx>(
             const updatedNode$0node = transformTypePair(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'File': {
+            const transformed = visitor.AllTaggedTypesPost_File
+                ? visitor.AllTaggedTypesPost_File(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeFile': {
+            const transformed = visitor.AllTaggedTypesPost_TypeFile
+                ? visitor.AllTaggedTypesPost_TypeFile(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Apply': {
+            const transformed = visitor.AllTaggedTypesPost_Apply
+                ? visitor.AllTaggedTypesPost_Apply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'CallSuffix': {
+            const transformed = visitor.AllTaggedTypesPost_CallSuffix
+                ? visitor.AllTaggedTypesPost_CallSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'CommaExpr': {
+            const transformed = visitor.AllTaggedTypesPost_CommaExpr
+                ? visitor.AllTaggedTypesPost_CommaExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Identifier': {
+            const transformed = visitor.AllTaggedTypesPost_Identifier
+                ? visitor.AllTaggedTypesPost_Identifier(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ParenedExpression': {
+            const transformed = visitor.AllTaggedTypesPost_ParenedExpression
+                ? visitor.AllTaggedTypesPost_ParenedExpression(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'BinOp': {
+            const transformed = visitor.AllTaggedTypesPost_BinOp
+                ? visitor.AllTaggedTypesPost_BinOp(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'BinOpRight': {
+            const transformed = visitor.AllTaggedTypesPost_BinOpRight
+                ? visitor.AllTaggedTypesPost_BinOpRight(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'WithUnary': {
+            const transformed = visitor.AllTaggedTypesPost_WithUnary
+                ? visitor.AllTaggedTypesPost_WithUnary(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'UnaryOpWithHash': {
+            const transformed = visitor.AllTaggedTypesPost_UnaryOpWithHash
+                ? visitor.AllTaggedTypesPost_UnaryOpWithHash(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'binopWithHash': {
+            const transformed = visitor.AllTaggedTypesPost_binopWithHash
+                ? visitor.AllTaggedTypesPost_binopWithHash(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ParenedOp': {
+            const transformed = visitor.AllTaggedTypesPost_ParenedOp
+                ? visitor.AllTaggedTypesPost_ParenedOp(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Boolean': {
+            const transformed = visitor.AllTaggedTypesPost_Boolean
+                ? visitor.AllTaggedTypesPost_Boolean(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Number': {
+            const transformed = visitor.AllTaggedTypesPost_Number
+                ? visitor.AllTaggedTypesPost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'String': {
+            const transformed = visitor.AllTaggedTypesPost_String
+                ? visitor.AllTaggedTypesPost_String(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TemplateString': {
+            const transformed = visitor.AllTaggedTypesPost_TemplateString
+                ? visitor.AllTaggedTypesPost_TemplateString(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TemplatePair': {
+            const transformed = visitor.AllTaggedTypesPost_TemplatePair
+                ? visitor.AllTaggedTypesPost_TemplatePair(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TemplateWrap': {
+            const transformed = visitor.AllTaggedTypesPost_TemplateWrap
+                ? visitor.AllTaggedTypesPost_TemplateWrap(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecoratedExpression': {
+            const transformed = visitor.AllTaggedTypesPost_DecoratedExpression
+                ? visitor.AllTaggedTypesPost_DecoratedExpression(
+                      updatedNode,
+                      ctx,
+                  )
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Decorator': {
+            const transformed = visitor.AllTaggedTypesPost_Decorator
+                ? visitor.AllTaggedTypesPost_Decorator(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecoratorId': {
+            const transformed = visitor.AllTaggedTypesPost_DecoratorId
+                ? visitor.AllTaggedTypesPost_DecoratorId(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecoratorArgs': {
+            const transformed = visitor.AllTaggedTypesPost_DecoratorArgs
+                ? visitor.AllTaggedTypesPost_DecoratorArgs(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'LabeledDecoratorArg': {
+            const transformed = visitor.AllTaggedTypesPost_LabeledDecoratorArg
+                ? visitor.AllTaggedTypesPost_LabeledDecoratorArg(
+                      updatedNode,
+                      ctx,
+                  )
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecType': {
+            const transformed = visitor.AllTaggedTypesPost_DecType
+                ? visitor.AllTaggedTypesPost_DecType(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecExpr': {
+            const transformed = visitor.AllTaggedTypesPost_DecExpr
+                ? visitor.AllTaggedTypesPost_DecExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Enum': {
+            const transformed = visitor.AllTaggedTypesPost_Enum
+                ? visitor.AllTaggedTypesPost_Enum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TEnum': {
+            const transformed = visitor.AllTaggedTypesPost_TEnum
+                ? visitor.AllTaggedTypesPost_TEnum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'EnumCases': {
+            const transformed = visitor.AllTaggedTypesPost_EnumCases
+                ? visitor.AllTaggedTypesPost_EnumCases(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TagDecl': {
+            const transformed = visitor.AllTaggedTypesPost_TagDecl
+                ? visitor.AllTaggedTypesPost_TagDecl(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TagPayload': {
+            const transformed = visitor.AllTaggedTypesPost_TagPayload
+                ? visitor.AllTaggedTypesPost_TagPayload(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Star': {
+            const transformed = visitor.AllTaggedTypesPost_Star
+                ? visitor.AllTaggedTypesPost_Star(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeApplicationSuffix': {
+            const transformed = visitor.AllTaggedTypesPost_TypeApplicationSuffix
+                ? visitor.AllTaggedTypesPost_TypeApplicationSuffix(
+                      updatedNode,
+                      ctx,
+                  )
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAppVbls': {
+            const transformed = visitor.AllTaggedTypesPost_TypeAppVbls
+                ? visitor.AllTaggedTypesPost_TypeAppVbls(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeVariables': {
+            const transformed = visitor.AllTaggedTypesPost_TypeVariables
+                ? visitor.AllTaggedTypesPost_TypeVariables(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeVbls': {
+            const transformed = visitor.AllTaggedTypesPost_TypeVbls
+                ? visitor.AllTaggedTypesPost_TypeVbls(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeVbl': {
+            const transformed = visitor.AllTaggedTypesPost_TypeVbl
+                ? visitor.AllTaggedTypesPost_TypeVbl(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Record': {
+            const transformed = visitor.AllTaggedTypesPost_Record
+                ? visitor.AllTaggedTypesPost_Record(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'RecordItems': {
+            const transformed = visitor.AllTaggedTypesPost_RecordItems
+                ? visitor.AllTaggedTypesPost_RecordItems(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'RecordSpread': {
+            const transformed = visitor.AllTaggedTypesPost_RecordSpread
+                ? visitor.AllTaggedTypesPost_RecordSpread(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'RecordKeyValue': {
+            const transformed = visitor.AllTaggedTypesPost_RecordKeyValue
+                ? visitor.AllTaggedTypesPost_RecordKeyValue(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecord': {
+            const transformed = visitor.AllTaggedTypesPost_TRecord
+                ? visitor.AllTaggedTypesPost_TRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecordItems': {
+            const transformed = visitor.AllTaggedTypesPost_TRecordItems
+                ? visitor.AllTaggedTypesPost_TRecordItems(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecordSpread': {
+            const transformed = visitor.AllTaggedTypesPost_TRecordSpread
+                ? visitor.AllTaggedTypesPost_TRecordSpread(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecordKeyValue': {
+            const transformed = visitor.AllTaggedTypesPost_TRecordKeyValue
+                ? visitor.AllTaggedTypesPost_TRecordKeyValue(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TApply': {
+            const transformed = visitor.AllTaggedTypesPost_TApply
+                ? visitor.AllTaggedTypesPost_TApply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TComma': {
+            const transformed = visitor.AllTaggedTypesPost_TComma
+                ? visitor.AllTaggedTypesPost_TComma(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TVars': {
+            const transformed = visitor.AllTaggedTypesPost_TVars
+                ? visitor.AllTaggedTypesPost_TVars(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TBargs': {
+            const transformed = visitor.AllTaggedTypesPost_TBargs
+                ? visitor.AllTaggedTypesPost_TBargs(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TBArg': {
+            const transformed = visitor.AllTaggedTypesPost_TBArg
+                ? visitor.AllTaggedTypesPost_TBArg(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TDecorated': {
+            const transformed = visitor.AllTaggedTypesPost_TDecorated
+                ? visitor.AllTaggedTypesPost_TDecorated(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRef': {
+            const transformed = visitor.AllTaggedTypesPost_TRef
+                ? visitor.AllTaggedTypesPost_TRef(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TOps': {
+            const transformed = visitor.AllTaggedTypesPost_TOps
+                ? visitor.AllTaggedTypesPost_TOps(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRight': {
+            const transformed = visitor.AllTaggedTypesPost_TRight
+                ? visitor.AllTaggedTypesPost_TRight(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TParens': {
+            const transformed = visitor.AllTaggedTypesPost_TParens
+                ? visitor.AllTaggedTypesPost_TParens(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TArg': {
+            const transformed = visitor.AllTaggedTypesPost_TArg
+                ? visitor.AllTaggedTypesPost_TArg(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TArgs': {
+            const transformed = visitor.AllTaggedTypesPost_TArgs
+                ? visitor.AllTaggedTypesPost_TArgs(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TLambda': {
+            const transformed = visitor.AllTaggedTypesPost_TLambda
+                ? visitor.AllTaggedTypesPost_TLambda(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAlias': {
+            const transformed = visitor.AllTaggedTypesPost_TypeAlias
+                ? visitor.AllTaggedTypesPost_TypeAlias(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypePair': {
+            const transformed = visitor.AllTaggedTypesPost_TypePair
+                ? visitor.AllTaggedTypesPost_TypePair(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 

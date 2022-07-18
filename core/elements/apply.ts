@@ -199,7 +199,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
 
         return null;
     },
-    Expression_Apply(node, { ctx, hit }) {
+    ExpressionPost_Apply(node, { ctx, hit }) {
         // Otherwise, try to get the type of the target & compare to the args
         const ttype = ctx.getType(node.target);
         if (!ttype) {

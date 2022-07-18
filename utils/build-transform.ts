@@ -354,6 +354,7 @@ export const unionTransformer = (
 
     // Ok, pre-show for individuals
     const preCases: Array<string> = [];
+    const postCases: Array<string> = [];
     if (unionName) {
         type.types.forEach((t) => {
             const resolved = resolveType(t, ctx);
@@ -380,7 +381,15 @@ export const unionTransformer = (
                             }
                             break
                         }`,
-                        // `${name}_${tname[0]}?: (node: ${tname}, ctx: any) => null | false | ${name} | [${name} | null, Ctx]`,
+                    );
+                    postCases.push(
+                        `case '${tname[0]}': {
+                            const transformed = visitor.${unionName}Post_${name} ? visitor.${unionName}Post_${name}(${newName}, ctx) : null;
+                            if (transformed != null) {
+                                ${newName} = transformed;
+                            }
+                            break
+                        }`,
                     );
                 }
             }
@@ -400,6 +409,12 @@ export const unionTransformer = (
 
         switch (${vbl}.type) {
             ${cases.join('\n\n            ')}
+        }${
+            postCases.length
+                ? `\n\nswitch (${newName}.type) {
+            ${postCases.join('\n\n            ')}
+        }`
+                : ''
         }`;
 };
 
@@ -616,6 +631,7 @@ export function buildTransformFile(
                     if (tname.length && ctx.types[tname[0]]) {
                         visitorSubs.push(
                             `${name}_${tname[0]}?: (node: ${tname}, ctx: Ctx) => null | false | ${name} | [${name} | null, Ctx]`,
+                            `${name}Post_${tname[0]}?: (node: ${tname}, ctx: Ctx) => null | ${name}`,
                         );
                     }
                 }
