@@ -1,5 +1,5 @@
 import { Ctx } from '..';
-import { noloc } from '../ctx';
+import { FullContext, noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as ICtx } from '../ir/ir';
@@ -199,6 +199,8 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
+import { idsEqual } from '../ids';
+import { findBuiltinName } from './base';
 export const ToJS = {
     Number(x: t.Number, ctx: JCtx): b.NumericLiteral {
         return b.numericLiteral(x.value);
@@ -207,6 +209,12 @@ export const ToJS = {
         return b.booleanLiteral(x.value);
     },
     Ref(x: t.Ref, ctx: JCtx): b.Identifier {
+        if (x.kind.type === 'Global') {
+            const name = findBuiltinName(x.kind.id, ctx.actx);
+            if (name) {
+                return b.identifier(name);
+            }
+        }
         return b.identifier(t.refHash(x.kind));
     },
     ITemplateString(x: t.ITemplateString, ctx: JCtx): b.TemplateLiteral {

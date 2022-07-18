@@ -17,8 +17,11 @@ alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h0220a608632738c67902e09a1b0
 ==[New fixture]==
 --[input]--
 2+3+4
+2 + 3 * (1+4)+5
 
 --[output:expected]--
-alias +=h0220a608632738c67902e09a1b0ba3102ec3ebd0 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h0220a608632738c67902e09a1b0ba3102ec3ebd0 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 (+)((+)(2, 3), 4)
+// int
+(+)((+)(2, (*)(3, (+)(1, 4))), 5)
 // int

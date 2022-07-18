@@ -13,11 +13,11 @@ and/or a nice error coalescing example.
 	- [x] parse
 	- [-] totast
 		- [x] basic
-		- [ ] honor precendence
+		- [x] honor precendence
 	- [x] allow referencing binops like (*)
 	- [x] print with parens if appropriate in an apply
 	- [ ] print for real, with parens for precedence where needed
-	- [ ] print js too? like yeah
+	- [x] print js too? like yeah
 	- [ ] binops w/ type variables, so
 		<A: int, B: int>(a: A, b: B) => A + B
 	- [ ] eq! <A: eq>(a: A, b: A) => bool

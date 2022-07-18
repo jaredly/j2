@@ -387,10 +387,40 @@ function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
     }
 }
 
+export const findBuiltinName = (id: t.Id, ctx: ACtx): string | null => {
+    const got = ctx.valueForId(id);
+    if (got && got.type === 'builtin') {
+        const inner = (ctx as FullContext).extract();
+
+        for (let key of Object.keys(inner.values.names)) {
+            if (inner.values.names[key].some((ref) => idsEqual(ref.id, id))) {
+                return key;
+            }
+        }
+    }
+    return null;
+};
+
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
+import { FullContext } from '../ctx';
+import { idsEqual } from '../ids';
 export const ToJS = {
     IApply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
+        if (
+            args.length === 2 &&
+            target.type === 'Ref' &&
+            target.kind.type === 'Global'
+        ) {
+            const name = findBuiltinName(target.kind.id, ctx.actx);
+            if (name && !name.match(/^[a-zA-Z_0-0]/)) {
+                return b.binaryExpression(
+                    name as any,
+                    ctx.ToJS.IExpression(args[0], ctx),
+                    ctx.ToJS.IExpression(args[1], ctx),
+                );
+            }
+        }
         return b.callExpression(
             ctx.ToJS.IExpression(target, ctx),
             args.map((arg) => ctx.ToJS.IExpression(arg, ctx)),

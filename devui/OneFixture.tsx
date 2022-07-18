@@ -335,7 +335,7 @@ export function OneFixture({
                                                 top.expr as any,
                                                 ictx,
                                             );
-                                            const jctx = jCtx();
+                                            const jctx = jCtx(tctx);
                                             const js = jctx.ToJS.IExpression(
                                                 ir,
                                                 jctx,

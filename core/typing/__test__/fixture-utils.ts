@@ -251,7 +251,7 @@ export function runFixture(
             }
             const ictx = iCtx();
             const ir = ictx.ToIR[top.expr.type](top.expr as any, ictx);
-            const jctx = jCtx();
+            const jctx = jCtx(ctx);
             const js = jctx.ToJS.IExpression(ir, jctx);
             const jsraw = generate(js).code;
             const pp = newPPCtx(false);
