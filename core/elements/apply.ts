@@ -9,6 +9,7 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { noloc } from '../ctx';
+import { opLevel } from './binops';
 
 export const grammar = `
 Apply = target:Atom suffixes_drop:Suffix*
@@ -69,6 +70,103 @@ export const maybeParenedBinop = (v: p.BinOp): p.WithUnary => {
     return v;
 };
 
+export const makeBinop = (
+    op: p.Identifier,
+    left: p.Expression,
+    right: p.Expression,
+): p.Expression => {
+    const opp: p.BinOpRight['op'] = {
+        op: op.text,
+        loc: op.loc,
+        hash: op.hash,
+        type: 'binopWithHash',
+    };
+    let level = opLevel(op.text);
+    if (left.type === 'BinOp') {
+        const levels = left.rest.map((r) => opLevel(r.op.op));
+        let maxLevel = Math.max(...levels);
+        if (maxLevel >= level) {
+            let rest = left.rest.slice();
+            if (right.type === 'BinOp') {
+                const levels = right.rest.map((r) => opLevel(r.op.op));
+                const maxLevel = Math.max(...levels);
+                if (maxLevel >= level) {
+                    rest.push(
+                        {
+                            type: 'BinOpRight',
+                            op: opp,
+                            right: right.first,
+                            loc: right.loc,
+                        },
+                        ...right.rest,
+                    );
+                } else {
+                    rest.push({
+                        type: 'BinOpRight',
+                        op: opp,
+                        right: maybeParenedBinop(right),
+                        loc: right.loc,
+                    });
+                }
+            } else {
+                rest.push({
+                    type: 'BinOpRight',
+                    op: opp,
+                    right: maybeParenedBinop(right),
+                    loc: right.loc,
+                });
+            }
+            return {
+                ...left,
+                rest,
+            };
+        }
+    }
+    if (right.type === 'BinOp') {
+        const levels = right.rest.map((r) => opLevel(r.op.op));
+        const maxLevel = Math.max(...levels);
+        if (maxLevel >= level) {
+            return {
+                type: 'BinOp',
+                first: maybeParenedBinop(left),
+                rest: [
+                    {
+                        type: 'BinOpRight',
+                        right: right.first,
+                        loc: op.loc,
+                        op: {
+                            op: op.text,
+                            loc: op.loc,
+                            hash: op.hash,
+                            type: 'binopWithHash',
+                        },
+                    },
+                    ...right.rest,
+                ],
+                loc: op.loc,
+            };
+        }
+    }
+    return {
+        type: 'BinOp',
+        first: maybeParenedBinop(left),
+        rest: [
+            {
+                type: 'BinOpRight',
+                right: maybeParenedBinop(right),
+                loc: op.loc,
+                op: {
+                    op: op.text,
+                    loc: op.loc,
+                    hash: op.hash,
+                    type: 'binopWithHash',
+                },
+            },
+        ],
+        loc: op.loc,
+    };
+};
+
 export const makeApply = (
     inner: p.Expression,
     suffix: p.Suffix,
@@ -81,24 +179,7 @@ export const makeApply = (
         suffix.args &&
         suffix.args.items.length === 2
     ) {
-        return {
-            type: 'BinOp',
-            first: maybeParenedBinop(suffix.args.items[0]),
-            rest: [
-                {
-                    type: 'BinOpRight',
-                    right: maybeParenedBinop(suffix.args.items[1]),
-                    loc: suffix.loc,
-                    op: {
-                        op: inner.text,
-                        loc: inner.loc,
-                        hash: inner.hash,
-                        type: 'binopWithHash',
-                    },
-                },
-            ],
-            loc,
-        };
+        return makeBinop(inner, suffix.args.items[0], suffix.args.items[1]);
     }
     if (inner.type === 'Apply') {
         return { ...inner, suffixes: inner.suffixes.concat([suffix]) };

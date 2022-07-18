@@ -126,7 +126,7 @@ export const precedence = [
     ['^'],
 ];
 
-let opLevel = (op: string) => {
+export const opLevel = (op: string) => {
     for (let i = 0; i < precedence.length; i++) {
         if (precedence[i].includes(op[0])) {
             return i;
