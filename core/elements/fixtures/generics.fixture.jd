@@ -232,4 +232,4 @@ iadd<10, 20>(10, 20)
 --[output:expected]--
 alias iadd=hc77e92301772e2ac145296b642b1c522b071d07e
 iadd<10, 20>(10, 20)
-// 10 + 20
+// 30

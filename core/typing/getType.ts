@@ -3,6 +3,7 @@ import { allRecordItems, TRecordKeyValue } from '../elements/records';
 import { extract, idToString } from '../ids';
 import { transformType } from '../transform-tast';
 import { Expression, Type, TVars, GlobalRef } from '../typed-ast';
+import { collapseOps } from './ops';
 import { typeMatches, Ctx } from './typeMatches';
 
 export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
@@ -41,6 +42,12 @@ export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
             Type_TRef(node, ctx) {
                 if (node.ref.type === 'Local' && symbols[node.ref.sym]) {
                     return symbols[node.ref.sym];
+                }
+                return null;
+            },
+            TypePost(node, _) {
+                if (node.type === 'TOps') {
+                    return collapseOps(node, ctx);
                 }
                 return null;
             },
