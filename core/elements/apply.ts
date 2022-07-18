@@ -56,11 +56,50 @@ export const ToTast = {
     },
 };
 
+export const isOpText = (t: string) => !t.match(/^[a-zA-Z_$]/);
+
+export const maybeParenedBinop = (v: p.BinOp): p.WithUnary => {
+    if (v.type === 'BinOp') {
+        return {
+            type: 'ParenedExpression',
+            loc: v.loc,
+            items: { type: 'CommaExpr', items: [v], loc: v.loc },
+        };
+    }
+    return v;
+};
+
 export const makeApply = (
     inner: p.Expression,
     suffix: p.Suffix,
     loc: t.Loc,
-): p.Apply_inner => {
+): p.Expression => {
+    if (
+        inner.type === 'Identifier' &&
+        isOpText(inner.text) &&
+        suffix.type === 'CallSuffix' &&
+        suffix.args &&
+        suffix.args.items.length === 2
+    ) {
+        return {
+            type: 'BinOp',
+            first: maybeParenedBinop(suffix.args.items[0]),
+            rest: [
+                {
+                    type: 'BinOpRight',
+                    right: maybeParenedBinop(suffix.args.items[1]),
+                    loc: suffix.loc,
+                    op: {
+                        op: inner.text,
+                        loc: inner.loc,
+                        hash: inner.hash,
+                        type: 'binopWithHash',
+                    },
+                },
+            ],
+            loc,
+        };
+    }
     if (inner.type === 'Apply') {
         return { ...inner, suffixes: inner.suffixes.concat([suffix]) };
     }
@@ -95,7 +134,7 @@ export const makeApply = (
 };
 
 export const ToAst = {
-    Apply({ target, args, loc }: Apply, ctx: TACtx): p.Apply {
+    Apply({ target, args, loc }: Apply, ctx: TACtx): p.Expression {
         if (target.type === 'TypeApplication') {
             const ttype = ctx.actx.getType(target.target);
             const argTypes = args.map((arg) => ctx.actx.getType(arg));

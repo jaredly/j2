@@ -62,34 +62,7 @@ export const ToTast = {
 
         const tree = arrangeIntoLevels(first, rest);
         return treeToExpr(tree);
-
-        // let inner = ctx.ToTast.Expression(ast.first, ctx);
-        // ast.rest.forEach((right) => {
-        //     const target = ctx.ToTast.Identifier(
-        //         {
-        //             ...right.op,
-        //             text: right.op.op,
-        //             type: 'Identifier',
-        //         },
-        //         ctx,
-        //     );
-        //     inner = {
-        //         type: 'Apply',
-        //         target,
-        //         args: [inner, ctx.ToTast.Expression(right.right, ctx)],
-        //         loc: right.loc,
-        //     };
-        // });
-
-        // /*
-        // OK steps here:
-        // - make a tree of the binop elements, by precendence
-        // - do normal resolution
-        // */
-        // return inner;
     },
-    // Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
-    // },
 };
 
 export const ToAst = {
@@ -115,7 +88,23 @@ export const ToPP = {
     },
     BinOp(ast: p.BinOp_inner, ctx: PCtx): pp.PP {
         const inner = ctx.ToPP.Expression(ast.first, ctx);
-        return inner;
+        return pp.items(
+            [
+                inner,
+                ...ast.rest.map(({ op, right, loc }) => {
+                    return pp.items(
+                        [
+                            pp.atom(' ', loc),
+                            pp.atom(op.op + (op.hash ?? ''), op.loc),
+                            pp.atom(' ', loc),
+                            ctx.ToPP.Expression(right, ctx),
+                        ],
+                        loc,
+                    );
+                }),
+            ],
+            ast.loc,
+        );
     },
     // Apply(apply: p.Apply_inner, ctx: PCtx): pp.PP {
     // },
@@ -303,26 +292,3 @@ export const rebalanceTree = <Op, Leaf>(
     }
     return left || right ? { ...tree, left: ll, right: rr } : null;
 };
-
-// const arrangeIntoLevels_ = (
-//     first: t.Expression,
-//     rest: {
-//         level: number;
-//         right: t.Expression;
-//         op: t.Expression;
-//     }[],
-// ) => {
-//     let root: Tree = {
-//         type: 'op',
-//         level: rest[0].level,
-//         left: { type: 'single', expr: first },
-//         op: rest[0].op,
-//         right: { type: 'single', expr: rest[0].right },
-//     };
-//     let path: Op[] = [root];
-//     rest.slice(1).forEach(({ level, right, op }) => {
-//         const last = path[path.length - 1];
-//         if (level < last.level) {
-//         }
-//     });
-// };
