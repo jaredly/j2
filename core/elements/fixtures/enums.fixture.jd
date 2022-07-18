@@ -16,7 +16,7 @@ type Tree = <T>[Node<T> | `Leaf(T)]
 and Node = <T>[`Tree(Array<Tree<T>>)]
 
 --[output:expected]--
-alias Array=h6ce318655ab4415711bb740c4f05155e4ac26aef
+alias Array=hfb6f1e273957b1ff385b246d9253142c9540f513
 type Tree = <T#[0]>[ Node#[r1]<T#[0]> | `Leaf(T#[0]) ]
 and Node = <T#[1]>[ `Tree(Array<Tree#[r0]<T#[1]>>) ]
 
@@ -27,7 +27,7 @@ type z = [`Z]
 type x = [int | `Hello | y | z]
 
 --[output:expected]--
-alias Array=h6ce318655ab4415711bb740c4f05155e4ac26aef error:notAnEnum=hf16010a7ae4b37140f787a2e06b17030e8329fb3 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f y=hee62968c14dcbd5319a9fbb6bd597d3849030728 z=h0134ffd3e646c10f4287b09aec0838d7ac4f5cb8
+alias Array=hfb6f1e273957b1ff385b246d9253142c9540f513 error:notAnEnum=hf16010a7ae4b37140f787a2e06b17030e8329fb3 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f y=h638d5da3319c2fa049acabb2a8fa575341b13ce7 z=h0134ffd3e646c10f4287b09aec0838d7ac4f5cb8
 type y = Array<10>
 type z = [ `Z ]
 type x = [ @error:notAnEnum() int | `Hello | @error:notAnEnum() y | z ]
