@@ -5,7 +5,7 @@ and/or a nice error coalescing example.
 
 - [x] normal (reolved) apply, let it infer type args
 - [x] oh I need to support Expression_ApplyPost in transformer
-- [ ] when printing apply's, drop type args if inferrable
+- [x] when printing apply's, drop type args if inferrable
 
 - [x] little cleanup, remove all of the `as any`s
 	- [x] do some by hand
@@ -13,16 +13,16 @@ and/or a nice error coalescing example.
 	- [x] get fed up, do a full codegen step for all aggregate types
 	- [x] YAYYY love it
 
-- [ ] binops
+- [x] binops
 	- [x] parse
-	- [-] totast
+	- [x] totast
 		- [x] basic
 		- [x] honor precendence
 	- [x] allow referencing binops like (*)
 	- [x] print with parens if appropriate in an apply
-	- [ ] print for real, with parens for precedence where needed
+	- [x] print for real, with parens for precedence where needed
 	- [x] print js too? like yeah
-	- [ ] binops w/ type variables, so
+	- [x] binops w/ type variables, so
 		<A: int, B: int>(a: A, b: B) => A + B
 	- [ ] eq! <A: eq>(a: A, b: A) => bool
 	- [ ] ohhhh am I going to need multiple & divide at the type level?

@@ -1,31 +1,27 @@
-import { noloc, refsEqual } from '../ctx';
+import { refsEqual } from '../ctx';
 import { enumTypeMatches } from '../elements/enums';
 import { recordMatches } from '../elements/records';
 import { tvarsMatches } from '../elements/type-vbls';
 import { Id } from '../ids';
-import { transformType, Visitor } from '../transform-tast';
+import { transformType } from '../transform-tast';
 import {
     EnumCase,
     GlobalRef,
     refHash,
-    RefKind,
     TApply,
     TEnum,
     TLambda,
     TOps,
     TRef,
-    TVar,
-    TVars,
     Type,
 } from '../typed-ast';
-import { applyType } from './getType';
 import {
     collapseOps,
-    justStringAdds,
-    stringAddsMatch,
-    numOps,
     eopsMatch,
     justAdds,
+    justStringAdds,
+    numOps,
+    stringAddsMatch,
     stringOps,
 } from './ops';
 import { unifyTypes } from './unifyTypes';
@@ -79,6 +75,33 @@ export const payloadsEqual = (
     );
 };
 
+export const hasFunctions = (t: Type, ctx: Ctx): boolean => {
+    let found = false;
+    transformType(
+        t,
+        {
+            TLambda(node, ctx) {
+                found = true;
+                return false;
+            },
+            TRef(node, _) {
+                const resolved = ctx.resolveRefsAndApplies(node);
+                found =
+                    found || (resolved ? hasFunctions(resolved, ctx) : true);
+                return false;
+            },
+            TApply(node, _) {
+                const resolved = ctx.resolveRefsAndApplies(node);
+                found =
+                    found || (resolved ? hasFunctions(resolved, ctx) : true);
+                return false;
+            },
+        },
+        null,
+    );
+    return found;
+};
+
 export const typeMatches = (
     candidate: Type,
     expected: Type,
@@ -106,6 +129,10 @@ export const typeMatches = (
     }
     if (candidate.type === 'TOps') {
         candidate = collapseOps(candidate, ctx);
+    }
+
+    if (ctx.isBuiltinType(expected, 'eq')) {
+        return !hasFunctions(candidate, ctx);
     }
 
     // console.log('at', candidate, expected);

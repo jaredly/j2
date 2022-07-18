@@ -618,6 +618,7 @@ toString: (value: bool) => string
 +: <A: int, B: int>(a: A, b: B) => A + B
 +: (a: float, b: float) => float
 *: (a: int, b: int) => int
+==: <T: eq>(a: T, b: T) => bool
 `;
 
 export const setupDefaults = (ctx: FullContext) => {
