@@ -136,7 +136,6 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             node.target.type === 'Ref' &&
             node.target.kind.type === 'Unresolved'
         ) {
-            // console.log('UNRESOLVE', node);
             const resolved = ctx.resolve(node.target.kind.text, null);
             if (resolved.length > 1) {
                 const argTypes = node.args.map((arg) => ctx.getType(arg));
@@ -157,6 +156,44 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                                 ...node,
                                 target: { ...node.target, kind: option },
                             };
+                        }
+                        if (
+                            ttype?.type === 'TVars' &&
+                            ttype.inner.type === 'TLambda'
+                        ) {
+                            const mapping = inferVarsFromArgs(
+                                ttype.args,
+                                ttype.inner.args.map((t) => t.typ),
+                            );
+                            if (
+                                mapping &&
+                                ttype.args.every(
+                                    (arg, i) =>
+                                        !arg.bound ||
+                                        typeMatches(
+                                            argTypes[mapping[arg.sym.id]]!,
+                                            arg.bound,
+                                            ctx,
+                                        ),
+                                )
+                            ) {
+                                return {
+                                    ...node,
+                                    target: {
+                                        type: 'TypeApplication',
+                                        target: {
+                                            ...node.target,
+                                            kind: option,
+                                        },
+                                        args: ttype.args.map(
+                                            (arg) =>
+                                                argTypes[mapping[arg.sym.id]]!,
+                                        ),
+                                        loc: node.target.loc,
+                                    },
+                                };
+                                // ctx.debugger();
+                            }
                         }
                     }
                 }
@@ -208,4 +245,26 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         // if it's not resolved, then
         return changed ? { ...node, args } : null;
     },
+};
+
+export const inferVarsFromArgs = (
+    vars: t.TVar[],
+    args: t.Type[],
+): null | { [key: number]: number } => {
+    const mapping: { [sym: number]: false | number } = {};
+    vars.forEach((v) => {
+        mapping[v.sym.id] = false;
+    });
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        if (arg.type === 'TRef' && arg.ref.type === 'Local') {
+            if (mapping[arg.ref.sym] === false) {
+                mapping[arg.ref.sym] = i;
+            }
+        }
+    }
+    if (Object.keys(mapping).every((k) => mapping[+k] !== false)) {
+        return mapping as { [sym: number]: number };
+    }
+    return null;
 };

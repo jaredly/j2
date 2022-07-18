@@ -615,7 +615,7 @@ const builtinValues = `
 toString: (value: int) => string
 toString: (value: float) => string
 toString: (value: bool) => string
-+: (a: int, b: int) => int
++: <A: int, B: int>(a: A, b: B) => A + B
 +: (a: float, b: float) => float
 *: (a: int, b: int) => int
 `;

@@ -21,6 +21,11 @@ and/or a nice error coalescing example.
 	- [ ] binops w/ type variables, so
 		<A: int, B: int>(a: A, b: B) => A + B
 	- [ ] eq! <A: eq>(a: A, b: A) => bool
+	- [ ] ohhhh am I going to need multiple & divide at the type level?
+		Or, am I just going to have fanciness for + and -?
+		Because, once I get fancy, it might be hard to go back.
+		Although my precedence tree rebalancing dealio does seem
+		very slick & simple to understand.
 - [ ] lambdas
 - [ ] ifs
 - [ ] lets
