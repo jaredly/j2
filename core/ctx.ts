@@ -2,7 +2,7 @@ import hashObject from 'object-hash';
 import { Ctx } from '.';
 import { DecoratorDecl } from './elements/decorators';
 import { TVar } from './elements/type-vbls';
-import { Loc } from './grammar/base.parser';
+import { Loc, parseType } from './grammar/base.parser';
 import { extract, Id, idsEqual, toId } from './ids';
 import { resolveAnalyzeType } from './resolveAnalyzeType';
 import { transformType } from './transform-tast';
@@ -11,7 +11,11 @@ import { Ctx as ACtx } from './typing/analyze';
 import { getType } from './typing/getType';
 import { makeToTast, Toplevel } from './typing/to-tast';
 import { Ctx as TCtx } from './typing/typeMatches';
-import { locClearVisitor } from './typing/__test__/fixture-utils';
+import {
+    clearLocs,
+    loadBuiltins,
+    locClearVisitor,
+} from './typing/__test__/fixture-utils';
 
 export type HashedNames<Contents, NameV> = {
     hashed: { [hash: string]: Array<Contents> };
@@ -605,14 +609,15 @@ eq
     .trim()
     .split('\n');
 
-// TODO: allow parsing from a `Declaration` rule,
-// which will let us declare our builtins like this.
-// although ... maybe what I want is to autogenerate
+// ... maybe what I want is to autogenerate
 // the types from the .ts file of builtins 🤔
 const builtinValues = `
-.toString: (value: int) => () => string
-.toString: (value: float) => () => string
-.toString: (value: bool) => () => string
+toString: (value: int) => string
+toString: (value: float) => string
+toString: (value: bool) => string
++: (a: int, b: int) => int
++: (a: float, b: float) => float
+*: (a: int, b: int) => int
 `;
 
 export const setupDefaults = (ctx: FullContext) => {
@@ -625,82 +630,17 @@ export const setupDefaults = (ctx: FullContext) => {
     });
     addBuiltinDecorator(ctx, `test:type`, 0);
 
-    addBuiltin(
-        ctx,
-        '+',
-        tlam(
-            [
-                { label: 'a', typ: tref(named.int), loc: noloc },
-                { label: 'b', typ: tref(named.int), loc: noloc },
-            ],
-            tref(named.int),
-        ),
-    );
-
-    addBuiltin(
-        ctx,
-        '+',
-        tlam(
-            [
-                { label: 'a', typ: tref(named.float), loc: noloc },
-                { label: 'b', typ: tref(named.float), loc: noloc },
-            ],
-            tref(named.float),
-        ),
-    );
-
-    addBuiltin(
-        ctx,
-        '*',
-        tlam(
-            [
-                { label: 'a', typ: tref(named.int), loc: noloc },
-                { label: 'b', typ: tref(named.int), loc: noloc },
-            ],
-            tref(named.int),
-        ),
-    );
-
-    addBuiltin(
-        ctx,
-        'toString',
-        tlam(
-            [{ label: 'v', typ: tref(named.int), loc: noloc }],
-            tref(named.string),
-        ),
-    );
-    addBuiltin(
-        ctx,
-        'toString',
-        tlam(
-            [{ label: 'v', typ: tref(named.float), loc: noloc }],
-            tref(named.string),
-        ),
-    );
-
-    addBuiltin(
-        ctx,
-        'add',
-        tlam(
-            [
-                { label: 'a', typ: tref(named.int), loc: noloc },
-                { label: 'b', typ: tref(named.int), loc: noloc },
-            ],
-            tref(named.int),
-        ),
-    );
-
-    addBuiltin(
-        ctx,
-        'add',
-        tlam(
-            [
-                { label: 'a', typ: tref(named.float), loc: noloc },
-                { label: 'b', typ: tref(named.float), loc: noloc },
-            ],
-            tref(named.float),
-        ),
-    );
+    builtinValues.split('\n').forEach((line) => {
+        const [name, ...rest] = line.split(':');
+        const type = rest.join(':');
+        try {
+            const t = parseType(type.trim());
+            const tast = ctx.ToTast.Type(t, ctx);
+            addBuiltin(ctx, name, transformType(tast, locClearVisitor, null));
+        } catch (err) {
+            console.log(type);
+        }
+    });
 };
 
 export const fullContext = () => {

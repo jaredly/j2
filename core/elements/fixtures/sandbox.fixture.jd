@@ -17,7 +17,7 @@ hello
 "${toString(10)} and ${one}"
 
 --[output:expected]--
-alias one=h75a4651f0e6841970290c6a4c7f547d57bb814ca string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h0ac4106142a4522c2471a4bc4c3cc92ae5c381f8
+alias one=h75a4651f0e6841970290c6a4c7f547d57bb814ca string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h99b01457a189d1392ca641b22a79c97b3eda324c
 "${toString(10)} and ${one}"
 // string
 
