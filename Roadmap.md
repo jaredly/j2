@@ -3,6 +3,9 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+- [ ] normal (reolved) apply, let it infer type args
+- [ ] when printing apply's, drop type args if inferrable
+
 - [x] little cleanup, remove all of the `as any`s
 	- [x] do some by hand
 	- [x] make a little macro system for generating some switch statements

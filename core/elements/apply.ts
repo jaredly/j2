@@ -161,38 +161,18 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                             ttype?.type === 'TVars' &&
                             ttype.inner.type === 'TLambda'
                         ) {
-                            const mapping = inferVarsFromArgs(
+                            const typed = autoTypeApply(
+                                {
+                                    ...node,
+                                    target: { ...node.target, kind: option },
+                                },
                                 ttype.args,
                                 ttype.inner.args.map((t) => t.typ),
+                                argTypes as t.Type[],
+                                ctx,
                             );
-                            if (
-                                mapping &&
-                                ttype.args.every(
-                                    (arg, i) =>
-                                        !arg.bound ||
-                                        typeMatches(
-                                            argTypes[mapping[arg.sym.id]]!,
-                                            arg.bound,
-                                            ctx,
-                                        ),
-                                )
-                            ) {
-                                return {
-                                    ...node,
-                                    target: {
-                                        type: 'TypeApplication',
-                                        target: {
-                                            ...node.target,
-                                            kind: option,
-                                        },
-                                        args: ttype.args.map(
-                                            (arg) =>
-                                                argTypes[mapping[arg.sym.id]]!,
-                                        ),
-                                        loc: node.target.loc,
-                                    },
-                                };
-                                // ctx.debugger();
+                            if (typed) {
+                                return typed;
                             }
                         }
                     }
@@ -200,7 +180,23 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                 // ctx.debugger();
             }
             // Check if there are multiples
+            return null;
         }
+
+        const ttype = ctx.getType(node.target);
+        if (ttype?.type === 'TVars' && ttype.inner.type === 'TLambda') {
+            const argTypes = node.args.map((arg) => ctx.getType(arg));
+            if (argTypes.every(Boolean)) {
+                return autoTypeApply(
+                    node,
+                    ttype.args,
+                    ttype.inner.args.map((t) => t.typ),
+                    argTypes as t.Type[],
+                    ctx,
+                );
+            }
+        }
+
         return null;
     },
     Expression_Apply(node, { ctx, hit }) {
@@ -265,6 +261,35 @@ export const inferVarsFromArgs = (
     }
     if (Object.keys(mapping).every((k) => mapping[+k] !== false)) {
         return mapping as { [sym: number]: number };
+    }
+    return null;
+};
+
+export const autoTypeApply = (
+    node: t.Apply,
+    vars: t.TVar[],
+    args: t.Type[],
+    argTypes: t.Type[],
+    ctx: Ctx,
+): null | t.Apply => {
+    const mapping = inferVarsFromArgs(vars, args);
+    if (
+        mapping &&
+        vars.every(
+            (arg, i) =>
+                !arg.bound ||
+                typeMatches(argTypes[mapping[arg.sym.id]]!, arg.bound, ctx),
+        )
+    ) {
+        return {
+            ...node,
+            target: {
+                type: 'TypeApplication',
+                target: node.target,
+                args: vars.map((arg) => argTypes[mapping[arg.sym.id]]!),
+                loc: node.target.loc,
+            },
+        };
     }
     return null;
 };
