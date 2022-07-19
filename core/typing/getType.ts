@@ -64,6 +64,20 @@ const maybeTref = (ref: GlobalRef | null) => (ref ? tref(ref) : null);
 // this could maybe do a ...visitor kind of thing as well.
 export const getType = (expr: Expression, ctx: Ctx): Type | null => {
     switch (expr.type) {
+        case 'Lambda': {
+            // TODO Args! Got to ... make type variables,
+            // and then figure things out.
+            return {
+                type: 'TLambda',
+                loc: expr.loc,
+                args: expr.args.map((arg) => ({
+                    label: '',
+                    typ: arg.typ!,
+                    loc: arg.loc,
+                })),
+                result: getType(expr.body, ctx)!,
+            };
+        }
         case 'TypeApplication': {
             const target = getType(expr.target, ctx);
             if (target?.type === 'TVars') {

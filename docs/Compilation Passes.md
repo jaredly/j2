@@ -19,3 +19,10 @@ TAST -> IR
 - insert converters wherever a subtype is being passed, right?
 	although, what exactly the converters need to do is platform-specific (js doesn't care about smaller/larger enums, for example)
 - returns and such
+- switch -> returns?
+	Althouuuugh, we could do switch->if/else and stay in-universe, right?
+- so really it's "if/else expr -> if/else stmt"?
+
+Ok but what about for & while loops? jerd doesn't have either,
+but imperative targets will. So it makes sense to have an IR
+that knows about them ... right?

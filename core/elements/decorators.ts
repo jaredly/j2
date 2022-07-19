@@ -140,7 +140,11 @@ export const ToAst = {
                     .concat(inner.decorators),
             };
         }
-        if (inner.type === 'BinOp' || inner.type === 'WithUnary') {
+        if (
+            inner.type === 'BinOp' ||
+            inner.type === 'WithUnary' ||
+            inner.type === 'Lambda'
+        ) {
             inner = {
                 type: 'ParenedExpression',
                 items: { type: 'CommaExpr', items: [inner], loc: inner.loc },

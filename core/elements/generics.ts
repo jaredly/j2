@@ -62,7 +62,7 @@ export const ToAst = {
     TypeApplication(
         { target, args, loc }: TypeApplication,
         ctx: TACtx,
-    ): p.Apply_inner {
+    ): p.Expression {
         return makeApply(
             ctx.ToAst.Expression(target, ctx),
             {

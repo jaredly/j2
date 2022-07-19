@@ -69,7 +69,7 @@ export type Toplevel = TypeAlias | Expression;
 
 export type TypeToplevel = TypeAlias | Type;
 
-export type Expression = BinOp;
+export type Expression = Lambda | BinOp;
 
 export type Identifier = {
   type: "Identifier";
@@ -326,6 +326,48 @@ export type TypeVbl = {
   bound: Type | null;
 };
 
+export type Lambda = {
+  type: "Lambda";
+  loc: Loc;
+  args: LArgs | null;
+  res: Type | null;
+  body: Expression;
+};
+
+export type LArgs = {
+  type: "LArgs";
+  loc: Loc;
+  items: LArg[];
+};
+
+export type LArg = {
+  type: "LArg";
+  loc: Loc;
+  pat: Pattern;
+  typ: Type | null;
+};
+
+export type Pattern = PName | PTuple;
+
+export type PName = {
+  type: "PName";
+  loc: Loc;
+  name: string;
+  hash: string;
+};
+
+export type PTuple = {
+  type: "PTuple";
+  loc: Loc;
+  items: PTupleItems | null;
+};
+
+export type PTupleItems = {
+  type: "PTupleItems";
+  loc: Loc;
+  items: Pattern[];
+};
+
 export type Record = {
   type: "Record";
   loc: Loc;
@@ -495,9 +537,9 @@ export type TypePair = {
   typ: Type;
 };
 
-export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | Identifier | ParenedExpression | BinOp_inner | BinOpRight | WithUnary_inner | UnaryOpWithHash | binopWithHash | ParenedOp | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | Record | RecordItems | RecordSpread | RecordKeyValue | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
+export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | Identifier | ParenedExpression | BinOp_inner | BinOpRight | WithUnary_inner | UnaryOpWithHash | binopWithHash | ParenedOp | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | Lambda | LArgs | LArg | PName | PTuple | PTupleItems | Record | RecordItems | RecordSpread | RecordKeyValue | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
 
-export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "Identifier", "ParenedExpression", "BinOp", "BinOpRight", "WithUnary", "UnaryOpWithHash", "binopWithHash", "ParenedOp", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "Record", "RecordItems", "RecordSpread", "RecordKeyValue", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "Identifier", "ParenedExpression", "BinOp", "BinOpRight", "WithUnary", "UnaryOpWithHash", "binopWithHash", "ParenedOp", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "Lambda", "LArgs", "LArg", "PName", "PTuple", "PTupleItems", "Record", "RecordItems", "RecordSpread", "RecordKeyValue", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
 
 // @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});

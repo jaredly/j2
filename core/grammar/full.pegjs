@@ -38,13 +38,13 @@ _EOF = !.
 Toplevel = TypeAlias / Expression
 TypeToplevel = TypeAlias / Type
 
-Expression = BinOp
+Expression = Lambda / BinOp
 
 Identifier = text:$IdText hash:IdHash?
 
 IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
 
-Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record
+Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record 
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -139,6 +139,21 @@ TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
 TypeVariables = "<" _ vbls:TypeVbls ">" _ body:Expression
 TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
 TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
+
+
+// lambda.ts
+
+Lambda = "(" _ args:LArgs? _ ")" _ res:(":" _ Type)? _ "=>" _ body:Expression
+LArgs = first:LArg rest:(_ "," _ LArg)*
+LArg = pat:Pattern typ:(_ ":" _ Type)?
+
+
+// pattern.ts
+
+Pattern = PName / PTuple
+PName = name:$IdText hash:$JustSym?
+PTuple = "(" _  items:PTupleItems? _ ")"
+PTupleItems = first:Pattern rest:(_ "," _ Pattern)*
 
 
 // record-exprs.ts

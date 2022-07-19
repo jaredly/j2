@@ -1,0 +1,10 @@
+##[fixtures]##
+==[basic]==
+--[input]--
+() => 10
+// hello
+
+--[output:expected]--
+() => 10
+// () => 10
+// hello

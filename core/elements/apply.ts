@@ -60,8 +60,8 @@ export const ToTast = {
 
 export const isOpText = (t: string) => !t.match(/^[a-zA-Z_$]/);
 
-export const maybeParenedBinop = (v: p.BinOp): p.WithUnary => {
-    if (v.type === 'BinOp') {
+export const maybeParenedBinop = (v: p.Expression): p.WithUnary => {
+    if (v.type === 'BinOp' || v.type === 'Lambda') {
         return {
             type: 'ParenedExpression',
             loc: v.loc,
@@ -201,7 +201,11 @@ export const makeApply = (
             loc,
         };
     }
-    if (inner.type === 'BinOp' || inner.type === 'WithUnary') {
+    if (
+        inner.type === 'BinOp' ||
+        inner.type === 'WithUnary' ||
+        inner.type === 'Lambda'
+    ) {
         inner = {
             type: 'ParenedExpression',
             items: {

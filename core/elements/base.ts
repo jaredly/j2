@@ -20,13 +20,13 @@ _EOF = !.
 Toplevel = TypeAlias / Expression
 TypeToplevel = TypeAlias / Type
 
-Expression = BinOp
+Expression = Lambda / BinOp
 
 Identifier = text:$IdText hash:IdHash?
 
 IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
 
-Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record
+Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record 
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 

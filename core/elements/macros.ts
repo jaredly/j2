@@ -74,6 +74,9 @@ export const ToTast = {
 
     Expression(node: p.Expression, ctx: TCtx): t.Expression {
         switch (node.type) {
+            case 'Lambda':
+                return ctx.ToTast.Lambda(node, ctx);
+
             case 'BinOp':
                 return ctx.ToTast.BinOp(node, ctx);
 
@@ -123,6 +126,20 @@ export const ToTast = {
 
             case 'DecExpr':
                 return ctx.ToTast.DecExpr(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    Pattern(node: p.Pattern, ctx: TCtx): t.Pattern {
+        switch (node.type) {
+            case 'PName':
+                return ctx.ToTast.PName(node, ctx);
+
+            case 'PTuple':
+                return ctx.ToTast.PTuple(node, ctx);
 
             default:
                 let _: never = node;
@@ -239,6 +256,9 @@ export const ToAst = {
             case 'Enum':
                 return ctx.ToAst.Enum(node, ctx);
 
+            case 'Lambda':
+                return ctx.ToAst.Lambda(node, ctx);
+
             case 'Record':
                 return ctx.ToAst.Record(node, ctx);
 
@@ -314,6 +334,20 @@ export const ToAst = {
                 throw new Error('Nope');
         }
     },
+
+    Pattern(node: t.Pattern, ctx: TACtx): p.Pattern {
+        switch (node.type) {
+            case 'PName':
+                return ctx.ToAst.PName(node, ctx);
+
+            case 'PTuple':
+                return ctx.ToAst.PTuple(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
 };
 
 export const ToPP = {
@@ -377,6 +411,9 @@ export const ToPP = {
 
     Expression(node: p.Expression, ctx: PCtx): pp.PP {
         switch (node.type) {
+            case 'Lambda':
+                return ctx.ToPP.Lambda(node, ctx);
+
             case 'BinOp':
                 return ctx.ToPP.BinOp(node, ctx);
 
@@ -426,6 +463,20 @@ export const ToPP = {
 
             case 'DecExpr':
                 return ctx.ToPP.DecExpr(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    Pattern(node: p.Pattern, ctx: PCtx): pp.PP {
+        switch (node.type) {
+            case 'PName':
+                return ctx.ToPP.PName(node, ctx);
+
+            case 'PTuple':
+                return ctx.ToPP.PTuple(node, ctx);
 
             default:
                 let _: never = node;
@@ -486,6 +537,9 @@ export const ToIR = {
 
             case 'Enum':
                 return ctx.ToIR.Enum(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToIR.Lambda(node, ctx);
 
             case 'Record':
                 return ctx.ToIR.Record(node, ctx);
