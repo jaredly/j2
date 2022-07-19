@@ -50,7 +50,7 @@ export type {
     Record,
     RecordKeyValue,
 } from './elements/record-exprs';
-export type { PName, PTuple, Pattern } from './elements/pattern';
+export type { IPattern, PName, PTuple, Pattern } from './elements/pattern';
 export type { LArg, Lambda } from './elements/lambda';
 
 export type GlobalRef = {

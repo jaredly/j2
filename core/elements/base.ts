@@ -443,7 +443,7 @@ export const ToJS = {
 export const ToIR = {
     Apply({ args, loc, target }: t.Apply, ctx: ICtx): t.IApply {
         return {
-            type: 'IApply',
+            type: 'Apply',
             loc,
             args: args.map((arg) => ctx.ToIR[arg.type](arg as any, ctx)),
             target: ctx.ToIR[target.type](target as any, ctx),

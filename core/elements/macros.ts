@@ -564,6 +564,20 @@ export const ToIR = {
                 throw new Error('Nope');
         }
     },
+
+    Pattern(node: t.Pattern, ctx: ICtx): t.IPattern {
+        switch (node.type) {
+            case 'PName':
+                return ctx.ToIR.PName(node, ctx);
+
+            case 'PTuple':
+                return ctx.ToIR.PTuple(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
 };
 
 export const ToJS = {
@@ -578,14 +592,14 @@ export const ToJS = {
             case 'Boolean':
                 return ctx.ToJS.Boolean(node, ctx);
 
-            case 'IApply':
-                return ctx.ToJS.IApply(node, ctx);
+            case 'Apply':
+                return ctx.ToJS.Apply(node, ctx);
 
-            case 'ITemplateString':
-                return ctx.ToJS.ITemplateString(node, ctx);
+            case 'TemplateString':
+                return ctx.ToJS.TemplateString(node, ctx);
 
-            case 'IEnum':
-                return ctx.ToJS.IEnum(node, ctx);
+            case 'Enum':
+                return ctx.ToJS.Enum(node, ctx);
 
             case 'IRecord':
                 return ctx.ToJS.IRecord(node, ctx);

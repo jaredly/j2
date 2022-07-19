@@ -27,7 +27,7 @@ export type Apply = {
 };
 
 export type IApply = {
-    type: 'IApply';
+    type: 'Apply';
     target: t.IExpression;
     args: Array<t.IExpression>;
     loc: t.Loc;

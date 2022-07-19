@@ -9,6 +9,7 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
+import { Ctx as ICtx } from '../ir/ir';
 
 export const grammar = `
 Pattern = PName / PTuple
@@ -88,7 +89,12 @@ export const ToPP = {
 };
 
 export const ToIR = {
-    //ok
+    PName(p: PName, ctx: ICtx): t.IPattern {
+        return p;
+    },
+    PTuple(p: PTuple, ctx: ICtx): t.IPattern {
+        return { type: 'PName', loc: p.loc, sym: { id: 0, name: 'bad' } };
+    },
 };
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {

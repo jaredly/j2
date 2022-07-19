@@ -20,7 +20,7 @@ export type Enum = {
 };
 
 export type IEnum = {
-    type: 'IEnum';
+    type: 'Enum';
     tag: string;
     payload?: t.IExpression;
     loc: t.Loc;

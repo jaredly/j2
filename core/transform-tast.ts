@@ -55,6 +55,7 @@ import {
     TAdd,
     TSub,
     TOr,
+    IPattern,
 } from './typed-ast';
 
 export type Visitor<Ctx> = {
@@ -320,6 +321,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost?: (node: Pattern, ctx: Ctx) => null | Pattern;
+    IPattern?: (
+        node: IPattern,
+        ctx: Ctx,
+    ) => null | false | IPattern | [IPattern | null, Ctx];
+    IPatternPost?: (node: IPattern, ctx: Ctx) => null | IPattern;
     TypeToplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
@@ -415,24 +421,24 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
     IExpressionPost_Boolean?: (node: Boolean, ctx: Ctx) => null | IExpression;
-    IExpression_IApply?: (
-        node: IApply,
+    IExpression_Apply?: (
+        node: Apply,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
-    IExpressionPost_IApply?: (node: IApply, ctx: Ctx) => null | IExpression;
-    IExpression_ITemplateString?: (
-        node: ITemplateString,
+    IExpressionPost_Apply?: (node: Apply, ctx: Ctx) => null | IExpression;
+    IExpression_TemplateString?: (
+        node: TemplateString,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
-    IExpressionPost_ITemplateString?: (
-        node: ITemplateString,
+    IExpressionPost_TemplateString?: (
+        node: TemplateString,
         ctx: Ctx,
     ) => null | IExpression;
-    IExpression_IEnum?: (
-        node: IEnum,
+    IExpression_Enum?: (
+        node: Enum,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
-    IExpressionPost_IEnum?: (node: IEnum, ctx: Ctx) => null | IExpression;
+    IExpressionPost_Enum?: (node: Enum, ctx: Ctx) => null | IExpression;
     IExpression_IRecord?: (
         node: IRecord,
         ctx: Ctx,
@@ -4959,9 +4965,9 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
-        case 'IApply': {
-            const transformed = visitor.IExpression_IApply
-                ? visitor.IExpression_IApply(node, ctx)
+        case 'Apply': {
+            const transformed = visitor.IExpression_Apply
+                ? visitor.IExpression_Apply(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -4978,9 +4984,9 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
-        case 'ITemplateString': {
-            const transformed = visitor.IExpression_ITemplateString
-                ? visitor.IExpression_ITemplateString(node, ctx)
+        case 'TemplateString': {
+            const transformed = visitor.IExpression_TemplateString
+                ? visitor.IExpression_TemplateString(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -4997,9 +5003,9 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
-        case 'IEnum': {
-            const transformed = visitor.IExpression_IEnum
-                ? visitor.IExpression_IEnum(node, ctx)
+        case 'Enum': {
+            const transformed = visitor.IExpression_Enum
+                ? visitor.IExpression_Enum(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -5057,19 +5063,19 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
-        case 'IApply': {
+        case 'Apply': {
             updatedNode = transformIApply(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
 
-        case 'ITemplateString': {
+        case 'TemplateString': {
             updatedNode = transformITemplateString(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
 
-        case 'IEnum': {
+        case 'Enum': {
             updatedNode = transformIEnum(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
@@ -5115,9 +5121,9 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
-        case 'IApply': {
-            const transformed = visitor.IExpressionPost_IApply
-                ? visitor.IExpressionPost_IApply(updatedNode, ctx)
+        case 'Apply': {
+            const transformed = visitor.IExpressionPost_Apply
+                ? visitor.IExpressionPost_Apply(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -5125,9 +5131,9 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
-        case 'ITemplateString': {
-            const transformed = visitor.IExpressionPost_ITemplateString
-                ? visitor.IExpressionPost_ITemplateString(updatedNode, ctx)
+        case 'TemplateString': {
+            const transformed = visitor.IExpressionPost_TemplateString
+                ? visitor.IExpressionPost_TemplateString(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -5135,9 +5141,9 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
-        case 'IEnum': {
-            const transformed = visitor.IExpressionPost_IEnum
-                ? visitor.IExpressionPost_IEnum(updatedNode, ctx)
+        case 'Enum': {
+            const transformed = visitor.IExpressionPost_Enum
+                ? visitor.IExpressionPost_Enum(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -5519,6 +5525,45 @@ export const transformTOr = <Ctx>(
     node = updatedNode;
     if (visitor.TOrPost) {
         const transformed = visitor.TOrPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformIPattern = <Ctx>(
+    node: IPattern,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IPattern => {
+    if (!node) {
+        throw new Error('No IPattern provided');
+    }
+
+    const transformed = visitor.IPattern ? visitor.IPattern(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    const updatedNode = transformPName(node, visitor, ctx);
+    changed0 = changed0 || updatedNode !== node;
+
+    node = updatedNode;
+    if (visitor.IPatternPost) {
+        const transformed = visitor.IPatternPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }

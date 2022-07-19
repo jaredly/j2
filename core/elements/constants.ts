@@ -42,7 +42,7 @@ export type TemplateString = {
 };
 
 export type ITemplateString = {
-    type: 'ITemplateString';
+    type: 'TemplateString';
     first: string;
     rest: Array<{ expr: t.IExpression; suffix: string; loc: Loc }>;
     loc: Loc;
@@ -186,9 +186,7 @@ export const ToIR = {
     Ref: (x: t.Ref, ctx: ICtx) => x,
     TemplateString(x: t.TemplateString, ctx: ICtx): t.ITemplateString {
         return {
-            type: 'ITemplateString',
-            loc: x.loc,
-            first: x.first,
+            ...x,
             rest: x.rest.map((part) => ({
                 ...part,
                 expr: ctx.ToIR[part.expr.type](part.expr as any, ctx),
