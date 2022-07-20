@@ -54,11 +54,11 @@ console.log(Object.keys(tastTypes));
 
 const extraArgs: { [key: string]: string } = {
     Suffix: ' next: t.Expression,',
-    Pattern: ' locals: {sym: t.Sym, type: t.Type}[], expected: t.Type | null,',
+    // Pattern: ' expected: t.Type | null,',
 };
 const extraPass: { [key: string]: string } = {
     Suffix: ' next,',
-    Pattern: ' locals, expected,',
+    // Pattern: ' expected,',
 };
 
 const text = `

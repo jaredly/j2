@@ -77,6 +77,29 @@ can we bring this back?
 //     }
 // };
 
+export const typeForPattern = (pat: Pattern, ctx: TCtx): t.Type => {
+    switch (pat.type) {
+        case 'PName':
+            return ctx.newTypeVar();
+        case 'PRecord':
+            return {
+                type: 'TRecord',
+                items: pat.items.map(([name, pat]) => ({
+                    type: 'TRecordKeyValue',
+                    key: name,
+                    value: typeForPattern(pat, ctx),
+                    loc: pat.loc,
+                    default_: null,
+                })),
+                loc: pat.loc,
+                open: false,
+                spreads: [],
+            };
+        case 'PBlank':
+            return { type: 'TEnum', cases: [], loc: pat.loc, open: false };
+    }
+};
+
 export const getLocals = (
     pat: Pattern,
     type: t.Type,
@@ -109,72 +132,37 @@ export const getLocals = (
 };
 
 export const ToTast = {
-    PBlank(
-        pat: p.PBlank,
-        locals: Locals,
-        _: t.Type | null,
-        ctx: TCtx,
-    ): t.Pattern {
+    PBlank(pat: p.PBlank, ctx: TCtx): t.Pattern {
         return { type: 'PBlank', loc: pat.loc };
     },
-    PName(
-        { type, name, hash, loc }: p.PName,
-        locals: Locals,
-        expected: t.Type | null,
-        // path: PPath[],
-        ctx: TCtx,
-    ): PName {
+    PName({ type, name, hash, loc }: p.PName, ctx: TCtx): PName {
         const sym = hash ? { name, id: +hash.slice(2, -1) } : ctx.sym(name);
-        locals.push({ sym, type: expected ?? ctx.newTypeVar() });
+        // locals.push({ sym, type: expected ?? ctx.newTypeVar() });
         return {
             type: 'PName',
             sym,
             loc,
         };
     },
-    PTuple(
-        { type, items, loc }: p.PTuple,
-        locals: Locals,
-        expected: t.Type | null,
-        ctx: TCtx,
-    ): PRecord {
-        const eitems =
-            expected?.type === 'TRecord' ? allRecordItems(expected, ctx) : null;
+    PTuple({ type, items, loc }: p.PTuple, ctx: TCtx): PRecord {
         return {
             type: 'PRecord',
             items:
                 items?.items.map((item, i) => [
                     i.toString(),
-                    ctx.ToTast.Pattern(
-                        item,
-                        locals,
-                        eitems ? eitems[i]?.value : null,
-                        ctx,
-                    ),
+                    ctx.ToTast.Pattern(item, ctx),
                 ]) ?? [],
             loc,
         };
     },
-    PRecord(
-        { type, fields, loc }: p.PRecord,
-        locals: Locals,
-        expected: t.Type | null,
-        ctx: TCtx,
-    ): PRecord {
-        const eitems =
-            expected?.type === 'TRecord' ? allRecordItems(expected, ctx) : null;
+    PRecord({ type, fields, loc }: p.PRecord, ctx: TCtx): PRecord {
         return {
             type: 'PRecord',
             items:
                 fields?.items.map((item) => [
                     item.name,
                     item.pat && item.pat.type !== 'PHash'
-                        ? ctx.ToTast.Pattern(
-                              item.pat,
-                              locals,
-                              eitems ? eitems[item.name].value : null,
-                              ctx,
-                          )
+                        ? ctx.ToTast.Pattern(item.pat, ctx)
                         : ctx.ToTast.PName(
                               {
                                   type: 'PName',
@@ -182,8 +170,6 @@ export const ToTast = {
                                   hash: item.pat ? item.pat.hash : '',
                                   loc,
                               },
-                              locals,
-                              eitems ? eitems[item.name].value : null,
                               ctx,
                           ),
                 ]) ?? [],

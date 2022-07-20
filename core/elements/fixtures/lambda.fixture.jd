@@ -36,9 +36,9 @@ alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 ({a, what}) => 10
 
 --[output:expected]--
-(a#[0]: "tvbl:0") => a#[0] +#[:unresolved:] 2
+(a#[0]: "tvbl:1") => a#[0] +#[:unresolved:] 2
 // Error, no type!
-((a#[0], b#[1]): "tvbl:0"):10 => 10
-// ("tvbl:0") => 10
-({a#[0], what#[1]}: "tvbl:0"):10 => 10
-// ("tvbl:0") => 10
+((a#[0], b#[1]): ("tvbl:2", "tvbl:3")):10 => 10
+// (("tvbl:2", "tvbl:3")) => 10
+({a#[0], what#[1]}: {a: "tvbl:2", what: "tvbl:3"}):10 => 10
+// ({a: "tvbl:2", what: "tvbl:3"}) => 10

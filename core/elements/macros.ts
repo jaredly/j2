@@ -133,24 +133,19 @@ export const ToTast = {
         }
     },
 
-    Pattern(
-        node: p.Pattern,
-        locals: { sym: t.Sym; type: t.Type }[],
-        expected: t.Type | null,
-        ctx: TCtx,
-    ): t.Pattern {
+    Pattern(node: p.Pattern, ctx: TCtx): t.Pattern {
         switch (node.type) {
             case 'PName':
-                return ctx.ToTast.PName(node, locals, expected, ctx);
+                return ctx.ToTast.PName(node, ctx);
 
             case 'PTuple':
-                return ctx.ToTast.PTuple(node, locals, expected, ctx);
+                return ctx.ToTast.PTuple(node, ctx);
 
             case 'PRecord':
-                return ctx.ToTast.PRecord(node, locals, expected, ctx);
+                return ctx.ToTast.PRecord(node, ctx);
 
             case 'PBlank':
-                return ctx.ToTast.PBlank(node, locals, expected, ctx);
+                return ctx.ToTast.PBlank(node, ctx);
 
             default:
                 let _: never = node;

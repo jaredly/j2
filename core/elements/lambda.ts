@@ -66,15 +66,11 @@ export const ToTast = {
         const locals: Locals = [];
         const targs: Lambda['args'] =
             args?.items.map((arg) => {
+                const pat = ctx.ToTast.Pattern(arg.pat, ctx);
                 const typ = arg.typ
                     ? ctx.ToTast.Type(arg.typ, ctx)
-                    : ctx.newTypeVar();
-                const pat = ctx.ToTast.Pattern(
-                    arg.pat,
-                    locals,
-                    arg.typ ? typ : null,
-                    ctx,
-                );
+                    : typeForPattern(pat, ctx);
+                getLocals(pat, typ, locals, ctx);
                 if (!arg.typ) {
                     ctx.addTypeConstraint(typ as t.TVbl, pat);
                 }
@@ -167,7 +163,7 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { Locals } from './pattern';
+import { getLocals, Locals, typeForPattern } from './pattern';
 export const ToJS = {
     Lambda({ type, args, res, body, loc }: ILambda, ctx: JCtx): b.Expression {
         return b.arrowFunctionExpression(

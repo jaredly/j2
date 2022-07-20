@@ -439,7 +439,7 @@ export const newContext = (): FullContext => {
         newTypeVar() {
             return {
                 type: 'TVbl',
-                id: 0,
+                id: this[opaque].symid++,
                 loc: noloc,
             };
         },
