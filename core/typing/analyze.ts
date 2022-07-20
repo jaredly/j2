@@ -16,6 +16,7 @@ import {
     Expression,
     File,
     Loc,
+    Locals,
     RefKind,
     Toplevel,
     TVar,
@@ -26,6 +27,7 @@ import { extract, Id, idsEqual, idToString } from '../ids';
 import { Ctx as TMCtx } from './typeMatches';
 import { analyzeVisitor } from './analyze.gen';
 import { TopTypeKind } from './to-tast';
+import { getLocals } from '../elements/pattern';
 
 export type Ctx = {
     getType(expr: Expression): Type | null;
@@ -185,8 +187,8 @@ export const errorCount = (v: Verify): number => {
     );
 };
 
-export const verifyVisitor = (results: Verify, ctx: Ctx): Visitor<null> => {
-    const errorDecorators = ctx.errorDecorators();
+export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
+    const errorDecorators = _ctx.errorDecorators();
     return {
         Toplevel(node) {
             // ctx.toplevelConfig?
@@ -205,7 +207,15 @@ export const verifyVisitor = (results: Verify, ctx: Ctx): Visitor<null> => {
             }
             return null;
         },
-        Expression(node) {
+        Lambda(node, ctx) {
+            const locals: Locals = [];
+
+            node.args.forEach((arg) =>
+                getLocals(arg.pat, arg.typ, locals, ctx),
+            );
+            return [null, ctx.withLocals(locals) as Ctx];
+        },
+        Expression(node, ctx) {
             if (!ctx.getType(node)) {
                 results.untypedExpression.push(node.loc);
             }
@@ -240,6 +250,6 @@ export const initVerify = () => ({
 export const verify = (ast: File, ctx: Ctx): Verify => {
     const results: Verify = initVerify();
 
-    transformFile(ast, verifyVisitor(results, ctx), null);
+    transformFile(ast, verifyVisitor(results, ctx), ctx);
     return results;
 };

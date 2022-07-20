@@ -213,6 +213,8 @@ export const ToJS = {
                 return b.identifier(name);
             }
         }
+        if (x.kind.type === 'Local') {
+        }
         return b.identifier(t.refHash(x.kind));
     },
     TemplateString(x: t.ITemplateString, ctx: JCtx): b.TemplateLiteral {

@@ -174,6 +174,15 @@ export const ToJS = {
 };
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
+    Lambda(node, ctx) {
+        // idk I'm sure there's stuff
+        const locals: Locals = [];
+
+        node.args.forEach((arg) =>
+            getLocals(arg.pat, arg.typ, locals, ctx.ctx),
+        );
+        return [null, { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx }];
+    },
     // Expression_Apply(node, { ctx, hit }) {
     // },
 };

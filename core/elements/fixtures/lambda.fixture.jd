@@ -16,7 +16,7 @@
 --[input:shouldFail]--
 ((a, b): 10) => 10
 
---[output:expected]--
+--[output:failed]--
 ((a#[0], b#[1]): 10):10 => 10
 // (10) => 10
 
@@ -24,7 +24,7 @@
 --[input]--
 (a: int) => a
 
---[output:expected]--
+--[output:failed]--
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 (a#[0]: int):int => a#[0]
 // (int) => int

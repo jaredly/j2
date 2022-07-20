@@ -23,10 +23,20 @@ tvbl, is like ok folks
 hm nope. make a `typeForPattern`, should suffice.
 Also need a `constrainType` that's the opposite of `unifyTypes`.
 
-- [ ] lambda getType make it work
+- [x] lambda getType make it work
 - [ ] .res, we should keep track if it was inferred, and
 	if so, don't print it in toast. Same for arg types.
 
+
+SO
+I think I want a `symInfo` dealio that I can get by
+traversing a tast
+
+and then pass to to-ast and to-ir and to-js ctx's
+So that they don't have to keep track of a bunch of madness.
+
+Does that make sense?
+Seems like it would.
 
 
 # and such

@@ -1,5 +1,13 @@
 import generate from '@babel/generator';
-import { Button, Card, Checkbox, Input, Spacer, Text } from '@nextui-org/react';
+import {
+    Button,
+    Card,
+    Checkbox,
+    Input,
+    Spacer,
+    Text,
+    Tooltip,
+} from '@nextui-org/react';
 import * as React from 'react';
 import { builtinContext, FullContext } from '../core/ctx';
 import { fileToTast } from '../core/elements/base';
@@ -274,6 +282,9 @@ export function OneFixture({
                     <div style={{ position: 'relative' }}>
                         {numErrors != 0 ? (
                             <TopRight
+                                tooltip={JSON.stringify(
+                                    newOutput.result.verify,
+                                )}
                                 text={`${numErrors} issue${
                                     numErrors > 1 ? 's' : ''
                                 }`}
@@ -325,7 +336,7 @@ export function OneFixture({
                                             transformExpression(
                                                 top.expr,
                                                 verifyVisitor(v, fctx),
-                                                null,
+                                                fctx,
                                             );
                                             if (errorCount(v)) {
                                                 return;
@@ -437,7 +448,13 @@ export const compare = (one: string, two: string): boolean | 'aliases' => {
     return true;
 };
 
-export const TopRight = ({ text }: { text: string }) => {
+export const TopRight = ({
+    text,
+    tooltip,
+}: {
+    text: string;
+    tooltip?: string;
+}) => {
     return (
         <Text
             css={{
@@ -452,7 +469,7 @@ export const TopRight = ({ text }: { text: string }) => {
                 backgroundColor: 'rgba(255,0,0,0.1)',
             }}
         >
-            {text}
+            {tooltip ? <Tooltip content={tooltip}>{text}</Tooltip> : text}
         </Text>
     );
 };
