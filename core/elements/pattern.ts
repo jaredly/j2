@@ -21,8 +21,8 @@ PRecord = "{" _ fields:PRecordFields? _ ","? _ "}"
 PRecordFields = first:PRecordField rest:(_ "," _ PRecordField)*
 PRecordField = name:$IdText pat:PRecordValue?
 PRecordValue = PRecordPattern / PHash
-PRecordPattern = _ ":" _ Pattern
-PHash = $JustSym
+PRecordPattern = _ ":" _ just:Pattern
+PHash = hash:$JustSym
 `;
 
 export type PName = {
@@ -116,10 +116,15 @@ export const ToTast = {
             items:
                 fields?.items.map((item) => [
                     item.name,
-                    item.pat
+                    item.pat && item.pat.type !== 'PHash'
                         ? ctx.ToTast.Pattern(item.pat, locals, ctx)
                         : ctx.ToTast.PName(
-                              { type: 'PName', name: item.name, hash: '', loc },
+                              {
+                                  type: 'PName',
+                                  name: item.name,
+                                  hash: item.pat ? item.pat.hash : '',
+                                  loc,
+                              },
                               locals,
                               ctx,
                           ),
@@ -157,12 +162,22 @@ export const ToAst = {
             type: 'PRecord',
             fields: {
                 type: 'PRecordFields',
-                items: items.map((item) => ({
-                    type: 'PRecordField',
-                    name: item[0],
-                    pat: ctx.ToAst.Pattern(item[1], ctx),
-                    loc: item[1].loc,
-                })),
+                items: items.map((item) => {
+                    const pat = ctx.ToAst.Pattern(item[1], ctx);
+                    return {
+                        type: 'PRecordField',
+                        name: item[0],
+                        pat:
+                            pat.type === 'PName' && pat.name === item[0]
+                                ? {
+                                      type: 'PHash',
+                                      hash: pat.hash ?? '',
+                                      loc: pat.loc,
+                                  }
+                                : pat,
+                        loc: item[1].loc,
+                    };
+                }),
                 loc,
             },
             loc,
@@ -194,14 +209,16 @@ export const ToPP = {
                 pp.items(
                     [
                         pp.text(item.name, loc),
-                        item.pat
+                        item.pat && item.pat.type !== 'PHash'
                             ? pp.items(
                                   [
                                       pp.text(': ', loc),
                                       ctx.ToPP.Pattern(item.pat, ctx),
                                   ],
-                                  loc,
+                                  item.pat.loc,
                               )
+                            : item.pat
+                            ? pp.text(item.pat.hash, item.pat.loc)
                             : null,
                     ],
                     loc,
@@ -227,6 +244,7 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
+import path from 'path';
 export const ToJS = {
     Pattern(p: Pattern, ctx: JCtx): b.Pattern | b.Identifier {
         switch (p.type) {

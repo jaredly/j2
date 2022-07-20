@@ -28,7 +28,9 @@ import {
     PRecord,
     PRecordFields,
     PRecordField,
+    PRecordValue,
     PBlank,
+    PHash,
     BinOp,
     BinOp_inner,
     WithUnary,
@@ -107,6 +109,7 @@ import {
     TypeVariables,
     TypeVbls,
     TypeVbl,
+    PRecordPattern,
     top,
     AllTaggedTypes,
 } from './grammar/base.parser';
@@ -516,6 +519,24 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | PRecordField | [PRecordField | null, Ctx];
     PRecordFieldPost?: (node: PRecordField, ctx: Ctx) => null | PRecordField;
+    PRecordValue?: (
+        node: PRecordValue,
+        ctx: Ctx,
+    ) => null | false | PRecordValue | [PRecordValue | null, Ctx];
+    PRecordValuePost?: (node: PRecordValue, ctx: Ctx) => null | PRecordValue;
+    PRecordPattern?: (
+        node: PRecordPattern,
+        ctx: Ctx,
+    ) => null | false | PRecordPattern | [PRecordPattern | null, Ctx];
+    PRecordPatternPost?: (
+        node: PRecordPattern,
+        ctx: Ctx,
+    ) => null | PRecordPattern;
+    PHash?: (
+        node: PHash,
+        ctx: Ctx,
+    ) => null | false | PHash | [PHash | null, Ctx];
+    PHashPost?: (node: PHash, ctx: Ctx) => null | PHash;
     Record?: (
         node: Record,
         ctx: Ctx,
@@ -807,6 +828,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost_PBlank?: (node: PBlank, ctx: Ctx) => null | Pattern;
+    PRecordValue_PHash?: (
+        node: PHash,
+        ctx: Ctx,
+    ) => null | false | PRecordValue | [PRecordValue | null, Ctx];
+    PRecordValuePost_PHash?: (node: PHash, ctx: Ctx) => null | PRecordValue;
     RecordItem_RecordSpread?: (
         node: RecordSpread,
         ctx: Ctx,
@@ -1248,6 +1274,11 @@ export type Visitor<Ctx> = {
         node: PRecordField,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
+    AllTaggedTypes_PHash?: (
+        node: PHash,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PHash?: (node: PHash, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_Record?: (
         node: Record,
         ctx: Ctx,
@@ -1794,6 +1825,209 @@ export const transformPTuple = <Ctx>(
     return node;
 };
 
+export const transformPBlank = <Ctx>(
+    node: PBlank,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PBlank => {
+    if (!node) {
+        throw new Error('No PBlank provided');
+    }
+
+    const transformed = visitor.PBlank ? visitor.PBlank(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PBlankPost) {
+        const transformed = visitor.PBlankPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPHash = <Ctx>(
+    node: PHash,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PHash => {
+    if (!node) {
+        throw new Error('No PHash provided');
+    }
+
+    const transformed = visitor.PHash ? visitor.PHash(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PHashPost) {
+        const transformed = visitor.PHashPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPRecordValue = <Ctx>(
+    node: PRecordValue,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PRecordValue => {
+    if (!node) {
+        throw new Error('No PRecordValue provided');
+    }
+
+    const transformed = visitor.PRecordValue
+        ? visitor.PRecordValue(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'PHash': {
+            const transformed = visitor.PRecordValue_PHash
+                ? visitor.PRecordValue_PHash(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'PName': {
+            updatedNode = transformPName(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PTuple': {
+            updatedNode = transformPTuple(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PRecord': {
+            updatedNode = transformPRecord(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PBlank': {
+            updatedNode = transformPBlank(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformPHash(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'PHash': {
+            const transformed = visitor.PRecordValuePost_PHash
+                ? visitor.PRecordValuePost_PHash(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PRecordValuePost) {
+        const transformed = visitor.PRecordValuePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformPRecordField = <Ctx>(
     node: PRecordField,
     visitor: Visitor<Ctx>,
@@ -1832,7 +2066,7 @@ export const transformPRecordField = <Ctx>(
         let updatedNode$pat = null;
         const updatedNode$pat$current = node.pat;
         if (updatedNode$pat$current != null) {
-            const updatedNode$pat$1$ = transformPattern(
+            const updatedNode$pat$1$ = transformPRecordValue(
                 updatedNode$pat$current,
                 visitor,
                 ctx,
@@ -1995,54 +2229,6 @@ export const transformPRecord = <Ctx>(
     node = updatedNode;
     if (visitor.PRecordPost) {
         const transformed = visitor.PRecordPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformPBlank = <Ctx>(
-    node: PBlank,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): PBlank => {
-    if (!node) {
-        throw new Error('No PBlank provided');
-    }
-
-    const transformed = visitor.PBlank ? visitor.PBlank(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-        if (changed1) {
-            updatedNode = { ...updatedNode, loc: updatedNode$loc };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.PBlankPost) {
-        const transformed = visitor.PBlankPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -9187,6 +9373,47 @@ export const transformTypeVariables = <Ctx>(
     return node;
 };
 
+export const transformPRecordPattern = <Ctx>(
+    node: PRecordPattern,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PRecordPattern => {
+    if (!node) {
+        throw new Error('No PRecordPattern provided');
+    }
+
+    const transformed = visitor.PRecordPattern
+        ? visitor.PRecordPattern(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    const updatedNode = transformPattern(node, visitor, ctx);
+    changed0 = changed0 || updatedNode !== node;
+
+    node = updatedNode;
+    if (visitor.PRecordPatternPost) {
+        const transformed = visitor.PRecordPatternPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformtop = <Ctx>(
     node: top,
     visitor: Visitor<Ctx>,
@@ -10146,6 +10373,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'PHash': {
+            const transformed = visitor.AllTaggedTypes_PHash
+                ? visitor.AllTaggedTypes_PHash(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Record': {
             const transformed = visitor.AllTaggedTypes_Record
                 ? visitor.AllTaggedTypes_Record(node, ctx)
@@ -10873,6 +11119,12 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'PHash': {
+            updatedNode = transformPHash(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Record': {
             updatedNode = transformRecord(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -11487,6 +11739,16 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'PRecordField': {
             const transformed = visitor.AllTaggedTypesPost_PRecordField
                 ? visitor.AllTaggedTypesPost_PRecordField(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PHash': {
+            const transformed = visitor.AllTaggedTypesPost_PHash
+                ? visitor.AllTaggedTypesPost_PHash(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

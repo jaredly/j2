@@ -395,9 +395,13 @@ export type PRecordField = {
 
 export type PRecordValue = PRecordPattern | PHash;
 
-// No data on PRecordPattern
+export type PRecordPattern = Pattern;
 
-export type PHash = JustSym;
+export type PHash = {
+  type: "PHash";
+  loc: Loc;
+  hash: string;
+};
 
 export type Record = {
   type: "Record";
@@ -568,9 +572,9 @@ export type TypePair = {
   typ: Type;
 };
 
-export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | Identifier | ParenedExpression | BinOp_inner | BinOpRight | WithUnary_inner | UnaryOpWithHash | binopWithHash | ParenedOp | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | Lambda | LArgs | LArg | PBlank | PName | PTuple | PTupleItems | PRecord | PRecordFields | PRecordField | Record | RecordItems | RecordSpread | RecordKeyValue | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
+export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | Identifier | ParenedExpression | BinOp_inner | BinOpRight | WithUnary_inner | UnaryOpWithHash | binopWithHash | ParenedOp | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | Lambda | LArgs | LArg | PBlank | PName | PTuple | PTupleItems | PRecord | PRecordFields | PRecordField | PHash | Record | RecordItems | RecordSpread | RecordKeyValue | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
 
-export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "Identifier", "ParenedExpression", "BinOp", "BinOpRight", "WithUnary", "UnaryOpWithHash", "binopWithHash", "ParenedOp", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "Lambda", "LArgs", "LArg", "PBlank", "PName", "PTuple", "PTupleItems", "PRecord", "PRecordFields", "PRecordField", "Record", "RecordItems", "RecordSpread", "RecordKeyValue", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "Identifier", "ParenedExpression", "BinOp", "BinOpRight", "WithUnary", "UnaryOpWithHash", "binopWithHash", "ParenedOp", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "Lambda", "LArgs", "LArg", "PBlank", "PName", "PTuple", "PTupleItems", "PRecord", "PRecordFields", "PRecordField", "PHash", "Record", "RecordItems", "RecordSpread", "RecordKeyValue", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
 
 // @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});

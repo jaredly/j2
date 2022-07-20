@@ -159,8 +159,8 @@ PRecord = "{" _ fields:PRecordFields? _ ","? _ "}"
 PRecordFields = first:PRecordField rest:(_ "," _ PRecordField)*
 PRecordField = name:$IdText pat:PRecordValue?
 PRecordValue = PRecordPattern / PHash
-PRecordPattern = _ ":" _ Pattern
-PHash = JustSym
+PRecordPattern = _ ":" _ just:Pattern
+PHash = hash:$JustSym
 
 
 // record-exprs.ts
