@@ -215,7 +215,7 @@ export const ToJS = {
         }
         return b.identifier(t.refHash(x.kind));
     },
-    ITemplateString(x: t.ITemplateString, ctx: JCtx): b.TemplateLiteral {
+    TemplateString(x: t.ITemplateString, ctx: JCtx): b.TemplateLiteral {
         return b.templateLiteral(
             [x.first]
                 .concat(x.rest.map((r) => r.suffix))

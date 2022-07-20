@@ -300,6 +300,29 @@ export const ToPP = {
     },
 };
 
+import { Ctx as ICtx } from '../ir/ir';
+export const ToIR = {
+    Apply({ args, loc, target }: t.Apply, ctx: ICtx): t.IApply {
+        return {
+            type: 'Apply',
+            loc,
+            args: args.map((arg) => ctx.ToIR[arg.type](arg as any, ctx)),
+            target: ctx.ToIR[target.type](target as any, ctx),
+        };
+    },
+};
+
+import { Ctx as JCtx } from '../ir/to-js';
+import * as b from '@babel/types';
+export const ToJS = {
+    Apply({ args, loc, target }: IApply, ctx: JCtx): b.Expression {
+        return b.callExpression(
+            ctx.ToJS.IExpression(target, ctx),
+            args.map((arg) => ctx.ToJS.IExpression(arg, ctx)),
+        );
+    },
+};
+
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     ApplyPost(node, { ctx, hit }) {
         if (

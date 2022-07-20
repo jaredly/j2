@@ -439,11 +439,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
     IExpressionPost_Enum?: (node: Enum, ctx: Ctx) => null | IExpression;
-    IExpression_IRecord?: (
-        node: IRecord,
+    IExpression_Record?: (
+        node: Record,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
-    IExpressionPost_IRecord?: (node: IRecord, ctx: Ctx) => null | IExpression;
+    IExpressionPost_Record?: (node: Record, ctx: Ctx) => null | IExpression;
     DecoratorArg_DExpr?: (
         node: DExpr,
         ctx: Ctx,
@@ -5022,9 +5022,9 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
-        case 'IRecord': {
-            const transformed = visitor.IExpression_IRecord
-                ? visitor.IExpression_IRecord(node, ctx)
+        case 'Record': {
+            const transformed = visitor.IExpression_Record
+                ? visitor.IExpression_Record(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -5151,9 +5151,9 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
-        case 'IRecord': {
-            const transformed = visitor.IExpressionPost_IRecord
-                ? visitor.IExpressionPost_IRecord(updatedNode, ctx)
+        case 'Record': {
+            const transformed = visitor.IExpressionPost_Record
+                ? visitor.IExpressionPost_Record(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

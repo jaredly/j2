@@ -601,8 +601,8 @@ export const ToJS = {
             case 'Enum':
                 return ctx.ToJS.Enum(node, ctx);
 
-            case 'IRecord':
-                return ctx.ToJS.IRecord(node, ctx);
+            case 'Record':
+                return ctx.ToJS.Record(node, ctx);
 
             default:
                 let _: never = node;

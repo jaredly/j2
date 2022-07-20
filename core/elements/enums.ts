@@ -193,6 +193,37 @@ export const ToPP = {
     },
 };
 
+import { Ctx as ICtx } from '../ir/ir';
+export const ToIR = {
+    Enum({ loc, tag, payload }: t.Enum, ctx: ICtx): t.IEnum {
+        return {
+            type: 'Enum',
+            loc,
+            tag,
+            payload: payload
+                ? ctx.ToIR[payload.type](payload as any, ctx)
+                : undefined,
+        };
+    },
+};
+
+import { Ctx as JCtx } from '../ir/to-js';
+import * as b from '@babel/types';
+export const ToJS = {
+    Enum({ loc, tag, payload }: t.IEnum, ctx: JCtx): b.Expression {
+        if (!payload) {
+            return b.stringLiteral(tag);
+        }
+        return b.objectExpression([
+            b.objectProperty(b.identifier('tag'), b.stringLiteral(tag)),
+            b.objectProperty(
+                b.identifier('payload'),
+                ctx.ToJS.IExpression(payload, ctx),
+            ),
+        ]);
+    },
+};
+
 const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
     // We'll special case 'recur ref that's applied'
     if (

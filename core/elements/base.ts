@@ -441,38 +441,6 @@ export const ToJS = {
 };
 
 export const ToIR = {
-    Apply({ args, loc, target }: t.Apply, ctx: ICtx): t.IApply {
-        return {
-            type: 'Apply',
-            loc,
-            args: args.map((arg) => ctx.ToIR[arg.type](arg as any, ctx)),
-            target: ctx.ToIR[target.type](target as any, ctx),
-        };
-    },
-    Enum({ loc, tag, payload }: t.Enum, ctx: ICtx): t.IEnum {
-        return {
-            type: 'IEnum',
-            loc,
-            tag,
-            payload: payload
-                ? ctx.ToIR[payload.type](payload as any, ctx)
-                : undefined,
-        };
-    },
-    Record({ loc, spreads, items }: t.Record, ctx: ICtx): t.IRecord {
-        return {
-            type: 'IRecord',
-            loc,
-            spreads: spreads.map((spread) =>
-                ctx.ToIR[spread.type](spread as any, ctx),
-            ),
-            items: items.map((item) => ({
-                ...item,
-                type: 'IRecordKeyValue',
-                value: ctx.ToIR[item.value.type](item.value as any, ctx),
-            })),
-        };
-    },
     TypeApplication(
         { loc, target, args }: t.TypeApplication,
         ctx: ICtx,

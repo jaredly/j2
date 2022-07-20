@@ -350,11 +350,26 @@ export const allRecordItems = (
     return items;
 };
 
+import { Ctx as ICtx } from '../ir/ir';
+export const ToIR = {
+    Record({ items, loc, spreads }: t.Record, ctx: ICtx): t.IRecord {
+        return {
+            type: 'Record',
+            loc,
+            items: items.map((item) => ({
+                ...item,
+                value: ctx.ToIR.Expression(item.value, ctx),
+            })),
+            spreads: spreads.map((spread) => ctx.ToIR.Expression(spread, ctx)),
+        };
+    },
+};
+
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 export const ToJS = {
-    IRecord({ items, spreads, loc }: t.IRecord, ctx: JCtx): b.Expression {
-        const nums = irecordAsTuple({ items, spreads, loc, type: 'IRecord' });
+    Record({ items, spreads, loc }: t.IRecord, ctx: JCtx): b.Expression {
+        const nums = irecordAsTuple({ items, spreads, loc, type: 'Record' });
         if (nums) {
             return b.arrayExpression(
                 nums.map((num) => ctx.ToJS.IExpression(num, ctx)),
