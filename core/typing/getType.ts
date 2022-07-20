@@ -107,7 +107,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 case 'Recur':
                     return null;
                 case 'Local':
-                    throw new Error('not yet');
+                    return ctx.localType(expr.kind.sym);
             }
         case 'Apply':
             const typ = getType(expr.target, ctx);

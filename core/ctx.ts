@@ -206,7 +206,6 @@ const resolveType = (
             }
         }
     }
-    // TODO: local resolution
     if (ctx.types.names[name]) {
         return ctx.types.names[name];
     }
@@ -222,7 +221,15 @@ const resolve = (
     if (rawHash || Object.hasOwn(ctx.aliases, name)) {
         // console.log('ok', name);
         const hash = parseHash(rawHash ?? ctx.aliases[name]);
-        if (hash.type === 'sym' || hash.type === 'recur') {
+        if (hash.type === 'sym') {
+            for (let { values } of ctx.locals) {
+                for (let { sym, type } of values) {
+                    if (sym.id === hash.num) {
+                        return [{ type: 'Local', sym: sym.id }]; // , bound};
+                    }
+                }
+            }
+        } else if (hash.type === 'recur') {
             throw new Error('not yet: ' + rawHash);
             // const ref = ctx.values.names[name]
             // if (ref) {
@@ -233,6 +240,13 @@ const resolve = (
             // console.log(ref, hash);
             if (ref && hash.idx < ref.length) {
                 return [{ type: 'Global', id: toId(hash.hash, hash.idx) }];
+            }
+        }
+    }
+    for (let { values } of ctx.locals) {
+        for (let { sym, type } of values) {
+            if (sym.name === name) {
+                return [{ type: 'Local', sym: sym.id }]; // , bound};
             }
         }
     }
@@ -294,6 +308,16 @@ export const newContext = (): FullContext => {
                 ...this,
                 [opaque]: { ...this[opaque], toplevel },
             };
+        },
+        localType(sym) {
+            for (let local of this[opaque].locals) {
+                for (let { sym: s, type } of local.values) {
+                    if (s.id === sym) {
+                        return type;
+                    }
+                }
+            }
+            return null;
         },
         extract() {
             return this[opaque];

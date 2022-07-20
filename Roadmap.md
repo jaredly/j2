@@ -14,13 +14,14 @@ the effects examples
 and/or a nice error coalescing example.
 
 
-
 # Up nExtt
 
 ## so can we do some type variable stuff
 tvbl, is like ok folks
 
 - with patterns, should I be ... passing up ... a 'path' or constraint things. yeah I think so.
+hm nope. make a `typeForPattern`, should suffice.
+Also need a `constrainType` that's the opposite of `unifyTypes`.
 
 
 

@@ -38,6 +38,7 @@ export type Ctx = {
     getBuiltinRef(name: string): GlobalRef | null;
     resolveRefsAndApplies(t: Type, path?: string[]): Type | null;
     getValueType(id: Id): Type | null;
+    localType(sym: number): Type | null;
     getBound(sym: number): Type | null;
     log(...args: any[]): void;
     /** Only triggers the devtools debugger if the fixture is pinned. */

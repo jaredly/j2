@@ -23,15 +23,20 @@
 ==[wait just acessing variable, what happens]==
 --[input]--
 (a: int) => a
-(a) => a
+
+--[output:failed]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+(a#[0]: int) => unnamed#[0]
+// Error, no type!
+
+==[New fixture]==
+--[input]--
+(a) => a + 2
 ((a, b)) => 10
 ({a, what}) => 10
 
---[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
-(a#[0]: int) => a#[:unresolved:]
-// Error, no type!
-(a#[0]: 9000) => a#[:unresolved:]
+--[output:failed]--
+(a#[0]: 9000) => unnamed#[0] +#[:unresolved:] 2
 // Error, no type!
 ((a#[0], b#[1]): 9000) => 10
 // (9000) => 10
