@@ -32,12 +32,13 @@ export type LArg = {
     loc: t.Loc;
 };
 
-// export type ILambda = {
-//     type: 'ILambda';
-//     args: {pat: t.IPattern, typ: t.IType}[];
-//     body: t.IExpression
-//     // res: p.Type | null;
-// }
+export type ILambda = {
+    type: 'Lambda';
+    args: LArg[];
+    body: t.IExpression;
+    res: t.Type | null;
+    loc: t.Loc;
+};
 
 export const ToTast = {
     Lambda({ type, args, res, body, loc }: p.Lambda, ctx: TCtx): t.Lambda {
@@ -85,8 +86,23 @@ export const ToPP = {
         return pp.items(
             [
                 pp.args(
-                    args?.items.map((arg) => ctx.ToPP.Pattern(arg.pat, ctx)) ??
-                        [],
+                    args?.items.map((arg) =>
+                        pp.items(
+                            [
+                                ctx.ToPP.Pattern(arg.pat, ctx),
+                                arg.typ
+                                    ? pp.items(
+                                          [
+                                              pp.atom(': ', arg.loc),
+                                              ctx.ToPP.Type(arg.typ, ctx),
+                                          ],
+                                          arg.loc,
+                                      )
+                                    : null,
+                            ],
+                            arg.loc,
+                        ),
+                    ) ?? [],
                     args?.loc ?? loc,
                 ),
                 res
@@ -104,13 +120,25 @@ export const ToPP = {
 };
 
 export const ToIR = {
-    Lambda({ type, args, res, body, loc }: t.Lambda, ctx: ICtx): t.Number {
+    Lambda({ type, args, res, body, loc }: t.Lambda, ctx: ICtx): t.ILambda {
         return {
-            type: 'Number',
+            type: 'Lambda',
+            args,
+            res,
+            body: ctx.ToIR.Expression(body, ctx),
             loc,
-            kind: 'Int',
-            value: 5,
         };
+    },
+};
+
+import * as b from '@babel/types';
+import { Ctx as JCtx } from '../ir/to-js';
+export const ToJS = {
+    Lambda({ type, args, res, body, loc }: ILambda, ctx: JCtx): b.Expression {
+        return b.arrowFunctionExpression(
+            args?.map((arg) => ctx.ToJS.Pattern(arg.pat, ctx)) ?? [],
+            ctx.ToJS.IExpression(body, ctx),
+        );
     },
 };
 

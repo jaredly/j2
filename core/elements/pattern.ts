@@ -32,7 +32,7 @@ export type PTuple = {
 
 export type Pattern = PName | PTuple;
 
-export type IPattern = PName;
+// export type IPattern = PName;
 
 export const ToTast = {
     PName({ type, name, hash, loc }: p.PName, ctx: TCtx): PName {
@@ -89,12 +89,33 @@ export const ToPP = {
 };
 
 export const ToIR = {
-    PName(p: PName, ctx: ICtx): t.IPattern {
-        return p;
+    // PName(p: PName, ctx: ICtx): t.IPattern {
+    //     return p;
+    // },
+    // PTuple(p: PTuple, ctx: ICtx): t.IPattern {
+    //     return { type: 'PName', loc: p.loc, sym: { id: 0, name: 'bad' } };
+    // },
+};
+
+import * as b from '@babel/types';
+import { Ctx as JCtx } from '../ir/to-js';
+export const ToJS = {
+    Pattern(p: Pattern, ctx: JCtx): b.Pattern | b.Identifier {
+        switch (p.type) {
+            case 'PName':
+                return b.identifier(p.sym.name);
+            case 'PTuple':
+                return b.arrayPattern(
+                    p.items.map((item) => ctx.ToJS.Pattern(item, ctx)),
+                );
+        }
     },
-    PTuple(p: PTuple, ctx: ICtx): t.IPattern {
-        return { type: 'PName', loc: p.loc, sym: { id: 0, name: 'bad' } };
-    },
+    // Pattern({}: ILambda, ctx: JCtx): b.Expression {
+    //     return b.arrowFunctionExpression(
+    //         args?.map((arg) => ctx.ToJS.Pattern(arg.pat, ctx)) ?? [],
+    //         ctx.ToJS.IExpression(body, ctx),
+    //     )
+    // }
 };
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {

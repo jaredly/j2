@@ -45,6 +45,7 @@ import {
     TypeToplevel,
     TypeFile,
     IExpression,
+    ILambda,
     IApply,
     ITemplateString,
     IEnum,
@@ -55,7 +56,6 @@ import {
     TAdd,
     TSub,
     TOr,
-    IPattern,
 } from './typed-ast';
 
 export type Visitor<Ctx> = {
@@ -271,6 +271,11 @@ export type Visitor<Ctx> = {
     LambdaPost?: (node: Lambda, ctx: Ctx) => null | Lambda;
     LArg?: (node: LArg, ctx: Ctx) => null | false | LArg | [LArg | null, Ctx];
     LArgPost?: (node: LArg, ctx: Ctx) => null | LArg;
+    ILambda?: (
+        node: ILambda,
+        ctx: Ctx,
+    ) => null | false | ILambda | [ILambda | null, Ctx];
+    ILambdaPost?: (node: ILambda, ctx: Ctx) => null | ILambda;
     TApply?: (
         node: TApply,
         ctx: Ctx,
@@ -321,11 +326,6 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost?: (node: Pattern, ctx: Ctx) => null | Pattern;
-    IPattern?: (
-        node: IPattern,
-        ctx: Ctx,
-    ) => null | false | IPattern | [IPattern | null, Ctx];
-    IPatternPost?: (node: IPattern, ctx: Ctx) => null | IPattern;
     TypeToplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
@@ -416,6 +416,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
     IExpressionPost_Number?: (node: Number, ctx: Ctx) => null | IExpression;
+    IExpression_Lambda?: (
+        node: Lambda,
+        ctx: Ctx,
+    ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_Lambda?: (node: Lambda, ctx: Ctx) => null | IExpression;
     IExpression_Boolean?: (
         node: Boolean,
         ctx: Ctx,
@@ -4490,6 +4495,94 @@ export const transformTypeFile = <Ctx>(
     return node;
 };
 
+export const transformILambda = <Ctx>(
+    node: ILambda,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ILambda => {
+    if (!node) {
+        throw new Error('No ILambda provided');
+    }
+
+    const transformed = visitor.ILambda ? visitor.ILambda(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$args = node.args;
+        {
+            let changed2 = false;
+            const arr1 = node.args.map((updatedNode$args$item1) => {
+                const result = transformLArg(
+                    updatedNode$args$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$args$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$args = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$body = transformIExpression(node.body, visitor, ctx);
+        changed1 = changed1 || updatedNode$body !== node.body;
+
+        let updatedNode$res = null;
+        const updatedNode$res$current = node.res;
+        if (updatedNode$res$current != null) {
+            const updatedNode$res$1$ = transformType(
+                updatedNode$res$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$res$1$ !== updatedNode$res$current;
+            updatedNode$res = updatedNode$res$1$;
+        }
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                args: updatedNode$args,
+                body: updatedNode$body,
+                res: updatedNode$res,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ILambdaPost) {
+        const transformed = visitor.ILambdaPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformIApply = <Ctx>(
     node: IApply,
     visitor: Visitor<Ctx>,
@@ -4946,6 +5039,25 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
+        case 'Lambda': {
+            const transformed = visitor.IExpression_Lambda
+                ? visitor.IExpression_Lambda(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Boolean': {
             const transformed = visitor.IExpression_Boolean
                 ? visitor.IExpression_Boolean(node, ctx)
@@ -5057,6 +5169,12 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
+        case 'Lambda': {
+            updatedNode = transformILambda(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Boolean': {
             updatedNode = transformBoolean(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -5104,6 +5222,16 @@ export const transformIExpression = <Ctx>(
         case 'Number': {
             const transformed = visitor.IExpressionPost_Number
                 ? visitor.IExpressionPost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Lambda': {
+            const transformed = visitor.IExpressionPost_Lambda
+                ? visitor.IExpressionPost_Lambda(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -5525,45 +5653,6 @@ export const transformTOr = <Ctx>(
     node = updatedNode;
     if (visitor.TOrPost) {
         const transformed = visitor.TOrPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformIPattern = <Ctx>(
-    node: IPattern,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): IPattern => {
-    if (!node) {
-        throw new Error('No IPattern provided');
-    }
-
-    const transformed = visitor.IPattern ? visitor.IPattern(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    const updatedNode = transformPName(node, visitor, ctx);
-    changed0 = changed0 || updatedNode !== node;
-
-    node = updatedNode;
-    if (visitor.IPatternPost) {
-        const transformed = visitor.IPatternPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }

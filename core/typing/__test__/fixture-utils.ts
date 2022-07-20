@@ -250,13 +250,13 @@ export function runFixture(
                 return;
             }
             const ictx = iCtx();
-            const ir = ictx.ToIR[top.expr.type](top.expr as any, ictx);
+            const ir = ictx.ToIR.Expression(top.expr, ictx);
             const jctx = jCtx(ctx);
             const js = jctx.ToJS.IExpression(ir, jctx);
             const jsraw = generate(js).code;
             const pp = newPPCtx(false);
-            const ast = actx.ToAst[t.type](t as any, actx);
-            const cm = printToString(pp.ToPP[ast.type](ast as any, pp), 200);
+            const ast = actx.ToAst.Type(t, actx);
+            const cm = printToString(pp.ToPP.Type(ast, pp), 200);
             checked.comments.push([
                 {
                     ...top.loc,

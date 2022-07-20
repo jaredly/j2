@@ -450,7 +450,7 @@ export const ToIR = {
         // at least to be able to know what types things are?
         // on the other hand, maybe I can bake types at this point?
         // like, monomorphizing is going to happen before this.
-        return ctx.ToIR[target.type](target as any, ctx);
+        return ctx.ToIR.Expression(target as any, ctx);
     },
     DecoratedExpression(
         { loc, expr }: t.DecoratedExpression,

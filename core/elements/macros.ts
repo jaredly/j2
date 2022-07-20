@@ -564,20 +564,6 @@ export const ToIR = {
                 throw new Error('Nope');
         }
     },
-
-    Pattern(node: t.Pattern, ctx: ICtx): t.IPattern {
-        switch (node.type) {
-            case 'PName':
-                return ctx.ToIR.PName(node, ctx);
-
-            case 'PTuple':
-                return ctx.ToIR.PTuple(node, ctx);
-
-            default:
-                let _: never = node;
-                throw new Error('Nope');
-        }
-    },
 };
 
 export const ToJS = {
@@ -588,6 +574,9 @@ export const ToJS = {
 
             case 'Number':
                 return ctx.ToJS.Number(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToJS.Lambda(node, ctx);
 
             case 'Boolean':
                 return ctx.ToJS.Boolean(node, ctx);

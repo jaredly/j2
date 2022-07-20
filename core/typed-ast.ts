@@ -11,7 +11,7 @@ import { TypeApplication } from './elements/generics';
 import { Type } from './elements/type';
 import { Id, idToString } from './ids';
 import { IRecord, Record } from './elements/record-exprs';
-import { Lambda } from './elements/lambda';
+import { ILambda, Lambda } from './elements/lambda';
 export type { Id };
 export type { Apply, IApply } from './elements/apply';
 export type {
@@ -50,8 +50,8 @@ export type {
     Record,
     RecordKeyValue,
 } from './elements/record-exprs';
-export type { IPattern, PName, PTuple, Pattern } from './elements/pattern';
-export type { LArg, Lambda } from './elements/lambda';
+export type { ILambda, LArg, Lambda } from './elements/lambda';
+export type { PName, PTuple, Pattern } from './elements/pattern';
 
 export type GlobalRef = {
     type: 'Global';
@@ -135,6 +135,7 @@ export type Expression =
 export type IExpression =
     | Ref
     | Number
+    | ILambda
     | Boolean
     | IApply
     | ITemplateString

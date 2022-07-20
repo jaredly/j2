@@ -2,9 +2,27 @@
 ==[basic]==
 --[input]--
 () => 10
+(a: 10) => 10
 // hello
 
 --[output:expected]--
 () => 10
 // () => 10
+(a#[0]: 10) => 10
+// (10) => 10
+// hello
+
+==[pattern type mismatch]==
+--[input:shouldFail]--
+((a, b): 10) => 10
+
+--[output:expected]--
+((a#[0], b#[1]): 10) => 10
+// (10) => 10
+
+==[wait just acessing variable, what happens]==
+--[input]--
+(a: 10) => a
+
+--[output:expected]--
 // hello

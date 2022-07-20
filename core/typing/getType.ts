@@ -67,6 +67,13 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
         case 'Lambda': {
             // TODO Args! Got to ... make type variables,
             // and then figure things out.
+            const res = getType(expr.body, ctx);
+            if (!res) {
+                return null;
+            }
+            if (expr.args.some((a) => !a.typ)) {
+                return null;
+            }
             return {
                 type: 'TLambda',
                 loc: expr.loc,
@@ -75,7 +82,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                     typ: arg.typ!,
                     loc: arg.loc,
                 })),
-                result: getType(expr.body, ctx)!,
+                result: res,
             };
         }
         case 'TypeApplication': {

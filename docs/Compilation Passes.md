@@ -23,6 +23,9 @@ TAST -> IR
 	Althouuuugh, we could do switch->if/else and stay in-universe, right?
 - so really it's "if/else expr -> if/else stmt"?
 
+hmmmmm do I just leave patterns as-is?
+let's try that.
+
 Ok but what about for & while loops? jerd doesn't have either,
 but imperative targets will. So it makes sense to have an IR
 that knows about them ... right?
