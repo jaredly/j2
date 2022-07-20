@@ -51,6 +51,15 @@ const keys = Object.keys(parserUnions).filter(
 console.log(Object.keys(parserUnions), keys);
 console.log(Object.keys(tastTypes));
 
+const extraArgs: { [key: string]: string } = {
+    Suffix: ' next: t.Expression,',
+    Pattern: ' locals: {sym: t.Sym, type: t.Type}[],',
+};
+const extraPass: { [key: string]: string } = {
+    Suffix: ' next,',
+    Pattern: ' locals,',
+};
+
 const text = `
 import { Visitor } from '../transform-tast';
 import { decorate } from '../typing/analyze';
@@ -72,15 +81,15 @@ export const ToTast = {
 	${keys
         .map((type) => {
             return `
-		${type}(node: p.${type},${
-                type === 'Suffix' ? ' next: t.Expression,' : ''
-            } ctx: TCtx): t.${Parser[type] || type} {
+		${type}(node: p.${type},${extraArgs[type] || ''} ctx: TCtx): t.${
+                Parser[type] || type
+            } {
 			switch (node.type) {
 				${parserUnions[type]
                     .map((union) => {
                         return `
 					case '${union}':
-						return ctx.ToTast.${union}(node,${type === 'Suffix' ? ' next,' : ''} ctx);
+						return ctx.ToTast.${union}(node,${extraPass[type] || ''} ctx);
 					`;
                     })
                     .join('\n')}

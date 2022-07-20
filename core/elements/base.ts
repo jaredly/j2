@@ -351,6 +351,7 @@ function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
 
 function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
     switch (t.type) {
+        case 'TVbl':
         case 'Number':
         case 'String':
         case 'TOps':

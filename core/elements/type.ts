@@ -70,10 +70,17 @@ export type TLambda = {
     loc: t.Loc;
 };
 
+export type TVbl = {
+    type: 'TVbl';
+    id: number;
+    loc: t.Loc;
+};
+
 // Ok so also, you can just drop an inline record declaration, right?
 
 export type Type =
     | TRef
+    | TVbl
     | TLambda
     | t.TEnum
     | t.Number

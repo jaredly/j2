@@ -22,7 +22,7 @@
 
 ==[wait just acessing variable, what happens]==
 --[input]--
-(a: 10) => a
+(a: int) => a
 
 --[output:expected]--
 // hello

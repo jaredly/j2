@@ -243,6 +243,7 @@ const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
         case 'String':
         case 'TOps':
         case 'TLambda':
+        case 'TVbl':
         case 'TVars':
         // These are taken care of by resolveAnalyzeType
         case 'TDecorated':

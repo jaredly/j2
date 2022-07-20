@@ -133,13 +133,17 @@ export const ToTast = {
         }
     },
 
-    Pattern(node: p.Pattern, ctx: TCtx): t.Pattern {
+    Pattern(
+        node: p.Pattern,
+        locals: { sym: t.Sym; type: t.Type }[],
+        ctx: TCtx,
+    ): t.Pattern {
         switch (node.type) {
             case 'PName':
-                return ctx.ToTast.PName(node, ctx);
+                return ctx.ToTast.PName(node, locals, ctx);
 
             case 'PTuple':
-                return ctx.ToTast.PTuple(node, ctx);
+                return ctx.ToTast.PTuple(node, locals, ctx);
 
             default:
                 let _: never = node;
@@ -194,6 +198,9 @@ export const ToAst = {
         switch (node.type) {
             case 'TRef':
                 return ctx.ToAst.TRef(node, ctx);
+
+            case 'TVbl':
+                return ctx.ToAst.TVbl(node, ctx);
 
             case 'TLambda':
                 return ctx.ToAst.TLambda(node, ctx);
@@ -301,6 +308,9 @@ export const ToAst = {
         switch (node.type) {
             case 'TRef':
                 return ctx.ToAst.TRef(node, ctx);
+
+            case 'TVbl':
+                return ctx.ToAst.TVbl(node, ctx);
 
             case 'TLambda':
                 return ctx.ToAst.TLambda(node, ctx);

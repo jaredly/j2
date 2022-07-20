@@ -28,7 +28,7 @@ export type Lambda = {
 export type LArg = {
     type: 'LArg';
     pat: t.Pattern;
-    typ: t.Type | null;
+    typ: t.Type;
     loc: t.Loc;
 };
 
@@ -42,22 +42,27 @@ export type ILambda = {
 
 export const ToTast = {
     Lambda({ type, args, res, body, loc }: p.Lambda, ctx: TCtx): t.Lambda {
+        const locals: Locals = [];
+        const targs: Lambda['args'] =
+            args?.items.map((arg) => {
+                const typ = arg.typ
+                    ? ctx.ToTast.Type(arg.typ, ctx)
+                    : ctx.newTypeVar();
+                const pat = ctx.ToTast.Pattern(arg.pat, locals, ctx);
+                if (!arg.typ) {
+                    ctx.addTypeConstraint(typ as t.TVbl, pat);
+                }
+                return { type: 'LArg', pat, typ, loc: arg.loc };
+            }) ?? [];
+        ctx = ctx.withLocals(locals);
         return {
             type: 'Lambda',
-            args:
-                args?.items.map((arg) => ({
-                    type: 'LArg',
-                    pat: ctx.ToTast.Pattern(arg.pat, ctx),
-                    typ: arg.typ ? ctx.ToTast.Type(arg.typ, ctx) : null,
-                    loc: arg.loc,
-                })) ?? [],
+            args: targs,
             body: ctx.ToTast.Expression(body, ctx),
             res: res ? ctx.ToTast.Type(res, ctx) : null,
             loc,
         };
     },
-    // Apply(apply: p.Apply_inner, ctx: TCtx): t.Apply {
-    // },
 };
 
 export const ToAst = {
@@ -121,6 +126,7 @@ export const ToPP = {
 
 export const ToIR = {
     Lambda({ type, args, res, body, loc }: t.Lambda, ctx: ICtx): t.ILambda {
+        // hmm so if there are argssss
         return {
             type: 'Lambda',
             args,
@@ -133,6 +139,7 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
+import { Locals } from './pattern';
 export const ToJS = {
     Lambda({ type, args, res, body, loc }: ILambda, ctx: JCtx): b.Expression {
         return b.arrowFunctionExpression(

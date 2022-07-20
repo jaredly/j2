@@ -12,8 +12,8 @@ import * as t from '../../typed-ast';
 export const typeToString = (t: t.Type, ctx: FullContext) => {
     const actx = printCtx(ctx, false);
     const pctx = newPPCtx(false);
-    const ast = actx.ToAst[t.type](t as any, actx);
-    return printToString(pctx.ToPP[ast.type](ast as any, pctx), 100);
+    const ast = actx.ToAst.Type(t, actx);
+    return printToString(pctx.ToPP.Type(ast, pctx), 100);
 };
 
 export const assertions = {

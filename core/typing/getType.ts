@@ -1,10 +1,9 @@
-import { FullContext, tref } from '../ctx';
+import { tref } from '../ctx';
 import { allRecordItems, TRecordKeyValue } from '../elements/records';
-import { extract, idToString } from '../ids';
 import { transformType } from '../transform-tast';
-import { Expression, Type, TVars, GlobalRef } from '../typed-ast';
+import { Expression, GlobalRef, TVars, Type } from '../typed-ast';
 import { collapseOps } from './ops';
-import { typeMatches, Ctx } from './typeMatches';
+import { Ctx, typeMatches } from './typeMatches';
 
 export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
     let minArgs = target.args.findIndex((arg) => arg.default_);

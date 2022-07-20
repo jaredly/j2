@@ -411,6 +411,34 @@ export const newContext = (): FullContext => {
                 },
             };
         },
+
+        newTypeVar() {
+            return {
+                type: 'TVbl',
+                id: 0,
+                loc: noloc,
+            };
+        },
+
+        withLocals(values) {
+            const locals: Internal['locals'][0] = { types: [], values };
+            values.forEach((t) => {
+                this[opaque].syms.values[t.sym.id] = t.type;
+            });
+            return {
+                ...this,
+                [opaque]: {
+                    ...this[opaque],
+                    locals: [locals, ...this[opaque].locals],
+                },
+            };
+        },
+
+        addTypeConstraint(typ, pat) {
+            // hmmmmmm
+            // idk
+        },
+
         withTypes(types) {
             const defns = types.map((m) =>
                 transformType(m.type, locClearVisitor, null),

@@ -39,6 +39,7 @@ export type {
     TOr,
     TRef,
     TSub,
+    TVbl,
     Type,
 } from './elements/type';
 export type { EnumCase, TEnum } from './elements/enums';

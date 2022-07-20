@@ -19,6 +19,7 @@ import {
     PTuple,
     Type,
     TRef,
+    TVbl,
     TLambda,
     TEnum,
     EnumCase,
@@ -228,6 +229,8 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TLambda | [TLambda | null, Ctx];
     TLambdaPost?: (node: TLambda, ctx: Ctx) => null | TLambda;
+    TVbl?: (node: TVbl, ctx: Ctx) => null | false | TVbl | [TVbl | null, Ctx];
+    TVblPost?: (node: TVbl, ctx: Ctx) => null | TVbl;
     Type?: (node: Type, ctx: Ctx) => null | false | Type | [Type | null, Ctx];
     TypePost?: (node: Type, ctx: Ctx) => null | Type;
     TAdd?: (node: TAdd, ctx: Ctx) => null | false | TAdd | [TAdd | null, Ctx];
@@ -464,6 +467,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
     TypePost_TRef?: (node: TRef, ctx: Ctx) => null | Type;
+    Type_TVbl?: (
+        node: TVbl,
+        ctx: Ctx,
+    ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TVbl?: (node: TVbl, ctx: Ctx) => null | Type;
     Type_TLambda?: (
         node: TLambda,
         ctx: Ctx,
@@ -1306,6 +1314,54 @@ export const transformTRef = <Ctx>(
     node = updatedNode;
     if (visitor.TRefPost) {
         const transformed = visitor.TRefPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformTVbl = <Ctx>(
+    node: TVbl,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TVbl => {
+    if (!node) {
+        throw new Error('No TVbl provided');
+    }
+
+    const transformed = visitor.TVbl ? visitor.TVbl(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TVblPost) {
+        const transformed = visitor.TVblPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2657,6 +2713,25 @@ export const transformType = <Ctx>(
             break;
         }
 
+        case 'TVbl': {
+            const transformed = visitor.Type_TVbl
+                ? visitor.Type_TVbl(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TLambda': {
             const transformed = visitor.Type_TLambda
                 ? visitor.Type_TLambda(node, ctx)
@@ -2838,6 +2913,12 @@ export const transformType = <Ctx>(
             break;
         }
 
+        case 'TVbl': {
+            updatedNode = transformTVbl(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TLambda': {
             updatedNode = transformTLambda(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -2899,6 +2980,16 @@ export const transformType = <Ctx>(
         case 'TRef': {
             const transformed = visitor.TypePost_TRef
                 ? visitor.TypePost_TRef(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TVbl': {
+            const transformed = visitor.TypePost_TVbl
+                ? visitor.TypePost_TVbl(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -3040,18 +3131,8 @@ export const transformLArg = <Ctx>(
         const updatedNode$pat = transformPattern(node.pat, visitor, ctx);
         changed1 = changed1 || updatedNode$pat !== node.pat;
 
-        let updatedNode$typ = null;
-        const updatedNode$typ$current = node.typ;
-        if (updatedNode$typ$current != null) {
-            const updatedNode$typ$1$ = transformType(
-                updatedNode$typ$current,
-                visitor,
-                ctx,
-            );
-            changed1 =
-                changed1 || updatedNode$typ$1$ !== updatedNode$typ$current;
-            updatedNode$typ = updatedNode$typ$1$;
-        }
+        const updatedNode$typ = transformType(node.typ, visitor, ctx);
+        changed1 = changed1 || updatedNode$typ !== node.typ;
 
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;

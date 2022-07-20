@@ -32,21 +32,31 @@ export type PTuple = {
 
 export type Pattern = PName | PTuple;
 
+export type Locals = { sym: t.Sym; type: t.Type }[];
+
 // export type IPattern = PName;
 
 export const ToTast = {
-    PName({ type, name, hash, loc }: p.PName, ctx: TCtx): PName {
+    PName(
+        { type, name, hash, loc }: p.PName,
+        locals: Locals,
+        ctx: TCtx,
+    ): PName {
+        const sym = hash ? { name, id: +hash.slice(2, -1) } : ctx.sym(name);
+        locals.push({ sym, type: ctx.newTypeVar() });
         return {
             type: 'PName',
-            sym: hash ? { name, id: +hash.slice(2, -1) } : ctx.sym(name),
+            sym,
             loc,
         };
     },
-    PTuple({ type, items, loc }: p.PTuple, ctx: TCtx): PTuple {
+    PTuple({ type, items, loc }: p.PTuple, locals: Locals, ctx: TCtx): PTuple {
         return {
             type: 'PTuple',
             items:
-                items?.items.map((item) => ctx.ToTast.Pattern(item, ctx)) ?? [],
+                items?.items.map((item) =>
+                    ctx.ToTast.Pattern(item, locals, ctx),
+                ) ?? [],
             loc,
         };
     },
@@ -71,6 +81,10 @@ export const ToAst = {
             },
             loc,
         };
+    },
+    TVbl({ id, loc }: t.TVbl, ctx: TACtx): p.Type {
+        // TODO: I think we just get the current unity of the constraints?
+        throw new Error(`Unresolved type variables cant be represented?`);
     },
 };
 

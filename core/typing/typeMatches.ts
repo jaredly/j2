@@ -139,6 +139,10 @@ export const typeMatches = (
         return !hasFunctions(candidate, ctx);
     }
 
+    // if (candidate.type === 'TVbl' || expected.type === 'TVbl') {
+    //     return false;
+    // }
+
     // console.log('at', candidate, expected);
     // if (expected.type === 'TOr') {
     //     if (candidate.type === 'TOr') {
@@ -162,6 +166,8 @@ export const typeMatches = (
     // console.log(candidate, expected);
 
     switch (candidate.type) {
+        case 'TVbl':
+            return false;
         case 'TRecord':
             return recordMatches(candidate, expected, ctx);
         case 'TEnum':

@@ -9,7 +9,10 @@ export type Ctx = {
     // seems like the ctx probably wants a say in the assignment of symbol IDs.
     // to ensure there aren't collisions.
     sym: (name: string) => t.Sym;
+    newTypeVar: () => t.TVbl;
+    addTypeConstraint: (typ: t.TVbl, pat: t.Pattern) => void;
     withLocalTypes: (locals: { sym: t.Sym; bound: t.Type | null }[]) => Ctx;
+    withLocals: (locals: { sym: t.Sym; type: t.Type }[]) => Ctx;
     withAliases: (aliases: { [readableName: string]: string }) => Ctx;
     withTypes: (types: { name: string; type: t.Type }[]) => Ctx;
     toplevelConfig: (top: Toplevel | null) => Ctx;
