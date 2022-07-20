@@ -1,4 +1,5 @@
 import { tref } from '../ctx';
+import { getLocals, Locals } from '../elements/pattern';
 import { allRecordItems, TRecordKeyValue } from '../elements/records';
 import { transformType } from '../transform-tast';
 import { Expression, GlobalRef, TVars, Type } from '../typed-ast';
@@ -66,11 +67,14 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
         case 'Lambda': {
             // TODO Args! Got to ... make type variables,
             // and then figure things out.
+            const locals: Locals = [];
+            expr.args.forEach((arg) =>
+                getLocals(arg.pat, arg.typ, locals, ctx),
+            );
+            ctx = ctx.withLocals(locals);
             const res = getType(expr.body, ctx);
             if (!res) {
-                return null;
-            }
-            if (expr.args.some((a) => !a.typ)) {
+                // ctx.debugger();
                 return null;
             }
             return {
@@ -78,7 +82,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 loc: expr.loc,
                 args: expr.args.map((arg) => ({
                     label: '',
-                    typ: arg.typ!,
+                    typ: arg.typ,
                     loc: arg.loc,
                 })),
                 result: res,

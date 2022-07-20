@@ -8,6 +8,7 @@ import {
     EnumCase,
     GlobalRef,
     refHash,
+    Sym,
     TApply,
     TEnum,
     TLambda,
@@ -44,6 +45,7 @@ export type Ctx = {
     /** Only triggers the devtools debugger if the fixture is pinned. */
     debugger(): void;
     withBounds(bounds: { [sym: number]: Type | null }): Ctx;
+    withLocals: (locals: { sym: Sym; type: Type }[]) => Ctx;
 };
 
 export const unifyPayloads = (

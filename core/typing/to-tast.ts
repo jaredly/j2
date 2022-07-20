@@ -12,7 +12,6 @@ export type Ctx = {
     newTypeVar: () => t.TVbl;
     addTypeConstraint: (typ: t.TVbl, pat: t.Pattern) => void;
     withLocalTypes: (locals: { sym: t.Sym; bound: t.Type | null }[]) => Ctx;
-    withLocals: (locals: { sym: t.Sym; type: t.Type }[]) => Ctx;
     withAliases: (aliases: { [readableName: string]: string }) => Ctx;
     withTypes: (types: { name: string; type: t.Type }[]) => Ctx;
     toplevelConfig: (top: Toplevel | null) => Ctx;

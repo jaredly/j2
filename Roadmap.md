@@ -23,6 +23,10 @@ tvbl, is like ok folks
 hm nope. make a `typeForPattern`, should suffice.
 Also need a `constrainType` that's the opposite of `unifyTypes`.
 
+- [ ] lambda getType make it work
+- [ ] .res, we should keep track if it was inferred, and
+	if so, don't print it in toast. Same for arg types.
+
 
 
 # and such

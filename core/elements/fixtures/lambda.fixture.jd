@@ -6,9 +6,9 @@
 // hello
 
 --[output:expected]--
-() => 10
+():10 => 10
 // () => 10
-(a#[0]: 10) => 10
+(a#[0]: 10):10 => 10
 // (10) => 10
 // hello
 
@@ -17,17 +17,17 @@
 ((a, b): 10) => 10
 
 --[output:expected]--
-((a#[0], b#[1]): 10) => 10
+((a#[0], b#[1]): 10):10 => 10
 // (10) => 10
 
 ==[wait just acessing variable, what happens]==
 --[input]--
 (a: int) => a
 
---[output:failed]--
+--[output:expected]--
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
-(a#[0]: int) => unnamed#[0]
-// Error, no type!
+(a#[0]: int):int => a#[0]
+// (int) => int
 
 ==[New fixture]==
 --[input]--
@@ -35,10 +35,10 @@ alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 ((a, b)) => 10
 ({a, what}) => 10
 
---[output:failed]--
-(a#[0]: 9000) => unnamed#[0] +#[:unresolved:] 2
+--[output:expected]--
+(a#[0]: "tvbl:0") => a#[0] +#[:unresolved:] 2
 // Error, no type!
-((a#[0], b#[1]): 9000) => 10
-// (9000) => 10
-({a#[0], what#[1]}: 9000) => 10
-// (9000) => 10
+((a#[0], b#[1]): "tvbl:0"):10 => 10
+// ("tvbl:0") => 10
+({a#[0], what#[1]}: "tvbl:0"):10 => 10
+// ("tvbl:0") => 10

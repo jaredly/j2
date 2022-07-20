@@ -77,31 +77,80 @@ can we bring this back?
 //     }
 // };
 
+export const getLocals = (
+    pat: Pattern,
+    type: t.Type,
+    locals: Locals,
+    ctx: TMCtx,
+) => {
+    switch (pat.type) {
+        case 'PBlank':
+            return;
+        case 'PName':
+            locals.push({ sym: pat.sym, type });
+            return;
+        case 'PRecord':
+            if (type.type !== 'TRecord') {
+                return;
+            }
+            const eitems = allRecordItems(type, ctx);
+            if (eitems) {
+                // for (const [name, item] of eitems) {
+                //     locals.push({ sym: ctx.sym(name), type: item });
+                // }
+                pat.items.forEach(([name, item]) => {
+                    if (eitems[name]) {
+                        getLocals(item, eitems[name].value, locals, ctx);
+                    }
+                });
+            }
+            return;
+    }
+};
+
 export const ToTast = {
-    PBlank(pat: p.PBlank, locals: Locals, ctx: TCtx): t.Pattern {
+    PBlank(
+        pat: p.PBlank,
+        locals: Locals,
+        _: t.Type | null,
+        ctx: TCtx,
+    ): t.Pattern {
         return { type: 'PBlank', loc: pat.loc };
     },
     PName(
         { type, name, hash, loc }: p.PName,
         locals: Locals,
+        expected: t.Type | null,
         // path: PPath[],
         ctx: TCtx,
     ): PName {
         const sym = hash ? { name, id: +hash.slice(2, -1) } : ctx.sym(name);
-        locals.push({ sym, type: ctx.newTypeVar() });
+        locals.push({ sym, type: expected ?? ctx.newTypeVar() });
         return {
             type: 'PName',
             sym,
             loc,
         };
     },
-    PTuple({ type, items, loc }: p.PTuple, locals: Locals, ctx: TCtx): PRecord {
+    PTuple(
+        { type, items, loc }: p.PTuple,
+        locals: Locals,
+        expected: t.Type | null,
+        ctx: TCtx,
+    ): PRecord {
+        const eitems =
+            expected?.type === 'TRecord' ? allRecordItems(expected, ctx) : null;
         return {
             type: 'PRecord',
             items:
                 items?.items.map((item, i) => [
                     i.toString(),
-                    ctx.ToTast.Pattern(item, locals, ctx),
+                    ctx.ToTast.Pattern(
+                        item,
+                        locals,
+                        eitems ? eitems[i]?.value : null,
+                        ctx,
+                    ),
                 ]) ?? [],
             loc,
         };
@@ -109,15 +158,23 @@ export const ToTast = {
     PRecord(
         { type, fields, loc }: p.PRecord,
         locals: Locals,
+        expected: t.Type | null,
         ctx: TCtx,
     ): PRecord {
+        const eitems =
+            expected?.type === 'TRecord' ? allRecordItems(expected, ctx) : null;
         return {
             type: 'PRecord',
             items:
                 fields?.items.map((item) => [
                     item.name,
                     item.pat && item.pat.type !== 'PHash'
-                        ? ctx.ToTast.Pattern(item.pat, locals, ctx)
+                        ? ctx.ToTast.Pattern(
+                              item.pat,
+                              locals,
+                              eitems ? eitems[item.name].value : null,
+                              ctx,
+                          )
                         : ctx.ToTast.PName(
                               {
                                   type: 'PName',
@@ -126,6 +183,7 @@ export const ToTast = {
                                   loc,
                               },
                               locals,
+                              eitems ? eitems[item.name].value : null,
                               ctx,
                           ),
                 ]) ?? [],
@@ -139,6 +197,7 @@ export const ToAst = {
         return { type: 'PBlank', loc: pat.loc, pseudo: '_' };
     },
     PName({ type, sym, loc }: PName, ctx: TACtx): p.PName {
+        ctx.recordSym(sym, 'value');
         return {
             type: 'PName',
             name: sym.name,
@@ -186,7 +245,7 @@ export const ToAst = {
     TVbl({ id, loc }: t.TVbl, ctx: TACtx): p.Type {
         // TODO: I think we just get the current unity of the constraints?
         // throw new Error(`Unresolved type variables cant be represented?`);
-        return { type: 'Number', contents: '9000', loc };
+        return { type: 'String', text: 'tvbl:' + id, loc };
     },
 };
 
@@ -245,6 +304,7 @@ export const ToIR = {
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import path from 'path';
+import { allRecordItems } from './records';
 export const ToJS = {
     Pattern(p: Pattern, ctx: JCtx): b.Pattern | b.Identifier {
         switch (p.type) {

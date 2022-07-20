@@ -40,6 +40,27 @@ export type ILambda = {
     loc: t.Loc;
 };
 
+/*
+((a, _): (int, float)) => ...
+pattern comes back with 'a' is a thing
+but we don't have a bound on it yet
+and like
+ok so maybe Pattern to-ast needs to be
+...
+accompanied by ...
+
+so ... I've been thinking about
+having a setup
+where you can manipulate the tast
+and then re-run the analyze stuff
+and have it all work out.
+also, getType isn't reifying anything,
+it's just crawling the tree.
+How does that change, when we have these
+local variables and stuff.
+
+*/
+
 export const ToTast = {
     Lambda({ type, args, res, body, loc }: p.Lambda, ctx: TCtx): t.Lambda {
         const locals: Locals = [];
@@ -48,18 +69,25 @@ export const ToTast = {
                 const typ = arg.typ
                     ? ctx.ToTast.Type(arg.typ, ctx)
                     : ctx.newTypeVar();
-                const pat = ctx.ToTast.Pattern(arg.pat, locals, ctx);
+                const pat = ctx.ToTast.Pattern(
+                    arg.pat,
+                    locals,
+                    arg.typ ? typ : null,
+                    ctx,
+                );
                 if (!arg.typ) {
                     ctx.addTypeConstraint(typ as t.TVbl, pat);
                 }
                 return { type: 'LArg', pat, typ, loc: arg.loc };
             }) ?? [];
-        ctx = ctx.withLocals(locals);
+        ctx = ctx.withLocals(locals) as TCtx;
+        const tbody = ctx.ToTast.Expression(body, ctx);
+        console.log(tbody);
         return {
             type: 'Lambda',
             args: targs,
-            body: ctx.ToTast.Expression(body, ctx),
-            res: res ? ctx.ToTast.Type(res, ctx) : null,
+            body: tbody,
+            res: res ? ctx.ToTast.Type(res, ctx) : ctx.getType(tbody),
             loc,
         };
     },
