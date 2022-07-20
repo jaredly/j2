@@ -52,7 +52,13 @@ export type {
     RecordKeyValue,
 } from './elements/record-exprs';
 export type { ILambda, LArg, Lambda } from './elements/lambda';
-export type { PName, PTuple, Pattern } from './elements/pattern';
+export type {
+    Locals,
+    PBlank,
+    PName,
+    PRecord,
+    Pattern,
+} from './elements/pattern';
 
 export type GlobalRef = {
     type: 'Global';

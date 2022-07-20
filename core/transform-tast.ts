@@ -16,7 +16,8 @@ import {
     Pattern,
     PName,
     Sym,
-    PTuple,
+    PRecord,
+    PBlank,
     Type,
     TRef,
     TVbl,
@@ -319,16 +320,21 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | PName | [PName | null, Ctx];
     PNamePost?: (node: PName, ctx: Ctx) => null | PName;
-    PTuple?: (
-        node: PTuple,
+    PRecord?: (
+        node: PRecord,
         ctx: Ctx,
-    ) => null | false | PTuple | [PTuple | null, Ctx];
-    PTuplePost?: (node: PTuple, ctx: Ctx) => null | PTuple;
+    ) => null | false | PRecord | [PRecord | null, Ctx];
+    PRecordPost?: (node: PRecord, ctx: Ctx) => null | PRecord;
     Pattern?: (
         node: Pattern,
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost?: (node: Pattern, ctx: Ctx) => null | Pattern;
+    PBlank?: (
+        node: PBlank,
+        ctx: Ctx,
+    ) => null | false | PBlank | [PBlank | null, Ctx];
+    PBlankPost?: (node: PBlank, ctx: Ctx) => null | PBlank;
     TypeToplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
@@ -522,11 +528,16 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost_PName?: (node: PName, ctx: Ctx) => null | Pattern;
-    Pattern_PTuple?: (
-        node: PTuple,
+    Pattern_PRecord?: (
+        node: PRecord,
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
-    PatternPost_PTuple?: (node: PTuple, ctx: Ctx) => null | Pattern;
+    PatternPost_PRecord?: (node: PRecord, ctx: Ctx) => null | Pattern;
+    Pattern_PBlank?: (
+        node: PBlank,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PBlank?: (node: PBlank, ctx: Ctx) => null | Pattern;
 };
 export const transformId = <Ctx>(
     node: Id,
@@ -1055,16 +1066,16 @@ export const transformPName = <Ctx>(
     return node;
 };
 
-export const transformPTuple = <Ctx>(
-    node: PTuple,
+export const transformPRecord = <Ctx>(
+    node: PRecord,
     visitor: Visitor<Ctx>,
     ctx: Ctx,
-): PTuple => {
+): PRecord => {
     if (!node) {
-        throw new Error('No PTuple provided');
+        throw new Error('No PRecord provided');
     }
 
-    const transformed = visitor.PTuple ? visitor.PTuple(node, ctx) : null;
+    const transformed = visitor.PRecord ? visitor.PRecord(node, ctx) : null;
     if (transformed === false) {
         return node;
     }
@@ -1085,39 +1096,65 @@ export const transformPTuple = <Ctx>(
     {
         let changed1 = false;
 
-        let updatedNode$items = node.items;
-        {
-            let changed2 = false;
-            const arr1 = node.items.map((updatedNode$items$item1) => {
-                const result = transformPattern(
-                    updatedNode$items$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$items$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$items = arr1;
-                changed1 = true;
-            }
-        }
-
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
         if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                items: updatedNode$items,
-                loc: updatedNode$loc,
-            };
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
             changed0 = true;
         }
     }
 
     node = updatedNode;
-    if (visitor.PTuplePost) {
-        const transformed = visitor.PTuplePost(node, ctx);
+    if (visitor.PRecordPost) {
+        const transformed = visitor.PRecordPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPBlank = <Ctx>(
+    node: PBlank,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PBlank => {
+    if (!node) {
+        throw new Error('No PBlank provided');
+    }
+
+    const transformed = visitor.PBlank ? visitor.PBlank(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PBlankPost) {
+        const transformed = visitor.PBlankPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -1171,9 +1208,28 @@ export const transformPattern = <Ctx>(
             break;
         }
 
-        case 'PTuple': {
-            const transformed = visitor.Pattern_PTuple
-                ? visitor.Pattern_PTuple(node, ctx)
+        case 'PRecord': {
+            const transformed = visitor.Pattern_PRecord
+                ? visitor.Pattern_PRecord(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PBlank': {
+            const transformed = visitor.Pattern_PBlank
+                ? visitor.Pattern_PBlank(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -1200,10 +1256,16 @@ export const transformPattern = <Ctx>(
             break;
         }
 
+        case 'PRecord': {
+            updatedNode = transformPRecord(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformPTuple(node, visitor, ctx);
+            const updatedNode$0node = transformPBlank(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -1220,9 +1282,19 @@ export const transformPattern = <Ctx>(
             break;
         }
 
-        case 'PTuple': {
-            const transformed = visitor.PatternPost_PTuple
-                ? visitor.PatternPost_PTuple(updatedNode, ctx)
+        case 'PRecord': {
+            const transformed = visitor.PatternPost_PRecord
+                ? visitor.PatternPost_PRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PBlank': {
+            const transformed = visitor.PatternPost_PBlank
+                ? visitor.PatternPost_PBlank(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

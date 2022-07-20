@@ -209,7 +209,7 @@ export const processExpression = (
             if (hasTypeAttribute) {
                 throw new Error(`Can't have an attribute named type`);
             }
-            const typeName = hasTypeAttribute ? '$type' : 'type';
+            const typeName = 'type';
             ruleTags.push(ctx.ruleName);
 
             const recordType = t.tsTypeLiteral(

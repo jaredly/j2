@@ -23,6 +23,17 @@
 ==[wait just acessing variable, what happens]==
 --[input]--
 (a: int) => a
+(a) => a
+((a, b)) => 10
+({a, what}) => 10
 
---[output:expected]--
-// hello
+--[output:failed]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+(a#[0]: int) => a#[:unresolved:]
+// Error, no type!
+(a#[0]: 9000) => a#[:unresolved:]
+// Error, no type!
+((a#[0], b#[1]): 9000) => 10
+// (9000) => 10
+({a: a#[0], what: what#[1]}: 9000) => 10
+// (9000) => 10

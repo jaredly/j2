@@ -25,6 +25,10 @@ import {
     PName,
     PTuple,
     PTupleItems,
+    PRecord,
+    PRecordFields,
+    PRecordField,
+    PBlank,
     BinOp,
     BinOp_inner,
     WithUnary,
@@ -477,6 +481,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost?: (node: Pattern, ctx: Ctx) => null | Pattern;
+    PBlank?: (
+        node: PBlank,
+        ctx: Ctx,
+    ) => null | false | PBlank | [PBlank | null, Ctx];
+    PBlankPost?: (node: PBlank, ctx: Ctx) => null | PBlank;
     PName?: (
         node: PName,
         ctx: Ctx,
@@ -492,6 +501,21 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | PTupleItems | [PTupleItems | null, Ctx];
     PTupleItemsPost?: (node: PTupleItems, ctx: Ctx) => null | PTupleItems;
+    PRecord?: (
+        node: PRecord,
+        ctx: Ctx,
+    ) => null | false | PRecord | [PRecord | null, Ctx];
+    PRecordPost?: (node: PRecord, ctx: Ctx) => null | PRecord;
+    PRecordFields?: (
+        node: PRecordFields,
+        ctx: Ctx,
+    ) => null | false | PRecordFields | [PRecordFields | null, Ctx];
+    PRecordFieldsPost?: (node: PRecordFields, ctx: Ctx) => null | PRecordFields;
+    PRecordField?: (
+        node: PRecordField,
+        ctx: Ctx,
+    ) => null | false | PRecordField | [PRecordField | null, Ctx];
+    PRecordFieldPost?: (node: PRecordField, ctx: Ctx) => null | PRecordField;
     Record?: (
         node: Record,
         ctx: Ctx,
@@ -773,6 +797,16 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost_PTuple?: (node: PTuple, ctx: Ctx) => null | Pattern;
+    Pattern_PRecord?: (
+        node: PRecord,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PRecord?: (node: PRecord, ctx: Ctx) => null | Pattern;
+    Pattern_PBlank?: (
+        node: PBlank,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PBlank?: (node: PBlank, ctx: Ctx) => null | Pattern;
     RecordItem_RecordSpread?: (
         node: RecordSpread,
         ctx: Ctx,
@@ -1161,6 +1195,14 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_LArg?: (node: LArg, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_PBlank?: (
+        node: PBlank,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PBlank?: (
+        node: PBlank,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_PName?: (
         node: PName,
         ctx: Ctx,
@@ -1180,6 +1222,30 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_PTupleItems?: (
         node: PTupleItems,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PRecord?: (
+        node: PRecord,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PRecord?: (
+        node: PRecord,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PRecordFields?: (
+        node: PRecordFields,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PRecordFields?: (
+        node: PRecordFields,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PRecordField?: (
+        node: PRecordField,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PRecordField?: (
+        node: PRecordField,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_Record?: (
@@ -1728,6 +1794,262 @@ export const transformPTuple = <Ctx>(
     return node;
 };
 
+export const transformPRecordField = <Ctx>(
+    node: PRecordField,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PRecordField => {
+    if (!node) {
+        throw new Error('No PRecordField provided');
+    }
+
+    const transformed = visitor.PRecordField
+        ? visitor.PRecordField(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$pat = null;
+        const updatedNode$pat$current = node.pat;
+        if (updatedNode$pat$current != null) {
+            const updatedNode$pat$1$ = transformPattern(
+                updatedNode$pat$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$pat$1$ !== updatedNode$pat$current;
+            updatedNode$pat = updatedNode$pat$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                pat: updatedNode$pat,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PRecordFieldPost) {
+        const transformed = visitor.PRecordFieldPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPRecordFields = <Ctx>(
+    node: PRecordFields,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PRecordFields => {
+    if (!node) {
+        throw new Error('No PRecordFields provided');
+    }
+
+    const transformed = visitor.PRecordFields
+        ? visitor.PRecordFields(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformPRecordField(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PRecordFieldsPost) {
+        const transformed = visitor.PRecordFieldsPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPRecord = <Ctx>(
+    node: PRecord,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PRecord => {
+    if (!node) {
+        throw new Error('No PRecord provided');
+    }
+
+    const transformed = visitor.PRecord ? visitor.PRecord(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$fields = null;
+        const updatedNode$fields$current = node.fields;
+        if (updatedNode$fields$current != null) {
+            const updatedNode$fields$1$ = transformPRecordFields(
+                updatedNode$fields$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 ||
+                updatedNode$fields$1$ !== updatedNode$fields$current;
+            updatedNode$fields = updatedNode$fields$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                fields: updatedNode$fields,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PRecordPost) {
+        const transformed = visitor.PRecordPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPBlank = <Ctx>(
+    node: PBlank,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PBlank => {
+    if (!node) {
+        throw new Error('No PBlank provided');
+    }
+
+    const transformed = visitor.PBlank ? visitor.PBlank(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PBlankPost) {
+        const transformed = visitor.PBlankPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformPattern = <Ctx>(
     node: Pattern,
     visitor: Visitor<Ctx>,
@@ -1792,6 +2114,44 @@ export const transformPattern = <Ctx>(
             }
             break;
         }
+
+        case 'PRecord': {
+            const transformed = visitor.Pattern_PRecord
+                ? visitor.Pattern_PRecord(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PBlank': {
+            const transformed = visitor.Pattern_PBlank
+                ? visitor.Pattern_PBlank(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -1803,10 +2163,22 @@ export const transformPattern = <Ctx>(
             break;
         }
 
+        case 'PTuple': {
+            updatedNode = transformPTuple(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PRecord': {
+            updatedNode = transformPRecord(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformPTuple(node, visitor, ctx);
+            const updatedNode$0node = transformPBlank(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -1826,6 +2198,26 @@ export const transformPattern = <Ctx>(
         case 'PTuple': {
             const transformed = visitor.PatternPost_PTuple
                 ? visitor.PatternPost_PTuple(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PRecord': {
+            const transformed = visitor.PatternPost_PRecord
+                ? visitor.PatternPost_PRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PBlank': {
+            const transformed = visitor.PatternPost_PBlank
+                ? visitor.PatternPost_PBlank(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -9621,6 +10013,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'PBlank': {
+            const transformed = visitor.AllTaggedTypes_PBlank
+                ? visitor.AllTaggedTypes_PBlank(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'PName': {
             const transformed = visitor.AllTaggedTypes_PName
                 ? visitor.AllTaggedTypes_PName(node, ctx)
@@ -9662,6 +10073,63 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'PTupleItems': {
             const transformed = visitor.AllTaggedTypes_PTupleItems
                 ? visitor.AllTaggedTypes_PTupleItems(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PRecord': {
+            const transformed = visitor.AllTaggedTypes_PRecord
+                ? visitor.AllTaggedTypes_PRecord(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PRecordFields': {
+            const transformed = visitor.AllTaggedTypes_PRecordFields
+                ? visitor.AllTaggedTypes_PRecordFields(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PRecordField': {
+            const transformed = visitor.AllTaggedTypes_PRecordField
+                ? visitor.AllTaggedTypes_PRecordField(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -10363,6 +10831,12 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'PBlank': {
+            updatedNode = transformPBlank(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'PName': {
             updatedNode = transformPName(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -10377,6 +10851,24 @@ export const transformAllTaggedTypes = <Ctx>(
 
         case 'PTupleItems': {
             updatedNode = transformPTupleItems(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PRecord': {
+            updatedNode = transformPRecord(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PRecordFields': {
+            updatedNode = transformPRecordFields(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PRecordField': {
+            updatedNode = transformPRecordField(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -10932,6 +11424,16 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'PBlank': {
+            const transformed = visitor.AllTaggedTypesPost_PBlank
+                ? visitor.AllTaggedTypesPost_PBlank(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
         case 'PName': {
             const transformed = visitor.AllTaggedTypesPost_PName
                 ? visitor.AllTaggedTypesPost_PName(updatedNode, ctx)
@@ -10955,6 +11457,36 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'PTupleItems': {
             const transformed = visitor.AllTaggedTypesPost_PTupleItems
                 ? visitor.AllTaggedTypesPost_PTupleItems(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PRecord': {
+            const transformed = visitor.AllTaggedTypesPost_PRecord
+                ? visitor.AllTaggedTypesPost_PRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PRecordFields': {
+            const transformed = visitor.AllTaggedTypesPost_PRecordFields
+                ? visitor.AllTaggedTypesPost_PRecordFields(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PRecordField': {
+            const transformed = visitor.AllTaggedTypesPost_PRecordField
+                ? visitor.AllTaggedTypesPost_PRecordField(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

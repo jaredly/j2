@@ -86,7 +86,7 @@ imports.forEach((imp) => {
 
 const ctx: Ctx = {
     types: {},
-    visitorTypes: visitorNames,
+    visitorTypes: visitorNames.filter((n) => n !== 'Locals'),
     transformers: {},
     transformerStatus: {},
 };

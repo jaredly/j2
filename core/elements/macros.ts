@@ -145,6 +145,12 @@ export const ToTast = {
             case 'PTuple':
                 return ctx.ToTast.PTuple(node, locals, ctx);
 
+            case 'PRecord':
+                return ctx.ToTast.PRecord(node, locals, ctx);
+
+            case 'PBlank':
+                return ctx.ToTast.PBlank(node, locals, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -350,8 +356,11 @@ export const ToAst = {
             case 'PName':
                 return ctx.ToAst.PName(node, ctx);
 
-            case 'PTuple':
-                return ctx.ToAst.PTuple(node, ctx);
+            case 'PRecord':
+                return ctx.ToAst.PRecord(node, ctx);
+
+            case 'PBlank':
+                return ctx.ToAst.PBlank(node, ctx);
 
             default:
                 let _: never = node;
@@ -487,6 +496,12 @@ export const ToPP = {
 
             case 'PTuple':
                 return ctx.ToPP.PTuple(node, ctx);
+
+            case 'PRecord':
+                return ctx.ToPP.PRecord(node, ctx);
+
+            case 'PBlank':
+                return ctx.ToPP.PBlank(node, ctx);
 
             default:
                 let _: never = node;

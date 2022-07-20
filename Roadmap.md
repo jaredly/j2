@@ -1,4 +1,6 @@
 
+# North Starnstuff
+
 WHAT IS MY
 current north star
 
@@ -12,8 +14,21 @@ the effects examples
 and/or a nice error coalescing example.
 
 
+
+# Up nExtt
+
+## so can we do some type variable stuff
+tvbl, is like ok folks
+
+- with patterns, should I be ... passing up ... a 'path' or constraint things. yeah I think so.
+
+
+
+# and such
+
+
 So ... what about
-- [ ] ... having a `TEmpty` type. would be good. For when there's an `apply` that needs application
+- [ ] ... having a `TEmpty` type. would be good. For when there's an `apply` that needs application. like "underscore"
 
 
 - [x] normal (reolved) apply, let it infer type args

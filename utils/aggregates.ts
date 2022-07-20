@@ -43,6 +43,7 @@ const Parser: { [key: string]: string | false } = {
 
 const Taster: { [key: string]: string | false } = {
     RefKind: false,
+    PPath: false,
 };
 
 const keys = Object.keys(parserUnions).filter(

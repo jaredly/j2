@@ -150,10 +150,17 @@ LArg = pat:Pattern typ:(_ ":" _ Type)?
 
 // pattern.ts
 
-Pattern = PName / PTuple
-PName = name:$IdText hash:$JustSym?
+Pattern = PName / PTuple / PRecord / PBlank
+PBlank = pseudo:"_"
+PName = name:$IdText hash:($JustSym)?
 PTuple = "(" _  items:PTupleItems? _ ")"
 PTupleItems = first:Pattern rest:(_ "," _ Pattern)*
+PRecord = "{" _ fields:PRecordFields? _ ","? _ "}"
+PRecordFields = first:PRecordField rest:(_ "," _ PRecordField)*
+PRecordField = name:$IdText pat:PRecordValue?
+PRecordValue = PRecordPattern / PHash
+PRecordPattern = _ ":" _ Pattern
+PHash = JustSym
 
 
 // record-exprs.ts
