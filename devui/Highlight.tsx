@@ -293,16 +293,26 @@ const collectAnnotations = (tast: File, ctx: FullContext) => {
                     loc: node.loc,
                     text: typeToString(t, ctx),
                 });
+            } else {
+                annotations.push({
+                    loc: node.loc,
+                    text: `[no type]`,
+                });
             }
             return node;
         },
         Ref(node, ctx) {
+            let text =
+                node.kind.type === 'Unresolved'
+                    ? 'Unresolved'
+                    : node.kind.type === 'Global'
+                    ? refHash(node.kind)
+                    : node.kind.type === 'Local'
+                    ? `sym=${node.kind.sym}`
+                    : `recur(${node.kind.idx})`;
             annotations.push({
                 loc: node.loc,
-                text:
-                    node.kind.type === 'Unresolved'
-                        ? 'unresolved'
-                        : refHash(node.kind),
+                text,
             });
             return null;
         },

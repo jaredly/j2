@@ -27,10 +27,13 @@ Also need a `constrainType` that's the opposite of `unifyTypes`.
 - [ ] .res, we should keep track if it was inferred, and
 	if so, don't print it in toast. Same for arg types.
 
-- [ ] ok, when adding decorators, let's use a much better
-	version, that checks to see
-- [ ] fix jest tests so I can like run them
-	- [ ] turns out I need to do analyze after parsing because I'm doing inference stufffss, so that comparing them works.
+- [x] ok, when adding decorators - clear them first
+- [x] fix jest tests so I can like run them
+	- [x] turns out I need to do analyze after parsing because I'm doing inference stufffss, so that comparing them works.
+	- [ ] fix the pattern to not have an array so we can traverse it
+	- [ ] figure out what I want to do with type variables...
+		ok yeah, in the anaalyze pass I want to replace the TVbl
+		with whatever it was inferref to be. Sounds reasonable.
 
 
 - [ ] make a basic collectSymInfo
