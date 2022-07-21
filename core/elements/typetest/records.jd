@@ -25,3 +25,5 @@ type HasName = {name: string}
 @type:shouldMatch(:(1, 2, *)) (1, 2, 3, 4)
 
 @type:shouldMatch(:(1, 2, *)) (1, 2)
+
+@type:shouldMatch(:{0: int, 1: float, name: string = "hi", *}) (1, 2.2)
