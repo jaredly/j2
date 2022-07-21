@@ -81,9 +81,9 @@ alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 (a) => takesInt(a) + takes10(a)
 
 --[output:expected]--
-alias takes10=h454b6d446f18aea6c51a4b3599f3bf413c24ee76 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
-(a#[0]: 10) => takesInt(a#[0]) +#[:unresolved:] takes10(a#[0])
-// Error, no type!
+alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takes10=h454b6d446f18aea6c51a4b3599f3bf413c24ee76 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
+(a#[0]: 10) => takesInt(a#[0]) + takes10(a#[0])
+// (10) => int + int
 
 --[builtins]--
 //:value:takesInt:(a: int) => int

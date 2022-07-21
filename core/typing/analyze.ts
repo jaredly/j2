@@ -16,6 +16,7 @@ import { Ctx as TMCtx } from './typeMatches';
 import { analyzeVisitor } from './analyze.gen';
 import { TopTypeKind } from './to-tast';
 import { getLocals, Pattern } from '../elements/pattern';
+import { printTopLevel } from '../debug';
 
 export type Ctx = {
     getType(expr: t.Expression): t.Type | null;
@@ -153,7 +154,7 @@ export const analyzeTypeTop = (
 export const analyzeTop = (ast: t.Toplevel, ctx: Ctx): t.Toplevel => {
     const top = transformToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
     return transformToplevel(
-        ast,
+        top,
         {
             Type_TVbl(node) {
                 console.log('Node ok');
