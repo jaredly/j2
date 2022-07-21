@@ -16,9 +16,10 @@
 --[input:shouldFail]--
 ((a, b): 10) => 10
 
---[output:failed]--
-((a#[0], b#[1]): 10):10 => 10
-// (10) => 10
+--[output:expected]--
+alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f
+((a#[0], b#[1]): @error:argWrongType() 10):10 => 10
+// (@error:argWrongType() 10) => 10
 
 ==[wait just acessing variable, what happens]==
 --[input]--

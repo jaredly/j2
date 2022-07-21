@@ -77,6 +77,37 @@ can we bring this back?
 //     }
 // };
 
+export const typeMatchesPattern = (
+    pat: Pattern,
+    type: t.Type,
+    ctx: TMCtx,
+): boolean => {
+    switch (pat.type) {
+        case 'PName':
+            return true;
+        case 'PRecord': {
+            if (type.type !== 'TRecord') {
+                return false;
+            }
+            const items = allRecordItems(type, ctx);
+            if (!items) {
+                return false;
+            }
+            for (let [name, cpat] of pat.items) {
+                if (!items[name]) {
+                    return false;
+                }
+                if (!typeMatchesPattern(cpat, items[name].value, ctx)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        case 'PBlank':
+            return true;
+    }
+};
+
 export const typeForPattern = (pat: Pattern, ctx: TCtx): t.Type => {
     switch (pat.type) {
         case 'PName':

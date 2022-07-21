@@ -1,5 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { decorate } from '../typing/analyze';
+import { decorate, tdecorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
 import { typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
@@ -163,7 +163,13 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { getLocals, Locals, typeForPattern } from './pattern';
+import {
+    getLocals,
+    Locals,
+    typeForPattern,
+    typeMatchesPattern,
+} from './pattern';
+
 export const ToJS = {
     Lambda({ type, args, res, body, loc }: ILambda, ctx: JCtx): b.Expression {
         return b.arrowFunctionExpression(
@@ -178,11 +184,18 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         // idk I'm sure there's stuff
         const locals: Locals = [];
 
-        node.args.forEach((arg) =>
-            getLocals(arg.pat, arg.typ, locals, ctx.ctx),
-        );
-        return [null, { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx }];
+        let changed = false;
+        const args = node.args.map((arg) => {
+            getLocals(arg.pat, arg.typ, locals, ctx.ctx);
+            if (!typeMatchesPattern(arg.pat, arg.typ, ctx.ctx)) {
+                changed = true;
+                return { ...arg, typ: tdecorate(arg.typ, 'argWrongType', ctx) };
+            }
+            return arg;
+        });
+        return [
+            changed ? { ...node, args } : null,
+            { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx },
+        ];
     },
-    // Expression_Apply(node, { ctx, hit }) {
-    // },
 };

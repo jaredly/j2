@@ -28,6 +28,9 @@ Also need a `constrainType` that's the opposite of `unifyTypes`.
 	if so, don't print it in toast. Same for arg types.
 
 
+- [ ] make a basic collectSymInfo
+- [ ] fix jest tests so I can like run them
+
 SO
 I think I want a `symInfo` dealio that I can get by
 traversing a tast

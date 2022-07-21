@@ -280,7 +280,7 @@ export function OneFixture({
                     />
                     <Card.Divider css={{ marginBlock: '$6' }} />
                     <div style={{ position: 'relative' }}>
-                        {numErrors != 0 ? (
+                        {numErrors != 0 && newOutput.type === 'success' ? (
                             <TopRight
                                 tooltip={JSON.stringify(
                                     newOutput.result.verify,

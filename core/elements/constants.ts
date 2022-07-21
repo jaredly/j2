@@ -1,5 +1,5 @@
 import { Ctx } from '..';
-import { FullContext, noloc } from '../ctx';
+import { noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as ICtx } from '../ir/ir';
@@ -197,7 +197,6 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { idsEqual } from '../ids';
 import { findBuiltinName } from './base';
 export const ToJS = {
     Number(x: t.Number, ctx: JCtx): b.NumericLiteral {
