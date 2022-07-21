@@ -412,27 +412,6 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         ctx,
                     ),
                 };
-
-                // return {
-                //     ...node,
-                //     target: {
-                //         type: 'TypeApplication',
-                //         target: node.target,
-                //         args: ttype.args.map((t) =>
-                //             tdecorate(
-                //                 {
-                //                     type: 'TEnum',
-                //                     cases: [],
-                //                     loc: t.loc,
-                //                     open: false,
-                //                 },
-                //                 'invalidType',
-                //                 { ctx, hit },
-                //             ),
-                //         ),
-                //         loc: node.loc,
-                //     },
-                // };
             }
             return decorate(node, 'notAFunction', hit, ctx);
         }
@@ -446,6 +425,10 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             if (at == null) {
                 return arg;
             }
+            if (at.type === 'TVbl') {
+                ctx.addTypeConstraint(at, ttype.args[i].typ);
+            }
+            // hmm so 'unconstrained' would be a thing.
             if (!typeMatches(at, ttype.args[i].typ, ctx)) {
                 changed = true;
                 return decorate(arg, 'argWrongType', hit, ctx, [
