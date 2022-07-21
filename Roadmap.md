@@ -17,7 +17,12 @@ and/or a nice error coalescing example.
 # Up nExtt
 
 - [x] tvbl as apply target
-- [ ] (a, b, *) for open tuples?
+- [x] (a, b, *) for open tuples?
+
+## Inferred stuff, feel free to drop it!
+
+hm I guess I need to have some tests that are like
+"print & reparse" and make sure it matches? oh wait I already have that.
 
 ## so can we do some type variable stuff
 tvbl, is like ok folks

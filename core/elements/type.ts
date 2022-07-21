@@ -125,8 +125,8 @@ export const asApply = (t: p.Type): p.TApply =>
         : t;
 
 export const ToTast = {
-    TBlank(blank: p.TBlank, ctx: TCtx): t.TBlank {
-        return blank;
+    TBlank({ type, loc }: p.TBlank, ctx: TCtx): t.TBlank {
+        return { type, loc };
     },
     TypeAlias({ loc, items }: p.TypeAlias, ctx: TCtx): t.TypeAlias {
         return {

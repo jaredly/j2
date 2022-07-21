@@ -1107,10 +1107,43 @@ export const transformPRecord = <Ctx>(
     {
         let changed1 = false;
 
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                let result = updatedNode$items$item1;
+                {
+                    let changed3 = false;
+
+                    const result$pat = transformPattern(
+                        updatedNode$items$item1.pat,
+                        visitor,
+                        ctx,
+                    );
+                    changed3 =
+                        changed3 || result$pat !== updatedNode$items$item1.pat;
+                    if (changed3) {
+                        result = { ...result, pat: result$pat };
+                        changed2 = true;
+                    }
+                }
+
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
         if (changed1) {
-            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            updatedNode = {
+                ...updatedNode,
+                items: updatedNode$items,
+                loc: updatedNode$loc,
+            };
             changed0 = true;
         }
     }

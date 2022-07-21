@@ -32,6 +32,9 @@ export const diffPaths = (
             }
             return null;
         }
+        if (a == null || b == null) {
+            return a == b ? null : { path, a, b };
+        }
         for (const key in a) {
             if (!(key in b)) {
                 return { path: [...path, key], a: a[key], b: b[key] };

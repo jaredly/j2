@@ -81,7 +81,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 type: 'TLambda',
                 loc: expr.loc,
                 args: expr.args.map((arg) => ({
-                    label: '',
+                    label: null,
                     typ: arg.typ,
                     loc: arg.loc,
                 })),

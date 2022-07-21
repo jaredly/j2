@@ -39,7 +39,7 @@ export type PName = {
 
 export type PRecord = {
     type: 'PRecord';
-    items: [string, Pattern][];
+    items: { name: string; pat: Pattern }[];
     loc: t.Loc;
 };
 
@@ -93,7 +93,7 @@ export const typeMatchesPattern = (
             if (!items) {
                 return false;
             }
-            for (let [name, cpat] of pat.items) {
+            for (let { name, pat: cpat } of pat.items) {
                 if (!items[name]) {
                     return false;
                 }
@@ -115,7 +115,7 @@ export const typeForPattern = (pat: Pattern, ctx?: TCtx): t.Type => {
         case 'PRecord':
             return {
                 type: 'TRecord',
-                items: pat.items.map(([name, pat]) => ({
+                items: pat.items.map(({ name, pat }) => ({
                     type: 'TRecordKeyValue',
                     key: name,
                     value: typeForPattern(pat, ctx),
@@ -152,7 +152,7 @@ export const getLocals = (
                 // for (const [name, item] of eitems) {
                 //     locals.push({ sym: ctx.sym(name), type: item });
                 // }
-                pat.items.forEach(([name, item]) => {
+                pat.items.forEach(({ name, pat: item }) => {
                     if (eitems[name]) {
                         getLocals(item, eitems[name].value, locals, ctx);
                     }
@@ -179,10 +179,10 @@ export const ToTast = {
         return {
             type: 'PRecord',
             items:
-                items?.items.map((item, i) => [
-                    i.toString(),
-                    ctx.ToTast.Pattern(item, ctx),
-                ]) ?? [],
+                items?.items.map((item, i) => ({
+                    name: i.toString(),
+                    pat: ctx.ToTast.Pattern(item, ctx),
+                })) ?? [],
             loc,
         };
     },
@@ -190,20 +190,21 @@ export const ToTast = {
         return {
             type: 'PRecord',
             items:
-                fields?.items.map((item) => [
-                    item.name,
-                    item.pat && item.pat.type !== 'PHash'
-                        ? ctx.ToTast.Pattern(item.pat, ctx)
-                        : ctx.ToTast.PName(
-                              {
-                                  type: 'PName',
-                                  name: item.name,
-                                  hash: item.pat ? item.pat.hash : '',
-                                  loc,
-                              },
-                              ctx,
-                          ),
-                ]) ?? [],
+                fields?.items.map((item) => ({
+                    name: item.name,
+                    pat:
+                        item.pat && item.pat.type !== 'PHash'
+                            ? ctx.ToTast.Pattern(item.pat, ctx)
+                            : ctx.ToTast.PName(
+                                  {
+                                      type: 'PName',
+                                      name: item.name,
+                                      hash: item.pat ? item.pat.hash : '',
+                                      loc,
+                                  },
+                                  ctx,
+                              ),
+                })) ?? [],
             loc,
         };
     },
@@ -223,12 +224,14 @@ export const ToAst = {
         };
     },
     PRecord({ type, items, loc }: PRecord, ctx: TACtx): p.Pattern {
-        if (items.every((item, i) => item[0] === i.toString())) {
+        if (items.every((item, i) => item.name === i.toString())) {
             return {
                 type: 'PTuple',
                 items: {
                     type: 'PTupleItems',
-                    items: items.map((item) => ctx.ToAst.Pattern(item[1], ctx)),
+                    items: items.map((item) =>
+                        ctx.ToAst.Pattern(item.pat, ctx),
+                    ),
                     loc,
                 },
                 loc,
@@ -239,19 +242,19 @@ export const ToAst = {
             fields: {
                 type: 'PRecordFields',
                 items: items.map((item) => {
-                    const pat = ctx.ToAst.Pattern(item[1], ctx);
+                    const pat = ctx.ToAst.Pattern(item.pat, ctx);
                     return {
                         type: 'PRecordField',
-                        name: item[0],
+                        name: item.name,
                         pat:
-                            pat.type === 'PName' && pat.name === item[0]
+                            pat.type === 'PName' && pat.name === item.name
                                 ? {
                                       type: 'PHash',
                                       hash: pat.hash ?? '',
                                       loc: pat.loc,
                                   }
                                 : pat,
-                        loc: item[1].loc,
+                        loc: item.pat.loc,
                     };
                 }),
                 loc,
@@ -320,7 +323,6 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import path from 'path';
 import { allRecordItems } from './records';
 export const ToJS = {
     Pattern(p: Pattern, ctx: JCtx): b.Pattern | b.Identifier {
@@ -330,16 +332,16 @@ export const ToJS = {
             case 'PName':
                 return b.identifier(p.sym.name);
             case 'PRecord':
-                if (p.items.every((item, i) => item[0] === i.toString())) {
+                if (p.items.every((item, i) => item.name === i.toString())) {
                     return b.arrayPattern(
-                        p.items.map((item) => ctx.ToJS.Pattern(item[1], ctx)),
+                        p.items.map((item) => ctx.ToJS.Pattern(item.pat, ctx)),
                     );
                 } else {
                     return b.objectPattern(
                         p.items.map((item) =>
                             b.objectProperty(
-                                b.identifier(item[0]),
-                                ctx.ToJS.Pattern(item[1], ctx),
+                                b.identifier(item.name),
+                                ctx.ToJS.Pattern(item.pat, ctx),
                             ),
                         ),
                     );

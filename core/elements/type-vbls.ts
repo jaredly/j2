@@ -105,6 +105,7 @@ export const ToAst = {
                       type: 'TParens',
                       items: { type: 'TComma', items: [inner], loc },
                       loc,
+                      open: null,
                   }
                 : inner;
         return {

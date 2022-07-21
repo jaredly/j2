@@ -408,7 +408,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                 args: argTypes.map((typ) => ({
                     typ: typ ? typ : { type: 'TBlank', loc: node.loc },
                     loc: typ?.loc ?? node.loc,
-                    label: '',
+                    label: null,
                 })),
                 loc: node.loc,
                 result: { type: 'TBlank', loc: node.loc },

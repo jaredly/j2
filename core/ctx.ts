@@ -551,9 +551,7 @@ export const newContext = (): FullContext => {
         },
         typeByName(name: string) {
             const ref = this[opaque].types.names[name];
-            return ref
-                ? { type: 'TRef', ref: ref, loc: noloc, args: [] }
-                : null;
+            return ref ? { type: 'TRef', ref: ref, loc: noloc } : null;
         },
         getTypeArgs(ref) {
             if (ref.type === 'Global') {
