@@ -23,7 +23,7 @@ TRight = _ top:$top _ right:TOpInner
 top = "-" / "+"
 TOpInner = TDecorated / TApply
 
-TParens = "(" _ items:TComma? _ ")"
+TParens = "(" _ items:TComma? open:(_ "*")? _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
@@ -120,6 +120,7 @@ export const asApply = (t: p.Type): p.TApply =>
               type: 'TParens',
               items: { type: 'TComma', items: [t], loc: t.loc },
               loc: t.loc,
+              open: null,
           }
         : t;
 
@@ -151,7 +152,7 @@ export const ToTast = {
             })),
         };
     },
-    TParens({ loc, items }: p.TParens, ctx: TCtx): t.Type {
+    TParens({ loc, items, open }: p.TParens, ctx: TCtx): t.Type {
         if (items?.items.length === 1) {
             return ctx.ToTast.Type(items.items[0], ctx);
         }
@@ -167,7 +168,7 @@ export const ToTast = {
                     value: ctx.ToTast.Type(x, ctx),
                     loc: x.loc,
                 })) ?? [],
-            open: false,
+            open: !!open,
         };
     },
     TDecorated(
@@ -265,6 +266,7 @@ export const ToAst = {
                     type: 'TParens',
                     loc: inner.loc,
                     items: { type: 'TComma', items: [inner], loc: inner.loc },
+                    open: '',
                 },
                 decorators,
             };
@@ -391,9 +393,11 @@ export const ToPP = {
             loc,
         );
     },
-    TParens({ items, loc }: p.TParens, ctx: PCtx): pp.PP {
+    TParens({ items, loc, open }: p.TParens, ctx: PCtx): pp.PP {
         return pp.args(
-            items?.items.map((x) => ctx.ToPP.Type(x, ctx)) ?? [],
+            items?.items
+                .map((x) => ctx.ToPP.Type(x, ctx))
+                .concat(open ? [pp.text('*', loc)] : []) ?? [],
             loc,
         );
         // return pp.items(

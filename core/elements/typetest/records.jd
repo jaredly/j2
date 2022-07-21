@@ -21,3 +21,7 @@ type HasName = {name: string}
 // Defaults!
 @type:shouldMatch(:{x: int = 5, y: float})
 @type:shouldNotMatch(:{x: int, y: float}) {y: 10.2}
+
+@type:shouldMatch(:(1, 2, *)) (1, 2, 3, 4)
+
+@type:shouldMatch(:(1, 2, *)) (1, 2)

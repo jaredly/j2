@@ -70,7 +70,7 @@ export const ToTast = {
 };
 
 export const recordAsTuple = (t: TRecord) => {
-    if (!t.open && t.spreads.length == 0) {
+    if (t.spreads.length == 0) {
         let nums = [];
         for (let item of t.items) {
             const i = parseInt(item.key);
@@ -131,6 +131,7 @@ export const ToAst = {
                     items: tup.map((v) => ctx.ToAst.Type(v, ctx)),
                     loc: t.loc,
                 },
+                open: t.open ? '*' : null,
             };
         }
         return {

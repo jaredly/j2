@@ -537,6 +537,7 @@ export type TParens = {
   type: "TParens";
   loc: Loc;
   items: TComma | null;
+  open: string | null;
 };
 
 export type TArg = {
