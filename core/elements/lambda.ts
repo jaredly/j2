@@ -29,6 +29,7 @@ export type LArg = {
     type: 'LArg';
     pat: t.Pattern;
     typ: t.Type;
+    inferred: boolean;
     loc: t.Loc;
 };
 
@@ -74,7 +75,13 @@ export const ToTast = {
                 if (!arg.typ) {
                     ctx.addTypeConstraint(typ as t.TVbl, typeForPattern(pat));
                 }
-                return { type: 'LArg', pat, typ, loc: arg.loc };
+                return {
+                    type: 'LArg',
+                    pat,
+                    typ,
+                    loc: arg.loc,
+                    inferred: !arg.typ,
+                };
             }) ?? [];
         ctx = ctx.withLocals(locals) as TCtx;
         const tbody = ctx.ToTast.Expression(body, ctx);
@@ -102,7 +109,10 @@ export const ToAst = {
                 items: args.map((arg) => ({
                     type: 'LArg',
                     pat: ctx.ToAst.Pattern(arg.pat, ctx),
-                    typ: arg.typ ? ctx.ToAst.Type(arg.typ, ctx) : null,
+                    typ:
+                        arg.typ && !arg.inferred
+                            ? ctx.ToAst.Type(arg.typ, ctx)
+                            : null,
                     loc: arg.loc,
                 })),
                 loc: args.length > 0 ? args[0].loc : loc,

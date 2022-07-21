@@ -43,18 +43,18 @@ alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 
 --[output:expected]--
 alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takes10=h454b6d446f18aea6c51a4b3599f3bf413c24ee76 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
-(a#[0]: int) => takesInt(a#[0]) + 2
+(a#[0]) => takesInt(a#[0]) + 2
 // (int) => int + 2
-((a#[0], b#[1]): (_, _, *)):10 => 10
+((a#[0], b#[1])):10 => 10
 // ((_, _, *)) => 10
-({a#[0], what#[1]}: {a: _, what: _, *}):10 => 10
+({a#[0], what#[1]}):10 => 10
 // ({a: _, what: _, *}) => 10
 // this is adding constraints
-(a#[0]: 10) => takesInt(a#[0]) + takes10(a#[0])
+(a#[0]) => takesInt(a#[0]) + takes10(a#[0])
 // (10) => int + int
 // Ok folks, so why does 'res' show up as nothing in the one place,
 // but _ on the reparse?
-(a#[0]: (10) => _) => a#[0](10)
+(a#[0]) => a#[0](10)
 // ((10) => _) => _
 
 --[builtins]--
@@ -67,7 +67,7 @@ alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0
 
 --[output:expected]--
 alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
-(a#[0]: string):string => "${a#[0]}"
+(a#[0]):string => "${a#[0]}"
 // (string) => string
 
 ==[New fixture_]==
@@ -76,7 +76,7 @@ alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 
 --[output:expected]--
 alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takes10=h454b6d446f18aea6c51a4b3599f3bf413c24ee76 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
-(a#[0]: 10) => takesInt(a#[0]) + takes10(a#[0])
+(a#[0]) => takesInt(a#[0]) + takes10(a#[0])
 // (10) => int + int
 
 --[builtins]--
