@@ -16,6 +16,9 @@ and/or a nice error coalescing example.
 
 # Up nExtt
 
+- [ ] tvbl as apply target
+- [ ] (a, b, *) for open tuples?
+
 ## so can we do some type variable stuff
 tvbl, is like ok folks
 

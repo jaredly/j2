@@ -27,7 +27,7 @@ export type Ctx = {
     getDecorator(name: string): t.RefKind[];
     errorDecorators(): Id[];
     currentConstraints: (id: number) => t.Type;
-    addTypeConstraint: (typ: t.TVbl, constraint: t.Type) => void;
+    addTypeConstraint: (typ: t.TVbl, constraint: t.Type) => t.Type;
 
     typeForId: (id: Id) => GlobalType | null;
     valueForId: (id: Id) => GlobalValue | null;
@@ -192,6 +192,14 @@ export const errorCount = (v: Verify): number => {
 export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
     const errorDecorators = _ctx.errorDecorators();
     return {
+        TVbl(node, ctx) {
+            results.errors.push(node.loc);
+            return null;
+        },
+        TBlank(node) {
+            results.errors.push(node.loc);
+            return null;
+        },
         Toplevel(node) {
             // ctx.toplevelConfig?
             // ctx.resetSym()

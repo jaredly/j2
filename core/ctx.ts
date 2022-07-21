@@ -51,7 +51,7 @@ type Internal = {
     // Used in the first traversal & resolving
     // After that, we use syms
     constraints: {
-        [key: number]: Type[];
+        [key: number]: Type;
     };
     locals: {
         types: { sym: Sym; bound: Type | null }[];
@@ -445,7 +445,6 @@ export const newContext = (): FullContext => {
 
         newTypeVar() {
             const id = this[opaque].symid++;
-            this[opaque].constraints[id] = [];
             return {
                 type: 'TVbl',
                 id,
@@ -469,25 +468,27 @@ export const newContext = (): FullContext => {
 
         addTypeConstraint(typ, constraint) {
             if (!this[opaque].constraints[typ.id]) {
-                this[opaque].constraints[typ.id] = [];
+                this[opaque].constraints[typ.id] = constraint;
+                return constraint;
             }
-            this[opaque].constraints[typ.id].push(constraint);
+            const mix = constrainTypes(
+                this[opaque].constraints[typ.id],
+                constraint,
+                this,
+            );
+            if (!mix) {
+                return this[opaque].constraints[typ.id];
+            }
+            this[opaque].constraints[typ.id] = mix;
+            return mix;
         },
 
         currentConstraints(id) {
             console.log('get', id, this[opaque].constraints[id]);
-            if (!this[opaque].constraints[id].length) {
+            if (!this[opaque].constraints[id]) {
                 return { type: 'TBlank', loc: noloc };
             }
-            const all = this[opaque].constraints[id];
-            let t = all[0];
-            for (let i = 1; i < all.length; i++) {
-                const res = constrainTypes(t, all[i], this);
-                if (res) {
-                    t = res;
-                }
-            }
-            return t;
+            return this[opaque].constraints[id];
         },
 
         withTypes(types) {

@@ -394,14 +394,27 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     },
     ExpressionPost_Apply(node, { ctx, hit }) {
         // Otherwise, try to get the type of the target & compare to the args
-        const ttype = ctx.getType(node.target);
+        let ttype = ctx.getType(node.target);
         if (!ttype) {
             // Something deeper has an error.
             // Huh I should probably do a transformFile checking that all expressions
             // have types before signing off.
             return null;
         }
-        if (ttype?.type !== 'TLambda') {
+        const argTypes = node.args.map((arg) => ctx.getType(arg));
+        if (ttype.type === 'TVbl') {
+            ttype = ctx.addTypeConstraint(ttype, {
+                type: 'TLambda',
+                args: argTypes.map((typ) => ({
+                    typ: typ ? typ : { type: 'TBlank', loc: node.loc },
+                    loc: typ?.loc ?? node.loc,
+                    label: '',
+                })),
+                loc: node.loc,
+                result: { type: 'TBlank', loc: node.loc },
+            });
+        }
+        if (ttype.type !== 'TLambda') {
             if (ttype.type === 'TVars') {
                 return {
                     ...node,
@@ -415,21 +428,21 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             }
             return decorate(node, 'notAFunction', hit, ctx);
         }
-        const argTypes = node.args.map((arg) => ctx.getType(arg));
         if (ttype.args.length !== argTypes.length) {
             return decorate(node, 'wrongNumberOfArgs', hit, ctx);
         }
+        const atype = ttype;
         let changed = false;
         const args = node.args.map((arg, i) => {
-            const at = ctx.getType(arg);
+            let at = ctx.getType(arg);
             if (at == null) {
                 return arg;
             }
             if (at.type === 'TVbl') {
-                ctx.addTypeConstraint(at, ttype.args[i].typ);
+                at = ctx.addTypeConstraint(at, atype.args[i].typ);
             }
             // hmm so 'unconstrained' would be a thing.
-            if (!typeMatches(at, ttype.args[i].typ, ctx)) {
+            if (!typeMatches(at, atype.args[i].typ, ctx)) {
                 changed = true;
                 return decorate(arg, 'argWrongType', hit, ctx, [
                     {
@@ -437,7 +450,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         arg: {
                             type: 'DType',
                             loc: noloc,
-                            typ: ttype.args[i].typ,
+                            typ: atype.args[i].typ,
                         },
                         loc: noloc,
                     },
