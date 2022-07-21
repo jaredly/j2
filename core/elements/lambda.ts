@@ -72,7 +72,7 @@ export const ToTast = {
                     : typeForPattern(pat, ctx);
                 getLocals(pat, typ, locals, ctx);
                 if (!arg.typ) {
-                    ctx.addTypeConstraint(typ as t.TVbl, pat);
+                    ctx.addTypeConstraint(typ as t.TVbl, typeForPattern(pat));
                 }
                 return { type: 'LArg', pat, typ, loc: arg.loc };
             }) ?? [];
@@ -187,7 +187,9 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         let changed = false;
         const args = node.args.map((arg) => {
             getLocals(arg.pat, arg.typ, locals, ctx.ctx);
+            console.log('check it', arg.pat, arg.typ);
             if (!typeMatchesPattern(arg.pat, arg.typ, ctx.ctx)) {
+                console.log('hup hit it');
                 changed = true;
                 return { ...arg, typ: tdecorate(arg.typ, 'argWrongType', ctx) };
             }

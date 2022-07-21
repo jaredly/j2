@@ -467,16 +467,19 @@ export const newContext = (): FullContext => {
             };
         },
 
-        addTypeConstraint(typ, pat) {
+        addTypeConstraint(typ, constraint) {
+            console.log('add', typ.id);
+            // debugger
             if (!this[opaque].constraints[typ.id]) {
                 this[opaque].constraints[typ.id] = [];
             }
-            this[opaque].constraints[typ.id].push(typeForPattern(pat));
+            this[opaque].constraints[typ.id].push(constraint);
             // hmmmmmm
             // idk
         },
 
         currentConstraints(id) {
+            console.log('get', id, this[opaque].constraints[id]);
             if (!this[opaque].constraints[id].length) {
                 return { type: 'TBlank', loc: noloc };
             }

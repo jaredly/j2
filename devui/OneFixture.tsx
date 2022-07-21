@@ -306,7 +306,6 @@ export function OneFixture({
                                         ctx: newOutput.result.ctx2,
                                     }}
                                     extraLocs={(ast) => {
-                                        console.log('ex', ast.type);
                                         if (ast.type !== 'File') {
                                             return [];
                                         }
@@ -361,7 +360,6 @@ export function OneFixture({
                                                 },
                                             });
                                         });
-                                        console.log('ok', locs);
                                         return locs;
                                     }}
                                 />

@@ -88,6 +88,13 @@ export const constrainTypes = (
     //     return unifyRecords(one, two, ctx);
     // }
 
+    if (one.type === 'TBlank') {
+        return two;
+    }
+    if (two.type === 'TBlank') {
+        return one;
+    }
+
     // What do we delve into?
     // Lambdas
     // Enums

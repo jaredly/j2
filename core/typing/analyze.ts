@@ -10,41 +10,31 @@ import {
     transformTypeAlias,
     Visitor,
 } from '../transform-tast';
-import {
-    DecoratedExpression,
-    Decorator,
-    Expression,
-    File,
-    Loc,
-    Locals,
-    RefKind,
-    Toplevel,
-    TVar,
-    Type,
-    TypeAlias,
-} from '../typed-ast';
+import * as t from '../typed-ast';
 import { extract, Id, idsEqual, idToString } from '../ids';
 import { Ctx as TMCtx } from './typeMatches';
 import { analyzeVisitor } from './analyze.gen';
 import { TopTypeKind } from './to-tast';
-import { getLocals } from '../elements/pattern';
+import { getLocals, Pattern } from '../elements/pattern';
 
 export type Ctx = {
-    getType(expr: Expression): Type | null;
-    getTypeArgs(ref: RefKind): TVar[] | null;
+    getType(expr: t.Expression): t.Type | null;
+    getTypeArgs(ref: t.RefKind): t.TVar[] | null;
     getTopKind(idx: number): TopTypeKind | null;
-    resolveAnalyzeType(type: Type): Type | null;
-    typeByName(name: string): Type | null;
-    getDecorator(name: string): RefKind[];
+    resolveAnalyzeType(type: t.Type): t.Type | null;
+    typeByName(name: string): t.Type | null;
+    getDecorator(name: string): t.RefKind[];
     errorDecorators(): Id[];
+    currentConstraints: (id: number) => t.Type;
+    addTypeConstraint: (typ: t.TVbl, constraint: t.Type) => void;
 
     typeForId: (id: Id) => GlobalType | null;
     valueForId: (id: Id) => GlobalValue | null;
-    resolveType: (name: string, hash?: string | null) => RefKind | null;
-    resolveDecorator: (name: string, hash?: string | null) => Array<RefKind>;
+    resolveType: (name: string, hash?: string | null) => t.RefKind | null;
+    resolveDecorator: (name: string, hash?: string | null) => Array<t.RefKind>;
 
     // decoratorNames(): { [key: string]: string };
-    resolve: (name: string, hash?: string | null) => Array<RefKind>;
+    resolve: (name: string, hash?: string | null) => Array<t.RefKind>;
     // This should only be in the analyze, not in to-tast
     resolveRecur(idx: number): Id | null;
 } & TMCtx;
@@ -55,11 +45,11 @@ export type VisitorCtx = {
 };
 
 export const addDecorator = (
-    loc: Loc,
-    decorators: Decorator[],
+    loc: t.Loc,
+    decorators: t.Decorator[],
     tag: ErrorTag,
     ctx: { hit: { [key: number]: boolean }; ctx: Ctx },
-    args: Decorator['args'] = [],
+    args: t.Decorator['args'] = [],
 ) => {
     if (ctx.hit[loc.idx]) {
         return decorators;
@@ -80,11 +70,11 @@ export const addDecorator = (
 };
 
 export const tdecorate = (
-    type: Type,
+    type: t.Type,
     tag: ErrorTag,
     { hit, ctx }: { hit: { [key: number]: boolean }; ctx: Ctx },
-    args: Decorator['args'] = [],
-): Type => {
+    args: t.Decorator['args'] = [],
+): t.Type => {
     if (hit[type.loc.idx]) {
         return type;
     }
@@ -116,12 +106,12 @@ export const tdecorate = (
 };
 
 export const decorate = (
-    expr: Expression,
+    expr: t.Expression,
     tag: ErrorTag,
     hit: { [key: number]: boolean },
     ctx: Ctx,
-    args: Decorator['args'] = [],
-): DecoratedExpression | Expression => {
+    args: t.Decorator['args'] = [],
+): t.DecoratedExpression | t.Expression => {
     if (hit[expr.loc.idx]) {
         return expr;
     }
@@ -149,9 +139,9 @@ export const decorate = (
 };
 
 export const analyzeTypeTop = (
-    ast: TypeAlias | Type,
+    ast: t.TypeAlias | t.Type,
     ctx: Ctx,
-): TypeAlias | Type => {
+): t.TypeAlias | t.Type => {
     if (ast.type === 'TypeAlias') {
         return transformTypeAlias(ast, analyzeVisitor(), { ctx, hit: {} });
     } else {
@@ -159,8 +149,18 @@ export const analyzeTypeTop = (
     }
 };
 
-export const analyzeTop = (ast: Toplevel, ctx: Ctx): Toplevel => {
-    return transformToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
+export const analyzeTop = (ast: t.Toplevel, ctx: Ctx): t.Toplevel => {
+    const top = transformToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
+    return transformToplevel(
+        ast,
+        {
+            Type_TVbl(node) {
+                console.log('Node ok');
+                return ctx.currentConstraints(node.id);
+            },
+        },
+        null,
+    );
 };
 
 // export const analyze = (ast: File, ctx: Ctx): File => {
@@ -168,12 +168,12 @@ export const analyzeTop = (ast: Toplevel, ctx: Ctx): Toplevel => {
 // };
 
 export type Verify = {
-    errors: Loc[];
-    untypedExpression: Loc[];
+    errors: t.Loc[];
+    untypedExpression: t.Loc[];
     unresolved: {
-        type: Loc[];
-        decorator: Loc[];
-        value: Loc[];
+        type: t.Loc[];
+        decorator: t.Loc[];
+        value: t.Loc[];
     };
 };
 
@@ -208,7 +208,7 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
             return null;
         },
         Lambda(node, ctx) {
-            const locals: Locals = [];
+            const locals: t.Locals = [];
 
             node.args.forEach((arg) =>
                 getLocals(arg.pat, arg.typ, locals, ctx),
@@ -247,7 +247,7 @@ export const initVerify = () => ({
     },
 });
 
-export const verify = (ast: File, ctx: Ctx): Verify => {
+export const verify = (ast: t.File, ctx: Ctx): Verify => {
     const results: Verify = initVerify();
 
     transformFile(ast, verifyVisitor(results, ctx), ctx);

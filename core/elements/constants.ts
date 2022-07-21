@@ -56,6 +56,9 @@ export const Analyze: Visitor<VisitorCtx> = {
         const rest: TemplateString['rest'] = node.rest.map(
             ({ expr, suffix, loc }) => {
                 const expt = ctx.getType(expr);
+                if (expt?.type === 'TVbl') {
+                    ctx.addTypeConstraint(expt, ctx.typeByName('string')!);
+                }
                 // HMMMM This might ... end up wrapping multiple times?
                 // like ... and the idxs we're doing to be having with noloc
                 // are not going to disambiguate. I think I need to think
