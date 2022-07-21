@@ -131,7 +131,25 @@ export const fileToTast = (
 
 export const removeErrorDecorators = (ctx: Ctx): Visitor<null> => {
     const errorDecs = ctx.errorDecorators();
+    function removeErrorDecorators(decorators: t.Decorator[]) {
+        return decorators.filter(
+            (t) =>
+                !(
+                    t.id.ref.type === 'Global' &&
+                    errorDecs.some((i) =>
+                        idsEqual(i, (t.id.ref as t.GlobalRef).id),
+                    )
+                ),
+        );
+    }
+
     return {
+        EnumCase(node, ctx) {
+            const left = removeErrorDecorators(node.decorators);
+            return left.length < node.decorators.length
+                ? { ...node, decorators: left }
+                : null;
+        },
         ExpressionPost_DecoratedExpression(node, ctx) {
             if (!node.decorators.length) {
                 return node.expr;
@@ -139,15 +157,7 @@ export const removeErrorDecorators = (ctx: Ctx): Visitor<null> => {
             return null;
         },
         DecoratedExpression(node, ctx) {
-            const left = node.decorators.filter(
-                (t) =>
-                    !(
-                        t.id.ref.type === 'Global' &&
-                        errorDecs.some((i) =>
-                            idsEqual(i, (t.id.ref as t.GlobalRef).id),
-                        )
-                    ),
-            );
+            const left = removeErrorDecorators(node.decorators);
             return left.length < node.decorators.length
                 ? { ...node, decorators: left }
                 : null;
@@ -159,15 +169,7 @@ export const removeErrorDecorators = (ctx: Ctx): Visitor<null> => {
             return null;
         },
         TDecorated(node, ctx) {
-            const left = node.decorators.filter(
-                (t) =>
-                    !(
-                        t.id.ref.type === 'Global' &&
-                        errorDecs.some((i) =>
-                            idsEqual(i, (t.id.ref as t.GlobalRef).id),
-                        )
-                    ),
-            );
+            const left = removeErrorDecorators(node.decorators);
             return left.length < node.decorators.length
                 ? { ...node, decorators: left }
                 : null;
