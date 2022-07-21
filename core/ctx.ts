@@ -468,14 +468,10 @@ export const newContext = (): FullContext => {
         },
 
         addTypeConstraint(typ, constraint) {
-            console.log('add', typ.id);
-            // debugger
             if (!this[opaque].constraints[typ.id]) {
                 this[opaque].constraints[typ.id] = [];
             }
             this[opaque].constraints[typ.id].push(constraint);
-            // hmmmmmm
-            // idk
         },
 
         currentConstraints(id) {

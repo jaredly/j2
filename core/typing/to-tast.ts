@@ -10,8 +10,6 @@ export type Ctx = {
     // to ensure there aren't collisions.
     sym: (name: string) => t.Sym;
     newTypeVar: () => t.TVbl;
-    addTypeConstraint: (typ: t.TVbl, pat: t.Pattern) => void;
-    currentConstraints: (id: number) => t.Type;
     withLocalTypes: (locals: { sym: t.Sym; bound: t.Type | null }[]) => Ctx;
     withAliases: (aliases: { [readableName: string]: string }) => Ctx;
     withTypes: (types: { name: string; type: t.Type }[]) => Ctx;
