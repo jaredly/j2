@@ -79,11 +79,15 @@ export const ToTast = {
         ctx = ctx.withLocals(locals) as TCtx;
         const tbody = ctx.ToTast.Expression(body, ctx);
         // console.log(tbody);
+        const tres =
+            res && res.type !== 'TBlank'
+                ? ctx.ToTast.Type(res, ctx)
+                : ctx.getType(tbody);
         return {
             type: 'Lambda',
             args: targs,
             body: tbody,
-            res: res ? ctx.ToTast.Type(res, ctx) : ctx.getType(tbody),
+            res: tres?.type === 'TBlank' ? null : tres,
             loc,
         };
     },
@@ -195,6 +199,10 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             }
             return arg;
         });
+        // if (!node.res) {
+        //     changed = true;
+        //     node = { ...node, res: ctx.ctx.getType(node.body) };
+        // }
         return [
             changed ? { ...node, args } : null,
             { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx },
