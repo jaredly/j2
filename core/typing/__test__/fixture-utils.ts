@@ -300,7 +300,7 @@ export function runFixture(
         // hmmmmm so what about ...
         // removing error decorators, first? seems like I
         // need to do it.
-        [outputTast, ctx2] = parseRaw(output, ctx2, false);
+        [outputTast, ctx2] = parseRaw(output, ctx2, true);
     } catch (err) {
         console.log(output);
         console.log(err);

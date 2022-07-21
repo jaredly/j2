@@ -115,47 +115,7 @@ export const fileToTast = (
         if (!analyze) {
             return top;
         }
-        const errorDecs = ctx.errorDecorators();
-        // const transformed = transformToplevel(
-        //     top,
-        //     {
-        //         DecoratedExpression(node, ctx) {
-        //             const left = node.decorators.filter(
-        //                 (t) =>
-        //                     !(
-        //                         t.id.ref.type === 'Global' &&
-        //                         errorDecs.some((i) =>
-        //                             idsEqual(
-        //                                 i,
-        //                                 (t.id.ref as t.GlobalRef).id,
-        //                             ),
-        //                         )
-        //                     ),
-        //             );
-        //             return left.length < node.decorators.length
-        //                 ? { ...node, decorators: left }
-        //                 : null;
-        //         },
-        //         TDecorated(node, ctx) {
-        //             const left = node.decorators.filter(
-        //                 (t) =>
-        //                     !(
-        //                         t.id.ref.type === 'Global' &&
-        //                         errorDecs.some((i) =>
-        //                             idsEqual(
-        //                                 i,
-        //                                 (t.id.ref as t.GlobalRef).id,
-        //                             ),
-        //                         )
-        //                     ),
-        //             );
-        //             return left.length < node.decorators.length
-        //                 ? { ...node, decorators: left }
-        //                 : null;
-        //         },
-        //     },
-        //     null,
-        // )
+        top = transformToplevel(top, removeErrorDecorators(ctx), null);
         return analyzeTop(top, ctx);
     });
     return [
@@ -167,6 +127,52 @@ export const fileToTast = (
         },
         ctx,
     ];
+};
+
+export const removeErrorDecorators = (ctx: Ctx): Visitor<null> => {
+    const errorDecs = ctx.errorDecorators();
+    return {
+        ExpressionPost_DecoratedExpression(node, ctx) {
+            if (!node.decorators.length) {
+                return node.expr;
+            }
+            return null;
+        },
+        DecoratedExpression(node, ctx) {
+            const left = node.decorators.filter(
+                (t) =>
+                    !(
+                        t.id.ref.type === 'Global' &&
+                        errorDecs.some((i) =>
+                            idsEqual(i, (t.id.ref as t.GlobalRef).id),
+                        )
+                    ),
+            );
+            return left.length < node.decorators.length
+                ? { ...node, decorators: left }
+                : null;
+        },
+        TypePost_TDecorated(node, ctx) {
+            if (!node.decorators.length) {
+                return node.inner;
+            }
+            return null;
+        },
+        TDecorated(node, ctx) {
+            const left = node.decorators.filter(
+                (t) =>
+                    !(
+                        t.id.ref.type === 'Global' &&
+                        errorDecs.some((i) =>
+                            idsEqual(i, (t.id.ref as t.GlobalRef).id),
+                        )
+                    ),
+            );
+            return left.length < node.decorators.length
+                ? { ...node, decorators: left }
+                : null;
+        },
+    };
 };
 
 export const ToTast = {
@@ -450,7 +456,7 @@ import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { FullContext } from '../ctx';
 import { idsEqual } from '../ids';
-import { transformToplevel } from '../transform-tast';
+import { transformToplevel, Visitor } from '../transform-tast';
 export const ToJS = {
     IApply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
         if (

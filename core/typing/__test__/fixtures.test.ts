@@ -7,6 +7,9 @@ import {
     runFixture,
 } from './fixture-utils';
 import equal from 'fast-deep-equal';
+import { printToString } from '../../printer/pp';
+import { newPPCtx, pegPrinter } from '../../printer/to-pp';
+import { printCtx } from '../to-ast';
 
 export const diffPaths = (
     a: any,
@@ -66,7 +69,7 @@ readdirSync(base)
 
                 let { title, output_expected } = fixture;
 
-                let { checked, newOutput, outputTast } = runFixture(
+                let { checked, newOutput, outputTast, ctx2 } = runFixture(
                     fixture,
                     baseCtx,
                 );
@@ -87,10 +90,20 @@ readdirSync(base)
                         expect(cc).toEqual(co);
                     } catch (err) {
                         const ddd = diffPaths(cc, co, ['top']);
+                        const actx = printCtx(ctx2);
+                        const outputAgain = printToString(
+                            pegPrinter(
+                                actx.ToAst.File(outputTast, actx),
+                                newPPCtx(false),
+                            ),
+                            100,
+                        );
                         throw new Error(
                             `${fullOutput}\n\n\n${fullExpectedOutput}\n\n${
                                 ddd ? JSON.stringify(ddd) : null
-                            }\n${equal(cc, co) ? 'Equal' : 'Not equal'}`,
+                            }\n${
+                                equal(cc, co) ? 'Equal' : 'Not equal'
+                            }\n\n${outputAgain}`,
                         );
                     }
                 }
