@@ -143,7 +143,7 @@ export const typeMatches = (
     }
 
     if (candidate.type === 'TBlank' || expected.type === 'TBlank') {
-        return true;
+        return false;
     }
 
     switch (candidate.type) {
