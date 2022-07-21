@@ -142,31 +142,9 @@ export const typeMatches = (
         return !hasFunctions(candidate, ctx);
     }
 
-    // if (candidate.type === 'TVbl' || expected.type === 'TVbl') {
-    //     return false;
-    // }
-
-    // console.log('at', candidate, expected);
-    // if (expected.type === 'TOr') {
-    //     if (candidate.type === 'TOr') {
-    //         return candidate.elements.every((can) =>
-    //             (expected as TOr).elements.some((t) =>
-    //                 typeMatches(can, t, ctx),
-    //             ),
-    //         );
-    //     }
-    //     return expected.elements.some((t) => typeMatches(candidate, t, ctx));
-    // }
-    // if (candidate.type === 'TOr') {
-    //     return candidate.elements.every((can) =>
-    //         typeMatches(can, expected, ctx),
-    //     );
-    // }
-    // candidate = reduceConstant(candidate);
-    // if (candidate.type !== expected.type) {
-    //     return false;
-    // }
-    // console.log(candidate, expected);
+    if (candidate.type === 'TBlank' || expected.type === 'TBlank') {
+        return true;
+    }
 
     switch (candidate.type) {
         case 'TVbl':

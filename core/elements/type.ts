@@ -15,7 +15,7 @@ export const grammar = `
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
+TAtom = TBlank / TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
 
 TOps = left:TOpInner right_drop:TRight*
@@ -31,6 +31,8 @@ TLambda = "(" _ args:TArgs? ")" _ "=>" _ result:Type
 
 TypeAlias = "type" _ first:TypePair rest:(_ "and" _ TypePair)*
 TypePair = name:$IdText _ "=" _ typ:Type
+
+TBlank = pseudo:"_"
 
 `;
 
@@ -76,11 +78,16 @@ export type TVbl = {
     loc: t.Loc;
 };
 
-// Ok so also, you can just drop an inline record declaration, right?
+// Unconstrained
+export type TBlank = {
+    type: 'TBlank';
+    loc: t.Loc;
+};
 
 export type Type =
     | TRef
     | TVbl
+    | TBlank
     | TLambda
     | t.TEnum
     | t.Number
@@ -117,6 +124,9 @@ export const asApply = (t: p.Type): p.TApply =>
         : t;
 
 export const ToTast = {
+    TBlank(blank: p.TBlank, ctx: TCtx): t.TBlank {
+        return blank;
+    },
     TypeAlias({ loc, items }: p.TypeAlias, ctx: TCtx): t.TypeAlias {
         return {
             type: 'TypeAlias',
@@ -206,6 +216,9 @@ export const ToTast = {
 };
 
 export const ToAst = {
+    TBlank(blank: t.TBlank, ctx: TACtx): p.TBlank {
+        return { ...blank, pseudo: '_' };
+    },
     TypeAlias({ elements, loc }: t.TypeAlias, ctx: TACtx): p.TypeAlias {
         return {
             type: 'TypeAlias',
@@ -298,6 +311,9 @@ export const ToAst = {
 };
 
 export const ToPP = {
+    TBlank({ loc }: t.TBlank, ctx: PCtx): pp.PP {
+        return pp.atom('_', loc);
+    },
     TypeAlias({ items, loc }: p.TypeAlias, ctx: PCtx): pp.PP {
         const lines: pp.PP[] = [];
         items.forEach(({ name, typ, loc }, i) => {

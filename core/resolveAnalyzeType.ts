@@ -15,6 +15,9 @@ export const resolveAnalyzeType = (
     ctx: FullContext,
     path: string[] = [],
 ): Type | null => {
+    if (type.type === 'TVbl') {
+        return ctx.currentConstraints(type.id);
+    }
     if (type.type === 'TDecorated') {
         return resolveAnalyzeType(type.inner, ctx, path);
     }

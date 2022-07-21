@@ -33,6 +33,7 @@ export type { TypeApplication, TypeVariables } from './elements/generics';
 export type { TApply, TVar, TVars } from './elements/type-vbls';
 export type {
     TAdd,
+    TBlank,
     TDecorated,
     TLambda,
     TOps,

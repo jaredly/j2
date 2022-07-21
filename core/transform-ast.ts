@@ -68,6 +68,7 @@ import {
     TApply,
     TApply_inner,
     TAtom,
+    TBlank,
     TRef,
     String,
     TLambda,
@@ -683,6 +684,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TypePair | [TypePair | null, Ctx];
     TypePairPost?: (node: TypePair, ctx: Ctx) => null | TypePair;
+    TBlank?: (
+        node: TBlank,
+        ctx: Ctx,
+    ) => null | false | TBlank | [TBlank | null, Ctx];
+    TBlankPost?: (node: TBlank, ctx: Ctx) => null | TBlank;
     AllTaggedTypes?: (
         node: AllTaggedTypes,
         ctx: Ctx,
@@ -875,6 +881,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TApply | [TApply | null, Ctx];
     TApplyPost_TApply?: (node: TApply, ctx: Ctx) => null | TApply;
+    TAtom_TBlank?: (
+        node: TBlank,
+        ctx: Ctx,
+    ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TBlank?: (node: TBlank, ctx: Ctx) => null | TAtom;
     TAtom_TRef?: (
         node: TRef,
         ctx: Ctx,
@@ -1443,6 +1454,14 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_TypePair?: (
         node: TypePair,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_TBlank?: (
+        node: TBlank,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TBlank?: (
+        node: TBlank,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
 };
@@ -5697,6 +5716,54 @@ export const transformDecorator = <Ctx>(
     return node;
 };
 
+export const transformTBlank = <Ctx>(
+    node: TBlank,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TBlank => {
+    if (!node) {
+        throw new Error('No TBlank provided');
+    }
+
+    const transformed = visitor.TBlank ? visitor.TBlank(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TBlankPost) {
+        const transformed = visitor.TBlankPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformTRef = <Ctx>(
     node: TRef,
     visitor: Visitor<Ctx>,
@@ -7058,6 +7125,12 @@ export const transformEnumCase = <Ctx>(
             break;
         }
 
+        case 'TBlank': {
+            updatedNode = transformTBlank(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TRef': {
             updatedNode = transformTRef(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -7311,6 +7384,25 @@ export const transformTAtom = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
+        case 'TBlank': {
+            const transformed = visitor.TAtom_TBlank
+                ? visitor.TAtom_TBlank(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TRef': {
             const transformed = visitor.TAtom_TRef
                 ? visitor.TAtom_TRef(node, ctx)
@@ -7467,6 +7559,12 @@ export const transformTAtom = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
+        case 'TBlank': {
+            updatedNode = transformTBlank(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TRef': {
             updatedNode = transformTRef(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -7519,6 +7617,16 @@ export const transformTAtom = <Ctx>(
     }
 
     switch (updatedNode.type) {
+        case 'TBlank': {
+            const transformed = visitor.TAtomPost_TBlank
+                ? visitor.TAtomPost_TBlank(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
         case 'TRef': {
             const transformed = visitor.TAtomPost_TRef
                 ? visitor.TAtomPost_TRef(updatedNode, ctx)
@@ -10828,6 +10936,25 @@ export const transformAllTaggedTypes = <Ctx>(
             }
             break;
         }
+
+        case 'TBlank': {
+            const transformed = visitor.AllTaggedTypes_TBlank
+                ? visitor.AllTaggedTypes_TBlank(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -11257,10 +11384,16 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'TypePair': {
+            updatedNode = transformTypePair(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformTypePair(node, visitor, ctx);
+            const updatedNode$0node = transformTBlank(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -11979,6 +12112,16 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'TypePair': {
             const transformed = visitor.AllTaggedTypesPost_TypePair
                 ? visitor.AllTaggedTypesPost_TypePair(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TBlank': {
+            const transformed = visitor.AllTaggedTypesPost_TBlank
+                ? visitor.AllTaggedTypesPost_TBlank(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

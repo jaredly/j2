@@ -197,7 +197,7 @@ TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Typ
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
+TAtom = TBlank / TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
 
 TOps = left:TOpInner right_drop:TRight*
@@ -213,3 +213,5 @@ TLambda = "(" _ args:TArgs? ")" _ "=>" _ result:Type
 
 TypeAlias = "type" _ first:TypePair rest:(_ "and" _ TypePair)*
 TypePair = name:$IdText _ "=" _ typ:Type
+
+TBlank = pseudo:"_"

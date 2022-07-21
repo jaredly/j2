@@ -873,6 +873,13 @@ function peg$parse(input, options) {
     typ
   };
 };
+  var peg$f84 = function(pseudo) {
+  return {
+    type: "TBlank",
+    loc: myLocation(),
+    pseudo
+  };
+};
   var peg$currPos = 0;
   var peg$savedPos = 0;
   var peg$posDetailsCache = [{ line: 1, column: 1 }];
@@ -5719,21 +5726,24 @@ function peg$parse(input, options) {
   function peg$parseTAtom() {
     var s0;
 
-    s0 = peg$parseTRef();
+    s0 = peg$parseTBlank();
     if (s0 === peg$FAILED) {
-      s0 = peg$parseNumber();
+      s0 = peg$parseTRef();
       if (s0 === peg$FAILED) {
-        s0 = peg$parseString();
+        s0 = peg$parseNumber();
         if (s0 === peg$FAILED) {
-          s0 = peg$parseTLambda();
+          s0 = peg$parseString();
           if (s0 === peg$FAILED) {
-            s0 = peg$parseTVars();
+            s0 = peg$parseTLambda();
             if (s0 === peg$FAILED) {
-              s0 = peg$parseTParens();
+              s0 = peg$parseTVars();
               if (s0 === peg$FAILED) {
-                s0 = peg$parseTEnum();
+                s0 = peg$parseTParens();
                 if (s0 === peg$FAILED) {
-                  s0 = peg$parseTRecord();
+                  s0 = peg$parseTEnum();
+                  if (s0 === peg$FAILED) {
+                    s0 = peg$parseTRecord();
+                  }
                 }
               }
             }
@@ -6241,6 +6251,26 @@ function peg$parse(input, options) {
       peg$currPos = s0;
       s0 = peg$FAILED;
     }
+
+    return s0;
+  }
+
+  function peg$parseTBlank() {
+    var s0, s1;
+
+    s0 = peg$currPos;
+    if (input.charCodeAt(peg$currPos) === 95) {
+      s1 = peg$c35;
+      peg$currPos++;
+    } else {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$e44); }
+    }
+    if (s1 !== peg$FAILED) {
+      peg$savedPos = s0;
+      s1 = peg$f84(s1);
+    }
+    s0 = s1;
 
     return s0;
   }

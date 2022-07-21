@@ -163,9 +163,9 @@ export const analyzeTop = (ast: Toplevel, ctx: Ctx): Toplevel => {
     return transformToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
 };
 
-export const analyze = (ast: File, ctx: Ctx): File => {
-    return transformFile(ast, analyzeVisitor(), { ctx, hit: {} });
-};
+// export const analyze = (ast: File, ctx: Ctx): File => {
+//     return transformFile(ast, analyzeVisitor(), { ctx, hit: {} });
+// };
 
 export type Verify = {
     errors: Loc[];

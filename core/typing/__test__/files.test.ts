@@ -36,7 +36,7 @@ readdirSync(base)
                     ctx = ctx.withTypes(top.elements) as FullContext;
                 } else {
                     ctx = ctx.toplevelConfig(null) as FullContext;
-                    let type = ctx.ToTast[t.type](t as any, ctx);
+                    let type = ctx.ToTast.Type(t, ctx);
                     if (type.type === 'TDecorated') {
                         const inner = type.inner;
                         type.decorators.forEach((d) => {

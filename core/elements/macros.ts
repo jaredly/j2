@@ -42,6 +42,9 @@ export const ToTast = {
             case 'TApply':
                 return ctx.ToTast.TApply(node, ctx);
 
+            case 'TBlank':
+                return ctx.ToTast.TBlank(node, ctx);
+
             case 'TRef':
                 return ctx.ToTast.TRef(node, ctx);
 
@@ -164,6 +167,9 @@ export const ToTast = {
             case 'TApply':
                 return ctx.ToTast.TApply(node, ctx);
 
+            case 'TBlank':
+                return ctx.ToTast.TBlank(node, ctx);
+
             case 'TRef':
                 return ctx.ToTast.TRef(node, ctx);
 
@@ -203,6 +209,9 @@ export const ToAst = {
 
             case 'TVbl':
                 return ctx.ToAst.TVbl(node, ctx);
+
+            case 'TBlank':
+                return ctx.ToAst.TBlank(node, ctx);
 
             case 'TLambda':
                 return ctx.ToAst.TLambda(node, ctx);
@@ -314,6 +323,9 @@ export const ToAst = {
             case 'TVbl':
                 return ctx.ToAst.TVbl(node, ctx);
 
+            case 'TBlank':
+                return ctx.ToAst.TBlank(node, ctx);
+
             case 'TLambda':
                 return ctx.ToAst.TLambda(node, ctx);
 
@@ -393,6 +405,9 @@ export const ToPP = {
 
             case 'TApply':
                 return ctx.ToPP.TApply(node, ctx);
+
+            case 'TBlank':
+                return ctx.ToPP.TBlank(node, ctx);
 
             case 'TRef':
                 return ctx.ToPP.TRef(node, ctx);
@@ -515,6 +530,9 @@ export const ToPP = {
 
             case 'TApply':
                 return ctx.ToPP.TApply(node, ctx);
+
+            case 'TBlank':
+                return ctx.ToPP.TBlank(node, ctx);
 
             case 'TRef':
                 return ctx.ToPP.TRef(node, ctx);

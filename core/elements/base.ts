@@ -3,12 +3,7 @@ import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as ICtx } from '../ir/ir';
-import {
-    analyze,
-    analyzeTop,
-    analyzeTypeTop,
-    Ctx as ACtx,
-} from '../typing/analyze';
+import { analyzeTop, analyzeTypeTop, Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx, Toplevel, TopTypeKind } from '../typing/to-tast';
 
@@ -369,6 +364,7 @@ function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
         case 'Number':
         case 'String':
         case 'TOps':
+        case 'TBlank':
             return 'builtin';
         case 'TRecord':
             return 'record';
@@ -407,6 +403,7 @@ function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
         case 'Number':
         case 'String':
         case 'TOps':
+        case 'TBlank':
             return 'builtin';
         case 'TDecorated':
         case 'TVars':

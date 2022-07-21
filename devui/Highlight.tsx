@@ -17,6 +17,7 @@ import { getType } from '../core/typing/getType';
 import { printCtx } from '../core/typing/to-ast';
 import { markUpTree, Tree as TreeT } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
+import { getLocals, Locals } from '../core/elements/pattern';
 
 export type Colorable = keyof Visitor<null> | 'Error' | 'Success';
 
@@ -285,8 +286,15 @@ export const typeToString = (t: Type, ctx: FullContext) => {
 
 const collectAnnotations = (tast: File, ctx: FullContext) => {
     const annotations: { loc: Loc; text: string }[] = [];
-    const visitor: tt.Visitor<null> = {
-        Expression: (node) => {
+    const visitor: tt.Visitor<FullContext> = {
+        Lambda(node, ctx) {
+            const locals: Locals = [];
+            node.args.map((arg) => {
+                getLocals(arg.pat, arg.typ, locals, ctx);
+            });
+            return [null, ctx.withLocals(locals) as FullContext];
+        },
+        Expression: (node, ctx) => {
             const t = getType(node, ctx);
             if (t) {
                 annotations.push({
@@ -317,7 +325,7 @@ const collectAnnotations = (tast: File, ctx: FullContext) => {
             return null;
         },
     };
-    tt.transformFile(tast, visitor, null);
+    tt.transformFile(tast, visitor, ctx);
     // console.log(annotations);
     return annotations;
 };

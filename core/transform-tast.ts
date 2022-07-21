@@ -21,6 +21,7 @@ import {
     Type,
     TRef,
     TVbl,
+    TBlank,
     TLambda,
     TEnum,
     EnumCase,
@@ -232,6 +233,11 @@ export type Visitor<Ctx> = {
     TLambdaPost?: (node: TLambda, ctx: Ctx) => null | TLambda;
     TVbl?: (node: TVbl, ctx: Ctx) => null | false | TVbl | [TVbl | null, Ctx];
     TVblPost?: (node: TVbl, ctx: Ctx) => null | TVbl;
+    TBlank?: (
+        node: TBlank,
+        ctx: Ctx,
+    ) => null | false | TBlank | [TBlank | null, Ctx];
+    TBlankPost?: (node: TBlank, ctx: Ctx) => null | TBlank;
     Type?: (node: Type, ctx: Ctx) => null | false | Type | [Type | null, Ctx];
     TypePost?: (node: Type, ctx: Ctx) => null | Type;
     TAdd?: (node: TAdd, ctx: Ctx) => null | false | TAdd | [TAdd | null, Ctx];
@@ -478,6 +484,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
     TypePost_TVbl?: (node: TVbl, ctx: Ctx) => null | Type;
+    Type_TBlank?: (
+        node: TBlank,
+        ctx: Ctx,
+    ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TBlank?: (node: TBlank, ctx: Ctx) => null | Type;
     Type_TLambda?: (
         node: TLambda,
         ctx: Ctx,
@@ -1434,6 +1445,54 @@ export const transformTVbl = <Ctx>(
     node = updatedNode;
     if (visitor.TVblPost) {
         const transformed = visitor.TVblPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformTBlank = <Ctx>(
+    node: TBlank,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TBlank => {
+    if (!node) {
+        throw new Error('No TBlank provided');
+    }
+
+    const transformed = visitor.TBlank ? visitor.TBlank(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TBlankPost) {
+        const transformed = visitor.TBlankPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2804,6 +2863,25 @@ export const transformType = <Ctx>(
             break;
         }
 
+        case 'TBlank': {
+            const transformed = visitor.Type_TBlank
+                ? visitor.Type_TBlank(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TLambda': {
             const transformed = visitor.Type_TLambda
                 ? visitor.Type_TLambda(node, ctx)
@@ -2991,6 +3069,12 @@ export const transformType = <Ctx>(
             break;
         }
 
+        case 'TBlank': {
+            updatedNode = transformTBlank(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TLambda': {
             updatedNode = transformTLambda(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -3062,6 +3146,16 @@ export const transformType = <Ctx>(
         case 'TVbl': {
             const transformed = visitor.TypePost_TVbl
                 ? visitor.TypePost_TVbl(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TBlank': {
+            const transformed = visitor.TypePost_TBlank
+                ? visitor.TypePost_TBlank(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

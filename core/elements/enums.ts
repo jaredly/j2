@@ -250,6 +250,7 @@ const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
         case 'TApply':
         case 'TRecord':
             return false;
+        case 'TBlank':
         case 'TEnum':
             return true;
         case 'TRef':

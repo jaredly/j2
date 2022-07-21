@@ -18,7 +18,7 @@ import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import { transformFile, transformType, Visitor } from '../../transform-tast';
 import { File } from '../../typed-ast';
-import { analyze, Verify, verify } from '../analyze';
+import { Verify, verify } from '../analyze';
 import { getType } from '../getType';
 import { printCtx } from '../to-ast';
 

@@ -1,6 +1,7 @@
 import hashObject from 'object-hash';
 import { Ctx } from '.';
 import { DecoratorDecl } from './elements/decorators';
+import { typeForPattern } from './elements/pattern';
 import { TVar } from './elements/type-vbls';
 import { Loc, parseType } from './grammar/base.parser';
 import { extract, Id, idsEqual, toId } from './ids';
@@ -11,6 +12,7 @@ import { Ctx as ACtx } from './typing/analyze';
 import { getType } from './typing/getType';
 import { makeToTast, Toplevel } from './typing/to-tast';
 import { Ctx as TCtx } from './typing/typeMatches';
+import { constrainTypes } from './typing/unifyTypes';
 import {
     clearLocs,
     loadBuiltins,
@@ -48,6 +50,9 @@ type Internal = {
     >;
     // Used in the first traversal & resolving
     // After that, we use syms
+    constraints: {
+        [key: number]: Type[];
+    };
     locals: {
         types: { sym: Sym; bound: Type | null }[];
         values: { sym: Sym; type: Type }[];
@@ -323,6 +328,7 @@ export const newContext = (): FullContext => {
             return this[opaque];
         },
         [opaque]: {
+            constraints: {},
             aliases: {},
             locals: [],
             symid: 0,
@@ -368,6 +374,7 @@ export const newContext = (): FullContext => {
         resetSym() {
             this[opaque].symid = 0;
             this[opaque].syms = { types: {}, values: {} };
+            this[opaque].constraints = {};
         },
         isBuiltinType(t, name) {
             return (
@@ -437,9 +444,11 @@ export const newContext = (): FullContext => {
         },
 
         newTypeVar() {
+            const id = this[opaque].symid++;
+            this[opaque].constraints[id] = [];
             return {
                 type: 'TVbl',
-                id: this[opaque].symid++,
+                id,
                 loc: noloc,
             };
         },
@@ -459,8 +468,27 @@ export const newContext = (): FullContext => {
         },
 
         addTypeConstraint(typ, pat) {
+            if (!this[opaque].constraints[typ.id]) {
+                this[opaque].constraints[typ.id] = [];
+            }
+            this[opaque].constraints[typ.id].push(typeForPattern(pat));
             // hmmmmmm
             // idk
+        },
+
+        currentConstraints(id) {
+            if (!this[opaque].constraints[id].length) {
+                return { type: 'TBlank', loc: noloc };
+            }
+            const all = this[opaque].constraints[id];
+            let t = all[0];
+            for (let i = 1; i < all.length; i++) {
+                const res = constrainTypes(t, all[i], this);
+                if (res) {
+                    t = res;
+                }
+            }
+            return t;
         },
 
         withTypes(types) {

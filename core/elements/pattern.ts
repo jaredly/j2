@@ -108,10 +108,10 @@ export const typeMatchesPattern = (
     }
 };
 
-export const typeForPattern = (pat: Pattern, ctx: TCtx): t.Type => {
+export const typeForPattern = (pat: Pattern, ctx?: TCtx): t.Type => {
     switch (pat.type) {
         case 'PName':
-            return ctx.newTypeVar();
+            return ctx ? ctx.newTypeVar() : { type: 'TBlank', loc: pat.loc };
         case 'PRecord':
             return {
                 type: 'TRecord',
@@ -123,11 +123,11 @@ export const typeForPattern = (pat: Pattern, ctx: TCtx): t.Type => {
                     default_: null,
                 })),
                 loc: pat.loc,
-                open: false,
+                open: true,
                 spreads: [],
             };
         case 'PBlank':
-            return { type: 'TEnum', cases: [], loc: pat.loc, open: false };
+            return { type: 'TBlank', loc: pat.loc };
     }
 };
 
