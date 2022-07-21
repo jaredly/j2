@@ -112,7 +112,51 @@ export const fileToTast = (
         if (top.type === 'TypeAlias') {
             ctx = ctx.withTypes(top.elements);
         }
-        return analyze ? analyzeTop(top, ctx) : top;
+        if (!analyze) {
+            return top;
+        }
+        const errorDecs = ctx.errorDecorators();
+        // const transformed = transformToplevel(
+        //     top,
+        //     {
+        //         DecoratedExpression(node, ctx) {
+        //             const left = node.decorators.filter(
+        //                 (t) =>
+        //                     !(
+        //                         t.id.ref.type === 'Global' &&
+        //                         errorDecs.some((i) =>
+        //                             idsEqual(
+        //                                 i,
+        //                                 (t.id.ref as t.GlobalRef).id,
+        //                             ),
+        //                         )
+        //                     ),
+        //             );
+        //             return left.length < node.decorators.length
+        //                 ? { ...node, decorators: left }
+        //                 : null;
+        //         },
+        //         TDecorated(node, ctx) {
+        //             const left = node.decorators.filter(
+        //                 (t) =>
+        //                     !(
+        //                         t.id.ref.type === 'Global' &&
+        //                         errorDecs.some((i) =>
+        //                             idsEqual(
+        //                                 i,
+        //                                 (t.id.ref as t.GlobalRef).id,
+        //                             ),
+        //                         )
+        //                     ),
+        //             );
+        //             return left.length < node.decorators.length
+        //                 ? { ...node, decorators: left }
+        //                 : null;
+        //         },
+        //     },
+        //     null,
+        // )
+        return analyzeTop(top, ctx);
     });
     return [
         {
@@ -406,6 +450,7 @@ import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { FullContext } from '../ctx';
 import { idsEqual } from '../ids';
+import { transformToplevel } from '../transform-tast';
 export const ToJS = {
     IApply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
         if (

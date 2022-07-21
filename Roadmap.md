@@ -27,9 +27,14 @@ Also need a `constrainType` that's the opposite of `unifyTypes`.
 - [ ] .res, we should keep track if it was inferred, and
 	if so, don't print it in toast. Same for arg types.
 
+- [ ] ok, when adding decorators, let's use a much better
+	version, that checks to see
+- [ ] fix jest tests so I can like run them
+	- [ ] turns out I need to do analyze after parsing because I'm doing inference stufffss, so that comparing them works.
+
 
 - [ ] make a basic collectSymInfo
-- [ ] fix jest tests so I can like run them
+	- oh but like ... 
 
 SO
 I think I want a `symInfo` dealio that I can get by

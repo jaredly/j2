@@ -297,6 +297,9 @@ export function runFixture(
     let ctx2 = baseCtx.clone();
     loadBuiltins(builtins, ctx2);
     try {
+        // hmmmmm so what about ...
+        // removing error decorators, first? seems like I
+        // need to do it.
         [outputTast, ctx2] = parseRaw(output, ctx2, false);
     } catch (err) {
         console.log(output);

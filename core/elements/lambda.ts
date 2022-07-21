@@ -78,7 +78,7 @@ export const ToTast = {
             }) ?? [];
         ctx = ctx.withLocals(locals) as TCtx;
         const tbody = ctx.ToTast.Expression(body, ctx);
-        console.log(tbody);
+        // console.log(tbody);
         return {
             type: 'Lambda',
             args: targs,

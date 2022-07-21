@@ -1,3 +1,3 @@
 @type:shouldNotMatch(:[ `One | `Two ]) [ `Two | * ]
 
-[ `Failure(([ `TooBad ], int)) | `Failure(([ `Timeout ], int)) ]
+// [ `Failure([ `TooBad ], int) | `Failure([ `Timeout ], int) ]
