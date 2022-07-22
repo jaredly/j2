@@ -1,4 +1,4 @@
-import { Card, Popover, Text, Tooltip } from '@nextui-org/react';
+import { Card, Popover, styled, Text, Tooltip } from '@nextui-org/react';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { parseTypeFile, SyntaxError } from '../core/grammar/base.parser';
@@ -97,6 +97,11 @@ export const highlightLocations = (
     }
 };
 
+const Container = styled('div', {
+    whiteSpace: 'pre-wrap',
+    fontFamily: '$mono',
+});
+
 export const Highlight = ({
     text,
     info,
@@ -136,10 +141,8 @@ export const Highlight = ({
 
     return (
         <div onClick={onClick}>
-            <Text
+            <Container
                 css={{
-                    whiteSpace: 'pre-wrap',
-                    fontFamily: '$mono',
                     cursor: onClick ? 'pointer' : 'default',
                 }}
                 onMouseLeave={(evt) => {
@@ -184,7 +187,7 @@ export const Highlight = ({
                         'Error parsing: ' + text
                     )}
                 </span>
-            </Text>
+            </Container>
             {hover && annotations.length && portal
                 ? createPortal(
                       <Card
@@ -270,7 +273,9 @@ export const Tree = ({
             )}
             {tree.hl.suffix && tree.hl.suffix.message ? (
                 <Tooltip content={tree.hl.suffix.message}>
-                    <span>{tree.hl.suffix.text}</span>
+                    <span style={{ whiteSpace: 'pre-wrap' }}>
+                        {tree.hl.suffix.text}
+                    </span>
                 </Tooltip>
             ) : null}
         </span>

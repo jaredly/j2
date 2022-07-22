@@ -37,7 +37,7 @@ export type LArg = {
 export type ILambda = {
     type: 'Lambda';
     args: LArg[];
-    body: t.IExpression;
+    body: t.IExpression | t.IBlock;
     resInferred: boolean;
     res: t.Type | null;
     loc: t.Loc;
@@ -199,7 +199,9 @@ export const ToJS = {
     Lambda({ type, args, res, body, loc }: ILambda, ctx: JCtx): b.Expression {
         return b.arrowFunctionExpression(
             args?.map((arg) => ctx.ToJS.Pattern(arg.pat, ctx)) ?? [],
-            ctx.ToJS.IExpression(body, ctx),
+            body.type === 'Block'
+                ? ctx.ToJS.Block(body, ctx)
+                : ctx.ToJS.IExpression(body, ctx),
         );
     },
 };

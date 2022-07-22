@@ -1,20 +1,17 @@
-import { Visitor } from '../transform-tast';
-import { decorate } from '../typing/analyze';
-import { Ctx as ACtx } from '../typing/analyze';
-import { typeMatches } from '../typing/typeMatches';
-import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
+import { Ctx as ICtx } from '../ir/ir';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
-import { Ctx as TCtx } from '../typing/to-tast';
+import { Visitor } from '../transform-tast';
+import * as t from '../typed-ast';
+import { Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { Ctx as TMCtx } from '../typing/typeMatches';
-import { Ctx as ICtx } from '../ir/ir';
+import { Ctx as TCtx } from '../typing/to-tast';
 import { getLocals, typeForPattern } from './pattern';
 
 export const grammar = `
 Block = "{" _ stmts:Stmts? _ "}"
-Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)*
+Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)* _ ';'?
 Stmt = Let / Expression
 Let = "let" _ pat:Pattern _ "=" _ expr:Expression
 `;
@@ -37,7 +34,8 @@ export type IBlock = {
     stmts: IStmt[];
     loc: t.Loc;
 };
-export type IStmt = ILet | t.IExpression | IBlock;
+export type IStmt = ILet | t.IExpression | IBlock | IReturn;
+export type IReturn = { type: 'Return'; expr: t.IExpression; loc: t.Loc };
 export type ILet = {
     type: 'Let';
     pat: t.Pattern;
@@ -82,7 +80,7 @@ export const ToAst = {
             stmts: node.stmts.length
                 ? {
                       type: 'Stmts',
-                      items: node.stmts.map((stmt) =>
+                      items: node.stmts.map((stmt, i) =>
                           ctx.ToAst.Stmt(stmt, ctx),
                       ),
                       loc: node.loc,
@@ -126,10 +124,35 @@ export const ToPP = {
 };
 
 export const ToIR = {
-    Block(node: t.Block, ctx: ICtx): IBlock {
+    BlockSt(node: t.Block, ctx: ICtx): IBlock {
         return {
             type: 'Block',
-            stmts: node.stmts.map((stmt) => ctx.ToIR.Stmt(stmt, ctx)),
+            stmts: node.stmts.map((stmt, i) =>
+                i === node.stmts.length - 1 &&
+                stmt.type !== 'Block' &&
+                stmt.type !== 'Let'
+                    ? {
+                          type: 'Return',
+                          expr: ctx.ToIR.Expression(stmt, ctx),
+                          loc: stmt.loc,
+                      }
+                    : ctx.ToIR.Stmt(stmt, ctx),
+            ),
+            loc: node.loc,
+        };
+    },
+    Block(node: t.Block, ctx: ICtx): t.IExpression {
+        return {
+            type: 'Apply',
+            target: {
+                type: 'Lambda',
+                loc: node.loc,
+                args: [],
+                res: null,
+                resInferred: true,
+                body: ctx.ToIR.BlockSt(node, ctx),
+            },
+            args: [],
             loc: node.loc,
         };
     },
@@ -162,6 +185,12 @@ export const ToJS = {
     IStmt(node: t.IStmt, ctx: JCtx): b.Statement {
         if (node.type === 'Let') {
             return ctx.ToJS.Let(node, ctx);
+        }
+        if (node.type === 'Block') {
+            return ctx.ToJS.Block(node, ctx);
+        }
+        if (node.type === 'Return') {
+            return b.returnStatement(ctx.ToJS.IExpression(node.expr, ctx));
         }
         return b.expressionStatement(ctx.ToJS.IExpression(node, ctx));
     },

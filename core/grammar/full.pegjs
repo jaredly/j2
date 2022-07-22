@@ -151,7 +151,7 @@ LArg = pat:Pattern typ:(_ ":" _ Type)?
 // lets.ts
 
 Block = "{" _ stmts:Stmts? _ "}"
-Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)*
+Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)* _ ';'?
 Stmt = Let / Expression
 Let = "let" _ pat:Pattern _ "=" _ expr:Expression
 

@@ -49,8 +49,8 @@ const Taster: { [key: string]: string | false } = {
 const keys = Object.keys(parserUnions).filter(
     (x) => Parser[x] !== false && (tastTypes[x] || !!Parser[x]),
 );
-console.log(Object.keys(parserUnions), keys);
-console.log(Object.keys(tastTypes));
+// console.log(Object.keys(parserUnions), keys);
+// console.log(Object.keys(tastTypes));
 
 const extraArgs: { [key: string]: string } = {
     Suffix: ' next: t.Expression,',
