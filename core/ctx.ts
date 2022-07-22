@@ -487,7 +487,7 @@ export const newContext = (): FullContext => {
         },
 
         currentConstraints(id) {
-            console.log('get', id, this[opaque].constraints[id]);
+            // console.log('get', id, this[opaque].constraints[id]);
             if (!this[opaque].constraints[id]) {
                 return { type: 'TBlank', loc: noloc };
             }

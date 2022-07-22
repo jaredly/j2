@@ -246,10 +246,11 @@ export const tvarsMatches = (
     };
     transformType(expected, visit, null);
     transformType(candidate, visit, null);
-    const bounds: { [key: number]: t.Type | null } = {};
+    const bounds: { [key: number]: { bound: t.Type | null; name: string } } =
+        {};
     let newTypes: t.TRef[] = expected.args.map((arg, i) => {
         const sym = maxSym + i + 1;
-        bounds[sym] = arg.bound;
+        bounds[sym] = { bound: arg.bound, name: arg.sym.name };
         return {
             type: 'TRef',
             loc: noloc,
