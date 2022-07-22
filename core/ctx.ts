@@ -315,6 +315,9 @@ export const newContext = (): FullContext => {
             };
         },
         localType(sym) {
+            if (this[opaque].syms.values[sym] !== undefined) {
+                return this[opaque].syms.values[sym].type;
+            }
             for (let local of this[opaque].locals) {
                 for (let { sym: s, type } of local.values) {
                     if (s.id === sym) {
@@ -486,20 +489,20 @@ export const newContext = (): FullContext => {
             };
         },
 
-        addTypeConstraint(typ, constraint) {
-            if (!this[opaque].constraints[typ.id]) {
-                this[opaque].constraints[typ.id] = constraint;
+        addTypeConstraint(id, constraint) {
+            if (!this[opaque].constraints[id]) {
+                this[opaque].constraints[id] = constraint;
                 return constraint;
             }
             const mix = constrainTypes(
-                this[opaque].constraints[typ.id],
+                this[opaque].constraints[id],
                 constraint,
                 this,
             );
             if (!mix) {
-                return this[opaque].constraints[typ.id];
+                return this[opaque].constraints[id];
             }
-            this[opaque].constraints[typ.id] = mix;
+            this[opaque].constraints[id] = mix;
             return mix;
         },
 

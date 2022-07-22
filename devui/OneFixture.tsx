@@ -453,12 +453,9 @@ export const TopRight = ({
     text: string;
     tooltip?: string;
 }) => {
-    return (
+    const inner = (
         <Text
             css={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
                 flex: 1,
                 textAlign: 'right',
                 flexShrink: 0,
@@ -467,7 +464,18 @@ export const TopRight = ({
                 backgroundColor: 'rgba(255,0,0,0.1)',
             }}
         >
-            {tooltip ? <Tooltip content={tooltip}>{text}</Tooltip> : text}
+            {text}
         </Text>
+    );
+    return (
+        <div
+            style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+            }}
+        >
+            {tooltip ? <Tooltip content={tooltip}>{inner}</Tooltip> : inner}
+        </div>
     );
 };

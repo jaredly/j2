@@ -75,7 +75,10 @@ export const ToTast = {
                     : typeForPattern(pat, ctx);
                 getLocals(pat, typ, locals, ctx);
                 if (!arg.typ) {
-                    ctx.addTypeConstraint(typ as t.TVbl, typeForPattern(pat));
+                    ctx.addTypeConstraint(
+                        (typ as t.TVbl).id,
+                        typeForPattern(pat),
+                    );
                 }
                 return {
                     type: 'LArg',

@@ -58,7 +58,7 @@ export const Analyze: Visitor<VisitorCtx> = {
                 let expt = ctx.getType(expr);
                 if (expt?.type === 'TVbl') {
                     expt = ctx.addTypeConstraint(
-                        expt,
+                        expt.id,
                         ctx.typeByName('string')!,
                     );
                 }

@@ -27,7 +27,7 @@ export type Ctx = {
     getDecorator(name: string): t.RefKind[];
     errorDecorators(): Id[];
     currentConstraints: (id: number) => t.Type;
-    addTypeConstraint: (typ: t.TVbl, constraint: t.Type) => t.Type;
+    addTypeConstraint: (id: number, constraint: t.Type) => t.Type;
 
     valueForSym: (sym: number) => null | { name: string; type: t.Type };
     typeForId: (id: Id) => GlobalType | null;

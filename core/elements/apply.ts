@@ -10,7 +10,7 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { noloc } from '../ctx';
 import { opLevel } from './binops';
-import { unifyTypes } from '../typing/unifyTypes';
+import { constrainTypes, unifyTypes } from '../typing/unifyTypes';
 
 export const grammar = `
 Apply = target:Atom suffixes_drop:Suffix*
@@ -237,7 +237,7 @@ export const ToAst = {
                     ctx.actx,
                 );
                 if (auto) {
-                    const targs = (auto.target as t.TypeApplication).args;
+                    const targs = (auto.apply.target as t.TypeApplication).args;
                     if (
                         targs.length === target.args.length &&
                         targs.every(
@@ -246,6 +246,12 @@ export const ToAst = {
                                 typeMatches(target.args[i], targ, ctx.actx),
                         )
                     ) {
+                        Object.keys(auto.constraints).forEach((key) => {
+                            ctx.actx.addTypeConstraint(
+                                +key,
+                                auto.constraints[+key],
+                            );
+                        });
                         return makeApply(
                             ctx.ToAst.Expression(target.target, ctx),
                             {
@@ -369,7 +375,6 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                             ttype?.type === 'TVars' &&
                             ttype.inner.type === 'TLambda'
                         ) {
-                            // ctx.debugger();
                             const typed = autoTypeApply(
                                 {
                                     ...node,
@@ -381,12 +386,19 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                                 ctx,
                             );
                             if (typed) {
-                                return typed;
+                                Object.keys(typed.constraints).forEach(
+                                    (key) => {
+                                        ctx.addTypeConstraint(
+                                            +key,
+                                            typed.constraints[+key],
+                                        );
+                                    },
+                                );
+                                return typed.apply;
                             }
                         }
                     }
                 }
-                // ctx.debugger();
             }
             // Check if there are multiples
             return null;
@@ -396,13 +408,19 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         if (ttype?.type === 'TVars' && ttype.inner.type === 'TLambda') {
             const argTypes = node.args.map((arg) => ctx.getType(arg));
             if (argTypes.every(Boolean)) {
-                return autoTypeApply(
+                const auto = autoTypeApply(
                     node,
                     ttype.args,
                     ttype.inner.args.map((t) => t.typ),
                     argTypes as t.Type[],
                     ctx,
                 );
+                if (auto) {
+                    Object.keys(auto.constraints).forEach((key) => {
+                        ctx.addTypeConstraint(+key, auto.constraints[+key]);
+                    });
+                    return auto.apply;
+                }
             }
         }
 
@@ -419,7 +437,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         }
         const argTypes = node.args.map((arg) => ctx.getType(arg));
         if (ttype.type === 'TVbl') {
-            ttype = ctx.addTypeConstraint(ttype, {
+            ttype = ctx.addTypeConstraint(ttype.id, {
                 type: 'TLambda',
                 args: argTypes.map((typ) => ({
                     typ: typ ? typ : { type: 'TBlank', loc: node.loc },
@@ -455,7 +473,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                 return arg;
             }
             if (at.type === 'TVbl') {
-                at = ctx.addTypeConstraint(at, atype.args[i].typ);
+                at = ctx.addTypeConstraint(at.id, atype.args[i].typ);
             }
             // hmm so 'unconstrained' would be a thing.
             if (!typeMatches(at, atype.args[i].typ, ctx)) {
@@ -521,15 +539,43 @@ export const autoTypeApply = (
     args: t.Type[],
     argTypes: t.Type[],
     ctx: Ctx,
-): null | t.Apply => {
+): null | { apply: t.Apply; constraints: { [key: number]: t.Type } } => {
     // console.log(vars, args, node.args);
     const mapping = inferVarsFromArgs(vars, args);
     if (!mapping) {
         return null;
     }
+    let constraints: { [key: number]: t.Type } = {};
     for (let arg of vars) {
+        if (!arg.bound) {
+            continue;
+        }
+
+        const idxs = mapping[arg.sym.id];
+        if (idxs.length === 1) {
+            const argType = argTypes[idxs[0]];
+            if (
+                argType.type === 'TVbl' &&
+                ctx.currentConstraints(argType.id).type === 'TBlank'
+            ) {
+                if (constraints[argType.id] != null) {
+                    const t = constrainTypes(
+                        constraints[argType.id],
+                        arg.bound,
+                        ctx,
+                    );
+                    if (t) {
+                        constraints[argType.id] = t;
+                        continue;
+                    }
+                } else {
+                    constraints[argType.id] = arg.bound;
+                    continue;
+                }
+            }
+        }
+
         if (
-            arg.bound &&
             !typeMatches(
                 unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
                 arg.bound,
@@ -540,14 +586,17 @@ export const autoTypeApply = (
         }
     }
     return {
-        ...node,
-        target: {
-            type: 'TypeApplication',
-            target: node.target,
-            args: vars.map((arg) =>
-                unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
-            ),
-            loc: node.target.loc,
+        apply: {
+            ...node,
+            target: {
+                type: 'TypeApplication',
+                target: node.target,
+                args: vars.map((arg) =>
+                    unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
+                ),
+                loc: node.target.loc,
+            },
         },
+        constraints,
     };
 };
