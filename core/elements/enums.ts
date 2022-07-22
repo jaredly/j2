@@ -418,7 +418,7 @@ export const enumTypeMatches = (
             if (expected.open) {
                 continue;
             }
-            console.log('no extra', kase.tag, expected.open, candidate.open);
+            // console.log('no extra', kase.tag, expected.open, candidate.open);
             return false;
         }
         if (

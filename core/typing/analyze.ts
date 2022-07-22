@@ -78,7 +78,6 @@ export const tdecorate = (
     args: t.Decorator['args'] = [],
 ): t.Type => {
     if (hit[type.loc.idx]) {
-        console.log('skip it folks');
         return type;
     }
     hit[type.loc.idx] = true;

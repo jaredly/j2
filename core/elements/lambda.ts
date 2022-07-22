@@ -21,6 +21,7 @@ export type Lambda = {
     type: 'Lambda';
     args: LArg[];
     res: t.Type | null;
+    // resInferred: boolean;
     body: t.Expression;
     loc: t.Loc;
 };
@@ -95,6 +96,7 @@ export const ToTast = {
             args: targs,
             body: tbody,
             res: tres?.type === 'TBlank' ? null : tres,
+            // resInferred: !res,
             loc,
         };
     },
