@@ -29,6 +29,7 @@ export type Ctx = {
     currentConstraints: (id: number) => t.Type;
     addTypeConstraint: (typ: t.TVbl, constraint: t.Type) => t.Type;
 
+    valueForSym: (sym: number) => null | { name: string; type: t.Type };
     typeForId: (id: Id) => GlobalType | null;
     valueForId: (id: Id) => GlobalValue | null;
     resolveType: (name: string, hash?: string | null) => t.RefKind | null;
@@ -157,7 +158,7 @@ export const analyzeTop = (ast: t.Toplevel, ctx: Ctx): t.Toplevel => {
         top,
         {
             Type_TVbl(node) {
-                console.log('Node ok');
+                // console.log('Node ok');
                 return ctx.currentConstraints(node.id);
             },
         },

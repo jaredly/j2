@@ -33,7 +33,7 @@ alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 ==[playground of dreams]==
 --[input:shouldFail]--
 (a) => takesInt(a) + 2
-((a, b)) => 10
+((a, b)) => takesInt(a) + takes10(b)
 ({a, what}) => 10
 // this is adding constraints
 (a) => takesInt(a) + takes10(a)
@@ -45,8 +45,8 @@ alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takes10=h454b6d446f18aea6c51a4b3599f3bf413c24ee76 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
 (a#[0]) => takesInt(a#[0]) + 2
 // (int) => int + 2
-((a#[0], b#[1])):10 => 10
-// ((_, _, *)) => 10
+((a#[0], b#[1])) => takesInt(a#[0]) + takes10(b#[1])
+// ((int, 10, *)) => int + int
 ({a#[0], what#[1]}):10 => 10
 // ({a: _, what: _, *}) => 10
 // this is adding constraints

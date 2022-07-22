@@ -457,37 +457,20 @@ import { FullContext } from '../ctx';
 import { idsEqual } from '../ids';
 import { transformToplevel, Visitor } from '../transform-tast';
 export const ToJS = {
-    IApply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
-        if (
-            args.length === 2 &&
-            target.type === 'Ref' &&
-            target.kind.type === 'Global'
-        ) {
-            const name = findBuiltinName(target.kind.id, ctx.actx);
-            if (name && !name.match(/^[a-zA-Z_0-0]/)) {
-                return b.binaryExpression(
-                    name as any,
-                    ctx.ToJS.IExpression(args[0], ctx),
-                    ctx.ToJS.IExpression(args[1], ctx),
-                );
+    Ref(x: t.Ref, ctx: JCtx): b.Identifier {
+        if (x.kind.type === 'Global') {
+            const name = findBuiltinName(x.kind.id, ctx.actx);
+            if (name) {
+                return b.identifier(name);
             }
         }
-        return b.callExpression(
-            ctx.ToJS.IExpression(target, ctx),
-            args.map((arg) => ctx.ToJS.IExpression(arg, ctx)),
-        );
-    },
-    IEnum({ tag, payload, loc }: t.IEnum, ctx: JCtx): b.Expression {
-        if (!payload) {
-            return b.stringLiteral(tag);
+        if (x.kind.type === 'Local') {
+            const found = ctx.actx.valueForSym(x.kind.sym);
+            if (found) {
+                return b.identifier(found.name);
+            }
         }
-        return b.objectExpression([
-            b.objectProperty(b.identifier('tag'), b.stringLiteral(tag)),
-            b.objectProperty(
-                b.identifier('payload'),
-                ctx.ToJS.IExpression(payload, ctx),
-            ),
-        ]);
+        return b.identifier(t.refHash(x.kind));
     },
 };
 

@@ -201,9 +201,9 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         let changed = false;
         const args = node.args.map((arg) => {
             getLocals(arg.pat, arg.typ, locals, ctx.ctx);
-            console.log('check it', arg.pat, arg.typ);
+            // console.log('check it', arg.pat, arg.typ);
             if (!typeMatchesPattern(arg.pat, arg.typ, ctx.ctx)) {
-                console.log('hup hit it');
+                // console.log('hup hit it');
                 changed = true;
                 return { ...arg, typ: tdecorate(arg.typ, 'argWrongType', ctx) };
             }

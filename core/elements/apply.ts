@@ -314,8 +314,23 @@ export const ToIR = {
 
 import { Ctx as JCtx } from '../ir/to-js';
 import * as b from '@babel/types';
+import { findBuiltinName } from './base';
 export const ToJS = {
-    Apply({ args, loc, target }: IApply, ctx: JCtx): b.Expression {
+    Apply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
+        if (
+            args.length === 2 &&
+            target.type === 'Ref' &&
+            target.kind.type === 'Global'
+        ) {
+            const name = findBuiltinName(target.kind.id, ctx.actx);
+            if (name && !name.match(/^[a-zA-Z_0-0]/)) {
+                return b.binaryExpression(
+                    name as any,
+                    ctx.ToJS.IExpression(args[0], ctx),
+                    ctx.ToJS.IExpression(args[1], ctx),
+                );
+            }
+        }
         return b.callExpression(
             ctx.ToJS.IExpression(target, ctx),
             args.map((arg) => ctx.ToJS.IExpression(arg, ctx)),

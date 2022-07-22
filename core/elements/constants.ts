@@ -211,17 +211,6 @@ export const ToJS = {
     Boolean(x: t.Boolean, ctx: JCtx): b.BooleanLiteral {
         return b.booleanLiteral(x.value);
     },
-    Ref(x: t.Ref, ctx: JCtx): b.Identifier {
-        if (x.kind.type === 'Global') {
-            const name = findBuiltinName(x.kind.id, ctx.actx);
-            if (name) {
-                return b.identifier(name);
-            }
-        }
-        if (x.kind.type === 'Local') {
-        }
-        return b.identifier(t.refHash(x.kind));
-    },
     TemplateString(x: t.ITemplateString, ctx: JCtx): b.TemplateLiteral {
         return b.templateLiteral(
             [x.first]
