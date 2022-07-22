@@ -355,7 +355,7 @@ export function OneFixture({
                                                 loc: top.loc,
                                                 type: 'Success',
                                                 suffix: {
-                                                    text: '🏃‍♀️',
+                                                    text: ' 🏃‍♀️',
                                                     message: jsraw,
                                                 },
                                             });

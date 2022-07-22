@@ -16,7 +16,7 @@ and/or a nice error coalescing example.
 
 # Up nExtt
 
-- [ ] (a) => a + 2
+- [x] (a) => a + 2
 	- so we're looking at a given option, so we don't want to just constrain
 		in case this isn't the one
 		So we like ... return a list of ... constraints?
