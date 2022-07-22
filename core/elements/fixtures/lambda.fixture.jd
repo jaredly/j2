@@ -82,3 +82,11 @@ alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0
 --[builtins]--
 //:value:takesInt:(a: int) => int
 //:value:takes10:(a: 10) => int
+
+==[resolve with int]==
+--[input]--
+(a) => a + 2
+
+--[output:failed]--
+(a#[0]) => a#[0] +#[:unresolved:] 2
+// Error, no type!

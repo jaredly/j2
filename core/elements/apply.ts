@@ -369,6 +369,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                             ttype?.type === 'TVars' &&
                             ttype.inner.type === 'TLambda'
                         ) {
+                            // ctx.debugger();
                             const typed = autoTypeApply(
                                 {
                                     ...node,
@@ -511,9 +512,6 @@ export const unifiedTypes = (argTypes: t.Type[], idx: number[], ctx: Ctx) => {
             t = unified;
         }
     }
-    // if (idx.length > 1) {
-    //     ctx.debugger();
-    // }
     return t;
 };
 

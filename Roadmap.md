@@ -16,6 +16,12 @@ and/or a nice error coalescing example.
 
 # Up nExtt
 
+- [ ] (a) => a + 2
+	- so we're looking at a given option, so we don't want to just constrain
+		in case this isn't the one
+		So we like ... return a list of ... constraints?
+- [ ] `let` thanks
+
 - [x] tvbl as apply target
 - [x] (a, b, *) for open tuples?
 
@@ -62,7 +68,7 @@ Seems like it would.
 
 
 So ... what about
-- [ ] ... having a `TEmpty` type. would be good. For when there's an `apply` that needs application. like "underscore"
+- [x] ... having a `TBlank` type. would be good. For when there's an `apply` that needs application. like "underscore"
 
 
 - [x] normal (reolved) apply, let it infer type args
@@ -93,7 +99,7 @@ So ... what about
 		Although my precedence tree rebalancing dealio does seem
 		very slick & simple to understand.
 
-- [ ] lambdas
+- [x] lambdas
 - [ ] ifs
 - [ ] lets
 - [ ] have js gen use pretty names where possible

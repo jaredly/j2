@@ -41,6 +41,13 @@ export const unifyTypes = (one: Type, two: Type, ctx: Ctx): false | Type => {
         return one;
     }
 
+    if (one.type === 'TBlank') {
+        return two;
+    }
+    if (two.type === 'TBlank') {
+        return one;
+    }
+
     if (
         one.type === 'Number' &&
         two.type === 'Number' &&
