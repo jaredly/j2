@@ -58,7 +58,7 @@ type Internal = {
         values: { sym: Sym; type: Type }[];
     }[];
     syms: {
-        types: { [key: number]: Type | null };
+        types: { [key: number]: { bound: Type | null; name: string } };
         // lots of questions about how Type variables
         // get inferred
         values: { [key: number]: Type };
@@ -359,7 +359,7 @@ export const newContext = (): FullContext => {
 
         getBound(sym) {
             if (this[opaque].syms.types[sym] !== undefined) {
-                return this[opaque].syms.types[sym];
+                return this[opaque].syms.types[sym]?.bound;
             }
             for (let { types } of this[opaque].locals) {
                 for (let t of types) {
@@ -432,7 +432,10 @@ export const newContext = (): FullContext => {
         withLocalTypes(types) {
             const locals: Internal['locals'][0] = { types, values: [] };
             types.forEach((t) => {
-                this[opaque].syms.types[t.sym.id] = t.bound;
+                this[opaque].syms.types[t.sym.id] = {
+                    bound: t.bound,
+                    name: t.sym.name,
+                };
             });
             return {
                 ...this,

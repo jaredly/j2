@@ -44,7 +44,9 @@ export type Ctx = {
     log(...args: any[]): void;
     /** Only triggers the devtools debugger if the fixture is pinned. */
     debugger(): void;
-    withBounds(bounds: { [sym: number]: Type | null }): Ctx;
+    withBounds(bounds: {
+        [sym: number]: { bound: Type | null; name: string };
+    }): Ctx;
     withLocals: (locals: { sym: Sym; type: Type }[]) => Ctx;
 };
 
