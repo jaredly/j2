@@ -44,7 +44,7 @@ Identifier = text:$IdText hash:IdHash?
 
 IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
 
-Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record 
+Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -146,6 +146,14 @@ TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
 Lambda = "(" _ args:LArgs? _ ")" _ res:(":" _ Type)? _ "=>" _ body:Expression
 LArgs = first:LArg rest:(_ "," _ LArg)*
 LArg = pat:Pattern typ:(_ ":" _ Type)?
+
+
+// lets.ts
+
+Block = "{" _ stmts:Stmts? _ "}"
+Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)*
+Stmt = Let / Expression
+Let = "let" _ pat:Pattern _ "=" _ expr:Expression
 
 
 // pattern.ts

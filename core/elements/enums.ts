@@ -200,9 +200,7 @@ export const ToIR = {
             type: 'Enum',
             loc,
             tag,
-            payload: payload
-                ? ctx.ToIR[payload.type](payload as any, ctx)
-                : undefined,
+            payload: payload ? ctx.ToIR.Expression(payload, ctx) : undefined,
         };
     },
 };

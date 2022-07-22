@@ -1,8 +1,8 @@
 import { tref } from '../ctx';
 import { getLocals, Locals } from '../elements/pattern';
-import { allRecordItems, TRecordKeyValue } from '../elements/records';
+import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
 import { transformType } from '../transform-tast';
-import { Expression, GlobalRef, TVars, Type } from '../typed-ast';
+import { Expression, GlobalRef, Loc, TVars, Type } from '../typed-ast';
 import { collapseOps } from './ops';
 import { Ctx, typeMatches } from './typeMatches';
 
@@ -174,8 +174,26 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 ],
             };
         }
+        case 'Block': {
+            if (!expr.stmts.length) {
+                return unit(expr.loc);
+            }
+            const last = expr.stmts[expr.stmts.length - 1];
+            if (last.type === 'Let') {
+                return unit(expr.loc);
+            }
+            return getType(last, ctx);
+        }
         default:
             let _x: never = expr;
             return null;
     }
 };
+
+export const unit = (loc: Loc): TRecord => ({
+    type: 'TRecord',
+    loc: loc,
+    spreads: [],
+    items: [],
+    open: false,
+});

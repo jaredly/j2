@@ -21,7 +21,7 @@ Identifier = text:$IdText hash:IdHash?
 
 IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
 
-Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record 
+Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -484,12 +484,12 @@ export const ToIR = {
         // at least to be able to know what types things are?
         // on the other hand, maybe I can bake types at this point?
         // like, monomorphizing is going to happen before this.
-        return ctx.ToIR.Expression(target as any, ctx);
+        return ctx.ToIR.Expression(target, ctx);
     },
     DecoratedExpression(
         { loc, expr }: t.DecoratedExpression,
         ctx: ICtx,
     ): t.IExpression {
-        return ctx.ToIR[expr.type](expr as any, ctx);
+        return ctx.ToIR.Expression(expr, ctx);
     },
 };

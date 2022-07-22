@@ -341,8 +341,8 @@ export function OneFixture({
                                                 return;
                                             }
 
-                                            const ir = ictx.ToIR[top.expr.type](
-                                                top.expr as any,
+                                            const ir = ictx.ToIR.Expression(
+                                                top.expr,
                                                 ictx,
                                             );
                                             const jctx = jCtx(tctx);

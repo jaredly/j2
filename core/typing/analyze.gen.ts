@@ -6,6 +6,7 @@ import { Analyze as enumexprs } from '../elements/enum-exprs';
 import { Analyze as enums } from '../elements/enums';
 import { Analyze as generics } from '../elements/generics';
 import { Analyze as lambda } from '../elements/lambda';
+import { Analyze as lets } from '../elements/lets';
 import { Analyze as pattern } from '../elements/pattern';
 import { Analyze as recordexprs } from '../elements/record-exprs';
 import { Analyze as records } from '../elements/records';
@@ -22,6 +23,7 @@ export const analyzeVisitor = (): Visitor<{ctx: Ctx, hit: {}}> => {
 		...enums,
 		...generics,
 		...lambda,
+		...lets,
 		...pattern,
 		...recordexprs,
 		...records,

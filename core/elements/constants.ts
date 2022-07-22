@@ -195,7 +195,7 @@ export const ToIR = {
             ...x,
             rest: x.rest.map((part) => ({
                 ...part,
-                expr: ctx.ToIR[part.expr.type](part.expr as any, ctx),
+                expr: ctx.ToIR.Expression(part.expr, ctx),
             })),
         };
     },

@@ -312,8 +312,8 @@ export const ToIR = {
         return {
             type: 'Apply',
             loc,
-            args: args.map((arg) => ctx.ToIR[arg.type](arg as any, ctx)),
-            target: ctx.ToIR[target.type](target as any, ctx),
+            args: args.map((arg) => ctx.ToIR.Expression(arg, ctx)),
+            target: ctx.ToIR.Expression(target, ctx),
         };
     },
 };

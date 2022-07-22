@@ -48,7 +48,7 @@ export const runTypeTest = (ast: TypeFile, debugFailures = false): TypeTest => {
             ctx = ctx.withTypes(top.elements) as FullContext;
         } else {
             ctx = ctx.toplevelConfig(null) as FullContext;
-            let type = ctx.ToTast[t.type](t as any, ctx);
+            let type = ctx.ToTast.Type(t, ctx);
             tast.toplevels.push(type);
             if (type.type === 'TDecorated') {
                 let failed = false;
@@ -80,7 +80,7 @@ export const runTypeTest = (ast: TypeFile, debugFailures = false): TypeTest => {
 
                     window.console = old;
                     console.log('Rerunning with debugging enabled');
-                    dctx.ToTast[t.type](t as any, dctx);
+                    dctx.ToTast.Type(t, dctx);
 
                     type.decorators.forEach((d) => {
                         if (d.id.ref.type !== 'Global') {

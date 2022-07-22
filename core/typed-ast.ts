@@ -12,6 +12,7 @@ import { Type } from './elements/type';
 import { Id, idToString } from './ids';
 import { IRecord, Record } from './elements/record-exprs';
 import { ILambda, Lambda } from './elements/lambda';
+import { Block } from './elements/lets';
 export type { Id };
 export type { Apply, IApply } from './elements/apply';
 export type {
@@ -60,6 +61,7 @@ export type {
     PRecord,
     Pattern,
 } from './elements/pattern';
+export type { Block, IBlock, ILet, IStmt, Let, Stmt } from './elements/lets';
 
 export type GlobalRef = {
     type: 'Global';
@@ -138,6 +140,7 @@ export type Expression =
     | Boolean
     | TemplateString
     | TypeApplication
+    | Block
     | DecoratedExpression;
 
 export type IExpression =

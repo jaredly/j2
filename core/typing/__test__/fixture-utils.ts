@@ -230,7 +230,8 @@ export function runFixture(
     } catch (err) {
         console.log('Failed to parse input:', input);
         console.log(err);
-        throw err;
+        // throw err;
+        checked = { type: 'File', toplevels: [], loc: noloc, comments: [] };
     }
 
     const actx = printCtx(ctx);
@@ -290,7 +291,7 @@ export function runFixture(
         100,
     );
 
-    let outputTast;
+    let outputTast: File;
 
     let output = output_expected ? output_expected : output_failed;
 
@@ -304,7 +305,9 @@ export function runFixture(
     } catch (err) {
         console.log(output);
         console.log(err);
-        throw err;
+        // throw err;
+        // throw err;
+        outputTast = { type: 'File', toplevels: [], loc: noloc, comments: [] };
     }
 
     return {

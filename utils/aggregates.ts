@@ -61,6 +61,11 @@ const extraPass: { [key: string]: string } = {
     // Pattern: ' expected,',
 };
 
+const jsTypes: { [key: string]: false | string } = {
+    IStmt: false, // 'Statement',
+    IExpression: 'Expression',
+};
+
 const text = `
 import { Visitor } from '../transform-tast';
 import { decorate } from '../typing/analyze';
@@ -184,10 +189,10 @@ export const ToIR = {
 
 export const ToJS = {
 	${Object.keys(tastUnions)
-        .filter((n) => n.startsWith('I'))
+        .filter((n) => n.startsWith('I') && jsTypes[n] !== false)
         .map((type) => {
             return `
-		${type}(node: t.${type}, ctx: JCtx): b.${type.slice(1)} {
+		${type}(node: t.${type}, ctx: JCtx): b.${jsTypes[type]} {
 			switch (node.type) {
 				${tastUnions[type]
                     .map((union) => {
