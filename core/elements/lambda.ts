@@ -21,7 +21,7 @@ export type Lambda = {
     type: 'Lambda';
     args: LArg[];
     res: t.Type | null;
-    // resInferred: boolean;
+    resInferred: boolean;
     body: t.Expression;
     loc: t.Loc;
 };
@@ -38,6 +38,7 @@ export type ILambda = {
     type: 'Lambda';
     args: LArg[];
     body: t.IExpression;
+    resInferred: boolean;
     res: t.Type | null;
     loc: t.Loc;
 };
@@ -96,14 +97,17 @@ export const ToTast = {
             args: targs,
             body: tbody,
             res: tres?.type === 'TBlank' ? null : tres,
-            // resInferred: !res,
+            resInferred: !res,
             loc,
         };
     },
 };
 
 export const ToAst = {
-    Lambda({ type, args, res, body, loc }: t.Lambda, ctx: TACtx): p.Lambda {
+    Lambda(
+        { type, args, res, resInferred, body, loc }: t.Lambda,
+        ctx: TACtx,
+    ): p.Lambda {
         return {
             type: 'Lambda',
             args: {
@@ -120,7 +124,7 @@ export const ToAst = {
                 loc: args.length > 0 ? args[0].loc : loc,
             },
             body: ctx.ToAst.Expression(body, ctx),
-            res: res ? ctx.ToAst.Type(res, ctx) : null,
+            res: res && !resInferred ? ctx.ToAst.Type(res, ctx) : null,
             loc,
         };
     },
@@ -165,13 +169,17 @@ export const ToPP = {
 };
 
 export const ToIR = {
-    Lambda({ type, args, res, body, loc }: t.Lambda, ctx: ICtx): t.ILambda {
+    Lambda(
+        { type, args, resInferred, res, body, loc }: t.Lambda,
+        ctx: ICtx,
+    ): t.ILambda {
         // hmm so if there are argssss
         return {
             type: 'Lambda',
             args,
             res,
             body: ctx.ToIR.Expression(body, ctx),
+            resInferred,
             loc,
         };
     },

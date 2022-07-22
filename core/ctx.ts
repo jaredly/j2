@@ -730,17 +730,24 @@ export const setupDefaults = (ctx: FullContext) => {
     });
     addBuiltinDecorator(ctx, `test:type`, 0);
 
-    builtinValues.split('\n').forEach((line) => {
-        const [name, ...rest] = line.split(':');
-        const type = rest.join(':');
-        try {
-            const t = parseType(type.trim());
-            const tast = ctx.ToTast.Type(t, ctx);
-            addBuiltin(ctx, name, transformType(tast, locClearVisitor, null));
-        } catch (err) {
-            console.log(type);
-        }
-    });
+    builtinValues
+        .split('\n')
+        .filter((line) => line.trim())
+        .forEach((line) => {
+            const [name, ...rest] = line.split(':');
+            const type = rest.join(':');
+            try {
+                const t = parseType(type.trim());
+                const tast = ctx.ToTast.Type(t, ctx);
+                addBuiltin(
+                    ctx,
+                    name,
+                    transformType(tast, locClearVisitor, null),
+                );
+            } catch (err) {
+                console.log(type);
+            }
+        });
 };
 
 export const fullContext = () => {
