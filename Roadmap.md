@@ -32,19 +32,19 @@ hm nope. make a `typeForPattern`, should suffice.
 Also need a `constrainType` that's the opposite of `unifyTypes`.
 
 - [x] lambda getType make it work
-- [ ] .res, we should keep track if it was inferred, and
+- [x] .res, we should keep track if it was inferred, and
 	if so, don't print it in toast. Same for arg types.
 
 - [x] ok, when adding decorators - clear them first
 - [x] fix jest tests so I can like run them
 	- [x] turns out I need to do analyze after parsing because I'm doing inference stufffss, so that comparing them works.
-	- [ ] fix the pattern to not have an array so we can traverse it
-	- [ ] figure out what I want to do with type variables...
+	- [x] fix the pattern to not have an array so we can traverse it
+	- [x] figure out what I want to do with type variables...
 		ok yeah, in the anaalyze pass I want to replace the TVbl
 		with whatever it was inferref to be. Sounds reasonable.
 
 
-- [ ] make a basic collectSymInfo
+- [x] make a basic collectSymInfo
 	- oh but like ... 
 
 SO
