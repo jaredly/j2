@@ -522,30 +522,32 @@ export const autoTypeApply = (
     argTypes: t.Type[],
     ctx: Ctx,
 ): null | t.Apply => {
+    // console.log(vars, args, node.args);
     const mapping = inferVarsFromArgs(vars, args);
-    if (
-        mapping &&
-        vars.every(
-            (arg, i) =>
-                !arg.bound ||
-                typeMatches(
-                    unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
-                    arg.bound,
-                    ctx,
-                ),
-        )
-    ) {
-        return {
-            ...node,
-            target: {
-                type: 'TypeApplication',
-                target: node.target,
-                args: vars.map((arg) =>
-                    unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
-                ),
-                loc: node.target.loc,
-            },
-        };
+    if (!mapping) {
+        return null;
     }
-    return null;
+    for (let arg of vars) {
+        if (
+            arg.bound &&
+            !typeMatches(
+                unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
+                arg.bound,
+                ctx,
+            )
+        ) {
+            return null;
+        }
+    }
+    return {
+        ...node,
+        target: {
+            type: 'TypeApplication',
+            target: node.target,
+            args: vars.map((arg) =>
+                unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
+            ),
+            loc: node.target.loc,
+        },
+    };
 };
