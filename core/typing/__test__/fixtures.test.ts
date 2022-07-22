@@ -103,7 +103,10 @@ readdirSync(base)
                         );
                         throw new Error(
                             `${fullOutput}\n\n\n${fullExpectedOutput}\n\n${
-                                ddd ? JSON.stringify(ddd) : null
+                                ddd
+                                    ? 'a=checked, b=outputTast ' +
+                                      JSON.stringify(ddd)
+                                    : null
                             }\n${
                                 equal(cc, co) ? 'Equal' : 'Not equal'
                             }\n\n${outputAgain}`,

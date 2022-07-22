@@ -92,9 +92,7 @@ export const ToTast = {
         const tbody = ctx.ToTast.Expression(body, ctx);
         // console.log(tbody);
         const tres =
-            res && res.type !== 'TBlank'
-                ? ctx.ToTast.Type(res, ctx)
-                : ctx.getType(tbody);
+            res && res.type !== 'TBlank' ? ctx.ToTast.Type(res, ctx) : null; //ctx.getType(tbody);
         return {
             type: 'Lambda',
             args: targs,
