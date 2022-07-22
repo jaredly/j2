@@ -361,15 +361,26 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         });
                         if (
                             ttype?.type === 'TLambda' &&
-                            ttype.args.length === argTypes.length &&
-                            ttype.args.every((arg, i) =>
-                                typeMatches(argTypes[i]!, arg.typ, ctx),
-                            )
+                            ttype.args.length === argTypes.length
                         ) {
-                            return {
-                                ...node,
-                                target: { ...node.target, kind: option },
-                            };
+                            // Will return 'null' if any types don't match
+                            const constraints = constraintsForApply(
+                                argTypes as t.Type[],
+                                ttype.args,
+                                ctx,
+                            );
+                            if (constraints) {
+                                Object.keys(constraints).forEach((key) => {
+                                    ctx.addTypeConstraint(
+                                        +key,
+                                        constraints[+key],
+                                    );
+                                });
+                                return {
+                                    ...node,
+                                    target: { ...node.target, kind: option },
+                                };
+                            }
                         }
                         if (
                             ttype?.type === 'TVars' &&
@@ -531,6 +542,39 @@ export const unifiedTypes = (argTypes: t.Type[], idx: number[], ctx: Ctx) => {
         }
     }
     return t;
+};
+
+export const constraintsForApply = (
+    argTypes: t.Type[],
+    args: t.TLambda['args'],
+    ctx: Ctx,
+) => {
+    let constraints: { [key: number]: t.Type } = {};
+    for (let i = 0; i < argTypes.length; i++) {
+        const argType = argTypes[i];
+        const arg = args[i];
+        if (
+            argType.type === 'TVbl' &&
+            ctx.currentConstraints(argType.id).type === 'TBlank'
+        ) {
+            if (constraints[argType.id] != null) {
+                const t = constrainTypes(constraints[argType.id], arg.typ, ctx);
+                if (t) {
+                    constraints[argType.id] = t;
+                    continue;
+                } else {
+                    return null;
+                }
+            } else {
+                constraints[argType.id] = arg.typ;
+                continue;
+            }
+        }
+        if (!typeMatches(argType, arg.typ, ctx)) {
+            return null;
+        }
+    }
+    return constraints;
 };
 
 export const autoTypeApply = (
