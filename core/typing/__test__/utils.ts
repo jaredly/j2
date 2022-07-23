@@ -39,14 +39,13 @@ const getExprArg = (args: t.DecoratorArg[]): string | t.DExpr => {
 };
 
 export const valueAssertions = {
-    equal(args: t.DecoratorArg[], inner: t.Expression, ctx: ExecutionContext) {
+    equal(args: t.DecoratorArg[], candidate: any, ctx: ExecutionContext) {
         const arg = getExprArg(args);
         if (typeof arg === 'string') {
             return arg;
         }
         // ummmmm I thikn I want to do the == generation dealio idk
         try {
-            const candidate = ctx.execute(inner);
             const expected = ctx.execute(arg.expr);
             return candidate === expected
                 ? undefined
@@ -55,9 +54,8 @@ export const valueAssertions = {
             return `Failed to execute ${(err as Error).message}`;
         }
     },
-    true(args: t.DecoratorArg[], inner: t.Expression, ctx: ExecutionContext) {
+    true(args: t.DecoratorArg[], candidate: any, ctx: ExecutionContext) {
         try {
-            const candidate = ctx.execute(inner);
             return candidate === true
                 ? undefined
                 : `Expected true, got ${candidate}`;
@@ -65,9 +63,8 @@ export const valueAssertions = {
             return `Failed to execute ${(err as Error).message}`;
         }
     },
-    false(args: t.DecoratorArg[], inner: t.Expression, ctx: ExecutionContext) {
+    false(args: t.DecoratorArg[], candidate: any, ctx: ExecutionContext) {
         try {
-            const candidate = ctx.execute(inner);
             return candidate === false
                 ? undefined
                 : `Expected false, got ${candidate}`;

@@ -38,7 +38,7 @@ export const newExecutionContext = (ctx: FullContext) => {
             const jctx = jCtx(ctx);
             const js = jctx.ToJS.Block(ir, jctx);
             const jsraw = generate(js).code;
-            console.log(jsraw);
+            // console.log(jsraw);
             try {
                 const f = new Function('$terms', jsraw);
                 return f(this.terms);

@@ -86,6 +86,19 @@ readdirSync(base)
 
                     if (expr.type === 'DecoratedExpression') {
                         const inner = expr.expr;
+                        const ictx = iCtx();
+                        const ir = ictx.ToIR.BlockSt(
+                            {
+                                type: 'Block',
+                                stmts: [expr.expr],
+                                loc: expr.loc,
+                            },
+                            ictx,
+                        );
+                        const jctx = jCtx(ctx);
+                        const js = jctx.ToJS.Block(ir, jctx);
+                        const jsraw = generate(js).code;
+
                         expr.decorators.forEach((d) => {
                             if (d.id.ref.type !== 'Global') {
                                 return;
@@ -96,13 +109,23 @@ readdirSync(base)
                                     d.loc.end.offset,
                                 ) + ` ${file}:${d.loc.start.line}`,
                                 () => {
+                                    let res;
+                                    try {
+                                        const f = new Function('$terms', jsraw);
+                                        res = f(ectx.terms);
+                                    } catch (err) {
+                                        throw new Error(jsraw, {
+                                            cause: err as Error,
+                                        });
+                                    }
+
                                     const hash = idToString(
                                         (d.id.ref as t.GlobalRef).id,
                                     );
                                     if (assertById[hash]) {
                                         const err = assertById[hash](
                                             d.args.map((arg) => arg.arg),
-                                            inner,
+                                            res,
                                             ectx,
                                         );
                                         expect(err).toBeUndefined();

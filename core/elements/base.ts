@@ -462,6 +462,8 @@ export const ToJS = {
             const name = findBuiltinName(x.kind.id, ctx.actx);
             if (name) {
                 return b.identifier(name);
+            } else {
+                return b.identifier('unresolved itsadeal');
             }
         }
         if (x.kind.type === 'Local') {
