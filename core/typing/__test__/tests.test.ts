@@ -1,9 +1,14 @@
 import generate from '@babel/generator';
 import { readdirSync, readFileSync } from 'fs';
-import { addBuiltinDecorator, builtinContext, FullContext } from '../../ctx';
+import {
+    addBuiltinDecorator,
+    builtinContext,
+    FullContext,
+    refsEqual,
+} from '../../ctx';
 import { removeErrorDecorators, typeToplevel } from '../../elements/base';
 import { parseFile, parseTypeFile } from '../../grammar/base.parser';
-import { idToString } from '../../ids';
+import { idsEqual, idToString } from '../../ids';
 import { iCtx } from '../../ir/ir';
 import { ExecutionContext, jCtx, newExecutionContext } from '../../ir/to-js';
 import { transformToplevel } from '../../transform-tast';
@@ -23,6 +28,7 @@ readdirSync(base)
             const text = readFileSync(fixtureFile, 'utf8');
             const ast = parseFile(text);
             let ctx = builtinContext.clone();
+            const eq = ctx.getBuiltinRef('==');
             const assertById: {
                 [key: string]: (
                     args: t.DecoratorArg[],
@@ -84,21 +90,20 @@ readdirSync(base)
                         },
                     );
 
-                    if (expr.type === 'DecoratedExpression') {
-                        const inner = expr.expr;
-                        const ictx = iCtx();
-                        const ir = ictx.ToIR.BlockSt(
-                            {
-                                type: 'Block',
-                                stmts: [expr.expr],
-                                loc: expr.loc,
-                            },
-                            ictx,
-                        );
-                        const jctx = jCtx(ctx);
-                        const js = jctx.ToJS.Block(ir, jctx);
-                        const jsraw = generate(js).code;
+                    const ictx = iCtx();
+                    const ir = ictx.ToIR.BlockSt(
+                        {
+                            type: 'Block',
+                            stmts: [expr],
+                            loc: expr.loc,
+                        },
+                        ictx,
+                    );
+                    const jctx = jCtx(ctx);
+                    const js = jctx.ToJS.Block(ir, jctx);
+                    const jsraw = generate(js).code;
 
+                    if (expr.type === 'DecoratedExpression') {
                         expr.decorators.forEach((d) => {
                             if (d.id.ref.type !== 'Global') {
                                 return;
@@ -133,6 +138,24 @@ readdirSync(base)
                                 },
                             );
                         });
+                        // } else if (
+                        //     expr.type === 'Apply' &&
+                        //     expr.target.type === 'Ref' &&
+                        //     refsEqual(expr.target.kind, eq!)
+                        // ) {
+                        //     const expected = expr.args[0];
+                        //     const actual = expr.args[1];
+                    } else if (ctx.isBuiltinType(ctx.getType(expr)!, 'bool')) {
+                        let res;
+                        try {
+                            const f = new Function('$terms', jsraw);
+                            res = f(ectx.terms);
+                        } catch (err) {
+                            throw new Error(jsraw, {
+                                cause: err as Error,
+                            });
+                        }
+                        expect(res).toBe(true);
                     } else {
                         throw new Error('Not decorated?' + expr.type);
                     }

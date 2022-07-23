@@ -19,7 +19,7 @@ and/or a nice error coalescing example.
 # Make ExprTests
 or probably just tests
 
-- [ ] make the tests, make them work
+- [x] make the tests, make them work
 - [ ] toplevel let! gotta have it folks, for the tests
 - [ ] if/else comes next
 - [ ] then recursive functions pls

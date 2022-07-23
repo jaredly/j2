@@ -499,6 +499,15 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         },
                         loc: noloc,
                     },
+                    // {
+                    //     label: 'got',
+                    //     arg: {
+                    //         type: 'DType',
+                    //         loc: noloc,
+                    //         typ: at,
+                    //     },
+                    //     loc: noloc,
+                    // },
                 ]);
             }
             return arg;

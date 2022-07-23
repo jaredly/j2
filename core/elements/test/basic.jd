@@ -1,9 +1,6 @@
+// A bunch of little maths
 
-@assert:equal(5) (2 + 3)
-@assert:equal(8) (5 + 1 * 3)
-@assert:true() (5 == 5)
-@assert:false() (4 == 5)
-
-@assert:equal(3) ((v) => {
-	v + 1
-})(2)
+5 == 2 + 3;
+8 == 5 + 1 * 3;
+5 == 5;
+3 == ((v) => v + 1)(2);

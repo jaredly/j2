@@ -7,7 +7,15 @@ import { Loc, parseType } from './grammar/base.parser';
 import { extract, Id, idsEqual, toId } from './ids';
 import { resolveAnalyzeType } from './resolveAnalyzeType';
 import { transformType } from './transform-tast';
-import { Expression, GlobalRef, RefKind, Sym, TVars, Type } from './typed-ast';
+import {
+    Expression,
+    GlobalRef,
+    RefKind,
+    Sym,
+    TVars,
+    Type,
+    UnresolvedRef,
+} from './typed-ast';
 import { Ctx as ACtx } from './typing/analyze';
 import { getType } from './typing/getType';
 import { makeToTast, Toplevel } from './typing/to-tast';
@@ -262,8 +270,14 @@ const resolve = (
     return [];
 };
 
-export const refsEqual = (a: RefKind, b: RefKind): boolean => {
+export const refsEqual = (
+    a: RefKind | UnresolvedRef,
+    b: RefKind | UnresolvedRef,
+): boolean => {
     if (a.type !== b.type) {
+        return false;
+    }
+    if (a.type === 'Unresolved' || b.type === 'Unresolved') {
         return false;
     }
     if (a.type === 'Global') {

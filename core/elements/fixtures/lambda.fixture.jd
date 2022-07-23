@@ -110,3 +110,10 @@ alias +=h1b711bccf9aef2b0a1f3a7595ee93b32b87a881e float=h1c9cc9450fe2e869a48abaa
 (a#[0]) => 2.4 + a#[0]
 // (float) => float
 /* a => 2.4 + a */
+
+==[New fixture__]==
+--[input]--
+3 == ((v) => v + 1)(2);
+
+--[output:expected]--
+// hello

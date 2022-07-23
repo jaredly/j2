@@ -1,6 +1,7 @@
 import { unifyEnums } from '../elements/enums';
 import { unifyRecords } from '../elements/records';
 import { Type } from '../typed-ast';
+import { numOps, unifyOps } from './ops';
 import { Ctx, typeMatches } from './typeMatches';
 
 // For now, just take the greater of the two.
@@ -46,6 +47,20 @@ export const unifyTypes = (one: Type, two: Type, ctx: Ctx): false | Type => {
     }
     if (two.type === 'TBlank') {
         return one;
+    }
+
+    // So, there's a lot we could do here, with
+    // unifying ops. But I'm going to bail for now.
+    if (
+        (one.type === 'TOps' || one.type === 'Number' || one.type === 'TRef') &&
+        (two.type === 'TOps' || two.type === 'Number' || two.type === 'TRef')
+    ) {
+        const oops = numOps(one, ctx);
+        const tops = numOps(two, ctx);
+        const res = oops && tops ? unifyOps(oops, tops, ctx) : null;
+        if (res) {
+            return res;
+        }
     }
 
     if (
