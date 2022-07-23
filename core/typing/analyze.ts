@@ -14,8 +14,13 @@ import * as t from '../typed-ast';
 import { extract, Id, idsEqual, idToString } from '../ids';
 import { Ctx as TMCtx } from './typeMatches';
 import { analyzeVisitor } from './analyze.gen';
-import { TopTypeKind } from './to-tast';
-import { getLocals, Pattern } from '../elements/pattern';
+import { Toplevel, TopTypeKind } from './to-tast';
+import {
+    getLocals,
+    Pattern,
+    typeForPattern,
+    typeMatchesPattern,
+} from '../elements/pattern';
 import { printTopLevel } from '../debug';
 
 export type Ctx = {
@@ -186,6 +191,32 @@ export const errorCount = (v: Verify): number => {
         v.unresolved.type.length +
         v.unresolved.decorator.length +
         v.unresolved.value.length
+    );
+};
+
+export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
+    transformToplevel(
+        top,
+        {
+            Let(node) {
+                const locals: t.Locals = [];
+                const typ =
+                    ctx.getType(node.expr) ??
+                    typeForPattern(node.pat, ctx as FullContext);
+                getLocals(node.pat, typ, locals, ctx);
+                ctx.withLocals(locals);
+                return null;
+            },
+            Lambda(node) {
+                const locals: t.Locals = [];
+                node.args.forEach((arg) => {
+                    getLocals(arg.pat, arg.typ, locals, ctx);
+                });
+                ctx.withLocals(locals);
+                return null;
+            },
+        },
+        null,
     );
 };
 

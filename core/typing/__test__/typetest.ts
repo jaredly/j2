@@ -98,8 +98,6 @@ export const runTypeTest = (ast: TypeFile, debugFailures = false): TypeTest => {
 
                     window.console = mock;
                 }
-            } else {
-                // throw new Error('Not decorated?' + type.type);
             }
         }
     });

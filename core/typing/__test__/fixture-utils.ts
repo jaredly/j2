@@ -8,7 +8,7 @@ import {
     hashTypes,
     noloc,
 } from '../../ctx';
-import { fileToTast } from '../../elements/base';
+import { fileToTast, typeToplevelT } from '../../elements/base';
 import { TVar } from '../../elements/type-vbls';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
@@ -16,9 +16,21 @@ import { iCtx } from '../../ir/ir';
 import { jCtx } from '../../ir/to-js';
 import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
-import { transformFile, transformType, Visitor } from '../../transform-tast';
+import {
+    transformFile,
+    transformToplevel,
+    transformType,
+    Visitor,
+} from '../../transform-tast';
 import { File } from '../../typed-ast';
-import { Verify, verify } from '../analyze';
+import {
+    errorCount,
+    initVerify,
+    populateSyms,
+    Verify,
+    verify,
+    verifyVisitor,
+} from '../analyze';
 import { getType } from '../getType';
 import { printCtx } from '../to-ast';
 
@@ -233,11 +245,20 @@ export function runFixture(
         // throw err;
         checked = { type: 'File', toplevels: [], loc: noloc, comments: [] };
     }
+    let actx = printCtx(ctx);
+    // const backAliases = {};
 
-    const actx = printCtx(ctx);
+    const printed = checked.toplevels.map((top) => {
+        ctx.resetSym();
+        populateSyms(top, ctx);
+        if (top.type === 'TypeAlias') {
+            const tt = typeToplevelT(top, ctx);
+            ctx.toplevelConfig(tt);
+            actx = actx.withToplevel(tt);
+        }
+        // const actx = printCtx(ctx);
+        // Object.assign(backAliases, actx.backAliases);
 
-    // const checked = analyze(tast, ctx);
-    checked.toplevels.forEach((top) => {
         if (top.type === 'ToplevelExpression') {
             const t = getType(top.expr, ctx);
             if (!t) {
@@ -248,7 +269,7 @@ export function runFixture(
                     },
                     '// Error, no type!',
                 ]);
-                return;
+                return actx.ToAst.Toplevel(top, actx);
             }
             const ictx = iCtx();
             const ir = ictx.ToIR.Expression(top.expr, ictx);
@@ -262,10 +283,16 @@ export function runFixture(
                 { ...top.loc, start: top.loc.end },
                 '// ' + cm, // + ' ' + jsraw + ' */',
             ]);
-            checked.comments.push([
-                { ...top.loc, start: top.loc.end },
-                '/* ' + jsraw + ' */',
-            ]);
+            const results: Verify = initVerify();
+
+            transformToplevel(top, verifyVisitor(results, ctx), ctx);
+
+            if (!errorCount(results)) {
+                checked.comments.push([
+                    { ...top.loc, start: top.loc.end },
+                    '/* ' + jsraw + ' */',
+                ]);
+            }
 
             // TODO: surface the IDs of things in the UI.
             // eh, and maybe as a suffix on the whole thing?
@@ -286,10 +313,19 @@ export function runFixture(
             //     //     '// h' + hash,
             //     // ]);
         }
+        return actx.ToAst.Toplevel(top, actx);
     });
 
     const newOutput = printToString(
-        pegPrinter(actx.ToAst.File(checked, actx), newPPCtx(false)),
+        pegPrinter(
+            {
+                type: 'File',
+                toplevels: printed,
+                loc: checked.loc,
+                comments: checked.comments,
+            },
+            newPPCtx(false),
+        ),
         100,
     );
 

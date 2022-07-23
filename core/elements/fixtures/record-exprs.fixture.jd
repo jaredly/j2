@@ -10,14 +10,26 @@
 --[output:expected]--
 {x: 10, y: "hl", x: 2}
 // {x: 2, y: "hl"}
+/* {
+  x: 10,
+  y: `hl`,
+  x: 2
+} */
 (1, 2)
 // (1, 2)
+/* [1, 2] */
 ()
 // ()
+/* [] */
 ()
 // ()
+/* [] */
 {tag: "Something", payload: 200}
 // {tag: "Something", payload: 200}
+/* {
+  tag: `Something`,
+  payload: 200
+} */
 
 ==[New fixture]==
 --[input]--
@@ -26,6 +38,11 @@
 --[output:expected]--
 {...{x: 10}, y: 100}
 // {x: 10, y: 100}
+/* { ...{
+    x: 10
+  },
+  y: 100
+} */
 
 ==[bad spread]==
 --[input:shouldFail]--

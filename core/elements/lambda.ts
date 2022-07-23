@@ -179,7 +179,10 @@ export const ToIR = {
             type: 'Lambda',
             args,
             res,
-            body: ctx.ToIR.Expression(body, ctx),
+            body:
+                body.type === 'Block'
+                    ? ctx.ToIR.Block(body, ctx)
+                    : ctx.ToIR.Expression(body, ctx),
             resInferred,
             loc,
         };

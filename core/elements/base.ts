@@ -468,6 +468,8 @@ export const ToJS = {
             const found = ctx.actx.valueForSym(x.kind.sym);
             if (found) {
                 return b.identifier(found.name);
+            } else {
+                return b.identifier(`unresolved sym!`);
             }
         }
         return b.identifier(t.refHash(x.kind));

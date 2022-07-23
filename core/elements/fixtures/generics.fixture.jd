@@ -19,6 +19,7 @@ hello<int>(10)
 alias hello=hda7294ffc909707ec4e6c0a68f226c52ec4cae25 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 hello<int>(10)
 // int
+/* hello(10) */
 
 ==[decorate target]==
 --[input]--
@@ -28,6 +29,7 @@ hello<int>(10)
 alias decorate=h5a7fc9170718190f9388084b28fb49f6cb4602fc hello=hda7294ffc909707ec4e6c0a68f226c52ec4cae25
 (@decorate() hello)(10)
 // 10
+/* hello(10) */
 
 ==[multiple args]==
 --[input]--
@@ -38,8 +40,10 @@ multi<int, string>(10, "hello")
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f multi=hc5961545e555b8c7c63bc6f08c8fdd379f0ede6e string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 multi<int, string>
 // (a: int, b: string) => int
+/* multi */
 multi<int, string>(10, "hello")
 // int
+/* multi(10, `hello`) */
 
 ==[bounded]==
 --[input]--
@@ -50,8 +54,10 @@ bounded<int>(10)
 alias bounded=hc51fab91793ea04f9d1f93e37ed42783cb09a337 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 bounded(10)
 // 10
+/* bounded(10) */
 bounded<int>(10)
 // int
+/* bounded(10) */
 
 ==[bound fail]==
 --[input:shouldFail]--
@@ -100,6 +106,7 @@ takesArray(@error:argWrongType(expected: :Array<string, 10u>) 10)
 // int
 takesArray(anArray)
 // int
+/* takesArray(anArray) */
 
 ==[chained]==
 --[input]--
@@ -218,6 +225,7 @@ boundedDefault<int>
 alias boundedDefault=h558134f16a2f2008e5219367cfd76166dbe57bc2 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 boundedDefault<int>
 // (a: int, b: 10u) => int
+/* boundedDefault */
 
 ==[generic arg works]==
 --[input]--
@@ -227,6 +235,7 @@ takesArray(anArray)
 alias anArray=ha841469a8732a704d4c19413e4c8b5da394d5e23 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takesArray=he4b6904ec900e70c055cc6f7f494b9b7b489323b
 takesArray(anArray)
 // int
+/* takesArray(anArray) */
 
 ==[iadd apply]==
 --[input]--
@@ -236,3 +245,4 @@ iadd(10, 20)
 alias iadd=h2cfd7dd7592887fc30e4d0388a059cdccb79dfa4
 iadd(10, 20)
 // 30
+/* iadd(10, 20) */

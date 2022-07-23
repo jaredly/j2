@@ -628,10 +628,15 @@ export function buildTransformFile(
                     const tname = resolved.members
                         .map(getTypeName)
                         .filter(Boolean) as Array<string>;
+                    const talias =
+                        item.type === 'TSTypeReference' &&
+                        item.typeName.type === 'Identifier'
+                            ? item.typeName.name
+                            : tname[0];
                     if (tname.length && ctx.types[tname[0]]) {
                         visitorSubs.push(
-                            `${name}_${tname[0]}?: (node: ${tname}, ctx: Ctx) => null | false | ${name} | [${name} | null, Ctx]`,
-                            `${name}Post_${tname[0]}?: (node: ${tname}, ctx: Ctx) => null | ${name}`,
+                            `${name}_${tname[0]}?: (node: ${talias}, ctx: Ctx) => null | false | ${name} | [${name} | null, Ctx]`,
+                            `${name}Post_${tname[0]}?: (node: ${talias}, ctx: Ctx) => null | ${name}`,
                         );
                     }
                 }

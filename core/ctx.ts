@@ -309,6 +309,7 @@ export const newContext = (): FullContext => {
             if (toplevel && this[opaque].toplevel?.hash) {
                 toplevel.hash = this[opaque].toplevel.hash;
             }
+            this[opaque].toplevel = toplevel;
             return {
                 ...this,
                 [opaque]: { ...this[opaque], toplevel },

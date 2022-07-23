@@ -8,8 +8,10 @@ false
 alias bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150
 true
 // bool
+/* true */
 false
 // bool
+/* false */
 
 ==[numbers]==
 --[input]--
@@ -19,8 +21,10 @@ false
 --[output:expected]--
 123
 // 123
+/* 123 */
 1.23
 // 1.23
+/* 1.23 */
 
 ==[strings]==
 --[input]--
@@ -29,6 +33,7 @@ false
 --[output:expected]--
 "hello"
 // "hello"
+/* `hello` */
 
 ==[basic template]==
 --[input]--
@@ -38,6 +43,7 @@ false
 alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h99b01457a189d1392ca641b22a79c97b3eda324c
 "hello ${toString(123)}"
 // string
+/* `hello ${toString(123)}` */
 
 ==[right next to each other]==
 --[input]--
@@ -47,6 +53,7 @@ alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h99b01457a189d13
 alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 "One${"1"}${"2"} and ${"3"}"
 // string
+/* `One${`1`}${`2`} and ${`3`}` */
 
 ==[expression wrong type]==
 --[input:shouldFail]--

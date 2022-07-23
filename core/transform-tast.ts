@@ -470,38 +470,38 @@ export type Visitor<Ctx> = {
     ) => null | false | IExpression | [IExpression | null, Ctx];
     IExpressionPost_Number?: (node: Number, ctx: Ctx) => null | IExpression;
     IExpression_Lambda?: (
-        node: Lambda,
+        node: ILambda,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
-    IExpressionPost_Lambda?: (node: Lambda, ctx: Ctx) => null | IExpression;
+    IExpressionPost_Lambda?: (node: ILambda, ctx: Ctx) => null | IExpression;
     IExpression_Boolean?: (
         node: Boolean,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
     IExpressionPost_Boolean?: (node: Boolean, ctx: Ctx) => null | IExpression;
     IExpression_Apply?: (
-        node: Apply,
+        node: IApply,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
-    IExpressionPost_Apply?: (node: Apply, ctx: Ctx) => null | IExpression;
+    IExpressionPost_Apply?: (node: IApply, ctx: Ctx) => null | IExpression;
     IExpression_TemplateString?: (
-        node: TemplateString,
+        node: ITemplateString,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
     IExpressionPost_TemplateString?: (
-        node: TemplateString,
+        node: ITemplateString,
         ctx: Ctx,
     ) => null | IExpression;
     IExpression_Enum?: (
-        node: Enum,
+        node: IEnum,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
-    IExpressionPost_Enum?: (node: Enum, ctx: Ctx) => null | IExpression;
+    IExpressionPost_Enum?: (node: IEnum, ctx: Ctx) => null | IExpression;
     IExpression_Record?: (
-        node: Record,
+        node: IRecord,
         ctx: Ctx,
     ) => null | false | IExpression | [IExpression | null, Ctx];
-    IExpressionPost_Record?: (node: Record, ctx: Ctx) => null | IExpression;
+    IExpressionPost_Record?: (node: IRecord, ctx: Ctx) => null | IExpression;
     DecoratorArg_DExpr?: (
         node: DExpr,
         ctx: Ctx,
@@ -578,15 +578,15 @@ export type Visitor<Ctx> = {
     ) => null | false | Stmt | [Stmt | null, Ctx];
     StmtPost_Let?: (node: Let, ctx: Ctx) => null | Stmt;
     IStmt_Let?: (
-        node: Let,
+        node: ILet,
         ctx: Ctx,
     ) => null | false | IStmt | [IStmt | null, Ctx];
-    IStmtPost_Let?: (node: Let, ctx: Ctx) => null | IStmt;
+    IStmtPost_Let?: (node: ILet, ctx: Ctx) => null | IStmt;
     IStmt_Block?: (
-        node: Block,
+        node: IBlock,
         ctx: Ctx,
     ) => null | false | IStmt | [IStmt | null, Ctx];
-    IStmtPost_Block?: (node: Block, ctx: Ctx) => null | IStmt;
+    IStmtPost_Block?: (node: IBlock, ctx: Ctx) => null | IStmt;
     Pattern_PName?: (
         node: PName,
         ctx: Ctx,

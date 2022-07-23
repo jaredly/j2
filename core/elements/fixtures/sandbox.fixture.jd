@@ -11,6 +11,7 @@ hello
 alias hello=hfe91f1ef2452e6927118530ab0bc97677c300137 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 hello
 // string
+/* hello */
 
 ==[types]==
 --[input]--
@@ -20,6 +21,7 @@ hello
 alias one=h75a4651f0e6841970290c6a4c7f547d57bb814ca string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h99b01457a189d1392ca641b22a79c97b3eda324c
 "${toString(10)} and ${one}"
 // string
+/* `${toString(10)} and ${one}` */
 
 ==[Kitchen Sink]==
 --[input:shouldFail]--
@@ -51,14 +53,18 @@ type x = over10<"test-hello.js">
 // ## Values ##
 "a string"
 // "a string"
+/* `a string` */
 "a template ${@error:notAString() 100} string"
 // string
 10.2
 // 10.2
+/* 10.2 */
 10
 // 10
+/* 10 */
 true
 // bool
+/* true */
 
 ==[New fixture_]==
 --[input]--

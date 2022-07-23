@@ -127,17 +127,20 @@ export const ToIR = {
     BlockSt(node: t.Block, ctx: ICtx): IBlock {
         return {
             type: 'Block',
-            stmts: node.stmts.map((stmt, i) =>
-                i === node.stmts.length - 1 &&
-                stmt.type !== 'Block' &&
-                stmt.type !== 'Let'
-                    ? {
-                          type: 'Return',
-                          expr: ctx.ToIR.Expression(stmt, ctx),
-                          loc: stmt.loc,
-                      }
-                    : ctx.ToIR.Stmt(stmt, ctx),
-            ),
+            stmts: node.stmts.map((stmt, i) => {
+                if (i < node.stmts.length - 1 || stmt.type === 'Let') {
+                    return ctx.ToIR.Stmt(stmt, ctx);
+                }
+                if (stmt.type === 'Block') {
+                    return ctx.ToIR.BlockSt(stmt, ctx);
+                }
+
+                return {
+                    type: 'Return',
+                    expr: ctx.ToIR.Expression(stmt, ctx),
+                    loc: stmt.loc,
+                };
+            }),
             loc: node.loc,
         };
     },

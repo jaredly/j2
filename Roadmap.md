@@ -16,10 +16,19 @@ and/or a nice error coalescing example.
 
 
 
+# Make ExprTests
+or probably just tests
 
+- [ ] make the tests, make them work
+- [ ] toplevel let! gotta have it folks, for the tests
+- [ ] if/else comes next
+- [ ] then recursive functions pls
 
 
 # Up nExtt
+
+- [ ] hm for `unit` value, maybe have a global variable `unit` or something?
+	so that you can do cheap comparisons? idk can just do a .length
 
 - [x] (a) => a + 2
 	- so we're looking at a given option, so we don't want to just constrain
@@ -27,7 +36,7 @@ and/or a nice error coalescing example.
 		So we like ... return a list of ... constraints?
 - [x] `let` thanks
 	- [x] basic working
-	- [ ] keep track of generated js in fixture output, I'd say yes
+	- [x] keep track of generated js in fixture output, I'd say yes
 		- hmmm orrr ToIR? like the IR output?
 
 - [x] tvbl as apply target

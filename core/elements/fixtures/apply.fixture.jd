@@ -18,8 +18,10 @@ toString(3.4)
 alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h99b01457a189d1392ca641b22a79c97b3eda324c toString_h7=h7a085b7af0cace37678c385e00d352db9204d70a
 toString(1)
 // string
+/* toString(1) */
 toString_h7(3.4)
 // string
+/* toString(3.4) */
 
 ==[multiple args]==
 --[input]--
@@ -29,6 +31,7 @@ twoArgs(1, "hello")
 alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 twoArgs=h0f02217a611769b7c4ee218488bbd1fc16cbeeb5
 twoArgs(1, "hello")
 // string
+/* twoArgs(1, `hello`) */
 
 --[builtins]--
 //:value:twoArgs:(one: int, two: string) => string
@@ -41,6 +44,7 @@ takeSimple(simple)
 alias simple=h65dbf0bf0a81f130770718771f42643e5fb6ac13 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takeSimple=hdc45749f4e265c12ceb62ea6db4d02a0386622c5
 takeSimple(simple)
 // string
+/* takeSimple(simple) */
 
 --[builtins]--
 //:value:takeSimple:(simple: () => string) => string
@@ -57,6 +61,7 @@ takeOneArg(@error:argWrongType(expected: :(v: int) => string) simple)
 // string
 takeOneArg(oneArg)
 // string
+/* takeOneArg(oneArg) */
 takeIntle(@error:argWrongType(expected: :() => int) simple)
 // string
 
@@ -117,8 +122,10 @@ take10Arg(tenArg)
 alias intArg=h67789f568964fa53a2df27ab843b718d0f9252f0 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 take10Arg=h35f7ae1b4d73863baeacd76e318976ba557137da takeIntArg=hbbad4dcddf49fa76dadb8708898a93677da48de3 tenArg=h28bcd0de96d1861d032f20f5229c3988e2b468dc
 takeIntArg(intArg)
 // string
+/* takeIntArg(intArg) */
 take10Arg(tenArg)
 // string
+/* take10Arg(tenArg) */
 
 ==[variance 2]==
 --[input:shouldFail]--
@@ -139,6 +146,7 @@ take10Arg(intArg)
 alias intArg=h67789f568964fa53a2df27ab843b718d0f9252f0 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 take10Arg=h35f7ae1b4d73863baeacd76e318976ba557137da
 take10Arg(intArg)
 // string
+/* take10Arg(intArg) */
 
 ==[level 2]==
 --[input]--
@@ -149,8 +157,10 @@ take10ArgTaker(take10Arg)
 alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 take10Arg=h35f7ae1b4d73863baeacd76e318976ba557137da take10ArgTaker=hbaaa12ffbadf2f6368bb7391fbfb5469e9deddbe takeIntArg=hbbad4dcddf49fa76dadb8708898a93677da48de3 takeIntArgTaker=h614d6f0fc25f7afa2b36bae14edc03f26a27f6f3
 takeIntArgTaker(takeIntArg)
 // string
+/* takeIntArgTaker(takeIntArg) */
 take10ArgTaker(take10Arg)
 // string
+/* take10ArgTaker(take10Arg) */
 
 ==[level 2 good]==
 --[input]--
@@ -160,6 +170,7 @@ takeIntArgTaker(take10Arg)
 alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 take10Arg=h35f7ae1b4d73863baeacd76e318976ba557137da takeIntArgTaker=h614d6f0fc25f7afa2b36bae14edc03f26a27f6f3
 takeIntArgTaker(take10Arg)
 // string
+/* takeIntArgTaker(take10Arg) */
 
 ==[level 2 bad]==
 --[input:shouldFail]--
