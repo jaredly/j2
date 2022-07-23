@@ -60,6 +60,7 @@ import {
     IBlock,
     IStmt,
     ILet,
+    IReturn,
     DecoratorDecl,
     TypeVariables,
     TAdd,
@@ -311,6 +312,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IStmt | [IStmt | null, Ctx];
     IStmtPost?: (node: IStmt, ctx: Ctx) => null | IStmt;
+    IReturn?: (
+        node: IReturn,
+        ctx: Ctx,
+    ) => null | false | IReturn | [IReturn | null, Ctx];
+    IReturnPost?: (node: IReturn, ctx: Ctx) => null | IReturn;
     ILet?: (node: ILet, ctx: Ctx) => null | false | ILet | [ILet | null, Ctx];
     ILetPost?: (node: ILet, ctx: Ctx) => null | ILet;
     TApply?: (
@@ -5521,6 +5527,61 @@ export const transformILet = <Ctx>(
     return node;
 };
 
+export const transformIReturn = <Ctx>(
+    node: IReturn,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IReturn => {
+    if (!node) {
+        throw new Error('No IReturn provided');
+    }
+
+    const transformed = visitor.IReturn ? visitor.IReturn(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$expr = transformIExpression(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                expr: updatedNode$expr,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IReturnPost) {
+        const transformed = visitor.IReturnPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformIStmt = <Ctx>(
     node: IStmt,
     visitor: Visitor<Ctx>,
@@ -5644,10 +5705,16 @@ export const transformIStmt = <Ctx>(
             break;
         }
 
+        case 'Block': {
+            updatedNode = transformIBlock(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformIBlock(node, visitor, ctx);
+            const updatedNode$0node = transformIReturn(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }

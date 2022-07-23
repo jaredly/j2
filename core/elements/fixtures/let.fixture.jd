@@ -5,7 +5,8 @@
 let x = 10
 let y = 20
 x + y
-}
+};
+// {1 }
 
 --[output:expected]--
 alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c
@@ -15,3 +16,9 @@ alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c
     x#[0] + y#[1];
 }
 // 30
+/* (() => {
+  let x = 10;
+  let y = 20;
+  return x + y;
+})() */
+// {1 }

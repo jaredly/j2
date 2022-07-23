@@ -141,6 +141,8 @@ export const ToIR = {
             loc: node.loc,
         };
     },
+    // Stmt(node: t.Stmt, ctx: ICtx): IStmt {
+    // },
     Block(node: t.Block, ctx: ICtx): t.IExpression {
         return {
             type: 'Apply',

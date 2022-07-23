@@ -61,7 +61,15 @@ export type {
     PRecord,
     Pattern,
 } from './elements/pattern';
-export type { Block, IBlock, ILet, IStmt, Let, Stmt } from './elements/lets';
+export type {
+    Block,
+    IBlock,
+    ILet,
+    IReturn,
+    IStmt,
+    Let,
+    Stmt,
+} from './elements/lets';
 
 export type GlobalRef = {
     type: 'Global';

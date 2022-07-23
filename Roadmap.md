@@ -14,13 +14,21 @@ the effects examples
 and/or a nice error coalescing example.
 
 
+
+
+
+
+
 # Up nExtt
 
 - [x] (a) => a + 2
 	- so we're looking at a given option, so we don't want to just constrain
 		in case this isn't the one
 		So we like ... return a list of ... constraints?
-- [ ] `let` thanks
+- [x] `let` thanks
+	- [x] basic working
+	- [ ] keep track of generated js in fixture output, I'd say yes
+		- hmmm orrr ToIR? like the IR output?
 
 - [x] tvbl as apply target
 - [x] (a, b, *) for open tuples?

@@ -259,12 +259,14 @@ export function runFixture(
             const ast = actx.ToAst.Type(t, actx);
             const cm = printToString(pp.ToPP.Type(ast, pp), 200);
             checked.comments.push([
-                {
-                    ...top.loc,
-                    start: top.loc.end,
-                },
+                { ...top.loc, start: top.loc.end },
                 '// ' + cm, // + ' ' + jsraw + ' */',
             ]);
+            checked.comments.push([
+                { ...top.loc, start: top.loc.end },
+                '/* ' + jsraw + ' */',
+            ]);
+
             // TODO: surface the IDs of things in the UI.
             // eh, and maybe as a suffix on the whole thing?
             // That way we still know if the hashes change (which is maybe useful?)
