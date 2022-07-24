@@ -133,10 +133,12 @@ export type ToplevelExpression = {
 };
 export type ToplevelLet = {
     type: 'ToplevelLet';
-    expr: Expression;
+    elements: Array<{
+        name: string;
+        expr: Expression;
+        loc: Loc;
+    }>;
     loc: Loc;
-    name: string;
-    hash: string | null;
 };
 export type Toplevel = ToplevelExpression | TypeAlias | ToplevelLet;
 export type TypeAlias = {

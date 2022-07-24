@@ -4777,15 +4777,55 @@ export const transformToplevelLet = <Ctx>(
     {
         let changed1 = false;
 
-        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
-        changed1 = changed1 || updatedNode$expr !== node.expr;
+        let updatedNode$elements = node.elements;
+        {
+            let changed2 = false;
+            const arr1 = node.elements.map((updatedNode$elements$item1) => {
+                let result = updatedNode$elements$item1;
+                {
+                    let changed3 = false;
+
+                    const result$expr = transformExpression(
+                        updatedNode$elements$item1.expr,
+                        visitor,
+                        ctx,
+                    );
+                    changed3 =
+                        changed3 ||
+                        result$expr !== updatedNode$elements$item1.expr;
+
+                    const result$loc = transformLoc(
+                        updatedNode$elements$item1.loc,
+                        visitor,
+                        ctx,
+                    );
+                    changed3 =
+                        changed3 ||
+                        result$loc !== updatedNode$elements$item1.loc;
+                    if (changed3) {
+                        result = {
+                            ...result,
+                            expr: result$expr,
+                            loc: result$loc,
+                        };
+                        changed2 = true;
+                    }
+                }
+
+                return result;
+            });
+            if (changed2) {
+                updatedNode$elements = arr1;
+                changed1 = true;
+            }
+        }
 
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
         if (changed1) {
             updatedNode = {
                 ...updatedNode,
-                expr: updatedNode$expr,
+                elements: updatedNode$elements,
                 loc: updatedNode$loc,
             };
             changed0 = true;

@@ -96,6 +96,7 @@ import {
     Star,
     TRight,
     ToplevelLet,
+    LetPair,
     TypeFile,
     TypeToplevel,
     _lineEnd,
@@ -504,6 +505,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | ToplevelLet | [ToplevelLet | null, Ctx];
     ToplevelLetPost?: (node: ToplevelLet, ctx: Ctx) => null | ToplevelLet;
+    LetPair?: (
+        node: LetPair,
+        ctx: Ctx,
+    ) => null | false | LetPair | [LetPair | null, Ctx];
+    LetPairPost?: (node: LetPair, ctx: Ctx) => null | LetPair;
     Pattern?: (
         node: Pattern,
         ctx: Ctx,
@@ -1301,6 +1307,14 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_ToplevelLet?: (
         node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_LetPair?: (
+        node: LetPair,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_LetPair?: (
+        node: LetPair,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_PBlank?: (
@@ -8821,6 +8835,61 @@ export const transformTypeAlias = <Ctx>(
     return node;
 };
 
+export const transformLetPair = <Ctx>(
+    node: LetPair,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): LetPair => {
+    if (!node) {
+        throw new Error('No LetPair provided');
+    }
+
+    const transformed = visitor.LetPair ? visitor.LetPair(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                expr: updatedNode$expr,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.LetPairPost) {
+        const transformed = visitor.LetPairPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformToplevelLet = <Ctx>(
     node: ToplevelLet,
     visitor: Visitor<Ctx>,
@@ -8856,13 +8925,29 @@ export const transformToplevelLet = <Ctx>(
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
 
-        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
-        changed1 = changed1 || updatedNode$expr !== node.expr;
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformLetPair(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
         if (changed1) {
             updatedNode = {
                 ...updatedNode,
                 loc: updatedNode$loc,
-                expr: updatedNode$expr,
+                items: updatedNode$items,
             };
             changed0 = true;
         }
@@ -10908,6 +10993,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'LetPair': {
+            const transformed = visitor.AllTaggedTypes_LetPair
+                ? visitor.AllTaggedTypes_LetPair(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'PBlank': {
             const transformed = visitor.AllTaggedTypes_PBlank
                 ? visitor.AllTaggedTypes_PBlank(node, ctx)
@@ -11788,6 +11892,12 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'LetPair': {
+            updatedNode = transformLetPair(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'PBlank': {
             updatedNode = transformPBlank(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -12426,6 +12536,16 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'ToplevelLet': {
             const transformed = visitor.AllTaggedTypesPost_ToplevelLet
                 ? visitor.AllTaggedTypesPost_ToplevelLet(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'LetPair': {
+            const transformed = visitor.AllTaggedTypesPost_LetPair
+                ? visitor.AllTaggedTypesPost_LetPair(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

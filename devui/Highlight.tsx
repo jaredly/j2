@@ -246,13 +246,15 @@ const advance = (
 visitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
     ctx.push({ loc: node.loc, type: 'ToplevelLet' });
     const { start, end } = node.loc;
-    ctx.push({
-        loc: {
-            ...node.loc,
-            start: advance(start, 4),
-            end: advance(start, 4 + node.name.length),
-        },
-        type: 'LetName',
+    node.items.forEach((item) => {
+        ctx.push({
+            loc: {
+                ...node.loc,
+                start: advance(start, 4),
+                end: advance(start, 4 + item.name.length),
+            },
+            type: 'LetName',
+        });
     });
     return null;
 };

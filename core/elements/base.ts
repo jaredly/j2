@@ -107,6 +107,9 @@ export const fileToTast = (
         if (top.type === 'TypeAlias') {
             ctx = ctx.withTypes(top.elements);
         }
+        if (top.type === 'ToplevelLet') {
+            // const hash = hash
+        }
         if (!analyze) {
             return top;
         }
@@ -189,10 +192,12 @@ export const ToTast = {
     ToplevelLet(top: p.ToplevelLet, ctx: Ctx): t.ToplevelLet {
         return {
             type: 'ToplevelLet',
-            expr: ctx.ToTast.Expression(top.expr, ctx),
+            elements: top.items.map((item) => ({
+                expr: ctx.ToTast.Expression(item.expr, ctx),
+                name: item.name,
+                loc: item.loc,
+            })),
             loc: top.loc,
-            hash: top.hash,
-            name: top.name,
         };
     },
     TypeToplevel(top: p.TypeAlias | p.Type, ctx: Ctx): t.Type | t.TypeAlias {
@@ -327,13 +332,19 @@ export const ToPP = {
         }
         if (top.type === 'ToplevelLet') {
             return pp.items(
-                [
-                    pp.text('let ', top.loc),
-                    pp.text(top.name, top.loc),
-                    pp.text(' = ', top.loc),
-                    ctx.ToPP.Expression(top.expr, ctx),
-                ],
+                top.items.map((item, i) =>
+                    pp.items(
+                        [
+                            pp.text(i > 0 ? 'and ' : 'let ', item.loc),
+                            pp.text(item.name, item.loc),
+                            pp.text(' = ', item.loc),
+                            ctx.ToPP.Expression(item.expr, ctx),
+                        ],
+                        item.loc,
+                    ),
+                ),
                 top.loc,
+                'always',
             );
         }
         return ctx.ToPP.Expression(top, ctx);

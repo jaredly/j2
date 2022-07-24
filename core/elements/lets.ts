@@ -15,7 +15,8 @@ Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)* _ ';'?
 Stmt = Let / Expression
 Let = "let" _ pat:Pattern _ "=" _ expr:Expression
 
-ToplevelLet = "let" _ name:$IdText hash:($HashRef)? _ "=" _ expr:Expression
+ToplevelLet = "let" _ first:LetPair rest:(__ "and" __ LetPair)*
+LetPair = name:$IdText _ "=" _ expr:Expression
 `;
 
 export type Block = {
@@ -102,9 +103,12 @@ export const ToAst = {
     ToplevelLet(top: t.ToplevelLet, ctx: TACtx): p.ToplevelLet {
         return {
             type: 'ToplevelLet',
-            name: top.name,
-            expr: ctx.ToAst.Expression(top.expr, ctx),
-            hash: top.hash,
+            items: top.elements.map((el) => ({
+                type: 'LetPair',
+                name: el.name,
+                expr: ctx.ToAst.Expression(el.expr, ctx),
+                loc: el.loc,
+            })),
             loc: top.loc,
         };
     },

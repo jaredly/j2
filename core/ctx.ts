@@ -6,7 +6,7 @@ import { TVar } from './elements/type-vbls';
 import { Loc, parseType } from './grammar/base.parser';
 import { extract, Id, idsEqual, toId } from './ids';
 import { resolveAnalyzeType } from './resolveAnalyzeType';
-import { transformType } from './transform-tast';
+import { transformExpression, transformType } from './transform-tast';
 import {
     Expression,
     GlobalRef,
@@ -529,6 +529,11 @@ export const newContext = (): FullContext => {
             return this[opaque].constraints[id];
         },
 
+        // withExprs(exprs) {
+        //     const defns = exprs.map(t => transformType)
+        //     const hash = hashExprs(exprs)
+        // }
+
         withTypes(types) {
             const defns = types.map((m) =>
                 transformType(m.type, locClearVisitor, null),
@@ -641,6 +646,12 @@ export const hashType = (type: Type): string => {
     return hashObject(serial(type));
 };
 export const hashTypes = (t: Type[]): string => hashObject(t.map(hashType));
+export const hashExpr = (t: Expression) =>
+    hashObject(serial(transformExpression(t, locClearVisitor, null)));
+export const hashExprs = (t: Expression[]) =>
+    hashObject(
+        serial(t.map((t) => transformExpression(t, locClearVisitor, null))),
+    );
 
 export const noloc: Loc = {
     start: { line: 0, column: 0, offset: -1 },

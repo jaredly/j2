@@ -155,7 +155,8 @@ Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)* _ ';'?
 Stmt = Let / Expression
 Let = "let" _ pat:Pattern _ "=" _ expr:Expression
 
-ToplevelLet = "let" _ name:$IdText hash:($HashRef)? _ "=" _ expr:Expression
+ToplevelLet = "let" _ first:LetPair rest:(__ "and" __ LetPair)*
+LetPair = name:$IdText _ "=" _ expr:Expression
 
 
 // pattern.ts
