@@ -13,6 +13,9 @@ export type Ctx = {
     withLocalTypes: (locals: { sym: t.Sym; bound: t.Type | null }[]) => Ctx;
     withAliases: (aliases: { [readableName: string]: string }) => Ctx;
     withTypes: (types: { name: string; type: t.Type }[]) => Ctx;
+    withValues: (
+        types: { name: string; expr: t.Expression; loc: t.Loc }[],
+    ) => Ctx;
     toplevelConfig: (top: Toplevel | null) => Ctx;
     ToTast: ToTast;
 } & ACtx;

@@ -17,7 +17,7 @@ export type Ctx = {
     recordSym: (sym: t.Sym, kind: 'value' | 'type') => void;
     aliases: { [key: string]: string };
     backAliases: { [key: string]: string };
-    withToplevel: (t: Toplevel) => Ctx;
+    withToplevel: (t: Toplevel | null) => Ctx;
 
     reverse: {
         decorators: { [key: string]: string };
@@ -84,10 +84,19 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
         reverse,
 
         withToplevel(top) {
+            if (!top) {
+                return this;
+            }
             const reverse = { ...this.reverse };
             if (top.type === 'Type') {
                 top.items.forEach((item, i) => {
                     reverse.types[t.refHash({ type: 'Recur', idx: i })] =
+                        item.name;
+                });
+            }
+            if (top.type === 'Expr') {
+                top.items.forEach((item, i) => {
+                    reverse.values[t.refHash({ type: 'Recur', idx: i })] =
                         item.name;
                 });
             }

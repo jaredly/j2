@@ -529,10 +529,40 @@ export const newContext = (): FullContext => {
             return this[opaque].constraints[id];
         },
 
-        // withExprs(exprs) {
-        //     const defns = exprs.map(t => transformType)
-        //     const hash = hashExprs(exprs)
-        // }
+        withValues(exprs) {
+            const defns = exprs.map((t) =>
+                transformExpression(t.expr, locClearVisitor, null),
+            );
+            const hash = hashExprs(defns);
+            const ctx = { ...this[opaque] };
+            ctx.values = {
+                ...ctx.values,
+                hashed: {
+                    ...ctx.values.hashed,
+                    [hash]: exprs.map(({ name, expr }) => ({
+                        type: 'user',
+                        typ: this.getType(expr)!,
+                        expr,
+                    })),
+                },
+                names: {
+                    ...ctx.values.names,
+                },
+            };
+            exprs.forEach(({ name }, i) => {
+                if (!ctx.values.names[name]) {
+                    ctx.values.names[name] = [];
+                }
+                ctx.values.names[name].push({
+                    type: 'Global',
+                    id: toId(hash, i),
+                });
+            });
+            if (ctx.toplevel?.type === 'Expr') {
+                ctx.toplevel.hash = hash;
+            }
+            return { ...this, [opaque]: ctx };
+        },
 
         withTypes(types) {
             const defns = types.map((m) =>
@@ -648,10 +678,7 @@ export const hashType = (type: Type): string => {
 export const hashTypes = (t: Type[]): string => hashObject(t.map(hashType));
 export const hashExpr = (t: Expression) =>
     hashObject(serial(transformExpression(t, locClearVisitor, null)));
-export const hashExprs = (t: Expression[]) =>
-    hashObject(
-        serial(t.map((t) => transformExpression(t, locClearVisitor, null))),
-    );
+export const hashExprs = (t: Expression[]) => hashObject(serial(t));
 
 export const noloc: Loc = {
     start: { line: 0, column: 0, offset: -1 },

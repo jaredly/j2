@@ -30,18 +30,30 @@ AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 `;
 
-export const typeToplevelT = (t: t.TypeAlias, ctx: ACtx): Toplevel => {
-    return {
-        type: 'Type',
-        items: t.elements.map((t) => {
-            const kind = determineKindT(t.type, ctx);
-            if (t.type.type === 'TVars') {
-                const args = t.type.args;
-                return { name: t.name, args, kind };
-            }
-            return { name: t.name, args: [], kind };
-        }),
-    };
+export const typeToplevelT = (t: t.Toplevel, ctx: ACtx): Toplevel | null => {
+    if (t.type === 'TypeAlias') {
+        return {
+            type: 'Type',
+            items: t.elements.map((t) => {
+                const kind = determineKindT(t.type, ctx);
+                if (t.type.type === 'TVars') {
+                    const args = t.type.args;
+                    return { name: t.name, args, kind };
+                }
+                return { name: t.name, args: [], kind };
+            }),
+        };
+    }
+    if (t.type === 'ToplevelLet') {
+        return {
+            type: 'Expr',
+            items: t.elements.map((t) => ({
+                name: t.name,
+                type: ctx.getType(t.expr) ?? { type: 'TBlank', loc: t.loc },
+            })),
+        };
+    }
+    return null;
 };
 
 export const typeToplevel = (t: p.TypeAlias, ctx: Ctx): Toplevel => {
@@ -106,9 +118,8 @@ export const fileToTast = (
         let top = ctx.ToTast.Toplevel(t, ctx);
         if (top.type === 'TypeAlias') {
             ctx = ctx.withTypes(top.elements);
-        }
-        if (top.type === 'ToplevelLet') {
-            // const hash = hash
+        } else if (top.type === 'ToplevelLet') {
+            ctx = ctx.withValues(top.elements);
         }
         if (!analyze) {
             return top;
@@ -266,10 +277,7 @@ export const ToAst = {
         return {
             type,
             toplevels: toplevels.map((t) => {
-                let inner = ctx;
-                if (t.type === 'TypeAlias') {
-                    inner = ctx.withToplevel(typeToplevelT(t, ctx.actx));
-                }
+                let inner = ctx.withToplevel(typeToplevelT(t, ctx.actx));
                 return inner.ToAst.Toplevel(t, inner);
             }),
             loc,
