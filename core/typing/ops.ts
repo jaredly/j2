@@ -102,10 +102,15 @@ export const numOps = (
     let num = 0;
     const mm = { upperLimit: true, lowerLimit: true };
     // let ismax = false;
-    const elements = [{ op: '+', right: expected.left }].concat(
+    const elements = [
+        {
+            op: '+',
+            right: ctx.resolveRefsAndApplies(expected.left) ?? expected.left,
+        },
+    ].concat(
         expected.right.map(({ top, right }) => ({
             op: top,
-            right,
+            right: ctx.resolveRefsAndApplies(right) ?? right,
         })),
     );
     let kind: Number['kind'] | null = null;

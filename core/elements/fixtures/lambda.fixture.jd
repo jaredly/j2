@@ -116,4 +116,7 @@ alias +=h1b711bccf9aef2b0a1f3a7595ee93b32b87a881e float=h1c9cc9450fe2e869a48abaa
 3 == ((v) => v + 1)(2);
 
 --[output:expected]--
-// hello
+alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c ===h0e26cba9974393f0886bf43a5876c4132b1e69bb bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150
+3 == ((v#[0]) => v#[0] + 1)(2)
+// bool
+/* 3 == (v => v + 1)(2) */

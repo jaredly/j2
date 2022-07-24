@@ -594,6 +594,7 @@ export const autoTypeApply = (
     ctx: Ctx,
 ): null | { apply: t.Apply; constraints: { [key: number]: t.Type } } => {
     // console.log(vars, args, node.args);
+    // console.log(vars, args, node.args);
     const mapping = inferVarsFromArgs(vars, args);
     if (!mapping) {
         return null;
