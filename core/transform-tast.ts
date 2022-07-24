@@ -48,6 +48,7 @@ import {
     Let,
     DecoratedExpression,
     TypeAlias,
+    ToplevelLet,
     TypeToplevel,
     TypeFile,
     IExpression,
@@ -108,6 +109,11 @@ export type Visitor<Ctx> = {
         node: ToplevelExpression,
         ctx: Ctx,
     ) => null | ToplevelExpression;
+    ToplevelLet?: (
+        node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | false | ToplevelLet | [ToplevelLet | null, Ctx];
+    ToplevelLetPost?: (node: ToplevelLet, ctx: Ctx) => null | ToplevelLet;
     Toplevel?: (
         node: Toplevel,
         ctx: Ctx,
@@ -395,6 +401,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Toplevel | [Toplevel | null, Ctx];
     ToplevelPost_TypeAlias?: (node: TypeAlias, ctx: Ctx) => null | Toplevel;
+    Toplevel_ToplevelLet?: (
+        node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | false | Toplevel | [Toplevel | null, Ctx];
+    ToplevelPost_ToplevelLet?: (node: ToplevelLet, ctx: Ctx) => null | Toplevel;
     Expression_Ref?: (
         node: Ref,
         ctx: Ctx,
@@ -4734,6 +4745,63 @@ export const transformTypeAlias = <Ctx>(
     return node;
 };
 
+export const transformToplevelLet = <Ctx>(
+    node: ToplevelLet,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ToplevelLet => {
+    if (!node) {
+        throw new Error('No ToplevelLet provided');
+    }
+
+    const transformed = visitor.ToplevelLet
+        ? visitor.ToplevelLet(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                expr: updatedNode$expr,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ToplevelLetPost) {
+        const transformed = visitor.ToplevelLetPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformToplevel = <Ctx>(
     node: Toplevel,
     visitor: Visitor<Ctx>,
@@ -4798,6 +4866,25 @@ export const transformToplevel = <Ctx>(
             }
             break;
         }
+
+        case 'ToplevelLet': {
+            const transformed = visitor.Toplevel_ToplevelLet
+                ? visitor.Toplevel_ToplevelLet(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -4809,10 +4896,16 @@ export const transformToplevel = <Ctx>(
             break;
         }
 
+        case 'TypeAlias': {
+            updatedNode = transformTypeAlias(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformTypeAlias(node, visitor, ctx);
+            const updatedNode$0node = transformToplevelLet(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -4832,6 +4925,16 @@ export const transformToplevel = <Ctx>(
         case 'TypeAlias': {
             const transformed = visitor.ToplevelPost_TypeAlias
                 ? visitor.ToplevelPost_TypeAlias(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ToplevelLet': {
+            const transformed = visitor.ToplevelPost_ToplevelLet
+                ? visitor.ToplevelPost_ToplevelLet(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

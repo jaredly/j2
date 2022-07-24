@@ -14,6 +14,8 @@ Block = "{" _ stmts:Stmts? _ "}"
 Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)* _ ';'?
 Stmt = Let / Expression
 Let = "let" _ pat:Pattern _ "=" _ expr:Expression
+
+ToplevelLet = "let" _ name:$IdText hash:($HashRef)? _ "=" _ expr:Expression
 `;
 
 export type Block = {
@@ -95,6 +97,15 @@ export const ToAst = {
             pat: ctx.ToAst.Pattern(node.pat, ctx),
             expr: ctx.ToAst.Expression(node.expr, ctx),
             loc: node.loc,
+        };
+    },
+    ToplevelLet(top: t.ToplevelLet, ctx: TACtx): p.ToplevelLet {
+        return {
+            type: 'ToplevelLet',
+            name: top.name,
+            expr: ctx.ToAst.Expression(top.expr, ctx),
+            hash: top.hash,
+            loc: top.loc,
         };
     },
     // Apply({ type, target, args, loc }: t.Apply, ctx: TACtx): p.Apply {

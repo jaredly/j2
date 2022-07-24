@@ -12,7 +12,7 @@ _lineEnd = '\n' / _EOF
 
 _EOF = !.
 
-Toplevel = TypeAlias / Expression
+Toplevel = TypeAlias / ToplevelLet / Expression
 TypeToplevel = TypeAlias / Type
 
 Expression = Lambda / BinOp
@@ -176,6 +176,8 @@ export const ToTast = {
     Toplevel(top: p.Toplevel, ctx: Ctx): t.Toplevel {
         if (top.type === 'TypeAlias') {
             return ctx.ToTast.TypeAlias(top, ctx);
+        } else if (top.type === 'ToplevelLet') {
+            return ctx.ToTast.ToplevelLet(top, ctx);
         } else {
             return {
                 type: 'ToplevelExpression',
@@ -183,6 +185,15 @@ export const ToTast = {
                 loc: top.loc,
             };
         }
+    },
+    ToplevelLet(top: p.ToplevelLet, ctx: Ctx): t.ToplevelLet {
+        return {
+            type: 'ToplevelLet',
+            expr: ctx.ToTast.Expression(top.expr, ctx),
+            loc: top.loc,
+            hash: top.hash,
+            name: top.name,
+        };
     },
     TypeToplevel(top: p.TypeAlias | p.Type, ctx: Ctx): t.Type | t.TypeAlias {
         if (top.type === 'TypeAlias') {
@@ -314,8 +325,20 @@ export const ToPP = {
         if (top.type === 'TypeAlias') {
             return ctx.ToPP.TypeAlias(top, ctx);
         }
+        if (top.type === 'ToplevelLet') {
+            return pp.items(
+                [
+                    pp.text('let ', top.loc),
+                    pp.text(top.name, top.loc),
+                    pp.text(' = ', top.loc),
+                    ctx.ToPP.Expression(top.expr, ctx),
+                ],
+                top.loc,
+            );
+        }
         return ctx.ToPP.Expression(top, ctx);
     },
+    // ToplevelLet()
     TypeFile: (file: p.TypeFile, ctx: PCtx): pp.PP => {
         return pp.items(
             file.toplevels.map((t) =>

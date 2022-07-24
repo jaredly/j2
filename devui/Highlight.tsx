@@ -12,18 +12,19 @@ import {
     Visitor,
 } from '../core/transform-ast';
 import * as tt from '../core/transform-tast';
-import { File, Loc, refHash, Type } from '../core/typed-ast';
+import { File, Loc, refHash, ToplevelLet, Type } from '../core/typed-ast';
 import { getType } from '../core/typing/getType';
 import { printCtx } from '../core/typing/to-ast';
 import { markUpTree, Tree as TreeT } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
 import { getLocals, Locals } from '../core/elements/pattern';
 
-export type Colorable = keyof Visitor<null> | 'Error' | 'Success';
+export type Colorable = keyof Visitor<null> | 'Error' | 'Success' | 'LetName';
 
 export const colors: {
     [key in Colorable]?: string;
 } = {
+    LetName: '#00f000',
     TagDecl: '#33ff4e',
     TRef: 'green',
     String: '#afa',
@@ -225,13 +226,36 @@ export const Highlight = ({
     );
 };
 
-const visitor: Visitor<Array<{ loc: Loc; type: string }>> = {};
+const visitor: Visitor<Array<{ loc: Loc; type: Colorable }>> = {};
 AllTaggedTypeNames.forEach((name) => {
     visitor[name] = (node: any, ctx): any => {
         ctx.push({ loc: node.loc, type: name });
         return null;
     };
 });
+const advance = (
+    { offset, line, column }: Loc['start'],
+    v: number,
+): Loc['start'] => {
+    return {
+        offset: offset + v,
+        column: column + v,
+        line,
+    };
+};
+visitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
+    ctx.push({ loc: node.loc, type: 'ToplevelLet' });
+    const { start, end } = node.loc;
+    ctx.push({
+        loc: {
+            ...node.loc,
+            start: advance(start, 4),
+            end: advance(start, 4 + node.name.length),
+        },
+        type: 'LetName',
+    });
+    return null;
+};
 
 export const Tree = ({
     tree,

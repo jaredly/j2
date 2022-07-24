@@ -35,7 +35,7 @@ _lineEnd = '\n' / _EOF
 
 _EOF = !.
 
-Toplevel = TypeAlias / Expression
+Toplevel = TypeAlias / ToplevelLet / Expression
 TypeToplevel = TypeAlias / Type
 
 Expression = Lambda / BinOp
@@ -154,6 +154,8 @@ Block = "{" _ stmts:Stmts? _ "}"
 Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)* _ ';'?
 Stmt = Let / Expression
 Let = "let" _ pat:Pattern _ "=" _ expr:Expression
+
+ToplevelLet = "let" _ name:$IdText hash:($HashRef)? _ "=" _ expr:Expression
 
 
 // pattern.ts

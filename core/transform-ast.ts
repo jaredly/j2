@@ -95,6 +95,7 @@ import {
     TRecordKeyValue,
     Star,
     TRight,
+    ToplevelLet,
     TypeFile,
     TypeToplevel,
     _lineEnd,
@@ -498,6 +499,11 @@ export type Visitor<Ctx> = {
     StmtPost?: (node: Stmt, ctx: Ctx) => null | Stmt;
     Let?: (node: Let, ctx: Ctx) => null | false | Let | [Let | null, Ctx];
     LetPost?: (node: Let, ctx: Ctx) => null | Let;
+    ToplevelLet?: (
+        node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | false | ToplevelLet | [ToplevelLet | null, Ctx];
+    ToplevelLetPost?: (node: ToplevelLet, ctx: Ctx) => null | ToplevelLet;
     Pattern?: (
         node: Pattern,
         ctx: Ctx,
@@ -716,10 +722,10 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     Apply_Apply?: (
-        node: Apply,
+        node: Apply_inner,
         ctx: Ctx,
     ) => null | false | Apply | [Apply | null, Ctx];
-    ApplyPost_Apply?: (node: Apply, ctx: Ctx) => null | Apply;
+    ApplyPost_Apply?: (node: Apply_inner, ctx: Ctx) => null | Apply;
     Suffix_CallSuffix?: (
         node: CallSuffix,
         ctx: Ctx,
@@ -738,6 +744,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Toplevel | [Toplevel | null, Ctx];
     ToplevelPost_TypeAlias?: (node: TypeAlias, ctx: Ctx) => null | Toplevel;
+    Toplevel_ToplevelLet?: (
+        node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | false | Toplevel | [Toplevel | null, Ctx];
+    ToplevelPost_ToplevelLet?: (node: ToplevelLet, ctx: Ctx) => null | Toplevel;
     TypeToplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
@@ -800,21 +811,24 @@ export type Visitor<Ctx> = {
     ) => null | false | Atom | [Atom | null, Ctx];
     AtomPost_Block?: (node: Block, ctx: Ctx) => null | Atom;
     BinOp_BinOp?: (
-        node: BinOp,
+        node: BinOp_inner,
         ctx: Ctx,
     ) => null | false | BinOp | [BinOp | null, Ctx];
-    BinOpPost_BinOp?: (node: BinOp, ctx: Ctx) => null | BinOp;
+    BinOpPost_BinOp?: (node: BinOp_inner, ctx: Ctx) => null | BinOp;
     WithUnary_WithUnary?: (
-        node: WithUnary,
+        node: WithUnary_inner,
         ctx: Ctx,
     ) => null | false | WithUnary | [WithUnary | null, Ctx];
-    WithUnaryPost_WithUnary?: (node: WithUnary, ctx: Ctx) => null | WithUnary;
+    WithUnaryPost_WithUnary?: (
+        node: WithUnary_inner,
+        ctx: Ctx,
+    ) => null | WithUnary;
     DecoratedExpression_DecoratedExpression?: (
-        node: DecoratedExpression,
+        node: DecoratedExpression_inner,
         ctx: Ctx,
     ) => null | false | DecoratedExpression | [DecoratedExpression | null, Ctx];
     DecoratedExpressionPost_DecoratedExpression?: (
-        node: DecoratedExpression,
+        node: DecoratedExpression_inner,
         ctx: Ctx,
     ) => null | DecoratedExpression;
     DecoratorArg_DecType?: (
@@ -905,10 +919,10 @@ export type Visitor<Ctx> = {
     ) => null | false | TRecordItem | [TRecordItem | null, Ctx];
     TRecordItemPost_Star?: (node: Star, ctx: Ctx) => null | TRecordItem;
     TApply_TApply?: (
-        node: TApply,
+        node: TApply_inner,
         ctx: Ctx,
     ) => null | false | TApply | [TApply | null, Ctx];
-    TApplyPost_TApply?: (node: TApply, ctx: Ctx) => null | TApply;
+    TApplyPost_TApply?: (node: TApply_inner, ctx: Ctx) => null | TApply;
     TAtom_TBlank?: (
         node: TBlank,
         ctx: Ctx,
@@ -955,10 +969,10 @@ export type Visitor<Ctx> = {
     ) => null | false | TAtom | [TAtom | null, Ctx];
     TAtomPost_TRecord?: (node: TRecord, ctx: Ctx) => null | TAtom;
     TOps_TOps?: (
-        node: TOps,
+        node: TOps_inner,
         ctx: Ctx,
     ) => null | false | TOps | [TOps | null, Ctx];
-    TOpsPost_TOps?: (node: TOps, ctx: Ctx) => null | TOps;
+    TOpsPost_TOps?: (node: TOps_inner, ctx: Ctx) => null | TOps;
     TOpInner_TDecorated?: (
         node: TDecorated,
         ctx: Ctx,
@@ -978,10 +992,13 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_Apply?: (
-        node: Apply,
+        node: Apply_inner,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypesPost_Apply?: (node: Apply, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypesPost_Apply?: (
+        node: Apply_inner,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_CallSuffix?: (
         node: CallSuffix,
         ctx: Ctx,
@@ -1015,10 +1032,13 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_BinOp?: (
-        node: BinOp,
+        node: BinOp_inner,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypesPost_BinOp?: (node: BinOp, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypesPost_BinOp?: (
+        node: BinOp_inner,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_BinOpRight?: (
         node: BinOpRight,
         ctx: Ctx,
@@ -1028,11 +1048,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_WithUnary?: (
-        node: WithUnary,
+        node: WithUnary_inner,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_WithUnary?: (
-        node: WithUnary,
+        node: WithUnary_inner,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_UnaryOpWithHash?: (
@@ -1108,11 +1128,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_DecoratedExpression?: (
-        node: DecoratedExpression,
+        node: DecoratedExpression_inner,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_DecoratedExpression?: (
-        node: DecoratedExpression,
+        node: DecoratedExpression_inner,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_Decorator?: (
@@ -1275,6 +1295,14 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_Let?: (node: Let, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_ToplevelLet?: (
+        node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_ToplevelLet?: (
+        node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_PBlank?: (
         node: PBlank,
         ctx: Ctx,
@@ -1398,11 +1426,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_TApply?: (
-        node: TApply,
+        node: TApply_inner,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_TApply?: (
-        node: TApply,
+        node: TApply_inner,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_TComma?: (
@@ -1445,10 +1473,13 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_TRef?: (node: TRef, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TOps?: (
-        node: TOps,
+        node: TOps_inner,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypesPost_TOps?: (node: TOps, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypesPost_TOps?: (
+        node: TOps_inner,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRight?: (
         node: TRight,
         ctx: Ctx,
@@ -8790,6 +8821,63 @@ export const transformTypeAlias = <Ctx>(
     return node;
 };
 
+export const transformToplevelLet = <Ctx>(
+    node: ToplevelLet,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ToplevelLet => {
+    if (!node) {
+        throw new Error('No ToplevelLet provided');
+    }
+
+    const transformed = visitor.ToplevelLet
+        ? visitor.ToplevelLet(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                expr: updatedNode$expr,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ToplevelLetPost) {
+        const transformed = visitor.ToplevelLetPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformToplevel = <Ctx>(
     node: Toplevel,
     visitor: Visitor<Ctx>,
@@ -8835,6 +8923,25 @@ export const transformToplevel = <Ctx>(
             }
             break;
         }
+
+        case 'ToplevelLet': {
+            const transformed = visitor.Toplevel_ToplevelLet
+                ? visitor.Toplevel_ToplevelLet(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -8842,6 +8949,12 @@ export const transformToplevel = <Ctx>(
     switch (node.type) {
         case 'TypeAlias': {
             updatedNode = transformTypeAlias(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'ToplevelLet': {
+            updatedNode = transformToplevelLet(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -8859,6 +8972,16 @@ export const transformToplevel = <Ctx>(
         case 'TypeAlias': {
             const transformed = visitor.ToplevelPost_TypeAlias
                 ? visitor.ToplevelPost_TypeAlias(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ToplevelLet': {
+            const transformed = visitor.ToplevelPost_ToplevelLet
+                ? visitor.ToplevelPost_ToplevelLet(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -10766,6 +10889,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'ToplevelLet': {
+            const transformed = visitor.AllTaggedTypes_ToplevelLet
+                ? visitor.AllTaggedTypes_ToplevelLet(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'PBlank': {
             const transformed = visitor.AllTaggedTypes_PBlank
                 ? visitor.AllTaggedTypes_PBlank(node, ctx)
@@ -11640,6 +11782,12 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'ToplevelLet': {
+            updatedNode = transformToplevelLet(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'PBlank': {
             updatedNode = transformPBlank(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -12268,6 +12416,16 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'Let': {
             const transformed = visitor.AllTaggedTypesPost_Let
                 ? visitor.AllTaggedTypesPost_Let(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ToplevelLet': {
+            const transformed = visitor.AllTaggedTypesPost_ToplevelLet
+                ? visitor.AllTaggedTypesPost_ToplevelLet(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
