@@ -2,16 +2,53 @@ import * as b from '@babel/types';
 import { ToJS, makeToJS } from './to-js.gen';
 import { Ctx as ACtx } from '../typing/analyze';
 import { FullContext } from '../ctx';
-import { Expression } from '../typed-ast';
+import { Expression, Id } from '../typed-ast';
 import { iCtx } from './ir';
 import generate from '@babel/generator';
+import { idToString } from '../ids';
 
 export type Ctx = {
+    namespaced: boolean;
     ToJS: ToJS;
     actx: ACtx;
+    globalName(id: Id): string;
+    addGlobalName(id: Id, name: string): string;
 };
 
-export const jCtx = (actx: ACtx): Ctx => ({ ToJS: makeToJS(), actx });
+export const jCtx = (actx: ACtx, namespaced = true): Ctx => {
+    const names: { [key: string]: string } = {};
+    const used: { [key: string]: true } = {};
+    return {
+        namespaced,
+        ToJS: makeToJS(),
+        actx,
+        globalName(id) {
+            const key = idToString(id);
+            if (names[key]) {
+                return names[key];
+            }
+            return this.addGlobalName(id, 'unnamed');
+        },
+        addGlobalName(id, name) {
+            const key = idToString(id);
+            if (names[key]) {
+                return names[key];
+            }
+            if (!used[name]) {
+                used[name] = true;
+                return (names[key] = name);
+            }
+            for (let i = 0; i < key.length; i++) {
+                const n = name + '_' + key.slice(0, i);
+                if (!used[n]) {
+                    used[n] = true;
+                    return (names[key] = n);
+                }
+            }
+            throw new Error(`Unable to find unique name for ${key} : ${name}`);
+        },
+    };
+};
 
 export type ExecutionContext = {
     ctx: FullContext;
@@ -21,7 +58,7 @@ export type ExecutionContext = {
     execute(expr: Expression): any;
 };
 
-export const newExecutionContext = (ctx: FullContext) => {
+export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
     return {
         ctx,
         terms: {},

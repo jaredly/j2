@@ -8,7 +8,7 @@ import {
 } from '../../ctx';
 import { removeErrorDecorators, typeToplevel } from '../../elements/base';
 import { parseFile, parseTypeFile } from '../../grammar/base.parser';
-import { idsEqual, idToString } from '../../ids';
+import { idsEqual, idToString, toId } from '../../ids';
 import { iCtx } from '../../ir/ir';
 import { ExecutionContext, jCtx, newExecutionContext } from '../../ir/to-js';
 import { transformToplevel } from '../../transform-tast';
@@ -42,6 +42,7 @@ readdirSync(base)
                     valueAssertions[key as keyof typeof valueAssertions];
             });
 
+            const jctx = jCtx(ctx);
             const ectx = newExecutionContext(ctx);
 
             ast.toplevels.forEach((t) => {
@@ -69,6 +70,58 @@ readdirSync(base)
                             const v = initVerify();
                             transformToplevel(top, verifyVisitor(v, ctx), ctx);
                             expect(v).toEqual(initVerify());
+                        },
+                    );
+                } else if (t.type === 'ToplevelLet') {
+                    ctx = ctx.toplevelConfig(
+                        typeToplevel(t, ctx),
+                    ) as FullContext;
+                    let top = ctx.ToTast.ToplevelLet(t, ctx);
+                    top = transformToplevel(
+                        top,
+                        removeErrorDecorators(ctx),
+                        null,
+                    ) as t.ToplevelLet;
+                    top = analyzeTop(top, ctx) as t.ToplevelLet;
+                    const { hash, ctx: nctx } = ctx.withValues(top.elements);
+                    jctx.actx = ctx = nctx as FullContext;
+
+                    const ictx = iCtx();
+
+                    const raws = top.elements.map((el) => {
+                        const ir = ictx.ToIR.BlockSt(
+                            {
+                                type: 'Block',
+                                stmts: [el.expr],
+                                loc: el.expr.loc,
+                            },
+                            ictx,
+                        );
+                        const js = jctx.ToJS.Block(ir, jctx);
+                        return generate(js).code;
+                    });
+
+                    it(
+                        text.slice(t.loc.start.offset, t.loc.end.offset) +
+                            ` ${file}:${t.loc.start.line} - should be valid`,
+                        () => {
+                            const v = initVerify();
+                            transformToplevel(top, verifyVisitor(v, ctx), ctx);
+                            expect(v).toEqual(initVerify());
+
+                            raws.forEach((raw, i) => {
+                                const name = jctx.globalName(toId(hash, i));
+                                let res;
+                                try {
+                                    const f = new Function('$terms', raw);
+                                    res = f(ectx.terms);
+                                } catch (err) {
+                                    throw new Error(raw, {
+                                        cause: err as Error,
+                                    });
+                                }
+                                ectx.terms[name] = res;
+                            });
                         },
                     );
                 } else {
@@ -99,7 +152,8 @@ readdirSync(base)
                         },
                         ictx,
                     );
-                    const jctx = jCtx(ctx);
+                    // const jctx = jCtx(ctx);
+                    jctx.actx = ctx;
                     const js = jctx.ToJS.Block(ir, jctx);
                     const jsraw = generate(js).code;
 
@@ -146,16 +200,22 @@ readdirSync(base)
                         //     const expected = expr.args[0];
                         //     const actual = expr.args[1];
                     } else if (ctx.isBuiltinType(ctx.getType(expr)!, 'bool')) {
-                        let res;
-                        try {
-                            const f = new Function('$terms', jsraw);
-                            res = f(ectx.terms);
-                        } catch (err) {
-                            throw new Error(jsraw, {
-                                cause: err as Error,
-                            });
-                        }
-                        expect(res).toBe(true);
+                        it(
+                            text.slice(t.loc.start.offset, t.loc.end.offset) +
+                                ` ${file}:${t.loc.start.line} - should be true`,
+                            () => {
+                                let res;
+                                try {
+                                    const f = new Function('$terms', jsraw);
+                                    res = f(ectx.terms);
+                                } catch (err) {
+                                    throw new Error(jsraw, {
+                                        cause: err as Error,
+                                    });
+                                }
+                                expect(res).toBe(true);
+                            },
+                        );
                     } else {
                         throw new Error('Not decorated?' + expr.type);
                     }

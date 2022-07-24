@@ -21,6 +21,8 @@ or probably just tests
 
 - [x] make the tests, make them work
 - [ ] toplevel let! gotta have it folks, for the tests
+	- [ ] jctx addName, my jctx needs to persist, and know
+		about toplevel, and such.
 - [ ] if/else comes next
 - [ ] then recursive functions pls
 

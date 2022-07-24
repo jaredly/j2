@@ -56,20 +56,35 @@ export const typeToplevelT = (t: t.Toplevel, ctx: ACtx): Toplevel | null => {
     return null;
 };
 
-export const typeToplevel = (t: p.TypeAlias, ctx: Ctx): Toplevel => {
-    return {
-        type: 'Type',
-        items: t.items.map((t) => {
-            const kind = determineKind(t.typ, ctx);
-            if (t.typ.type === 'TVars') {
-                const args = t.typ.args.items.map((arg) =>
-                    ctx.ToTast[arg.type](arg, ctx),
-                );
-                return { name: t.name, args, kind };
-            }
-            return { name: t.name, args: [], kind };
-        }),
-    };
+export const typeToplevel = (
+    t: p.TypeAlias | p.ToplevelLet,
+    ctx: Ctx,
+): Toplevel => {
+    if (t.type === 'TypeAlias') {
+        return {
+            type: 'Type',
+            items: t.items.map((t) => {
+                const kind = determineKind(t.typ, ctx);
+                if (t.typ.type === 'TVars') {
+                    const args = t.typ.args.items.map((arg) =>
+                        ctx.ToTast[arg.type](arg, ctx),
+                    );
+                    return { name: t.name, args, kind };
+                }
+                return { name: t.name, args: [], kind };
+            }),
+        };
+    } else {
+        return {
+            type: 'Expr',
+            items: t.items.map((t) => {
+                return {
+                    name: t.name,
+                    type: { type: 'TBlank', loc: t.loc },
+                };
+            }),
+        };
+    }
 };
 
 export const typeFileToTast = (
@@ -119,7 +134,8 @@ export const fileToTast = (
         if (top.type === 'TypeAlias') {
             ctx = ctx.withTypes(top.elements);
         } else if (top.type === 'ToplevelLet') {
-            ctx = ctx.withValues(top.elements);
+            const res = ctx.withValues(top.elements);
+            ctx = res.ctx;
         }
         if (!analyze) {
             return top;
@@ -499,13 +515,20 @@ import { FullContext } from '../ctx';
 import { idsEqual } from '../ids';
 import { transformToplevel, Visitor } from '../transform-tast';
 export const ToJS = {
-    Ref(x: t.Ref, ctx: JCtx): b.Identifier {
+    Ref(x: t.Ref, ctx: JCtx): b.Expression {
         if (x.kind.type === 'Global') {
             const name = findBuiltinName(x.kind.id, ctx.actx);
             if (name) {
                 return b.identifier(name);
             } else {
-                return b.identifier('unresolved itsadeal');
+                if (ctx.namespaced) {
+                    return b.memberExpression(
+                        b.identifier('$terms'),
+                        b.identifier(ctx.globalName(x.kind.id)),
+                        false,
+                    );
+                }
+                return b.identifier(ctx.globalName(x.kind.id));
             }
         }
         if (x.kind.type === 'Local') {
@@ -516,7 +539,10 @@ export const ToJS = {
                 return b.identifier(`unresolved sym!`);
             }
         }
-        return b.identifier(t.refHash(x.kind));
+        if (x.kind.type === 'Recur') {
+            return b.identifier(`recur me please`);
+        }
+        return b.identifier(`:unresovled:`);
     },
 };
 
