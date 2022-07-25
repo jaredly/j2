@@ -77,7 +77,7 @@ alias *=hc964b8e32721e8a2764054a069ab98c885f00921 ===h0e26cba9974393f0886bf43a58
   return y * 2;
 })() */
 
-==[New fixture_]==
+==[if else, and enums]==
 --[input]--
 if 1 > 0 {
 `Yes(20)

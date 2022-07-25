@@ -110,7 +110,7 @@ export function OneFixture({
                 }}
             >
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
-                    {titleEdit ? (
+                    {titleEdit != null ? (
                         <Input
                             autoFocus
                             aria-label="Fixture title"
