@@ -15,7 +15,8 @@ NamespacedIdText "identifier" = $IdText (":" IdText)*
 
 JustSym = "#[" [0-9]+ "]"
 RecurHash = "#[r" [0-9]+ "]"
-HashRef = "#[h" [0-9a-zA-Z]+ "]"
+HashRef = "#[" HashRefInner "]"
+HashRefInner = "h" [0-9a-zA-Z]+ 
 ShortRef = "#[:" [0-9a-zA-Z]+ "]"
 BuiltinHash = "#[" ("builtin" / "b") "]"
 UnresolvedHash = "#[" ":unresolved:" "]"
@@ -35,8 +36,12 @@ _lineEnd = '\n' / _EOF
 
 _EOF = !.
 
-Toplevel = TypeAlias / ToplevelLet / Expression
+Toplevel = Aliases / TypeAlias / ToplevelLet / Expression
 TypeToplevel = TypeAlias / Type
+
+Aliases = "alias" items:AliasItem*
+AliasItem = _nonnewline name:$AliasName _nonnewline "=" _nonnewline hash:$HashRefInner
+AliasName = $IdText / $binop
 
 Expression = Lambda / BinOp
 

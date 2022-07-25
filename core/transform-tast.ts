@@ -50,6 +50,7 @@ import {
     DecoratedExpression,
     TypeAlias,
     ToplevelLet,
+    ToplevelAliases,
     TypeToplevel,
     TypeFile,
     IExpression,
@@ -122,6 +123,14 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Toplevel | [Toplevel | null, Ctx];
     ToplevelPost?: (node: Toplevel, ctx: Ctx) => null | Toplevel;
+    ToplevelAliases?: (
+        node: ToplevelAliases,
+        ctx: Ctx,
+    ) => null | false | ToplevelAliases | [ToplevelAliases | null, Ctx];
+    ToplevelAliasesPost?: (
+        node: ToplevelAliases,
+        ctx: Ctx,
+    ) => null | ToplevelAliases;
     TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
@@ -423,6 +432,14 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Toplevel | [Toplevel | null, Ctx];
     ToplevelPost_ToplevelLet?: (node: ToplevelLet, ctx: Ctx) => null | Toplevel;
+    Toplevel_ToplevelAliases?: (
+        node: ToplevelAliases,
+        ctx: Ctx,
+    ) => null | false | Toplevel | [Toplevel | null, Ctx];
+    ToplevelPost_ToplevelAliases?: (
+        node: ToplevelAliases,
+        ctx: Ctx,
+    ) => null | Toplevel;
     Expression_Ref?: (
         node: Ref,
         ctx: Ctx,
@@ -5056,6 +5073,90 @@ export const transformToplevelLet = <Ctx>(
     return node;
 };
 
+export const transformToplevelAliases = <Ctx>(
+    node: ToplevelAliases,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ToplevelAliases => {
+    if (!node) {
+        throw new Error('No ToplevelAliases provided');
+    }
+
+    const transformed = visitor.ToplevelAliases
+        ? visitor.ToplevelAliases(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$aliases = node.aliases;
+        {
+            let changed2 = false;
+            const arr1 = node.aliases.map((updatedNode$aliases$item1) => {
+                let result = updatedNode$aliases$item1;
+                {
+                    let changed3 = false;
+
+                    const result$loc = transformLoc(
+                        updatedNode$aliases$item1.loc,
+                        visitor,
+                        ctx,
+                    );
+                    changed3 =
+                        changed3 ||
+                        result$loc !== updatedNode$aliases$item1.loc;
+                    if (changed3) {
+                        result = { ...result, loc: result$loc };
+                        changed2 = true;
+                    }
+                }
+
+                return result;
+            });
+            if (changed2) {
+                updatedNode$aliases = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                aliases: updatedNode$aliases,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ToplevelAliasesPost) {
+        const transformed = visitor.ToplevelAliasesPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformToplevel = <Ctx>(
     node: Toplevel,
     visitor: Visitor<Ctx>,
@@ -5139,6 +5240,25 @@ export const transformToplevel = <Ctx>(
             }
             break;
         }
+
+        case 'ToplevelAliases': {
+            const transformed = visitor.Toplevel_ToplevelAliases
+                ? visitor.Toplevel_ToplevelAliases(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -5156,10 +5276,20 @@ export const transformToplevel = <Ctx>(
             break;
         }
 
+        case 'ToplevelLet': {
+            updatedNode = transformToplevelLet(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformToplevelLet(node, visitor, ctx);
+            const updatedNode$0node = transformToplevelAliases(
+                node,
+                visitor,
+                ctx,
+            );
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -5189,6 +5319,16 @@ export const transformToplevel = <Ctx>(
         case 'ToplevelLet': {
             const transformed = visitor.ToplevelPost_ToplevelLet
                 ? visitor.ToplevelPost_ToplevelLet(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ToplevelAliases': {
+            const transformed = visitor.ToplevelPost_ToplevelAliases
+                ? visitor.ToplevelPost_ToplevelAliases(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

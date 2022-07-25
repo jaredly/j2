@@ -3,6 +3,8 @@ import {
     Loc,
     File,
     Toplevel,
+    Aliases,
+    AliasItem,
     TypeAlias,
     TypePair,
     Type,
@@ -104,6 +106,7 @@ import {
     TypeToplevel,
     _lineEnd,
     _EOF,
+    AliasName,
     AttrText,
     Binop,
     newline,
@@ -181,6 +184,21 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
     TypeToplevelPost?: (node: TypeToplevel, ctx: Ctx) => null | TypeToplevel;
+    Aliases?: (
+        node: Aliases,
+        ctx: Ctx,
+    ) => null | false | Aliases | [Aliases | null, Ctx];
+    AliasesPost?: (node: Aliases, ctx: Ctx) => null | Aliases;
+    AliasItem?: (
+        node: AliasItem,
+        ctx: Ctx,
+    ) => null | false | AliasItem | [AliasItem | null, Ctx];
+    AliasItemPost?: (node: AliasItem, ctx: Ctx) => null | AliasItem;
+    AliasName?: (
+        node: AliasName,
+        ctx: Ctx,
+    ) => null | false | AliasName | [AliasName | null, Ctx];
+    AliasNamePost?: (node: AliasName, ctx: Ctx) => null | AliasName;
     Expression?: (
         node: Expression,
         ctx: Ctx,
@@ -757,6 +775,11 @@ export type Visitor<Ctx> = {
         node: TypeApplicationSuffix,
         ctx: Ctx,
     ) => null | Suffix;
+    Toplevel_Aliases?: (
+        node: Aliases,
+        ctx: Ctx,
+    ) => null | false | Toplevel | [Toplevel | null, Ctx];
+    ToplevelPost_Aliases?: (node: Aliases, ctx: Ctx) => null | Toplevel;
     Toplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
@@ -1040,6 +1063,22 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_CommaExpr?: (
         node: CommaExpr,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_Aliases?: (
+        node: Aliases,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Aliases?: (
+        node: Aliases,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_AliasItem?: (
+        node: AliasItem,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_AliasItem?: (
+        node: AliasItem,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_Identifier?: (
@@ -1667,6 +1706,125 @@ export const transformSyntaxError = <Ctx>(
     node = updatedNode;
     if (visitor.SyntaxErrorPost) {
         const transformed = visitor.SyntaxErrorPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformAliasItem = <Ctx>(
+    node: AliasItem,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): AliasItem => {
+    if (!node) {
+        throw new Error('No AliasItem provided');
+    }
+
+    const transformed = visitor.AliasItem ? visitor.AliasItem(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.AliasItemPost) {
+        const transformed = visitor.AliasItemPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformAliases = <Ctx>(
+    node: Aliases,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Aliases => {
+    if (!node) {
+        throw new Error('No Aliases provided');
+    }
+
+    const transformed = visitor.Aliases ? visitor.Aliases(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformAliasItem(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.AliasesPost) {
+        const transformed = visitor.AliasesPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -9344,6 +9502,25 @@ export const transformToplevel = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
+        case 'Aliases': {
+            const transformed = visitor.Toplevel_Aliases
+                ? visitor.Toplevel_Aliases(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TypeAlias': {
             const transformed = visitor.Toplevel_TypeAlias
                 ? visitor.Toplevel_TypeAlias(node, ctx)
@@ -9386,6 +9563,12 @@ export const transformToplevel = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
+        case 'Aliases': {
+            updatedNode = transformAliases(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TypeAlias': {
             updatedNode = transformTypeAlias(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -9408,6 +9591,16 @@ export const transformToplevel = <Ctx>(
     }
 
     switch (updatedNode.type) {
+        case 'Aliases': {
+            const transformed = visitor.ToplevelPost_Aliases
+                ? visitor.ToplevelPost_Aliases(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
         case 'TypeAlias': {
             const transformed = visitor.ToplevelPost_TypeAlias
                 ? visitor.ToplevelPost_TypeAlias(updatedNode, ctx)
@@ -9737,6 +9930,43 @@ export const transform_EOF = <Ctx>(
     node = updatedNode;
     if (visitor._EOFPost) {
         const transformed = visitor._EOFPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformAliasName = <Ctx>(
+    node: AliasName,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): AliasName => {
+    if (!node) {
+        throw new Error('No AliasName provided');
+    }
+
+    const transformed = visitor.AliasName ? visitor.AliasName(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.AliasNamePost) {
+        const transformed = visitor.AliasNamePost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -10590,6 +10820,44 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'CommaExpr': {
             const transformed = visitor.AllTaggedTypes_CommaExpr
                 ? visitor.AllTaggedTypes_CommaExpr(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Aliases': {
+            const transformed = visitor.AllTaggedTypes_Aliases
+                ? visitor.AllTaggedTypes_Aliases(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'AliasItem': {
+            const transformed = visitor.AllTaggedTypes_AliasItem
+                ? visitor.AllTaggedTypes_AliasItem(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -12046,6 +12314,18 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'Aliases': {
+            updatedNode = transformAliases(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'AliasItem': {
+            updatedNode = transformAliasItem(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Identifier': {
             updatedNode = transformIdentifier(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -12541,6 +12821,26 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'CommaExpr': {
             const transformed = visitor.AllTaggedTypesPost_CommaExpr
                 ? visitor.AllTaggedTypesPost_CommaExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Aliases': {
+            const transformed = visitor.AllTaggedTypesPost_Aliases
+                ? visitor.AllTaggedTypesPost_Aliases(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'AliasItem': {
+            const transformed = visitor.AllTaggedTypesPost_AliasItem
+                ? visitor.AllTaggedTypesPost_AliasItem(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

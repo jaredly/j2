@@ -12,8 +12,12 @@ _lineEnd = '\n' / _EOF
 
 _EOF = !.
 
-Toplevel = TypeAlias / ToplevelLet / Expression
+Toplevel = Aliases / TypeAlias / ToplevelLet / Expression
 TypeToplevel = TypeAlias / Type
+
+Aliases = "alias" items:AliasItem*
+AliasItem = _nonnewline name:$AliasName _nonnewline "=" _nonnewline hash:$HashRefInner
+AliasName = $IdText / $binop
 
 Expression = Lambda / BinOp
 
@@ -210,6 +214,16 @@ export const ToTast = {
             return ctx.ToTast.TypeAlias(top, ctx);
         } else if (top.type === 'ToplevelLet') {
             return ctx.ToTast.ToplevelLet(top, ctx);
+        } else if (top.type === 'Aliases') {
+            return {
+                type: 'ToplevelAliases',
+                aliases: top.items.map((t) => ({
+                    name: t.name,
+                    hash: t.hash,
+                    loc: t.loc,
+                })),
+                loc: top.loc,
+            };
         } else {
             return {
                 type: 'ToplevelExpression',
@@ -304,6 +318,22 @@ export const ToAst = {
         };
     },
 
+    ToplevelAliases(
+        { aliases, loc }: t.ToplevelAliases,
+        ctx: TACtx,
+    ): p.Aliases {
+        return {
+            type: 'Aliases',
+            items: aliases.map((a) => ({
+                type: 'AliasItem',
+                name: a.name,
+                hash: a.hash,
+                loc: a.loc,
+            })),
+            loc,
+        };
+    },
+
     TypeFile(
         { type, toplevels, loc, comments }: t.TypeFile,
         ctx: TACtx,
@@ -381,6 +411,15 @@ export const ToPP = {
                 ),
                 top.loc,
                 'always',
+            );
+        }
+        if (top.type === 'Aliases') {
+            return pp.text(
+                'alias' +
+                    top.items
+                        .map((item) => `${item.name} = ${item.hash}`)
+                        .join(' '),
+                top.loc,
             );
         }
         return ctx.ToPP.Expression(top, ctx);

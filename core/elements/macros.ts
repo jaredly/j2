@@ -322,6 +322,9 @@ export const ToAst = {
             case 'ToplevelLet':
                 return ctx.ToAst.ToplevelLet(node, ctx);
 
+            case 'ToplevelAliases':
+                return ctx.ToAst.ToplevelAliases(node, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');

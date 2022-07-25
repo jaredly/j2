@@ -144,7 +144,21 @@ export type ToplevelLet = {
     }>;
     loc: Loc;
 };
-export type Toplevel = ToplevelExpression | TypeAlias | ToplevelLet;
+export type Toplevel =
+    | ToplevelExpression
+    | TypeAlias
+    | ToplevelLet
+    | ToplevelAliases;
+export type ToplevelAliases = {
+    type: 'ToplevelAliases';
+    aliases: Array<{
+        name: string;
+        hash: string;
+        loc: Loc;
+    }>;
+    loc: Loc;
+};
+
 export type TypeAlias = {
     type: 'TypeAlias';
     elements: Array<{ name: string; type: Type }>;
