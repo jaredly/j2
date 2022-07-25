@@ -88,10 +88,15 @@ export const TestView = ({
                             try {
                                 onChange(ran);
                                 setText(fmt);
-                                fetch(`/elements/typetest/${name}`, {
-                                    method: 'POST',
-                                    body: fmt,
-                                });
+                                fetch(
+                                    `/elements/test/${name.slice(
+                                        'test:'.length,
+                                    )}`,
+                                    {
+                                        method: 'POST',
+                                        body: fmt,
+                                    },
+                                );
                             } catch (err) {
                                 //
                             }

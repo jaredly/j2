@@ -14,11 +14,11 @@ and/or a nice error coalescing example.
 
 BIG NEXT
 
-- [ ] tests in browser
+- [x] tests in browser
 - [ ] value/fn recursion
 - [ ] switch/enum patterns
+- [ ] figure out withHandler and andThen
 - [ ] eq deriving for realsies
-
 
 # Much more fancy type arithmatic
 

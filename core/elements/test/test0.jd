@@ -1,0 +1,5 @@
+let longSum = (v#[0]: int) => if v#[0] > 0 {
+    1 +#[:unresolved:] longSum#[:unresolved:](v#[0] -#[:unresolved:] 1);
+} else {
+    0;
+}

@@ -781,6 +781,8 @@ toString: (value: bool) => string
 <=: (a: int, b: int) => bool
 +: (a: float, b: float) => float
 *: (a: int, b: int) => int
+-: (a: float, b: float) => float
+-: (a: int, b: int) => int
 ==: <T: eq>(a: T, b: T) => bool
 `;
 

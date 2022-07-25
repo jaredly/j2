@@ -1,6 +1,6 @@
-import { Divider, Link, Text } from '@nextui-org/react';
+import { Button, Divider, Link, Text } from '@nextui-org/react';
 import * as React from 'react';
-import { builtinContext, FullContext } from '../core/ctx';
+import { builtinContext, FullContext, noloc } from '../core/ctx';
 import { parseFile, parseTypeFile } from '../core/grammar/base.parser';
 import { fixComments } from '../core/grammar/fixComments';
 import {
@@ -200,13 +200,13 @@ export const App = () => {
             // Silence console during others
             // if (hash.endsWith('/pin')) {
             console.warn(`NOTE: suppressing logs from non-pinned items.`);
-            // window.console = {
-            //     ...old,
-            //     log: () => {},
-            //     warn: () => {},
-            //     error: () => {},
-            // };
-            // // }
+            window.console = {
+                ...old,
+                log: () => {},
+                warn: () => {},
+                error: () => {},
+            };
+            // }
 
             const files = {} as Files['fixtures'];
             fixtureContents.forEach((contents, i) => {
@@ -228,7 +228,7 @@ export const App = () => {
             });
             const testFiles = {} as Files['test'];
             testContents.forEach((contents, i) => {
-                console.log('um', contents);
+                old.log('um', contents);
                 try {
                     testFiles[test[i]] = runTest(parseFile(contents));
                 } catch (err) {
@@ -291,6 +291,33 @@ export const App = () => {
                     ))}
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 <Text>Tests</Text>
+                <Button
+                    style={{ flexShrink: 0 }}
+                    size="xs"
+                    onClick={() => {
+                        const newFiles = { ...files.test };
+                        let num = 0;
+                        while (true) {
+                            const name = `test${num}.jd`;
+                            if (newFiles[name] == null) {
+                                newFiles[name] = {
+                                    ctx: builtinContext.clone(),
+                                    file: {
+                                        type: 'File',
+                                        comments: [],
+                                        loc: noloc,
+                                        toplevels: [],
+                                    },
+                                    statuses: [],
+                                };
+                                break;
+                            }
+                        }
+                        setFiles({ ...files, test: newFiles });
+                    }}
+                >
+                    New Test
+                </Button>
                 {Object.keys(files.test)
                     .sort()
                     .map((name) => (
