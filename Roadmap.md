@@ -8,23 +8,32 @@ current north star
 - getting some kind of UI framework going
 - GLSL PLSSS
 
-
 So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
+
+# Much more fancy type arithmatic
+
+- comparison ops, let's do this
+- mul/div why not
 
 # TYPE INFERENCE
 
 Ok sooo I think I want `typeMatches` to return `false` or
 a list of new constraints that must be successfully applied
 in order for the types to match.
+... and ... I need a way to constrain variables to be equal
+to each other ...
+
+anyway, worst that happens is people need to annotate stuff.
+which is kinda fine. idk.
 
 ohhh also what happens when we .. have a type variable on
 either side of the typeMatches?
 like `(a, b) => a(b) + takesInt(a)`?
 
 hmmm so `(a, b) => (a == b, takesInt(a), a == b)`
-.. the first a==b fails, the second one succeeds.
+.. the first a == b fails, the second one succeeds.
 I guess I need to do an inference pass first, and then
 a 'highlight all errors' pass. Yeah it doesn't work to mix them.
 
@@ -33,7 +42,7 @@ a 'highlight all errors' pass. Yeah it doesn't work to mix them.
 - Enum (w/ or w/o payload specified)
 - Constants
 - Exaustiveness
-- 
+- `as` pls
 
 
 

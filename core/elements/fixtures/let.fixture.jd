@@ -117,3 +117,30 @@ alias error:patternMismatch=h1bb5af1fd93cc04570b46a227234b3c89fbdd280
     let (x#[0], y#[1]) = @error:patternMismatch() {a: 1, b: 2};
 }
 // ()
+
+==[nest that pattern up]==
+--[input]--
+{
+let {x: {a: b}} = {x: {a: 10}}
+b + 2
+}
+
+--[output:expected]--
+alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c
+{
+    let {x: {a: b#[0]}} = {x: {a: 10}};
+    b#[0] + 2;
+}
+// 12
+/* (() => {
+  let {
+    x: {
+      a: b
+    }
+  } = {
+    x: {
+      a: 10
+    }
+  };
+  return b + 2;
+})() */
