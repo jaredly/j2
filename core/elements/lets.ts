@@ -2,7 +2,7 @@ import * as p from '../grammar/base.parser';
 import { Ctx as ICtx } from '../ir/ir';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
-import { Visitor } from '../transform-tast';
+import { transformIBlock, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
 import { Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
@@ -186,6 +186,34 @@ export const ToIR = {
             loc: node.loc,
         };
     },
+};
+
+export const unwrapiffe = (node: t.IExpression): t.IStmt | undefined => {
+    if (
+        node.type !== 'Apply' ||
+        node.args.length !== 0 ||
+        node.target.type !== 'Lambda' ||
+        node.target.args.length !== 0 ||
+        node.target.body.type !== 'Block'
+    ) {
+        return;
+    }
+    const body = node.target.body;
+    transformIBlock(
+        body,
+        {
+            // IStmt_Return(node: t.IReturn): t.IStmt {
+            // }
+        },
+        null,
+    );
+};
+
+export const flatLet = (ilet: ILet): t.IStmt[] => {
+    if (!ilet.expr) {
+        return [ilet];
+    }
+    return [];
 };
 
 export const iife = (st: t.IStmt, ctx: ICtx): t.IExpression => {
