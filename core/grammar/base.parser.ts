@@ -331,8 +331,10 @@ export type If = {
   loc: Loc;
   cond: Expression;
   yes: Block;
-  no: Block | null;
+  no: Else | null;
 };
+
+export type Else = Block | If;
 
 export type Lambda = {
   type: "Lambda";

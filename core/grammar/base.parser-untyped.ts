@@ -4384,7 +4384,7 @@ function peg$parse(input, options) {
             }
             if (s8 !== peg$FAILED) {
               s9 = peg$parse_();
-              s10 = peg$parseBlock();
+              s10 = peg$parseElse();
               if (s10 !== peg$FAILED) {
                 s7 = [s7, s8, s9, s10];
                 s6 = s7;
@@ -4416,6 +4416,17 @@ function peg$parse(input, options) {
     } else {
       peg$currPos = s0;
       s0 = peg$FAILED;
+    }
+
+    return s0;
+  }
+
+  function peg$parseElse() {
+    var s0;
+
+    s0 = peg$parseBlock();
+    if (s0 === peg$FAILED) {
+      s0 = peg$parseIf();
     }
 
     return s0;

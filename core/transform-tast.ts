@@ -1746,12 +1746,35 @@ export const transformIf = <Ctx>(
         let updatedNode$no = undefined;
         const updatedNode$no$current = node.no;
         if (updatedNode$no$current != null) {
-            const updatedNode$no$1$ = transformBlock(
-                updatedNode$no$current,
-                visitor,
-                ctx,
-            );
-            changed1 = changed1 || updatedNode$no$1$ !== updatedNode$no$current;
+            let updatedNode$no$1$ = updatedNode$no$current;
+
+            switch (updatedNode$no$current.type) {
+                case 'Block': {
+                    updatedNode$no$1$ = transformBlock(
+                        updatedNode$no$current,
+                        visitor,
+                        ctx,
+                    );
+                    changed1 =
+                        changed1 ||
+                        updatedNode$no$1$ !== updatedNode$no$current;
+                    break;
+                }
+
+                default: {
+                    // let changed2 = false;
+
+                    const updatedNode$no$1$$1node = transformIf(
+                        updatedNode$no$current,
+                        visitor,
+                        ctx,
+                    );
+                    changed1 =
+                        changed1 ||
+                        updatedNode$no$1$$1node !== updatedNode$no$current;
+                    updatedNode$no$1$ = updatedNode$no$1$$1node;
+                }
+            }
             updatedNode$no = updatedNode$no$1$;
         }
 
@@ -6018,12 +6041,35 @@ export const transformIIf = <Ctx>(
         let updatedNode$no = undefined;
         const updatedNode$no$current = node.no;
         if (updatedNode$no$current != null) {
-            const updatedNode$no$1$ = transformIBlock(
-                updatedNode$no$current,
-                visitor,
-                ctx,
-            );
-            changed1 = changed1 || updatedNode$no$1$ !== updatedNode$no$current;
+            let updatedNode$no$1$ = updatedNode$no$current;
+
+            switch (updatedNode$no$current.type) {
+                case 'Block': {
+                    updatedNode$no$1$ = transformIBlock(
+                        updatedNode$no$current,
+                        visitor,
+                        ctx,
+                    );
+                    changed1 =
+                        changed1 ||
+                        updatedNode$no$1$ !== updatedNode$no$current;
+                    break;
+                }
+
+                default: {
+                    // let changed2 = false;
+
+                    const updatedNode$no$1$$1node = transformIIf(
+                        updatedNode$no$current,
+                        visitor,
+                        ctx,
+                    );
+                    changed1 =
+                        changed1 ||
+                        updatedNode$no$1$$1node !== updatedNode$no$current;
+                    updatedNode$no$1$ = updatedNode$no$1$$1node;
+                }
+            }
             updatedNode$no = updatedNode$no$1$;
         }
 

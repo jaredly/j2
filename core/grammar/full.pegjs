@@ -143,7 +143,8 @@ TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
 
 // ifs.ts
 
-If = "if" __ cond:Expression _ yes:Block no:(_ "else" _ Block)?
+If = "if" __ cond:Expression _ yes:Block no:(_ "else" _ Else)?
+Else = Block / If
 
 
 // lambda.ts

@@ -48,6 +48,7 @@ import {
     Stmts,
     Stmt,
     Let,
+    Else,
     Number,
     Boolean,
     Identifier,
@@ -477,6 +478,8 @@ export type Visitor<Ctx> = {
     TypeVblPost?: (node: TypeVbl, ctx: Ctx) => null | TypeVbl;
     If?: (node: If, ctx: Ctx) => null | false | If | [If | null, Ctx];
     IfPost?: (node: If, ctx: Ctx) => null | If;
+    Else?: (node: Else, ctx: Ctx) => null | false | Else | [Else | null, Ctx];
+    ElsePost?: (node: Else, ctx: Ctx) => null | Else;
     Lambda?: (
         node: Lambda,
         ctx: Ctx,
@@ -862,6 +865,13 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | EnumCase | [EnumCase | null, Ctx];
     EnumCasePost_Star?: (node: Star, ctx: Ctx) => null | EnumCase;
+    Else_Block?: (
+        node: Block,
+        ctx: Ctx,
+    ) => null | false | Else | [Else | null, Ctx];
+    ElsePost_Block?: (node: Block, ctx: Ctx) => null | Else;
+    Else_If?: (node: If, ctx: Ctx) => null | false | Else | [Else | null, Ctx];
+    ElsePost_If?: (node: If, ctx: Ctx) => null | Else;
     Stmt_Let?: (
         node: Let,
         ctx: Ctx,
@@ -3192,6 +3202,122 @@ export const transformBlock = <Ctx>(
     return node;
 };
 
+export const transformElse = <Ctx>(
+    node: Else,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Else => {
+    if (!node) {
+        throw new Error('No Else provided');
+    }
+
+    const transformed = visitor.Else ? visitor.Else(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'Block': {
+            const transformed = visitor.Else_Block
+                ? visitor.Else_Block(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'If': {
+            const transformed = visitor.Else_If
+                ? visitor.Else_If(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'Block': {
+            updatedNode = transformBlock(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformIf(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Block': {
+            const transformed = visitor.ElsePost_Block
+                ? visitor.ElsePost_Block(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'If': {
+            const transformed = visitor.ElsePost_If
+                ? visitor.ElsePost_If(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ElsePost) {
+        const transformed = visitor.ElsePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformIf = <Ctx>(
     node: If,
     visitor: Visitor<Ctx>,
@@ -3234,7 +3360,7 @@ export const transformIf = <Ctx>(
         let updatedNode$no = null;
         const updatedNode$no$current = node.no;
         if (updatedNode$no$current != null) {
-            const updatedNode$no$1$ = transformBlock(
+            const updatedNode$no$1$ = transformElse(
                 updatedNode$no$current,
                 visitor,
                 ctx,

@@ -17,14 +17,15 @@ import { unifyTypes } from '../typing/unifyTypes';
 import { isUnit } from '../typing/getType';
 
 export const grammar = `
-If = "if" __ cond:Expression _ yes:Block no:(_ "else" _ Block)?
+If = "if" __ cond:Expression _ yes:Block no:(_ "else" _ Else)?
+Else = Block / If
 `;
 
 export type If = {
     type: 'If';
     cond: t.Expression;
     yes: t.Block;
-    no?: t.Block;
+    no?: t.Block | If;
     loc: t.Loc;
 };
 
@@ -32,7 +33,7 @@ export type IIf = {
     type: 'If';
     cond: t.IExpression;
     yes: t.IBlock;
-    no?: t.IBlock;
+    no?: t.IBlock | IIf;
     loc: t.Loc;
 };
 
@@ -42,7 +43,12 @@ export const ToTast = {
             type: 'If',
             cond: ctx.ToTast.Expression(ast.cond, ctx),
             yes: ctx.ToTast.Block(ast.yes, ctx),
-            no: ast.no ? ctx.ToTast.Block(ast.no, ctx) : undefined,
+            no: ast.no
+                ? ast.no.type === 'Block'
+                    ? ctx.ToTast.Block(ast.no, ctx)
+                    : ctx.ToTast.If(ast.no, ctx)
+                : undefined,
+
             loc: ast.loc,
         };
     },
@@ -56,7 +62,11 @@ export const ToAst = {
             type: 'If',
             cond: ctx.ToAst.Expression(node.cond, ctx),
             yes: ctx.ToAst.Block(node.yes, ctx),
-            no: node.no ? ctx.ToAst.Block(node.no, ctx) : null,
+            no: node.no
+                ? node.no.type === 'Block'
+                    ? ctx.ToAst.Block(node.no, ctx)
+                    : ctx.ToAst.If(node.no, ctx)
+                : null,
             loc: node.loc,
         };
     },
@@ -71,7 +81,11 @@ export const ToPP = {
                 pp.text(' ', loc),
                 ctx.ToPP.Block(yes, ctx),
                 no ? pp.text(' else ', loc) : null,
-                no ? ctx.ToPP.Block(no, ctx) : null,
+                no
+                    ? no.type === 'Block'
+                        ? ctx.ToPP.Block(no, ctx)
+                        : ctx.ToPP.If(no, ctx)
+                    : null,
             ],
             loc,
         );
@@ -87,7 +101,11 @@ export const ToIR = {
             type: 'If',
             cond: ctx.ToIR.Expression(cond, ctx),
             yes: ctx.ToIR.BlockSt(yes, ctx),
-            no: no ? ctx.ToIR.BlockSt(no, ctx) : undefined,
+            no: no
+                ? no.type === 'Block'
+                    ? ctx.ToIR.BlockSt(no, ctx)
+                    : ctx.ToIR.IfSt(no, ctx)
+                : undefined,
             loc,
         };
     },
@@ -98,7 +116,11 @@ export const ToJS = {
         return b.ifStatement(
             ctx.ToJS.IExpression(node.cond, ctx),
             ctx.ToJS.Block(node.yes, ctx),
-            node.no ? ctx.ToJS.Block(node.no, ctx) : null,
+            node.no
+                ? node.no.type === 'Block'
+                    ? ctx.ToJS.Block(node.no, ctx)
+                    : ctx.ToJS.If(node.no, ctx)
+                : null,
         );
     },
 };
