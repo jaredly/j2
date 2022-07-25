@@ -38,3 +38,28 @@ let y = x + 10
 alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c x=hccdddf8fbc43dbb853d8230b0bad5a50bcf222dd
 let x = 10
 let y = x + 10
+
+==[New fixture]==
+--[input]--
+{
+let (x, y) = if true { (2 ,3) } else { (3, 4)}
+}
+
+--[output:expected]--
+{
+    let (x#[0], y#[1]) = if true {
+        (2, 3);
+    } else {
+        (3, 4);
+    };
+}
+// ()
+/* (() => {
+  let [x, y];
+
+  if (true) {
+    [x, y] = [2, 3];
+  } else {
+    [x, y] = [3, 4];
+  }
+})() */
