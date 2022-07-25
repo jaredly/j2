@@ -156,6 +156,11 @@ export const runTest = (
             // );
         } else if (t.type === 'Aliases') {
             // um
+            const aliases: { [key: string]: string } = {};
+            t.items.forEach(({ name, hash }) => {
+                aliases[name] = hash;
+            });
+            ctx = ctx.withAliases(aliases) as FullContext;
         } else {
             ctx = ctx.toplevelConfig(null) as FullContext;
             let top = ctx.ToTast.Toplevel(t, ctx) as t.ToplevelExpression;
