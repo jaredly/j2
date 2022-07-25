@@ -751,6 +751,7 @@ export const errors = {
     invalidRecord: 0,
     needsTypeVariables: 0,
     ifBranchesDisagree: 2,
+    patternMismatch: 0,
 };
 export type ErrorTag = keyof typeof errors;
 
@@ -772,6 +773,10 @@ toString: (value: int) => string
 toString: (value: float) => string
 toString: (value: bool) => string
 +: <A: int, B: int>(a: A, b: B) => A + B
+>: (a: int, b: int) => bool
+<: (a: int, b: int) => bool
+>=: (a: int, b: int) => bool
+<=: (a: int, b: int) => bool
 +: (a: float, b: float) => float
 *: (a: int, b: int) => int
 ==: <T: eq>(a: T, b: T) => bool

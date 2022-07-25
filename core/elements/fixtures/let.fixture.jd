@@ -100,3 +100,16 @@ let {x, y} = if true { {x: 10, y: 20} } else { {x: 10, y: 20} }
     });
   }
 })() */
+
+==[New fixture__]==
+--[input:shouldFail]--
+{
+let (x, y) = {a: 1, b: 2};
+}
+
+--[output:expected]--
+alias error:patternMismatch=h1bb5af1fd93cc04570b46a227234b3c89fbdd280
+{
+    let (x#[0], y#[1]) = @error:patternMismatch() {a: 1, b: 2};
+}
+// ()

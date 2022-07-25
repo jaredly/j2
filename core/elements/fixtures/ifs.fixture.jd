@@ -76,3 +76,30 @@ alias *=hc964b8e32721e8a2764054a069ab98c885f00921 ===h0e26cba9974393f0886bf43a58
 
   return y * 2;
 })() */
+
+==[New fixture_]==
+--[input]--
+if 1 > 0 {
+`Yes(20)
+} else {
+`No
+}
+
+--[output:expected]--
+alias >=hc1d03250b26806868f520136d8a763b0c0edff9b
+if 1 > 0 {
+    `Yes(20);
+} else {
+    `No;
+}
+// [ `No | `Yes(20) ]
+/* (() => {
+  if (1 > 0) {
+    return {
+      tag: "Yes",
+      payload: 20
+    };
+  } else {
+    return "No";
+  }
+})() */

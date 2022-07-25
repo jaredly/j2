@@ -4,10 +4,10 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { transformIBlock, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { Ctx as ACtx } from '../typing/analyze';
+import { Ctx as ACtx, decorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { getLocals, typeForPattern } from './pattern';
+import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
 
 export const grammar = `
 Block = "{" _ stmts:Stmts? _ "}"
@@ -318,6 +318,16 @@ export const ToJS = {
 };
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
+    Let(node, ctx) {
+        const t = ctx.ctx.getType(node.expr);
+        if (t && !typeMatchesPattern(node.pat, t, ctx.ctx)) {
+            return {
+                ...node,
+                expr: decorate(node.expr, 'patternMismatch', ctx.hit, ctx.ctx),
+            };
+        }
+        return null;
+    },
     // Expression_Apply(node, { ctx, hit }) {
     // },
 };

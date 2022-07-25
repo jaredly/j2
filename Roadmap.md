@@ -13,7 +13,18 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
-
+# Let & If
+What validation do I need?
+- [x] let, pattern must match initializer type
+- [ ] let, pattern needs to be exhaustive.
+	- ok this doesn't actually enter into the picture until
+		we can have Enum patterns. because so far we only have
+		record patterns, which are always exaustive.
+- if, cond/yes/no ... I think that's it?
+- it might be good to allow full patterns at the toplevel?
+	although, the UI coud make it so that it doesn't come up.
+	If you're making a toplevel term, you fill in the name,
+	and then go to the "body". Which is a block by default.
 
 
 # Make ExprTests
@@ -26,7 +37,7 @@ or probably just tests
 - [x] if/else comes next
 - [x] unwrap iffe pls
 	- [x] why is transform not getting all the sub dealios?
-- [ ] oh with empty let, need to just grab the syms out of the pattern.
+- [x] oh with empty let, need to just grab the syms out of the pattern.
 - [ ] then recursive functions pls
 
 
