@@ -1,22 +1,7 @@
-import generate from '@babel/generator';
 import { readdirSync, readFileSync } from 'fs';
-import {
-    addBuiltinDecorator,
-    builtinContext,
-    FullContext,
-    refsEqual,
-} from '../../ctx';
-import { removeErrorDecorators, typeToplevel } from '../../elements/base';
-import { parseFile, parseTypeFile } from '../../grammar/base.parser';
-import { idsEqual, idToString, toId } from '../../ids';
-import { iCtx } from '../../ir/ir';
-import { ExecutionContext, jCtx, newExecutionContext } from '../../ir/to-js';
-import { transformToplevel } from '../../transform-tast';
-import * as t from '../../typed-ast';
-import { analyzeTop, errorCount, initVerify, verifyVisitor } from '../analyze';
-import { assertions, valueAssertions } from './utils';
-// import { Ctx as JCtx } from '../../ir/to-js';
-// import { Ctx as iCtx } from '../../ir/ir';
+import { builtinContext } from '../../ctx';
+import { parseFile } from '../../grammar/base.parser';
+import { runTest } from './run-test';
 
 const base = __dirname + '/../../elements/test/';
 readdirSync(base)
@@ -28,198 +13,17 @@ readdirSync(base)
             const text = readFileSync(fixtureFile, 'utf8');
             const ast = parseFile(text);
             let ctx = builtinContext.clone();
-            const eq = ctx.getBuiltinRef('==');
-            const assertById: {
-                [key: string]: (
-                    args: t.DecoratorArg[],
-                    expr: t.Expression,
-                    ctx: ExecutionContext,
-                ) => string | undefined;
-            } = {};
-            Object.keys(valueAssertions).forEach((key) => {
-                const { id } = addBuiltinDecorator(ctx, `assert:${key}`, 0);
-                assertById[idToString(id)] =
-                    valueAssertions[key as keyof typeof valueAssertions];
+
+            const result = runTest(ast, false);
+            result.statuses.forEach((status) => {
+                it(
+                    text.slice(status.loc.start.offset, status.loc.end.offset) +
+                        ` ${file}:${status.loc.start.line} - should be valid`,
+                    () => {
+                        expect(status.text).toBe(null);
+                    },
+                );
             });
-
-            const jctx = jCtx(ctx);
-            const ectx = newExecutionContext(ctx);
-
-            ast.toplevels.forEach((t) => {
-                ctx.resetSym();
-
-                if (t.type === 'TypeAlias') {
-                    // Need to reset again, so the args get the same syms
-                    // when we parse them again
-                    ctx = ctx.toplevelConfig(
-                        typeToplevel(t, ctx),
-                    ) as FullContext;
-                    let top = ctx.ToTast.TypeAlias(t, ctx);
-                    top = transformToplevel(
-                        top,
-                        removeErrorDecorators(ctx),
-                        null,
-                    ) as t.TypeAlias;
-                    top = analyzeTop(top, ctx) as t.TypeAlias;
-                    ctx = ctx.withTypes(top.elements) as FullContext;
-
-                    it(
-                        text.slice(t.loc.start.offset, t.loc.end.offset) +
-                            ` ${file}:${t.loc.start.line} - should be valid`,
-                        () => {
-                            const v = initVerify();
-                            transformToplevel(top, verifyVisitor(v, ctx), ctx);
-                            expect(v).toEqual(initVerify());
-                        },
-                    );
-                } else if (t.type === 'ToplevelLet') {
-                    ctx = ctx.toplevelConfig(
-                        typeToplevel(t, ctx),
-                    ) as FullContext;
-                    let top = ctx.ToTast.ToplevelLet(t, ctx);
-                    top = transformToplevel(
-                        top,
-                        removeErrorDecorators(ctx),
-                        null,
-                    ) as t.ToplevelLet;
-                    top = analyzeTop(top, ctx) as t.ToplevelLet;
-                    const { hash, ctx: nctx } = ctx.withValues(top.elements);
-                    jctx.actx = ctx = nctx as FullContext;
-
-                    const ictx = iCtx(ctx);
-
-                    const raws = top.elements.map((el) => {
-                        const ir = ictx.ToIR.BlockSt(
-                            {
-                                type: 'Block',
-                                stmts: [el.expr],
-                                loc: el.expr.loc,
-                            },
-                            ictx,
-                        );
-                        const js = jctx.ToJS.Block(ir, jctx);
-                        return generate(js).code;
-                    });
-
-                    it(
-                        text.slice(t.loc.start.offset, t.loc.end.offset) +
-                            ` ${file}:${t.loc.start.line} - should be valid`,
-                        () => {
-                            const v = initVerify();
-                            transformToplevel(top, verifyVisitor(v, ctx), ctx);
-                            expect(v).toEqual(initVerify());
-
-                            raws.forEach((raw, i) => {
-                                const name = jctx.globalName(toId(hash, i));
-                                let res;
-                                try {
-                                    const f = new Function('$terms', raw);
-                                    res = f(ectx.terms);
-                                } catch (err) {
-                                    throw new Error(raw, {
-                                        cause: err as Error,
-                                    });
-                                }
-                                ectx.terms[name] = res;
-                            });
-                        },
-                    );
-                } else {
-                    ctx = ctx.toplevelConfig(null) as FullContext;
-                    let top = ctx.ToTast.Toplevel(
-                        t,
-                        ctx,
-                    ) as t.ToplevelExpression;
-                    top = analyzeTop(top, ctx) as t.ToplevelExpression;
-                    let expr = top.expr;
-
-                    it(
-                        text.slice(t.loc.start.offset, t.loc.end.offset) +
-                            ` ${file}:${t.loc.start.line} - should be valid`,
-                        () => {
-                            const v = initVerify();
-                            transformToplevel(top, verifyVisitor(v, ctx), ctx);
-                            expect(v).toEqual(initVerify());
-                        },
-                    );
-
-                    const ictx = iCtx(ctx);
-                    const ir = ictx.ToIR.BlockSt(
-                        {
-                            type: 'Block',
-                            stmts: [expr],
-                            loc: expr.loc,
-                        },
-                        ictx,
-                    );
-                    // const jctx = jCtx(ctx);
-                    jctx.actx = ctx;
-                    const js = jctx.ToJS.Block(ir, jctx);
-                    const jsraw = generate(js).code;
-
-                    if (expr.type === 'DecoratedExpression') {
-                        expr.decorators.forEach((d) => {
-                            if (d.id.ref.type !== 'Global') {
-                                return;
-                            }
-                            it(
-                                text.slice(
-                                    d.loc.start.offset,
-                                    d.loc.end.offset,
-                                ) + ` ${file}:${d.loc.start.line}`,
-                                () => {
-                                    let res;
-                                    try {
-                                        const f = new Function('$terms', jsraw);
-                                        res = f(ectx.terms);
-                                    } catch (err) {
-                                        throw new Error(jsraw, {
-                                            cause: err as Error,
-                                        });
-                                    }
-
-                                    const hash = idToString(
-                                        (d.id.ref as t.GlobalRef).id,
-                                    );
-                                    if (assertById[hash]) {
-                                        const err = assertById[hash](
-                                            d.args.map((arg) => arg.arg),
-                                            res,
-                                            ectx,
-                                        );
-                                        expect(err).toBeUndefined();
-                                    }
-                                },
-                            );
-                        });
-                        // } else if (
-                        //     expr.type === 'Apply' &&
-                        //     expr.target.type === 'Ref' &&
-                        //     refsEqual(expr.target.kind, eq!)
-                        // ) {
-                        //     const expected = expr.args[0];
-                        //     const actual = expr.args[1];
-                    } else if (ctx.isBuiltinType(ctx.getType(expr)!, 'bool')) {
-                        it(
-                            text.slice(t.loc.start.offset, t.loc.end.offset) +
-                                ` ${file}:${t.loc.start.line} - should be true`,
-                            () => {
-                                let res;
-                                try {
-                                    const f = new Function('$terms', jsraw);
-                                    res = f(ectx.terms);
-                                } catch (err) {
-                                    throw new Error(jsraw, {
-                                        cause: err as Error,
-                                    });
-                                }
-                                expect(res).toBe(true);
-                            },
-                        );
-                    } else {
-                        throw new Error('Not decorated?' + expr.type);
-                    }
-                }
-            });
+            it('should parse I guess', () => {});
         });
     });

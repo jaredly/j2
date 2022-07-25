@@ -1,10 +1,8 @@
 import { Divider, Link, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { builtinContext, FullContext } from '../core/ctx';
-import { typeFileToTast } from '../core/elements/base';
-import { parseTypeFile } from '../core/grammar/base.parser';
+import { parseFile, parseTypeFile } from '../core/grammar/base.parser';
 import { fixComments } from '../core/grammar/fixComments';
-import { Loc, Type, TypeAlias, TypeFile } from '../core/typed-ast';
 import {
     Builtin,
     Fixture,
@@ -14,6 +12,7 @@ import {
     parseFixtureFile,
     runFixture,
 } from '../core/typing/__test__/fixture-utils';
+import { Test } from '../core/typing/__test__/run-test';
 import { runTypeTest, TypeTest } from '../core/typing/__test__/typetest';
 import { FixtureFile } from './FixtureFile';
 import {
@@ -70,6 +69,7 @@ export type Status = {
 export type Files = {
     fixtures: { [key: string]: Status };
     typetest: { [key: string]: TypeTest };
+    test: { [key: string]: Test };
 };
 
 export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
@@ -147,18 +147,28 @@ export const fileStatus = (name: string, file: FixtureFileType): Status => {
 export const App = () => {
     const hash = useHash();
 
-    const [listing] = usePromise<{ fixtures: string[]; typetest: string[] }>(
+    const [listing] = usePromise<{
+        fixtures: string[];
+        typetest: string[];
+        test: string[];
+    }>(
         () =>
             Promise.all([
                 fetch('/elements/fixtures/').then((res) => res.json()),
                 fetch('/elements/typetest/').then((res) => res.json()),
-            ]).then(([fixtures, typetest]) => ({ fixtures, typetest })),
+                fetch('/elements/test/').then((res) => res.json()),
+            ]).then(([fixtures, typetest, test]) => ({
+                fixtures,
+                typetest,
+                test,
+            })),
         [],
     );
 
     const [files, setFiles] = React.useState<Files>({
         fixtures: {},
         typetest: {},
+        test: {},
     });
 
     // Ok, so when we update a fixture, we might update things off built
@@ -166,7 +176,7 @@ export const App = () => {
         if (!listing) {
             return;
         }
-        const { fixtures, typetest } = listing;
+        const { fixtures, typetest, test } = listing;
         Promise.all([
             Promise.all(
                 fixtures.map((line) =>
@@ -178,7 +188,12 @@ export const App = () => {
                     fetch(`/elements/typetest/${line}`).then((v) => v.text()),
                 ),
             ),
-        ]).then(([fixtureContents, typetestContents]) => {
+            Promise.all(
+                test.map((line) =>
+                    fetch(`/elements/test/${line}`).then((v) => v.text()),
+                ),
+            ),
+        ]).then(([fixtureContents, typetestContents, testContents]) => {
             const old = window.console;
 
             // Silence console during others
@@ -210,7 +225,19 @@ export const App = () => {
                     // );
                 }
             });
-            setFiles({ fixtures: files, typetest: typetestFiles });
+            const testFiles = {} as Files['test'];
+            testContents.forEach((contents, i) => {
+                try {
+                    testFiles[test[i]] = runTest(parseFile(contents));
+                } catch (err) {
+                    old.error(`Failed to parse test`, err);
+                }
+            });
+            setFiles({
+                fixtures: files,
+                typetest: typetestFiles,
+                test: testFiles,
+            });
 
             window.console = old;
         });
