@@ -178,7 +178,6 @@ export const Editor = ({
         const selfn = () => {
             prevPos.current = getPos(ref.current!);
         };
-        // document.addEventListener('selectionchange', selfn);
 
         return () => {
             obs.disconnect();
@@ -213,6 +212,18 @@ export const Editor = ({
                     ref.current!.blur();
                     // document.body.focus();
                     document.getSelection()?.removeAllRanges();
+                }
+                if (evt.key === 'Tab') {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    const range = document.getSelection()?.getRangeAt(0);
+                    if (range) {
+                        const node = document.createTextNode('  ');
+                        range.insertNode(node);
+                        range.selectNode(node);
+                        range.collapse(false);
+                    }
+                    // document.getSelection().repl
                 }
             }}
             ref={(node) => (ref.current = node)}

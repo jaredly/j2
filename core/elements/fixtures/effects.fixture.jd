@@ -64,9 +64,9 @@ let hello = (): Task<[`Print(string, ()) | `Read((), string)]> => {
     `Read((), (v: string) => {
       `Print("Got ${v}", () => {
         `Print("done", () => `Return())
-})
-})
-})
+      })
+    })
+  })
 }
 
 --[output:expected]--
