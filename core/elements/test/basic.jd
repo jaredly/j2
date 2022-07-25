@@ -7,3 +7,9 @@
 
 let hello = 10;
 hello == 10;
+
+
+{
+  let (x, y) = if true { (2 ,3) } else { (3, 4)};
+  x + y
+} == 5

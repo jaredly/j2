@@ -42,7 +42,7 @@ let y = x + 10
 ==[New fixture]==
 --[input]--
 {
-let (x, y) = if true { (2 ,3) } else { (3, 4)}
+let (x, y) = if true { (2 ,3) } else { (3, 4)};
 }
 
 --[output:expected]--
@@ -55,11 +55,48 @@ let (x, y) = if true { (2 ,3) } else { (3, 4)}
 }
 // ()
 /* (() => {
-  let [x, y];
+  let x, y;
 
   if (true) {
     [x, y] = [2, 3];
   } else {
     [x, y] = [3, 4];
+  }
+})() */
+
+==[New fixture_]==
+--[input]--
+{
+let {x, y} = if true { {x: 10, y: 20} } else { {x: 10, y: 20} }
+}
+
+--[output:expected]--
+{
+    let {x#[0], y#[1]} = if true {
+        {x: 10, y: 20};
+    } else {
+        {x: 10, y: 20};
+    };
+}
+// ()
+/* (() => {
+  let x, y;
+
+  if (true) {
+    ({
+      x: x,
+      y: y
+    } = {
+      x: 10,
+      y: 20
+    });
+  } else {
+    ({
+      x: x,
+      y: y
+    } = {
+      x: 10,
+      y: 20
+    });
   }
 })() */

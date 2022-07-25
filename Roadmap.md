@@ -24,8 +24,9 @@ or probably just tests
 	- [x] jctx addName, my jctx needs to persist, and know
 		about toplevel, and such.
 - [x] if/else comes next
-- [ ] unwrap iffe pls
-	- [ ] why is transform not getting all the sub dealios?
+- [x] unwrap iffe pls
+	- [x] why is transform not getting all the sub dealios?
+- [ ] oh with empty let, need to just grab the syms out of the pattern.
 - [ ] then recursive functions pls
 
 

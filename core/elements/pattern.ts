@@ -1,15 +1,12 @@
-import { Visitor } from '../transform-tast';
-import { decorate } from '../typing/analyze';
-import { Ctx as ACtx } from '../typing/analyze';
-import { typeMatches } from '../typing/typeMatches';
-import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
-import { Ctx as TCtx } from '../typing/to-tast';
+import { Visitor } from '../transform-tast';
+import * as t from '../typed-ast';
+import { Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
+import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
-import { Ctx as ICtx } from '../ir/ir';
 
 export const grammar = `
 Pattern = PName / PTuple / PRecord / PBlank

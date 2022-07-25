@@ -271,6 +271,16 @@ export const ToJS = {
         );
     },
     Let(node: t.ILet, ctx: JCtx): b.Statement {
+        if (!node.expr) {
+            const locals: t.Locals = [];
+            getLocals(node.pat, node.typ, locals, ctx.actx);
+            return b.variableDeclaration(
+                'let',
+                locals.map((l) =>
+                    b.variableDeclarator(b.identifier(l.sym.name)),
+                ),
+            );
+        }
         return b.variableDeclaration('let', [
             b.variableDeclarator(
                 ctx.ToJS.Pattern(node.pat, ctx),
