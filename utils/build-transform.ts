@@ -362,8 +362,15 @@ export const unionTransformer = (
                 const tname = resolved.members
                     .map(getTypeName)
                     .filter(Boolean) as Array<string>;
-                if (tname.length && ctx.types[tname[0]]) {
-                    const name = tname[0];
+                const name = tname[0];
+                const talias =
+                    t.type === 'TSTypeReference' &&
+                    t.typeName.type === 'Identifier'
+                        ? t.typeName.name
+                        : name;
+
+                if (tname.length && ctx.types[talias]) {
+                    // const name = t.type === 'TSTypeReference'
                     preCases.push(
                         `case '${tname[0]}': {
                             const transformed = visitor.${unionName}_${name} ? visitor.${unionName}_${name}(${vbl}, ctx) : null;
@@ -633,7 +640,7 @@ export function buildTransformFile(
                         item.typeName.type === 'Identifier'
                             ? item.typeName.name
                             : tname[0];
-                    if (tname.length && ctx.types[tname[0]]) {
+                    if (tname.length && ctx.types[talias]) {
                         visitorSubs.push(
                             `${name}_${tname[0]}?: (node: ${talias}, ctx: Ctx) => null | false | ${name} | [${name} | null, Ctx]`,
                             `${name}Post_${tname[0]}?: (node: ${talias}, ctx: Ctx) => null | ${name}`,

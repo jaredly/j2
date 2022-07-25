@@ -62,6 +62,7 @@ import {
     IBlock,
     IStmt,
     ILet,
+    IAssign,
     IReturn,
     IIf,
     DecoratorDecl,
@@ -69,7 +70,6 @@ import {
     TAdd,
     TSub,
     TOr,
-    IAssign,
 } from './typed-ast';
 
 export type Visitor<Ctx> = {
@@ -392,6 +392,11 @@ export type Visitor<Ctx> = {
     IfPost?: (node: If, ctx: Ctx) => null | If;
     IIf?: (node: IIf, ctx: Ctx) => null | false | IIf | [IIf | null, Ctx];
     IIfPost?: (node: IIf, ctx: Ctx) => null | IIf;
+    RefKind_Global?: (
+        node: GlobalRef,
+        ctx: Ctx,
+    ) => null | false | RefKind | [RefKind | null, Ctx];
+    RefKindPost_Global?: (node: GlobalRef, ctx: Ctx) => null | RefKind;
     TypeToplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
@@ -610,11 +615,21 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IStmt | [IStmt | null, Ctx];
     IStmtPost_Let?: (node: ILet, ctx: Ctx) => null | IStmt;
+    IStmt_Assign?: (
+        node: IAssign,
+        ctx: Ctx,
+    ) => null | false | IStmt | [IStmt | null, Ctx];
+    IStmtPost_Assign?: (node: IAssign, ctx: Ctx) => null | IStmt;
     IStmt_Block?: (
         node: IBlock,
         ctx: Ctx,
     ) => null | false | IStmt | [IStmt | null, Ctx];
     IStmtPost_Block?: (node: IBlock, ctx: Ctx) => null | IStmt;
+    IStmt_Return?: (
+        node: IReturn,
+        ctx: Ctx,
+    ) => null | false | IStmt | [IStmt | null, Ctx];
+    IStmtPost_Return?: (node: IReturn, ctx: Ctx) => null | IStmt;
     IStmt_If?: (
         node: IIf,
         ctx: Ctx,
@@ -747,6 +762,27 @@ export const transformRefKind = <Ctx>(
 
     let changed0 = false;
 
+    switch (node.type) {
+        case 'Global': {
+            const transformed = visitor.RefKind_Global
+                ? visitor.RefKind_Global(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
     let updatedNode = node;
 
     switch (node.type) {
@@ -761,6 +797,18 @@ export const transformRefKind = <Ctx>(
 
         case 'Recur':
             break;
+    }
+
+    switch (updatedNode.type) {
+        case 'Global': {
+            const transformed = visitor.RefKindPost_Global
+                ? visitor.RefKindPost_Global(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
     }
 
     node = updatedNode;
@@ -5813,6 +5861,69 @@ export const transformILet = <Ctx>(
     return node;
 };
 
+export const transformIAssign = <Ctx>(
+    node: IAssign,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IAssign => {
+    if (!node) {
+        throw new Error('No IAssign provided');
+    }
+
+    const transformed = visitor.IAssign ? visitor.IAssign(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$pat = transformPattern(node.pat, visitor, ctx);
+        changed1 = changed1 || updatedNode$pat !== node.pat;
+
+        const updatedNode$expr = transformIExpression(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+
+        const updatedNode$typ = transformType(node.typ, visitor, ctx);
+        changed1 = changed1 || updatedNode$typ !== node.typ;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                pat: updatedNode$pat,
+                expr: updatedNode$expr,
+                typ: updatedNode$typ,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IAssignPost) {
+        const transformed = visitor.IAssignPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformIReturn = <Ctx>(
     node: IReturn,
     visitor: Visitor<Ctx>,
@@ -5986,9 +6097,47 @@ export const transformIStmt = <Ctx>(
             break;
         }
 
+        case 'Assign': {
+            const transformed = visitor.IStmt_Assign
+                ? visitor.IStmt_Assign(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Block': {
             const transformed = visitor.IStmt_Block
                 ? visitor.IStmt_Block(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Return': {
+            const transformed = visitor.IStmt_Return
+                ? visitor.IStmt_Return(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -6030,6 +6179,12 @@ export const transformIStmt = <Ctx>(
     switch (node.type) {
         case 'Let': {
             updatedNode = transformILet(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Assign': {
+            updatedNode = transformIAssign(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -6114,9 +6269,29 @@ export const transformIStmt = <Ctx>(
             break;
         }
 
+        case 'Assign': {
+            const transformed = visitor.IStmtPost_Assign
+                ? visitor.IStmtPost_Assign(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
         case 'Block': {
             const transformed = visitor.IStmtPost_Block
                 ? visitor.IStmtPost_Block(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Return': {
+            const transformed = visitor.IStmtPost_Return
+                ? visitor.IStmtPost_Return(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -7049,65 +7224,6 @@ export const transformTOr = <Ctx>(
     node = updatedNode;
     if (visitor.TOrPost) {
         const transformed = visitor.TOrPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformIAssign = <Ctx>(
-    node: IAssign,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): IAssign => {
-    if (!node) {
-        throw new Error('No IAssign provided');
-    }
-
-    const transformed = visitor.IAssign ? visitor.IAssign(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$sym = transformSym(node.sym, visitor, ctx);
-        changed1 = changed1 || updatedNode$sym !== node.sym;
-
-        const updatedNode$expr = transformIExpression(node.expr, visitor, ctx);
-        changed1 = changed1 || updatedNode$expr !== node.expr;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                sym: updatedNode$sym,
-                expr: updatedNode$expr,
-                loc: updatedNode$loc,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.IAssignPost) {
-        const transformed = visitor.IAssignPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }

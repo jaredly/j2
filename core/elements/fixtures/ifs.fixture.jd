@@ -52,7 +52,7 @@ alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb int=h942cd67cf31d350ec1f39bcd
 let y = if x == 5 { 4 } else { 2 };
 y * 2}
 
---[output:failed]--
+--[output:expected]--
 alias *=hc964b8e32721e8a2764054a069ab98c885f00921 ===h0e26cba9974393f0886bf43a5876c4132b1e69bb int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 {
     let x#[0] = 10;
@@ -66,14 +66,13 @@ alias *=hc964b8e32721e8a2764054a069ab98c885f00921 ===h0e26cba9974393f0886bf43a58
 // int
 /* (() => {
   let x = 10;
+  let y;
 
-  let y = (() => {
-    if (x == 5) {
-      return 4;
-    } else {
-      return 2;
-    }
-  })();
+  if (x == 5) {
+    y = 4;
+  } else {
+    y = 2;
+  }
 
   return y * 2;
 })() */

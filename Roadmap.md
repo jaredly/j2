@@ -23,7 +23,9 @@ or probably just tests
 - [x] toplevel let! gotta have it folks, for the tests
 	- [x] jctx addName, my jctx needs to persist, and know
 		about toplevel, and such.
-- [ ] if/else comes next
+- [x] if/else comes next
+- [ ] unwrap iffe pls
+	- [ ] why is transform not getting all the sub dealios?
 - [ ] then recursive functions pls
 
 

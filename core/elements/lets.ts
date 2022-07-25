@@ -37,7 +37,7 @@ export type IBlock = {
     stmts: IStmt[];
     loc: t.Loc;
 };
-export type IStmt = ILet | t.IExpression | IBlock | IReturn | IIf;
+export type IStmt = ILet | IAssign | t.IExpression | IBlock | IReturn | IIf;
 export type IReturn = { type: 'Return'; expr: t.IExpression; loc: t.Loc };
 export type ILet = {
     type: 'Let';
@@ -48,8 +48,9 @@ export type ILet = {
 };
 export type IAssign = {
     type: 'Assign';
-    sym: t.Sym;
+    pat: t.Pattern;
     expr: t.IExpression;
+    typ: t.Type;
     loc: t.Loc;
 };
 
@@ -149,23 +150,27 @@ export const ToIR = {
     BlockSt(node: t.Block, ctx: ICtx): IBlock {
         return {
             type: 'Block',
-            stmts: node.stmts.map((stmt, i) => {
-                if (i < node.stmts.length - 1 || stmt.type === 'Let') {
-                    return ctx.ToIR.Stmt(stmt, ctx);
-                }
-                if (stmt.type === 'Block') {
-                    return ctx.ToIR.BlockSt(stmt, ctx);
-                }
-                if (stmt.type === 'If') {
-                    return ctx.ToIR.IfSt(stmt, ctx);
-                }
+            stmts: node.stmts
+                .map((stmt, i): t.IStmt[] => {
+                    if (i < node.stmts.length - 1 || stmt.type === 'Let') {
+                        return flatLet(ctx.ToIR.Stmt(stmt, ctx));
+                    }
+                    if (stmt.type === 'Block') {
+                        return [ctx.ToIR.BlockSt(stmt, ctx)];
+                    }
+                    if (stmt.type === 'If') {
+                        return [ctx.ToIR.IfSt(stmt, ctx)];
+                    }
 
-                return {
-                    type: 'Return',
-                    expr: ctx.ToIR.Expression(stmt, ctx),
-                    loc: stmt.loc,
-                };
-            }),
+                    return [
+                        {
+                            type: 'Return',
+                            expr: ctx.ToIR.Expression(stmt, ctx),
+                            loc: stmt.loc,
+                        },
+                    ];
+                })
+                .flat(),
             loc: node.loc,
         };
     },
@@ -188,7 +193,11 @@ export const ToIR = {
     },
 };
 
-export const unwrapiffe = (node: t.IExpression): t.IStmt | undefined => {
+export const unwrapiffe = (
+    node: t.IExpression,
+    pat: t.Pattern,
+    typ: t.Type,
+): t.IStmt[] | undefined => {
     if (
         node.type !== 'Apply' ||
         node.args.length !== 0 ||
@@ -199,21 +208,38 @@ export const unwrapiffe = (node: t.IExpression): t.IStmt | undefined => {
         return;
     }
     const body = node.target.body;
-    transformIBlock(
+    return transformIBlock(
         body,
         {
-            // IStmt_Return(node: t.IReturn): t.IStmt {
-            // }
+            Lambda(node, ctx) {
+                return false;
+            },
+            IStmt_Return(node: t.IReturn) {
+                return {
+                    type: 'Assign',
+                    typ,
+                    pat,
+                    expr: node.expr,
+                    loc: node.loc,
+                };
+            },
         },
         null,
-    );
+    ).stmts;
 };
 
-export const flatLet = (ilet: ILet): t.IStmt[] => {
+export const flatLet = (ilet: t.IStmt): t.IStmt[] => {
+    if (ilet.type !== 'Let') {
+        return [ilet];
+    }
     if (!ilet.expr) {
         return [ilet];
     }
-    return [];
+    const unwrapped = unwrapiffe(ilet.expr, ilet.pat, ilet.typ);
+    if (unwrapped) {
+        return [{ ...ilet, expr: undefined }, ...unwrapped];
+    }
+    return [ilet];
 };
 
 export const iife = (st: t.IStmt, ctx: ICtx): t.IExpression => {
@@ -252,6 +278,15 @@ export const ToJS = {
             ),
         ]);
     },
+    Assign(node: IAssign, ctx: JCtx): b.Statement {
+        return b.expressionStatement(
+            b.assignmentExpression(
+                '=',
+                ctx.ToJS.Pattern(node.pat, ctx),
+                ctx.ToJS.IExpression(node.expr, ctx),
+            ),
+        );
+    },
     IStmt(node: t.IStmt, ctx: JCtx): b.Statement {
         if (node.type === 'Let') {
             return ctx.ToJS.Let(node, ctx);
@@ -264,6 +299,9 @@ export const ToJS = {
         }
         if (node.type === 'Return') {
             return b.returnStatement(ctx.ToJS.IExpression(node.expr, ctx));
+        }
+        if (node.type === 'Assign') {
+            return ctx.ToJS.Assign(node, ctx);
         }
         return b.expressionStatement(ctx.ToJS.IExpression(node, ctx));
     },
