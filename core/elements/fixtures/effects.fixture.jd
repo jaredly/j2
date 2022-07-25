@@ -42,7 +42,7 @@ alias Task=h36ea667ef0c00c6fcbfe2206360b8ce768e10926
 /* v => v */
 
 ==[New fixture]==
---[input]--
+--[input:shouldFail]--
 let print = (v: string): Task<[`Print(string, ())]> => `Pront(v, () => `Return())
 let print = (v: string): Task<[`Print(string, ())]> => `Print(v, () => `Return(10))
 

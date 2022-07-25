@@ -24,7 +24,7 @@ export type Test = {
 };
 
 export const runTest = (ast: File, debugFailures = false): Test => {
-    const old = global.console;
+    const old = window.console;
     const mock = old; // (window.console = { ...old, log() {}, warn() {}, error() {} });
 
     let ctx = builtinContext.clone();
@@ -82,6 +82,7 @@ export const runTest = (ast: File, debugFailures = false): Test => {
                     text: `${errorCount(v)} errors in toplevel`,
                 });
             }
+            tast.toplevels.push(top);
             // expect(v).toEqual(initVerify());
             //     },
             // );
@@ -94,6 +95,7 @@ export const runTest = (ast: File, debugFailures = false): Test => {
                 null,
             ) as t.ToplevelLet;
             top = analyzeTop(top, ctx) as t.ToplevelLet;
+            tast.toplevels.push(top);
             const { hash, ctx: nctx } = ctx.withValues(top.elements);
             jctx.actx = ctx = nctx as FullContext;
 
@@ -152,6 +154,7 @@ export const runTest = (ast: File, debugFailures = false): Test => {
             ctx = ctx.toplevelConfig(null) as FullContext;
             let top = ctx.ToTast.Toplevel(t, ctx) as t.ToplevelExpression;
             top = analyzeTop(top, ctx) as t.ToplevelExpression;
+            tast.toplevels.push(top);
             let expr = top.expr;
 
             // it(
@@ -213,7 +216,11 @@ export const runTest = (ast: File, debugFailures = false): Test => {
                                 res,
                                 ectx,
                             );
-                            expect(err).toBeUndefined();
+                            // expect(err).toBeUndefined();
+                            statuses.push({
+                                loc: { ...d.loc, end: d.loc.start },
+                                text: err ?? null,
+                            });
                         }
                     } catch (err) {
                         statuses.push({
@@ -231,39 +238,36 @@ export const runTest = (ast: File, debugFailures = false): Test => {
                 // ) {
                 //     const expected = expr.args[0];
                 //     const actual = expr.args[1];
-            } else if (ctx.isBuiltinType(ctx.getType(expr)!, 'bool')) {
-                // it(
-                //     text.slice(t.loc.start.offset, t.loc.end.offset) +
-                //         ` ${file}:${t.loc.start.line} - should be true`,
-                //     () => {
-                try {
-                    let res;
+            } else {
+                const t = ctx.getType(expr);
+                if (t && ctx.isBuiltinType(t, 'bool')) {
                     try {
-                        const f = new Function('$terms', jsraw);
-                        res = f(ectx.terms);
+                        let res;
+                        try {
+                            const f = new Function('$terms', jsraw);
+                            res = f(ectx.terms);
+                        } catch (err) {
+                            throw new Error(jsraw, {
+                                cause: err as Error,
+                            });
+                        }
+                        statuses.push({
+                            loc: { ...expr.loc, end: expr.loc.start },
+                            text: res ? null : `false`,
+                        });
                     } catch (err) {
-                        throw new Error(jsraw, {
-                            cause: err as Error,
+                        statuses.push({
+                            loc: { ...expr.loc, end: expr.loc.start },
+                            text: `Error ${(err as Error).message}`,
                         });
                     }
-                    statuses.push({
-                        loc: expr.loc,
-                        text: res ? null : `false`,
-                    });
-                    expect(res).toBe(true);
-                } catch (err) {
-                    statuses.push({
-                        loc: t.loc,
-                        text: `Error ${(err as Error).message}`,
-                    });
                 }
-                //     },
-                // );
             }
         }
     });
 
     // });
-    global.console = old;
+    console.log(statuses);
+    window.console = old;
     return { statuses, file: tast, ctx };
 };

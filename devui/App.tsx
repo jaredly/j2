@@ -12,7 +12,7 @@ import {
     parseFixtureFile,
     runFixture,
 } from '../core/typing/__test__/fixture-utils';
-import { Test } from '../core/typing/__test__/run-test';
+import { runTest, Test } from '../core/typing/__test__/run-test';
 import { runTypeTest, TypeTest } from '../core/typing/__test__/typetest';
 import { FixtureFile } from './FixtureFile';
 import {
@@ -22,6 +22,7 @@ import {
     PushpinIconFilled,
     ReportProblemIcon,
 } from './Icons';
+import { TestView } from './Test';
 import { TypeTestView } from './TypeTest';
 
 export const usePromise = <T,>(
@@ -199,13 +200,13 @@ export const App = () => {
             // Silence console during others
             // if (hash.endsWith('/pin')) {
             console.warn(`NOTE: suppressing logs from non-pinned items.`);
-            window.console = {
-                ...old,
-                log: () => {},
-                warn: () => {},
-                error: () => {},
-            };
-            // }
+            // window.console = {
+            //     ...old,
+            //     log: () => {},
+            //     warn: () => {},
+            //     error: () => {},
+            // };
+            // // }
 
             const files = {} as Files['fixtures'];
             fixtureContents.forEach((contents, i) => {
@@ -227,6 +228,7 @@ export const App = () => {
             });
             const testFiles = {} as Files['test'];
             testContents.forEach((contents, i) => {
+                console.log('um', contents);
                 try {
                     testFiles[test[i]] = runTest(parseFile(contents));
                 } catch (err) {
@@ -285,6 +287,21 @@ export const App = () => {
                         >
                             <ShowStatus status={files.fixtures[fixture]} />
                             {fixture}
+                        </Link>
+                    ))}
+                <Divider css={{ marginBottom: 24, marginTop: 24 }} />
+                <Text>Tests</Text>
+                {Object.keys(files.test)
+                    .sort()
+                    .map((name) => (
+                        <Link
+                            key={name}
+                            href={`#test:${name}`}
+                            block
+                            color={name === hashName ? 'primary' : 'secondary'}
+                        >
+                            <ShowTest statuses={files.test[name].statuses} />
+                            {name}
                         </Link>
                     ))}
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
@@ -364,6 +381,18 @@ export const App = () => {
                         const newTypes = { ...files.typetest };
                         newTypes[hashName] = data;
                         setFiles({ ...files, typetest: newTypes });
+                    }}
+                />
+            ) : hashName?.startsWith('test:') &&
+              files.test[hashName.slice('test:'.length)] ? (
+                <TestView
+                    name={hashName}
+                    key={hashName}
+                    test={files.test[hashName.slice('test:'.length)]}
+                    onChange={(data) => {
+                        const newTest = { ...files.test };
+                        newTest[hashName.slice('test:'.length)] = data;
+                        setFiles({ ...files, test: newTest });
                     }}
                 />
             ) : (

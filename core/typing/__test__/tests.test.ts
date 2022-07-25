@@ -3,6 +3,9 @@ import { builtinContext } from '../../ctx';
 import { parseFile } from '../../grammar/base.parser';
 import { runTest } from './run-test';
 
+// @ts-ignore
+global.window = global;
+
 const base = __dirname + '/../../elements/test/';
 readdirSync(base)
     .filter((x) => x.endsWith('.jd'))
