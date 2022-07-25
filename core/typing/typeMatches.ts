@@ -1,4 +1,4 @@
-import { refsEqual } from '../ctx';
+import { noloc, refsEqual } from '../ctx';
 import { enumTypeMatches } from '../elements/enums';
 import { recordMatches } from '../elements/records';
 import { tvarsMatches } from '../elements/type-vbls';
@@ -7,6 +7,7 @@ import {
     EnumCase,
     GlobalRef,
     refHash,
+    RefKind,
     Sym,
     TApply,
     TEnum,
@@ -25,6 +26,7 @@ import {
     stringAddsMatch,
     stringOps,
 } from './ops';
+import { isTaskable, matchesTask } from './tasks';
 import { unifyTypes } from './unifyTypes';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
@@ -80,27 +82,6 @@ export const payloadsEqual = (
     );
 };
 
-export const isTaskable = (t: Type, ctx: Ctx): boolean => {
-    if (t.type !== 'TEnum' || t.open) {
-        return false;
-    }
-    const cases = expandEnumCases(t, ctx);
-    return (
-        cases != null &&
-        cases.every((kase) => {
-            return (
-                kase.payload != null &&
-                kase.payload.type === 'TRecord' &&
-                kase.payload.items.length === 2 &&
-                !kase.payload.spreads.length &&
-                !kase.payload.open &&
-                kase.payload.items[0].key === '0' &&
-                kase.payload.items[1].key === '1'
-            );
-        })
-    );
-};
-
 export const typeMatches = (
     candidate: Type,
     expected: Type,
@@ -132,6 +113,13 @@ export const typeMatches = (
 
     if (ctx.isBuiltinType(expected, 'task')) {
         return isTaskable(candidate, ctx);
+    }
+    if (
+        expected.type === 'TApply' &&
+        candidate.type === 'TEnum' &&
+        ctx.isBuiltinType(expected.target, 'Task')
+    ) {
+        return matchesTask(candidate, expected.loc, expected.args, ctx);
     }
 
     if (ctx.isBuiltinType(expected, 'eq')) {

@@ -71,7 +71,7 @@ whatNum(`What(110))
 whatTen(`What(10))
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f whatNum=hed7f1742a075998ffaaf39fd584a3cb31c2df29d whatTen=hb6a4ee646daa689f2ce7cc5cb71f48c02c4532fd
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f whatNum=h7688dfb0e0b91d9137afcb7a0693cb57eb1c60c9 whatTen=h41fe87ae3122488bc9be5b65f06685bd4b38f914
 whatNum(`What(110))
 // int
 /* whatNum({

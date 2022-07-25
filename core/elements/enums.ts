@@ -1,4 +1,4 @@
-import { noloc } from '../ctx';
+import { FullContext, noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
@@ -213,6 +213,7 @@ export const ToIR = {
 
 import { Ctx as JCtx } from '../ir/to-js';
 import * as b from '@babel/types';
+import { typeToString } from '../typing/__test__/utils';
 export const ToJS = {
     Enum({ loc, tag, payload }: t.IEnum, ctx: JCtx): b.Expression {
         if (!payload) {
@@ -428,6 +429,12 @@ export const enumTypeMatches = (
         if (
             !payloadsEqual(kase.payload, expMap[kase.tag].payload, ctx, false)
         ) {
+            // console.log(`Payload not equal ${kase.tag}`);
+            // console.log(typeToString(kase.payload!, ctx as FullContext));
+            // console.log(
+            //     typeToString(expMap[kase.tag].payload!, ctx as FullContext),
+            // );
+            // console.log(kase.payload, expMap[kase.tag].payload);
             return false;
         }
     }
