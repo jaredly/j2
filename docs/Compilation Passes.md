@@ -1,4 +1,29 @@
 
+TAST -> IR
+
+
+
+// So, exprs that would turn into statements ...
+// get turned into 
+
+() => {
+	let x = if 10 > 2 {
+		34
+	} else {
+		12
+	};
+
+	hello(if true { 10 } else { 2 })
+}
+
+() => {
+
+}
+
+
+
+---
+
 Here are the things I'm thinking of:
 
 - turn effects into (either a state machine or) CPS

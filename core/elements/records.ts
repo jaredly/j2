@@ -372,6 +372,9 @@ export const ToJS = {
     Record({ items, spreads, loc }: t.IRecord, ctx: JCtx): b.Expression {
         const nums = irecordAsTuple({ items, spreads, loc, type: 'Record' });
         if (nums) {
+            if (!nums.length) {
+                return b.nullLiteral();
+            }
             return b.arrayExpression(
                 nums.map((num) => ctx.ToJS.IExpression(num, ctx)),
             );

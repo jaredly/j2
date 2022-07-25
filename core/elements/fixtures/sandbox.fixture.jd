@@ -66,9 +66,12 @@ true
 // bool
 /* true */
 
-==[New fixture_]==
+==[what]==
 --[input]--
-// hello
+// ok
 
 --[output:expected]--
-// hello
+// ok
+
+--[builtins]--
+//:type:Task:<E, T>

@@ -1,6 +1,34 @@
 
 
 
+# Definition of `Task`
+
+```
+Task<[`A(a, ar) | `B(b, br) | `C(c, [])], D>
+// becomes
+type Whatsit = [
+	`A(a, ar => Whatsit) |
+	`B(b, br => Whatsit) |
+	`C(c, ()) |
+	`Return(D)
+]
+```
+
+## Two Magic Functions
+
+### andThen
+lets you use the eventual returned value.
+(this is "bind")
+R => Task<[T], R'>
+
+### withHandler
+lets you map all subtasks??
+Task<[T + E], R> => Task<[T], R>
+
+
+# Ramblings
+
+
 Ok, so once I have `Task<>` style effects ...
 what do I have next?
 

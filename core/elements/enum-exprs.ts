@@ -9,7 +9,8 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { maybeTuple } from './base';
 
 export const grammar = `
-Enum = "\`" text:$IdText payload:("(" _ CommaExpr? _ ")")?
+Enum = "\`" text:$IdText payload:EnumPayload?
+EnumPayload = "(" _ items:CommaExpr? _ ")"
 `;
 
 export type Enum = {
@@ -31,7 +32,9 @@ export const ToTast = {
         return {
             type: 'Enum',
             tag: t.text,
-            payload: t.payload ? maybeTuple(t.payload, t.loc, ctx) : undefined,
+            payload: t.payload
+                ? maybeTuple(t.payload.items, t.loc, ctx)
+                : undefined,
             loc: t.loc,
         };
     },
@@ -45,16 +48,20 @@ export const ToAst = {
         return {
             type: 'Enum',
             text: t.tag,
-            payload:
-                inner?.type === 'ParenedExpression'
-                    ? inner.items
-                    : inner
-                    ? {
-                          type: 'CommaExpr',
-                          items: [inner],
-                          loc: t.loc,
-                      }
-                    : null,
+            payload: inner
+                ? {
+                      type: 'EnumPayload',
+                      loc: t.loc,
+                      items:
+                          inner?.type === 'ParenedExpression'
+                              ? inner.items
+                              : {
+                                    type: 'CommaExpr',
+                                    items: [inner],
+                                    loc: t.loc,
+                                },
+                  }
+                : null,
             loc: t.loc,
         };
     },
@@ -68,9 +75,9 @@ export const ToPP = {
                 pp.text(t.text, t.loc),
                 t.payload
                     ? pp.args(
-                          t.payload.items.map((item) =>
+                          t.payload.items?.items.map((item) =>
                               ctx.ToPP.Expression(item, ctx),
-                          ),
+                          ) ?? [],
                           t.payload.loc,
                       )
                     : null,

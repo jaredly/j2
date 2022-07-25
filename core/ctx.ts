@@ -752,6 +752,7 @@ export const errors = {
     needsTypeVariables: 0,
     ifBranchesDisagree: 2,
     patternMismatch: 0,
+    resMismatch: 1,
 };
 export type ErrorTag = keyof typeof errors;
 
@@ -762,6 +763,7 @@ float
 bool
 string
 eq
+task
 `
     .trim()
     .split('\n');
@@ -787,6 +789,26 @@ export const setupDefaults = (ctx: FullContext) => {
     builtinTypes.forEach((name) => {
         named[name] = addBuiltinType(ctx, name, []);
     });
+    addBuiltinType(ctx, 'Task', [
+        {
+            sym: { id: 0, name: 'Effects' },
+            bound: tref(named['task']),
+            loc: noloc,
+            default_: null,
+        },
+        {
+            sym: { id: 0, name: 'Effects' },
+            bound: null,
+            loc: noloc,
+            default_: {
+                type: 'TRecord',
+                items: [],
+                loc: noloc,
+                spreads: [],
+                open: false,
+            },
+        },
+    ]);
     Object.keys(errors).forEach((tag) => {
         addBuiltinDecorator(ctx, `error:` + tag, 0);
     });

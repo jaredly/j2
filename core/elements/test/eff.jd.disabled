@@ -1,0 +1,240 @@
+
+/*
+const printFullName = () ={Read, Write}> {
+    print("What is your forename?");
+    const foreName = raise!(Read.read());
+    print("What is your surname?");
+    const surName = raise!(Read.read());
+    print(foreName ++ " " ++ surName)
+}
+*/
+
+let print = (x): Task<[`Print(string, ())], ()> => `Print(x, () => `Return()`);
+let read = (x): Task<[`Read((), string)], string> => `Read((), v => `Return(v)`);
+let printFullName = (x): Task<[`Print(string, []) | `Read((), string)]> => {
+	print("Hello") andThen () => {
+		read() andThen (forName) => {
+			print("Hooo") andThen () => {
+				read() andThen (surName) => {
+					forName + " " + surName
+				}
+			}
+		}
+	}
+}
+
+andThen t r becomes
+
+switch t {
+	`Print(v, k) => `Print(v, x => r(k(x)))
+	`Read(v, k) => `Read(v, x => r(k(x)))
+	`Return(v) => `Return(r(v))
+}
+
+type Party<T> = [
+	~Print(string, () => Party<T>) |
+	~Read((), string => Party<T>) |
+	~Return(T)
+]
+
+Task<[A(a, ar) | B(b, br) | C(c, [])], D>
+// becomes
+type Whatsit = [
+	A(a, ar => Whatsit) |
+	B(b, br => Whatsit) |
+	C(c) |
+	Return(D)
+]
+
+
+const andThen: (Party<T>, T => Party<R>) => Party<R> = (party, next) => {
+	switch (party) {
+		case `Return(v) => next(v) `
+		case `Print(v, k) => `Print(v, x => andThen(k(x), next))
+		case `Read(v, k) => `Read(v, x => andThen(k(x), next))
+	}
+}
+
+const handleWhatsit = () => {
+	switch res {
+		'Print(v, k) => k()
+	}
+}
+
+const collect = <T: taskable>(task: Task<[T | Write(string, ())], ()>): Task<T> => {
+	switch task {
+		`Return(v) => "end"`
+		`Write(v, k) => v + "\n" + collect(k())`
+		// Does this case need to be different?
+		// like a 'insert myself into the "k" of whatever it is'?
+		otherwise => otherwise withHandler collect
+	}
+}
+
+
+
+const alwaysRead = <T, E: taskable>(value: string, task: Task<[E | Read((), string)], T>): Task<E, T> => {
+	switch task {
+		`Return(v) => `Return(v)
+		`Read(v, k) => alwaysRead<T, E>(value, k(value))`
+		otherwise => otherwise withHandler task => alwaysRead(value, task)
+	}
+}
+// ^ in this case it would look like
+const withHandler = (task, handler) => switch task {
+	`Write(v, k) => `Write(v, x => handler(k(x)))
+	`Return(v) => `Return(v)
+}
+/*
+and the js for all withHandler's
+
+const withHandler = ({type, payload: [value, k]}: {type: string, payload: [any, Function | null]}, handler) => 
+	({type, payload: [value, k ? (x) => handler(k(x)) : null]})
+
+and ...
+
+const andThen = ({type, payload}, next) => {
+	type === 'Return' ? next(payload) :
+	{type, payload: [payload[0], payload[1] ? (x) => andThen(payload[1](x), next) : null]}
+}
+
+*/
+
+/*
+
+So the `withHandler` magic function...
+strips an effect off of the /insides/ of a task.
+
+
+
+*/
+
+collect<[]>(alwaysRead<(), [`Write(string, ())`]>("hi", {
+    print!(read!());
+    print!("YA");
+    print!(read!());
+    print!("B")
+})) == "hi\nYA\nhi\nB\nend"
+
+
+
+
+collect<[]>(alwaysRead<(), [`Write(string, ())`]>("hi", {
+	Read((), v => {
+		Write(v, () => {
+			Write("YA", () => {
+				Read((), v => {
+					Write(v, () => {
+						Write("B", () => ())
+					})
+				})
+			})
+		})
+	})
+})) == "hi\nYA\nhi\nB\nend"
+
+
+
+
+
+
+
+
+/********************/
+/********************/
+/* Looking into CPS */
+/********************/
+/********************/
+
+/*
+is there ... likely to be ... a good way to represent these things
+in a language that doesnt do unions?
+
+oh lol I guess it's definitely a recursive function, right?
+so glsl can't do it anyway.
+
+oh lol yes because the type is recursive as well. deifnitely can't.
+
+on the other handdd if we represent things as continuations ...
+... does it get better?
+no I mean handle always has to be recursive, I'm pretty sure?
+
+
+*/
+
+let print = <T>(x: string, handlers: {
+	Print: <T>(string, () => T) => T,
+}, then: () => T) => handlers.Print<T>(x, then)
+
+let read = <T>(handlers: {
+	Read: <T>((string) => T) => T,
+}, then: (string) => T) => handlers.Read<T>(then)
+
+// yup that's also a recursive type, kindof
+// although it's in a function type, which I'll
+// be cheating on.
+
+type Handlers = {
+	Print: <T>(Handlers, string, (handlers: Handlers) => T) => T,
+	Read: <T>(Handlers, (handlers: Handlers, string) => T) => T,
+}
+
+let printFullName = <R>(
+	handlers: Handlers,
+	next: (handlers: Handlers, string) => R,
+): R => {
+	print("Hello", handlers, (handlers) => {
+		read(handlers, (handlers, forName) => {
+			print("Hoaa", handlers, (handlers, surName) => {
+				next(handlers, forName + " " + surName)
+			})
+		})
+	})
+}
+
+let printFullName = () => {
+	print!("Hello");
+	let forName = read!();
+	print!("Hoaa");
+	let surName = read!();
+	forName + " " + surName;
+}
+
+/*
+So, it looks like
+
+hrmmm oh wait no we can't update the handlers this way
+
+oh hm. idk if this works
+
+collectPrint ()
+     ______
+    /      \
+	[... um ok ...]
+	[] => ()
+	........
+
+So like the effect dealio, wants to be
+
+*/
+
+HH<{Print: (string, ()), Read: ((), string), Fail: (string, [])}>
+// --> becomes
+type Handlers = {
+	Print: <T>(Handlers, string, (handlers: Handlers) => T) => T,
+	Read: <T>(Handlers, (handlers: Handlers, string) => T) => T,
+	Fail: <T>(Handlers, string) => T,
+}
+/*
+ohhh wait how does 'fail' work in this case?
+maybe I cant use "return value" as a thing
+*/
+
+let collect = <Handlers: {*}>(handlers: Handlers, text: string, k: (handlers: Handlers) => T) => text + "\n" + k({
+	...handlers,
+	Print: collect,
+});
+
+printFullName({
+	Print: collect,
+})

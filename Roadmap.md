@@ -12,6 +12,14 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+BIG NEXT
+
+- [ ] tests in browser
+- [ ] value/fn recursion
+- [ ] switch/enum patterns
+- [ ] eq deriving for realsies
+
+
 # Much more fancy type arithmatic
 
 - comparison ops, let's do this
@@ -37,12 +45,25 @@ hmmm so `(a, b) => (a == b, takesInt(a), a == b)`
 I guess I need to do an inference pass first, and then
 a 'highlight all errors' pass. Yeah it doesn't work to mix them.
 
+
+
+
+ooohhhh what if the type restriction shortcut syntax looks like:
+- `Type 'where' Pattern`?
+that could be cool.
+ok also with type arithmetic, I might need to allow
+an upper & lower bound to a number. idk.
+
+
 # Patternings
 
 - Enum (w/ or w/o payload specified)
 - Constants
 - Exaustiveness
 - `as` pls
+
+# SWitches
+
 
 
 

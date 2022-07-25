@@ -20,10 +20,10 @@
 /* [1, 2] */
 ()
 // ()
-/* [] */
+/* null */
 ()
 // ()
-/* [] */
+/* null */
 {tag: "Something", payload: 200}
 // {tag: "Something", payload: 200}
 /* {

@@ -197,6 +197,7 @@ import {
     typeForPattern,
     typeMatchesPattern,
 } from './pattern';
+import { dtype } from './ifs';
 
 export const ToJS = {
     Lambda({ type, args, res, body, loc }: ILambda, ctx: JCtx): b.Expression {
@@ -225,10 +226,18 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             }
             return arg;
         });
-        // if (!node.res) {
-        //     changed = true;
-        //     node = { ...node, res: ctx.ctx.getType(node.body) };
-        // }
+        if (node.res) {
+            const res = ctx.ctx.getType(node.body);
+            if (res && !typeMatches(res, node.res, ctx.ctx)) {
+                changed = true;
+                node = {
+                    ...node,
+                    res: tdecorate(node.res, 'resMismatch', ctx, [
+                        dtype('inferrred', res, node.res.loc),
+                    ]),
+                };
+            }
+        }
         return [
             changed ? { ...node, args } : null,
             { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx },

@@ -116,7 +116,8 @@ DecExpr = expr:Expression
 
 // enum-exprs.ts
 
-Enum = "\`" text:$IdText payload:("(" _ CommaExpr? _ ")")?
+Enum = "\`" text:$IdText payload:EnumPayload?
+EnumPayload = "(" _ items:CommaExpr? _ ")"
 
 
 // enums.ts
@@ -126,7 +127,7 @@ EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"?
 EnumCase = TagDecl / Type / Star
 TagDecl = decorators:(Decorator _)* "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
-TagPayload = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
+TagPayload = "(" _ items:TComma? _ ")"
 Star = pseudo:"*"
 
 

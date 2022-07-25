@@ -3,7 +3,6 @@ import { enumTypeMatches } from '../elements/enums';
 import { recordMatches } from '../elements/records';
 import { tvarsMatches } from '../elements/type-vbls';
 import { Id } from '../ids';
-import { transformType } from '../transform-tast';
 import {
     EnumCase,
     GlobalRef,
@@ -16,6 +15,7 @@ import {
     TRef,
     Type,
 } from '../typed-ast';
+import { hasFunctions } from './hasFunctions';
 import {
     collapseOps,
     eopsMatch,
@@ -80,35 +80,25 @@ export const payloadsEqual = (
     );
 };
 
-export const hasFunctions = (t: Type, ctx: Ctx): boolean => {
-    let found = false;
-    transformType(
-        t,
-        {
-            TLambda(node, ctx) {
-                found = true;
-                return false;
-            },
-            TRef(node, _) {
-                const resolved = ctx.resolveRefsAndApplies(node);
-                // Probably still global
-                if (resolved?.type === 'TRef') {
-                    return false;
-                }
-                found =
-                    found || (resolved ? hasFunctions(resolved, ctx) : true);
-                return false;
-            },
-            TApply(node, _) {
-                const resolved = ctx.resolveRefsAndApplies(node);
-                found =
-                    found || (resolved ? hasFunctions(resolved, ctx) : true);
-                return false;
-            },
-        },
-        null,
+export const isTaskable = (t: Type, ctx: Ctx): boolean => {
+    if (t.type !== 'TEnum' || t.open) {
+        return false;
+    }
+    const cases = expandEnumCases(t, ctx);
+    return (
+        cases != null &&
+        cases.every((kase) => {
+            return (
+                kase.payload != null &&
+                kase.payload.type === 'TRecord' &&
+                kase.payload.items.length === 2 &&
+                !kase.payload.spreads.length &&
+                !kase.payload.open &&
+                kase.payload.items[0].key === '0' &&
+                kase.payload.items[1].key === '1'
+            );
+        })
     );
-    return found;
 };
 
 export const typeMatches = (
@@ -138,6 +128,10 @@ export const typeMatches = (
     }
     if (candidate.type === 'TOps') {
         candidate = collapseOps(candidate, ctx);
+    }
+
+    if (ctx.isBuiltinType(expected, 'task')) {
+        return isTaskable(candidate, ctx);
     }
 
     if (ctx.isBuiltinType(expected, 'eq')) {

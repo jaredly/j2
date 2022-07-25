@@ -21,7 +21,7 @@ EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"?
 EnumCase = TagDecl / Type / Star
 TagDecl = decorators:(Decorator _)* "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
-TagPayload = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
+TagPayload = "(" _ items:TComma? _ ")"
 Star = pseudo:"*"
 
 `;
@@ -60,9 +60,9 @@ export const ToTast = {
                                     ctx.ToTast.Decorator(d, ctx),
                                 ),
                                 payload: c.payload
-                                    ? c.payload.items.length === 1
+                                    ? c.payload.items?.items.length === 1
                                         ? ctx.ToTast.Type(
-                                              c.payload.items[0],
+                                              c.payload.items.items[0],
                                               ctx,
                                           )
                                         : {
@@ -70,17 +70,18 @@ export const ToTast = {
                                               loc: noloc,
                                               spreads: [],
                                               open: false,
-                                              items: c.payload.items.map(
-                                                  (p, i) => ({
-                                                      type: 'TRecordKeyValue',
-                                                      loc: noloc,
-                                                      key: i.toString(),
-                                                      value: ctx.ToTast.Type(
-                                                          p,
-                                                          ctx,
-                                                      ),
-                                                  }),
-                                              ),
+                                              items:
+                                                  c.payload.items?.items.map(
+                                                      (p, i) => ({
+                                                          type: 'TRecordKeyValue',
+                                                          loc: noloc,
+                                                          key: i.toString(),
+                                                          value: ctx.ToTast.Type(
+                                                              p,
+                                                              ctx,
+                                                          ),
+                                                      }),
+                                                  ) ?? [],
                                           }
                                     : undefined,
                                 loc: c.loc,
@@ -115,11 +116,15 @@ export const ToAst = {
                                     ? {
                                           type: 'TagPayload',
                                           loc: c.loc,
-                                          items: enumPayload(
-                                              c.payload,
-                                              ctx,
-                                              c.loc,
-                                          ),
+                                          items: {
+                                              type: 'TComma',
+                                              items: enumPayload(
+                                                  c.payload,
+                                                  ctx,
+                                                  c.loc,
+                                              ),
+                                              loc: c.loc,
+                                          },
                                       }
                                     : null,
                                 loc: c.loc,
@@ -158,9 +163,10 @@ export const ToPP = {
                                     pp.text(`\`${c.text}`, noloc),
                                     c.payload
                                         ? pp.args(
-                                              c.payload.items.map((item) =>
-                                                  ctx.ToPP.Type(item, ctx),
-                                              ),
+                                              c.payload.items?.items.map(
+                                                  (item) =>
+                                                      ctx.ToPP.Type(item, ctx),
+                                              ) ?? [],
                                               c.payload.loc,
                                           )
                                         : // pp.items(

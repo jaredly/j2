@@ -61,6 +61,7 @@ import {
     TemplatePair,
     TemplateWrap,
     Enum,
+    EnumPayload,
     Record,
     RecordItems,
     RecordItem,
@@ -417,6 +418,11 @@ export type Visitor<Ctx> = {
     DecExprPost?: (node: DecExpr, ctx: Ctx) => null | DecExpr;
     Enum?: (node: Enum, ctx: Ctx) => null | false | Enum | [Enum | null, Ctx];
     EnumPost?: (node: Enum, ctx: Ctx) => null | Enum;
+    EnumPayload?: (
+        node: EnumPayload,
+        ctx: Ctx,
+    ) => null | false | EnumPayload | [EnumPayload | null, Ctx];
+    EnumPayloadPost?: (node: EnumPayload, ctx: Ctx) => null | EnumPayload;
     TEnum?: (
         node: TEnum,
         ctx: Ctx,
@@ -1209,6 +1215,14 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_Enum?: (node: Enum, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_EnumPayload?: (
+        node: EnumPayload,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_EnumPayload?: (
+        node: EnumPayload,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TEnum?: (
         node: TEnum,
         ctx: Ctx,
@@ -4049,6 +4063,74 @@ export const transformTemplateString = <Ctx>(
     return node;
 };
 
+export const transformEnumPayload = <Ctx>(
+    node: EnumPayload,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): EnumPayload => {
+    if (!node) {
+        throw new Error('No EnumPayload provided');
+    }
+
+    const transformed = visitor.EnumPayload
+        ? visitor.EnumPayload(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = null;
+        const updatedNode$items$current = node.items;
+        if (updatedNode$items$current != null) {
+            const updatedNode$items$1$ = transformCommaExpr(
+                updatedNode$items$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$items$1$ !== updatedNode$items$current;
+            updatedNode$items = updatedNode$items$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.EnumPayloadPost) {
+        const transformed = visitor.EnumPayloadPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformEnum = <Ctx>(
     node: Enum,
     visitor: Visitor<Ctx>,
@@ -4081,8 +4163,27 @@ export const transformEnum = <Ctx>(
 
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$payload = null;
+        const updatedNode$payload$current = node.payload;
+        if (updatedNode$payload$current != null) {
+            const updatedNode$payload$1$ = transformEnumPayload(
+                updatedNode$payload$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 ||
+                updatedNode$payload$1$ !== updatedNode$payload$current;
+            updatedNode$payload = updatedNode$payload$1$;
+        }
+
         if (changed1) {
-            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                payload: updatedNode$payload,
+            };
             changed0 = true;
         }
     }
@@ -7088,22 +7189,17 @@ export const transformTagPayload = <Ctx>(
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
 
-        let updatedNode$items = node.items;
-        {
-            let changed2 = false;
-            const arr1 = node.items.map((updatedNode$items$item1) => {
-                const result = transformType(
-                    updatedNode$items$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$items$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$items = arr1;
-                changed1 = true;
-            }
+        let updatedNode$items = null;
+        const updatedNode$items$current = node.items;
+        if (updatedNode$items$current != null) {
+            const updatedNode$items$1$ = transformTComma(
+                updatedNode$items$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$items$1$ !== updatedNode$items$current;
+            updatedNode$items = updatedNode$items$1$;
         }
 
         if (changed1) {
@@ -10914,6 +11010,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'EnumPayload': {
+            const transformed = visitor.AllTaggedTypes_EnumPayload
+                ? visitor.AllTaggedTypes_EnumPayload(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TEnum': {
             const transformed = visitor.AllTaggedTypes_TEnum
                 ? visitor.AllTaggedTypes_TEnum(node, ctx)
@@ -12053,6 +12168,12 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'EnumPayload': {
+            updatedNode = transformEnumPayload(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TEnum': {
             updatedNode = transformTEnum(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -12632,6 +12753,16 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'Enum': {
             const transformed = visitor.AllTaggedTypesPost_Enum
                 ? visitor.AllTaggedTypesPost_Enum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'EnumPayload': {
+            const transformed = visitor.AllTaggedTypesPost_EnumPayload
+                ? visitor.AllTaggedTypesPost_EnumPayload(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
