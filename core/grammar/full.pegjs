@@ -40,7 +40,7 @@ Toplevel = Aliases / TypeAlias / ToplevelLet / Expression
 TypeToplevel = TypeAlias / Type
 
 Aliases = "alias" items:AliasItem*
-AliasItem = _nonnewline name:$AliasName _nonnewline "=" _nonnewline hash:$HashRefInner
+AliasItem = _nonnewline name:$AliasName ":" hash:$HashRefInner
 AliasName = $IdText / $binop
 
 Expression = Lambda / BinOp
@@ -79,6 +79,7 @@ Binop = Expression
 
 newline = "\n"
 _nonnewline = [ \t\r]* (comment [ \t\r]*)*
+__nonnewline = [ \t\r]+ (comment [ \t\r]*)*
 _ "whitespace"
   = [ \t\n\r]* (comment _)*
 __ "whitespace"

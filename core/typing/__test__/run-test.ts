@@ -154,6 +154,8 @@ export const runTest = (
             }
             //     },
             // );
+        } else if (t.type === 'Aliases') {
+            // um
         } else {
             ctx = ctx.toplevelConfig(null) as FullContext;
             let top = ctx.ToTast.Toplevel(t, ctx) as t.ToplevelExpression;

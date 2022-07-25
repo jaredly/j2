@@ -18,6 +18,7 @@ BIG NEXT
 - [ ] value/fn recursion
 	- [ ] oh wait, aliases ...
 		hm ok
+		...
 - [ ] switch/enum patterns
 - [ ] figure out withHandler and andThen
 - [ ] eq deriving for realsies

@@ -22,6 +22,22 @@ import { splitAliases } from '../core/typing/__test__/fixture-utils';
 
 export type Colorable = keyof Visitor<null> | 'Error' | 'Success' | 'LetName';
 
+export const styles: {
+    [key in Colorable]?: any; // React.CSSProperties;
+} = {
+    AliasItem: {
+        'font-size': '50%',
+        color: '#555',
+        // 'max-width': '100px',
+        // display: 'inline-block',
+        // overflow: 'hidden',
+        // 'white-space': 'nowrap',
+        // 'text-overflow': 'ellipsis',
+        // 'margin-bottom': '-7px',
+        // 'margin-left': '0.5em',
+    },
+};
+
 export const colors: {
     [key in Colorable]?: string;
 } = {
@@ -39,6 +55,7 @@ export const colors: {
     Decorator: 'orange',
     DecoratorId: '#ffbf88',
     TemplateWrap: 'yellow',
+    AliasItem: '#555',
     // Error: 'red',
     // Success: 'green',
 };
@@ -275,6 +292,7 @@ export const Tree = ({
             // data-prefix={tree.hl.prefix ? tree.hl.prefix.text : undefined}
             // data-suffix={tree.hl.suffix ? tree.hl.suffix.text : undefined}
             style={{
+                ...styles[tree.hl.type],
                 color: colors[tree.hl.type] ?? '#aaa',
             }}
         >

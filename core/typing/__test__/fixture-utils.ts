@@ -102,13 +102,16 @@ export const loadSections = (data: string, char = '=') => {
     return sections;
 };
 
-export const aliasesToString = (aliases: { [key: string]: string }) =>
+export const aliasesToString = (
+    aliases: { [key: string]: string },
+    mid = '=',
+) =>
     Object.keys(aliases).length
         ? 'alias ' +
           Object.entries(aliases)
               .sort((a, b) => a[0].localeCompare(b[0]))
               .map(([key, value]) => {
-                  return `${key}=${value}`;
+                  return `${key}${mid}${value}`;
               })
               .join(' ') +
           '\n'

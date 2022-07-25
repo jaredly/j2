@@ -164,6 +164,8 @@ export type newline = string;
 
 export type _nonnewline = string;
 
+export type __nonnewline = string;
+
 export type _ = string;
 
 export type __ = string;

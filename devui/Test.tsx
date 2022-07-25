@@ -21,7 +21,7 @@ const refmt = (test: Test) => {
     const pctx = newPPCtx();
     const pp = injectComments(pctx.ToPP.File(ast, pctx), ast.comments.slice());
     return (
-        aliasesToString(actx.backAliases) +
+        aliasesToString(actx.backAliases, ':') +
         printToString(pp, 100).replace(/[ \t]+$/gm, '')
     );
 };

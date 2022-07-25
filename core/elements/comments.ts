@@ -4,6 +4,7 @@ import * as pp from '../printer/pp';
 export const grammar = `
 newline = "\n"
 _nonnewline = [ \t\r]* (comment [ \t\r]*)*
+__nonnewline = [ \t\r]+ (comment [ \t\r]*)*
 _ "whitespace"
   = [ \t\n\r]* (comment _)*
 __ "whitespace"

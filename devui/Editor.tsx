@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
 import { Visitor } from '../core/transform-ast';
-import { Colorable, colors, highlightLocations, HL } from './Highlight';
+import { Colorable, colors, highlightLocations, HL, styles } from './Highlight';
 import { markUpTree, Tree } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
 
@@ -227,19 +227,36 @@ export const Editor = ({
     );
 };
 
+const serializeStyles = (styles?: React.CSSProperties) => {
+    if (!styles) {
+        return '';
+    }
+    let items: string[] = [];
+    Object.keys(styles).forEach((k) => {
+        items.push(`${k}:${(styles as any)[k]}`);
+    });
+    return '; ' + items.join('; ');
+};
+
 export const openSpan = (hl: HL) =>
     `<span class="${hl.type}" style="color: ${colors[hl.type] ?? '#aaa'}${
         hl.underline
             ? '; text-decoration: underline; text-decoration-style: wavy; text-decoration-color: ' +
               hl.underline
             : ''
-    }"${hl.prefix ? ` data-prefix="${hl.prefix.text}"` : ''}${
+    }${serializeStyles(styles[hl.type])}"${
+        hl.prefix ? ` data-prefix="${escapeLine(hl.prefix.text)}"` : ''
+    }${
         hl.prefix?.message
-            ? ` data-message="${hl.prefix.message}" title="${hl.prefix.message}"`
+            ? ` data-message="${escapeLine(
+                  hl.prefix.message,
+              )}" title="${escapeLine(hl.prefix.message)}"`
             : ''
-    }${hl.suffix ? ` data-suffix="${hl.suffix.text}"` : ''}${
+    }${hl.suffix ? ` data-suffix="${escapeLine(hl.suffix.text)}"` : ''}${
         hl.suffix?.message
-            ? ` data-suffix-message="${hl.suffix.message}" title="${hl.suffix.message}"`
+            ? ` data-suffix-message="${escapeLine(
+                  hl.suffix.message,
+              )}" title="${escapeLine(hl.suffix.message)}"`
             : ''
     }>`;
 
