@@ -13,16 +13,17 @@ import { TVar } from '../../elements/type-vbls';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
 import { iCtx } from '../../ir/ir';
-import { jCtx } from '../../ir/to-js';
+import { jCtx, Ctx as JCtx } from '../../ir/to-js';
 import { printToString } from '../../printer/pp';
 import { newPPCtx, pegPrinter } from '../../printer/to-pp';
 import {
+    transformExpression,
     transformFile,
     transformToplevel,
     transformType,
     Visitor,
 } from '../../transform-tast';
-import { File } from '../../typed-ast';
+import { Expression, File, Loc, Type } from '../../typed-ast';
 import {
     errorCount,
     initVerify,
@@ -32,7 +33,7 @@ import {
     verifyVisitor,
 } from '../analyze';
 import { getType } from '../getType';
-import { printCtx } from '../to-ast';
+import { Ctx, printCtx } from '../to-ast';
 
 export type FixtureFile = {
     builtins: Builtin[];
@@ -247,6 +248,7 @@ export function runFixture(
     }
     let actx = printCtx(ctx);
     // const backAliases = {};
+    const jctx = jCtx(ctx);
 
     const printed = checked.toplevels.map((top) => {
         ctx.resetSym();
@@ -256,63 +258,47 @@ export function runFixture(
             ctx.toplevelConfig(tt);
             actx = actx.withToplevel(tt);
         }
-        // const actx = printCtx(ctx);
-        // Object.assign(backAliases, actx.backAliases);
 
         if (top.type === 'ToplevelExpression') {
-            const t = getType(top.expr, ctx);
+            const { loc, expr } = top;
+            const t = getType(expr, ctx);
             if (!t) {
                 checked.comments.push([
                     {
-                        ...top.loc,
-                        start: top.loc.end,
+                        ...loc,
+                        start: loc.end,
                     },
                     '// Error, no type!',
                 ]);
                 return actx.ToAst.Toplevel(top, actx);
             }
-            const ictx = iCtx(ctx);
-            const ir = ictx.ToIR.Expression(top.expr, ictx);
-            const jctx = jCtx(ctx);
-            const js = jctx.ToJS.IExpression(ir, jctx);
-            const jsraw = generate(js).code;
-            const pp = newPPCtx(false);
-            const ast = actx.ToAst.Type(t, actx);
-            const cm = printToString(pp.ToPP.Type(ast, pp), 200);
-            checked.comments.push([
-                { ...top.loc, start: top.loc.end },
-                '// ' + cm, // + ' ' + jsraw + ' */',
-            ]);
-            const results: Verify = initVerify();
-
-            transformToplevel(top, verifyVisitor(results, ctx), ctx);
-
-            if (!errorCount(results)) {
-                checked.comments.push([
-                    { ...top.loc, start: top.loc.end },
-                    '/* ' + jsraw + ' */',
-                ]);
-            }
-
-            // TODO: surface the IDs of things in the UI.
-            // eh, and maybe as a suffix on the whole thing?
-            // That way we still know if the hashes change (which is maybe useful?)
-            // but we can easily split out those changing from other things.
-
-            // } else if (top.type === 'TypeAlias') {
-            //     const hash = hashTypes(
-            //         top.elements.map((t) =>
-            //             transformType(t.type, locClearVisitor, null),
-            //         ),
-            //     );
-            //     // checked.comments.push([
-            //     //     {
-            //     //         ...top.loc,
-            //     //         start: top.loc.end,
-            //     //     },
-            //     //     '// h' + hash,
-            //     // ]);
+            validateExpression(ctx, jctx, expr, actx, t, checked, loc);
         }
+        if (top.type === 'ToplevelLet') {
+            top.elements.forEach((el) => {
+                const t = getType(el.expr, ctx);
+                if (!t) {
+                    checked.comments.push([
+                        {
+                            ...el.loc,
+                            start: el.loc.end,
+                        },
+                        '// Error, no type!',
+                    ]);
+                    return;
+                }
+                validateExpression(
+                    ctx,
+                    jctx,
+                    el.expr,
+                    actx,
+                    t,
+                    checked,
+                    el.loc,
+                );
+            });
+        }
+
         return actx.ToAst.Toplevel(top, actx);
     });
 
@@ -359,6 +345,36 @@ export function runFixture(
         outputVerify: verify(outputTast, ctx2),
         aliases: actx.backAliases,
     };
+}
+
+function validateExpression(
+    ctx: FullContext,
+    jctx: JCtx,
+    expr: Expression,
+    actx: Ctx,
+    t: Type,
+    checked: File,
+    loc: Loc,
+) {
+    const ictx = iCtx(ctx);
+    const ir = ictx.ToIR.Expression(expr, ictx);
+    const js = jctx.ToJS.IExpression(ir, jctx);
+    const jsraw = generate(js).code;
+    const pp = newPPCtx(false);
+    const ast = actx.ToAst.Type(t, actx);
+    const cm = printToString(pp.ToPP.Type(ast, pp), 200);
+    checked.comments.push([
+        { ...loc, start: loc.end },
+        '// ' + cm, // + ' ' + jsraw + ' */',
+    ]);
+    const results: Verify = initVerify();
+    transformExpression(expr, verifyVisitor(results, ctx), ctx);
+    if (!errorCount(results)) {
+        checked.comments.push([
+            { ...loc, start: loc.end },
+            '/* ' + jsraw + ' */',
+        ]);
+    }
 }
 
 export function loadBuiltins(builtins: Builtin[], ctx: FullContext) {

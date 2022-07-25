@@ -13,6 +13,30 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+# TYPE INFERENCE
+
+Ok sooo I think I want `typeMatches` to return `false` or
+a list of new constraints that must be successfully applied
+in order for the types to match.
+
+ohhh also what happens when we .. have a type variable on
+either side of the typeMatches?
+like `(a, b) => a(b) + takesInt(a)`?
+
+hmmm so `(a, b) => (a == b, takesInt(a), a == b)`
+.. the first a==b fails, the second one succeeds.
+I guess I need to do an inference pass first, and then
+a 'highlight all errors' pass. Yeah it doesn't work to mix them.
+
+# Patternings
+
+- Enum (w/ or w/o payload specified)
+- Constants
+- Exaustiveness
+- 
+
+
+
 # Let & If
 What validation do I need?
 - [x] let, pattern must match initializer type
