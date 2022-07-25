@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'fs';
-import { builtinContext } from '../../ctx';
+import { builtinContext, FullContext } from '../../ctx';
 import { parseFile } from '../../grammar/base.parser';
+import { aliasesFromString, splitAliases } from './fixture-utils';
 import { runTest } from './run-test';
 
 // @ts-ignore
@@ -13,11 +14,17 @@ readdirSync(base)
         const fixtureFile = base + file;
 
         describe(file, () => {
-            const text = readFileSync(fixtureFile, 'utf8');
+            const raw = readFileSync(fixtureFile, 'utf8');
+            const [aliasRaw, text] = splitAliases(raw);
             const ast = parseFile(text);
             let ctx = builtinContext.clone();
+            if (aliasRaw) {
+                ctx = ctx.withAliases(
+                    aliasesFromString(aliasRaw),
+                ) as FullContext;
+            }
 
-            const result = runTest(ast, false);
+            const result = runTest(ast, ctx, false);
             result.statuses.forEach((status) => {
                 it(
                     text.slice(status.loc.start.offset, status.loc.end.offset) +

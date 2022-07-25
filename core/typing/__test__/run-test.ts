@@ -23,11 +23,13 @@ export type Test = {
     ctx: FullContext;
 };
 
-export const runTest = (ast: File, debugFailures = false): Test => {
+export const runTest = (
+    ast: File,
+    ctx: FullContext,
+    debugFailures = false,
+): Test => {
     const old = window.console;
     const mock = old; // (window.console = { ...old, log() {}, warn() {}, error() {} });
-
-    let ctx = builtinContext.clone();
 
     const statuses: { loc: t.Loc; text: string | null }[] = [];
 

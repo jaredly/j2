@@ -18,6 +18,7 @@ import { printCtx } from '../core/typing/to-ast';
 import { markUpTree, Tree as TreeT } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
 import { getLocals, Locals } from '../core/elements/pattern';
+import { splitAliases } from '../core/typing/__test__/fixture-utils';
 
 export type Colorable = keyof Visitor<null> | 'Error' | 'Success' | 'LetName';
 
@@ -123,8 +124,10 @@ export const Highlight = ({
     }
 
     const marked = React.useMemo(() => {
-        const locs = highlightLocations(text, typeFile, extraLocs);
-        return text.trim().length ? markUpTree(text, locs) : null;
+        const [aliasRaw, rest] = splitAliases(text);
+
+        const locs = highlightLocations(rest, typeFile, extraLocs);
+        return text.trim().length ? markUpTree(rest, locs) : null;
     }, [text]);
 
     const annotations = React.useMemo(

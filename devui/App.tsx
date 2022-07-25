@@ -4,6 +4,7 @@ import { builtinContext, FullContext, noloc } from '../core/ctx';
 import { parseFile, parseTypeFile } from '../core/grammar/base.parser';
 import { fixComments } from '../core/grammar/fixComments';
 import {
+    aliasesFromString,
     Builtin,
     Fixture,
     FixtureFile as FixtureFileType,
@@ -11,6 +12,7 @@ import {
     loadBuiltins,
     parseFixtureFile,
     runFixture,
+    splitAliases,
 } from '../core/typing/__test__/fixture-utils';
 import { runTest, Test } from '../core/typing/__test__/run-test';
 import { runTypeTest, TypeTest } from '../core/typing/__test__/typetest';
@@ -228,9 +230,17 @@ export const App = () => {
             });
             const testFiles = {} as Files['test'];
             testContents.forEach((contents, i) => {
-                old.log('um', contents);
+                // old.log('um', contents);
+                const [aliasRaw, text] = splitAliases(contents);
+                let ctx = builtinContext.clone();
+                if (aliasRaw) {
+                    ctx = ctx.withAliases(
+                        aliasesFromString(aliasRaw),
+                    ) as FullContext;
+                }
+
                 try {
-                    testFiles[test[i]] = runTest(parseFile(contents));
+                    testFiles[test[i]] = runTest(parseFile(text), ctx);
                 } catch (err) {
                     old.error(`Failed to parse test`, err);
                 }

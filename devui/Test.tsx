@@ -8,13 +8,22 @@ import { Card } from '@nextui-org/react';
 import { fixComments } from '../core/grammar/fixComments';
 import { parseFile, parseTypeFile } from '../core/grammar/base.parser';
 import { runTest, Test } from '../core/typing/__test__/run-test';
+import {
+    aliasesFromString,
+    aliasesToString,
+    splitAliases,
+} from '../core/typing/__test__/fixture-utils';
+import { builtinContext, FullContext } from '../core/ctx';
 
 const refmt = (test: Test) => {
     const actx = printCtx(test.ctx);
     const ast = actx.ToAst.File(test.file, actx);
     const pctx = newPPCtx();
     const pp = injectComments(pctx.ToPP.File(ast, pctx), ast.comments.slice());
-    return printToString(pp, 100).replace(/[ \t]+$/gm, '');
+    return (
+        aliasesToString(actx.backAliases) +
+        printToString(pp, 100).replace(/[ \t]+$/gm, '')
+    );
 };
 
 export const TestView = ({
@@ -59,7 +68,11 @@ export const TestView = ({
                             if (v.type !== 'File') {
                                 return [];
                             }
-                            const results = runTest(v, true);
+                            const results = runTest(
+                                v,
+                                builtinContext.clone(),
+                                true,
+                            );
                             return results.statuses.map((status) => {
                                 if (status.text) {
                                     return {
@@ -82,8 +95,18 @@ export const TestView = ({
                                 }
                             });
                         }}
-                        onBlur={(text) => {
-                            const ran = runTest(fixComments(parseFile(text)));
+                        onBlur={(contents) => {
+                            const [aliasRaw, text] = splitAliases(contents);
+                            let ctx = builtinContext.clone();
+                            if (aliasRaw) {
+                                ctx = ctx.withAliases(
+                                    aliasesFromString(aliasRaw),
+                                ) as FullContext;
+                            }
+                            const ran = runTest(
+                                fixComments(parseFile(text)),
+                                ctx,
+                            );
                             const fmt = refmt(ran);
                             try {
                                 onChange(ran);
