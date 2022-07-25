@@ -63,6 +63,7 @@ export type {
 } from './elements/pattern';
 export type {
     Block,
+    IAssign,
     IBlock,
     ILet,
     IReturn,
@@ -70,6 +71,8 @@ export type {
     Let,
     Stmt,
 } from './elements/lets';
+import { If } from './elements/ifs';
+export type { IIf, If } from './elements/ifs';
 
 export type GlobalRef = {
     type: 'Global';
@@ -151,6 +154,7 @@ export type Expression =
     | Ref
     | Apply
     | Enum
+    | If
     | Lambda
     | Record
     | Number

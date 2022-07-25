@@ -271,7 +271,7 @@ export function runFixture(
                 ]);
                 return actx.ToAst.Toplevel(top, actx);
             }
-            const ictx = iCtx();
+            const ictx = iCtx(ctx);
             const ir = ictx.ToIR.Expression(top.expr, ictx);
             const jctx = jCtx(ctx);
             const js = jctx.ToJS.IExpression(ir, jctx);

@@ -1,0 +1,79 @@
+##[fixtures]##
+==[basic]==
+--[input]--
+if true { "ten" } else { "eleven" }
+
+--[output:expected]--
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+if true {
+    "ten";
+} else {
+    "eleven";
+}
+// string
+/* (() => {
+  if (true) {
+    return `ten`;
+  } else {
+    return `eleven`;
+  }
+})() */
+
+==[in a block]==
+--[input]--
+{
+let x = 10;
+if x == 5 { 4 } else { 2 }}
+
+--[output:expected]--
+alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+{
+    let x#[0] = 10;
+    if x#[0] == 5 {
+        4;
+    } else {
+        2;
+    };
+}
+// int
+/* (() => {
+  let x = 10;
+
+  if (x == 5) {
+    return 4;
+  } else {
+    return 2;
+  }
+})() */
+
+==[New fixture]==
+--[input]--
+{let x = 10;
+let y = if x == 5 { 4 } else { 2 };
+y * 2}
+
+--[output:failed]--
+alias *=hc964b8e32721e8a2764054a069ab98c885f00921 ===h0e26cba9974393f0886bf43a5876c4132b1e69bb int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+{
+    let x#[0] = 10;
+    let y#[1] = if x#[0] == 5 {
+        4;
+    } else {
+        2;
+    };
+    y#[1] * 2;
+}
+// int
+/* (() => {
+  let x = 10;
+
+  let y = (() => {
+    if (x == 5) {
+      return 4;
+    } else {
+      return 2;
+    }
+  })();
+
+  return y * 2;
+})() */

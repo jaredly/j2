@@ -44,7 +44,7 @@ Identifier = text:$IdText hash:IdHash?
 
 IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
 
-Atom = Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
+Atom = If / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -139,6 +139,11 @@ TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
 TypeVariables = "<" _ vbls:TypeVbls ">" _ body:Expression
 TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
 TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
+
+
+// ifs.ts
+
+If = "if" __ cond:Expression _ yes:Block no:(_ "else" _ Block)?
 
 
 // lambda.ts

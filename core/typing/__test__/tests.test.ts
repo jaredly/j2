@@ -86,7 +86,7 @@ readdirSync(base)
                     const { hash, ctx: nctx } = ctx.withValues(top.elements);
                     jctx.actx = ctx = nctx as FullContext;
 
-                    const ictx = iCtx();
+                    const ictx = iCtx(ctx);
 
                     const raws = top.elements.map((el) => {
                         const ir = ictx.ToIR.BlockSt(
@@ -143,7 +143,7 @@ readdirSync(base)
                         },
                     );
 
-                    const ictx = iCtx();
+                    const ictx = iCtx(ctx);
                     const ir = ictx.ToIR.BlockSt(
                         {
                             type: 'Block',

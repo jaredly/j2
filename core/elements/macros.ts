@@ -92,6 +92,9 @@ export const ToTast = {
             case 'Apply':
                 return ctx.ToTast.Apply(node, ctx);
 
+            case 'If':
+                return ctx.ToTast.If(node, ctx);
+
             case 'Number':
                 return ctx.ToTast.Number(node, ctx);
 
@@ -158,6 +161,9 @@ export const ToTast = {
 
             case 'Apply':
                 return ctx.ToTast.Apply(node, ctx);
+
+            case 'If':
+                return ctx.ToTast.If(node, ctx);
 
             case 'Number':
                 return ctx.ToTast.Number(node, ctx);
@@ -333,6 +339,9 @@ export const ToAst = {
             case 'Enum':
                 return ctx.ToAst.Enum(node, ctx);
 
+            case 'If':
+                return ctx.ToAst.If(node, ctx);
+
             case 'Lambda':
                 return ctx.ToAst.Lambda(node, ctx);
 
@@ -434,6 +443,9 @@ export const ToAst = {
 
             case 'Enum':
                 return ctx.ToAst.Enum(node, ctx);
+
+            case 'If':
+                return ctx.ToAst.If(node, ctx);
 
             case 'Lambda':
                 return ctx.ToAst.Lambda(node, ctx);
@@ -562,6 +574,9 @@ export const ToPP = {
             case 'Apply':
                 return ctx.ToPP.Apply(node, ctx);
 
+            case 'If':
+                return ctx.ToPP.If(node, ctx);
+
             case 'Number':
                 return ctx.ToPP.Number(node, ctx);
 
@@ -628,6 +643,9 @@ export const ToPP = {
 
             case 'Apply':
                 return ctx.ToPP.Apply(node, ctx);
+
+            case 'If':
+                return ctx.ToPP.If(node, ctx);
 
             case 'Number':
                 return ctx.ToPP.Number(node, ctx);
@@ -739,6 +757,9 @@ export const ToIR = {
             case 'Enum':
                 return ctx.ToIR.Enum(node, ctx);
 
+            case 'If':
+                return ctx.ToIR.If(node, ctx);
+
             case 'Lambda':
                 return ctx.ToIR.Lambda(node, ctx);
 
@@ -782,6 +803,9 @@ export const ToIR = {
 
             case 'Enum':
                 return ctx.ToIR.Enum(node, ctx);
+
+            case 'If':
+                return ctx.ToIR.If(node, ctx);
 
             case 'Lambda':
                 return ctx.ToIR.Lambda(node, ctx);

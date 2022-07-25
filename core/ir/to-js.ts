@@ -63,7 +63,7 @@ export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
         ctx,
         terms: {},
         execute(expr: Expression) {
-            const ictx = iCtx();
+            const ictx = iCtx(ctx);
             const ir = ictx.ToIR.BlockSt(
                 {
                     type: 'Block',

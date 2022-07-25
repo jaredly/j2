@@ -66,6 +66,8 @@ const jsTypes: { [key: string]: false | string } = {
     IExpression: 'Expression',
 };
 
+const IStart = /^I[A-Z]/;
+
 const text = `
 import { Visitor } from '../transform-tast';
 import { decorate } from '../typing/analyze';
@@ -111,7 +113,7 @@ export const ToTast = {
 
 export const ToAst = {
 	${Object.keys(tastUnions)
-        .filter((n) => !n.startsWith('I') && Taster[n] !== false)
+        .filter((n) => !n.match(IStart) && Taster[n] !== false)
         .map((type) => {
             return `
 		${type}(node: t.${type}, ctx: TACtx): p.${type} {
@@ -162,7 +164,7 @@ export const ToIR = {
 	${Object.keys(tastUnions)
         .filter(
             (n) =>
-                !n.startsWith('I') && // && Taster[n] !== false
+                !n.match(IStart) && // && Taster[n] !== false
                 tastTypes['I' + n],
         )
         .map((type) => {
@@ -189,7 +191,7 @@ export const ToIR = {
 
 export const ToJS = {
 	${Object.keys(tastUnions)
-        .filter((n) => n.startsWith('I') && jsTypes[n] !== false)
+        .filter((n) => n.match(IStart) && jsTypes[n] !== false)
         .map((type) => {
             return `
 		${type}(node: t.${type}, ctx: JCtx): b.${jsTypes[type]} {

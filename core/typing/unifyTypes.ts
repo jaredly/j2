@@ -63,6 +63,14 @@ export const unifyTypes = (one: Type, two: Type, ctx: Ctx): false | Type => {
         }
     }
 
+    if (one.type === 'String' && two.type === 'String') {
+        return {
+            type: 'TRef',
+            ref: ctx.getBuiltinRef('string')!,
+            loc: one.loc,
+        };
+    }
+
     if (
         one.type === 'Number' &&
         two.type === 'Number' &&

@@ -7,6 +7,7 @@ import { ToPP as decorators } from '../elements/decorators';
 import { ToPP as enumexprs } from '../elements/enum-exprs';
 import { ToPP as enums } from '../elements/enums';
 import { ToPP as generics } from '../elements/generics';
+import { ToPP as ifs } from '../elements/ifs';
 import { ToPP as lambda } from '../elements/lambda';
 import { ToPP as lets } from '../elements/lets';
 import { ToPP as macros } from '../elements/macros';
@@ -16,7 +17,7 @@ import { ToPP as records } from '../elements/records';
 import { ToPP as typevbls } from '../elements/type-vbls';
 import { ToPP as type } from '../elements/type';
 
-export type ToPP = typeof apply & typeof base & typeof binops & typeof constants & typeof decorators & typeof enumexprs & typeof enums & typeof generics & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof recordexprs & typeof records & typeof typevbls & typeof type;
+export type ToPP = typeof apply & typeof base & typeof binops & typeof constants & typeof decorators & typeof enumexprs & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof recordexprs & typeof records & typeof typevbls & typeof type;
 
 export const makeToPP = (): ToPP => {
 	return {
@@ -28,6 +29,7 @@ export const makeToPP = (): ToPP => {
 		...enumexprs,
 		...enums,
 		...generics,
+		...ifs,
 		...lambda,
 		...lets,
 		...macros,

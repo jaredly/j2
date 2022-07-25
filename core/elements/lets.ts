@@ -37,11 +37,18 @@ export type IBlock = {
     stmts: IStmt[];
     loc: t.Loc;
 };
-export type IStmt = ILet | t.IExpression | IBlock | IReturn;
+export type IStmt = ILet | t.IExpression | IBlock | IReturn | IIf;
 export type IReturn = { type: 'Return'; expr: t.IExpression; loc: t.Loc };
 export type ILet = {
     type: 'Let';
     pat: t.Pattern;
+    expr?: t.IExpression;
+    typ: t.Type;
+    loc: t.Loc;
+};
+export type IAssign = {
+    type: 'Assign';
+    sym: t.Sym;
     expr: t.IExpression;
     loc: t.Loc;
 };
@@ -149,6 +156,9 @@ export const ToIR = {
                 if (stmt.type === 'Block') {
                     return ctx.ToIR.BlockSt(stmt, ctx);
                 }
+                if (stmt.type === 'If') {
+                    return ctx.ToIR.IfSt(stmt, ctx);
+                }
 
                 return {
                     type: 'Return',
@@ -162,32 +172,44 @@ export const ToIR = {
     // Stmt(node: t.Stmt, ctx: ICtx): IStmt {
     // },
     Block(node: t.Block, ctx: ICtx): t.IExpression {
-        return {
-            type: 'Apply',
-            target: {
-                type: 'Lambda',
-                loc: node.loc,
-                args: [],
-                res: null,
-                resInferred: true,
-                body: ctx.ToIR.BlockSt(node, ctx),
-            },
-            args: [],
-            loc: node.loc,
-        };
+        return iife(ctx.ToIR.BlockSt(node, ctx), ctx);
     },
     Let(node: t.Let, ctx: ICtx): ILet {
         return {
             type: 'Let',
             pat: node.pat,
             expr: ctx.ToIR.Expression(node.expr, ctx),
+            typ: ctx.actx.getType(node.expr) ?? {
+                type: 'TBlank',
+                loc: node.loc,
+            },
             loc: node.loc,
         };
     },
 };
 
+export const iife = (st: t.IStmt, ctx: ICtx): t.IExpression => {
+    return {
+        type: 'Apply',
+        target: {
+            type: 'Lambda',
+            loc: st.loc,
+            args: [],
+            res: null,
+            resInferred: true,
+            body:
+                st.type === 'Block'
+                    ? st
+                    : { type: 'Block', stmts: [st], loc: st.loc },
+        },
+        args: [],
+        loc: st.loc,
+    };
+};
+
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
+import { IIf } from './ifs';
 export const ToJS = {
     Block(node: t.IBlock, ctx: JCtx): b.BlockStatement {
         return b.blockStatement(
@@ -198,13 +220,16 @@ export const ToJS = {
         return b.variableDeclaration('let', [
             b.variableDeclarator(
                 ctx.ToJS.Pattern(node.pat, ctx),
-                ctx.ToJS.IExpression(node.expr, ctx),
+                node.expr ? ctx.ToJS.IExpression(node.expr, ctx) : null,
             ),
         ]);
     },
     IStmt(node: t.IStmt, ctx: JCtx): b.Statement {
         if (node.type === 'Let') {
             return ctx.ToJS.Let(node, ctx);
+        }
+        if (node.type === 'If') {
+            return ctx.ToJS.If(node, ctx);
         }
         if (node.type === 'Block') {
             return ctx.ToJS.Block(node, ctx);

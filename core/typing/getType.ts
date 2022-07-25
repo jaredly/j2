@@ -1,10 +1,12 @@
 import { tref } from '../ctx';
+import { unifiedTypes } from '../elements/apply';
 import { getLocals, Locals } from '../elements/pattern';
 import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
 import { transformType } from '../transform-tast';
 import { Expression, GlobalRef, Loc, TVars, Type } from '../typed-ast';
 import { collapseOps } from './ops';
 import { Ctx, typeMatches } from './typeMatches';
+import { unifyTypes } from './unifyTypes';
 
 export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
     let minArgs = target.args.findIndex((arg) => arg.default_);
@@ -184,11 +186,26 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             }
             return getType(last, ctx);
         }
+        case 'If': {
+            if (expr.no) {
+                const no = getType(expr.no, ctx);
+                const yes = getType(expr.yes, ctx);
+                const unified = no && yes && unifyTypes(yes, no, ctx);
+                return unified ? unified : null;
+            }
+            return unit(expr.loc);
+        }
         default:
             let _x: never = expr;
             return null;
     }
 };
+
+export const isUnit = (t: Type): boolean =>
+    t.type === 'TRecord' &&
+    !t.open &&
+    t.items.length === 0 &&
+    t.spreads.length === 0;
 
 export const unit = (loc: Loc): TRecord => ({
     type: 'TRecord',

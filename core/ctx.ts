@@ -750,6 +750,7 @@ export const errors = {
     notARecord: 0,
     invalidRecord: 0,
     needsTypeVariables: 0,
+    ifBranchesDisagree: 2,
 };
 export type ErrorTag = keyof typeof errors;
 

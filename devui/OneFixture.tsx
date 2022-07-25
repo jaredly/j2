@@ -320,7 +320,7 @@ export function OneFixture({
                                             fctx,
                                             true,
                                         );
-                                        const ictx = iCtx();
+                                        const ictx = iCtx(ctx);
 
                                         const locs: HL[] = [];
                                         file.toplevels.forEach((top) => {

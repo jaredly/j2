@@ -5,6 +5,7 @@ import { Analyze as constants } from '../elements/constants';
 import { Analyze as enumexprs } from '../elements/enum-exprs';
 import { Analyze as enums } from '../elements/enums';
 import { Analyze as generics } from '../elements/generics';
+import { Analyze as ifs } from '../elements/ifs';
 import { Analyze as lambda } from '../elements/lambda';
 import { Analyze as lets } from '../elements/lets';
 import { Analyze as pattern } from '../elements/pattern';
@@ -22,6 +23,7 @@ export const analyzeVisitor = (): Visitor<{ctx: Ctx, hit: {}}> => {
 		...enumexprs,
 		...enums,
 		...generics,
+		...ifs,
 		...lambda,
 		...lets,
 		...pattern,
