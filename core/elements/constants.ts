@@ -1,14 +1,14 @@
 import { Ctx } from '..';
 import { noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
-import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as ICtx } from '../ir/ir';
 import * as pp from '../printer/pp';
+import { Ctx as PCtx } from '../printer/to-pp';
+import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
 import { Expression, Loc } from '../typed-ast';
-import { Ctx as ACtx } from '../typing/to-ast';
-import { Visitor } from '../transform-tast';
 import { decorate, VisitorCtx } from '../typing/analyze';
+import { Ctx as ACtx } from '../typing/to-ast';
 import { typeMatches } from '../typing/typeMatches';
 
 export const grammar = `
@@ -203,7 +203,6 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { findBuiltinName } from './base';
 export const ToJS = {
     Number(x: t.Number, ctx: JCtx): b.NumericLiteral {
         return b.numericLiteral(x.value);
@@ -211,7 +210,10 @@ export const ToJS = {
     Boolean(x: t.Boolean, ctx: JCtx): b.BooleanLiteral {
         return b.booleanLiteral(x.value);
     },
-    TemplateString(x: t.ITemplateString, ctx: JCtx): b.TemplateLiteral {
+    TemplateString(x: t.ITemplateString, ctx: JCtx): b.Expression {
+        // if (!x.rest.length) {
+        //     return b.stringLiteral(x.first);
+        // }
         return b.templateLiteral(
             [x.first]
                 .concat(x.rest.map((r) => r.suffix))

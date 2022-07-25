@@ -207,10 +207,7 @@ export const Editor = ({
             onFocus={() => setEditing(true)}
             onKeyDown={(evt) => {
                 if (evt.key === 'Escape') {
-                    // setEditing(false);
-                    // onBlur(getText(ref.current!));
                     ref.current!.blur();
-                    // document.body.focus();
                     document.getSelection()?.removeAllRanges();
                 }
                 if (evt.key === 'Tab') {
@@ -223,7 +220,6 @@ export const Editor = ({
                         range.selectNode(node);
                         range.collapse(false);
                     }
-                    // document.getSelection().repl
                 }
             }}
             ref={(node) => (ref.current = node)}
