@@ -111,7 +111,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 case 'Global':
                     return ctx.getValueType(expr.kind.id);
                 case 'Recur':
-                    return null;
+                    return ctx.typeForRecur(expr.kind.idx);
                 case 'Local':
                     return ctx.localType(expr.kind.sym);
             }

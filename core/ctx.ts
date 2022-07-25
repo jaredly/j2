@@ -230,6 +230,12 @@ const resolve = (
     name: string,
     rawHash?: string | null,
 ): RefKind[] => {
+    if (ctx.toplevel?.type === 'Expr') {
+        const idx = ctx.toplevel.items.findIndex((v) => v.name === name);
+        if (idx !== -1) {
+            return [{ type: 'Recur', idx }];
+        }
+    }
     // console.log(ctx.aliases, name, Object.hasOwn(ctx.aliases, name), rawHash);
     if (rawHash || Object.hasOwn(ctx.aliases, name)) {
         // console.log('ok', name);
@@ -600,19 +606,32 @@ export const newContext = (): FullContext => {
         resolveAnalyzeType(type: Type) {
             return resolveAnalyzeType(type, this);
         },
+        typeForRecur(idx) {
+            const { toplevel } = this[opaque];
+            if (!toplevel || toplevel.type !== 'Expr') {
+                return null;
+            }
+            return toplevel.items[idx].type;
+        },
         resolveRecur(idx) {
-            if (this[opaque].toplevel?.type === 'Type') {
-                const hash = this[opaque].toplevel.hash;
+            const { toplevel } = this[opaque];
+            if (!toplevel) {
+                return null;
+            }
+            if (toplevel.type === 'Type') {
+                const hash = toplevel.hash;
                 if (hash) {
                     return toId(hash, idx);
                 } else {
-                    console.log(
-                        'no hash on toplevel sry',
-                        this[opaque].toplevel,
-                    );
+                    console.log('no hash on toplevel sry', toplevel);
                 }
             } else {
-                console.log('cant resolve recur', this[opaque].toplevel, idx);
+                const hash = toplevel.hash;
+                if (hash) {
+                    return toId(hash, idx);
+                } else {
+                    console.log('no hash on toplevel sry', toplevel);
+                }
             }
             return null;
         },

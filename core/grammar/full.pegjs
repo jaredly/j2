@@ -163,7 +163,7 @@ Stmt = Let / Expression
 Let = "let" _ pat:Pattern _ "=" _ expr:Expression
 
 ToplevelLet = "let" _ first:LetPair rest:(__ "and" __ LetPair)*
-LetPair = name:$IdText _ "=" _ expr:Expression
+LetPair = name:$IdText typ:(_ ":" _ Type)? _ "=" _ expr:Expression
 
 
 // pattern.ts

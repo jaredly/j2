@@ -50,6 +50,7 @@ export type Ctx = {
         [sym: number]: { bound: Type | null; name: string };
     }): Ctx;
     withLocals: (locals: { sym: Sym; type: Type }[]) => Ctx;
+    typeForRecur: (idx: number) => Type | null;
 };
 
 export const unifyPayloads = (

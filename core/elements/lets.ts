@@ -16,7 +16,7 @@ Stmt = Let / Expression
 Let = "let" _ pat:Pattern _ "=" _ expr:Expression
 
 ToplevelLet = "let" _ first:LetPair rest:(__ "and" __ LetPair)*
-LetPair = name:$IdText _ "=" _ expr:Expression
+LetPair = name:$IdText typ:(_ ":" _ Type)? _ "=" _ expr:Expression
 `;
 
 export type Block = {
@@ -113,6 +113,7 @@ export const ToAst = {
             type: 'ToplevelLet',
             items: top.elements.map((el) => ({
                 type: 'LetPair',
+                typ: el.typ ? ctx.ToAst.Type(el.typ, ctx) : null,
                 name: el.name,
                 expr: ctx.ToAst.Expression(el.expr, ctx),
                 loc: el.loc,

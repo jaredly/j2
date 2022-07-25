@@ -394,6 +394,7 @@ export type LetPair = {
   type: "LetPair";
   loc: Loc;
   name: string;
+  typ: Type | null;
   expr: Expression;
 };
 

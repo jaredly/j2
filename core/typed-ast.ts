@@ -138,6 +138,7 @@ export type ToplevelLet = {
     type: 'ToplevelLet';
     elements: Array<{
         name: string;
+        typ: Type | null;
         expr: Expression;
         loc: Loc;
     }>;

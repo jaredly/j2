@@ -4985,6 +4985,19 @@ export const transformToplevelLet = <Ctx>(
                 {
                     let changed3 = false;
 
+                    let result$typ = null;
+                    const result$typ$current = updatedNode$elements$item1.typ;
+                    if (result$typ$current != null) {
+                        const result$typ$3$ = transformType(
+                            result$typ$current,
+                            visitor,
+                            ctx,
+                        );
+                        changed3 =
+                            changed3 || result$typ$3$ !== result$typ$current;
+                        result$typ = result$typ$3$;
+                    }
+
                     const result$expr = transformExpression(
                         updatedNode$elements$item1.expr,
                         visitor,
@@ -5005,6 +5018,7 @@ export const transformToplevelLet = <Ctx>(
                     if (changed3) {
                         result = {
                             ...result,
+                            typ: result$typ,
                             expr: result$expr,
                             loc: result$loc,
                         };

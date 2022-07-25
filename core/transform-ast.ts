@@ -9208,12 +9208,26 @@ export const transformLetPair = <Ctx>(
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
 
+        let updatedNode$typ = null;
+        const updatedNode$typ$current = node.typ;
+        if (updatedNode$typ$current != null) {
+            const updatedNode$typ$1$ = transformType(
+                updatedNode$typ$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$typ$1$ !== updatedNode$typ$current;
+            updatedNode$typ = updatedNode$typ$1$;
+        }
+
         const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
         changed1 = changed1 || updatedNode$expr !== node.expr;
         if (changed1) {
             updatedNode = {
                 ...updatedNode,
                 loc: updatedNode$loc,
+                typ: updatedNode$typ,
                 expr: updatedNode$expr,
             };
             changed0 = true;

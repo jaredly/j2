@@ -80,7 +80,9 @@ export const typeToplevel = (
             items: t.items.map((t) => {
                 return {
                     name: t.name,
-                    type: { type: 'TBlank', loc: t.loc },
+                    type: t.typ
+                        ? ctx.ToTast.Type(t.typ, ctx)
+                        : { type: 'TBlank', loc: t.loc },
                 };
             }),
         };
@@ -223,6 +225,7 @@ export const ToTast = {
                 expr: ctx.ToTast.Expression(item.expr, ctx),
                 name: item.name,
                 loc: item.loc,
+                typ: item.typ ? ctx.ToTast.Type(item.typ, ctx) : null,
             })),
             loc: top.loc,
         };
@@ -361,6 +364,15 @@ export const ToPP = {
                         [
                             pp.text(i > 0 ? 'and ' : 'let ', item.loc),
                             pp.text(item.name, item.loc),
+                            item.typ != null
+                                ? pp.items(
+                                      [
+                                          pp.text(': ', item.loc),
+                                          ctx.ToPP.Type(item.typ, ctx),
+                                      ],
+                                      item.loc,
+                                  )
+                                : null,
                             pp.text(' = ', item.loc),
                             ctx.ToPP.Expression(item.expr, ctx),
                         ],
@@ -540,7 +552,8 @@ export const ToJS = {
             }
         }
         if (x.kind.type === 'Recur') {
-            return b.identifier(`recur me please`);
+            const id = ctx.actx.resolveRecur(x.kind.idx);
+            return b.identifier(id ? ctx.globalName(id) : ':no recur found:');
         }
         return b.identifier(`:unresovled:`);
     },
