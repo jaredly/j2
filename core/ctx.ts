@@ -596,7 +596,7 @@ export const newContext = (): FullContext => {
             if (ctx.toplevel?.type === 'Type') {
                 ctx.toplevel.hash = hash;
             }
-            return { ...this, [opaque]: ctx };
+            return { hash, ctx: { ...this, [opaque]: ctx } };
         },
 
         // Analyze!

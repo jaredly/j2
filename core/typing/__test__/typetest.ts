@@ -45,7 +45,8 @@ export const runTypeTest = (ast: TypeFile, debugFailures = false): TypeTest => {
             ctx = ctx.toplevelConfig(typeToplevel(t, ctx)) as FullContext;
             let top = ctx.ToTast.TypeAlias(t, ctx);
             tast.toplevels.push(top);
-            ctx = ctx.withTypes(top.elements) as FullContext;
+            const res = ctx.withTypes(top.elements);
+            ctx = res.ctx as FullContext;
         } else {
             ctx = ctx.toplevelConfig(null) as FullContext;
             let type = ctx.ToTast.Type(t, ctx);

@@ -64,11 +64,6 @@ export type Status = {
     }>;
 };
 
-// export const processTypeTest = (raw: string, ctx: FullContext) => {
-//     const parsed = parseTypeFile(raw);
-//     const tast = typeFileToTast(parsed, ctx);
-// };
-
 export type Files = {
     fixtures: { [key: string]: Status };
     typetest: { [key: string]: TypeTest };

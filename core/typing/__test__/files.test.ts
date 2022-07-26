@@ -33,7 +33,8 @@ readdirSync(base)
                         typeToplevel(t, ctx),
                     ) as FullContext;
                     let top = ctx.ToTast.TypeAlias(t, ctx);
-                    ctx = ctx.withTypes(top.elements) as FullContext;
+                    const res = ctx.withTypes(top.elements);
+                    ctx = res.ctx as FullContext;
                 } else {
                     ctx = ctx.toplevelConfig(null) as FullContext;
                     let type = ctx.ToTast.Type(t, ctx);

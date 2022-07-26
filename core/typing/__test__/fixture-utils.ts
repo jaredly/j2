@@ -207,7 +207,6 @@ export const loadFixtures = (fixtureFile: string) => {
 export const parseRaw = (
     raw: string,
     ctx: FullContext,
-    analyze = true,
 ): [File, FullContext] => {
     if (raw.startsWith('alias ')) {
         const idx = raw.indexOf('\n');
@@ -217,7 +216,7 @@ export const parseRaw = (
         raw = raw.slice(idx + 1);
     }
     const ast = parseFile(raw);
-    const [file, tctx] = fileToTast(fixComments(ast), ctx, analyze);
+    const [file, tctx] = fileToTast(fixComments(ast), ctx);
     return [file, tctx as FullContext];
 };
 
@@ -329,7 +328,7 @@ export function runFixture(
         // hmmmmm so what about ...
         // removing error decorators, first? seems like I
         // need to do it.
-        [outputTast, ctx2] = parseRaw(output, ctx2, true);
+        [outputTast, ctx2] = parseRaw(output, ctx2);
     } catch (err) {
         console.log(output);
         console.log(err);

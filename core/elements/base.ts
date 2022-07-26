@@ -97,7 +97,6 @@ export const typeToplevel = (
 export const typeFileToTast = (
     { toplevels, loc, comments }: p.TypeFile,
     ctx: Ctx,
-    analyze = true,
 ): [t.TypeFile, Ctx] => {
     let parsed = toplevels.map((t) => {
         ctx.resetSym();
@@ -105,10 +104,13 @@ export const typeFileToTast = (
         ctx.resetSym();
         ctx = ctx.toplevelConfig(config);
         let top = ctx.ToTast.TypeToplevel(t, ctx);
+        top = analyzeTypeTop(top, ctx);
         if (top.type === 'TypeAlias') {
-            ctx = ctx.withTypes(top.elements);
+            const res = ctx.withTypes(top.elements);
+            ctx = res.ctx;
         }
-        return analyze ? analyzeTypeTop(top, ctx) : top;
+        // return analyze ? analyzeTypeTop(top, ctx) : top;
+        return top;
     });
     return [
         {
@@ -124,7 +126,6 @@ export const typeFileToTast = (
 export const fileToTast = (
     { toplevels, loc, comments }: p.File,
     ctx: Ctx,
-    analyze = true,
 ): [t.File, Ctx] => {
     let parsed = toplevels.map((t) => {
         ctx.resetSym();
@@ -132,17 +133,16 @@ export const fileToTast = (
         ctx.resetSym();
         ctx = ctx.toplevelConfig(config);
         let top = ctx.ToTast.Toplevel(t, ctx);
+        top = transformToplevel(top, removeErrorDecorators(ctx), null);
         if (top.type === 'TypeAlias') {
-            ctx = ctx.withTypes(top.elements);
+            const res = ctx.withTypes(top.elements);
+            ctx = res.ctx;
         } else if (top.type === 'ToplevelLet') {
             const res = ctx.withValues(top.elements);
             ctx = res.ctx;
         }
-        if (!analyze) {
-            return top;
-        }
-        top = transformToplevel(top, removeErrorDecorators(ctx), null);
-        return analyzeTop(top, ctx);
+        top = analyzeTop(top, ctx);
+        return top;
     });
     return [
         {

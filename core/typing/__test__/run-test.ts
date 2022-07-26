@@ -70,7 +70,8 @@ export const runTest = (
                 null,
             ) as t.TypeAlias;
             top = analyzeTop(top, ctx) as t.TypeAlias;
-            ctx = ctx.withTypes(top.elements) as FullContext;
+            const res = ctx.withTypes(top.elements);
+            ctx = res.ctx as FullContext;
 
             // it(
             //     text.slice(t.loc.start.offset, t.loc.end.offset) +
