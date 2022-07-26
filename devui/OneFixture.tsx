@@ -376,25 +376,6 @@ export function OneFixture({
                                                 );
                                                 return;
                                             }
-
-                                            const ir = ictx.ToIR.Expression(
-                                                top.expr,
-                                                ictx,
-                                            );
-                                            const jctx = jCtx(tctx);
-                                            const js = jctx.ToJS.IExpression(
-                                                ir,
-                                                jctx,
-                                            );
-                                            const jsraw = generate(js).code;
-                                            locs.push({
-                                                loc: top.loc,
-                                                type: 'Success',
-                                                suffix: {
-                                                    text: ' 🏃‍♀️',
-                                                    message: jsraw,
-                                                },
-                                            });
                                         });
                                         return locs;
                                     }}

@@ -16,7 +16,7 @@ switch (1, 2) {
 }
 // 3
 /* (() => {
-  switch ([1, 2]) {}
+  switch too complex;
 })() */
 
 ==[types]==
@@ -60,7 +60,7 @@ let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
 } 
 longSum(3) == 3
 
---[output:expected]--
+--[output:failed]--
 alias -=h4dd9308469e477a4a756b4b286de0625d5a98af9 +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c ===h0e26cba9974393f0886bf43a5876c4132b1e69bb >=hc1d03250b26806868f520136d8a763b0c0edff9b bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f longSum=h180c08349290e3657b782708681044293779f0af
 let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
     longSum#[r0](v#[0] - 1) + 1;

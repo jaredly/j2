@@ -181,7 +181,13 @@ export const ToIR = {
             res,
             body:
                 body.type === 'Block'
-                    ? ctx.ToIR.Block(body, ctx)
+                    ? ctx.ToIR.BlockSt(body, ctx)
+                    : body.type === 'Switch'
+                    ? {
+                          type: 'Block',
+                          stmts: [ctx.ToIR.SwitchSt(body, ctx)],
+                          loc: body.loc,
+                      }
                     : ctx.ToIR.Expression(body, ctx),
             resInferred,
             loc,

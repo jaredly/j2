@@ -1,7 +1,7 @@
 import { Visitor } from '../transform-tast';
 import { decorate, pdecorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
-import { typeMatches } from '../typing/typeMatches';
+import { expandEnumCases, typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -38,6 +38,7 @@ export type Case = {
 export type ISwitch = {
     type: 'Switch';
     target: t.IExpression;
+    ttype: t.Type;
     cases: ICase[];
     loc: t.Loc;
 };
@@ -59,7 +60,6 @@ export const ToTast = {
                 const typ = ctx.getType(target) ?? typeForPattern(pat, ctx);
                 const locals: t.Locals = [];
                 getLocals(pat, typ, locals, ctx);
-                console.log('switch case', locals, pat, typ);
                 return {
                     type: 'Case',
                     pat: pat,
@@ -134,6 +134,10 @@ export const ToIR = {
         return {
             type: 'Switch',
             target: ctx.ToIR.Expression(tast.target, ctx),
+            ttype: ctx.actx.getType(tast.target) ?? {
+                type: 'TBlank',
+                loc: tast.loc,
+            },
             cases: tast.cases.map((c) => {
                 return {
                     type: 'Case',
@@ -147,9 +151,52 @@ export const ToIR = {
     },
 };
 
+const asSimple = (pat: t.Pattern): b.Expression | null => {
+    if (pat.type === 'Number') {
+        return b.numericLiteral(pat.value);
+    }
+    if (pat.type === 'String') {
+        return b.stringLiteral(pat.text);
+    }
+    if (pat.type === 'PDecorated') {
+        return asSimple(pat.inner);
+    }
+    if (pat.type === 'PEnum' && pat.payload == null) {
+        return b.stringLiteral(pat.tag);
+    }
+    return null;
+};
+
+export const allBare = (typ: t.TEnum, ctx: ACtx): boolean => {
+    const cases = expandEnumCases(typ, ctx);
+    return cases?.every((kase) => !kase.payload) ?? false;
+};
+
 export const ToJS = {
     Switch(node: ISwitch, ctx: JCtx): b.Statement {
-        return b.switchStatement(ctx.ToJS.IExpression(node.target, ctx), []);
+        let cases: b.SwitchCase[] = [];
+        for (let kase of node.cases) {
+            const test = asSimple(kase.pat);
+            if (!test) {
+                return b.expressionStatement(
+                    b.identifier(`switch too complex`),
+                );
+            }
+            cases.push(b.switchCase(test, [ctx.ToJS.Block(kase.expr, ctx)]));
+        }
+        let target = ctx.ToJS.IExpression(node.target, ctx);
+        if (node.ttype.type === 'TEnum' && !allBare(node.ttype, ctx.actx)) {
+            target = b.conditionalExpression(
+                b.binaryExpression(
+                    '===',
+                    b.unaryExpression('typeof', target),
+                    b.stringLiteral('string'),
+                ),
+                target,
+                b.memberExpression(target, b.identifier('tag')),
+            );
+        }
+        return b.switchStatement(target, cases);
     },
 };
 

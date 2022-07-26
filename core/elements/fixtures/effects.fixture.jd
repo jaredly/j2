@@ -87,16 +87,16 @@ let hello = ():Task<[ `Print(string, ()) | `Read((), string) ]> => {
     );
 }
 // () => [ `Print("hello", () => [ `Read((), (string) => [ `Print(string, () => [ `Print("done", () => [ `Return() ]) ]) ]) ]) ]
-/* () => (() => {
+/* () => {
   return {
     tag: "Print",
-    payload: [`hello`, () => (() => {
+    payload: [`hello`, () => {
       return {
         tag: "Read",
-        payload: [null, v => (() => {
+        payload: [null, v => {
           return {
             tag: "Print",
-            payload: [`Got ${v}`, () => (() => {
+            payload: [`Got ${v}`, () => {
               return {
                 tag: "Print",
                 payload: [`done`, () => ({
@@ -104,10 +104,10 @@ let hello = ():Task<[ `Print(string, ()) | `Read((), string) ]> => {
                   payload: null
                 })]
               };
-            })()]
+            }]
           };
-        })()]
+        }]
       };
-    })()]
+    }]
   };
-})() */
+} */

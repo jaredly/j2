@@ -133,7 +133,7 @@ export const typeMatchesPattern = (
             for (let kase of cases) {
                 if (kase.tag === pat.tag) {
                     if (!pat.payload) {
-                        return kase.payload == null;
+                        return true;
                     }
                     return (
                         kase.payload != null &&

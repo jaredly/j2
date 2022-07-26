@@ -37,31 +37,85 @@ switch `What {
 
 ==[enum pattern wrong]==
 --[input:shouldFail]--
-switch `What {
+switch `What(10) {
 `What(hello) => hello
 }
 
 --[output:expected]--
-alias error:patternMismatch=h1bb5af1fd93cc04570b46a227234b3c89fbdd280
-switch `What {
-  @error:patternMismatch() `What(hello#[0]) => hello#[:unresolved:]
+switch `What(10) {
+  `What(hello#[0]) => hello#[0]
 }
-// ()
+// 10
+/* (() => {
+  switch too complex;
+})() */
 
 ==[New fixture]==
 --[input]--
-(m: [`One | `Two(int)]) => switch m {
+((m: [`One | `Two(int)]) => switch m {
   `One => 1
-  `Two(v#[1]) => v#[1]
+  `Two => 4
+  `Three => 2
+})(`One)
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+((m#[0]: [ `One | `Two(int) ]) => switch m#[0] {
+  `One => 1
+  `Two => 4
+  `Three => 2
+})(`One)
+// int
+/* (m => {
+  switch (typeof m === "string" ? m : m.tag) {
+    case "One":
+      {
+        return 1;
+      }
+
+    case "Two":
+      {
+        return 4;
+      }
+
+    case "Three":
+      {
+        return 2;
+      }
+  }
+})("One") */
+
+==[bare switch]==
+--[input]--
+(m: [`One | `Two | `Three]) => switch m {
+  `One => 1
+  `Two => 2
+  `Three => 3
 }
 
 --[output:expected]--
 alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
-(m#[0]: [ `One | `Two(int) ]) => switch m#[0] {
+(m#[0]: [ `One | `Two | `Three ]) => switch m#[0] {
   `One => 1
-  `Two(v#[1]) => v#[1]
+  `Two => 2
+  `Three => 3
 }
-// ([ `One | `Two(int) ]) => int
-/* m => (() => {
-  switch (m) {}
-})() */
+// ([ `One | `Two | `Three ]) => int
+/* m => {
+  switch (m) {
+    case "One":
+      {
+        return 1;
+      }
+
+    case "Two":
+      {
+        return 2;
+      }
+
+    case "Three":
+      {
+        return 3;
+      }
+  }
+} */
