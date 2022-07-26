@@ -61,9 +61,9 @@ export const typeToplevelT = (t: t.Toplevel, ctx: ACtx): Toplevel | null => {
 };
 
 export const typeToplevel = (
-    t: p.TypeAlias | p.ToplevelLet,
+    t: p.Toplevel | p.TypeToplevel,
     ctx: Ctx,
-): Toplevel => {
+): Toplevel | null => {
     if (t.type === 'TypeAlias') {
         return {
             type: 'Type',
@@ -78,7 +78,7 @@ export const typeToplevel = (
                 return { name: t.name, args: [], kind };
             }),
         };
-    } else {
+    } else if (t.type === 'ToplevelLet') {
         return {
             type: 'Expr',
             items: t.items.map((t) => {
@@ -91,6 +91,7 @@ export const typeToplevel = (
             }),
         };
     }
+    return null;
 };
 
 export const typeFileToTast = (
