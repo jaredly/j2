@@ -5,7 +5,7 @@ switch (1, 2) {
   (a, b) => a + b
   1 => 1
   "what" => 20
-`Hello => 1
+  `Hello => 1
 }
 
 --[output:expected]--
@@ -47,3 +47,21 @@ switch `What {
   @error:patternMismatch() `What(hello#[0]) => hello#[:unresolved:]
 }
 // ()
+
+==[New fixture]==
+--[input]--
+(m: [`One | `Two(int)]) => switch m {
+  `One => 1
+  `Two(v#[1]) => v#[1]
+}
+
+--[output:expected]--
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+(m#[0]: [ `One | `Two(int) ]) => switch m#[0] {
+  `One => 1
+  `Two(v#[1]) => v#[1]
+}
+// ([ `One | `Two(int) ]) => int
+/* m => (() => {
+  switch (m) {}
+})() */

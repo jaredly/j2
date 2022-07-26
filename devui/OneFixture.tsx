@@ -338,7 +338,6 @@ export function OneFixture({
                                                 fctx,
                                             );
                                             if (errorCount(v)) {
-                                                console.log('nope,', v);
                                                 v.errors.forEach((loc) => {
                                                     locs.push({
                                                         loc,

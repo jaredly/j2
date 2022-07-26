@@ -59,6 +59,7 @@ export const ToTast = {
                 const typ = ctx.getType(target) ?? typeForPattern(pat, ctx);
                 const locals: t.Locals = [];
                 getLocals(pat, typ, locals, ctx);
+                console.log('switch case', locals, pat, typ);
                 return {
                     type: 'Case',
                     pat: pat,

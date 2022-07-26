@@ -217,10 +217,14 @@ export const getLocals = (
     type: t.Type,
     locals: Locals,
     ctx: TMCtx,
-) => {
+): void => {
     switch (pat.type) {
         case 'PBlank':
+        case 'Number':
+        case 'String':
             return;
+        case 'PDecorated':
+            return getLocals(pat.inner, type, locals, ctx);
         case 'PName':
             locals.push({ sym: pat.sym, type });
             return;
@@ -240,6 +244,23 @@ export const getLocals = (
                 });
             }
             return;
+        case 'PEnum': {
+            if (type.type !== 'TEnum') {
+                return;
+            }
+            const cases = expandEnumCases(type, ctx) ?? [];
+            for (let kase of cases) {
+                if (kase.tag === pat.tag) {
+                    if (kase.payload && pat.payload) {
+                        getLocals(pat.payload, kase.payload, locals, ctx);
+                    }
+                    return;
+                }
+            }
+            return;
+        }
+        default:
+            let _x: never = pat;
     }
 };
 
@@ -260,11 +281,14 @@ export const ToTast = {
         return {
             type: 'PEnum',
             tag: text,
-            payload: payload ? ctx.ToTast.Pattern(payload, ctx) : null,
+            payload: payload ? ctx.ToTast.PTuple(payload, ctx) : null,
             loc,
         };
     },
-    PTuple({ type, items, loc }: p.PTuple, ctx: TCtx): PRecord {
+    PTuple({ type, items, loc }: p.PTuple, ctx: TCtx): Pattern {
+        if (items?.items.length === 1) {
+            return ctx.ToTast.Pattern(items.items[0], ctx);
+        }
         return {
             type: 'PRecord',
             items:
