@@ -225,16 +225,8 @@ export const App = () => {
             });
             const testFiles = {} as Files['test'];
             testContents.forEach((contents, i) => {
-                // old.log('um', contents);
-                // const [aliasRaw, text] = splitAliases(contents);
                 let ctx = builtinContext.clone();
-                // if (aliasRaw) {
-                //     ctx = ctx.withAliases(
-                //         aliasesFromString(aliasRaw),
-                //     ) as FullContext;
-                // }
 
-                old.log('wht', contents);
                 try {
                     testFiles[test[i]] = runTest(parseFile(contents), ctx);
                 } catch (err) {

@@ -8,7 +8,12 @@ import { collapseOps } from './ops';
 import { Ctx, typeMatches } from './typeMatches';
 import { unifyTypes } from './unifyTypes';
 
-export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
+export const applyType = (
+    args: Type[],
+    target: TVars,
+    ctx: Ctx,
+    path?: string[],
+) => {
     let minArgs = target.args.findIndex((arg) => arg.default_);
     if (minArgs === -1) {
         minArgs = target.args.length;
@@ -28,7 +33,7 @@ export const applyType = (args: Type[], target: TVars, ctx: Ctx) => {
             failed = true;
         }
         symbols[targ.sym.id] = arg!;
-        if (targ.bound && !typeMatches(arg!, targ.bound, ctx)) {
+        if (targ.bound && !typeMatches(arg!, targ.bound, ctx, path)) {
             failed = true;
         }
     });

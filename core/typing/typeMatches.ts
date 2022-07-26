@@ -87,10 +87,11 @@ export const typeMatches = (
     candidate: Type,
     expected: Type,
     ctx: Ctx,
+    path?: string[],
 ): boolean => {
     // Ok I need like a "resolve refs" function
-    const c2 = ctx.resolveRefsAndApplies(candidate)!;
-    const e2 = ctx.resolveRefsAndApplies(expected);
+    const c2 = ctx.resolveRefsAndApplies(candidate, path);
+    const e2 = ctx.resolveRefsAndApplies(expected, path);
     if (c2 != null) {
         candidate = c2;
     }
@@ -137,7 +138,7 @@ export const typeMatches = (
         case 'TRecord':
             return recordMatches(candidate, expected, ctx);
         case 'TEnum':
-            return enumTypeMatches(candidate, expected, ctx);
+            return enumTypeMatches(candidate, expected, ctx, path);
         case 'TDecorated':
             return typeMatches(candidate.inner, expected, ctx);
         case 'TVars': {
@@ -340,6 +341,8 @@ export const expandEnumCases = (
     ctx: Ctx,
     path: string[] = [],
 ): null | EnumCase[] => {
+    // ctx.debugger();
+    // console.log('expanding?', path);
     const cases: EnumCase[] = [];
     for (let kase of type.cases) {
         if (kase.type === 'EnumCase') {
@@ -353,8 +356,9 @@ export const expandEnumCases = (
                 }
                 path = path.concat([k]);
             }
-            const res = ctx.resolveRefsAndApplies(kase);
+            const res = ctx.resolveRefsAndApplies(kase, path);
             if (res?.type === 'TEnum') {
+                // console.log('ok next');
                 const expanded = expandEnumCases(res, ctx, path);
                 if (!expanded) {
                     return null;
@@ -365,6 +369,7 @@ export const expandEnumCases = (
             }
         }
     }
+    // console.log('resolved', cases, path);
     return cases;
 };
 

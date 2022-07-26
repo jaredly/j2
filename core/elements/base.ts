@@ -134,6 +134,12 @@ export const fileToTast = (
         ctx = ctx.toplevelConfig(config);
         let top = ctx.ToTast.Toplevel(t, ctx);
         top = transformToplevel(top, removeErrorDecorators(ctx), null);
+        if (config?.type === 'Type' && top.type === 'TypeAlias') {
+            config.items.forEach((item, i) => {
+                item.actual = (top as t.TypeAlias).elements[i].type;
+            });
+        }
+        top = analyzeTop(top, ctx);
         if (top.type === 'TypeAlias') {
             const res = ctx.withTypes(top.elements);
             ctx = res.ctx;
@@ -141,7 +147,6 @@ export const fileToTast = (
             const res = ctx.withValues(top.elements);
             ctx = res.ctx;
         }
-        top = analyzeTop(top, ctx);
         return top;
     });
     return [
@@ -557,7 +562,7 @@ export const findBuiltinName = (id: t.Id, ctx: ACtx): string | null => {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { FullContext } from '../ctx';
+import { FullContext, nodebug } from '../ctx';
 import { idsEqual } from '../ids';
 import { transformToplevel, Visitor } from '../transform-tast';
 export const ToJS = {

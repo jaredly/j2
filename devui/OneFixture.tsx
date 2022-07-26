@@ -318,7 +318,6 @@ export function OneFixture({
                                         const [file, tctx] = fileToTast(
                                             fixComments(ast),
                                             fctx,
-                                            true,
                                         );
                                         const ictx = iCtx(ctx);
 

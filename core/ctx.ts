@@ -313,12 +313,14 @@ const cloneInternal = (internal: Internal) => ({
     aliases: { ...internal.aliases },
 });
 
+export const nodebug = () => {};
+
 export const newContext = (): FullContext => {
     const ctx: FullContext = {
         log(...args) {
             console.log(...args);
         },
-        debugger() {},
+        debugger: nodebug,
         clone() {
             return {
                 ...this,
@@ -329,7 +331,7 @@ export const newContext = (): FullContext => {
             if (toplevel && this[opaque].toplevel?.hash) {
                 toplevel.hash = this[opaque].toplevel.hash;
             }
-            this[opaque].toplevel = toplevel;
+            // this[opaque].toplevel = toplevel;
             return {
                 ...this,
                 [opaque]: { ...this[opaque], toplevel },
@@ -613,25 +615,36 @@ export const newContext = (): FullContext => {
             }
             return toplevel.items[idx].type;
         },
+        resolveTypeRecur(idx) {
+            const { toplevel } = this[opaque];
+            if (toplevel && toplevel.type === 'Type') {
+                if (toplevel.items[idx].actual) {
+                    return toplevel.items[idx].actual!;
+                }
+                const hash = toplevel.hash;
+                if (hash) {
+                    return {
+                        type: 'TRef',
+                        ref: { type: 'Global', id: toId(hash, idx) },
+                        loc: noloc,
+                    };
+                } else {
+                    // ctx.debugger();
+                    console.log('no hash on toplevel sry', toplevel);
+                }
+            }
+            return null;
+        },
         resolveRecur(idx) {
             const { toplevel } = this[opaque];
             if (!toplevel) {
                 return null;
             }
-            if (toplevel.type === 'Type') {
-                const hash = toplevel.hash;
-                if (hash) {
-                    return toId(hash, idx);
-                } else {
-                    console.log('no hash on toplevel sry', toplevel);
-                }
+            const hash = toplevel.hash;
+            if (hash) {
+                return toId(hash, idx);
             } else {
-                const hash = toplevel.hash;
-                if (hash) {
-                    return toId(hash, idx);
-                } else {
-                    console.log('no hash on toplevel sry', toplevel);
-                }
+                console.log('no hash on toplevel sry', toplevel);
             }
             return null;
         },

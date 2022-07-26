@@ -1,4 +1,4 @@
-import { FullContext, noloc } from '../ctx';
+import { FullContext, nodebug, noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
@@ -6,7 +6,7 @@ import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
 import { addDecorator, Ctx, tdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { Ctx as TCtx } from '../typing/to-tast';
+import { Ctx as TCtx, ToplevelType } from '../typing/to-tast';
 import { Ctx as TMCtx, unifyPayloads } from '../typing/typeMatches';
 import { unifyTypes } from '../typing/unifyTypes';
 import { expandEnumCases, payloadsEqual } from '../typing/typeMatches';
@@ -214,6 +214,7 @@ export const ToIR = {
 import { Ctx as JCtx } from '../ir/to-js';
 import * as b from '@babel/types';
 import { typeToString } from '../typing/__test__/utils';
+import { typeToplevelT } from './base';
 export const ToJS = {
     Enum({ loc, tag, payload }: t.IEnum, ctx: JCtx): b.Expression {
         if (!payload) {
@@ -231,6 +232,7 @@ export const ToJS = {
 
 const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
     // We'll special case 'recur ref that's applied'
+    // ctx.debugger();
     if (
         c.type === 'TApply' &&
         c.target.type === 'TRef' &&
@@ -267,6 +269,34 @@ const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
 };
 
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
+    // TypeAlias(node, { ctx, hit }) {
+    //     let changed = false;
+    //     const top = typeToplevelT(node, ctx) as ToplevelType;
+    //     top.items.forEach((item, i) => {
+    //         item.actual = node.elements[i].type;
+    //     });
+    //     ctx = ctx.toplevelConfig(top);
+    //     // ctx.debugger();
+    //     const elements = node.elements.map((el, i) => {
+    //         if (el.type.type === 'TEnum') {
+    //             if (ctx.debugger !== nodebug) {
+    //                 const cases = expandEnumCases(el.type, ctx, [`r${i}`]);
+    //                 if (!cases) {
+    //                     changed = true;
+    //                     return {
+    //                         ...el,
+    //                         type: tdecorate(el.type, 'invalidEnum', {
+    //                             ctx,
+    //                             hit,
+    //                         }),
+    //                     };
+    //                 }
+    //             }
+    //         }
+    //         return el;
+    //     });
+    //     return changed ? { ...node, elements } : null;
+    // },
     TEnum(node, ctx): null | t.TEnum {
         let changed = false;
         let used: { [key: string]: EnumCase } = {};
@@ -302,7 +332,9 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                 used[k.tag] = k;
                 return k;
             } else {
+                // ctx.ctx.debugger();
                 const res = ctx.ctx.resolveRefsAndApplies(k);
+                // console.log('resolving', k, res);
                 if (res?.type === 'TEnum') {
                     const expanded = expandEnumCases(res, ctx.ctx);
                     if (!expanded) {
@@ -353,24 +385,6 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         });
         return changed ? { ...node, cases } : null;
     },
-    // Type_TEnum(node, ctx) {
-    //     const enums = expandEnumCases(node, ctx.ctx);
-    //     if (!enums) {
-    //         return tdecorate(node, 'invalidEnum', ctx.hit, ctx.ctx);
-    //     }
-    //     const map: { [key: string]: EnumCase } = {};
-    //     for (let kase of enums) {
-    //         // Multiple cases with the same name
-    //         if (
-    //             map[kase.tag] &&
-    //             !payloadsEqual(kase.payload, map[kase.tag].payload, ctx.ctx)
-    //         ) {
-    //             return tdecorate(node, 'invalidEnum', ctx.hit, ctx.ctx);
-    //         }
-    //         map[kase.tag] = kase;
-    //     }
-    //     return null;
-    // },
 };
 
 export const enumCaseMap = (canEnums: EnumCase[], ctx: TMCtx) => {
@@ -397,6 +411,7 @@ export const enumTypeMatches = (
     candidate: TEnum,
     expected: t.Type,
     ctx: TMCtx,
+    path?: string[],
 ) => {
     // [ `What ] matches [ `What | `Who ]
     // So everything in candidate needs to match something
@@ -404,8 +419,8 @@ export const enumTypeMatches = (
     if (expected.type !== 'TEnum') {
         return false;
     }
-    const canEnums = expandEnumCases(candidate, ctx);
-    const expEnums = expandEnumCases(expected, ctx);
+    const canEnums = expandEnumCases(candidate, ctx, path);
+    const expEnums = expandEnumCases(expected, ctx, path);
     if (!canEnums || !expEnums) {
         return false;
     }

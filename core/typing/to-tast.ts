@@ -24,19 +24,22 @@ export type Ctx = {
     ToTast: ToTast;
 } & ACtx;
 
+export type ToplevelType = {
+    type: 'Type';
+    // TODO: This shouldn't be optional,
+    // it should be never there for to-tast,
+    // and always there for analyze.
+    hash?: string;
+    items: {
+        name: string;
+        args: t.TVar[];
+        kind: TopTypeKind;
+        // Present during analyze, for recursion detection
+        actual?: t.Type;
+    }[];
+};
 export type Toplevel =
-    | {
-          type: 'Type';
-          // TODO: This shouldn't be optional,
-          // it should be never there for to-tast,
-          // and always there for analyze.
-          hash?: string;
-          items: {
-              name: string;
-              args: t.TVar[];
-              kind: TopTypeKind;
-          }[];
-      }
+    | ToplevelType
     | { type: 'Expr'; hash?: string; items: { name: string; type: t.Type }[] };
 
 export type TopTypeKind = 'enum' | 'record' | 'builtin' | 'lambda' | 'unknown';

@@ -40,10 +40,13 @@ export type Ctx = {
     resolveType: (name: string, hash?: string | null) => t.RefKind | null;
     resolveDecorator: (name: string, hash?: string | null) => Array<t.RefKind>;
 
+    toplevelConfig: (top: Toplevel | null) => Ctx;
     // decoratorNames(): { [key: string]: string };
     resolve: (name: string, hash?: string | null) => Array<t.RefKind>;
+
     // This should only be in the analyze, not in to-tast
     resolveRecur(idx: number): Id | null;
+    resolveTypeRecur(idx: number): t.Type | null;
 } & TMCtx;
 
 export type VisitorCtx = {
