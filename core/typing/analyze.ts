@@ -26,7 +26,6 @@ import { printTopLevel } from '../debug';
 import { typeToplevelT } from '../elements/base';
 
 export type Ctx = {
-    getType(expr: t.Expression): t.Type | null;
     getTypeArgs(ref: t.RefKind): t.TVar[] | null;
     getTopKind(idx: number): TopTypeKind | null;
     resolveAnalyzeType(type: t.Type): t.Type | null;

@@ -1,6 +1,6 @@
 import { tref } from '../ctx';
 import { unifiedTypes } from '../elements/apply';
-import { getLocals, Locals } from '../elements/pattern';
+import { getLocals, Locals, typeForPattern } from '../elements/pattern';
 import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
 import { transformType } from '../transform-tast';
 import { Expression, GlobalRef, Loc, TVars, Type } from '../typed-ast';
@@ -185,6 +185,15 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
         case 'Block': {
             if (!expr.stmts.length) {
                 return unit(expr.loc);
+            }
+            for (let stmt of expr.stmts) {
+                if (stmt.type === 'Let') {
+                    const locals: Locals = [];
+                    const typ =
+                        ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
+                    getLocals(stmt.pat, typ, locals, ctx);
+                    ctx = ctx.withLocals(locals);
+                }
             }
             const last = expr.stmts[expr.stmts.length - 1];
             if (last.type === 'Let') {

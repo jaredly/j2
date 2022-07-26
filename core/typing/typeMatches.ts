@@ -5,6 +5,7 @@ import { tvarsMatches } from '../elements/type-vbls';
 import { Id } from '../ids';
 import {
     EnumCase,
+    Expression,
     GlobalRef,
     refHash,
     RefKind,
@@ -37,6 +38,7 @@ export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
 };
 
 export type Ctx = {
+    getType(expr: Expression): Type | null;
     isBuiltinType(t: Type, name: string): boolean;
     getBuiltinRef(name: string): GlobalRef | null;
     resolveRefsAndApplies(t: Type, path?: string[]): Type | null;
