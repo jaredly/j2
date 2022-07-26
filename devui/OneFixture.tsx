@@ -311,15 +311,18 @@ export function OneFixture({
                                             return [];
                                         }
 
+                                        // debugger;
+
                                         // TODO: Just be able to use newOutput
                                         // with a source map for locs
-                                        const fctx = ctx.clone();
+                                        let fctx = ctx.clone();
                                         loadBuiltins(fixture.builtins, fctx);
 
                                         const [file, tctx] = fileToTast(
                                             fixComments(ast),
                                             fctx,
                                         );
+                                        fctx = tctx as FullContext;
                                         const ictx = iCtx(ctx);
 
                                         const locs: HL[] = [];
