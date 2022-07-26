@@ -15,7 +15,13 @@ import { iCtx } from '../../ir/ir';
 import { ExecutionContext, jCtx, newExecutionContext } from '../../ir/to-js';
 import { transformToplevel } from '../../transform-tast';
 import * as t from '../../typed-ast';
-import { analyzeTop, errorCount, initVerify, verifyVisitor } from '../analyze';
+import {
+    analyzeTop,
+    errorCount,
+    initVerify,
+    Verify,
+    verifyVisitor,
+} from '../analyze';
 import { assertions, valueAssertions } from './utils';
 
 export type Test = {
@@ -81,14 +87,7 @@ export const runTest = (
             const v = initVerify();
             transformToplevel(top, verifyVisitor(v, ctx), ctx);
             if (!equal(v, initVerify())) {
-                statuses.push({
-                    loc: t.loc,
-                    type: 'Error',
-                    prefix: {
-                        text: '🙁',
-                        message: `${errorCount(v)} errors in toplevel`,
-                    },
-                });
+                statuses.push(...verifyHL(v));
             }
             tast.toplevels.push(top);
             // expect(v).toEqual(initVerify());
@@ -130,30 +129,7 @@ export const runTest = (
                 const v = initVerify();
                 transformToplevel(top, verifyVisitor(v, ctx), ctx);
                 if (!equal(v, initVerify())) {
-                    // statuses.push({
-                    //     loc: t.loc,
-                    //     text: `${errorCount(v)} errors in toplevel`,
-                    // });
-                    v.errors.forEach((loc) => {
-                        statuses.push({
-                            loc: loc,
-                            type: 'Error',
-                            prefix: {
-                                text: '🙁',
-                                message: `Error?`,
-                            },
-                        });
-                    });
-                    v.untypedExpression.forEach((loc) => {
-                        statuses.push({
-                            loc: loc,
-                            type: 'Error',
-                            prefix: {
-                                text: '🖥',
-                                message: `Untyped`,
-                            },
-                        });
-                    });
+                    statuses.push(...verifyHL(v));
                 }
 
                 raws.forEach((raw, i) => {
@@ -205,19 +181,9 @@ export const runTest = (
             //     () => {
             const v = initVerify();
             transformToplevel(top, verifyVisitor(v, ctx), ctx);
-            // expect(v).toEqual(initVerify());
             if (!equal(v, initVerify())) {
-                statuses.push({
-                    loc: t.loc,
-                    type: 'Error',
-                    prefix: {
-                        text: '🚨',
-                        message: `${errorCount(v)} errors in toplevel`,
-                    },
-                });
+                statuses.push(...verifyHL(v));
             }
-            //     },
-            // );
 
             const ictx = iCtx(ctx);
             const ir = ictx.ToIR.BlockSt(
@@ -321,6 +287,7 @@ export const runTest = (
                             type: res ? 'Success' : `Error`,
                             prefix: {
                                 text: res ? '✅' : '🚨',
+                                message: res ? 'true' : 'false',
                             },
                         });
                     } catch (err) {
@@ -340,4 +307,29 @@ export const runTest = (
 
     window.console = old;
     return { statuses, file: tast, ctx };
+};
+
+export const verifyHL = (v: Verify) => {
+    const statuses: HL[] = [];
+    v.errors.forEach((loc) => {
+        statuses.push({
+            loc: loc,
+            type: 'Error',
+            prefix: {
+                text: '🙁',
+                message: `Error?`,
+            },
+        });
+    });
+    v.untypedExpression.forEach((loc) => {
+        statuses.push({
+            loc: loc,
+            type: 'Error',
+            prefix: {
+                text: '🖥',
+                message: `Untyped`,
+            },
+        });
+    });
+    return statuses;
 };

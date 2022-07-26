@@ -507,7 +507,15 @@ export const ToJS = {
             case 'PBlank':
                 return b.identifier('_');
             case 'PEnum':
-                return b.identifier('enum pattern, invalid');
+                if (p.payload) {
+                    return b.objectPattern([
+                        b.objectProperty(
+                            b.identifier('payload'),
+                            ctx.ToJS.Pattern(p.payload, ctx),
+                        ),
+                    ]);
+                }
+                return b.identifier('_');
             case 'PName':
                 return b.identifier(p.sym.name);
             case 'PDecorated':

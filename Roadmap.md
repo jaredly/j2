@@ -5,7 +5,10 @@ WHAT IS MY
 current north star
 
 - getting a basic Task / async/await / error coalescence story going
+	- need withHandler, andThen
+	- and a bunch of custom js dealio
 - getting some kind of UI framework going
+	- hmmmm i dunno what the story is
 - GLSL PLSSS
 
 So, I probably want to be working toward running
@@ -20,6 +23,41 @@ and/or a nice error coalescing example.
 - [ ] and 'switch to if/lets'
 
 ... run 'analyze' after 'simplify', to ensure that nothing went wrong
+hmmm, so if/let
+can IR .. do things like 
+
+```js
+/*
+
+switch hello {
+	`One(thing) => thing
+	`Two(12, b) => 2 * b
+	`Three => 23
+}
+
+// typeof hello !== 'string' && hello.tag === 'One'
+if let `One(thing) = hello {
+	thing
+// typeof hello !== 'string' && hello.tag === 'Two' && hello.payload[0] === 12
+} else if let `Two(12, b) = hello {
+	let `Two(_, b) = hello
+	2 * b
+} else {
+	23
+}
+
+*/
+```
+
+
+
+
+
+ok so, I need much better inference (typeMatches should return new constraints)
+
+also, I want : 
+
+
 
 BIG NEXT
 

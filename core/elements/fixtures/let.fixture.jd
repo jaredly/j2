@@ -158,9 +158,26 @@ alias error:notExhaustive=h8800c0a4e23ff598b839e081d716b8b28bf0b0e7
 }
 // ()
 
-==[New fixture____]==
+==[let enum]==
 --[input]--
-// hello
+{
+  let `One(a) = `One(20)
+  a
+} == 20
 
 --[output:expected]--
-// hello
+alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150
+{
+    let `One(a#[0]) = `One(20);
+    a#[0];
+} == 20
+// bool
+/* (() => {
+  let {
+    payload: a
+  } = {
+    tag: "One",
+    payload: 20
+  };
+  return a;
+})() == 20 */
