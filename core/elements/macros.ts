@@ -206,8 +206,8 @@ export const ToTast = {
 
     Pattern(node: p.Pattern, ctx: TCtx): t.Pattern {
         switch (node.type) {
-            case 'PDecorator':
-                return ctx.ToTast.PDecorator(node, ctx);
+            case 'PDecorated':
+                return ctx.ToTast.PDecorated(node, ctx);
 
             case 'PName':
                 return ctx.ToTast.PName(node, ctx);
@@ -518,8 +518,8 @@ export const ToAst = {
             case 'String':
                 return ctx.ToAst.String(node, ctx);
 
-            case 'PDecorator':
-                return ctx.ToAst.PDecorator(node, ctx);
+            case 'PDecorated':
+                return ctx.ToAst.PDecorated(node, ctx);
 
             default:
                 let _: never = node;
@@ -721,8 +721,8 @@ export const ToPP = {
 
     Pattern(node: p.Pattern, ctx: PCtx): pp.PP {
         switch (node.type) {
-            case 'PDecorator':
-                return ctx.ToPP.PDecorator(node, ctx);
+            case 'PDecorated':
+                return ctx.ToPP.PDecorated(node, ctx);
 
             case 'PName':
                 return ctx.ToPP.PName(node, ctx);

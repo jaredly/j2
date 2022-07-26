@@ -174,7 +174,7 @@ LetPair = name:$IdText typ:(_ ":" _ Type)? _ "=" _ expr:Expression
 
 // pattern.ts
 
-Pattern = PDecorator / PName / PTuple / PRecord / PBlank / Number / String
+Pattern = PDecorated / PName / PTuple / PRecord / PBlank / Number / String
 PBlank = pseudo:"_"
 PName = name:$IdText hash:($JustSym)?
 PTuple = "(" _  items:PTupleItems? _ ")"
@@ -186,7 +186,7 @@ PRecordValue = PRecordPattern / PHash
 PRecordPattern = _ ":" _ just:Pattern
 PHash = hash:$JustSym
 
-PDecorator = decorators:(Decorator _)+ inner:Pattern
+PDecorated = decorators:(Decorator _)+ inner:Pattern
 // PEnum
 // PUnion
 

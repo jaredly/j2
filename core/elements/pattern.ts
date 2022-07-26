@@ -9,7 +9,7 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
 
 export const grammar = `
-Pattern = PDecorator / PName / PTuple / PRecord / PBlank / Number / String
+Pattern = PDecorated / PName / PTuple / PRecord / PBlank / Number / String
 PBlank = pseudo:"_"
 PName = name:$IdText hash:($JustSym)?
 PTuple = "(" _  items:PTupleItems? _ ")"
@@ -21,7 +21,7 @@ PRecordValue = PRecordPattern / PHash
 PRecordPattern = _ ":" _ just:Pattern
 PHash = hash:$JustSym
 
-PDecorator = decorators:(Decorator _)+ inner:Pattern
+PDecorated = decorators:(Decorator _)+ inner:Pattern
 // PEnum
 // PUnion
 `;
@@ -50,9 +50,9 @@ export type Pattern =
     | PBlank
     | t.Number
     | t.String
-    | PDecorator;
-export type PDecorator = {
-    type: 'PDecorator';
+    | PDecorated;
+export type PDecorated = {
+    type: 'PDecorated';
     decorators: t.Decorator[];
     inner: Pattern;
     loc: t.Loc;
@@ -111,7 +111,7 @@ export const typeMatchesPattern = (
             }
             return ctx.isBuiltinType(type, 'string');
         }
-        case 'PDecorator': {
+        case 'PDecorated': {
             return typeMatchesPattern(pat.inner, type, ctx);
         }
         case 'PRecord': {
@@ -145,7 +145,7 @@ export const typeForPattern = (pat: Pattern, ctx?: TCtx): t.Type => {
             return pat;
         case 'PName':
             return ctx ? ctx.newTypeVar() : { type: 'TBlank', loc: pat.loc };
-        case 'PDecorator':
+        case 'PDecorated':
             return typeForPattern(pat.inner, ctx);
         case 'PRecord':
             return {
@@ -221,12 +221,12 @@ export const ToTast = {
             loc,
         };
     },
-    PDecorator(
-        { type, decorators, inner, loc }: p.PDecorator,
+    PDecorated(
+        { type, decorators, inner, loc }: p.PDecorated,
         ctx: TCtx,
-    ): PDecorator {
+    ): PDecorated {
         return {
-            type: 'PDecorator',
+            type: 'PDecorated',
             decorators: decorators.map((dec) => ctx.ToTast.Decorator(dec, ctx)),
             inner: ctx.ToTast.Pattern(inner, ctx),
             loc,
@@ -257,9 +257,9 @@ export const ToTast = {
 };
 
 export const ToAst = {
-    PDecorator(pat: t.PDecorator, ctx: TACtx): p.PDecorator {
+    PDecorated(pat: t.PDecorated, ctx: TACtx): p.PDecorated {
         return {
-            type: 'PDecorator',
+            type: 'PDecorated',
             decorators: pat.decorators.map((dec) =>
                 ctx.ToAst.Decorator(dec, ctx),
             ),
@@ -338,7 +338,7 @@ export const ToPP = {
             loc,
         );
     },
-    PDecorator(pat: p.PDecorator, ctx: PCtx): pp.PP {
+    PDecorated(pat: p.PDecorated, ctx: PCtx): pp.PP {
         return pp.items(
             [
                 pp.items(
@@ -401,7 +401,7 @@ export const ToJS = {
                 return b.identifier('_');
             case 'PName':
                 return b.identifier(p.sym.name);
-            case 'PDecorator':
+            case 'PDecorated':
                 return ctx.ToJS.Pattern(p.inner, ctx);
             case 'PRecord':
                 if (p.items.every((item, i) => item.name === i.toString())) {

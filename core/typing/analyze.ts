@@ -95,7 +95,7 @@ export const pdecorate = (
         throw new Error(`can't resolve that decorator`);
     }
     return {
-        type: 'PDecorator',
+        type: 'PDecorated',
         decorators: [
             {
                 type: 'Decorator',

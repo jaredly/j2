@@ -784,7 +784,7 @@ function peg$parse(input, options) {
 };
   var peg$f71 = function(decorators, inner) {
   return {
-    type: "PDecorator",
+    type: "PDecorated",
     loc: myLocation(),
     decorators: decorators.map(element => element[0]),
     inner
@@ -5261,7 +5261,7 @@ function peg$parse(input, options) {
   function peg$parsePattern() {
     var s0;
 
-    s0 = peg$parsePDecorator();
+    s0 = peg$parsePDecorated();
     if (s0 === peg$FAILED) {
       s0 = peg$parsePName();
       if (s0 === peg$FAILED) {
@@ -5646,7 +5646,7 @@ function peg$parse(input, options) {
     return s0;
   }
 
-  function peg$parsePDecorator() {
+  function peg$parsePDecorated() {
     var s0, s1, s2, s3, s4;
 
     s0 = peg$currPos;

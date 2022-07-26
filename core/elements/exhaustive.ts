@@ -10,7 +10,7 @@ export const patternIsExhaustive = (pat: Pattern, ctx: Ctx): boolean => {
             return pat.items.every((item) =>
                 patternIsExhaustive(item.pat, ctx),
             );
-        case 'PDecorator':
+        case 'PDecorated':
             return patternIsExhaustive(pat.inner, ctx);
         case 'Number':
         case 'String':

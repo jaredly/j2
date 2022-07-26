@@ -24,7 +24,7 @@ import {
     LArgs,
     LArg,
     Pattern,
-    PDecorator,
+    PDecorated,
     PName,
     PTuple,
     PTupleItems,
@@ -607,11 +607,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | PHash | [PHash | null, Ctx];
     PHashPost?: (node: PHash, ctx: Ctx) => null | PHash;
-    PDecorator?: (
-        node: PDecorator,
+    PDecorated?: (
+        node: PDecorated,
         ctx: Ctx,
-    ) => null | false | PDecorator | [PDecorator | null, Ctx];
-    PDecoratorPost?: (node: PDecorator, ctx: Ctx) => null | PDecorator;
+    ) => null | false | PDecorated | [PDecorated | null, Ctx];
+    PDecoratedPost?: (node: PDecorated, ctx: Ctx) => null | PDecorated;
     Record?: (
         node: Record,
         ctx: Ctx,
@@ -932,11 +932,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Stmt | [Stmt | null, Ctx];
     StmtPost_Let?: (node: Let, ctx: Ctx) => null | Stmt;
-    Pattern_PDecorator?: (
-        node: PDecorator,
+    Pattern_PDecorated?: (
+        node: PDecorated,
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
-    PatternPost_PDecorator?: (node: PDecorator, ctx: Ctx) => null | Pattern;
+    PatternPost_PDecorated?: (node: PDecorated, ctx: Ctx) => null | Pattern;
     Pattern_PName?: (
         node: PName,
         ctx: Ctx,
@@ -1489,12 +1489,12 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_PHash?: (node: PHash, ctx: Ctx) => null | AllTaggedTypes;
-    AllTaggedTypes_PDecorator?: (
-        node: PDecorator,
+    AllTaggedTypes_PDecorated?: (
+        node: PDecorated,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypesPost_PDecorator?: (
-        node: PDecorator,
+    AllTaggedTypesPost_PDecorated?: (
+        node: PDecorated,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_Record?: (
@@ -1999,17 +1999,17 @@ export const transformDecType = <Ctx>(
     return node;
 };
 
-export const transformPDecorator = <Ctx>(
-    node: PDecorator,
+export const transformPDecorated = <Ctx>(
+    node: PDecorated,
     visitor: Visitor<Ctx>,
     ctx: Ctx,
-): PDecorator => {
+): PDecorated => {
     if (!node) {
-        throw new Error('No PDecorator provided');
+        throw new Error('No PDecorated provided');
     }
 
-    const transformed = visitor.PDecorator
-        ? visitor.PDecorator(node, ctx)
+    const transformed = visitor.PDecorated
+        ? visitor.PDecorated(node, ctx)
         : null;
     if (transformed === false) {
         return node;
@@ -2066,8 +2066,8 @@ export const transformPDecorator = <Ctx>(
     }
 
     node = updatedNode;
-    if (visitor.PDecoratorPost) {
-        const transformed = visitor.PDecoratorPost(node, ctx);
+    if (visitor.PDecoratedPost) {
+        const transformed = visitor.PDecoratedPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2506,8 +2506,8 @@ export const transformPRecordValue = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
-        case 'PDecorator': {
-            updatedNode = transformPDecorator(node, visitor, ctx);
+        case 'PDecorated': {
+            updatedNode = transformPDecorated(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -2814,9 +2814,9 @@ export const transformPattern = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
-        case 'PDecorator': {
-            const transformed = visitor.Pattern_PDecorator
-                ? visitor.Pattern_PDecorator(node, ctx)
+        case 'PDecorated': {
+            const transformed = visitor.Pattern_PDecorated
+                ? visitor.Pattern_PDecorated(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -2951,8 +2951,8 @@ export const transformPattern = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
-        case 'PDecorator': {
-            updatedNode = transformPDecorator(node, visitor, ctx);
+        case 'PDecorated': {
+            updatedNode = transformPDecorated(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -2997,9 +2997,9 @@ export const transformPattern = <Ctx>(
     }
 
     switch (updatedNode.type) {
-        case 'PDecorator': {
-            const transformed = visitor.PatternPost_PDecorator
-                ? visitor.PatternPost_PDecorator(updatedNode, ctx)
+        case 'PDecorated': {
+            const transformed = visitor.PatternPost_PDecorated
+                ? visitor.PatternPost_PDecorated(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -12297,9 +12297,9 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'PDecorator': {
-            const transformed = visitor.AllTaggedTypes_PDecorator
-                ? visitor.AllTaggedTypes_PDecorator(node, ctx)
+        case 'PDecorated': {
+            const transformed = visitor.AllTaggedTypes_PDecorated
+                ? visitor.AllTaggedTypes_PDecorated(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -13160,8 +13160,8 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'PDecorator': {
-            updatedNode = transformPDecorator(node, visitor, ctx);
+        case 'PDecorated': {
+            updatedNode = transformPDecorated(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -13905,9 +13905,9 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'PDecorator': {
-            const transformed = visitor.AllTaggedTypesPost_PDecorator
-                ? visitor.AllTaggedTypesPost_PDecorator(updatedNode, ctx)
+        case 'PDecorated': {
+            const transformed = visitor.AllTaggedTypesPost_PDecorated
+                ? visitor.AllTaggedTypesPost_PDecorated(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

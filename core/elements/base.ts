@@ -201,17 +201,23 @@ export const removeErrorDecorators = (ctx: Ctx): Visitor<null> => {
             }
             return null;
         },
-        PDecorator(node, ctx) {
+        PDecorated(node, ctx) {
             const left = removeErrorDecorators(node.decorators);
             return left.length < node.decorators.length
                 ? { ...node, decorators: left }
                 : null;
         },
-        Pattern_PDecorator(node, ctx) {
-            if (!node.decorators.length) {
-                return node.inner;
-            }
-            return null;
+        Pattern_PDecorated(node, ctx) {
+            const left = removeErrorDecorators(node.decorators);
+            return left.length < node.decorators.length
+                ? left.length
+                    ? { ...node, decorators: left }
+                    : node.inner
+                : null;
+            // if (!node.decorators.length) {
+            //     return node.inner;
+            // }
+            // return null;
         },
         TDecorated(node, ctx) {
             const left = removeErrorDecorators(node.decorators);

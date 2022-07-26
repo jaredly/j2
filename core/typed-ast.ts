@@ -57,7 +57,7 @@ export type { ILambda, LArg, Lambda } from './elements/lambda';
 export type {
     Locals,
     PBlank,
-    PDecorator,
+    PDecorated,
     PName,
     PRecord,
     Pattern,
@@ -74,7 +74,8 @@ export type {
 } from './elements/lets';
 import { If } from './elements/ifs';
 import { Switch } from './elements/switchs';
-export type { IIf, If } from './elements/ifs';export type { Case, ICase, ISwitch, Switch } from './elements/switchs';
+export type { IIf, If } from './elements/ifs';
+export type { Case, ICase, ISwitch, Switch } from './elements/switchs';
 
 export type GlobalRef = {
     type: 'Global';

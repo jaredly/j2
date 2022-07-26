@@ -18,7 +18,7 @@ import {
     PBlank,
     Number,
     String,
-    PDecorator,
+    PDecorated,
     Decorator,
     UnresolvedRef,
     DecoratorArg,
@@ -397,11 +397,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost?: (node: Pattern, ctx: Ctx) => null | Pattern;
-    PDecorator?: (
-        node: PDecorator,
+    PDecorated?: (
+        node: PDecorated,
         ctx: Ctx,
-    ) => null | false | PDecorator | [PDecorator | null, Ctx];
-    PDecoratorPost?: (node: PDecorator, ctx: Ctx) => null | PDecorator;
+    ) => null | false | PDecorated | [PDecorated | null, Ctx];
+    PDecoratedPost?: (node: PDecorated, ctx: Ctx) => null | PDecorated;
     PBlank?: (
         node: PBlank,
         ctx: Ctx,
@@ -714,11 +714,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost_String?: (node: String, ctx: Ctx) => null | Pattern;
-    Pattern_PDecorator?: (
-        node: PDecorator,
+    Pattern_PDecorated?: (
+        node: PDecorated,
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
-    PatternPost_PDecorator?: (node: PDecorator, ctx: Ctx) => null | Pattern;
+    PatternPost_PDecorated?: (node: PDecorated, ctx: Ctx) => null | Pattern;
 };
 export const transformId = <Ctx>(
     node: Id,
@@ -3127,17 +3127,17 @@ export const transformDecorator = <Ctx>(
     return node;
 };
 
-export const transformPDecorator = <Ctx>(
-    node: PDecorator,
+export const transformPDecorated = <Ctx>(
+    node: PDecorated,
     visitor: Visitor<Ctx>,
     ctx: Ctx,
-): PDecorator => {
+): PDecorated => {
     if (!node) {
-        throw new Error('No PDecorator provided');
+        throw new Error('No PDecorated provided');
     }
 
-    const transformed = visitor.PDecorator
-        ? visitor.PDecorator(node, ctx)
+    const transformed = visitor.PDecorated
+        ? visitor.PDecorated(node, ctx)
         : null;
     if (transformed === false) {
         return node;
@@ -3194,8 +3194,8 @@ export const transformPDecorator = <Ctx>(
     }
 
     node = updatedNode;
-    if (visitor.PDecoratorPost) {
-        const transformed = visitor.PDecoratorPost(node, ctx);
+    if (visitor.PDecoratedPost) {
+        const transformed = visitor.PDecoratedPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -3325,9 +3325,9 @@ export const transformPattern = <Ctx>(
             break;
         }
 
-        case 'PDecorator': {
-            const transformed = visitor.Pattern_PDecorator
-                ? visitor.Pattern_PDecorator(node, ctx)
+        case 'PDecorated': {
+            const transformed = visitor.Pattern_PDecorated
+                ? visitor.Pattern_PDecorated(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -3381,7 +3381,7 @@ export const transformPattern = <Ctx>(
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformPDecorator(node, visitor, ctx);
+            const updatedNode$0node = transformPDecorated(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -3438,9 +3438,9 @@ export const transformPattern = <Ctx>(
             break;
         }
 
-        case 'PDecorator': {
-            const transformed = visitor.PatternPost_PDecorator
-                ? visitor.PatternPost_PDecorator(updatedNode, ctx)
+        case 'PDecorated': {
+            const transformed = visitor.PatternPost_PDecorated
+                ? visitor.PatternPost_PDecorated(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
