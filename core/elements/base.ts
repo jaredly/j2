@@ -101,11 +101,8 @@ export const typeFileToTast = (
 ): [t.TypeFile, Ctx] => {
     let parsed = toplevels.map((t) => {
         ctx.resetSym();
-        let config: null | Toplevel = null;
-        if (t.type === 'TypeAlias') {
-            config = typeToplevel(t, ctx);
-            ctx.resetSym();
-        }
+        let config = typeToplevel(t, ctx);
+        ctx.resetSym();
         ctx = ctx.toplevelConfig(config);
         let top = ctx.ToTast.TypeToplevel(t, ctx);
         if (top.type === 'TypeAlias') {
@@ -131,11 +128,8 @@ export const fileToTast = (
 ): [t.File, Ctx] => {
     let parsed = toplevels.map((t) => {
         ctx.resetSym();
-        let config: null | Toplevel = null;
-        if (t.type === 'TypeAlias' || t.type === 'ToplevelLet') {
-            config = typeToplevel(t, ctx);
-            ctx.resetSym();
-        }
+        let config = typeToplevel(t, ctx);
+        ctx.resetSym();
         ctx = ctx.toplevelConfig(config);
         let top = ctx.ToTast.Toplevel(t, ctx);
         if (top.type === 'TypeAlias') {
