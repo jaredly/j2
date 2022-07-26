@@ -427,7 +427,7 @@ export const ToPP = {
             return pp.text(
                 'alias ' +
                     top.items
-                        .map((item) => ` ${item.name}${item.hash}`)
+                        .map((item) => `${item.name}${item.hash}`)
                         .join(' '),
                 top.loc,
             );
