@@ -12,6 +12,15 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+## Switch next
+
+- [ ] set up a `simplify` thing
+	like, 'if a switch target is complex, bring it out into a let'
+- [ ] also a `extract stmts to the toplevel`
+- [ ] and 'switch to if/lets'
+
+... run 'analyze' after 'simplify', to ensure that nothing went wrong
+
 BIG NEXT
 
 - [x] tests in browser

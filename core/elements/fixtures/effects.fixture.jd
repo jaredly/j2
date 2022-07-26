@@ -17,11 +17,11 @@ let print = (v#[0]: string):Task<[ `Print(string, ()) ]> => `Print(v#[0], () => 
 
 ==[untyped print]==
 --[input]--
-let print = (v: string) => `Print(v, () => `Return())
+let print = (v: string): Task<[`Print(string, ())]> => `Print(v, () => `Return())
 
 --[output:expected]--
-alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
-let print = (v#[0]: string) => `Print(v#[0], () => `Return())
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 Task=h36ea667ef0c00c6fcbfe2206360b8ce768e10926
+let print = (v#[0]: string):Task<[ `Print(string, ()) ]> => `Print(v#[0], () => `Return())
 // (string) => [ `Print(string, () => [ `Return() ]) ]
 /* v => ({
   tag: "Print",

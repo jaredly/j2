@@ -181,7 +181,7 @@ export const ToIR = {
                         return flatLet(ctx.ToIR.Stmt(stmt, ctx));
                     }
                     if (stmt.type === 'Block') {
-                        return [ctx.ToIR.BlockSt(stmt, ctx)];
+                        return ctx.ToIR.BlockSt(stmt, ctx).stmts;
                     }
                     if (stmt.type === 'If') {
                         return [ctx.ToIR.IfSt(stmt, ctx)];
