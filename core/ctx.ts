@@ -542,6 +542,8 @@ export const newContext = (): FullContext => {
                 transformExpression(t.expr, locClearVisitor, null),
             );
             const hash = hashExprs(defns);
+            // console.log(hash, defns);
+            // require('fs').writeFileSync(hash, JSON.stringify(defns));
             const ctx = { ...this[opaque] };
             ctx.values = {
                 ...ctx.values,
@@ -885,6 +887,7 @@ export const serial = (x: any): any => {
         return (
             '{' +
             Object.keys(x)
+                .sort()
                 .map((k) => k + ': ' + serial(x[k]))
                 .join(', ') +
             '}'

@@ -6,7 +6,7 @@ type Y = {...X, ho: int};
 type Z = {...Y, hi: float};
 
 --[output:expected]--
-alias float=h1c9cc9450fe2e869a48abaa5e4a85271e1625474 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f X=h69305b9149bbe6b042090d322381635f28a56bf9 Y=h40419435d290c271113b6e153c2d8914ee6157eb
+alias float=h1c9cc9450fe2e869a48abaa5e4a85271e1625474 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f X=hed4a30a41f8a414926829ba66fa3d66b89972d5e Y=hb72541df1bc730821a919ee1ad26fe162452c876
 type X = {hi: int}
 type Y = {...X, ho: int}
 type Z = {...Y, hi: float}
@@ -29,6 +29,6 @@ type X = {x: int = 3}
 type Y = {...X}
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f X=hc50a39c60286ff2cfca90d33b7139ffaf7f3ca2c
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f X=h77bbd614ff7fc95d8d9c9a9ea3a5a3255617578d
 type X = {x: int = 3}
 type Y = {...X}

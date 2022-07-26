@@ -114,7 +114,7 @@ type x=<A: int><B: int>int
 type y=x<int><10>
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f x=h3e41c83bbb51caebc377dccc7d3f00afc719d763
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f x=h4030489d339f026aa8858c34765267f75dfef6c4
 type x = <A#[0]: int><B#[1]: int>int
 type y = x<int><10>
 
@@ -124,7 +124,7 @@ type Array = <Element, Length: uint>int
 type x = (@test:type() Array)<int, 10u>
 
 --[output:expected]--
-alias Array=h7fc6ad7cebab7784c65cdf4ea15a11722e5ea809 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+alias Array=h577eb136f0b535623a6285f1ede380b9c4f1add4 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
 type Array = <Element#[0], Length#[1]: uint>int
 type x = (@test:type() Array)<int, 10u>
 
@@ -151,7 +151,7 @@ type TwoTen = <T: 10>(v: (m: T) => string) => string
 // ## And then I think it would reverse again here?
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f One=h782f3ce2b7c72249be64f4b9b8d4f0360597e092 OneInt=h1a17e948f13bdde3d6bcc891d4868a8cc1424ab8 OneTen=h8f5793e9567e2ebaf1ac87095dd9b703e322b4b7 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 Two=h7e3fe5c70f6f8ff6d5e481b2cf6ac0518e0eb98e
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f One=h97b45df3cb872742a19659c4162f58fa0ca4f56a OneInt=h61ea0764cb509d7342d351bad1e4c571deaf41d5 OneTen=h5161012229cdcf7badd3fdfc996bb99638767974 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 Two=hbffca9db7c25ed458611638f6abddc3444468c2b
 type One = (v: int) => int
 type Two = (v: 10) => int
 // Should Three accept Two? NO
@@ -190,7 +190,7 @@ type TInt = (v: Int) => string
 type TTen = (v: Ten) => string
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f Int=h9c73bde69a9ef5ef73fece595b08bb30890e97fa string=hd978df838905e7e1bd7bb33530ae12436e3756f4 Ten=hd5194c1cf3ebd11b04a83687209da35927a6b535
+alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f Int=h3de445e42abf3558018edf97a93680650ec16354 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 Ten=hd7b522d36f31118c9c33c6ecce08bebf45e2c009
 type IntA = (x: int) => string
 type TenA = (x: 10) => string
 // # First we have basic variance. IntA can be passed to something expected a TenA, but not reversed.
@@ -212,7 +212,7 @@ type Marray = DArray<int>
 type TArray = DArray<int, 10u>
 
 --[output:expected]--
-alias DArray=h2e071faf3d824e5b58693ca6e0adf4c58e0c5f0e int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+alias DArray=hc727516769ee309abfec75e4ce4b47645a8088d4 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
 type DArray = <Element#[0], Length#[1]: uint = uint>int
 type Marray = DArray<int>
 type TArray = DArray<int, 10u>

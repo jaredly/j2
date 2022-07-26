@@ -35,7 +35,7 @@ let x = 10
 let y = x + 10
 
 --[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c x=hccdddf8fbc43dbb853d8230b0bad5a50bcf222dd
+alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c x=hfb3ab6073655e042df98cf160644857639baed08
 let x = 10
 // 10
 /* 10 */

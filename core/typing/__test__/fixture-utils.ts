@@ -51,6 +51,9 @@ export type Fixture = {
 };
 
 export const locClearVisitor: Visitor<null> = {
+    // ToplevelLet(node, ctx) {
+    //     return node.hash ? { ...node, hash: undefined } : null;
+    // },
     Loc: () => noloc,
     // RefKind(node) {
     //     if (node.type === 'Global') {

@@ -118,10 +118,6 @@ export const runTest = (
                     ictx,
                 );
                 const js = jctx.ToJS.Block(ir, jctx);
-                console.log(
-                    'ok',
-                    (jctx.actx as FullContext).extract().toplevel,
-                );
                 return generate(js).code;
             });
 
