@@ -15,7 +15,10 @@ import { File, Loc, ToplevelLet, Type } from '../core/typed-ast';
 import { printCtx } from '../core/typing/to-ast';
 import { markUpTree } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
-import { splitAliases } from '../core/typing/__test__/fixture-utils';
+import {
+    aliasesFromString,
+    splitAliases,
+} from '../core/typing/__test__/fixture-utils';
 import { HL } from './HL';
 import { Tree } from './Tree';
 import { collectAnnotations } from './collectAnnotations';
@@ -69,8 +72,12 @@ const n = (n: number): Loc['start'] => ({ ...noloc.start, offset: n });
 
 export const highlightLocations = (
     text: string,
+    aliases: { [key: string]: string },
     typeFile = false,
-    extraLocs?: (v: p.File | p.TypeFile) => HL[],
+    extraLocs?: (
+        v: p.File | p.TypeFile,
+        aliases: { [key: string]: string },
+    ) => HL[],
 ): HL[] => {
     try {
         const locs: HL[] = [];
@@ -81,7 +88,7 @@ export const highlightLocations = (
             });
             transformTypeFile(ast, visitor, locs);
             if (extraLocs) {
-                locs.push(...extraLocs(ast));
+                locs.push(...extraLocs(ast, aliases));
             }
         } else {
             const ast = p.parseFile(text);
@@ -90,7 +97,7 @@ export const highlightLocations = (
             });
             transformFile(ast, visitor, locs);
             if (extraLocs) {
-                locs.push(...extraLocs(ast));
+                locs.push(...extraLocs(ast, aliases));
             }
         }
         return locs;
@@ -131,22 +138,33 @@ export const Highlight = ({
     portal: HTMLDivElement;
     onClick?: () => void;
     typeFile?: boolean;
-    extraLocs?: (v: p.File | p.TypeFile) => HL[];
+    extraLocs?: (
+        v: p.File | p.TypeFile,
+        aliases: { [key: string]: string },
+    ) => HL[];
 }) => {
-    if (text.startsWith('alias ')) {
-        text = text.slice(text.indexOf('\n') + 1);
-    }
+    // console.log('wahttt', text);
+    const [aliases, rest] = React.useMemo(() => splitAliases(text), [text]);
+    text = rest;
+    // if (text.startsWith('alias ')) {
+    //     text = text.slice(text.indexOf('\n') + 1);
+    // }
 
     const marked = React.useMemo(() => {
         // const [aliasRaw, rest] = splitAliases(text);
 
-        const locs = highlightLocations(text, typeFile, extraLocs);
+        const locs = highlightLocations(
+            text,
+            aliasesFromString(aliases),
+            typeFile,
+            extraLocs,
+        );
         console.log(
             'locsss',
             locs.filter((t) => t.type === 'Error'),
         );
         return text.trim().length ? markUpTree(text, locs) : null;
-    }, [text]);
+    }, [text, aliases]);
 
     // console.log('tree', marked)
     const annotations = React.useMemo(

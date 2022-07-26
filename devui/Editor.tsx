@@ -85,7 +85,7 @@ export const Editor = ({
 
     React.useEffect(() => {
         if (getText(ref.current!) !== text) {
-            const locs = highlightLocations(text, typeFile, extraLocs);
+            const locs = highlightLocations(text, {}, typeFile, extraLocs);
             if (text.length) {
                 setHtmlAndClean(
                     ref.current!,
@@ -138,7 +138,7 @@ export const Editor = ({
                 );
                 prevPos.current = pos;
                 obs.disconnect();
-                const locs = highlightLocations(text, typeFile, extraLocs);
+                const locs = highlightLocations(text, {}, typeFile, extraLocs);
                 const html = treeToHtmlLines(markUpTree(text, locs));
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, pos);
@@ -164,6 +164,7 @@ export const Editor = ({
                 obs.disconnect();
                 const locs = highlightLocations(
                     entry.text,
+                    {},
                     typeFile,
                     extraLocs,
                 );

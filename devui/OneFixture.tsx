@@ -306,17 +306,18 @@ export function OneFixture({
                                         tast: newOutput.result.outputTast,
                                         ctx: newOutput.result.ctx2,
                                     }}
-                                    extraLocs={(ast) => {
+                                    extraLocs={(ast, aliases) => {
                                         if (ast.type !== 'File') {
                                             return [];
                                         }
-
-                                        // debugger;
 
                                         // TODO: Just be able to use newOutput
                                         // with a source map for locs
                                         let fctx = ctx.clone();
                                         loadBuiltins(fixture.builtins, fctx);
+                                        fctx = fctx.withAliases(
+                                            aliases,
+                                        ) as FullContext;
 
                                         const [file, tctx] = fileToTast(
                                             fixComments(ast),

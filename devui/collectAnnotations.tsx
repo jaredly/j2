@@ -32,8 +32,6 @@ export const collectAnnotations = (tast: File, ctx: FullContext) => {
                     text: typeToString(t, ctx),
                 });
             } else {
-                ctx.debugger();
-                debugger;
                 annotations.push({
                     loc: node.loc,
                     text: `[no type]`,

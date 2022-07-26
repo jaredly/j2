@@ -36,7 +36,7 @@ switch `What {
 // Error, no type!
 
 ==[enum pattern wrong]==
---[input:shouldFail]--
+--[input]--
 switch `What(10) {
 `What(hello) => hello
 }

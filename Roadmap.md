@@ -21,6 +21,9 @@ and/or a nice error coalescing example.
 	like, 'if a switch target is complex, bring it out into a let'
 - [ ] also a `extract stmts to the toplevel`
 - [ ] and 'switch to if/lets'
+	- once we're at `if let`s, I think we're in good shape?
+		BUT I do need to get type refinement working
+	- ehm. ... 
 
 ... run 'analyze' after 'simplify', to ensure that nothing went wrong
 hmmm, so if/let
@@ -48,6 +51,12 @@ if let `One(thing) = hello {
 
 */
 ```
+
+OK um . 
+
+### Type Refinement!
+So, in order for type refinement to work...
+I'll need to get rid of syminfo? 🤔
 
 
 
