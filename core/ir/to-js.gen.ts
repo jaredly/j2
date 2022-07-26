@@ -9,8 +9,9 @@ import { ToJS as lets } from '../elements/lets';
 import { ToJS as macros } from '../elements/macros';
 import { ToJS as pattern } from '../elements/pattern';
 import { ToJS as records } from '../elements/records';
+import { ToJS as switchs } from '../elements/switchs';
 
-export type ToJS = typeof apply & typeof base & typeof constants & typeof enums & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof records;
+export type ToJS = typeof apply & typeof base & typeof constants & typeof enums & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof records & typeof switchs;
 
 export const makeToJS = (): ToJS => {
 	return {
@@ -23,6 +24,7 @@ export const makeToJS = (): ToJS => {
 		...lets,
 		...macros,
 		...pattern,
-		...records
+		...records,
+		...switchs
 	}
 }

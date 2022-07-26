@@ -265,6 +265,11 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
             }
             return null;
         },
+        // Case(node, ctx) {
+        //     const locals: t.Locals = [];
+        //     getLocals(node.pat, ctx.getType(node.expr), locals, ctx);
+        //     return [null, ctx.withLocals(locals) as Ctx];
+        // },
         Decorator(node) {
             if (node.id.ref.type === 'Unresolved') {
                 results.unresolved.decorator.push(node.loc);
@@ -281,7 +286,7 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
     };
 };
 
-export const initVerify = () => ({
+export const initVerify = (): Verify => ({
     errors: [],
     untypedExpression: [],
     unresolved: {

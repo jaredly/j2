@@ -5,13 +5,18 @@
 ##[fixtures]##
 ==[basic]==
 --[input]--
-hello
+switch (1, 2) {
+  (a, b) => a + b
+  (x, y) => x
+}
 
 --[output:expected]--
-alias hello=hfe91f1ef2452e6927118530ab0bc97677c300137 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
-hello
-// string
-/* hello */
+alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c
+switch (1, 2) {
+  (a#[0], b#[1]) => (+)<1, 2>(a#[0], b#[1])
+  (x#[2], y#[3]) => x#[2]
+}
+// 3
 
 ==[types]==
 --[input]--

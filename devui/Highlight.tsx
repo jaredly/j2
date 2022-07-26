@@ -37,6 +37,10 @@ export const styles: {
         'text-overflow': 'ellipsis',
         'margin-bottom': '-7px',
     },
+    Error: {
+        'text-decoration': 'underline',
+        textDecorationColor: '#f00',
+    },
 };
 
 export const colors: {

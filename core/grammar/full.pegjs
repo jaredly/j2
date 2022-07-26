@@ -49,7 +49,7 @@ Identifier = text:$IdText hash:IdHash?
 
 IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
 
-Atom = If / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
+Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -204,6 +204,12 @@ TRecordItem = TRecordSpread / TRecordKeyValue / Star
 TRecordSpread = "..." _ inner:Type
 TRecordKeyValue = key:$AttrText _ ":" _ value:Type default_:(_ "=" _ Expression)?
 
+
+
+// switchs.ts
+
+Switch = "switch" _ target:Expression _ "{" _ cases:Case* _ "}"
+Case = _ pat:Pattern _ "=>" _ expr:Expression
 
 
 // type-vbls.ts

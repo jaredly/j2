@@ -337,6 +337,29 @@ export function OneFixture({
                                                 fctx,
                                             );
                                             if (errorCount(v)) {
+                                                console.log('nope,', v);
+                                                v.errors.forEach((loc) => {
+                                                    locs.push({
+                                                        loc,
+                                                        type: 'Error',
+                                                    });
+                                                });
+                                                v.unresolved.value.forEach(
+                                                    (loc) => {
+                                                        locs.push({
+                                                            loc,
+                                                            type: 'Error',
+                                                        });
+                                                    },
+                                                );
+                                                v.untypedExpression.forEach(
+                                                    (loc) => {
+                                                        locs.push({
+                                                            loc,
+                                                            type: 'Error',
+                                                        });
+                                                    },
+                                                );
                                                 return;
                                             }
 

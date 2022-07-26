@@ -37,7 +37,14 @@ export type IBlock = {
     stmts: IStmt[];
     loc: t.Loc;
 };
-export type IStmt = ILet | IAssign | t.IExpression | IBlock | IReturn | IIf;
+export type IStmt =
+    | ILet
+    | IAssign
+    | t.IExpression
+    | IBlock
+    | IReturn
+    | IIf
+    | ISwitch;
 export type IReturn = { type: 'Return'; expr: t.IExpression; loc: t.Loc };
 export type ILet = {
     type: 'Let';
@@ -148,7 +155,15 @@ export const ToPP = {
 };
 
 export const ToIR = {
-    BlockSt(node: t.Block, ctx: ICtx): IBlock {
+    BlockSt(expr: t.Expression, ctx: ICtx): IBlock {
+        const node =
+            expr.type === 'Block'
+                ? expr
+                : {
+                      type: 'Block',
+                      stmts: [expr],
+                      loc: expr.loc,
+                  };
         return {
             type: 'Block',
             stmts: node.stmts
@@ -265,6 +280,7 @@ export const iife = (st: t.IStmt, ctx: ICtx): t.IExpression => {
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { IIf } from './ifs';
+import { ISwitch } from './switchs';
 export const ToJS = {
     Block(node: t.IBlock, ctx: JCtx): b.BlockStatement {
         return b.blockStatement(
@@ -313,6 +329,9 @@ export const ToJS = {
         }
         if (node.type === 'Assign') {
             return ctx.ToJS.Assign(node, ctx);
+        }
+        if (node.type === 'Switch') {
+            return ctx.ToJS.Switch(node, ctx);
         }
         return b.expressionStatement(ctx.ToJS.IExpression(node, ctx));
     },

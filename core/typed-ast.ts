@@ -72,7 +72,8 @@ export type {
     Stmt,
 } from './elements/lets';
 import { If } from './elements/ifs';
-export type { IIf, If } from './elements/ifs';
+import { Switch } from './elements/switchs';
+export type { IIf, If } from './elements/ifs';export type { Case, ICase, ISwitch, Switch } from './elements/switchs';
 
 export type GlobalRef = {
     type: 'Global';
@@ -168,17 +169,18 @@ export type TypeAlias = {
 };
 
 export type Expression =
-    | Ref
-    | Apply
-    | Enum
     | If
+    | Ref
+    | Enum
+    | Block
+    | Apply
     | Lambda
     | Record
     | Number
+    | Switch
     | Boolean
     | TemplateString
     | TypeApplication
-    | Block
     | DecoratedExpression;
 
 export type IExpression =

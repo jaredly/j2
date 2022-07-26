@@ -14,10 +14,11 @@ import { ToTast as macros } from '../elements/macros';
 import { ToTast as pattern } from '../elements/pattern';
 import { ToTast as recordexprs } from '../elements/record-exprs';
 import { ToTast as records } from '../elements/records';
+import { ToTast as switchs } from '../elements/switchs';
 import { ToTast as typevbls } from '../elements/type-vbls';
 import { ToTast as type } from '../elements/type';
 
-export type ToTast = typeof apply & typeof base & typeof binops & typeof constants & typeof decorators & typeof enumexprs & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof recordexprs & typeof records & typeof typevbls & typeof type;
+export type ToTast = typeof apply & typeof base & typeof binops & typeof constants & typeof decorators & typeof enumexprs & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof recordexprs & typeof records & typeof switchs & typeof typevbls & typeof type;
 
 export const makeToTast = (): ToTast => {
 	return {
@@ -36,6 +37,7 @@ export const makeToTast = (): ToTast => {
 		...pattern,
 		...recordexprs,
 		...records,
+		...switchs,
 		...typevbls,
 		...type
 	}

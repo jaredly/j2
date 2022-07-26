@@ -14,10 +14,11 @@ import { ToPP as macros } from '../elements/macros';
 import { ToPP as pattern } from '../elements/pattern';
 import { ToPP as recordexprs } from '../elements/record-exprs';
 import { ToPP as records } from '../elements/records';
+import { ToPP as switchs } from '../elements/switchs';
 import { ToPP as typevbls } from '../elements/type-vbls';
 import { ToPP as type } from '../elements/type';
 
-export type ToPP = typeof apply & typeof base & typeof binops & typeof constants & typeof decorators & typeof enumexprs & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof recordexprs & typeof records & typeof typevbls & typeof type;
+export type ToPP = typeof apply & typeof base & typeof binops & typeof constants & typeof decorators & typeof enumexprs & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof recordexprs & typeof records & typeof switchs & typeof typevbls & typeof type;
 
 export const makeToPP = (): ToPP => {
 	return {
@@ -36,6 +37,7 @@ export const makeToPP = (): ToPP => {
 		...pattern,
 		...recordexprs,
 		...records,
+		...switchs,
 		...typevbls,
 		...type
 	}

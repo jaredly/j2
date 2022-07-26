@@ -116,6 +116,9 @@ export const ToTast = {
             case 'Enum':
                 return ctx.ToTast.Enum(node, ctx);
 
+            case 'Switch':
+                return ctx.ToTast.Switch(node, ctx);
+
             case 'Record':
                 return ctx.ToTast.Record(node, ctx);
 
@@ -185,6 +188,9 @@ export const ToTast = {
 
             case 'Enum':
                 return ctx.ToTast.Enum(node, ctx);
+
+            case 'Switch':
+                return ctx.ToTast.Switch(node, ctx);
 
             case 'Record':
                 return ctx.ToTast.Record(node, ctx);
@@ -333,17 +339,20 @@ export const ToAst = {
 
     Expression(node: t.Expression, ctx: TACtx): p.Expression {
         switch (node.type) {
+            case 'If':
+                return ctx.ToAst.If(node, ctx);
+
             case 'Ref':
                 return ctx.ToAst.Ref(node, ctx);
-
-            case 'Apply':
-                return ctx.ToAst.Apply(node, ctx);
 
             case 'Enum':
                 return ctx.ToAst.Enum(node, ctx);
 
-            case 'If':
-                return ctx.ToAst.If(node, ctx);
+            case 'Block':
+                return ctx.ToAst.Block(node, ctx);
+
+            case 'Apply':
+                return ctx.ToAst.Apply(node, ctx);
 
             case 'Lambda':
                 return ctx.ToAst.Lambda(node, ctx);
@@ -354,6 +363,9 @@ export const ToAst = {
             case 'Number':
                 return ctx.ToAst.Number(node, ctx);
 
+            case 'Switch':
+                return ctx.ToAst.Switch(node, ctx);
+
             case 'Boolean':
                 return ctx.ToAst.Boolean(node, ctx);
 
@@ -362,9 +374,6 @@ export const ToAst = {
 
             case 'TypeApplication':
                 return ctx.ToAst.TypeApplication(node, ctx);
-
-            case 'Block':
-                return ctx.ToAst.Block(node, ctx);
 
             case 'DecoratedExpression':
                 return ctx.ToAst.DecoratedExpression(node, ctx);
@@ -438,17 +447,20 @@ export const ToAst = {
             case 'Let':
                 return ctx.ToAst.Let(node, ctx);
 
+            case 'If':
+                return ctx.ToAst.If(node, ctx);
+
             case 'Ref':
                 return ctx.ToAst.Ref(node, ctx);
-
-            case 'Apply':
-                return ctx.ToAst.Apply(node, ctx);
 
             case 'Enum':
                 return ctx.ToAst.Enum(node, ctx);
 
-            case 'If':
-                return ctx.ToAst.If(node, ctx);
+            case 'Block':
+                return ctx.ToAst.Block(node, ctx);
+
+            case 'Apply':
+                return ctx.ToAst.Apply(node, ctx);
 
             case 'Lambda':
                 return ctx.ToAst.Lambda(node, ctx);
@@ -459,6 +471,9 @@ export const ToAst = {
             case 'Number':
                 return ctx.ToAst.Number(node, ctx);
 
+            case 'Switch':
+                return ctx.ToAst.Switch(node, ctx);
+
             case 'Boolean':
                 return ctx.ToAst.Boolean(node, ctx);
 
@@ -467,9 +482,6 @@ export const ToAst = {
 
             case 'TypeApplication':
                 return ctx.ToAst.TypeApplication(node, ctx);
-
-            case 'Block':
-                return ctx.ToAst.Block(node, ctx);
 
             case 'DecoratedExpression':
                 return ctx.ToAst.DecoratedExpression(node, ctx);
@@ -601,6 +613,9 @@ export const ToPP = {
             case 'Enum':
                 return ctx.ToPP.Enum(node, ctx);
 
+            case 'Switch':
+                return ctx.ToPP.Switch(node, ctx);
+
             case 'Record':
                 return ctx.ToPP.Record(node, ctx);
 
@@ -670,6 +685,9 @@ export const ToPP = {
 
             case 'Enum':
                 return ctx.ToPP.Enum(node, ctx);
+
+            case 'Switch':
+                return ctx.ToPP.Switch(node, ctx);
 
             case 'Record':
                 return ctx.ToPP.Record(node, ctx);
@@ -751,17 +769,20 @@ export const ToPP = {
 export const ToIR = {
     Expression(node: t.Expression, ctx: ICtx): t.IExpression {
         switch (node.type) {
+            case 'If':
+                return ctx.ToIR.If(node, ctx);
+
             case 'Ref':
                 return ctx.ToIR.Ref(node, ctx);
-
-            case 'Apply':
-                return ctx.ToIR.Apply(node, ctx);
 
             case 'Enum':
                 return ctx.ToIR.Enum(node, ctx);
 
-            case 'If':
-                return ctx.ToIR.If(node, ctx);
+            case 'Block':
+                return ctx.ToIR.Block(node, ctx);
+
+            case 'Apply':
+                return ctx.ToIR.Apply(node, ctx);
 
             case 'Lambda':
                 return ctx.ToIR.Lambda(node, ctx);
@@ -772,6 +793,9 @@ export const ToIR = {
             case 'Number':
                 return ctx.ToIR.Number(node, ctx);
 
+            case 'Switch':
+                return ctx.ToIR.Switch(node, ctx);
+
             case 'Boolean':
                 return ctx.ToIR.Boolean(node, ctx);
 
@@ -780,9 +804,6 @@ export const ToIR = {
 
             case 'TypeApplication':
                 return ctx.ToIR.TypeApplication(node, ctx);
-
-            case 'Block':
-                return ctx.ToIR.Block(node, ctx);
 
             case 'DecoratedExpression':
                 return ctx.ToIR.DecoratedExpression(node, ctx);
@@ -798,17 +819,20 @@ export const ToIR = {
             case 'Let':
                 return ctx.ToIR.Let(node, ctx);
 
+            case 'If':
+                return ctx.ToIR.If(node, ctx);
+
             case 'Ref':
                 return ctx.ToIR.Ref(node, ctx);
-
-            case 'Apply':
-                return ctx.ToIR.Apply(node, ctx);
 
             case 'Enum':
                 return ctx.ToIR.Enum(node, ctx);
 
-            case 'If':
-                return ctx.ToIR.If(node, ctx);
+            case 'Block':
+                return ctx.ToIR.Block(node, ctx);
+
+            case 'Apply':
+                return ctx.ToIR.Apply(node, ctx);
 
             case 'Lambda':
                 return ctx.ToIR.Lambda(node, ctx);
@@ -819,6 +843,9 @@ export const ToIR = {
             case 'Number':
                 return ctx.ToIR.Number(node, ctx);
 
+            case 'Switch':
+                return ctx.ToIR.Switch(node, ctx);
+
             case 'Boolean':
                 return ctx.ToIR.Boolean(node, ctx);
 
@@ -827,9 +854,6 @@ export const ToIR = {
 
             case 'TypeApplication':
                 return ctx.ToIR.TypeApplication(node, ctx);
-
-            case 'Block':
-                return ctx.ToIR.Block(node, ctx);
 
             case 'DecoratedExpression':
                 return ctx.ToIR.DecoratedExpression(node, ctx);

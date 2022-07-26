@@ -7,10 +7,6 @@ import {
     Toplevel,
     ToplevelExpression,
     Expression,
-    Ref,
-    UnresolvedRef,
-    Apply,
-    Enum,
     If,
     Block,
     Stmt,
@@ -20,6 +16,10 @@ import {
     Sym,
     PRecord,
     PBlank,
+    Ref,
+    UnresolvedRef,
+    Enum,
+    Apply,
     Lambda,
     LArg,
     Type,
@@ -44,6 +44,8 @@ import {
     TOps,
     Record,
     RecordKeyValue,
+    Switch,
+    Case,
     Boolean,
     TemplateString,
     TypeApplication,
@@ -66,6 +68,8 @@ import {
     IAssign,
     IReturn,
     IIf,
+    ISwitch,
+    ICase,
     DecoratorDecl,
     TypeVariables,
     TAdd,
@@ -401,6 +405,23 @@ export type Visitor<Ctx> = {
     IfPost?: (node: If, ctx: Ctx) => null | If;
     IIf?: (node: IIf, ctx: Ctx) => null | false | IIf | [IIf | null, Ctx];
     IIfPost?: (node: IIf, ctx: Ctx) => null | IIf;
+    Switch?: (
+        node: Switch,
+        ctx: Ctx,
+    ) => null | false | Switch | [Switch | null, Ctx];
+    SwitchPost?: (node: Switch, ctx: Ctx) => null | Switch;
+    Case?: (node: Case, ctx: Ctx) => null | false | Case | [Case | null, Ctx];
+    CasePost?: (node: Case, ctx: Ctx) => null | Case;
+    ISwitch?: (
+        node: ISwitch,
+        ctx: Ctx,
+    ) => null | false | ISwitch | [ISwitch | null, Ctx];
+    ISwitchPost?: (node: ISwitch, ctx: Ctx) => null | ISwitch;
+    ICase?: (
+        node: ICase,
+        ctx: Ctx,
+    ) => null | false | ICase | [ICase | null, Ctx];
+    ICasePost?: (node: ICase, ctx: Ctx) => null | ICase;
     RefKind_Global?: (
         node: GlobalRef,
         ctx: Ctx,
@@ -440,26 +461,31 @@ export type Visitor<Ctx> = {
         node: ToplevelAliases,
         ctx: Ctx,
     ) => null | Toplevel;
-    Expression_Ref?: (
-        node: Ref,
-        ctx: Ctx,
-    ) => null | false | Expression | [Expression | null, Ctx];
-    ExpressionPost_Ref?: (node: Ref, ctx: Ctx) => null | Expression;
-    Expression_Apply?: (
-        node: Apply,
-        ctx: Ctx,
-    ) => null | false | Expression | [Expression | null, Ctx];
-    ExpressionPost_Apply?: (node: Apply, ctx: Ctx) => null | Expression;
-    Expression_Enum?: (
-        node: Enum,
-        ctx: Ctx,
-    ) => null | false | Expression | [Expression | null, Ctx];
-    ExpressionPost_Enum?: (node: Enum, ctx: Ctx) => null | Expression;
     Expression_If?: (
         node: If,
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
     ExpressionPost_If?: (node: If, ctx: Ctx) => null | Expression;
+    Expression_Ref?: (
+        node: Ref,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Ref?: (node: Ref, ctx: Ctx) => null | Expression;
+    Expression_Enum?: (
+        node: Enum,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Enum?: (node: Enum, ctx: Ctx) => null | Expression;
+    Expression_Block?: (
+        node: Block,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Block?: (node: Block, ctx: Ctx) => null | Expression;
+    Expression_Apply?: (
+        node: Apply,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Apply?: (node: Apply, ctx: Ctx) => null | Expression;
     Expression_Lambda?: (
         node: Lambda,
         ctx: Ctx,
@@ -475,6 +501,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
     ExpressionPost_Number?: (node: Number, ctx: Ctx) => null | Expression;
+    Expression_Switch?: (
+        node: Switch,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Switch?: (node: Switch, ctx: Ctx) => null | Expression;
     Expression_Boolean?: (
         node: Boolean,
         ctx: Ctx,
@@ -496,11 +527,6 @@ export type Visitor<Ctx> = {
         node: TypeApplication,
         ctx: Ctx,
     ) => null | Expression;
-    Expression_Block?: (
-        node: Block,
-        ctx: Ctx,
-    ) => null | false | Expression | [Expression | null, Ctx];
-    ExpressionPost_Block?: (node: Block, ctx: Ctx) => null | Expression;
     Expression_DecoratedExpression?: (
         node: DecoratedExpression,
         ctx: Ctx,
@@ -652,6 +678,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IStmt | [IStmt | null, Ctx];
     IStmtPost_If?: (node: IIf, ctx: Ctx) => null | IStmt;
+    IStmt_Switch?: (
+        node: ISwitch,
+        ctx: Ctx,
+    ) => null | false | IStmt | [IStmt | null, Ctx];
+    IStmtPost_Switch?: (node: ISwitch, ctx: Ctx) => null | IStmt;
     Pattern_PName?: (
         node: PName,
         ctx: Ctx,
@@ -868,267 +899,6 @@ export const transformLoc = <Ctx>(
     node = updatedNode;
     if (visitor.LocPost) {
         const transformed = visitor.LocPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformUnresolvedRef = <Ctx>(
-    node: UnresolvedRef,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): UnresolvedRef => {
-    if (!node) {
-        throw new Error('No UnresolvedRef provided');
-    }
-
-    const transformed = visitor.UnresolvedRef
-        ? visitor.UnresolvedRef(node, ctx)
-        : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-    const updatedNode = node;
-
-    node = updatedNode;
-    if (visitor.UnresolvedRefPost) {
-        const transformed = visitor.UnresolvedRefPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformRef = <Ctx>(
-    node: Ref,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): Ref => {
-    if (!node) {
-        throw new Error('No Ref provided');
-    }
-
-    const transformed = visitor.Ref ? visitor.Ref(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        let updatedNode$kind = node.kind;
-
-        switch (node.kind.type) {
-            case 'Unresolved': {
-                updatedNode$kind = transformUnresolvedRef(
-                    node.kind,
-                    visitor,
-                    ctx,
-                );
-                changed1 = changed1 || updatedNode$kind !== node.kind;
-                break;
-            }
-
-            default: {
-                // let changed2 = false;
-
-                const updatedNode$kind$1node = transformRefKind(
-                    node.kind,
-                    visitor,
-                    ctx,
-                );
-                changed1 = changed1 || updatedNode$kind$1node !== node.kind;
-                updatedNode$kind = updatedNode$kind$1node;
-            }
-        }
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                kind: updatedNode$kind,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.RefPost) {
-        const transformed = visitor.RefPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformApply = <Ctx>(
-    node: Apply,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): Apply => {
-    if (!node) {
-        throw new Error('No Apply provided');
-    }
-
-    const transformed = visitor.Apply ? visitor.Apply(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$target = transformExpression(
-            node.target,
-            visitor,
-            ctx,
-        );
-        changed1 = changed1 || updatedNode$target !== node.target;
-
-        let updatedNode$args = node.args;
-        {
-            let changed2 = false;
-            const arr1 = node.args.map((updatedNode$args$item1) => {
-                const result = transformExpression(
-                    updatedNode$args$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$args$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$args = arr1;
-                changed1 = true;
-            }
-        }
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                target: updatedNode$target,
-                args: updatedNode$args,
-                loc: updatedNode$loc,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.ApplyPost) {
-        const transformed = visitor.ApplyPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformEnum = <Ctx>(
-    node: Enum,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): Enum => {
-    if (!node) {
-        throw new Error('No Enum provided');
-    }
-
-    const transformed = visitor.Enum ? visitor.Enum(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        let updatedNode$payload = undefined;
-        const updatedNode$payload$current = node.payload;
-        if (updatedNode$payload$current != null) {
-            const updatedNode$payload$1$ = transformExpression(
-                updatedNode$payload$current,
-                visitor,
-                ctx,
-            );
-            changed1 =
-                changed1 ||
-                updatedNode$payload$1$ !== updatedNode$payload$current;
-            updatedNode$payload = updatedNode$payload$1$;
-        }
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                payload: updatedNode$payload,
-                loc: updatedNode$loc,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.EnumPost) {
-        const transformed = visitor.EnumPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -1812,6 +1582,267 @@ export const transformIf = <Ctx>(
     node = updatedNode;
     if (visitor.IfPost) {
         const transformed = visitor.IfPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformUnresolvedRef = <Ctx>(
+    node: UnresolvedRef,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): UnresolvedRef => {
+    if (!node) {
+        throw new Error('No UnresolvedRef provided');
+    }
+
+    const transformed = visitor.UnresolvedRef
+        ? visitor.UnresolvedRef(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.UnresolvedRefPost) {
+        const transformed = visitor.UnresolvedRefPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformRef = <Ctx>(
+    node: Ref,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Ref => {
+    if (!node) {
+        throw new Error('No Ref provided');
+    }
+
+    const transformed = visitor.Ref ? visitor.Ref(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$kind = node.kind;
+
+        switch (node.kind.type) {
+            case 'Unresolved': {
+                updatedNode$kind = transformUnresolvedRef(
+                    node.kind,
+                    visitor,
+                    ctx,
+                );
+                changed1 = changed1 || updatedNode$kind !== node.kind;
+                break;
+            }
+
+            default: {
+                // let changed2 = false;
+
+                const updatedNode$kind$1node = transformRefKind(
+                    node.kind,
+                    visitor,
+                    ctx,
+                );
+                changed1 = changed1 || updatedNode$kind$1node !== node.kind;
+                updatedNode$kind = updatedNode$kind$1node;
+            }
+        }
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                kind: updatedNode$kind,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.RefPost) {
+        const transformed = visitor.RefPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformEnum = <Ctx>(
+    node: Enum,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Enum => {
+    if (!node) {
+        throw new Error('No Enum provided');
+    }
+
+    const transformed = visitor.Enum ? visitor.Enum(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$payload = undefined;
+        const updatedNode$payload$current = node.payload;
+        if (updatedNode$payload$current != null) {
+            const updatedNode$payload$1$ = transformExpression(
+                updatedNode$payload$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 ||
+                updatedNode$payload$1$ !== updatedNode$payload$current;
+            updatedNode$payload = updatedNode$payload$1$;
+        }
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                payload: updatedNode$payload,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.EnumPost) {
+        const transformed = visitor.EnumPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformApply = <Ctx>(
+    node: Apply,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Apply => {
+    if (!node) {
+        throw new Error('No Apply provided');
+    }
+
+    const transformed = visitor.Apply ? visitor.Apply(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$target = transformExpression(
+            node.target,
+            visitor,
+            ctx,
+        );
+        changed1 = changed1 || updatedNode$target !== node.target;
+
+        let updatedNode$args = node.args;
+        {
+            let changed2 = false;
+            const arr1 = node.args.map((updatedNode$args$item1) => {
+                const result = transformExpression(
+                    updatedNode$args$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$args$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$args = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                target: updatedNode$target,
+                args: updatedNode$args,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ApplyPost) {
+        const transformed = visitor.ApplyPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -4052,6 +4083,143 @@ export const transformRecord = <Ctx>(
     return node;
 };
 
+export const transformCase = <Ctx>(
+    node: Case,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Case => {
+    if (!node) {
+        throw new Error('No Case provided');
+    }
+
+    const transformed = visitor.Case ? visitor.Case(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$pat = transformPattern(node.pat, visitor, ctx);
+        changed1 = changed1 || updatedNode$pat !== node.pat;
+
+        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                pat: updatedNode$pat,
+                expr: updatedNode$expr,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.CasePost) {
+        const transformed = visitor.CasePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformSwitch = <Ctx>(
+    node: Switch,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Switch => {
+    if (!node) {
+        throw new Error('No Switch provided');
+    }
+
+    const transformed = visitor.Switch ? visitor.Switch(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$target = transformExpression(
+            node.target,
+            visitor,
+            ctx,
+        );
+        changed1 = changed1 || updatedNode$target !== node.target;
+
+        let updatedNode$cases = node.cases;
+        {
+            let changed2 = false;
+            const arr1 = node.cases.map((updatedNode$cases$item1) => {
+                const result = transformCase(
+                    updatedNode$cases$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$cases$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$cases = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                target: updatedNode$target,
+                cases: updatedNode$cases,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.SwitchPost) {
+        const transformed = visitor.SwitchPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformBoolean = <Ctx>(
     node: Boolean,
     visitor: Visitor<Ctx>,
@@ -4380,9 +4548,9 @@ export const transformExpression = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
-        case 'Ref': {
-            const transformed = visitor.Expression_Ref
-                ? visitor.Expression_Ref(node, ctx)
+        case 'If': {
+            const transformed = visitor.Expression_If
+                ? visitor.Expression_If(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -4399,9 +4567,9 @@ export const transformExpression = <Ctx>(
             break;
         }
 
-        case 'Apply': {
-            const transformed = visitor.Expression_Apply
-                ? visitor.Expression_Apply(node, ctx)
+        case 'Ref': {
+            const transformed = visitor.Expression_Ref
+                ? visitor.Expression_Ref(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -4437,9 +4605,28 @@ export const transformExpression = <Ctx>(
             break;
         }
 
-        case 'If': {
-            const transformed = visitor.Expression_If
-                ? visitor.Expression_If(node, ctx)
+        case 'Block': {
+            const transformed = visitor.Expression_Block
+                ? visitor.Expression_Block(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Apply': {
+            const transformed = visitor.Expression_Apply
+                ? visitor.Expression_Apply(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -4513,6 +4700,25 @@ export const transformExpression = <Ctx>(
             break;
         }
 
+        case 'Switch': {
+            const transformed = visitor.Expression_Switch
+                ? visitor.Expression_Switch(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Boolean': {
             const transformed = visitor.Expression_Boolean
                 ? visitor.Expression_Boolean(node, ctx)
@@ -4570,25 +4776,6 @@ export const transformExpression = <Ctx>(
             break;
         }
 
-        case 'Block': {
-            const transformed = visitor.Expression_Block
-                ? visitor.Expression_Block(node, ctx)
-                : null;
-            if (transformed != null) {
-                if (Array.isArray(transformed)) {
-                    ctx = transformed[1];
-                    if (transformed[0] != null) {
-                        node = transformed[0];
-                    }
-                } else if (transformed == false) {
-                    return node;
-                } else {
-                    node = transformed;
-                }
-            }
-            break;
-        }
-
         case 'DecoratedExpression': {
             const transformed = visitor.Expression_DecoratedExpression
                 ? visitor.Expression_DecoratedExpression(node, ctx)
@@ -4612,14 +4799,14 @@ export const transformExpression = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
-        case 'Ref': {
-            updatedNode = transformRef(node, visitor, ctx);
+        case 'If': {
+            updatedNode = transformIf(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
 
-        case 'Apply': {
-            updatedNode = transformApply(node, visitor, ctx);
+        case 'Ref': {
+            updatedNode = transformRef(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -4630,8 +4817,14 @@ export const transformExpression = <Ctx>(
             break;
         }
 
-        case 'If': {
-            updatedNode = transformIf(node, visitor, ctx);
+        case 'Block': {
+            updatedNode = transformBlock(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Apply': {
+            updatedNode = transformApply(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -4654,6 +4847,12 @@ export const transformExpression = <Ctx>(
             break;
         }
 
+        case 'Switch': {
+            updatedNode = transformSwitch(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Boolean': {
             updatedNode = transformBoolean(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -4672,12 +4871,6 @@ export const transformExpression = <Ctx>(
             break;
         }
 
-        case 'Block': {
-            updatedNode = transformBlock(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
         default: {
             // let changed1 = false;
 
@@ -4692,9 +4885,9 @@ export const transformExpression = <Ctx>(
     }
 
     switch (updatedNode.type) {
-        case 'Ref': {
-            const transformed = visitor.ExpressionPost_Ref
-                ? visitor.ExpressionPost_Ref(updatedNode, ctx)
+        case 'If': {
+            const transformed = visitor.ExpressionPost_If
+                ? visitor.ExpressionPost_If(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -4702,9 +4895,9 @@ export const transformExpression = <Ctx>(
             break;
         }
 
-        case 'Apply': {
-            const transformed = visitor.ExpressionPost_Apply
-                ? visitor.ExpressionPost_Apply(updatedNode, ctx)
+        case 'Ref': {
+            const transformed = visitor.ExpressionPost_Ref
+                ? visitor.ExpressionPost_Ref(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -4722,9 +4915,19 @@ export const transformExpression = <Ctx>(
             break;
         }
 
-        case 'If': {
-            const transformed = visitor.ExpressionPost_If
-                ? visitor.ExpressionPost_If(updatedNode, ctx)
+        case 'Block': {
+            const transformed = visitor.ExpressionPost_Block
+                ? visitor.ExpressionPost_Block(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Apply': {
+            const transformed = visitor.ExpressionPost_Apply
+                ? visitor.ExpressionPost_Apply(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -4762,6 +4965,16 @@ export const transformExpression = <Ctx>(
             break;
         }
 
+        case 'Switch': {
+            const transformed = visitor.ExpressionPost_Switch
+                ? visitor.ExpressionPost_Switch(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
         case 'Boolean': {
             const transformed = visitor.ExpressionPost_Boolean
                 ? visitor.ExpressionPost_Boolean(updatedNode, ctx)
@@ -4785,16 +4998,6 @@ export const transformExpression = <Ctx>(
         case 'TypeApplication': {
             const transformed = visitor.ExpressionPost_TypeApplication
                 ? visitor.ExpressionPost_TypeApplication(updatedNode, ctx)
-                : null;
-            if (transformed != null) {
-                updatedNode = transformed;
-            }
-            break;
-        }
-
-        case 'Block': {
-            const transformed = visitor.ExpressionPost_Block
-                ? visitor.ExpressionPost_Block(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -6251,6 +6454,143 @@ export const transformIIf = <Ctx>(
     return node;
 };
 
+export const transformICase = <Ctx>(
+    node: ICase,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ICase => {
+    if (!node) {
+        throw new Error('No ICase provided');
+    }
+
+    const transformed = visitor.ICase ? visitor.ICase(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$pat = transformPattern(node.pat, visitor, ctx);
+        changed1 = changed1 || updatedNode$pat !== node.pat;
+
+        const updatedNode$expr = transformIBlock(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                pat: updatedNode$pat,
+                expr: updatedNode$expr,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ICasePost) {
+        const transformed = visitor.ICasePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformISwitch = <Ctx>(
+    node: ISwitch,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ISwitch => {
+    if (!node) {
+        throw new Error('No ISwitch provided');
+    }
+
+    const transformed = visitor.ISwitch ? visitor.ISwitch(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$target = transformIExpression(
+            node.target,
+            visitor,
+            ctx,
+        );
+        changed1 = changed1 || updatedNode$target !== node.target;
+
+        let updatedNode$cases = node.cases;
+        {
+            let changed2 = false;
+            const arr1 = node.cases.map((updatedNode$cases$item1) => {
+                const result = transformICase(
+                    updatedNode$cases$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$cases$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$cases = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                target: updatedNode$target,
+                cases: updatedNode$cases,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ISwitchPost) {
+        const transformed = visitor.ISwitchPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformIStmt = <Ctx>(
     node: IStmt,
     visitor: Visitor<Ctx>,
@@ -6372,6 +6712,25 @@ export const transformIStmt = <Ctx>(
             }
             break;
         }
+
+        case 'Switch': {
+            const transformed = visitor.IStmt_Switch
+                ? visitor.IStmt_Switch(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -6449,10 +6808,16 @@ export const transformIStmt = <Ctx>(
             break;
         }
 
+        case 'If': {
+            updatedNode = transformIIf(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformIIf(node, visitor, ctx);
+            const updatedNode$0node = transformISwitch(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -6502,6 +6867,16 @@ export const transformIStmt = <Ctx>(
         case 'If': {
             const transformed = visitor.IStmtPost_If
                 ? visitor.IStmtPost_If(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Switch': {
+            const transformed = visitor.IStmtPost_Switch
+                ? visitor.IStmtPost_Switch(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

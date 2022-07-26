@@ -110,6 +110,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             }
             return maybeTref(ctx.getBuiltinRef('string'));
         case 'Ref':
+            // ctx.debugger();
             switch (expr.kind.type) {
                 case 'Unresolved':
                     return null;
@@ -199,6 +200,22 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 return unified ? unified : null;
             }
             return unit(expr.loc);
+        }
+        case 'Switch': {
+            const types = expr.cases
+                .map((c) => getType(c.expr, ctx))
+                .filter(Boolean) as Type[];
+            if (!types.length) {
+                return unit(expr.loc);
+            }
+            let t = types[0];
+            for (let i = 1; i < types.length; i++) {
+                const res = unifyTypes(t, types[i], ctx);
+                if (!res) {
+                    return null;
+                }
+            }
+            return t;
         }
         default:
             let _x: never = expr;

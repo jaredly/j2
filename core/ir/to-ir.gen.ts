@@ -9,8 +9,9 @@ import { ToIR as lets } from '../elements/lets';
 import { ToIR as macros } from '../elements/macros';
 import { ToIR as pattern } from '../elements/pattern';
 import { ToIR as records } from '../elements/records';
+import { ToIR as switchs } from '../elements/switchs';
 
-export type ToIR = typeof apply & typeof base & typeof constants & typeof enums & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof records;
+export type ToIR = typeof apply & typeof base & typeof constants & typeof enums & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof records & typeof switchs;
 
 export const makeToIR = (): ToIR => {
 	return {
@@ -23,6 +24,7 @@ export const makeToIR = (): ToIR => {
 		...lets,
 		...macros,
 		...pattern,
-		...records
+		...records,
+		...switchs
 	}
 }
