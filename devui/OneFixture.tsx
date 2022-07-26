@@ -345,6 +345,7 @@ export function OneFixture({
                                                         type: 'Error',
                                                         prefix: {
                                                             text: '🚨',
+                                                            message: 'Error',
                                                         },
                                                     });
                                                 });
@@ -355,6 +356,8 @@ export function OneFixture({
                                                             type: 'Error',
                                                             prefix: {
                                                                 text: '❔',
+                                                                message:
+                                                                    'Unresolved',
                                                             },
                                                         });
                                                     },
@@ -366,6 +369,8 @@ export function OneFixture({
                                                             type: 'Error',
                                                             prefix: {
                                                                 text: '😬',
+                                                                message:
+                                                                    'Untyped expression',
                                                             },
                                                         });
                                                     },

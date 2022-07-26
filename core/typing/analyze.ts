@@ -23,6 +23,7 @@ import {
     typeMatchesPattern,
 } from '../elements/pattern';
 import { printTopLevel } from '../debug';
+import { typeToplevelT } from '../elements/base';
 
 export type Ctx = {
     getType(expr: t.Expression): t.Type | null;
@@ -281,8 +282,12 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
             results.errors.push(node.loc);
             return null;
         },
-        Toplevel(node) {
-            return null;
+        Toplevel(node, ctx) {
+            populateSyms(node, ctx);
+            return [
+                null,
+                ctx.toplevelConfig(typeToplevelT(node, ctx)) as FullContext,
+            ];
         },
         TRef(node) {
             if (node.ref.type === 'Unresolved') {

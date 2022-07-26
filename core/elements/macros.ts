@@ -1,5 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { decorate } from '../typing/analyze';
+import { decorate, populateSyms } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
 import { typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
@@ -12,6 +12,7 @@ import { Ctx as TMCtx } from '../typing/typeMatches';
 import { Ctx as JCtx } from '../ir/to-js';
 import { Ctx as ICtx } from '../ir/ir';
 import * as b from '@babel/types';
+import { typeToplevelT } from './base';
 
 export const ToTast = {
     Suffix(node: p.Suffix, next: t.Expression, ctx: TCtx): t.Expression {

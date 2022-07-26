@@ -274,7 +274,10 @@ export const App = () => {
                 }}
             >
                 <Text>Fixtures</Text>
-                <details>
+                <details
+                    open={!!files.fixtures[hashName]}
+                    style={{ backgroundColor: 'transparent' }}
+                >
                     {Object.keys(files.fixtures)
                         .sort()
                         .map((fixture) => (
@@ -322,7 +325,10 @@ export const App = () => {
                 >
                     New Test
                 </Button>
-                <details>
+                <details
+                    open={!!files.test[hashName]}
+                    style={{ backgroundColor: 'transparent' }}
+                >
                     {Object.keys(files.test)
                         .sort()
                         .map((name) => (
@@ -343,7 +349,10 @@ export const App = () => {
                 </details>
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 <Text>Type Tests</Text>
-                <details>
+                <details
+                    open={!!files.typetest[hashName]}
+                    style={{ backgroundColor: 'transparent' }}
+                >
                     {Object.keys(files.typetest)
                         .sort()
                         .map((name) => (

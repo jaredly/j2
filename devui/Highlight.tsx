@@ -1,4 +1,4 @@
-import { Card, Popover, styled, Text, Tooltip } from '@nextui-org/react';
+import { Card, Popover, styled, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { parseTypeFile, SyntaxError } from '../core/grammar/base.parser';
@@ -11,15 +11,14 @@ import {
     transformTypeFile,
     Visitor,
 } from '../core/transform-ast';
-import * as tt from '../core/transform-tast';
-import { File, Loc, refHash, ToplevelLet, Type } from '../core/typed-ast';
-import { getType } from '../core/typing/getType';
+import { File, Loc, ToplevelLet, Type } from '../core/typed-ast';
 import { printCtx } from '../core/typing/to-ast';
-import { markUpTree, Tree as TreeT } from './markUpTree';
+import { markUpTree } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
-import { getLocals, Locals } from '../core/elements/pattern';
 import { splitAliases } from '../core/typing/__test__/fixture-utils';
 import { HL } from './HL';
+import { Tree } from './Tree';
+import { collectAnnotations } from './collectAnnotations';
 
 export type Colorable = keyof Visitor<null> | 'Error' | 'Success' | 'LetName';
 
@@ -149,6 +148,7 @@ export const Highlight = ({
         return text.trim().length ? markUpTree(text, locs) : null;
     }, [text]);
 
+    // console.log('tree', marked)
     const annotations = React.useMemo(
         () => (info ? collectAnnotations(info.tast, info.ctx) : []),
         [info],
@@ -281,105 +281,9 @@ visitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
     return null;
 };
 
-export const Tree = ({
-    tree,
-    hover,
-}: {
-    tree: TreeT;
-    hover: null | [number, number];
-}) => {
-    return (
-        <span
-            className={tree.hl.type}
-            // data-prefix={tree.hl.prefix ? tree.hl.prefix.text : undefined}
-            // data-suffix={tree.hl.suffix ? tree.hl.suffix.text : undefined}
-            style={{
-                ...styles[tree.hl.type],
-                color: colors[tree.hl.type] ?? '#aaa',
-            }}
-        >
-            {tree.children.map((child, i) =>
-                child.type === 'leaf' ? (
-                    <span
-                        data-span={`${child.span[0]}:${child.span[1]}`}
-                        style={
-                            hover &&
-                            hover[0] === child.span[0] &&
-                            hover[1] === child.span[1]
-                                ? {
-                                      // outline: '3px dotted rgba(255,255,0,0.1)'
-                                      textDecoration: 'underline',
-                                  }
-                                : {}
-                        }
-                        key={i}
-                    >
-                        {child.text}
-                    </span>
-                ) : (
-                    <Tree tree={child} key={i} hover={hover} />
-                ),
-            )}
-            {tree.hl.suffix && tree.hl.suffix.message ? (
-                <Tooltip content={tree.hl.suffix.message}>
-                    <span style={{ whiteSpace: 'pre-wrap' }}>
-                        {tree.hl.suffix.text}
-                    </span>
-                </Tooltip>
-            ) : null}
-        </span>
-    );
-};
-
 export const typeToString = (t: Type, ctx: FullContext) => {
     const actx = printCtx(ctx, false);
     const pctx = newPPCtx(false);
     const ast = actx.ToAst.Type(t, actx);
     return printToString(pctx.ToPP.Type(ast, pctx), 100);
-};
-
-const collectAnnotations = (tast: File, ctx: FullContext) => {
-    const annotations: { loc: Loc; text: string }[] = [];
-    const visitor: tt.Visitor<FullContext> = {
-        Lambda(node, ctx) {
-            const locals: Locals = [];
-            node.args.map((arg) => {
-                getLocals(arg.pat, arg.typ, locals, ctx);
-            });
-            return [null, ctx.withLocals(locals) as FullContext];
-        },
-        Expression: (node, ctx) => {
-            const t = getType(node, ctx);
-            if (t) {
-                annotations.push({
-                    loc: node.loc,
-                    text: typeToString(t, ctx),
-                });
-            } else {
-                annotations.push({
-                    loc: node.loc,
-                    text: `[no type]`,
-                });
-            }
-            return node;
-        },
-        Ref(node, ctx) {
-            let text =
-                node.kind.type === 'Unresolved'
-                    ? 'Unresolved'
-                    : node.kind.type === 'Global'
-                    ? refHash(node.kind)
-                    : node.kind.type === 'Local'
-                    ? `sym=${node.kind.sym}`
-                    : `recur(${node.kind.idx})`;
-            annotations.push({
-                loc: node.loc,
-                text,
-            });
-            return null;
-        },
-    };
-    tt.transformFile(tast, visitor, ctx);
-    // console.log(annotations);
-    return annotations;
 };

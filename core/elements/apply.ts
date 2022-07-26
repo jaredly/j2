@@ -222,6 +222,7 @@ export const makeApply = (
 export const ToAst = {
     Apply({ target, args, loc }: Apply, ctx: TACtx): p.Expression {
         if (target.type === 'TypeApplication') {
+            ctx.actx.debugger();
             const ttype = ctx.actx.getType(target.target);
             const argTypes = args.map((arg) => ctx.actx.getType(arg));
             if (
