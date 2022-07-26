@@ -1,5 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { decorate } from '../typing/analyze';
+import { decorate, pdecorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
 import { typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
@@ -12,12 +12,12 @@ import { Ctx as TMCtx } from '../typing/typeMatches';
 import { Ctx as ICtx } from '../ir/ir';
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { getLocals, typeForPattern } from './pattern';
+import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
 import { iife } from './lets';
 
 export const grammar = `
 Switch = "switch" _ target:Expression _ "{" _ cases:Case* _ "}"
-Case = _ pat:Pattern _ "=>" _ expr:Expression
+Case = _ pat:Pattern _ "=>" _ expr:Expression ";"?
 `;
 
 export type Switch = {
@@ -151,6 +151,23 @@ export const ToJS = {
 };
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
-    // Expression_Apply(node, { ctx, hit }) {
-    // },
+    Switch(node, { ctx, hit }) {
+        const target = ctx.getType(node.target);
+        if (!target) {
+            return null;
+        }
+        let changed = false;
+        const cases = node.cases.map((c) => {
+            const matches = typeMatchesPattern(c.pat, target, ctx);
+            if (!matches) {
+                changed = true;
+                return {
+                    ...c,
+                    pat: pdecorate(c.pat, 'patternMismatch', { ctx, hit }),
+                };
+            }
+            return c;
+        });
+        return changed ? { ...node, cases } : null;
+    },
 };

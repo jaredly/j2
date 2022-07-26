@@ -1,0 +1,17 @@
+##[fixtures]##
+==[basic]==
+--[input:shouldFail]--
+switch (1, 2) {
+  (a, b) => a + b
+  1 => 1
+  "what" => 20
+}
+
+--[output:expected]--
+alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c error:patternMismatch=h1bb5af1fd93cc04570b46a227234b3c89fbdd280
+switch (1, 2) {
+  (a#[0], b#[1]) => a#[0] + b#[1]
+  @error:patternMismatch() 1 => 1
+  @error:patternMismatch() "what" => 20
+}
+// 3

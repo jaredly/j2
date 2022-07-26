@@ -57,6 +57,7 @@ export type { ILambda, LArg, Lambda } from './elements/lambda';
 export type {
     Locals,
     PBlank,
+    PDecorator,
     PName,
     PRecord,
     Pattern,

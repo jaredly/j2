@@ -201,6 +201,18 @@ export const removeErrorDecorators = (ctx: Ctx): Visitor<null> => {
             }
             return null;
         },
+        PDecorator(node, ctx) {
+            const left = removeErrorDecorators(node.decorators);
+            return left.length < node.decorators.length
+                ? { ...node, decorators: left }
+                : null;
+        },
+        Pattern_PDecorator(node, ctx) {
+            if (!node.decorators.length) {
+                return node.inner;
+            }
+            return null;
+        },
         TDecorated(node, ctx) {
             const left = removeErrorDecorators(node.decorators);
             return left.length < node.decorators.length

@@ -2,7 +2,8 @@
 // Also, this is where we try to do type-based resolution.
 // Should I separate the two steps? idk.
 
-import { ErrorTag, FullContext, GlobalType, GlobalValue, noloc } from '../ctx';
+import { FullContext, GlobalType, GlobalValue, noloc } from '../ctx';
+import { ErrorTag } from '../errors';
 import {
     transformFile,
     transformToplevel,
@@ -77,6 +78,38 @@ export const addDecorator = (
             loc,
         },
     ]);
+};
+
+export const pdecorate = (
+    pat: t.Pattern,
+    tag: ErrorTag,
+    { hit, ctx }: { hit: { [key: number]: boolean }; ctx: Ctx },
+    args: t.Decorator['args'] = [],
+): t.Pattern => {
+    if (hit[pat.loc.idx]) {
+        return pat;
+    }
+    hit[pat.loc.idx] = true;
+    const refs = ctx.getDecorator(`error:${tag}`);
+    if (!refs || refs.length !== 1) {
+        throw new Error(`can't resolve that decorator`);
+    }
+    return {
+        type: 'PDecorator',
+        decorators: [
+            {
+                type: 'Decorator',
+                id: {
+                    ref: refs[0],
+                    loc: noloc,
+                },
+                args,
+                loc: pat.loc,
+            },
+        ],
+        inner: pat,
+        loc: pat.loc,
+    };
 };
 
 export const tdecorate = (
@@ -239,7 +272,6 @@ export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
 
 export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
     const errorDecorators = _ctx.errorDecorators();
-    console.log(_ctx);
     return {
         TVbl(node, ctx) {
             results.errors.push(node.loc);
@@ -250,8 +282,6 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
             return null;
         },
         Toplevel(node) {
-            // ctx.toplevelConfig?
-            // ctx.resetSym()
             return null;
         },
         TRef(node) {

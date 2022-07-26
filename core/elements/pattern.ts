@@ -9,7 +9,7 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
 
 export const grammar = `
-Pattern = PName / PTuple / PRecord / PBlank
+Pattern = PDecorator / PName / PTuple / PRecord / PBlank / Number / String
 PBlank = pseudo:"_"
 PName = name:$IdText hash:($JustSym)?
 PTuple = "(" _  items:PTupleItems? _ ")"
@@ -20,6 +20,10 @@ PRecordField = name:$IdText pat:PRecordValue?
 PRecordValue = PRecordPattern / PHash
 PRecordPattern = _ ":" _ just:Pattern
 PHash = hash:$JustSym
+
+PDecorator = decorators:(Decorator _)+ inner:Pattern
+// PEnum
+// PUnion
 `;
 
 export type PName = {
@@ -40,7 +44,19 @@ export type PRecord = {
     loc: t.Loc;
 };
 
-export type Pattern = PName | PRecord | PBlank;
+export type Pattern =
+    | PName
+    | PRecord
+    | PBlank
+    | t.Number
+    | t.String
+    | PDecorator;
+export type PDecorator = {
+    type: 'PDecorator';
+    decorators: t.Decorator[];
+    inner: Pattern;
+    loc: t.Loc;
+};
 export type PBlank = { type: 'PBlank'; loc: t.Loc };
 
 export type Locals = { sym: t.Sym; type: t.Type }[];
@@ -74,14 +90,30 @@ can we bring this back?
 //     }
 // };
 
+/**
+ * Checks to see if the type of an arg or let is appropriate.
+ */
 export const typeMatchesPattern = (
     pat: Pattern,
     type: t.Type,
     ctx: TMCtx,
 ): boolean => {
     switch (pat.type) {
-        case 'PName':
-            return true;
+        case 'Number': {
+            if (type.type === 'Number') {
+                return type.kind === pat.kind && type.value === pat.value;
+            }
+            return ctx.isBuiltinType(type, pat.kind.toLowerCase());
+        }
+        case 'String': {
+            if (type.type === 'String') {
+                return type.text === pat.text;
+            }
+            return ctx.isBuiltinType(type, 'string');
+        }
+        case 'PDecorator': {
+            return typeMatchesPattern(pat.inner, type, ctx);
+        }
         case 'PRecord': {
             if (type.type !== 'TRecord') {
                 return false;
@@ -100,6 +132,7 @@ export const typeMatchesPattern = (
             }
             return true;
         }
+        case 'PName':
         case 'PBlank':
             return true;
     }
@@ -107,8 +140,13 @@ export const typeMatchesPattern = (
 
 export const typeForPattern = (pat: Pattern, ctx?: TCtx): t.Type => {
     switch (pat.type) {
+        case 'Number':
+        case 'String':
+            return pat;
         case 'PName':
             return ctx ? ctx.newTypeVar() : { type: 'TBlank', loc: pat.loc };
+        case 'PDecorator':
+            return typeForPattern(pat.inner, ctx);
         case 'PRecord':
             return {
                 type: 'TRecord',
@@ -183,6 +221,17 @@ export const ToTast = {
             loc,
         };
     },
+    PDecorator(
+        { type, decorators, inner, loc }: p.PDecorator,
+        ctx: TCtx,
+    ): PDecorator {
+        return {
+            type: 'PDecorator',
+            decorators: decorators.map((dec) => ctx.ToTast.Decorator(dec, ctx)),
+            inner: ctx.ToTast.Pattern(inner, ctx),
+            loc,
+        };
+    },
     PRecord({ type, fields, loc }: p.PRecord, ctx: TCtx): PRecord {
         return {
             type: 'PRecord',
@@ -208,6 +257,16 @@ export const ToTast = {
 };
 
 export const ToAst = {
+    PDecorator(pat: t.PDecorator, ctx: TACtx): p.PDecorator {
+        return {
+            type: 'PDecorator',
+            decorators: pat.decorators.map((dec) =>
+                ctx.ToAst.Decorator(dec, ctx),
+            ),
+            inner: ctx.ToAst.Pattern(pat.inner, ctx),
+            loc: pat.loc,
+        };
+    },
     PBlank(pat: t.PBlank, ctx: TACtx): p.PBlank {
         return { type: 'PBlank', loc: pat.loc, pseudo: '_' };
     },
@@ -279,6 +338,18 @@ export const ToPP = {
             loc,
         );
     },
+    PDecorator(pat: p.PDecorator, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                pp.items(
+                    pat.decorators.map((d) => ctx.ToPP.Decorator(d, ctx)),
+                    pat.loc,
+                ),
+                ctx.ToPP.Pattern(pat.inner, ctx),
+            ],
+            pat.loc,
+        );
+    },
     PRecord({ type, fields, loc }: p.PRecord, ctx: PCtx): pp.PP {
         return pp.args(
             fields?.items.map((item) =>
@@ -324,10 +395,14 @@ import { allRecordItems } from './records';
 export const ToJS = {
     Pattern(p: Pattern, ctx: JCtx): b.Pattern | b.Identifier {
         switch (p.type) {
+            case 'Number':
+            case 'String':
             case 'PBlank':
                 return b.identifier('_');
             case 'PName':
                 return b.identifier(p.sym.name);
+            case 'PDecorator':
+                return ctx.ToJS.Pattern(p.inner, ctx);
             case 'PRecord':
                 if (p.items.every((item, i) => item.name === i.toString())) {
                     return b.arrayPattern(
@@ -345,12 +420,6 @@ export const ToJS = {
                 }
         }
     },
-    // Pattern({}: ILambda, ctx: JCtx): b.Expression {
-    //     return b.arrowFunctionExpression(
-    //         args?.map((arg) => ctx.ToJS.Pattern(arg.pat, ctx)) ?? [],
-    //         ctx.ToJS.IExpression(body, ctx),
-    //     )
-    // }
 };
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {

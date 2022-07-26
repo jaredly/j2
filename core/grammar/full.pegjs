@@ -174,7 +174,7 @@ LetPair = name:$IdText typ:(_ ":" _ Type)? _ "=" _ expr:Expression
 
 // pattern.ts
 
-Pattern = PName / PTuple / PRecord / PBlank
+Pattern = PDecorator / PName / PTuple / PRecord / PBlank / Number / String
 PBlank = pseudo:"_"
 PName = name:$IdText hash:($JustSym)?
 PTuple = "(" _  items:PTupleItems? _ ")"
@@ -185,6 +185,10 @@ PRecordField = name:$IdText pat:PRecordValue?
 PRecordValue = PRecordPattern / PHash
 PRecordPattern = _ ":" _ just:Pattern
 PHash = hash:$JustSym
+
+PDecorator = decorators:(Decorator _)+ inner:Pattern
+// PEnum
+// PUnion
 
 
 // record-exprs.ts
@@ -209,7 +213,7 @@ TRecordKeyValue = key:$AttrText _ ":" _ value:Type default_:(_ "=" _ Expression)
 // switchs.ts
 
 Switch = "switch" _ target:Expression _ "{" _ cases:Case* _ "}"
-Case = _ pat:Pattern _ "=>" _ expr:Expression
+Case = _ pat:Pattern _ "=>" _ expr:Expression ";"?
 
 
 // type-vbls.ts

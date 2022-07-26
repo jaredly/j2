@@ -95,6 +95,9 @@ export const ToTast = {
             case 'If':
                 return ctx.ToTast.If(node, ctx);
 
+            case 'Switch':
+                return ctx.ToTast.Switch(node, ctx);
+
             case 'Number':
                 return ctx.ToTast.Number(node, ctx);
 
@@ -115,9 +118,6 @@ export const ToTast = {
 
             case 'Enum':
                 return ctx.ToTast.Enum(node, ctx);
-
-            case 'Switch':
-                return ctx.ToTast.Switch(node, ctx);
 
             case 'Record':
                 return ctx.ToTast.Record(node, ctx);
@@ -168,6 +168,9 @@ export const ToTast = {
             case 'If':
                 return ctx.ToTast.If(node, ctx);
 
+            case 'Switch':
+                return ctx.ToTast.Switch(node, ctx);
+
             case 'Number':
                 return ctx.ToTast.Number(node, ctx);
 
@@ -189,9 +192,6 @@ export const ToTast = {
             case 'Enum':
                 return ctx.ToTast.Enum(node, ctx);
 
-            case 'Switch':
-                return ctx.ToTast.Switch(node, ctx);
-
             case 'Record':
                 return ctx.ToTast.Record(node, ctx);
 
@@ -206,6 +206,9 @@ export const ToTast = {
 
     Pattern(node: p.Pattern, ctx: TCtx): t.Pattern {
         switch (node.type) {
+            case 'PDecorator':
+                return ctx.ToTast.PDecorator(node, ctx);
+
             case 'PName':
                 return ctx.ToTast.PName(node, ctx);
 
@@ -217,6 +220,12 @@ export const ToTast = {
 
             case 'PBlank':
                 return ctx.ToTast.PBlank(node, ctx);
+
+            case 'Number':
+                return ctx.ToTast.Number(node, ctx);
+
+            case 'String':
+                return ctx.ToTast.String(node, ctx);
 
             default:
                 let _: never = node;
@@ -503,6 +512,15 @@ export const ToAst = {
             case 'PBlank':
                 return ctx.ToAst.PBlank(node, ctx);
 
+            case 'Number':
+                return ctx.ToAst.Number(node, ctx);
+
+            case 'String':
+                return ctx.ToAst.String(node, ctx);
+
+            case 'PDecorator':
+                return ctx.ToAst.PDecorator(node, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -592,6 +610,9 @@ export const ToPP = {
             case 'If':
                 return ctx.ToPP.If(node, ctx);
 
+            case 'Switch':
+                return ctx.ToPP.Switch(node, ctx);
+
             case 'Number':
                 return ctx.ToPP.Number(node, ctx);
 
@@ -612,9 +633,6 @@ export const ToPP = {
 
             case 'Enum':
                 return ctx.ToPP.Enum(node, ctx);
-
-            case 'Switch':
-                return ctx.ToPP.Switch(node, ctx);
 
             case 'Record':
                 return ctx.ToPP.Record(node, ctx);
@@ -665,6 +683,9 @@ export const ToPP = {
             case 'If':
                 return ctx.ToPP.If(node, ctx);
 
+            case 'Switch':
+                return ctx.ToPP.Switch(node, ctx);
+
             case 'Number':
                 return ctx.ToPP.Number(node, ctx);
 
@@ -686,9 +707,6 @@ export const ToPP = {
             case 'Enum':
                 return ctx.ToPP.Enum(node, ctx);
 
-            case 'Switch':
-                return ctx.ToPP.Switch(node, ctx);
-
             case 'Record':
                 return ctx.ToPP.Record(node, ctx);
 
@@ -703,6 +721,9 @@ export const ToPP = {
 
     Pattern(node: p.Pattern, ctx: PCtx): pp.PP {
         switch (node.type) {
+            case 'PDecorator':
+                return ctx.ToPP.PDecorator(node, ctx);
+
             case 'PName':
                 return ctx.ToPP.PName(node, ctx);
 
@@ -714,6 +735,12 @@ export const ToPP = {
 
             case 'PBlank':
                 return ctx.ToPP.PBlank(node, ctx);
+
+            case 'Number':
+                return ctx.ToPP.Number(node, ctx);
+
+            case 'String':
+                return ctx.ToPP.String(node, ctx);
 
             default:
                 let _: never = node;
