@@ -1,4 +1,4 @@
-import { FullContext, nodebug, noloc } from '../ctx';
+import { noloc } from '../ctx';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
@@ -6,10 +6,13 @@ import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
 import { addDecorator, Ctx, tdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { Ctx as TCtx, ToplevelType } from '../typing/to-tast';
-import { Ctx as TMCtx, unifyPayloads } from '../typing/typeMatches';
-import { unifyTypes } from '../typing/unifyTypes';
-import { expandEnumCases, payloadsEqual } from '../typing/typeMatches';
+import { Ctx as TCtx } from '../typing/to-tast';
+import {
+    Ctx as TMCtx,
+    expandEnumCases,
+    payloadsEqual,
+    unifyPayloads,
+} from '../typing/typeMatches';
 import { recordAsTuple } from './records';
 
 // type State:Effect = <T>[ `Get | `Set(T) ]
@@ -211,10 +214,8 @@ export const ToIR = {
     },
 };
 
-import { Ctx as JCtx } from '../ir/to-js';
 import * as b from '@babel/types';
-import { typeToString } from '../typing/__test__/utils';
-import { typeToplevelT } from './base';
+import { Ctx as JCtx } from '../ir/to-js';
 export const ToJS = {
     Enum({ loc, tag, payload }: t.IEnum, ctx: JCtx): b.Expression {
         if (!payload) {
@@ -269,34 +270,6 @@ const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
 };
 
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
-    // TypeAlias(node, { ctx, hit }) {
-    //     let changed = false;
-    //     const top = typeToplevelT(node, ctx) as ToplevelType;
-    //     top.items.forEach((item, i) => {
-    //         item.actual = node.elements[i].type;
-    //     });
-    //     ctx = ctx.toplevelConfig(top);
-    //     // ctx.debugger();
-    //     const elements = node.elements.map((el, i) => {
-    //         if (el.type.type === 'TEnum') {
-    //             if (ctx.debugger !== nodebug) {
-    //                 const cases = expandEnumCases(el.type, ctx, [`r${i}`]);
-    //                 if (!cases) {
-    //                     changed = true;
-    //                     return {
-    //                         ...el,
-    //                         type: tdecorate(el.type, 'invalidEnum', {
-    //                             ctx,
-    //                             hit,
-    //                         }),
-    //                     };
-    //                 }
-    //             }
-    //         }
-    //         return el;
-    //     });
-    //     return changed ? { ...node, elements } : null;
-    // },
     TEnum(node, ctx): null | t.TEnum {
         let changed = false;
         let used: { [key: string]: EnumCase } = {};

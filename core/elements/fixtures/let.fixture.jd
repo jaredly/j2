@@ -41,7 +41,7 @@ let x = 10
 /* 10 */
 let y = x + 10
 // 20
-/* $terms.unnamed + 10 */
+/* $terms.x + 10 */
 
 ==[New fixture]==
 --[input]--

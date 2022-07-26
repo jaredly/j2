@@ -12,6 +12,7 @@ import { fileToTast, typeToplevelT } from '../../elements/base';
 import { TVar } from '../../elements/type-vbls';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
+import { toId } from '../../ids';
 import { iCtx } from '../../ir/ir';
 import { jCtx, Ctx as JCtx } from '../../ir/to-js';
 import { printToString } from '../../printer/pp';
@@ -256,10 +257,13 @@ export function runFixture(
         ctx.resetSym();
         populateSyms(top, ctx);
         if (top.type === 'TypeAlias' || top.type === 'ToplevelLet') {
-            const tt = typeToplevelT(top, ctx);
+            const tt = typeToplevelT(top, ctx)!;
             jctx.actx = ctx = ctx.toplevelConfig(tt) as FullContext;
             actx = actx.withToplevel(tt);
             // jctx.actx = actx.actx as FullContext;
+            if (top.hash) {
+                tt.hash = top.hash;
+            }
         }
 
         if (top.type === 'ToplevelExpression') {
@@ -278,6 +282,9 @@ export function runFixture(
             validateExpression(ctx, jctx, expr, actx, t, checked, loc);
         }
         if (top.type === 'ToplevelLet') {
+            top.elements.forEach((el, i) => {
+                jctx.addGlobalName(toId(top.hash!, i), el.name);
+            });
             top.elements.forEach((el) => {
                 const t = getType(el.expr, ctx);
                 if (!t) {

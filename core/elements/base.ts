@@ -146,6 +146,7 @@ export const fileToTast = (
         } else if (top.type === 'ToplevelLet') {
             const res = ctx.withValues(top.elements);
             ctx = res.ctx;
+            top.hash = res.hash;
         }
         return top;
     });
@@ -594,7 +595,14 @@ export const ToJS = {
             const id = ctx.actx.resolveRecur(x.kind.idx);
             if (!id) {
                 console.log(id, x.kind.idx, ctx.actx);
-                ctx.actx.debugger();
+                // ctx.actx.debugger();
+            }
+            if (ctx.namespaced) {
+                return b.memberExpression(
+                    b.identifier('$terms'),
+                    b.identifier(id ? ctx.globalName(id) : ':no recur found:'),
+                    false,
+                );
             }
             return b.identifier(id ? ctx.globalName(id) : ':no recur found:');
         }

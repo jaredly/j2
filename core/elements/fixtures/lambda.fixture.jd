@@ -134,17 +134,17 @@ alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb bool=h62d1b70cb3ae567d8df7d48
 --[builtins]--
 //:value:takesInt:(a: int) => int
 
-==[New fixture___]==
+==[recursive what]==
 --[input]--
 let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
     longSum(v#[0] + 1) - 1 + 1;
 } else {
     0;
 }
-// longSum(0)
+longSum(0)
 
 --[output:expected]--
-alias -=h4dd9308469e477a4a756b4b286de0625d5a98af9 +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c >=hc1d03250b26806868f520136d8a763b0c0edff9b int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias -=h4dd9308469e477a4a756b4b286de0625d5a98af9 +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c >=hc1d03250b26806868f520136d8a763b0c0edff9b int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f longSum=hbb0cf1b2644d1c1d30cab87326b1240eb090b038
 let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
     longSum#[r0](v#[0] + 1) - 1 + 1;
 } else {
@@ -153,9 +153,11 @@ let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
 // (int) => int
 /* v => (() => {
   if (v > 0) {
-    return unnamed(v + 1) - 1 + 1;
+    return $terms.longSum(v + 1) - 1 + 1;
   } else {
     return 0;
   }
 })() */
-// longSum(0)
+longSum(0)
+// int
+/* $terms.longSum(0) */

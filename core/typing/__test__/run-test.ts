@@ -90,7 +90,8 @@ export const runTest = (
             //     },
             // );
         } else if (t.type === 'ToplevelLet') {
-            ctx = ctx.toplevelConfig(typeToplevel(t, ctx)) as FullContext;
+            const topc = typeToplevel(t, ctx);
+            ctx = ctx.toplevelConfig(topc) as FullContext;
             ctx.resetSym();
             let top = ctx.ToTast.ToplevelLet(t, ctx);
             top = transformToplevel(
@@ -103,6 +104,7 @@ export const runTest = (
 
             const { hash, ctx: nctx } = ctx.withValues(top.elements);
             jctx.actx = ctx = nctx as FullContext;
+            topc!.hash = hash;
 
             const ictx = iCtx(ctx);
 
@@ -116,6 +118,10 @@ export const runTest = (
                     ictx,
                 );
                 const js = jctx.ToJS.Block(ir, jctx);
+                console.log(
+                    'ok',
+                    (jctx.actx as FullContext).extract().toplevel,
+                );
                 return generate(js).code;
             });
 

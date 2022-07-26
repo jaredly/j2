@@ -15,6 +15,7 @@ and/or a nice error coalescing example.
 BIG NEXT
 
 - [x] tests in browser
+- [ ] ok, um ... what were some things I wanted to do?
 - [ ] value/fn recursion
 	- [ ] oh wait, aliases ...
 		hm ok

@@ -136,7 +136,7 @@ export type ToplevelExpression = {
 };
 export type ToplevelLet = {
     type: 'ToplevelLet';
-    // hash?: string;
+    hash?: string;
     elements: Array<{
         name: string;
         typ: Type | null;
