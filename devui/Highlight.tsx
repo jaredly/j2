@@ -38,7 +38,7 @@ export const styles: {
         'margin-bottom': '-7px',
     },
     Error: {
-        'text-decoration': 'underline',
+        textDecoration: 'underline',
         textDecorationColor: '#f00',
     },
 };

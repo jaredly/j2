@@ -210,6 +210,20 @@ export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
                 ctx.withLocals(locals);
                 return null;
             },
+            Switch(node) {
+                const locals: t.Locals = [];
+                const typ = ctx.getType(node.target);
+                node.cases.forEach((kase) => {
+                    getLocals(
+                        kase.pat,
+                        typ ?? typeForPattern(kase.pat, ctx as FullContext),
+                        locals,
+                        ctx,
+                    );
+                });
+                ctx.withLocals(locals);
+                return null;
+            },
             Lambda(node) {
                 const locals: t.Locals = [];
                 node.args.forEach((arg) => {
@@ -225,6 +239,7 @@ export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
 
 export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
     const errorDecorators = _ctx.errorDecorators();
+    console.log(_ctx);
     return {
         TVbl(node, ctx) {
             results.errors.push(node.loc);
@@ -261,15 +276,11 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
         },
         Expression(node, ctx) {
             if (!ctx.getType(node)) {
+                // ctx.debugger();
                 results.untypedExpression.push(node.loc);
             }
             return null;
         },
-        // Case(node, ctx) {
-        //     const locals: t.Locals = [];
-        //     getLocals(node.pat, ctx.getType(node.expr), locals, ctx);
-        //     return [null, ctx.withLocals(locals) as Ctx];
-        // },
         Decorator(node) {
             if (node.id.ref.type === 'Unresolved') {
                 results.unresolved.decorator.push(node.loc);

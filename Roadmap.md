@@ -23,6 +23,8 @@ BIG NEXT
 	- next up! switch!
 	- hm should I do if/let first?
 		that way I can change switch to a series of if/lets.
+	- [x] basic
+	- [ ] whyyyyy isn't resolve working?
 - [ ] figure out withHandler and andThen
 - [ ] eq deriving for realsies
 
