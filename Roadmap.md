@@ -15,12 +15,12 @@ and/or a nice error coalescing example.
 BIG NEXT
 
 - [x] tests in browser
-- [ ] ok, um ... what were some things I wanted to do?
-- [ ] value/fn recursion
+- [x] value/fn recursion
 	- [ ] oh wait, aliases ...
 		hm ok
 		...
 - [ ] switch/enum patterns
+	- next up! switch!
 - [ ] figure out withHandler and andThen
 - [ ] eq deriving for realsies
 

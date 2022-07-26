@@ -258,6 +258,10 @@ export const openSpan = (hl: HL) =>
                   hl.suffix.message,
               )}" title="${escapeLine(hl.suffix.message)}"`
             : ''
+    }${
+        styles[hl.type]?.contentEditable == false
+            ? ' contentEditable="false"'
+            : ''
     }>`;
 
 export const treeToHtmlLines = (tree: Tree) => {

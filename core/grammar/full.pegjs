@@ -39,8 +39,8 @@ _EOF = !.
 Toplevel = Aliases / TypeAlias / ToplevelLet / Expression
 TypeToplevel = TypeAlias / Type
 
-Aliases = "alias" items:AliasItem*
-AliasItem = _nonnewline name:$AliasName ":" hash:$HashRefInner
+Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
+AliasItem = name:$AliasName ":" hash:$HashRefInner
 AliasName = $IdText / $binop
 
 Expression = Lambda / BinOp

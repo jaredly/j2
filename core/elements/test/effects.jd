@@ -1,4 +1,4 @@
-alias helloFolks:hfed1de23f9e0e4cf356b8b63b9f2e1f126903d70 print:h2910a8b16851c4cfb1acc4a2b394383a0206f01d read:h5cafff6cbd3e73ca76e4a9388801b381533a30ff string:hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias *:hc964b8e32721e8a2764054a069ab98c885f00921 ==:h0e26cba9974393f0886bf43a5876c4132b1e69bb helloFolks:h9a8134163ca726eb79629d49b2b0dc435b354a43 print:h4f24f3cc4d7287d59500090338dc5c3365f885df read:hf1cbfa159d4d6ec5581f4a6706b6ebd6816f8091 string:hd978df838905e7e1bd7bb33530ae12436e3756f4
 let print = (value#[0]: string) => `Print(value#[0], () => ())
 let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
 let helloFolks = () => {
@@ -6,3 +6,4 @@ let helloFolks = () => {
     read();
 }
 helloFolks()
+2 == 2 * 1

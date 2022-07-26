@@ -15,8 +15,8 @@ _EOF = !.
 Toplevel = Aliases / TypeAlias / ToplevelLet / Expression
 TypeToplevel = TypeAlias / Type
 
-Aliases = "alias" items:AliasItem*
-AliasItem = _nonnewline name:$AliasName ":" hash:$HashRefInner
+Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
+AliasItem = name:$AliasName ":" hash:$HashRefInner
 AliasName = $IdText / $binop
 
 Expression = Lambda / BinOp
@@ -144,6 +144,7 @@ export const fileToTast = (
             const res = ctx.withTypes(top.elements);
             ctx = res.ctx;
         } else if (top.type === 'ToplevelLet') {
+            // ok
             const res = ctx.withValues(top.elements);
             ctx = res.ctx;
             top.hash = res.hash;

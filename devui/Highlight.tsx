@@ -26,15 +26,16 @@ export const styles: {
     [key in Colorable]?: any; // React.CSSProperties;
 } = {
     AliasItem: {
-        'font-size': '50%',
+        // 'font-size': '50%',
         color: '#555',
-        // 'max-width': '100px',
-        // display: 'inline-block',
-        // overflow: 'hidden',
-        // 'white-space': 'nowrap',
-        // 'text-overflow': 'ellipsis',
-        // 'margin-bottom': '-7px',
-        // 'margin-left': '0.5em',
+        'max-width': '200px',
+        display: 'inline-block',
+        contentEditable: false,
+        // 'user-select': 'none',
+        overflow: 'hidden',
+        'white-space': 'nowrap',
+        'text-overflow': 'ellipsis',
+        'margin-bottom': '-7px',
     },
 };
 
