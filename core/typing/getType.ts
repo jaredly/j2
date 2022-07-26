@@ -214,6 +214,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 if (!res) {
                     return null;
                 }
+                t = res;
             }
             return t;
         }

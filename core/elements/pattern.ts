@@ -128,7 +128,7 @@ export const typeMatchesPattern = (
             }
             const cases = expandEnumCases(type, ctx);
             if (!cases) {
-                return false;
+                return true;
             }
             for (let kase of cases) {
                 if (kase.tag === pat.tag) {
@@ -141,7 +141,7 @@ export const typeMatchesPattern = (
                     );
                 }
             }
-            return false;
+            return true;
         }
         case 'PRecord': {
             if (type.type !== 'TRecord') {

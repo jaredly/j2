@@ -14,6 +14,8 @@ import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
 import { iife } from './lets';
+import { unifyTypes } from '../typing/unifyTypes';
+import { dtype } from './ifs';
 
 export const grammar = `
 Switch = "switch" _ target:Expression _ "{" _ cases:Case* _ "}"
@@ -156,9 +158,27 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         if (!target) {
             return null;
         }
+        let body: null | t.Type = null;
         let changed = false;
         const cases = node.cases.map((c) => {
             const matches = typeMatchesPattern(c.pat, target, ctx);
+            let bt = ctx.getType(c.expr);
+            if (body && bt) {
+                let un = unifyTypes(body, bt, ctx);
+                if (un == false) {
+                    changed = true;
+                    c = {
+                        ...c,
+                        expr: decorate(c.expr, 'caseMismatch', hit, ctx, [
+                            dtype('expected', body, c.loc),
+                        ]),
+                    };
+                } else {
+                    body = un;
+                }
+            } else if (bt) {
+                body = bt;
+            }
             if (!matches) {
                 changed = true;
                 return {
