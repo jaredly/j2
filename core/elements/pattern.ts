@@ -6,10 +6,10 @@ import * as t from '../typed-ast';
 import { Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { Ctx as TMCtx } from '../typing/typeMatches';
+import { Ctx as TMCtx, expandEnumCases } from '../typing/typeMatches';
 
 export const grammar = `
-Pattern = PDecorated / PName / PTuple / PRecord / PBlank / Number / String
+Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PBlank / Number / String
 PBlank = pseudo:"_"
 PName = name:$IdText hash:($JustSym)?
 PTuple = "(" _  items:PTupleItems? _ ")"
@@ -22,7 +22,7 @@ PRecordPattern = _ ":" _ just:Pattern
 PHash = hash:$JustSym
 
 PDecorated = decorators:(Decorator _)+ inner:Pattern
-// PEnum
+PEnum = "\`" text:$IdText payload:PTuple?
 // PUnion
 `;
 
@@ -44,10 +44,18 @@ export type PRecord = {
     loc: t.Loc;
 };
 
+export type PEnum = {
+    type: 'PEnum';
+    tag: string;
+    payload: Pattern | null;
+    loc: t.Loc;
+};
+
 export type Pattern =
     | PName
     | PRecord
     | PBlank
+    | PEnum
     | t.Number
     | t.String
     | PDecorated;
@@ -114,6 +122,27 @@ export const typeMatchesPattern = (
         case 'PDecorated': {
             return typeMatchesPattern(pat.inner, type, ctx);
         }
+        case 'PEnum': {
+            if (type.type !== 'TEnum') {
+                return false;
+            }
+            const cases = expandEnumCases(type, ctx);
+            if (!cases) {
+                return false;
+            }
+            for (let kase of cases) {
+                if (kase.tag === pat.tag) {
+                    if (!pat.payload) {
+                        return kase.payload == null;
+                    }
+                    return (
+                        kase.payload != null &&
+                        typeMatchesPattern(pat.payload, kase.payload, ctx)
+                    );
+                }
+            }
+            return false;
+        }
         case 'PRecord': {
             if (type.type !== 'TRecord') {
                 return false;
@@ -143,6 +172,23 @@ export const typeForPattern = (pat: Pattern, ctx?: TCtx): t.Type => {
         case 'Number':
         case 'String':
             return pat;
+        case 'PEnum':
+            return {
+                type: 'TEnum',
+                open: false,
+                loc: pat.loc,
+                cases: [
+                    {
+                        type: 'EnumCase',
+                        tag: pat.tag,
+                        loc: pat.loc,
+                        payload: pat.payload
+                            ? typeForPattern(pat.payload, ctx)
+                            : undefined,
+                        decorators: [],
+                    },
+                ],
+            };
         case 'PName':
             return ctx ? ctx.newTypeVar() : { type: 'TBlank', loc: pat.loc };
         case 'PDecorated':
@@ -210,6 +256,14 @@ export const ToTast = {
             loc,
         };
     },
+    PEnum({ text, payload, loc }: p.PEnum, ctx: TCtx): PEnum {
+        return {
+            type: 'PEnum',
+            tag: text,
+            payload: payload ? ctx.ToTast.Pattern(payload, ctx) : null,
+            loc,
+        };
+    },
     PTuple({ type, items, loc }: p.PTuple, ctx: TCtx): PRecord {
         return {
             type: 'PRecord',
@@ -265,6 +319,26 @@ export const ToAst = {
             ),
             inner: ctx.ToAst.Pattern(pat.inner, ctx),
             loc: pat.loc,
+        };
+    },
+    PEnum(pat: t.PEnum, ctx: TACtx): p.PEnum {
+        let payload = pat.payload ? ctx.ToAst.Pattern(pat.payload, ctx) : null;
+        return {
+            type: 'PEnum',
+            text: pat.tag,
+            loc: pat.loc,
+            payload:
+                payload && payload.type !== 'PTuple'
+                    ? {
+                          type: 'PTuple',
+                          items: {
+                              type: 'PTupleItems',
+                              items: [payload],
+                              loc: pat.loc,
+                          },
+                          loc: pat.loc,
+                      }
+                    : payload,
         };
     },
     PBlank(pat: t.PBlank, ctx: TACtx): p.PBlank {
@@ -338,6 +412,15 @@ export const ToPP = {
             loc,
         );
     },
+    PEnum({ type, text, payload, loc }: p.PEnum, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                pp.text('`' + text, loc),
+                payload ? ctx.ToPP.Pattern(payload, ctx) : null,
+            ],
+            loc,
+        );
+    },
     PDecorated(pat: p.PDecorated, ctx: PCtx): pp.PP {
         return pp.items(
             [
@@ -399,6 +482,8 @@ export const ToJS = {
             case 'String':
             case 'PBlank':
                 return b.identifier('_');
+            case 'PEnum':
+                return b.identifier('enum pattern, invalid');
             case 'PName':
                 return b.identifier(p.sym.name);
             case 'PDecorated':

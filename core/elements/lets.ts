@@ -357,7 +357,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
                 expr: decorate(node.expr, 'patternMismatch', ctx.hit, ctx.ctx),
             };
         }
-        if (!patternIsExhaustive(node.pat, ctx.ctx)) {
+        if (t && !patternIsExhaustive(node.pat, t, ctx.ctx)) {
             return {
                 ...node,
                 pat: pdecorate(node.pat, 'notExhaustive', ctx),

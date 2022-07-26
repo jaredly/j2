@@ -1,5 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { decorate, populateSyms } from '../typing/analyze';
+import { decorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
 import { typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
@@ -12,7 +12,6 @@ import { Ctx as TMCtx } from '../typing/typeMatches';
 import { Ctx as JCtx } from '../ir/to-js';
 import { Ctx as ICtx } from '../ir/ir';
 import * as b from '@babel/types';
-import { typeToplevelT } from './base';
 
 export const ToTast = {
     Suffix(node: p.Suffix, next: t.Expression, ctx: TCtx): t.Expression {
@@ -209,6 +208,9 @@ export const ToTast = {
         switch (node.type) {
             case 'PDecorated':
                 return ctx.ToTast.PDecorated(node, ctx);
+
+            case 'PEnum':
+                return ctx.ToTast.PEnum(node, ctx);
 
             case 'PName':
                 return ctx.ToTast.PName(node, ctx);
@@ -513,6 +515,9 @@ export const ToAst = {
             case 'PBlank':
                 return ctx.ToAst.PBlank(node, ctx);
 
+            case 'PEnum':
+                return ctx.ToAst.PEnum(node, ctx);
+
             case 'Number':
                 return ctx.ToAst.Number(node, ctx);
 
@@ -724,6 +729,9 @@ export const ToPP = {
         switch (node.type) {
             case 'PDecorated':
                 return ctx.ToPP.PDecorated(node, ctx);
+
+            case 'PEnum':
+                return ctx.ToPP.PEnum(node, ctx);
 
             case 'PName':
                 return ctx.ToPP.PName(node, ctx);

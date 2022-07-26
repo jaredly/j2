@@ -16,7 +16,7 @@ BIG NEXT
 
 - [x] tests in browser
 - [x] value/fn recursion
-	- [ ] oh wait, aliases ...
+	- [x] oh wait, aliases ...
 		hm ok
 		...
 - [ ] switch/enum patterns
@@ -24,7 +24,8 @@ BIG NEXT
 	- hm should I do if/let first?
 		that way I can change switch to a series of if/lets.
 	- [x] basic
-	- [ ] whyyyyy isn't resolve working?
+	- [x] whyyyyy isn't resolve working?
+	- [ ] Enum?
 - [ ] figure out withHandler and andThen
 - [ ] eq deriving for realsies
 

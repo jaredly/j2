@@ -58,6 +58,7 @@ export type {
     Locals,
     PBlank,
     PDecorated,
+    PEnum,
     PName,
     PRecord,
     Pattern,

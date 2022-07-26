@@ -16,6 +16,7 @@ import {
     Sym,
     PRecord,
     PBlank,
+    PEnum,
     Number,
     String,
     PDecorated,
@@ -392,6 +393,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | PRecord | [PRecord | null, Ctx];
     PRecordPost?: (node: PRecord, ctx: Ctx) => null | PRecord;
+    PEnum?: (
+        node: PEnum,
+        ctx: Ctx,
+    ) => null | false | PEnum | [PEnum | null, Ctx];
+    PEnumPost?: (node: PEnum, ctx: Ctx) => null | PEnum;
     Pattern?: (
         node: Pattern,
         ctx: Ctx,
@@ -704,6 +710,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost_PBlank?: (node: PBlank, ctx: Ctx) => null | Pattern;
+    Pattern_PEnum?: (
+        node: PEnum,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PEnum?: (node: PEnum, ctx: Ctx) => null | Pattern;
     Pattern_Number?: (
         node: Number,
         ctx: Ctx,
@@ -1141,6 +1152,72 @@ export const transformPBlank = <Ctx>(
     node = updatedNode;
     if (visitor.PBlankPost) {
         const transformed = visitor.PBlankPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPEnum = <Ctx>(
+    node: PEnum,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PEnum => {
+    if (!node) {
+        throw new Error('No PEnum provided');
+    }
+
+    const transformed = visitor.PEnum ? visitor.PEnum(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$payload = null;
+        const updatedNode$payload$current = node.payload;
+        if (updatedNode$payload$current != null) {
+            const updatedNode$payload$1$ = transformPattern(
+                updatedNode$payload$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 ||
+                updatedNode$payload$1$ !== updatedNode$payload$current;
+            updatedNode$payload = updatedNode$payload$1$;
+        }
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                payload: updatedNode$payload,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PEnumPost) {
+        const transformed = visitor.PEnumPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -3287,6 +3364,25 @@ export const transformPattern = <Ctx>(
             break;
         }
 
+        case 'PEnum': {
+            const transformed = visitor.Pattern_PEnum
+                ? visitor.Pattern_PEnum(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Number': {
             const transformed = visitor.Pattern_Number
                 ? visitor.Pattern_Number(node, ctx)
@@ -3366,6 +3462,12 @@ export const transformPattern = <Ctx>(
             break;
         }
 
+        case 'PEnum': {
+            updatedNode = transformPEnum(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Number': {
             updatedNode = transformNumber(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -3411,6 +3513,16 @@ export const transformPattern = <Ctx>(
         case 'PBlank': {
             const transformed = visitor.PatternPost_PBlank
                 ? visitor.PatternPost_PBlank(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PEnum': {
+            const transformed = visitor.PatternPost_PEnum
+                ? visitor.PatternPost_PEnum(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

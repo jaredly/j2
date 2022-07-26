@@ -25,9 +25,10 @@ import {
     LArg,
     Pattern,
     PDecorated,
-    PName,
+    PEnum,
     PTuple,
     PTupleItems,
+    PName,
     PRecord,
     PRecordFields,
     PRecordField,
@@ -612,6 +613,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | PDecorated | [PDecorated | null, Ctx];
     PDecoratedPost?: (node: PDecorated, ctx: Ctx) => null | PDecorated;
+    PEnum?: (
+        node: PEnum,
+        ctx: Ctx,
+    ) => null | false | PEnum | [PEnum | null, Ctx];
+    PEnumPost?: (node: PEnum, ctx: Ctx) => null | PEnum;
     Record?: (
         node: Record,
         ctx: Ctx,
@@ -937,6 +943,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost_PDecorated?: (node: PDecorated, ctx: Ctx) => null | Pattern;
+    Pattern_PEnum?: (
+        node: PEnum,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PEnum?: (node: PEnum, ctx: Ctx) => null | Pattern;
     Pattern_PName?: (
         node: PName,
         ctx: Ctx,
@@ -1497,6 +1508,11 @@ export type Visitor<Ctx> = {
         node: PDecorated,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
+    AllTaggedTypes_PEnum?: (
+        node: PEnum,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PEnum?: (node: PEnum, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_Record?: (
         node: Record,
         ctx: Ctx,
@@ -2075,54 +2091,6 @@ export const transformPDecorated = <Ctx>(
     return node;
 };
 
-export const transformPName = <Ctx>(
-    node: PName,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): PName => {
-    if (!node) {
-        throw new Error('No PName provided');
-    }
-
-    const transformed = visitor.PName ? visitor.PName(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-        if (changed1) {
-            updatedNode = { ...updatedNode, loc: updatedNode$loc };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.PNamePost) {
-        const transformed = visitor.PNamePost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
 export const transformPTupleItems = <Ctx>(
     node: PTupleItems,
     visitor: Visitor<Ctx>,
@@ -2255,6 +2223,121 @@ export const transformPTuple = <Ctx>(
     node = updatedNode;
     if (visitor.PTuplePost) {
         const transformed = visitor.PTuplePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPEnum = <Ctx>(
+    node: PEnum,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PEnum => {
+    if (!node) {
+        throw new Error('No PEnum provided');
+    }
+
+    const transformed = visitor.PEnum ? visitor.PEnum(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$payload = null;
+        const updatedNode$payload$current = node.payload;
+        if (updatedNode$payload$current != null) {
+            const updatedNode$payload$1$ = transformPTuple(
+                updatedNode$payload$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 ||
+                updatedNode$payload$1$ !== updatedNode$payload$current;
+            updatedNode$payload = updatedNode$payload$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                payload: updatedNode$payload,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PEnumPost) {
+        const transformed = visitor.PEnumPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPName = <Ctx>(
+    node: PName,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PName => {
+    if (!node) {
+        throw new Error('No PName provided');
+    }
+
+    const transformed = visitor.PName ? visitor.PName(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PNamePost) {
+        const transformed = visitor.PNamePost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2508,6 +2591,12 @@ export const transformPRecordValue = <Ctx>(
     switch (node.type) {
         case 'PDecorated': {
             updatedNode = transformPDecorated(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PEnum': {
+            updatedNode = transformPEnum(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -2833,6 +2922,25 @@ export const transformPattern = <Ctx>(
             break;
         }
 
+        case 'PEnum': {
+            const transformed = visitor.Pattern_PEnum
+                ? visitor.Pattern_PEnum(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'PName': {
             const transformed = visitor.Pattern_PName
                 ? visitor.Pattern_PName(node, ctx)
@@ -2957,6 +3065,12 @@ export const transformPattern = <Ctx>(
             break;
         }
 
+        case 'PEnum': {
+            updatedNode = transformPEnum(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'PName': {
             updatedNode = transformPName(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -3000,6 +3114,16 @@ export const transformPattern = <Ctx>(
         case 'PDecorated': {
             const transformed = visitor.PatternPost_PDecorated
                 ? visitor.PatternPost_PDecorated(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PEnum': {
+            const transformed = visitor.PatternPost_PEnum
+                ? visitor.PatternPost_PEnum(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -12316,6 +12440,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'PEnum': {
+            const transformed = visitor.AllTaggedTypes_PEnum
+                ? visitor.AllTaggedTypes_PEnum(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Record': {
             const transformed = visitor.AllTaggedTypes_Record
                 ? visitor.AllTaggedTypes_Record(node, ctx)
@@ -13166,6 +13309,12 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'PEnum': {
+            updatedNode = transformPEnum(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Record': {
             updatedNode = transformRecord(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -13908,6 +14057,16 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'PDecorated': {
             const transformed = visitor.AllTaggedTypesPost_PDecorated
                 ? visitor.AllTaggedTypesPost_PDecorated(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PEnum': {
+            const transformed = visitor.AllTaggedTypesPost_PEnum
+                ? visitor.AllTaggedTypesPost_PEnum(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

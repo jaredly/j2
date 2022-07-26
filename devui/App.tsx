@@ -326,7 +326,7 @@ export const App = () => {
                     New Test
                 </Button>
                 <details
-                    open={!!files.test[hashName]}
+                    open={!!files.test[hashName?.slice('test:'.length) ?? '']}
                     style={{ backgroundColor: 'transparent' }}
                 >
                     {Object.keys(files.test)
