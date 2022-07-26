@@ -1,6 +1,7 @@
 import { noloc } from '../core/ctx';
 import { Loc } from '../core/typed-ast';
-import { Colorable, HL } from './Highlight';
+import { Colorable } from './Highlight';
+import { HL } from './HL';
 
 export type MarkupLoc = HL;
 

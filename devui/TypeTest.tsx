@@ -64,28 +64,7 @@ export const TypeTestView = ({
                                 return [];
                             }
                             const results = runTypeTest(v, true);
-                            // console.log('extra', results.statuses);
-                            return results.statuses.map((status) => {
-                                if (status.text) {
-                                    return {
-                                        loc: status.loc,
-                                        type: 'Error',
-                                        prefix: {
-                                            text: `🚨`,
-                                            message: status.text,
-                                        },
-                                        underline: 'red',
-                                    };
-                                } else {
-                                    return {
-                                        type: 'Success',
-                                        loc: status.loc,
-                                        prefix: {
-                                            text: `✅`,
-                                        },
-                                    };
-                                }
-                            });
+                            return results.statuses;
                         }}
                         onBlur={(text) => {
                             const ran = runTypeTest(

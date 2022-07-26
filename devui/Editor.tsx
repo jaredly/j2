@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
 import { Visitor } from '../core/transform-ast';
-import { Colorable, colors, highlightLocations, HL, styles } from './Highlight';
+import { Colorable, colors, highlightLocations, styles } from './Highlight';
+import { HL } from './HL';
 import { markUpTree, Tree } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
 

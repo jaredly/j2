@@ -167,7 +167,9 @@ const resolveDecorator = (
     if (rawHash || Object.hasOwn(ctx.aliases, name)) {
         const hash = parseHash(rawHash ?? ctx.aliases[name]);
         if (hash.type === 'sym') {
-            throw new Error('decorators can only be global');
+            throw new Error(
+                `decorators can only be global ${name} - ${rawHash} ${ctx.aliases[name]}`,
+            );
         } else if (hash.type === 'recur') {
             throw new Error('decorators can only be global');
         } else {

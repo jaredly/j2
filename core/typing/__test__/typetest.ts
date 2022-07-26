@@ -6,10 +6,11 @@ import { fixComments } from '../../grammar/fixComments';
 import { idToString } from '../../ids';
 import * as t from '../../typed-ast';
 import { assertions } from './utils';
+import { HL } from '../../../devui/HL';
 
 export type TypeTest = {
     file: t.TypeFile;
-    statuses: Array<{ loc: t.Loc; text: string | null }>;
+    statuses: Array<HL>;
     ctx: FullContext;
 };
 
@@ -27,7 +28,7 @@ export const runTypeTest = (ast: TypeFile, debugFailures = false): TypeTest => {
         assertById[idToString(id)] = assertions[key as keyof typeof assertions];
     });
 
-    const statuses: { loc: t.Loc; text: string | null }[] = [];
+    const statuses: HL[] = [];
 
     const tast: t.TypeFile = {
         type: 'TypeFile',
@@ -66,7 +67,24 @@ export const runTypeTest = (ast: TypeFile, debugFailures = false): TypeTest => {
                             inner,
                             ctx,
                         );
-                        statuses.push({ loc: d.loc, text: msg });
+                        if (msg) {
+                            statuses.push({
+                                loc: d.loc,
+                                type: 'Error',
+                                prefix: {
+                                    text: '🚨',
+                                    message: msg,
+                                },
+                            });
+                        } else {
+                            statuses.push({
+                                loc: d.loc,
+                                type: 'Success',
+                                prefix: {
+                                    text: '✅',
+                                },
+                            });
+                        }
                         failed = failed || !!msg;
                     }
                 });

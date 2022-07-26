@@ -19,6 +19,7 @@ import { markUpTree, Tree as TreeT } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
 import { getLocals, Locals } from '../core/elements/pattern';
 import { splitAliases } from '../core/typing/__test__/fixture-utils';
+import { HL } from './HL';
 
 export type Colorable = keyof Visitor<null> | 'Error' | 'Success' | 'LetName';
 
@@ -66,14 +67,6 @@ export const colors: {
 };
 
 const n = (n: number): Loc['start'] => ({ ...noloc.start, offset: n });
-
-export type HL = {
-    loc: Loc;
-    type: Colorable;
-    prefix?: { text: string; message?: string };
-    suffix?: { text: string; message?: string };
-    underline?: string;
-};
 
 export const highlightLocations = (
     text: string,
@@ -146,10 +139,14 @@ export const Highlight = ({
     }
 
     const marked = React.useMemo(() => {
-        const [aliasRaw, rest] = splitAliases(text);
+        // const [aliasRaw, rest] = splitAliases(text);
 
-        const locs = highlightLocations(rest, typeFile, extraLocs);
-        return text.trim().length ? markUpTree(rest, locs) : null;
+        const locs = highlightLocations(text, typeFile, extraLocs);
+        console.log(
+            'locsss',
+            locs.filter((t) => t.type === 'Error'),
+        );
+        return text.trim().length ? markUpTree(text, locs) : null;
     }, [text]);
 
     const annotations = React.useMemo(

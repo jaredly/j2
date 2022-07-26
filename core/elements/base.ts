@@ -16,8 +16,8 @@ Toplevel = Aliases / TypeAlias / ToplevelLet / Expression
 TypeToplevel = TypeAlias / Type
 
 Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
-AliasItem = name:$AliasName ":" hash:$HashRefInner
-AliasName = $IdText / $binop
+AliasItem = name:$AliasName hash:$HashRef
+AliasName = $NamespacedIdText / $binop
 
 Expression = Lambda / BinOp
 
@@ -229,7 +229,7 @@ export const ToTast = {
                 type: 'ToplevelAliases',
                 aliases: top.items.map((t) => ({
                     name: t.name,
-                    hash: t.hash,
+                    hash: t.hash.slice(2, -1),
                     loc: t.loc,
                 })),
                 loc: top.loc,
@@ -337,7 +337,7 @@ export const ToAst = {
             items: aliases.map((a) => ({
                 type: 'AliasItem',
                 name: a.name,
-                hash: a.hash,
+                hash: `#[${a.hash}]`,
                 loc: a.loc,
             })),
             loc,
@@ -425,9 +425,9 @@ export const ToPP = {
         }
         if (top.type === 'Aliases') {
             return pp.text(
-                'alias' +
+                'alias ' +
                     top.items
-                        .map((item) => `${item.name} = ${item.hash}`)
+                        .map((item) => ` ${item.name}${item.hash}`)
                         .join(' '),
                 top.loc,
             );

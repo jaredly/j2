@@ -17,6 +17,7 @@ import {
 import { runTest, Test } from '../core/typing/__test__/run-test';
 import { runTypeTest, TypeTest } from '../core/typing/__test__/typetest';
 import { FixtureFile } from './FixtureFile';
+import { HL } from './HL';
 import {
     CancelIcon,
     CheckmarkIcon,
@@ -89,10 +90,10 @@ export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
     );
 };
 
-export const ShowTest = ({ statuses }: { statuses: TypeTest['statuses'] }) => {
+export const ShowTest = ({ statuses }: { statuses: HL[] }) => {
     return (
         <span style={{ marginRight: 8 }}>
-            {statuses.some((m) => m.text != null) ? (
+            {statuses.some((m) => m.type == 'Error') ? (
                 <CancelIcon style={{ color: 'red' }} />
             ) : (
                 <CheckmarkIcon style={{ color: 'green' }} />
@@ -231,6 +232,7 @@ export const App = () => {
                     testFiles[test[i]] = runTest(parseFile(contents), ctx);
                 } catch (err) {
                     old.error(`Failed to parse test`, err);
+                    old.error(contents);
                 }
             });
             setFiles({
@@ -272,21 +274,25 @@ export const App = () => {
                 }}
             >
                 <Text>Fixtures</Text>
-                {Object.keys(files.fixtures)
-                    .sort()
-                    .map((fixture) => (
-                        <Link
-                            key={fixture}
-                            href={`#${fixture}`}
-                            block
-                            color={
-                                fixture === hashName ? 'primary' : 'secondary'
-                            }
-                        >
-                            <ShowStatus status={files.fixtures[fixture]} />
-                            {fixture}
-                        </Link>
-                    ))}
+                <details>
+                    {Object.keys(files.fixtures)
+                        .sort()
+                        .map((fixture) => (
+                            <Link
+                                key={fixture}
+                                href={`#${fixture}`}
+                                block
+                                color={
+                                    fixture === hashName
+                                        ? 'primary'
+                                        : 'secondary'
+                                }
+                            >
+                                <ShowStatus status={files.fixtures[fixture]} />
+                                {fixture}
+                            </Link>
+                        ))}
+                </details>
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 <Text>Tests</Text>
                 <Button
@@ -316,36 +322,46 @@ export const App = () => {
                 >
                     New Test
                 </Button>
-                {Object.keys(files.test)
-                    .sort()
-                    .map((name) => (
-                        <Link
-                            key={name}
-                            href={`#test:${name}`}
-                            block
-                            color={name === hashName ? 'primary' : 'secondary'}
-                        >
-                            <ShowTest statuses={files.test[name].statuses} />
-                            {name}
-                        </Link>
-                    ))}
+                <details>
+                    {Object.keys(files.test)
+                        .sort()
+                        .map((name) => (
+                            <Link
+                                key={name}
+                                href={`#test:${name}`}
+                                block
+                                color={
+                                    name === hashName ? 'primary' : 'secondary'
+                                }
+                            >
+                                <ShowTest
+                                    statuses={files.test[name].statuses}
+                                />
+                                {name}
+                            </Link>
+                        ))}
+                </details>
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 <Text>Type Tests</Text>
-                {Object.keys(files.typetest)
-                    .sort()
-                    .map((name) => (
-                        <Link
-                            key={name}
-                            href={`#${name}`}
-                            block
-                            color={name === hashName ? 'primary' : 'secondary'}
-                        >
-                            <ShowTest
-                                statuses={files.typetest[name].statuses}
-                            />
-                            {name}
-                        </Link>
-                    ))}
+                <details>
+                    {Object.keys(files.typetest)
+                        .sort()
+                        .map((name) => (
+                            <Link
+                                key={name}
+                                href={`#${name}`}
+                                block
+                                color={
+                                    name === hashName ? 'primary' : 'secondary'
+                                }
+                            >
+                                <ShowTest
+                                    statuses={files.typetest[name].statuses}
+                                />
+                                {name}
+                            </Link>
+                        ))}
+                </details>
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 {files.fixtures[hashName]
                     ? files.fixtures[hashName].file.fixtures.map(

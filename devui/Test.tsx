@@ -13,17 +13,26 @@ import {
     aliasesToString,
     splitAliases,
 } from '../core/typing/__test__/fixture-utils';
-import { builtinContext, FullContext } from '../core/ctx';
+import { builtinContext, FullContext, noloc } from '../core/ctx';
 
 const refmt = (test: Test) => {
     const actx = printCtx(test.ctx);
     const ast = actx.ToAst.File(test.file, actx);
+    ast.toplevels.unshift({
+        type: 'Aliases',
+        items: Object.keys(actx.backAliases)
+            .sort()
+            .map((k) => ({
+                type: 'AliasItem',
+                name: k,
+                hash: `#[${actx.backAliases[k]}]`,
+                loc: noloc,
+            })),
+        loc: noloc,
+    });
     const pctx = newPPCtx();
     const pp = injectComments(pctx.ToPP.File(ast, pctx), ast.comments.slice());
-    return (
-        aliasesToString(actx.backAliases, ':') +
-        printToString(pp, 100).replace(/[ \t]+$/gm, '')
-    );
+    return printToString(pp, 100).replace(/[ \t]+$/gm, '');
 };
 
 export const TestView = ({
@@ -73,27 +82,7 @@ export const TestView = ({
                                 builtinContext.clone(),
                                 true,
                             );
-                            return results.statuses.map((status) => {
-                                if (status.text) {
-                                    return {
-                                        loc: status.loc,
-                                        type: 'Error',
-                                        prefix: {
-                                            text: `🚨`,
-                                            message: status.text,
-                                        },
-                                        underline: 'red',
-                                    };
-                                } else {
-                                    return {
-                                        type: 'Success',
-                                        loc: status.loc,
-                                        prefix: {
-                                            text: `✅`,
-                                        },
-                                    };
-                                }
-                            });
+                            return results.statuses;
                         }}
                         onBlur={(contents) => {
                             const [aliasRaw, text] = splitAliases(contents);

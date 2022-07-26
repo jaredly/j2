@@ -1,6 +1,7 @@
 import generate from '@babel/generator';
 import equal from 'fast-deep-equal';
 import { readdirSync, readFileSync } from 'fs';
+import { HL } from '../../../devui/HL';
 import {
     addBuiltinDecorator,
     builtinContext,
@@ -19,7 +20,7 @@ import { assertions, valueAssertions } from './utils';
 
 export type Test = {
     file: t.File;
-    statuses: Array<{ loc: t.Loc; text: string | null }>;
+    statuses: Array<HL>;
     ctx: FullContext;
 };
 
@@ -31,7 +32,7 @@ export const runTest = (
     const old = window.console;
     const mock = old; // (window.console = { ...old, log() {}, warn() {}, error() {} });
 
-    const statuses: { loc: t.Loc; text: string | null }[] = [];
+    const statuses: HL[] = [];
 
     const tast: t.File = {
         type: 'File',
@@ -82,7 +83,11 @@ export const runTest = (
             if (!equal(v, initVerify())) {
                 statuses.push({
                     loc: t.loc,
-                    text: `${errorCount(v)} errors in toplevel`,
+                    type: 'Error',
+                    prefix: {
+                        text: '🙁',
+                        message: `${errorCount(v)} errors in toplevel`,
+                    },
                 });
             }
             tast.toplevels.push(top);
@@ -125,9 +130,29 @@ export const runTest = (
                 const v = initVerify();
                 transformToplevel(top, verifyVisitor(v, ctx), ctx);
                 if (!equal(v, initVerify())) {
-                    statuses.push({
-                        loc: t.loc,
-                        text: `${errorCount(v)} errors in toplevel`,
+                    // statuses.push({
+                    //     loc: t.loc,
+                    //     text: `${errorCount(v)} errors in toplevel`,
+                    // });
+                    v.errors.forEach((loc) => {
+                        statuses.push({
+                            loc: loc,
+                            type: 'Error',
+                            prefix: {
+                                text: '🙁',
+                                message: `Error?`,
+                            },
+                        });
+                    });
+                    v.untypedExpression.forEach((loc) => {
+                        statuses.push({
+                            loc: loc,
+                            type: 'Error',
+                            prefix: {
+                                text: '🖥',
+                                message: `Untyped`,
+                            },
+                        });
                     });
                 }
 
@@ -147,19 +172,29 @@ export const runTest = (
             } catch (err) {
                 statuses.push({
                     loc: t.loc,
-                    text: `Error ${(err as Error).message}`,
+                    type: 'Error',
+                    prefix: {
+                        text: '🚨',
+                        message: `Error ${(err as Error).message}`,
+                    },
                 });
             }
         } else if (t.type === 'Aliases') {
             // um
+            // const top = ctx.ToTast.Toplevel(t, ctx) as t.ToplevelAliases;
             const aliases: { [key: string]: string } = {};
             t.items.forEach(({ name, hash }) => {
-                aliases[name] = hash;
+                aliases[name] = hash.slice(2, -1);
             });
             ctx = ctx.withAliases(aliases) as FullContext;
         } else {
             ctx = ctx.toplevelConfig(null) as FullContext;
             let top = ctx.ToTast.Toplevel(t, ctx) as t.ToplevelExpression;
+            top = transformToplevel(
+                top,
+                removeErrorDecorators(ctx),
+                null,
+            ) as t.ToplevelExpression;
             top = analyzeTop(top, ctx) as t.ToplevelExpression;
             tast.toplevels.push(top);
             let expr = top.expr;
@@ -174,7 +209,11 @@ export const runTest = (
             if (!equal(v, initVerify())) {
                 statuses.push({
                     loc: t.loc,
-                    text: `${errorCount(v)} errors in toplevel`,
+                    type: 'Error',
+                    prefix: {
+                        text: '🚨',
+                        message: `${errorCount(v)} errors in toplevel`,
+                    },
                 });
             }
             //     },
@@ -224,15 +263,34 @@ export const runTest = (
                                 ectx,
                             );
                             // expect(err).toBeUndefined();
-                            statuses.push({
-                                loc: { ...d.loc, end: d.loc.start },
-                                text: err ?? null,
-                            });
+                            const loc = { ...d.loc, end: d.loc.start };
+                            if (err) {
+                                statuses.push({
+                                    loc: loc,
+                                    type: 'Error',
+                                    prefix: {
+                                        text: '🚨',
+                                        message: err,
+                                    },
+                                });
+                            } else {
+                                statuses.push({
+                                    loc: loc,
+                                    type: 'Success',
+                                    prefix: {
+                                        text: '✅',
+                                    },
+                                });
+                            }
                         }
                     } catch (err) {
                         statuses.push({
                             loc: d.loc,
-                            text: `Error ${(err as Error).message}`,
+                            type: 'Error',
+                            prefix: {
+                                text: '🚨',
+                                message: `Error ${(err as Error).message}`,
+                            },
                         });
                     }
                     //     },
@@ -260,12 +318,19 @@ export const runTest = (
                         }
                         statuses.push({
                             loc: { ...expr.loc, end: expr.loc.start },
-                            text: res ? null : `false`,
+                            type: res ? 'Success' : `Error`,
+                            prefix: {
+                                text: res ? '✅' : '🚨',
+                            },
                         });
                     } catch (err) {
                         statuses.push({
                             loc: { ...expr.loc, end: expr.loc.start },
-                            text: `Error ${(err as Error).message}`,
+                            type: 'Error',
+                            prefix: {
+                                text: '🚨',
+                                message: `Error ${(err as Error).message}`,
+                            },
                         });
                     }
                 }

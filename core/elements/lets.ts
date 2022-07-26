@@ -4,7 +4,7 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { transformIBlock, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { Ctx as ACtx, decorate } from '../typing/analyze';
+import { Ctx as ACtx, decorate, pdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
@@ -281,6 +281,7 @@ import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { IIf } from './ifs';
 import { ISwitch } from './switchs';
+import { patternIsExhaustive } from './exhaustive';
 export const ToJS = {
     Block(node: t.IBlock, ctx: JCtx): b.BlockStatement {
         return b.blockStatement(
@@ -344,6 +345,12 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             return {
                 ...node,
                 expr: decorate(node.expr, 'patternMismatch', ctx.hit, ctx.ctx),
+            };
+        }
+        if (!patternIsExhaustive(node.pat, ctx.ctx)) {
+            return {
+                ...node,
+                pat: pdecorate(node.pat, 'notExhaustive', ctx),
             };
         }
         return null;

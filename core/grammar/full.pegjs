@@ -40,8 +40,8 @@ Toplevel = Aliases / TypeAlias / ToplevelLet / Expression
 TypeToplevel = TypeAlias / Type
 
 Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
-AliasItem = name:$AliasName ":" hash:$HashRefInner
-AliasName = $IdText / $binop
+AliasItem = name:$AliasName hash:$HashRef
+AliasName = $NamespacedIdText / $binop
 
 Expression = Lambda / BinOp
 

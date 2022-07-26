@@ -30,7 +30,7 @@ readdirSync(base)
                     text.slice(status.loc.start.offset, status.loc.end.offset) +
                         ` ${file}:${status.loc.start.line} - should be valid`,
                     () => {
-                        expect(status.text).toBe(null);
+                        expect(status.type).toBe('Success');
                     },
                 );
             });

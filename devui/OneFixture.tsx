@@ -33,7 +33,8 @@ import {
 } from '../core/typing/__test__/fixture-utils';
 import { Editor } from './Editor';
 import { ShowBuiltins } from './FixtureFile';
-import { Highlight, HL } from './Highlight';
+import { Highlight } from './Highlight';
+import { HL } from './HL';
 import { CancelIcon, ReportProblemIcon } from './Icons';
 
 export function OneFixture({
@@ -342,6 +343,9 @@ export function OneFixture({
                                                     locs.push({
                                                         loc,
                                                         type: 'Error',
+                                                        prefix: {
+                                                            text: '🚨',
+                                                        },
                                                     });
                                                 });
                                                 v.unresolved.value.forEach(
@@ -349,6 +353,9 @@ export function OneFixture({
                                                         locs.push({
                                                             loc,
                                                             type: 'Error',
+                                                            prefix: {
+                                                                text: '❔',
+                                                            },
                                                         });
                                                     },
                                                 );
@@ -357,6 +364,9 @@ export function OneFixture({
                                                         locs.push({
                                                             loc,
                                                             type: 'Error',
+                                                            prefix: {
+                                                                text: '😬',
+                                                            },
                                                         });
                                                     },
                                                 );
