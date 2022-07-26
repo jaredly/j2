@@ -92,10 +92,12 @@ export const TestView = ({
                                     aliasesFromString(aliasRaw),
                                 ) as FullContext;
                             }
-                            const ran = runTest(
-                                fixComments(parseFile(text)),
-                                ctx,
-                            );
+                            const ran = runTest(fixComments(parseFile(text)), {
+                                ...ctx,
+                                debugger() {
+                                    debugger;
+                                },
+                            });
                             const fmt = refmt(ran);
                             try {
                                 onChange(ran);

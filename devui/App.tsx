@@ -319,6 +319,7 @@ export const App = () => {
                                 };
                                 break;
                             }
+                            num++;
                         }
                         setFiles({ ...files, test: newFiles });
                     }}
