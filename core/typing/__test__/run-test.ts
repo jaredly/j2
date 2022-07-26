@@ -118,14 +118,9 @@ export const runTest = (
                 return generate(js).code;
             });
 
-            // it(
-            //     text.slice(t.loc.start.offset, t.loc.end.offset) +
-            //         ` ${file}:${t.loc.start.line} - should be valid`,
-            //     () => {
             try {
                 const v = initVerify();
                 transformToplevel(top, verifyVisitor(v, ctx), ctx);
-                // expect(v).toEqual(initVerify());
                 if (!equal(v, initVerify())) {
                     statuses.push({
                         loc: t.loc,
@@ -152,8 +147,6 @@ export const runTest = (
                     text: `Error ${(err as Error).message}`,
                 });
             }
-            //     },
-            // );
         } else if (t.type === 'Aliases') {
             // um
             const aliases: { [key: string]: string } = {};

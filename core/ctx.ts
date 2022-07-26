@@ -249,7 +249,7 @@ const resolve = (
                 }
             }
         } else if (hash.type === 'recur') {
-            throw new Error('not yet: ' + rawHash);
+            return [{ type: 'Recur', idx: hash.idx }];
             // const ref = ctx.values.names[name]
             // if (ref) {
             // 	return ref

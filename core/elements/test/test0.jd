@@ -1,6 +1,9 @@
-alias -:h4dd9308469e477a4a756b4b286de0625d5a98af9 +:h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c >:hc1d03250b26806868f520136d8a763b0c0edff9b int:h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias -:h4dd9308469e477a4a756b4b286de0625d5a98af9 +:h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c >:hc1d03250b26806868f520136d8a763b0c0edff9b int:h942cd67cf31d350ec1f39bcd0c933f586dcd176f longSum:ha8457c4c16e481a5dc635ae0b24ecd33f1edf6c2 others:h08205c3f45bc1cac42532fa6666e22c6af8a0af4
+let others = (m#[0]: int) => m#[0]
 let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
-    longSum#[r0](v#[0] - 1) + 1;
+    others(v#[0] + 1) - 1 + 1;
 } else {
     0;
 }
+longSum(0)
+// longSum#[r0](v#[0] - 1) + 1;

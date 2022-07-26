@@ -131,7 +131,7 @@ export const fileToTast = (
     let parsed = toplevels.map((t) => {
         ctx.resetSym();
         let config: null | Toplevel = null;
-        if (t.type === 'TypeAlias') {
+        if (t.type === 'TypeAlias' || t.type === 'ToplevelLet') {
             config = typeToplevel(t, ctx);
             ctx.resetSym();
         }
@@ -592,6 +592,10 @@ export const ToJS = {
         }
         if (x.kind.type === 'Recur') {
             const id = ctx.actx.resolveRecur(x.kind.idx);
+            if (!id) {
+                console.log(id, x.kind.idx, ctx.actx);
+                ctx.actx.debugger();
+            }
             return b.identifier(id ? ctx.globalName(id) : ':no recur found:');
         }
         return b.identifier(`:unresovled:`);

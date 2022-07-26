@@ -251,15 +251,16 @@ export function runFixture(
     }
     let actx = printCtx(ctx);
     // const backAliases = {};
-    const jctx = jCtx(ctx);
+    let jctx = jCtx(ctx);
 
     const printed = checked.toplevels.map((top) => {
         ctx.resetSym();
         populateSyms(top, ctx);
-        if (top.type === 'TypeAlias') {
+        if (top.type === 'TypeAlias' || top.type === 'ToplevelLet') {
             const tt = typeToplevelT(top, ctx);
-            ctx.toplevelConfig(tt);
+            jctx.actx = ctx = ctx.toplevelConfig(tt) as FullContext;
             actx = actx.withToplevel(tt);
+            // jctx.actx = actx.actx as FullContext;
         }
 
         if (top.type === 'ToplevelExpression') {

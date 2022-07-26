@@ -1,6 +1,8 @@
+alias helloFolks:hfed1de23f9e0e4cf356b8b63b9f2e1f126903d70 print:h2910a8b16851c4cfb1acc4a2b394383a0206f01d read:h5cafff6cbd3e73ca76e4a9388801b381533a30ff string:hd978df838905e7e1bd7bb33530ae12436e3756f4
 let print = (value#[0]: string) => `Print(value#[0], () => ())
 let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
 let helloFolks = () => {
     print("What is your name?");
     read();
 }
+helloFolks()
