@@ -64,14 +64,12 @@ const initial = (v: string): History => ({
 });
 
 export const Editor = ({
-    ctx,
     text,
     onBlur,
     onChange,
     typeFile,
     extraLocs,
 }: {
-    ctx: FullContext;
     text: string;
     onBlur: (text: string) => void;
     onChange: (v: string) => void;

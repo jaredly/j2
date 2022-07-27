@@ -58,7 +58,6 @@ export const TypeTestView = ({
                     <Editor
                         typeFile
                         text={text}
-                        ctx={test.ctx}
                         extraLocs={(v) => {
                             if (v.type === 'File') {
                                 return [];

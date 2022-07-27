@@ -19,7 +19,7 @@ import {
 } from './typed-ast';
 import { Ctx as ACtx } from './typing/analyze';
 import { getType } from './typing/getType';
-import { makeToTast, Toplevel } from './typing/to-tast';
+import { makeToTast, ToplevelConfig } from './typing/to-tast';
 import { Ctx as TCtx } from './typing/typeMatches';
 import { constrainTypes } from './typing/unifyTypes';
 import {
@@ -72,7 +72,7 @@ type Internal = {
         // get inferred
         values: { [key: number]: { type: Type; name: string } };
     };
-    toplevel: null | Toplevel;
+    toplevel: null | ToplevelConfig;
 };
 
 export type FullContext = {
@@ -370,7 +370,16 @@ export const newContext = (): FullContext => {
         },
 
         withAliases(aliases) {
-            return { ...this, [opaque]: { ...this[opaque], aliases } };
+            return {
+                ...this,
+                [opaque]: {
+                    ...this[opaque],
+                    aliases: {
+                        ...this[opaque].aliases,
+                        ...aliases,
+                    },
+                },
+            };
         },
 
         withBounds(bounds) {

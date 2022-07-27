@@ -5,7 +5,7 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as ICtx } from '../ir/ir';
 import { analyzeTop, analyzeTypeTop, Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { Ctx, Toplevel, TopTypeKind } from '../typing/to-tast';
+import { Ctx, ToplevelConfig, TopTypeKind } from '../typing/to-tast';
 
 export const grammar = `
 _lineEnd = '\n' / _EOF
@@ -34,7 +34,10 @@ AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 `;
 
-export const typeToplevelT = (t: t.Toplevel, ctx: ACtx): Toplevel | null => {
+export const typeToplevelT = (
+    t: t.Toplevel,
+    ctx: ACtx,
+): ToplevelConfig | null => {
     if (t.type === 'TypeAlias') {
         return {
             type: 'Type',
@@ -63,7 +66,7 @@ export const typeToplevelT = (t: t.Toplevel, ctx: ACtx): Toplevel | null => {
 export const typeToplevel = (
     t: p.Toplevel | p.TypeToplevel,
     ctx: Ctx,
-): Toplevel | null => {
+): ToplevelConfig | null => {
     if (t.type === 'TypeAlias') {
         return {
             type: 'Type',

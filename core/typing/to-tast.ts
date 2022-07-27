@@ -20,7 +20,7 @@ export type Ctx = {
         hash: string;
         ctx: Ctx;
     };
-    toplevelConfig: (top: Toplevel | null) => Ctx;
+    toplevelConfig: (top: ToplevelConfig | null) => Ctx;
     ToTast: ToTast;
 } & ACtx;
 
@@ -38,7 +38,7 @@ export type ToplevelType = {
         actual?: t.Type;
     }[];
 };
-export type Toplevel =
+export type ToplevelConfig =
     | ToplevelType
     | { type: 'Expr'; hash?: string; items: { name: string; type: t.Type }[] };
 

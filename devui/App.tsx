@@ -1,8 +1,18 @@
 import { Button, Divider, Link, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { builtinContext, FullContext, noloc } from '../core/ctx';
+import {
+    emptyFileResult,
+    executeFile,
+    ExecutionInfo,
+    processFile,
+    SuccessTestResult,
+    TestResult,
+} from '../core/full/full';
 import { parseFile, parseTypeFile } from '../core/grammar/base.parser';
 import { fixComments } from '../core/grammar/fixComments';
+import { Loc } from '../core/typed-ast';
+import { errorCount } from '../core/typing/analyze';
 import {
     aliasesFromString,
     Builtin,
@@ -68,7 +78,52 @@ export type Status = {
 export type Files = {
     fixtures: { [key: string]: Status };
     typetest: { [key: string]: TypeTest };
-    test: { [key: string]: Test };
+    test: {
+        [key: string]: TestWhat;
+    };
+};
+
+export type TestWhat = {
+    file: TestResult;
+    values: null | TestValues;
+};
+
+export type TestValues = {
+    info: ExecutionInfo;
+    testResults: Array<{
+        success: boolean;
+        loc: Loc;
+    }>;
+    failed: boolean;
+};
+
+export const getTestResults = (file: SuccessTestResult): TestValues => {
+    const values: TestValues = {
+        info: executeFile(file),
+        testResults: [],
+        failed: false,
+    };
+    file.info.forEach((info, i) => {
+        if (
+            info.contents.top.type === 'ToplevelExpression' &&
+            info.contents.irtops
+        ) {
+            const top = info.contents.irtops[0];
+            if (top.type && file.ctx.isBuiltinType(top.type!, 'bool')) {
+                values.testResults.push({
+                    success: values.info.exprs[i],
+                    loc: info.contents.top.loc,
+                });
+                if (!values.info.exprs[i]) {
+                    values.failed = true;
+                }
+            }
+        }
+        if (errorCount(info.verify)) {
+            values.failed = true;
+        }
+    });
+    return values;
 };
 
 export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
@@ -90,10 +145,10 @@ export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
     );
 };
 
-export const ShowTest = ({ statuses }: { statuses: HL[] }) => {
+export const ShowTest = ({ failed }: { failed: boolean }) => {
     return (
         <span style={{ marginRight: 8 }}>
-            {statuses.some((m) => m.type == 'Error') ? (
+            {failed ? (
                 <CancelIcon style={{ color: 'red' }} />
             ) : (
                 <CheckmarkIcon style={{ color: 'green' }} />
@@ -226,14 +281,12 @@ export const App = () => {
             });
             const testFiles = {} as Files['test'];
             testContents.forEach((contents, i) => {
-                let ctx = builtinContext.clone();
-
-                try {
-                    testFiles[test[i]] = runTest(parseFile(contents), ctx);
-                } catch (err) {
-                    old.error(`Failed to parse test`, err);
-                    old.error(contents);
-                }
+                const file = processFile(contents);
+                testFiles[test[i]] = {
+                    file,
+                    values:
+                        file.type === 'Success' ? getTestResults(file) : null,
+                };
             });
             setFiles({
                 fixtures: files,
@@ -308,14 +361,12 @@ export const App = () => {
                             const name = `test${num}.jd`;
                             if (newFiles[name] == null) {
                                 newFiles[name] = {
-                                    ctx: builtinContext.clone(),
-                                    file: {
-                                        type: 'File',
-                                        comments: [],
-                                        loc: noloc,
-                                        toplevels: [],
+                                    file: emptyFileResult,
+                                    values: {
+                                        info: { terms: {}, exprs: {} },
+                                        testResults: [],
+                                        failed: false,
                                     },
-                                    statuses: [],
                                 };
                                 break;
                             }
@@ -342,7 +393,9 @@ export const App = () => {
                                 }
                             >
                                 <ShowTest
-                                    statuses={files.test[name].statuses}
+                                    failed={
+                                        files.test[name].values?.failed ?? true
+                                    }
                                 />
                                 {name}
                             </Link>
@@ -366,7 +419,9 @@ export const App = () => {
                                 }
                             >
                                 <ShowTest
-                                    statuses={files.typetest[name].statuses}
+                                    failed={files.typetest[name].statuses.some(
+                                        (m) => m.type == 'Error',
+                                    )}
                                 />
                                 {name}
                             </Link>

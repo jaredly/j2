@@ -2,7 +2,7 @@ import { FullContext } from '../ctx';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 import { makeToAst, ToAst } from './to-ast.gen';
-import { Toplevel } from './to-tast';
+import { ToplevelConfig } from './to-tast';
 export { type ToAst } from './to-ast.gen';
 import { Ctx as ACtx } from './analyze';
 
@@ -17,7 +17,7 @@ export type Ctx = {
     recordSym: (sym: t.Sym, kind: 'value' | 'type') => void;
     aliases: { [key: string]: string };
     backAliases: { [key: string]: string };
-    withToplevel: (t: Toplevel | null) => Ctx;
+    withToplevel: (t: ToplevelConfig | null) => Ctx;
 
     reverse: {
         decorators: { [key: string]: string };

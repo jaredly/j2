@@ -15,7 +15,7 @@ import * as t from '../typed-ast';
 import { extract, Id, idsEqual, idToString } from '../ids';
 import { Ctx as TMCtx } from './typeMatches';
 import { analyzeVisitor } from './analyze.gen';
-import { Toplevel, TopTypeKind } from './to-tast';
+import { ToplevelConfig, TopTypeKind } from './to-tast';
 import {
     getLocals,
     Pattern,
@@ -41,7 +41,7 @@ export type Ctx = {
     resolveType: (name: string, hash?: string | null) => t.RefKind | null;
     resolveDecorator: (name: string, hash?: string | null) => Array<t.RefKind>;
 
-    toplevelConfig: (top: Toplevel | null) => Ctx;
+    toplevelConfig: (top: ToplevelConfig | null) => Ctx;
     // decoratorNames(): { [key: string]: string };
     resolve: (name: string, hash?: string | null) => Array<t.RefKind>;
 

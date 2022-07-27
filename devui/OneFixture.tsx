@@ -265,7 +265,6 @@ export function OneFixture({
                     <Editor
                         text={editing ?? input}
                         onChange={setEditing}
-                        ctx={loadedCtx}
                         onBlur={(input) => {
                             setEditing(null);
                             if (
