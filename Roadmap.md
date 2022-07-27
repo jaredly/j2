@@ -30,8 +30,8 @@ and/or a nice error coalescing example.
 	- [ ] OK FOLKS, use `processFile` and `processTypeFile` everywhere
 		- [ ] run-test.ts
 			- [x] initial
-			- [ ] make sure failures propagate
-			- [ ] see if any other validation needs to come through
+			- [x] make sure failures propagate
+			- [x] see if any other validation needs to come through
 			- [ ] figure out the Alias toplevel dealio
 				- when fmting things back out, we probably want to ..
 					.. ok maybe include 'aliases' in the toplevelinfo

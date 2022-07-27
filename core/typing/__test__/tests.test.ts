@@ -23,14 +23,14 @@ readdirSync(base)
             });
 
             if (processed.type === 'Success') {
-                const { info, ast, ctx } = processed;
+                const { info, ctx } = processed;
                 let ectx: ExecutionContext;
                 beforeAll(() => {
                     ectx = newExecutionContext(ctx);
                 });
                 const empty = initVerify();
-                info.forEach((info, i) => {
-                    const top = ast.toplevels[i];
+                info.forEach((info) => {
+                    const top = info.contents.orig;
                     const text =
                         raw.slice(top.loc.start.offset, top.loc.end.offset) +
                         ` ./core/elements/test/${file}:${top.loc.start.line}`;

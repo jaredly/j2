@@ -1,28 +1,16 @@
 import generate from '@babel/generator';
 import equal from 'fast-deep-equal';
-import { readdirSync, readFileSync } from 'fs';
 import { HL } from '../../../devui/HL';
-import {
-    addBuiltinDecorator,
-    builtinContext,
-    FullContext,
-    refsEqual,
-} from '../../ctx';
+import { addBuiltinDecorator, FullContext } from '../../ctx';
 import { removeErrorDecorators, typeToplevel } from '../../elements/base';
-import { parseFile, parseTypeFile, File } from '../../grammar/base.parser';
-import { idsEqual, idToString, toId } from '../../ids';
+import { File } from '../../grammar/base.parser';
+import { idToString, toId } from '../../ids';
 import { iCtx } from '../../ir/ir';
 import { ExecutionContext, jCtx, newExecutionContext } from '../../ir/to-js';
 import { transformToplevel } from '../../transform-tast';
 import * as t from '../../typed-ast';
-import {
-    analyzeTop,
-    errorCount,
-    initVerify,
-    Verify,
-    verifyVisitor,
-} from '../analyze';
-import { assertions, valueAssertions } from './utils';
+import { analyzeTop, initVerify, Verify, verifyVisitor } from '../analyze';
+import { valueAssertions } from './utils';
 
 export type Test = {
     file: t.File;

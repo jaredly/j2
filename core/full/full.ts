@@ -38,6 +38,7 @@ export type IrTop = {
 export type FileContents = {
     type: 'File';
     top: t.Toplevel;
+    orig: p.Toplevel;
     refmt: p.Toplevel;
     irtops: null | IrTop[];
 };
@@ -45,6 +46,7 @@ export type FileContents = {
 export type TypeContents = {
     type: 'Type';
     top: t.TypeToplevel;
+    orig: p.TypeToplevel;
     refmt: p.TypeToplevel;
 };
 
@@ -53,6 +55,18 @@ export type ToplevelInfo<Contents> = {
     verify: Verify;
     annotations: { loc: t.Loc; text: string }[];
 };
+
+export type Result<Contents> =
+    | {
+          type: 'Success';
+          info: ToplevelInfo<Contents>[];
+          comments: p.File['comments'];
+          ctx: FullContext;
+      }
+    | {
+          type: 'Error';
+          err: t.Loc;
+      };
 
 export const toJs = (
     t: t.Expression,
@@ -73,21 +87,7 @@ export const toJs = (
     return { ir, js, type: ctx.getType(t), name };
 };
 
-export type Result<Ast, Contents> =
-    | {
-          type: 'Success';
-          ast: Ast;
-          info: ToplevelInfo<Contents>[];
-          ctx: FullContext;
-      }
-    | {
-          type: 'Error';
-          err: t.Loc;
-      };
-
-export const processTypeFile = (
-    text: string,
-): Result<p.TypeFile, TypeContents> => {
+export const processTypeFile = (text: string): Result<TypeContents> => {
     const info: ToplevelInfo<TypeContents>[] = [];
     let ast: p.TypeFile;
     try {
@@ -105,15 +105,18 @@ export const processTypeFile = (
     let ictx = iCtx(ctx);
 
     ast.toplevels.forEach((t) => {
-        const res = processTypeToplevel(t, ctx, ictx, jctx, pctx);
+        const res = processTypeToplevel(t, ctx, pctx);
         info.push(res.i);
         ctx = res.ctx;
     });
 
-    return { type: 'Success', ast, info, ctx };
+    return { type: 'Success', info, ctx, comments: ast.comments };
 };
 
-export const processFile = (text: string): Result<p.File, FileContents> => {
+export type TestResult = Result<FileContents>;
+export type TypeTestResult = Result<TypeContents>;
+
+export const processFile = (text: string): Result<FileContents> => {
     const info: ToplevelInfo<FileContents>[] = [];
     let ast: p.File;
     try {
@@ -138,20 +141,6 @@ export const processFile = (text: string): Result<p.File, FileContents> => {
                 aliases[name] = hash.slice(2, -1);
             });
             ctx = ctx.withAliases(aliases) as FullContext;
-            info.push({
-                contents: {
-                    type: 'File',
-                    top: { type: 'ToplevelAliases', aliases: [], loc: t.loc },
-                    irtops: null,
-                    refmt: {
-                        type: 'Aliases',
-                        items: [],
-                        loc: t.loc,
-                    },
-                },
-                annotations: [],
-                verify: initVerify(),
-            });
             return;
         }
 
@@ -160,14 +149,12 @@ export const processFile = (text: string): Result<p.File, FileContents> => {
         ctx = res.ctx;
     });
 
-    return { type: 'Success', ast, info, ctx };
+    return { type: 'Success', info, ctx, comments: ast.comments };
 };
 
 export const processTypeToplevel = (
     t: p.TypeToplevel,
     ctx: FullContext,
-    ictx: ReturnType<typeof iCtx>,
-    jctx: ReturnType<typeof jCtx>,
     pctx: ReturnType<typeof printCtx>,
 ): { i: ToplevelInfo<TypeContents>; ctx: FullContext } => {
     ctx.resetSym();
@@ -196,6 +183,7 @@ export const processTypeToplevel = (
         i: {
             contents: {
                 type: 'Type',
+                orig: t,
                 top: type,
                 refmt,
             },
@@ -275,6 +263,7 @@ export const processToplevel = (
             contents: {
                 type: 'File',
                 top,
+                orig: t,
                 refmt,
                 irtops,
             },
