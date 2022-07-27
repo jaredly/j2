@@ -238,16 +238,18 @@ const serializeStyles = (styles?: React.CSSProperties) => {
     return '; ' + items.join('; ');
 };
 
-export const openSpan = (hl: HL) =>
+export const openSpan = (hl: HL, noPrefix = false) =>
     `<span class="${hl.type}" style="color: ${colors[hl.type] ?? '#aaa'}${
         hl.underline
             ? '; text-decoration: underline; text-decoration-style: wavy; text-decoration-color: ' +
               hl.underline
             : ''
     }${serializeStyles(styles[hl.type])}"${
-        hl.prefix ? ` data-prefix="${escapeLine(hl.prefix.text)}"` : ''
+        hl.prefix && !noPrefix
+            ? ` data-prefix="${escapeLine(hl.prefix.text)}"`
+            : ''
     }${
-        hl.prefix?.message
+        !noPrefix && hl.prefix?.message
             ? ` data-message="${escapeLine(
                   hl.prefix.message,
               )}" title="${escapeLine(hl.prefix.message)}"`
@@ -288,7 +290,7 @@ export const treeToHtmlLinesInner = (tree: Tree, path: HL[]): string => {
                       .join(
                           path.map(() => '</span>').join('') +
                               '</div><div>' +
-                              path.map(openSpan).join(''),
+                              path.map((h) => openSpan(h, true)).join(''),
                       )}</span>`
                 : treeToHtmlLinesInner(child, path.concat([tree.hl])),
         )
