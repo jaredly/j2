@@ -38,7 +38,10 @@ readdirSync(base)
                         it(`should be valid`, () => {
                             expect(info.verify).toEqual(empty);
                         });
-                        if (top.type === 'ToplevelLet') {
+                        if (
+                            top.type === 'ToplevelLet' &&
+                            info.contents.irtops
+                        ) {
                             it(`should execute`, () => {
                                 top.items.forEach((item, i) => {
                                     const { js, name } =
