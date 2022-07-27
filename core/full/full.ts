@@ -9,7 +9,11 @@ import * as p from '../grammar/base.parser';
 import { fixComments } from '../grammar/fixComments';
 import { iCtx } from '../ir/ir';
 import { jCtx } from '../ir/to-js';
-import { transformToplevel, transformType } from '../transform-tast';
+import {
+    transformToplevel,
+    transformType,
+    transformTypeToplevel,
+} from '../transform-tast';
 import * as t from '../typed-ast';
 import {
     analyzeTop,
@@ -23,25 +27,27 @@ import { printCtx } from '../typing/to-ast';
 import * as b from '@babel/types';
 import { annotationVisitor } from '../../devui/collectAnnotations';
 
-export type ToplevelInfo = {
-    contents:
-        | {
-              type: 'File';
-              top: t.Toplevel;
-              refmt: p.Toplevel;
-              irtops:
-                  | null
-                  | {
-                        type: t.Type | null;
-                        ir: t.IExpression;
-                        js: b.Expression;
-                    }[];
-          }
-        | {
-              type: 'Type';
-              top: t.TypeToplevel;
-              refmt: p.TypeToplevel;
-          };
+export type IrTop = {
+    type: t.Type | null;
+    ir: t.IExpression;
+    js: b.Expression;
+};
+
+export type FileContents = {
+    type: 'File';
+    top: t.Toplevel;
+    refmt: p.Toplevel;
+    irtops: null | IrTop[];
+};
+
+export type TypeContents = {
+    type: 'Type';
+    top: t.TypeToplevel;
+    refmt: p.TypeToplevel;
+};
+
+export type ToplevelInfo<Contents> = {
+    contents: Contents;
     verify: Verify;
     annotations: { loc: t.Loc; text: string }[];
 };
@@ -58,7 +64,7 @@ export const toJs = (
 };
 
 export const processTypeFile = (text: string) => {
-    const info: (ToplevelInfo | t.Type)[] = [];
+    const info: ToplevelInfo<FileContents | TypeContents>[] = [];
     let ast: p.TypeFile;
     try {
         ast = fixComments(p.parseTypeFile(text));
@@ -84,7 +90,7 @@ export const processTypeFile = (text: string) => {
 };
 
 export const processFile = (text: string) => {
-    const info: ToplevelInfo[] = [];
+    const info: ToplevelInfo<FileContents>[] = [];
     let ast: p.File;
     try {
         ast = fixComments(p.parseFile(text));
@@ -125,25 +131,28 @@ export const processTypeToplevel = (
     ictx: ReturnType<typeof iCtx>,
     jctx: ReturnType<typeof jCtx>,
     pctx: ReturnType<typeof printCtx>,
-): { i: ToplevelInfo; ctx: FullContext } => {
-    if (t.type === 'TypeAlias') {
-        return processToplevel(t, ctx, ictx, jctx, pctx);
-    }
-    // ctx.resetSym();
-    // const config = typeToplevel(t, ctx);
-    // ctx.resetSym();
-    ctx = ctx.toplevelConfig(null) as FullContext;
-    let type = ctx.ToTast.Type(t, ctx);
-    // top = transformToplevel(top, removeErrorDecorators(ctx), null);
-    type = analyzeTypeTop(type, ctx) as t.Type;
+): { i: ToplevelInfo<TypeContents>; ctx: FullContext } => {
+    ctx.resetSym();
+    const config = typeToplevel(t, ctx);
+    ctx.resetSym();
+    ctx = ctx.toplevelConfig(config) as FullContext;
+    let type = ctx.ToTast.TypeToplevel(t, ctx);
+    type = transformTypeToplevel(type, removeErrorDecorators(ctx), null);
+    type = analyzeTypeTop(type, ctx);
 
     const verify = initVerify();
-    transformType(type, verifyVisitor(verify, ctx), ctx);
+    transformTypeToplevel(type, verifyVisitor(verify, ctx), ctx);
 
-    const refmt = pctx.ToAst.Type(type, pctx);
+    if (type.type === 'TypeAlias' && errorCount(verify) === 0) {
+        const res = ctx.withTypes(type.elements);
+        ctx = res.ctx as FullContext;
+        // todo: top.hash folks
+    }
+
+    const refmt = pctx.ToAst.TypeToplevel(type, pctx);
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
-    transformType(type, annotationVisitor(annotations), ctx);
+    transformTypeToplevel(type, annotationVisitor(annotations), ctx);
 
     return {
         i: {
@@ -165,7 +174,7 @@ export const processToplevel = (
     ictx: ReturnType<typeof iCtx>,
     jctx: ReturnType<typeof jCtx>,
     pctx: ReturnType<typeof printCtx>,
-): { i: ToplevelInfo; ctx: FullContext } => {
+): { i: ToplevelInfo<FileContents>; ctx: FullContext } => {
     ctx.resetSym();
     const config = typeToplevel(t, ctx);
     ctx.resetSym();
@@ -182,14 +191,16 @@ export const processToplevel = (
     const verify = initVerify();
     transformToplevel(top, verifyVisitor(verify, ctx), ctx);
 
-    if (top.type === 'TypeAlias') {
-        const res = ctx.withTypes(top.elements);
-        ctx = res.ctx as FullContext;
-        // todo: top.hash folks
-    } else if (top.type === 'ToplevelLet') {
-        const res = ctx.withValues(top.elements);
-        ctx = res.ctx as FullContext;
-        top.hash = res.hash;
+    if (errorCount(verify) === 0) {
+        if (top.type === 'TypeAlias') {
+            const res = ctx.withTypes(top.elements);
+            ctx = res.ctx as FullContext;
+            // todo: top.hash folks
+        } else if (top.type === 'ToplevelLet') {
+            const res = ctx.withValues(top.elements);
+            ctx = res.ctx as FullContext;
+            top.hash = res.hash;
+        }
     }
 
     pctx.actx = ctx;
