@@ -17,7 +17,7 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
-- [ ] get it so that there's one codepath, used by both the web ui & the jest tests.
+- [x] get it so that there's one codepath, used by both the web ui & the jest tests.
 	- outputs: validation, annotations, jsraw & stuff
 		- text -> ast
 		- ast -> tast
@@ -27,6 +27,12 @@ and/or a nice error coalescing example.
 			- refmt (w/ sourcemap???)
 			- ToIR
 			- ToJS
+	- [ ] OK FOLKS, use `processFile` and `processTypeFile` everywhere
+		- OneFixture
+		- Test.tsx
+		- TypeTest.tsx
+		- typetest.ts
+		- run-test.ts
 - [ ] then get rid of `syms`, so that we can pave the way for type refinement
 - [ ] if/let it up my folks
 
