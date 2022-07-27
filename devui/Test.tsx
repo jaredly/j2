@@ -66,7 +66,6 @@ const refmt = (file: TestResult) => {
         return file.text;
     }
 
-    console.log('refmtint', file.info);
     const ast: p.File = {
         type: 'File',
         comments: file.comments,
@@ -135,7 +134,6 @@ export const TestView = ({
                         text={text}
                         extraLocs={(v) => {
                             if (v.type !== 'File') {
-                                console.log('nope', v);
                                 return [];
                             }
                             const file = processFileR(v);

@@ -5,6 +5,7 @@ import { makeToAst, ToAst } from './to-ast.gen';
 import { ToplevelConfig } from './to-tast';
 export { type ToAst } from './to-ast.gen';
 import { Ctx as ACtx } from './analyze';
+import { toId } from '../ids';
 
 export type Ctx = {
     printRef: (
@@ -98,6 +99,14 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
                 top.items.forEach((item, i) => {
                     reverse.values[t.refHash({ type: 'Recur', idx: i })] =
                         item.name;
+                    if (top.hash) {
+                        reverse.values[
+                            t.refHash({
+                                type: 'Global',
+                                id: toId(top.hash, i),
+                            })
+                        ] = item.name;
+                    }
                 });
             }
             return { ...this, reverse };

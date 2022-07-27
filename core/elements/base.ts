@@ -54,6 +54,7 @@ export const typeToplevelT = (
     if (t.type === 'ToplevelLet') {
         return {
             type: 'Expr',
+            hash: t.hash,
             items: t.elements.map((t) => ({
                 name: t.name,
                 type: ctx.getType(t.expr) ?? { type: 'TBlank', loc: t.loc },
