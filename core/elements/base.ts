@@ -575,6 +575,7 @@ import { Ctx as JCtx } from '../ir/to-js';
 import { FullContext, nodebug } from '../ctx';
 import { idsEqual } from '../ids';
 import { transformToplevel, Visitor } from '../transform-tast';
+
 export const ToJS = {
     Ref(x: t.Ref, ctx: JCtx): b.Expression {
         if (x.kind.type === 'Global') {

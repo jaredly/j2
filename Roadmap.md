@@ -15,6 +15,21 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+## Next little minute
+
+- [ ] get it so that there's one codepath, used by both the web ui & the jest tests.
+	- outputs: validation, annotations, jsraw & stuff
+		- text -> ast
+		- ast -> tast
+		- tast (analyze)
+		- for each toplevel
+			- validate
+			- refmt (w/ sourcemap???)
+			- ToIR
+			- ToJS
+- [ ] then get rid of `syms`, so that we can pave the way for type refinement
+- [ ] if/let it up my folks
+
 ## Switch next
 
 - [ ] set up a `simplify` thing
@@ -24,6 +39,8 @@ and/or a nice error coalescing example.
 	- once we're at `if let`s, I think we're in good shape?
 		BUT I do need to get type refinement working
 	- ehm. ... 
+
+- [ ] ugh it's really vexing that the UI uses different codepaths for at least some of its stuff, such that it can be broken without the jest tests being alerted.
 
 ... run 'analyze' after 'simplify', to ensure that nothing went wrong
 hmmm, so if/let

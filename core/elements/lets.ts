@@ -121,7 +121,7 @@ export const ToAst = {
         };
     },
     ToplevelLet(top: t.ToplevelLet, ctx: TACtx): p.ToplevelLet {
-        populateSyms(top, ctx.actx);
+        // populateSyms(top, ctx.actx);
         const tt = typeToplevelT(top, ctx.actx);
         ctx = ctx.withToplevel(tt);
         ctx.actx = ctx.actx.toplevelConfig(tt);

@@ -282,7 +282,7 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
             return null;
         },
         Toplevel(node, ctx) {
-            populateSyms(node, ctx);
+            // populateSyms(node, ctx);
             return [
                 null,
                 ctx.toplevelConfig(typeToplevelT(node, ctx)) as FullContext,

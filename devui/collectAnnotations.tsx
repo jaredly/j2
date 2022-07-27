@@ -9,9 +9,18 @@ import { typeToString } from './Highlight';
 
 export const collectAnnotations = (tast: File, ctx: FullContext) => {
     const annotations: { loc: Loc; text: string }[] = [];
-    const visitor: tt.Visitor<FullContext> = {
+    const visitor: tt.Visitor<FullContext> = annotationVisitor(annotations);
+    tt.transformFile(tast, visitor, ctx);
+    // console.log(annotations);
+    return annotations;
+};
+
+export function annotationVisitor(
+    annotations: { loc: Loc; text: string }[],
+): tt.Visitor<FullContext> {
+    return {
         Toplevel(node, ctx) {
-            populateSyms(node, ctx);
+            // populateSyms(node, ctx);
             return [
                 null,
                 ctx.toplevelConfig(typeToplevelT(node, ctx)) as FullContext,
@@ -55,7 +64,4 @@ export const collectAnnotations = (tast: File, ctx: FullContext) => {
             return null;
         },
     };
-    tt.transformFile(tast, visitor, ctx);
-    // console.log(annotations);
-    return annotations;
-};
+}

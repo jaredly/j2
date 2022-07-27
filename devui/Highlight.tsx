@@ -86,7 +86,7 @@ export const highlightLocations = (
             ast.comments.forEach(([loc, _]) => {
                 locs.push({ loc, type: 'comment' });
             });
-            transformTypeFile(ast, visitor, locs);
+            transformTypeFile(ast, highlightVisitor, locs);
             if (extraLocs) {
                 locs.push(...extraLocs(ast, aliases));
             }
@@ -95,7 +95,7 @@ export const highlightLocations = (
             ast.comments.forEach(([loc, _]) => {
                 locs.push({ loc, type: 'comment' });
             });
-            transformFile(ast, visitor, locs);
+            transformFile(ast, highlightVisitor, locs);
             if (extraLocs) {
                 locs.push(...extraLocs(ast, aliases));
             }
@@ -266,9 +266,9 @@ export const Highlight = ({
     );
 };
 
-const visitor: Visitor<Array<{ loc: Loc; type: Colorable }>> = {};
+const highlightVisitor: Visitor<Array<{ loc: Loc; type: Colorable }>> = {};
 AllTaggedTypeNames.forEach((name) => {
-    visitor[name] = (node: any, ctx): any => {
+    highlightVisitor[name] = (node: any, ctx): any => {
         ctx.push({ loc: node.loc, type: name });
         return null;
     };
@@ -283,7 +283,7 @@ const advance = (
         line,
     };
 };
-visitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
+highlightVisitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
     ctx.push({ loc: node.loc, type: 'ToplevelLet' });
     const { start, end } = node.loc;
     node.items.forEach((item) => {
