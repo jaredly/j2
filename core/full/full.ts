@@ -26,11 +26,13 @@ import {
 import { printCtx } from '../typing/to-ast';
 import * as b from '@babel/types';
 import { annotationVisitor } from '../../devui/collectAnnotations';
+import { toId } from '../ids';
 
 export type IrTop = {
     type: t.Type | null;
-    ir: t.IExpression;
-    js: b.Expression;
+    ir: t.IBlock;
+    js: b.BlockStatement;
+    name?: string;
 };
 
 export type FileContents = {
@@ -57,14 +59,36 @@ export const toJs = (
     ictx: ReturnType<typeof iCtx>,
     jctx: ReturnType<typeof jCtx>,
     ctx: FullContext,
-) => {
-    const ir = ictx.ToIR.Expression(t, ictx);
-    const js = jctx.ToJS.IExpression(ir, jctx);
-    return { ir, js, type: ctx.getType(t) };
+    name?: string,
+): IrTop => {
+    const ir = ictx.ToIR.BlockSt(
+        {
+            type: 'Block',
+            stmts: [t],
+            loc: t.loc,
+        },
+        ictx,
+    );
+    const js = jctx.ToJS.Block(ir, jctx);
+    return { ir, js, type: ctx.getType(t), name };
 };
 
-export const processTypeFile = (text: string) => {
-    const info: ToplevelInfo<FileContents | TypeContents>[] = [];
+export type Result<Ast, Contents> =
+    | {
+          type: 'Success';
+          ast: Ast;
+          info: ToplevelInfo<Contents>[];
+          ctx: FullContext;
+      }
+    | {
+          type: 'Error';
+          err: t.Loc;
+      };
+
+export const processTypeFile = (
+    text: string,
+): Result<p.TypeFile, TypeContents> => {
+    const info: ToplevelInfo<TypeContents>[] = [];
     let ast: p.TypeFile;
     try {
         ast = fixComments(p.parseTypeFile(text));
@@ -89,7 +113,7 @@ export const processTypeFile = (text: string) => {
     return { type: 'Success', ast, info, ctx };
 };
 
-export const processFile = (text: string) => {
+export const processFile = (text: string): Result<p.File, FileContents> => {
     const info: ToplevelInfo<FileContents>[] = [];
     let ast: p.File;
     try {
@@ -114,6 +138,20 @@ export const processFile = (text: string) => {
                 aliases[name] = hash.slice(2, -1);
             });
             ctx = ctx.withAliases(aliases) as FullContext;
+            info.push({
+                contents: {
+                    type: 'File',
+                    top: { type: 'ToplevelAliases', aliases: [], loc: t.loc },
+                    irtops: null,
+                    refmt: {
+                        type: 'Aliases',
+                        items: [],
+                        loc: t.loc,
+                    },
+                },
+                annotations: [],
+                verify: initVerify(),
+            });
             return;
         }
 
@@ -213,7 +251,18 @@ export const processToplevel = (
             ? top.type === 'ToplevelExpression'
                 ? [toJs(top.expr, ictx, jctx, ctx)]
                 : top.type === 'ToplevelLet'
-                ? top.elements.map((el) => toJs(el.expr, ictx, jctx, ctx))
+                ? top.elements.map((el, i) =>
+                      toJs(
+                          el.expr,
+                          ictx,
+                          jctx,
+                          ctx,
+                          jctx.addGlobalName(
+                              toId((top as t.ToplevelLet).hash!, i),
+                              el.name,
+                          ),
+                      ),
+                  )
                 : []
             : null;
 

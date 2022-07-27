@@ -28,11 +28,20 @@ and/or a nice error coalescing example.
 			- ToIR
 			- ToJS
 	- [ ] OK FOLKS, use `processFile` and `processTypeFile` everywhere
+		- [ ] run-test.ts
+			- [x] initial
+			- [ ] make sure failures propagate
+			- [ ] see if any other validation needs to come through
+			- [ ] figure out the Alias toplevel dealio
+				- when fmting things back out, we probably want to ..
+					.. ok maybe include 'aliases' in the toplevelinfo
+						for a given thing?
+					which means we might as well just not return the
+					`ast`, but instead use our custom object. 🤔.
 		- OneFixture
 		- Test.tsx
 		- TypeTest.tsx
 		- typetest.ts
-		- run-test.ts
 - [ ] then get rid of `syms`, so that we can pave the way for type refinement
 - [ ] if/let it up my folks
 

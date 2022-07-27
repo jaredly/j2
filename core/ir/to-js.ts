@@ -55,6 +55,7 @@ export type ExecutionContext = {
     // I wonder .. should 'unit' evaluate to 'null'?
     // kinda might as well, idk
     terms: { [key: string]: any };
+    executeJs(js: b.BlockStatement, name?: string): any;
     execute(expr: Expression): any;
 };
 
@@ -62,6 +63,37 @@ export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
     return {
         ctx,
         terms: {},
+        executeJs(expr: b.BlockStatement, name?: string) {
+            const jsraw = generate(expr).code;
+            // console.log('ok', name, jsraw);
+            let f;
+            try {
+                f = new Function('$terms', jsraw);
+            } catch (err) {
+                throw new Error(
+                    `Syntax probably: ${(err as Error).message}\n` + jsraw,
+                    {
+                        cause: err as Error,
+                    },
+                );
+            }
+            let res;
+            try {
+                res = f(this.terms);
+            } catch (err) {
+                // console.log(this.terms);
+                throw new Error(
+                    `Exec Error: ${(err as Error).message}\n` + jsraw,
+                    {
+                        cause: err as Error,
+                    },
+                );
+            }
+            if (name) {
+                this.terms[name] = res;
+            }
+            return res;
+        },
         execute(expr: Expression) {
             const ictx = iCtx(ctx);
             const ir = ictx.ToIR.BlockSt(

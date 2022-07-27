@@ -1,8 +1,7 @@
 import { readdirSync, readFileSync } from 'fs';
-import { builtinContext, FullContext } from '../../ctx';
-import { parseFile } from '../../grammar/base.parser';
-import { aliasesFromString, splitAliases } from './fixture-utils';
-import { runTest } from './run-test';
+import { processFile } from '../../full/full';
+import { ExecutionContext, newExecutionContext } from '../../ir/to-js';
+import { initVerify } from '../analyze';
 
 // @ts-ignore
 global.window = global;
@@ -15,25 +14,52 @@ readdirSync(base)
 
         describe(file, () => {
             const raw = readFileSync(fixtureFile, 'utf8');
-            const [aliasRaw, text] = splitAliases(raw);
-            const ast = parseFile(text);
-            let ctx = builtinContext.clone();
-            if (aliasRaw) {
-                ctx = ctx.withAliases(
-                    aliasesFromString(aliasRaw),
-                ) as FullContext;
-            }
+            const processed = processFile(raw);
 
-            const result = runTest(ast, ctx, false);
-            result.statuses.forEach((status) => {
-                it(
-                    text.slice(status.loc.start.offset, status.loc.end.offset) +
-                        ` ${file}:${status.loc.start.line} - should be valid`,
-                    () => {
-                        expect(status.type).toBe('Success');
-                    },
-                );
+            it('should parse', () => {
+                if (processed.type === 'Error') {
+                    expect(processed.err).toBeUndefined();
+                }
             });
-            it('should parse I guess', () => {});
+
+            if (processed.type === 'Success') {
+                const { info, ast, ctx } = processed;
+                let ectx: ExecutionContext;
+                beforeAll(() => {
+                    ectx = newExecutionContext(ctx);
+                });
+                const empty = initVerify();
+                info.forEach((info, i) => {
+                    const top = ast.toplevels[i];
+                    const text =
+                        raw.slice(top.loc.start.offset, top.loc.end.offset) +
+                        ` ./core/elements/test/${file}:${top.loc.start.line}`;
+                    describe(text, () => {
+                        it(`should be valid`, () => {
+                            expect(info.verify).toEqual(empty);
+                        });
+                        if (top.type === 'ToplevelLet') {
+                            it(`should execute`, () => {
+                                top.items.forEach((item, i) => {
+                                    const { js, name } =
+                                        info.contents.irtops![i];
+                                    ectx.executeJs(js, name);
+                                });
+                            });
+                        } else if (
+                            info.contents.top.type === 'ToplevelExpression'
+                        ) {
+                            it(`should work`, () => {
+                                const { js, name, type } =
+                                    info.contents.irtops![0];
+                                const res = ectx.executeJs(js, name);
+                                if (ctx.isBuiltinType(type!, 'bool')) {
+                                    expect(res).toEqual(true);
+                                }
+                            });
+                        }
+                    });
+                });
+            }
         });
     });
