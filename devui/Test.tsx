@@ -56,7 +56,7 @@ export const testStatuses = (
     return statuses;
 };
 
-const refmt = (file: TestResult) => {
+export const refmt = (file: TestResult) => {
     if (file.type === 'Error') {
         return file.text;
     }

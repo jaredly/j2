@@ -17,38 +17,26 @@ import {
     serializeBuiltin,
     parseBuiltin,
     loadBuiltins,
-    FixtureFile as FixtureFileType,
     Builtin,
 } from '../core/typing/__test__/fixture-utils';
 import { colors } from './Highlight';
-import { Status, usePromise } from './App';
+import { Status, FixtureFileType } from './App';
 import { OneFixture } from './OneFixture';
+import { emptyFileResult } from '../core/full/full';
 
 export const FixtureFile = ({
     name,
-    files,
     setData,
     pin,
     data,
 }: {
     data: FixtureFileType;
     name: string;
-    files: { [key: string]: Status };
     setData: (data: FixtureFileType) => void;
     pin: number | null;
 }) => {
     let last = React.useRef(null as null | string);
 
-    // const [data, setData] = usePromise(
-    //     () =>
-    //         fetch(`/elements/${name}`)
-    //             .then((res) => res.text())
-    //             .then((raw) => {
-    //                 last.current = raw;
-    //                 return parseFixtureFile(raw);
-    //             }),
-    //     [name],
-    // );
     const serialized = React.useMemo(
         () => (data ? serializeFixtureFile(data) : null),
         [data],
@@ -130,9 +118,10 @@ export const FixtureFile = ({
                             fixture={fixture}
                             onChange={(fixture) => {
                                 // console.log('chagne', fixture, i);
-                                const fixtures = data.fixtures.slice();
-                                fixtures[i] = fixture;
-                                setData({ ...data, fixtures });
+                                // STOPSHIP
+                                // const fixtures = data.fixtures.slice();
+                                // fixtures[i] = fixture;
+                                // setData({ ...data, fixtures });
                             }}
                         />
                     ) : null,
@@ -150,6 +139,8 @@ export const FixtureFile = ({
                                     output_failed: '',
                                     shouldFail: false,
                                     builtins: [],
+                                    newOutput: '// hello',
+                                    result: emptyFileResult,
                                 },
                             ]),
                         });

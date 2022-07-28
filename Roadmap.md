@@ -40,8 +40,8 @@ and/or a nice error coalescing example.
 					`ast`, but instead use our custom object. 🤔.
 		- [x] Test.tsx
 		- [x] typetest.ts
-		- OneFixture
-		- TypeTest.tsx
+		- [x] TypeTest.tsx
+		- [ ] OneFixture
 - [ ] then get rid of `syms`, so that we can pave the way for type refinement
 - [ ] if/let it up my folks
 

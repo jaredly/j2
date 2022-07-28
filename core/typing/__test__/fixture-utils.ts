@@ -115,7 +115,7 @@ export const aliasesToString = (
           Object.entries(aliases)
               .sort((a, b) => a[0].localeCompare(b[0]))
               .map(([key, value]) => {
-                  return `${key}${mid}${value}`;
+                  return `${key}#[${value}]`;
               })
               .join(' ') +
           '\n'

@@ -1,4 +1,3 @@
-import generate from '@babel/generator';
 import {
     Button,
     Card,
@@ -9,19 +8,12 @@ import {
     Tooltip,
 } from '@nextui-org/react';
 import * as React from 'react';
-import { builtinContext, FullContext } from '../core/ctx';
+import { FullContext } from '../core/ctx';
 import { fileToTast } from '../core/elements/base';
 import { fixComments } from '../core/grammar/fixComments';
 import { iCtx } from '../core/ir/ir';
-import { jCtx } from '../core/ir/to-js';
 import { transformExpression } from '../core/transform-tast';
-import {
-    analyzeTop,
-    errorCount,
-    initVerify,
-    verify,
-    verifyVisitor,
-} from '../core/typing/analyze';
+import { errorCount, initVerify, verifyVisitor } from '../core/typing/analyze';
 import {
     aliasesFromString,
     Builtin,
@@ -297,7 +289,7 @@ export function OneFixture({
 
                         {newOutput.type === 'success' ? (
                             <>
-                                <Aliases aliases={parseAliases(prevOutput)} />
+                                {/* <Aliases aliases={parseAliases(prevOutput)} /> */}
                                 <Highlight
                                     portal={portal}
                                     text={prevOutput}
@@ -394,11 +386,11 @@ export function OneFixture({
                     {changed && newOutput.type === 'success' ? (
                         <>
                             <Card.Divider css={{ marginBlock: '$6' }} />
-                            <Aliases
+                            {/* <Aliases
                                 aliases={parseAliases(
                                     newOutput.result.newOutput,
                                 )}
-                            />
+                            /> */}
                             {changed !== 'aliases' ? (
                                 <Highlight
                                     portal={portal}

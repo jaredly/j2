@@ -173,9 +173,12 @@ export const processTypeFileR = (
     return { type: 'Success', info, ctx, comments: ast.comments };
 };
 
-export const processFileR = (ast: p.File): Success<FileContents> => {
+export const processFileR = (
+    ast: p.File,
+    baseCtx: FullContext = builtinContext,
+): Success<FileContents> => {
     const info: ToplevelInfo<FileContents>[] = [];
-    let ctx = builtinContext.clone();
+    let ctx = baseCtx.clone();
     let pctx = printCtx(ctx);
     let jctx = jCtx(ctx);
     let ictx = iCtx(ctx);
@@ -201,7 +204,10 @@ export const processFileR = (ast: p.File): Success<FileContents> => {
     return { type: 'Success', info, ctx, comments: ast.comments };
 };
 
-export const processFile = (text: string): Result<FileContents> => {
+export const processFile = (
+    text: string,
+    baseCtx?: FullContext,
+): Result<FileContents> => {
     let ast: p.File;
     try {
         ast = fixComments(p.parseFile(text));
@@ -212,7 +218,7 @@ export const processFile = (text: string): Result<FileContents> => {
             err: (err as p.SyntaxError).location,
         };
     }
-    return processFileR(ast);
+    return processFileR(ast, baseCtx);
 };
 
 export const processTypeToplevel = (

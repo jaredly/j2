@@ -147,35 +147,23 @@ export const Highlight = ({
         aliases: { [key: string]: string },
     ) => HL[];
 }) => {
-    // console.log('wahttt', text);
     const [aliases, rest] = React.useMemo(() => splitAliases(text), [text]);
     text = rest;
-    // if (text.startsWith('alias ')) {
-    //     text = text.slice(text.indexOf('\n') + 1);
-    // }
 
     const marked = React.useMemo(() => {
-        // const [aliasRaw, rest] = splitAliases(text);
-
         const locs = highlightLocations(
             text,
             aliasesFromString(aliases),
             typeFile,
             extraLocs,
         );
-        console.log(
-            'locsss',
-            locs.filter((t) => t.type === 'Error'),
-        );
         return text.trim().length ? markUpTree(text, locs) : null;
     }, [text, aliases]);
 
-    // console.log('tree', marked)
     const annotations = React.useMemo(
         () => (info ? collectAnnotations(info.tast, info.ctx) : []),
         [info],
     );
-    // console.log(annotations);
 
     const [hover, setHover] = React.useState(
         null as null | {

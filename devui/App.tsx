@@ -17,8 +17,6 @@ import { Loc } from '../core/typed-ast';
 import { errorCount } from '../core/typing/analyze';
 import {
     Builtin,
-    Fixture,
-    FixtureFile as FixtureFileType,
     FixtureResult,
     loadBuiltins,
     parseFixtureFile,
@@ -33,7 +31,7 @@ import {
     PushpinIconFilled,
     ReportProblemIcon,
 } from './Icons';
-import { TestView } from './Test';
+import { refmt, TestView } from './Test';
 import { TypeTestView } from './TypeTest';
 
 export const usePromise = <T,>(
@@ -62,15 +60,25 @@ export const useHash = () => {
     return hash;
 };
 
+export type FixtureFileType = {
+    builtins: Builtin[];
+    fixtures: Array<Fixture>;
+};
+
+export type Fixture = {
+    title: string;
+    input: string;
+    builtins: Builtin[];
+    output_expected: string;
+    output_failed: string;
+    shouldFail: boolean;
+    result: TestResult;
+    newOutput: string;
+};
+
 export type Status = {
     name: string;
     file: FixtureFileType;
-    ctx: FullContext;
-    results: Array<{
-        result: FixtureResult;
-        input: string;
-        builtins: Builtin[];
-    }>;
 };
 
 export type Files = {
@@ -161,14 +169,13 @@ export const getTestResults = (file: SuccessTestResult): TestValues => {
 };
 
 export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
-    const result = status.results[idx].result;
     const fixture = status.file.fixtures[idx];
     const prev = fixture.output_expected
         ? fixture.output_expected
         : fixture.output_failed;
     return (
         <span style={{ marginRight: 8 }}>
-            {prev !== result.newOutput ? (
+            {prev !== fixture.newOutput ? (
                 <ReportProblemIcon style={{ color: 'orange' }} />
             ) : fixture.output_failed ? (
                 <CancelIcon style={{ color: 'red' }} />
@@ -198,7 +205,7 @@ export const ShowStatus = ({ status }: { status: Status }) => {
         const prev = fixture.output_expected
             ? fixture.output_expected
             : fixture.output_failed;
-        if (prev !== status.results[i].result.newOutput) {
+        if (prev !== status.file.fixtures[i].newOutput) {
             changes++;
         } else if (fixture.output_failed) {
             failures++;
@@ -218,18 +225,7 @@ export const ShowStatus = ({ status }: { status: Status }) => {
 };
 
 export const fileStatus = (name: string, file: FixtureFileType): Status => {
-    const ctx = builtinContext.clone();
-    loadBuiltins(file.builtins, ctx);
-    return {
-        name,
-        file,
-        ctx,
-        results: file.fixtures.map((f) => ({
-            result: runFixture(f, ctx),
-            builtins: file.builtins,
-            input: f.input,
-        })),
-    };
+    return { name, file };
 };
 
 export const App = () => {
@@ -298,7 +294,18 @@ export const App = () => {
             const files = {} as Files['fixtures'];
             fixtureContents.forEach((contents, i) => {
                 const file = parseFixtureFile(contents);
-                files[fixtures[i]] = fileStatus(fixtures[i], file);
+                const ctx = builtinContext.clone();
+                loadBuiltins(file.builtins, ctx);
+                const news = file.fixtures.map((fixture) => {
+                    const bctx = ctx.clone();
+                    loadBuiltins(fixture.builtins, bctx);
+                    const result = processFile(fixture.input, bctx);
+                    return { ...fixture, result, newOutput: refmt(result) };
+                });
+                files[fixtures[i]] = fileStatus(fixtures[i], {
+                    ...file,
+                    fixtures: news,
+                });
             });
             const typetestFiles = {} as Files['typetest'];
             typetestContents.forEach((contents, i) => {
@@ -504,11 +511,11 @@ export const App = () => {
                 <FixtureFile
                     data={files.fixtures[hashName].file}
                     setData={(data) => {
-                        const newFixtures = { ...files.fixtures };
-                        newFixtures[hashName] = fileStatus(hashName, data);
-                        setFiles({ ...files, fixtures: newFixtures });
+                        // STOPSHIP
+                        // const newFixtures = { ...files.fixtures };
+                        // newFixtures[hashName] = fileStatus(hashName, data);
+                        // setFiles({ ...files, fixtures: newFixtures });
                     }}
-                    files={files.fixtures}
                     name={hashName}
                     pin={hash.endsWith('/pin') ? +hash.split('/')[1] : null}
                 />
