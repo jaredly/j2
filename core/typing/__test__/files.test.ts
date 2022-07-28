@@ -44,11 +44,11 @@ readdirSync(base)
                     }
                     const text = `./core/elements/typetest/${file}:${top.loc.start.line}`;
                     describe(text, () => {
-                        if (type.type === 'TypeAlias') {
-                            it('should be valid', () => {
-                                expect(info.verify).toEqual(empty);
-                            });
-                        }
+                        // if (type.type === 'TypeAlias') {
+                        it('should be valid', () => {
+                            expect(info.verify).toEqual(empty);
+                        });
+                        // }
                         if (type.type === 'TDecorated') {
                             const inner = type.inner;
                             type.decorators.forEach((d) => {
