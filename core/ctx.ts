@@ -7,7 +7,7 @@ import { errors } from './errors';
 import { Loc, parseType } from './grammar/base.parser';
 import { extract, Id, idsEqual, toId } from './ids';
 import { resolveAnalyzeType } from './resolveAnalyzeType';
-import { transformExpression, transformType } from './transform-tast';
+import { transformExpression, transformType, Visitor } from './transform-tast';
 import {
     Expression,
     GlobalRef,
@@ -22,11 +22,19 @@ import { getType } from './typing/getType';
 import { makeToTast, ToplevelConfig } from './typing/to-tast';
 import { Ctx as TCtx } from './typing/typeMatches';
 import { constrainTypes } from './typing/unifyTypes';
-import {
-    clearLocs,
-    loadBuiltins,
-    locClearVisitor,
-} from './typing/__test__/fixture-utils';
+
+export const locClearVisitor: Visitor<null> = {
+    // ToplevelLet(node, ctx) {
+    //     return node.hash ? { ...node, hash: undefined } : null;
+    // },
+    Loc: () => noloc,
+    // RefKind(node) {
+    //     if (node.type === 'Global') {
+    //         return { ...node, id: idToString(node.id) as any } as RefKind;
+    //     }
+    //     return null;
+    // },
+};
 
 export type HashedNames<Contents, NameV> = {
     hashed: { [hash: string]: Array<Contents> };

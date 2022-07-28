@@ -115,9 +115,13 @@ export const executeFile = (file: Success<FileContents>) => {
     const results: ExecutionInfo = { terms: ectx.terms, exprs: [] };
     file.info.forEach((info, i) => {
         info.contents.irtops?.forEach((irtop) => {
-            const res = ectx.executeJs(irtop.js, irtop.name);
-            if (info.contents.irtops?.length === 1) {
-                results.exprs[i] = res;
+            try {
+                const res = ectx.executeJs(irtop.js, irtop.name);
+                if (info.contents.irtops?.length === 1) {
+                    results.exprs[i] = res;
+                }
+            } catch (err) {
+                // ok
             }
         });
     });

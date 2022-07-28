@@ -11,6 +11,9 @@ const base = './core/elements/fixtures';
 readdirSync(base)
     .filter((x) => x.endsWith('.jd'))
     .forEach((name) => {
+        if (!name.startsWith('sandbox')) {
+            return;
+        }
         console.log(name);
         const full = join(base, name);
         const raw = readFileSync(full, 'utf8');

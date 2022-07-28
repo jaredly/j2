@@ -8,6 +8,7 @@ import {
     builtinContext,
     FullContext,
     hashTypes,
+    locClearVisitor,
     noloc,
 } from '../../ctx';
 import { fileToTast, typeToplevelT } from '../../elements/base';
@@ -51,19 +52,6 @@ export type Fixture = {
     output_expected: string;
     output_failed: string;
     shouldFail: boolean;
-};
-
-export const locClearVisitor: Visitor<null> = {
-    // ToplevelLet(node, ctx) {
-    //     return node.hash ? { ...node, hash: undefined } : null;
-    // },
-    Loc: () => noloc,
-    // RefKind(node) {
-    //     if (node.type === 'Global') {
-    //         return { ...node, id: idToString(node.id) as any } as RefKind;
-    //     }
-    //     return null;
-    // },
 };
 
 export const clearLocs = (ast: File) => {
@@ -149,13 +137,14 @@ export const fmtify = (text: string, builtins: Builtin[]) => {
     let ctx = builtinContext.clone();
     ctx = ctx.withAliases(aliases) as FullContext;
     loadBuiltins(builtins, ctx);
-    const result = processFile(text);
+    const result = processFile(rest);
     return refmt(result);
 };
 
 export const serializeFixtureFile = (file: FixtureFile) => {
     const fixmap: { [key: string]: string } = {};
     file.fixtures.forEach((fixture) => {
+        console.log('um', fixture.title);
         while (fixmap[fixture.title]) {
             fixture.title += '_';
         }
