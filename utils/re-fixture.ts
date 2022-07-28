@@ -7,10 +7,11 @@ import {
     serializeFixtureFile,
 } from '../core/typing/__test__/fixture-utils';
 
-const base = './core/elements';
+const base = './core/elements/fixtures';
 readdirSync(base)
     .filter((x) => x.endsWith('.jd'))
     .forEach((name) => {
+        console.log(name);
         const full = join(base, name);
         const raw = readFileSync(full, 'utf8');
         writeFileSync(full, serializeFixtureFile(parseFixtureFile(raw)));

@@ -144,7 +144,10 @@ export const splitAliases = (text: string): [string, string] => {
 };
 
 export const fmtify = (text: string, builtins: Builtin[]) => {
-    const ctx = builtinContext.clone();
+    const [aliasesRaw, rest] = splitAliases(text);
+    const aliases = aliasesFromString(aliasesRaw);
+    let ctx = builtinContext.clone();
+    ctx = ctx.withAliases(aliases) as FullContext;
     loadBuiltins(builtins, ctx);
     const result = processFile(text);
     return refmt(result);
