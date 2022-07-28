@@ -307,7 +307,6 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
         },
         Expression(node, ctx) {
             if (!ctx.getType(node)) {
-                ctx.debugger();
                 results.untypedExpression.push(node.loc);
             }
             return null;

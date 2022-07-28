@@ -349,7 +349,6 @@ export const newContext = (): FullContext => {
             };
         },
         localType(sym) {
-            ctx.debugger();
             if (this[opaque].syms.values[sym] !== undefined) {
                 return this[opaque].syms.values[sym].type;
             }

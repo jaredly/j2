@@ -28,9 +28,9 @@ export const injectComments = (pretty: pp.PP, comments: [p.Loc, string][]) => {
             contents = item.contents;
         } else if (item.type === 'items') {
             contents = item.items;
-            // if (item.breakMode === 'never') {
-            //     return item;
-            // }
+            if (item.breakMode === 'never') {
+                return item;
+            }
         } else {
             return item;
         }

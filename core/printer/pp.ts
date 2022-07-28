@@ -363,6 +363,7 @@ export const printToStringInner = (
         let prefix = '';
         let shouldBreak =
             pp.breakMode === 'always' ||
+            pp.items.some((p) => p.type === 'atom' && p.isComment) ||
             (pp.breakMode === 'sometimes' &&
                 current.pos + width(pp) > maxWidth);
         if (shouldBreak) {

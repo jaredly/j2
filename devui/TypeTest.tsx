@@ -45,7 +45,7 @@ const refmt = (file: TypeTestResult) => {
 
     if (ast.toplevels.length > 0) {
         ast.loc = {
-            start: ast.toplevels[0].loc.start,
+            start: { line: 0, column: 0, offset: 0 },
             end: ast.toplevels[ast.toplevels.length - 1].loc.end,
             idx: -1,
         };

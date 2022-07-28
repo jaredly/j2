@@ -158,7 +158,6 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
                 ref.type !== 'Local' &&
                 ref.type !== 'Recur'
             ) {
-                fctx.debugger();
                 if (!this.aliases[hash]) {
                     add(name, ref);
                 }

@@ -51,10 +51,11 @@ bounded<10>(10)
 bounded<int>(10)
 
 --[output:expected]--
-alias bounded#[hc51fab91793ea04f9d1f93e37ed42783cb09a337] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias bounded#[hc51fab91793ea04f9d1f93e37ed42783cb09a337]
 bounded(10)
 // 10
 /* bounded(10) */
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 bounded<int>(10)
 // int
 /* bounded(10) */

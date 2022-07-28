@@ -75,6 +75,7 @@ export const makeBinop = (
     op: p.Identifier,
     left: p.Expression,
     right: p.Expression,
+    loc: p.Loc,
 ): p.Expression => {
     const opp: p.BinOpRight['op'] = {
         op: op.text,
@@ -120,6 +121,7 @@ export const makeBinop = (
             return {
                 ...left,
                 rest,
+                loc,
             };
         }
     }
@@ -134,7 +136,10 @@ export const makeBinop = (
                     {
                         type: 'BinOpRight',
                         right: right.first,
-                        loc: op.loc,
+                        loc: {
+                            ...right.first.loc,
+                            start: op.loc.start,
+                        },
                         op: {
                             op: op.text,
                             loc: op.loc,
@@ -144,7 +149,7 @@ export const makeBinop = (
                     },
                     ...right.rest,
                 ],
-                loc: op.loc,
+                loc,
             };
         }
     }
@@ -155,7 +160,10 @@ export const makeBinop = (
             {
                 type: 'BinOpRight',
                 right: maybeParenedBinop(right),
-                loc: op.loc,
+                loc: {
+                    ...right.loc,
+                    start: op.loc.start,
+                },
                 op: {
                     op: op.text,
                     loc: op.loc,
@@ -164,7 +172,7 @@ export const makeBinop = (
                 },
             },
         ],
-        loc: op.loc,
+        loc,
     };
 };
 
@@ -180,10 +188,15 @@ export const makeApply = (
         suffix.args &&
         suffix.args.items.length === 2
     ) {
-        return makeBinop(inner, suffix.args.items[0], suffix.args.items[1]);
+        return makeBinop(
+            inner,
+            suffix.args.items[0],
+            suffix.args.items[1],
+            loc,
+        );
     }
     if (inner.type === 'Apply') {
-        return { ...inner, suffixes: inner.suffixes.concat([suffix]) };
+        return { ...inner, suffixes: inner.suffixes.concat([suffix]), loc };
     }
     if (inner.type === 'DecoratedExpression') {
         return {
@@ -222,7 +235,6 @@ export const makeApply = (
 export const ToAst = {
     Apply({ target, args, loc }: Apply, ctx: TACtx): p.Expression {
         if (target.type === 'TypeApplication') {
-            // ctx.actx.debugger();
             const ttype = ctx.actx.getType(target.target);
             const argTypes = args.map((arg) => ctx.actx.getType(arg));
             if (
@@ -297,6 +309,7 @@ export const ToPP = {
                 ...apply.suffixes.map((s) => ctx.ToPP.Suffix(s, ctx)),
             ],
             apply.loc,
+            'never',
         );
     },
     CallSuffix(parens: p.CallSuffix, ctx: PCtx): pp.PP {
