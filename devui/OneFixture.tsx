@@ -9,26 +9,18 @@ import {
 } from '@nextui-org/react';
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
-import { fileToTast } from '../core/elements/base';
 import { processFile, processFileR, TestResult } from '../core/full/full';
-import { fixComments } from '../core/grammar/fixComments';
-import { iCtx } from '../core/ir/ir';
-import { transformExpression } from '../core/transform-tast';
-import { errorCount, initVerify, verifyVisitor } from '../core/typing/analyze';
+import { errorCount } from '../core/typing/analyze';
 import {
     aliasesFromString,
     Builtin,
-    Fixture,
-    FixtureResult,
     loadBuiltins,
-    runFixture,
     splitAliases,
 } from '../core/typing/__test__/fixture-utils';
-import { getTestResults } from './App';
+import { FixtureWithResult, getTestResults } from './App';
 import { Editor } from './Editor';
 import { ShowBuiltins } from './FixtureFile';
 import { Highlight } from './Highlight';
-import { HL } from './HL';
 import { CancelIcon, ReportProblemIcon } from './Icons';
 import { refmt } from './refmt';
 import { testStatuses } from './Test';
@@ -36,7 +28,7 @@ import { testStatuses } from './Test';
 const withFmt = (file: TestResult) => {
     return file.type === 'Error'
         ? { file, text: file.text }
-        : { file, text: refmt(file) };
+        : { file, text: refmt(file, true) };
 };
 
 export function OneFixture({
@@ -52,8 +44,8 @@ export function OneFixture({
     id: string;
     ctx: FullContext;
     portal: HTMLDivElement;
-    fixture: Fixture;
-    onChange: (v: Fixture) => void;
+    fixture: FixtureWithResult;
+    onChange: (v: FixtureWithResult) => void;
     builtins: Builtin[];
 }) {
     const { title, input, output_expected, output_failed } = fixture;
@@ -79,21 +71,10 @@ export function OneFixture({
         const withBuiltins = ctx.clone();
         loadBuiltins(fixture.builtins, withBuiltins);
         if (editing != null) {
-            try {
-                // return {
-                //     type: 'success',
-                //     result: runFixture({ ...fixture, input: editing }, ctx),
-                // };
-                return withFmt(processFile(editing, withBuiltins));
-            } catch (err) {}
+            return withFmt(processFile(editing, withBuiltins));
         }
         // hmmmmm I think I'd rather the fallback be "the last successful one"
         return withFmt(processFile(fixture.input, withBuiltins));
-        // try {
-        //     return { type: 'success', result: runFixture(fixture, ctx) };
-        // } catch (err) {
-        //     return { type: 'error', error: err as Error };
-        // }
     }, [fixture, builtins, editing, isPinned]);
     const [titleEdit, setTitleEdit] = React.useState(null as null | string);
 
@@ -210,6 +191,7 @@ export function OneFixture({
                                     onPress={() => {
                                         onChange({
                                             ...fixture,
+                                            result: newOutput.file,
                                             output_expected: newOutput.text,
                                             output_failed: '',
                                         });
@@ -230,6 +212,7 @@ export function OneFixture({
                                         // but if the old one is accepted, then we keep it around as "the right one"
                                         onChange({
                                             ...fixture,
+                                            result: newOutput.file,
                                             output_failed: newOutput.text,
                                             output_expected: '',
                                         });
@@ -273,12 +256,14 @@ export function OneFixture({
                         onBlur={(input) => {
                             setEditing(null);
                             if (
-                                newOutput.file.type === 'Error'
+                                newOutput.file.type === 'Error' ||
                                 // STOPSHIP: what?
-                                // || input === newOutput.result.input
+                                input !== fixture.input
                             ) {
                                 onChange({
                                     ...fixture,
+                                    result: newOutput.file,
+                                    newOutput: newOutput.text,
                                     input,
                                 });
                             }

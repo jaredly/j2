@@ -1,6 +1,6 @@
 import { Button, Divider, Link, Text } from '@nextui-org/react';
 import * as React from 'react';
-import { builtinContext, FullContext } from '../core/ctx';
+import { builtinContext } from '../core/ctx';
 import {
     emptyFileResult,
     executeFile,
@@ -17,10 +17,8 @@ import { Loc } from '../core/typed-ast';
 import { errorCount } from '../core/typing/analyze';
 import {
     Builtin,
-    FixtureResult,
     loadBuiltins,
     parseFixtureFile,
-    runFixture,
 } from '../core/typing/__test__/fixture-utils';
 import { typeAssertById, typeTestCtx } from '../core/typing/__test__/utils';
 import { FixtureFile } from './FixtureFile';
@@ -31,8 +29,8 @@ import {
     PushpinIconFilled,
     ReportProblemIcon,
 } from './Icons';
-import { TestView } from './Test';
 import { refmt } from './refmt';
+import { TestView } from './Test';
 import { TypeTestView } from './TypeTest';
 
 export const usePromise = <T,>(
@@ -63,10 +61,10 @@ export const useHash = () => {
 
 export type FixtureFileType = {
     builtins: Builtin[];
-    fixtures: Array<Fixture>;
+    fixtures: Array<FixtureWithResult>;
 };
 
-export type Fixture = {
+export type FixtureWithResult = {
     title: string;
     input: string;
     builtins: Builtin[];
@@ -473,7 +471,7 @@ export const App = () => {
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 {files.fixtures[hashName]
                     ? files.fixtures[hashName].file.fixtures.map(
-                          (fixture: Fixture, i) => (
+                          (fixture: FixtureWithResult, i) => (
                               <div
                                   key={i}
                                   style={{
@@ -514,9 +512,9 @@ export const App = () => {
                     data={files.fixtures[hashName].file}
                     setData={(data) => {
                         // STOPSHIP
-                        // const newFixtures = { ...files.fixtures };
-                        // newFixtures[hashName] = fileStatus(hashName, data);
-                        // setFiles({ ...files, fixtures: newFixtures });
+                        const newFixtures = { ...files.fixtures };
+                        newFixtures[hashName] = fileStatus(hashName, data);
+                        setFiles({ ...files, fixtures: newFixtures });
                     }}
                     name={hashName}
                     pin={hash.endsWith('/pin') ? +hash.split('/')[1] : null}

@@ -106,7 +106,7 @@ export const FixtureFile = ({
 
                 <Card.Divider css={{ marginBlock: '$6' }} />
 
-                {data.fixtures.map((fixture: Fixture, i) =>
+                {data.fixtures.map((fixture, i) =>
                     pin == null || i == pin ? (
                         <OneFixture
                             isPinned={i == pin}
@@ -117,11 +117,9 @@ export const FixtureFile = ({
                             id={`${name}/${i}`}
                             fixture={fixture}
                             onChange={(fixture) => {
-                                // console.log('chagne', fixture, i);
-                                // STOPSHIP
-                                // const fixtures = data.fixtures.slice();
-                                // fixtures[i] = fixture;
-                                // setData({ ...data, fixtures });
+                                const fixtures = data.fixtures.slice();
+                                fixtures[i] = fixture;
+                                setData({ ...data, fixtures });
                             }}
                         />
                     ) : null,

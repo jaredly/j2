@@ -134,8 +134,6 @@ export const fmtify = (text: string, builtins: Builtin[]) => {
     if (!text.trim()) {
         return text.trim();
     }
-    console.log(text);
-    console.log();
     const [aliasesRaw, rest] = splitAliases(text);
     const aliases = aliasesFromString(aliasesRaw);
 
@@ -203,14 +201,8 @@ export const serializeFixtureFile = (file: FixtureFile) => {
             {
                 [fixture.shouldFail ? 'input:shouldFail' : 'input']:
                     fixture.input,
-                'output:expected': fmtify(
-                    fixture.output_expected,
-                    file.builtins.concat(fixture.builtins),
-                ),
-                'output:failed': fmtify(
-                    fixture.output_failed,
-                    file.builtins.concat(fixture.builtins),
-                ),
+                'output:expected': fixture.output_expected,
+                'output:failed': fixture.output_failed,
                 builtins: fixture.builtins.map(serializeBuiltin).join('\n'),
             },
             '-',
