@@ -1,15 +1,18 @@
 import generate from '@babel/generator';
 import * as fs from 'fs';
+import { refmt } from '../../../devui/refmt';
 import {
     addBuiltin,
     addBuiltinDecorator,
     addBuiltinType,
+    builtinContext,
     FullContext,
     hashTypes,
     noloc,
 } from '../../ctx';
 import { fileToTast, typeToplevelT } from '../../elements/base';
 import { TVar } from '../../elements/type-vbls';
+import { processFile } from '../../full/full';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
 import { toId } from '../../ids';
@@ -140,6 +143,13 @@ export const splitAliases = (text: string): [string, string] => {
     return ['', text];
 };
 
+export const fmtify = (text: string, builtins: Builtin[]) => {
+    const ctx = builtinContext.clone();
+    loadBuiltins(builtins, ctx);
+    const result = processFile(text);
+    return refmt(result);
+};
+
 export const serializeFixtureFile = (file: FixtureFile) => {
     const fixmap: { [key: string]: string } = {};
     file.fixtures.forEach((fixture) => {
@@ -150,8 +160,14 @@ export const serializeFixtureFile = (file: FixtureFile) => {
             {
                 [fixture.shouldFail ? 'input:shouldFail' : 'input']:
                     fixture.input,
-                'output:expected': fixture.output_expected,
-                'output:failed': fixture.output_failed,
+                'output:expected': fmtify(
+                    fixture.output_expected,
+                    file.builtins.concat(fixture.builtins),
+                ),
+                'output:failed': fmtify(
+                    fixture.output_failed,
+                    file.builtins.concat(fixture.builtins),
+                ),
                 builtins: fixture.builtins.map(serializeBuiltin).join('\n'),
             },
             '-',

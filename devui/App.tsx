@@ -31,7 +31,8 @@ import {
     PushpinIconFilled,
     ReportProblemIcon,
 } from './Icons';
-import { refmt, TestView } from './Test';
+import { TestView } from './Test';
+import { refmt } from './refmt';
 import { TypeTestView } from './TypeTest';
 
 export const usePromise = <T,>(
