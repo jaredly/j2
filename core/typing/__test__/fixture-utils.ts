@@ -177,8 +177,8 @@ export const fmtify = (text: string, builtins: Builtin[]) => {
     }
 
     const res = refmt(result);
-    console.log(res);
-    return text;
+    // console.log(res);
+    return res;
 };
 
 export const serializeFixtureFile = (file: FixtureFile) => {
