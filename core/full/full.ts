@@ -123,7 +123,10 @@ export const executeFile = (file: Success<FileContents>) => {
     return results;
 };
 
-export const processTypeFile = (text: string): Result<TypeContents> => {
+export const processTypeFile = (
+    text: string,
+    baseCtx = builtinContext,
+): Result<TypeContents> => {
     const info: ToplevelInfo<TypeContents>[] = [];
     let ast: p.TypeFile;
     try {
@@ -136,10 +139,8 @@ export const processTypeFile = (text: string): Result<TypeContents> => {
         };
     }
 
-    let ctx = builtinContext.clone();
+    let ctx = baseCtx.clone();
     let pctx = printCtx(ctx);
-    let jctx = jCtx(ctx);
-    let ictx = iCtx(ctx);
     const aliases: { [key: string]: string } = {};
 
     ast.toplevels.forEach((t) => {

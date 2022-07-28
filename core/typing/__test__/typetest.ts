@@ -1,12 +1,10 @@
+import { HL } from '../../../devui/HL';
 import { addBuiltinDecorator, builtinContext, FullContext } from '../../ctx';
 import { typeToplevel } from '../../elements/base';
-import { readdirSync, readFileSync } from 'fs';
-import { File, parseTypeFile, TypeFile } from '../../grammar/base.parser';
-import { fixComments } from '../../grammar/fixComments';
+import { TypeFile } from '../../grammar/base.parser';
 import { idToString } from '../../ids';
 import * as t from '../../typed-ast';
 import { assertions } from './utils';
-import { HL } from '../../../devui/HL';
 
 export type TypeTest = {
     file: t.TypeFile;
