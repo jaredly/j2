@@ -42,7 +42,7 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[h3040ed1f3de0b98f18bd2b6d
 2 == 3
 
 --[output:expected]--
-alias #[] bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150]
+alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb] bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150]
 2 == 3
 // bool
 /* 2 == 3 */
@@ -52,7 +52,7 @@ alias #[] bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150]
 what == 2
 
 --[output:expected]--
-alias #[] error:needsTypeVariables#[hf5fb5541892dfc05b0afa3069bc28a0cddf64c70] what#[hccdcdca735d9735a232ada1f6ca8b7ecd4038531]
+alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb] error:needsTypeVariables#[hf5fb5541892dfc05b0afa3069bc28a0cddf64c70] what#[hccdcdca735d9735a232ada1f6ca8b7ecd4038531]
 (@error:needsTypeVariables() (==))(what, 2)
 // Error, no type!
 
