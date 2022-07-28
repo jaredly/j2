@@ -262,9 +262,11 @@ export const ToTast = {
             loc: top.loc,
         };
     },
-    TypeToplevel(top: p.TypeAlias | p.Type, ctx: Ctx): t.Type | t.TypeAlias {
+    TypeToplevel(top: p.TypeToplevel, ctx: Ctx): t.TypeToplevel {
         if (top.type === 'TypeAlias') {
             return ctx.ToTast.TypeAlias(top, ctx);
+        } else if (top.type === 'Aliases') {
+            return ctx.ToTast.Aliases(top, ctx);
         } else {
             return ctx.ToTast.Type(top, ctx);
         }

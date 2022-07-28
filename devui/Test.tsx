@@ -1,29 +1,24 @@
-import * as React from 'react';
-import { Editor } from './Editor';
-import { printCtx } from '../core/typing/to-ast';
-import { newPPCtx } from '../core/printer/to-pp';
-import { injectComments } from '../core/elements/comments';
-import { printToString } from '../core/printer/pp';
 import { Card } from '@nextui-org/react';
-import { fixComments } from '../core/grammar/fixComments';
-import { parseFile, parseTypeFile } from '../core/grammar/base.parser';
-import { runTest, Test, verifyHL } from '../core/typing/__test__/run-test';
-import {
-    aliasesFromString,
-    aliasesToString,
-    splitAliases,
-} from '../core/typing/__test__/fixture-utils';
+import * as React from 'react';
 import { builtinContext, FullContext, noloc } from '../core/ctx';
-import { getTestResults, TestValues, TestWhat } from './App';
-import * as p from '../core/grammar/base.parser';
+import { injectComments } from '../core/elements/comments';
 import {
     FileContents,
     processFile,
     processFileR,
     Result,
-    Success,
     TestResult,
 } from '../core/full/full';
+import * as p from '../core/grammar/base.parser';
+import { printToString } from '../core/printer/pp';
+import { newPPCtx } from '../core/printer/to-pp';
+import {
+    aliasesFromString,
+    splitAliases,
+} from '../core/typing/__test__/fixture-utils';
+import { verifyHL } from '../core/typing/__test__/verifyHL';
+import { getTestResults, TestValues, TestWhat } from './App';
+import { Editor } from './Editor';
 import { HL } from './HL';
 
 export const testStatuses = (

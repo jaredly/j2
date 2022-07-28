@@ -1,22 +1,18 @@
-import { runTypeTest, TypeTest } from '../core/typing/__test__/typetest';
-import * as React from 'react';
-import { Editor } from './Editor';
-import { printCtx } from '../core/typing/to-ast';
-import { newPPCtx } from '../core/printer/to-pp';
-import { injectComments } from '../core/elements/comments';
-import { printToString } from '../core/printer/pp';
 import { Card } from '@nextui-org/react';
-import { fixComments } from '../core/grammar/fixComments';
-import { parseTypeFile } from '../core/grammar/base.parser';
+import * as React from 'react';
+import { noloc } from '../core/ctx';
+import { injectComments } from '../core/elements/comments';
 import {
     processTypeFile,
     processTypeFileR,
     TypeTestResult,
 } from '../core/full/full';
-import { typeResults, TypeWhat } from './App';
 import * as p from '../core/grammar/base.parser';
-import { noloc } from '../core/ctx';
+import { printToString } from '../core/printer/pp';
+import { newPPCtx } from '../core/printer/to-pp';
 import { typeTestCtx } from '../core/typing/__test__/utils';
+import { typeResults, TypeWhat } from './App';
+import { Editor } from './Editor';
 
 const refmt = (file: TypeTestResult) => {
     if (file.type === 'Error') {

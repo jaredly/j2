@@ -1,4 +1,3 @@
-
 import { ToTast as apply } from '../elements/apply';
 import { ToTast as base } from '../elements/base';
 import { ToTast as binops } from '../elements/binops';
@@ -18,27 +17,44 @@ import { ToTast as switchs } from '../elements/switchs';
 import { ToTast as typevbls } from '../elements/type-vbls';
 import { ToTast as type } from '../elements/type';
 
-export type ToTast = typeof apply & typeof base & typeof binops & typeof constants & typeof decorators & typeof enumexprs & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof recordexprs & typeof records & typeof switchs & typeof typevbls & typeof type;
+export type ToTast = typeof apply &
+    typeof base &
+    typeof binops &
+    typeof constants &
+    typeof decorators &
+    typeof enumexprs &
+    typeof enums &
+    typeof generics &
+    typeof ifs &
+    typeof lambda &
+    typeof lets &
+    typeof macros &
+    typeof pattern &
+    typeof recordexprs &
+    typeof records &
+    typeof switchs &
+    typeof typevbls &
+    typeof type;
 
 export const makeToTast = (): ToTast => {
-	return {
-		...apply,
-		...base,
-		...binops,
-		...constants,
-		...decorators,
-		...enumexprs,
-		...enums,
-		...generics,
-		...ifs,
-		...lambda,
-		...lets,
-		...macros,
-		...pattern,
-		...recordexprs,
-		...records,
-		...switchs,
-		...typevbls,
-		...type
-	}
-}
+    return {
+        ...apply,
+        ...base,
+        ...binops,
+        ...constants,
+        ...decorators,
+        ...enumexprs,
+        ...enums,
+        ...generics,
+        ...ifs,
+        ...lambda,
+        ...lets,
+        ...macros,
+        ...pattern,
+        ...recordexprs,
+        ...records,
+        ...switchs,
+        ...typevbls,
+        ...type,
+    };
+};

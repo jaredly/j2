@@ -1,6 +1,6 @@
 import { Button, Divider, Link, Text } from '@nextui-org/react';
 import * as React from 'react';
-import { builtinContext, FullContext, noloc } from '../core/ctx';
+import { builtinContext, FullContext } from '../core/ctx';
 import {
     emptyFileResult,
     executeFile,
@@ -12,13 +12,10 @@ import {
     TestResult,
     TypeTestResult,
 } from '../core/full/full';
-import { parseFile, parseTypeFile } from '../core/grammar/base.parser';
-import { fixComments } from '../core/grammar/fixComments';
 import { idToString } from '../core/ids';
 import { Loc } from '../core/typed-ast';
 import { errorCount } from '../core/typing/analyze';
 import {
-    aliasesFromString,
     Builtin,
     Fixture,
     FixtureFile as FixtureFileType,
@@ -26,12 +23,9 @@ import {
     loadBuiltins,
     parseFixtureFile,
     runFixture,
-    splitAliases,
 } from '../core/typing/__test__/fixture-utils';
-import { TypeTest } from '../core/typing/__test__/typetest';
 import { typeAssertById, typeTestCtx } from '../core/typing/__test__/utils';
 import { FixtureFile } from './FixtureFile';
-import { HL } from './HL';
 import {
     CancelIcon,
     CheckmarkIcon,
