@@ -41,6 +41,7 @@ export const emptyFileResult: TestResult = {
     type: 'Success',
     comments: [],
     ctx: builtinContext,
+    pctx: printCtx(builtinContext),
     info: [],
 };
 
@@ -78,6 +79,7 @@ export type Success<Contents> = {
     info: ToplevelInfo<Contents>[];
     comments: p.File['comments'];
     ctx: FullContext;
+    pctx: ReturnType<typeof printCtx>;
 };
 export type Result<Contents> =
     | Success<Contents>
@@ -174,7 +176,7 @@ export const processTypeFileR = (
         console.log(pctx.reverse, config);
     });
 
-    return { type: 'Success', info, ctx, comments: ast.comments };
+    return { type: 'Success', info, ctx, pctx, comments: ast.comments };
 };
 
 export const processFileR = (
@@ -205,7 +207,7 @@ export const processFileR = (
         pctx = pctx.withToplevel(typeToplevelT(res.i.contents.top, res.ctx));
     });
 
-    return { type: 'Success', info, ctx, comments: ast.comments };
+    return { type: 'Success', info, ctx, pctx, comments: ast.comments };
 };
 
 export const processFile = (

@@ -138,6 +138,39 @@ export const fmtify = (text: string, builtins: Builtin[]) => {
     ctx = ctx.withAliases(aliases) as FullContext;
     loadBuiltins(builtins, ctx);
     const result = processFile(rest);
+
+    if (result.type === 'Success') {
+        const pctx = result.pctx;
+        const pp = newPPCtx(false);
+        result.info.forEach((info) => {
+            const errors = errorCount(info.verify);
+            if (!errors) {
+                info.contents.irtops?.forEach((ir) => {
+                    if (ir.type) {
+                        const ast = pctx.ToAst.Type(ir.type, pctx);
+                        const cm = printToString(pp.ToPP.Type(ast, pp), 200);
+                        result.comments.push([
+                            {
+                                ...info.contents.top.loc,
+                                start: info.contents.top.loc.end,
+                            },
+                            '// ' + cm,
+                        ]);
+                    }
+
+                    const jsraw = generate(ir.js).code;
+                    result.comments.push([
+                        {
+                            ...info.contents.top.loc,
+                            start: info.contents.top.loc.end,
+                        },
+                        '/* ' + jsraw + ' */',
+                    ]);
+                });
+            }
+        });
+    }
+
     return refmt(result);
 };
 
