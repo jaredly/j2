@@ -5,7 +5,8 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921]
 5 == 5
 3 == ((v#[0]) => v#[0] + 1)(2)
 let hello = 10
-unnamed#[hfb3ab6073655e042df98cf160644857639baed08] == 10
+alias hello#[hfb3ab6073655e042df98cf160644857639baed08]
+hello == 10
 {
     let (x#[0], y#[1]) = if true {
         (2, 3);
