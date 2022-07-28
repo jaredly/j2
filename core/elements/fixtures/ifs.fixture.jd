@@ -4,7 +4,7 @@
 if true { "ten" } else { "eleven" }
 
 --[output:expected]--
-alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 if true {
     "ten";
 } else {
@@ -26,7 +26,7 @@ let x = 10;
 if x == 5 { 4 } else { 2 }}
 
 --[output:expected]--
-alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias #[] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 {
     let x#[0] = 10;
     if x#[0] == 5 {
@@ -53,7 +53,7 @@ let y = if x == 5 { 4 } else { 2 };
 y * 2}
 
 --[output:expected]--
-alias *=hc964b8e32721e8a2764054a069ab98c885f00921 ===h0e26cba9974393f0886bf43a5876c4132b1e69bb int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias #[] *#[hc964b8e32721e8a2764054a069ab98c885f00921] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 {
     let x#[0] = 10;
     let y#[1] = if x#[0] == 5 {
@@ -86,7 +86,7 @@ if 1 > 0 {
 } else { `No(`SoMuchFail) }
 
 --[output:expected]--
-alias >=hc1d03250b26806868f520136d8a763b0c0edff9b
+alias >#[hc1d03250b26806868f520136d8a763b0c0edff9b]
 if 1 > 0 {
     `Yes(20);
 } else if 1 > 2 {

@@ -9,7 +9,7 @@ x + y
  {1 }
 
 --[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
 {
     let x#[0] = 10;
     let y#[1] = 20;
@@ -35,7 +35,7 @@ let x = 10
 let y = x + 10
 
 --[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c x=hfb3ab6073655e042df98cf160644857639baed08
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] x#[hfb3ab6073655e042df98cf160644857639baed08]
 let x = 10
 // 10
 /* 10 */
@@ -112,7 +112,7 @@ let {x, y} = if true { {x: 10, y: 20} } else { {x: 10, y: 20} }
 }
 
 --[output:expected]--
-alias error:patternMismatch=h1bb5af1fd93cc04570b46a227234b3c89fbdd280
+alias error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280]
 {
     let (x#[0], y#[1]) = @error:patternMismatch() {a: 1, b: 2};
 }
@@ -126,7 +126,7 @@ b + 2
 }
 
 --[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
 {
     let {x: {a: b#[0]}} = {x: {a: 10}};
     b#[0] + 2;
@@ -152,7 +152,7 @@ let 1 = 1
 }
 
 --[output:expected]--
-alias error:notExhaustive=h8800c0a4e23ff598b839e081d716b8b28bf0b0e7
+alias error:notExhaustive#[h8800c0a4e23ff598b839e081d716b8b28bf0b0e7]
 {
     let @error:notExhaustive() 1 = 1;
 }
@@ -166,7 +166,7 @@ alias error:notExhaustive=h8800c0a4e23ff598b839e081d716b8b28bf0b0e7
 } == 20
 
 --[output:expected]--
-alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150
+alias #[] bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150]
 {
     let `One(a#[0]) = `One(20);
     a#[0];

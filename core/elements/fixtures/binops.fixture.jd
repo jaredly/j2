@@ -4,7 +4,7 @@
 2 + 3 * 4
 
 --[output:expected]--
-alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 2 + 3 * 4
 // 2 + int
 /* 2 + 3 * 4 */
@@ -16,7 +16,7 @@ alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb
 1 * 2 + 3 * 4 + 5 * 6
 
 --[output:expected]--
-alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 2 + 3 + 4
 // 9
 /* 2 + 3 + 4 */
@@ -32,7 +32,7 @@ alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb
 1 * (2 + 3) * (3 + 4)
 
 --[output:expected]--
-alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 1 * (2 + 3) * (3 + 4)
 // int
 /* 1 * (2 + 3) * (3 + 4) */
@@ -42,7 +42,7 @@ alias *=hc964b8e32721e8a2764054a069ab98c885f00921 +=h3040ed1f3de0b98f18bd2b6daeb
 2 == 3
 
 --[output:expected]--
-alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150
+alias #[] bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150]
 2 == 3
 // bool
 /* 2 == 3 */
@@ -52,7 +52,7 @@ alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb bool=h62d1b70cb3ae567d8df7d48
 what == 2
 
 --[output:expected]--
-alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb error:needsTypeVariables=hf5fb5541892dfc05b0afa3069bc28a0cddf64c70 what=hccdcdca735d9735a232ada1f6ca8b7ecd4038531
+alias #[] error:needsTypeVariables#[hf5fb5541892dfc05b0afa3069bc28a0cddf64c70] what#[hccdcdca735d9735a232ada1f6ca8b7ecd4038531]
 (@error:needsTypeVariables() (==))(what, 2)
 // Error, no type!
 

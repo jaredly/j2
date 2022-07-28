@@ -115,8 +115,8 @@ export const aliasesFromString = (raw: string) => {
         .slice('alias '.length)
         .split(' ')
         .reduce((acc, cur) => {
-            const [key, value] = cur.split('=');
-            acc[key] = value;
+            const [key, value] = cur.split('#');
+            acc[key] = value.slice(1, -1);
             return acc;
         }, {} as { [key: string]: string });
 };

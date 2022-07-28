@@ -5,7 +5,7 @@ true
 false
 
 --[output:expected]--
-alias bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150
+alias bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150]
 true
 // bool
 /* true */
@@ -40,7 +40,7 @@ false
 "hello ${toString(123)}"
 
 --[output:expected]--
-alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h99b01457a189d1392ca641b22a79c97b3eda324c
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] toString#[h99b01457a189d1392ca641b22a79c97b3eda324c]
 "hello ${toString(123)}"
 // string
 /* `hello ${toString(123)}` */
@@ -50,7 +50,7 @@ alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h99b01457a189d13
 "One${"1"}${"2"} and ${"3"}"
 
 --[output:expected]--
-alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 "One${"1"}${"2"} and ${"3"}"
 // string
 /* `One${`1`}${`2`} and ${`3`}` */
@@ -60,6 +60,6 @@ alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 "${12}"
 
 --[output:expected]--
-alias error:notAString=h78fb9682caf6cb8dc34febba83e591c06884dc73 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias error:notAString#[h78fb9682caf6cb8dc34febba83e591c06884dc73] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 "${@error:notAString() 12}"
 // string

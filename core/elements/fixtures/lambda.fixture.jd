@@ -19,7 +19,7 @@
 ((a, b): 10) => 10
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f]
 ((a#[0], b#[1]): @error:argWrongType() 10) => 10
 // (@error:argWrongType() 10) => 10
 
@@ -28,7 +28,7 @@ alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f
 (a: int) => a
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (a#[0]: int) => a#[0]
 // (int) => int
 /* a => a */
@@ -45,7 +45,7 @@ alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 (a) => a(10)
 
 --[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takes10=h454b6d446f18aea6c51a4b3599f3bf413c24ee76 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] takes10#[h454b6d446f18aea6c51a4b3599f3bf413c24ee76] takesInt#[hd724811982a4afd89c79872d8c1d55048540a958]
 (a#[0]) => takesInt(a#[0]) + 2
 // (int) => int + 2
 /* a => takesInt(a) + 2 */
@@ -72,7 +72,7 @@ alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0
 (a) => "${a}"
 
 --[output:expected]--
-alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 (a#[0]) => "${a#[0]}"
 // (string) => string
 /* a => `${a}` */
@@ -82,7 +82,7 @@ alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 (a) => takesInt(a) + takes10(a)
 
 --[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takes10=h454b6d446f18aea6c51a4b3599f3bf413c24ee76 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] takes10#[h454b6d446f18aea6c51a4b3599f3bf413c24ee76] takesInt#[hd724811982a4afd89c79872d8c1d55048540a958]
 (a#[0]) => takesInt(a#[0]) + takes10(a#[0])
 // (10) => int + int
 /* a => takesInt(a) + takes10(a) */
@@ -96,7 +96,7 @@ alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0
 (a) => a + 2
 
 --[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (a#[0]) => a#[0] + 2
 // (int) => int + 2
 /* a => a + 2 */
@@ -106,7 +106,7 @@ alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0
 (a) => 2.4 + a
 
 --[output:expected]--
-alias +=h1b711bccf9aef2b0a1f3a7595ee93b32b87a881e float=h1c9cc9450fe2e869a48abaa5e4a85271e1625474
+alias +#[h1b711bccf9aef2b0a1f3a7595ee93b32b87a881e] float#[h1c9cc9450fe2e869a48abaa5e4a85271e1625474]
 (a#[0]) => 2.4 + a#[0]
 // (float) => float
 /* a => 2.4 + a */
@@ -116,7 +116,7 @@ alias +=h1b711bccf9aef2b0a1f3a7595ee93b32b87a881e float=h1c9cc9450fe2e869a48abaa
 3 == ((v) => v + 1)(2);
 
 --[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c ===h0e26cba9974393f0886bf43a5876c4132b1e69bb bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150
+alias #[] +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150]
 3 == ((v#[0]) => v#[0] + 1)(2)
 // bool
 /* 3 == (v => v + 1)(2) */
@@ -126,7 +126,7 @@ alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c ===h0e26cba9974393f0886bf43a58
 (a: int, b) => (a == b, takesInt(a), a == b)
 
 --[output:expected]--
-alias ===h0e26cba9974393f0886bf43a5876c4132b1e69bb bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takesInt=hd724811982a4afd89c79872d8c1d55048540a958
+alias #[] bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] takesInt#[hd724811982a4afd89c79872d8c1d55048540a958]
 (a#[0]: int, b#[1]) => (a#[0] == b#[1], takesInt(a#[0]), a#[0] == b#[1])
 // (int, int) => (bool, int, bool)
 /* (a, b) => [a == b, takesInt(a), a == b] */
@@ -144,7 +144,7 @@ let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
 longSum(0)
 
 --[output:expected]--
-alias -=h4dd9308469e477a4a756b4b286de0625d5a98af9 +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c >=hc1d03250b26806868f520136d8a763b0c0edff9b int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f longSum=h3d44783fbc41440a5b756f93c349991bfb88d221
+alias -#[h4dd9308469e477a4a756b4b286de0625d5a98af9] +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] >#[hc1d03250b26806868f520136d8a763b0c0edff9b] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] longSum#[h3d44783fbc41440a5b756f93c349991bfb88d221]
 let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
     longSum#[r0](v#[0] + 1) - 1 + 1;
 } else {

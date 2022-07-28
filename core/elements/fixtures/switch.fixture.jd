@@ -9,7 +9,7 @@ switch (1, 2) {
 }
 
 --[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c error:patternMismatch=h1bb5af1fd93cc04570b46a227234b3c89fbdd280 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 switch (1, 2) {
   (a#[0], b#[1]) => a#[0] + b#[1]
   @error:patternMismatch() 1 => 1
@@ -27,7 +27,7 @@ switch `What {
 }
 
 --[output:expected]--
-alias error:caseMismatch=h83cceed949f4c31221b67a1e36c66dbd1dbcf86f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias error:caseMismatch#[h83cceed949f4c31221b67a1e36c66dbd1dbcf86f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 switch `What {
   `Who => 1
   `Yes => 2
@@ -59,7 +59,7 @@ switch `What(10) {
 })(`One)
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 ((m#[0]: [ `One | `Two(int) ]) => switch m#[0] {
   `One => 1
   `Two => 4
@@ -94,7 +94,7 @@ alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 }
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (m#[0]: [ `One | `Two | `Three ]) => switch m#[0] {
   `One => 1
   `Two => 2
