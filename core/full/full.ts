@@ -164,6 +164,10 @@ export const processTypeFileR = (
         const res = processTypeToplevel(t, ctx, pctx, aliases);
         info.push(res.i);
         ctx = res.ctx;
+        // ctx.debugger();
+        const config = typeToplevelT(res.i.contents.top, res.ctx);
+        pctx = pctx.withToplevel(config);
+        console.log(pctx.reverse, config);
     });
 
     return { type: 'Success', info, ctx, comments: ast.comments };
@@ -221,6 +225,7 @@ export const processTypeToplevel = (
     const config = typeToplevel(t, ctx);
     ctx.resetSym();
     ctx = ctx.toplevelConfig(config) as FullContext;
+    pctx = pctx.withToplevel(config);
     let type = ctx.ToTast.TypeToplevel(t, ctx);
     type = transformTypeToplevel(type, removeErrorDecorators(ctx), null);
     type = analyzeTypeTop(type, ctx);
@@ -231,13 +236,14 @@ export const processTypeToplevel = (
     if (type.type === 'TypeAlias' && errorCount(verify) === 0) {
         const res = ctx.withTypes(type.elements);
         ctx = res.ctx as FullContext;
-        // todo: top.hash folks
+        type.hash = res.hash;
     }
 
     const refmt = pctx.ToAst.TypeToplevel(type, pctx);
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
     transformTypeToplevel(type, annotationVisitor(annotations), ctx);
+    // ctx.debugger();
 
     return {
         i: {

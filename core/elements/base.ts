@@ -35,7 +35,7 @@ AttrText "attribute" = $([0-9a-z-A-Z_]+)
 `;
 
 export const typeToplevelT = (
-    t: t.Toplevel,
+    t: t.Toplevel | t.TypeToplevel,
     ctx: ACtx,
 ): ToplevelConfig | null => {
     if (t.type === 'TypeAlias') {
@@ -49,6 +49,7 @@ export const typeToplevelT = (
                 }
                 return { name: t.name, args: [], kind };
             }),
+            hash: t.hash,
         };
     }
     if (t.type === 'ToplevelLet') {

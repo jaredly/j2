@@ -114,7 +114,12 @@ export const TypeTestView = ({
                                 }));
                         }}
                         onBlur={(text) => {
-                            const ran = processTypeFile(text, typeTestCtx);
+                            const ran = processTypeFile(text, {
+                                ...typeTestCtx,
+                                debugger() {
+                                    debugger;
+                                },
+                            });
                             const values =
                                 ran.type === 'Success' ? typeResults(ran) : [];
                             const fmt = refmt(ran);

@@ -88,11 +88,23 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             if (!top) {
                 return this;
             }
-            const reverse = { ...this.reverse };
+            const reverse = {
+                ...this.reverse,
+                types: { ...this.reverse.types },
+                values: { ...this.reverse.values },
+            };
             if (top.type === 'Type') {
                 top.items.forEach((item, i) => {
                     reverse.types[t.refHash({ type: 'Recur', idx: i })] =
                         item.name;
+                    if (top.hash) {
+                        reverse.types[
+                            t.refHash({
+                                type: 'Global',
+                                id: toId(top.hash, i),
+                            })
+                        ] = item.name;
+                    }
                 });
             }
             if (top.type === 'Expr') {

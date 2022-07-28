@@ -1,3 +1,2 @@
-@type:shouldNotMatch(:[ `One | `Two ]) [ `Two | * ]
-
-// [ `Failure([ `TooBad ], int) | `Failure([ `Timeout ], int) ]
+type Tree = [ unnamed#[r1] | `Leaf ]
+and Node = [ `Tree(unnamed#[r1]) ]
