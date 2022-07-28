@@ -6,9 +6,11 @@ type Y = {...X, ho: int};
 type Z = {...Y, hi: float};
 
 --[output:expected]--
-alias float#[h1c9cc9450fe2e869a48abaa5e4a85271e1625474] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] X#[hed4a30a41f8a414926829ba66fa3d66b89972d5e] Y#[hb72541df1bc730821a919ee1ad26fe162452c876]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type X = {hi: int}
+alias X#[hed4a30a41f8a414926829ba66fa3d66b89972d5e]
 type Y = {...X, ho: int}
+alias Y#[hb72541df1bc730821a919ee1ad26fe162452c876] float#[h1c9cc9450fe2e869a48abaa5e4a85271e1625474]
 type Z = {...Y, hi: float}
 
 ==[failures]==
@@ -18,8 +20,9 @@ type Y = {...int}
 type Z = {...{...Z}}
 
 --[output:expected]--
-alias error:invalidRecord#[h506e7785537a789d79fa3a8c084d3fffe5751757] error:notARecord#[hd698a9fde2a4cf1505e7a7bbb328bed86802f545] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias error:invalidRecord#[h506e7785537a789d79fa3a8c084d3fffe5751757]
 type X = {...@error:invalidRecord() X#[r0]}
+alias error:notARecord#[hd698a9fde2a4cf1505e7a7bbb328bed86802f545] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type Y = {...@error:notARecord() int}
 type Z = {...@error:invalidRecord() {...@error:invalidRecord() Z#[r0]}}
 
@@ -29,6 +32,7 @@ type X = {x: int = 3}
 type Y = {...X}
 
 --[output:expected]--
-alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] X#[h77bbd614ff7fc95d8d9c9a9ea3a5a3255617578d]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type X = {x: int = 3}
+alias X#[h77bbd614ff7fc95d8d9c9a9ea3a5a3255617578d]
 type Y = {...X}

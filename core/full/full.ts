@@ -204,6 +204,7 @@ export const processFileR = (
         const res = processToplevel(t, ctx, ictx, jctx, pctx, aliases);
         info.push(res.i);
         ctx = res.ctx;
+        pctx = res.pctx;
         pctx = pctx.withToplevel(typeToplevelT(res.i.contents.top, res.ctx));
     });
 
@@ -275,18 +276,21 @@ export const processTypeToplevel = (
 
 type Aliases = { [key: string]: string };
 
+type PCtx = ReturnType<typeof printCtx>;
+
 export const processToplevel = (
     t: p.Toplevel,
     ctx: FullContext,
     ictx: ReturnType<typeof iCtx>,
     jctx: ReturnType<typeof jCtx>,
-    pctx: ReturnType<typeof printCtx>,
+    pctx: PCtx,
     allAliases: Aliases,
-): { i: ToplevelInfo<FileContents>; ctx: FullContext } => {
+): { i: ToplevelInfo<FileContents>; ctx: FullContext; pctx: PCtx } => {
     ctx.resetSym();
     const config = typeToplevel(t, ctx);
     ctx.resetSym();
     ctx = ctx.toplevelConfig(config) as FullContext;
+    pctx = pctx.withToplevel(config);
     let top = ctx.ToTast.Toplevel(t, ctx);
     top = transformToplevel(top, removeErrorDecorators(ctx), null);
     if (config?.type === 'Type' && top.type === 'TypeAlias') {
@@ -303,11 +307,13 @@ export const processToplevel = (
         if (top.type === 'TypeAlias') {
             const res = ctx.withTypes(top.elements);
             ctx = res.ctx as FullContext;
-            // todo: top.hash folks
+            top.hash = res.hash;
+            config!.hash = res.hash;
         } else if (top.type === 'ToplevelLet') {
             const res = ctx.withValues(top.elements);
             ctx = res.ctx as FullContext;
             top.hash = res.hash;
+            config!.hash = res.hash;
         }
     }
 
@@ -354,6 +360,7 @@ export const processToplevel = (
             aliases: newAliases(allAliases, pctx.backAliases),
         },
         ctx,
+        pctx,
     };
 };
 

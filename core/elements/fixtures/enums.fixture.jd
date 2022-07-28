@@ -27,9 +27,10 @@ type z = [`Z]
 type x = [int | `Hello | y | z]
 
 --[output:expected]--
-alias Array#[hfb6f1e273957b1ff385b246d9253142c9540f513] error:notAnEnum#[hf16010a7ae4b37140f787a2e06b17030e8329fb3] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] y#[h21b58d1c82110bcc15718353678f6c5699924c7d] z#[h114960c32561e86d49cc34f0af6e3db3deb19ffc]
+alias Array#[hfb6f1e273957b1ff385b246d9253142c9540f513]
 type y = Array<10>
 type z = [ `Z ]
+alias error:notAnEnum#[hf16010a7ae4b37140f787a2e06b17030e8329fb3] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] y#[h21b58d1c82110bcc15718353678f6c5699924c7d] z#[h114960c32561e86d49cc34f0af6e3db3deb19ffc]
 type x = [ @error:notAnEnum() int | `Hello | @error:notAnEnum() y | z ]
 
 ==[recursive bound propagation]==
@@ -77,11 +78,13 @@ type Four = [ `A(int)]
 type Five = [One | Four]
 
 --[output:expected]--
-alias error:conflictingEnumTag#[h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec] Four#[h08e809c3cb23e4a94960588a78b6b0d43e80b5fe] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] One#[hfb353110432771bdb690ef67d47cf80f61032eb9]
 type One = [ `A | `B ]
+alias One#[hfb353110432771bdb690ef67d47cf80f61032eb9]
 type Two = [ `A | One ]
+alias error:conflictingEnumTag#[h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type Three = [ `A(int) | @error:conflictingEnumTag(tag: "A") One ]
 type Four = [ `A(int) ]
+alias Four#[h08e809c3cb23e4a94960588a78b6b0d43e80b5fe]
 type Five = [ One | @error:conflictingEnumTag(tag: "A") Four ]
 
 ==[duplicate recursive]==
@@ -111,9 +114,10 @@ type A = [ `A | B#[r1] ]
 and B = [ `B | A#[r0] ]
 
 --[output:expected]--
-alias error:invalidEnum#[h49fbf0ea340043d002204371f9e00926593bae65] error:invalidType#[h8ad8219d907bce91b14c7d3e00812287b0ab7056]
+alias error:invalidType#[h8ad8219d907bce91b14c7d3e00812287b0ab7056]
 type X = @error:invalidType() Y#[r1]
 and Y = @error:invalidType() X#[r0]
+alias error:invalidEnum#[h49fbf0ea340043d002204371f9e00926593bae65]
 type A = [ `A | @error:invalidEnum() B#[r1] ]
 and B = [ `B | @error:invalidEnum() A#[r0] ]
 
@@ -132,8 +136,8 @@ type B = [ A | `Awe(int) ]
 type C = [ `Awe(int) | A]
 
 --[output:expected]--
-alias A#[h96f3e9d89eef2da1279133d573e53be8aa09e51e] error:conflictingEnumTag#[h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type A = [ `Awe ]
+alias A#[h96f3e9d89eef2da1279133d573e53be8aa09e51e] error:conflictingEnumTag#[h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type B = [ A | @error:conflictingEnumTag() `Awe(int) ]
 type C = [ `Awe(int) | @error:conflictingEnumTag(tag: "Awe") A ]
 
@@ -143,8 +147,8 @@ type A = <T: [*]>[T | `A]
 type B = [A<[B]> | `B]
 
 --[output:expected]--
-alias A#[hcab8a150870690a5be4fddec6c6cef35bb9e9b91] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] error:invalidEnum#[h49fbf0ea340043d002204371f9e00926593bae65] error:notAnEnum#[hf16010a7ae4b37140f787a2e06b17030e8329fb3]
 type A = <T#[0]: [ * ]>[ T#[0] | `A ]
+alias A#[hcab8a150870690a5be4fddec6c6cef35bb9e9b91] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] error:invalidEnum#[h49fbf0ea340043d002204371f9e00926593bae65] error:notAnEnum#[hf16010a7ae4b37140f787a2e06b17030e8329fb3]
 type B = [ @error:notAnEnum() A<
     @error:argWrongType(expected: :[ * ]) [ @error:invalidEnum() B#[r0] ],
 > | `B ]

@@ -53,7 +53,6 @@ alias test:type#[he071eaec952a7917f20d1828e42268ca3a10c513]
 --[output:expected]--
 alias test:type#[he071eaec952a7917f20d1828e42268ca3a10c513]
 @test:type(:hello#[:unresolved:]) 10
-// 10
 
 ==[arg default]==
 --[input]--
@@ -71,8 +70,9 @@ type hello = int
 @test:type(: hello) 10
 
 --[output:expected]--
-alias hello#[h7f7e38916d42ca00c3af4f0b1a80166a75aea9f5] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] test:type#[he071eaec952a7917f20d1828e42268ca3a10c513]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type hello = int
+alias hello#[h7f7e38916d42ca00c3af4f0b1a80166a75aea9f5] test:type#[he071eaec952a7917f20d1828e42268ca3a10c513]
 @test:type(:hello) 10
 // 10
 /* 10 */
@@ -84,10 +84,10 @@ type StringMe = <T: string>int;
 @test:type(:StringMe<"hello">) 10
 
 --[output:expected]--
-alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] StringMe#[h25c8fc60eccd050e45c5c2f4696e1bd578ae98fa] test:type#[he071eaec952a7917f20d1828e42268ca3a10c513]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 type StringMe = <T#[0]: string>int
+alias StringMe#[h25c8fc60eccd050e45c5c2f4696e1bd578ae98fa] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] test:type#[he071eaec952a7917f20d1828e42268ca3a10c513]
 @test:type(:StringMe<@error:argWrongType(expected: :string) 20>) 10
-// 10
 @test:type(:StringMe<"hello">) 10
 // 10
 /* 10 */
@@ -110,24 +110,24 @@ ten(10)
 ten(5)
 
 --[output:expected]--
-alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] hello#[h4be83b97ef46480eb6f8573f2ab90ed7c5c8b1e5] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] ten#[hf4f51e4cf24724da57c43defaba9896829117c9f]
+alias hello#[h4be83b97ef46480eb6f8573f2ab90ed7c5c8b1e5]
 hello("hello")
 // int
 /* hello(`hello`) */
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f]
 hello(@error:argWrongType(expected: :"hello") "ho")
-// int
+alias ten#[hf4f51e4cf24724da57c43defaba9896829117c9f]
 ten(10)
 // int
 /* ten(10) */
 ten(@error:argWrongType(expected: :10) 5)
-// int
 
 ==[rank 2 my folks]==
 --[input]--
 wantsId(id)
 
 --[output:expected]--
-alias id#[h1be1f842795aa8938e3a35912c925528cda5e190] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] wantsId#[h1367c8b71fd586945c9bdbd7bd79c6a7871d4b1c]
+alias id#[h1be1f842795aa8938e3a35912c925528cda5e190] wantsId#[h1367c8b71fd586945c9bdbd7bd79c6a7871d4b1c]
 wantsId(id)
 // int
 /* wantsId(id) */
@@ -138,8 +138,9 @@ type x = "one" + string
 type Z = (<S: string>int)<x>
 
 --[output:expected]--
-alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] x#[h1e9c080b8ba44508b1e38f3743a8e4a7b8c813a0]
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 type x = "one" + string
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] x#[h1e9c080b8ba44508b1e38f3743a8e4a7b8c813a0]
 type Z = (<S#[0]: string>int)<x>
 
 ==[string ops]==
@@ -149,9 +150,11 @@ type Good = FancyArray<"ones and a suffix">
 type Bad = FancyArray<"something else">
 
 --[output:expected]--
-alias Array#[h0185a04019af57b0d231bb9bd02d5f7581c9485c] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] FancyArray#[h97889a9d4f737b3400dbf19dcda58a6756878281] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias Array#[h0185a04019af57b0d231bb9bd02d5f7581c9485c] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 type FancyArray = <Element#[0]: "one" + string + "suffix">Array<Element#[0]>
+alias FancyArray#[h97889a9d4f737b3400dbf19dcda58a6756878281]
 type Good = FancyArray<"ones and a suffix">
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f]
 type Bad = FancyArray<@error:argWrongType(expected: :"one" + string + "suffix") "something else">
 
 ==[string ops_]==
@@ -161,8 +164,9 @@ type Good = NumArray<20>
 type Bad = NumArray<5>
 
 --[output:expected]--
-alias Array#[h0185a04019af57b0d231bb9bd02d5f7581c9485c] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] NumArray#[h44ce62618720fd69764600d44f2692fab8e2d0d3] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
+alias Array#[h0185a04019af57b0d231bb9bd02d5f7581c9485c] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
 type NumArray = <Element#[0]: 10 + uint>Array<Element#[0]>
+alias NumArray#[h44ce62618720fd69764600d44f2692fab8e2d0d3] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f]
 type Good = NumArray<@error:argWrongType(expected: :10 + uint) 20>
 type Bad = NumArray<@error:argWrongType(expected: :10 + uint) 5>
 
@@ -174,9 +178,10 @@ type X = (<X: string + ".js">int)<"hello.js">
 type X = (<X: string + ".js">int)<"hi" + ".js">
 
 --[output:expected]--
-alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type X = (<X#[0]: 10 + int>int)<13>
 type X = (<X#[0]: 5 + 5>int)<10>
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 type X = (<X#[0]: string + ".js">int)<"hello.js">
 type X = (<X#[0]: string + ".js">int)<"hi" + ".js">
 
@@ -187,9 +192,10 @@ type X = (<X: 10 + int>int)<int>
 type X = (<X: string + ".js">int)<string>
 
 --[output:expected]--
-alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type X = (<X#[0]: 10 + int>int)<@error:argWrongType(expected: :10 + int) 5>
 type X = (<X#[0]: 10 + int>int)<@error:argWrongType(expected: :10 + int) int>
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 type X = (<X#[0]: string + ".js">int)<@error:argWrongType(expected: :string + ".js") string>
 
 ==[New fixture]==

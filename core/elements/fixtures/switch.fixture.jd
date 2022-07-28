@@ -9,14 +9,13 @@ switch (1, 2) {
 }
 
 --[output:expected]--
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280]
 switch (1, 2) {
   (a#[0], b#[1]) => a#[0] + b#[1]
   @error:patternMismatch() 1 => 1
   @error:patternMismatch() "what" => 20
   @error:patternMismatch() `Hello => 1
 }
-// int
 
 ==[invalid return]==
 --[input:shouldFail]--
@@ -33,7 +32,6 @@ switch `What {
   `Yes => 2
   `What => @error:caseMismatch(expected: :int) "hello"
 }
-// Error, no type!
 
 ==[enum pattern wrong]==
 --[input]--
@@ -94,7 +92,6 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 }
 
 --[output:expected]--
-alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (m#[0]: [ `One | `Two | `Three ]) => switch m#[0] {
   `One => 1
   `Two => 2

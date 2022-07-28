@@ -299,7 +299,11 @@ export const App = () => {
                     const bctx = ctx.clone();
                     loadBuiltins(fixture.builtins, bctx);
                     const result = processFile(fixture.input, bctx);
-                    return { ...fixture, result, newOutput: refmt(result) };
+                    return {
+                        ...fixture,
+                        result,
+                        newOutput: refmt(result, true),
+                    };
                 });
                 files[fixtures[i]] = fileStatus(fixtures[i], {
                     ...file,

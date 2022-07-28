@@ -9,10 +9,11 @@ toString(1)
 toString(3.4)
 
 --[output:expected]--
-alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] toString#[h99b01457a189d1392ca641b22a79c97b3eda324c] toString_h7#[h7a085b7af0cace37678c385e00d352db9204d70a]
+alias toString#[h99b01457a189d1392ca641b22a79c97b3eda324c]
 toString(1)
 // string
 /* toString(1) */
+alias toString_h7#[h7a085b7af0cace37678c385e00d352db9204d70a]
 toString_h7(3.4)
 // string
 /* toString(3.4) */

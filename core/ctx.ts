@@ -339,9 +339,9 @@ export const newContext = (): FullContext => {
             };
         },
         toplevelConfig(toplevel) {
-            if (toplevel && this[opaque].toplevel?.hash) {
-                toplevel.hash = this[opaque].toplevel.hash;
-            }
+            // if (toplevel && this[opaque].toplevel?.hash) {
+            //     toplevel.hash = this[opaque].toplevel.hash;
+            // }
             // this[opaque].toplevel = toplevel;
             return {
                 ...this,

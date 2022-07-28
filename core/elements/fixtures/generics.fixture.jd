@@ -66,7 +66,6 @@ bounded<string>("wat")
 --[output:expected]--
 alias bounded#[hc51fab91793ea04f9d1f93e37ed42783cb09a337] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 bounded<@error:argWrongType(expected: :int) string>("wat")
-// Error, no type!
 
 ==[wrong args]==
 --[input:shouldFail]--
@@ -74,11 +73,10 @@ bounded<int, string>(20)
 takesInt<int>(10)
 
 --[output:expected]--
-alias bounded#[hc51fab91793ea04f9d1f93e37ed42783cb09a337] error:extraArg#[haae12b260f3d25abb4b67dfe8895a3c6fb00eb59] error:notATypeVars#[hf975b139e8972496b3acf4c415c5bc460d39dd08] error:wrongNumberOfTypeArgs#[h861c5babf48bbd7fc0325178615769bdb2837d5a] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takesInt#[hd724811982a4afd89c79872d8c1d55048540a958]
+alias bounded#[hc51fab91793ea04f9d1f93e37ed42783cb09a337] error:extraArg#[haae12b260f3d25abb4b67dfe8895a3c6fb00eb59] error:wrongNumberOfTypeArgs#[h861c5babf48bbd7fc0325178615769bdb2837d5a] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 (@error:wrongNumberOfTypeArgs() bounded<int, @error:extraArg() string>)(20)
-// int
+alias error:notATypeVars#[hf975b139e8972496b3acf4c415c5bc460d39dd08] takesInt#[hd724811982a4afd89c79872d8c1d55048540a958]
 (@error:notATypeVars() takesInt<int>)(10)
-// int
 
 ==[arg default]==
 --[input:shouldFail]--
@@ -93,7 +91,6 @@ alias Array#[hcbc330037d21992f5bf3e9564e0da0474482efbc] error:argWrongType#[hfcf
         @error:extraArg() int,
     >,
 ) 10
-// 10
 
 ==[taking a generic argument]==
 --[input:shouldFail]--
@@ -101,9 +98,9 @@ takesArray(10)
 takesArray(anArray)
 
 --[output:expected]--
-alias anArray#[ha841469a8732a704d4c19413e4c8b5da394d5e23] Array#[hcbc330037d21992f5bf3e9564e0da0474482efbc] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takesArray#[he4b6904ec900e70c055cc6f7f494b9b7b489323b]
+alias Array#[hcbc330037d21992f5bf3e9564e0da0474482efbc] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takesArray#[he4b6904ec900e70c055cc6f7f494b9b7b489323b]
 takesArray(@error:argWrongType(expected: :Array<string, 10u>) 10)
-// int
+alias anArray#[ha841469a8732a704d4c19413e4c8b5da394d5e23]
 takesArray(anArray)
 // int
 /* takesArray(anArray) */
@@ -114,8 +111,9 @@ type x=<A: int><B: int>int
 type y=x<int><10>
 
 --[output:expected]--
-alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] x#[h4030489d339f026aa8858c34765267f75dfef6c4]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type x = <A#[0]: int><B#[1]: int>int
+alias x#[h4030489d339f026aa8858c34765267f75dfef6c4]
 type y = x<int><10>
 
 ==[parnes]==
@@ -124,8 +122,9 @@ type Array = <Element, Length: uint>int
 type x = (@test:type() Array)<int, 10u>
 
 --[output:expected]--
-alias Array#[h577eb136f0b535623a6285f1ede380b9c4f1add4] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] test:type#[he071eaec952a7917f20d1828e42268ca3a10c513] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
 type Array = <Element#[0], Length#[1]: uint>int
+alias Array#[h577eb136f0b535623a6285f1ede380b9c4f1add4] test:type#[he071eaec952a7917f20d1828e42268ca3a10c513]
 type x = (@test:type() Array)<int, 10u>
 
 ==[variance?]==
@@ -151,19 +150,23 @@ type TwoTen = <T: 10>(v: (m: T) => string) => string
 // ## And then I think it would reverse again here?
 
 --[output:expected]--
-alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] One#[h97b45df3cb872742a19659c4162f58fa0ca4f56a] OneInt#[h61ea0764cb509d7342d351bad1e4c571deaf41d5] OneTen#[h5161012229cdcf7badd3fdfc996bb99638767974] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] Two#[hbffca9db7c25ed458611638f6abddc3444468c2b]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type One = (v: int) => int
 type Two = (v: 10) => int
+alias One#[h97b45df3cb872742a19659c4162f58fa0ca4f56a] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 // Should Three accept Two? NO
 // Should Four accept One? YES
 type Three = (l: One) => string
+alias Two#[hbffca9db7c25ed458611638f6abddc3444468c2b]
 // might pass any int to it
 type Four = (l: Two) => string
 // will only pass 10 to it
 // ## OK now to the actual question ##
 type OneInt = <T#[0]: int>(v: T#[0]) => string
 type OneTen = <T#[0]: 10>(v: T#[0]) => string
+alias OneInt#[h61ea0764cb509d7342d351bad1e4c571deaf41d5]
 type TOneInt = (v: OneInt) => string
+alias OneTen#[h5161012229cdcf7badd3fdfc996bb99638767974]
 type TOneTen = (v: OneTen) => string
 // ## Does TOneInt accept TOneTen? NO
 // ## Does TOneTen accept TOneInt? YES
@@ -190,7 +193,7 @@ type TInt = (v: Int) => string
 type TTen = (v: Ten) => string
 
 --[output:expected]--
-alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] Int#[h3de445e42abf3558018edf97a93680650ec16354] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] Ten#[hd7b522d36f31118c9c33c6ecce08bebf45e2c009]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 type IntA = (x: int) => string
 type TenA = (x: 10) => string
 // # First we have basic variance. IntA can be passed to something expected a TenA, but not reversed.
@@ -199,10 +202,12 @@ type TenR = (x: string) => 10
 // # On the other hand, something producing an int can't be given to someone expecting something that produces a 10.
 type Int = <T#[0]: int>(x: T#[0]) => T#[0]
 type Ten = <T#[0]: 10>(x: T#[0]) => T#[0]
+alias Int#[h3de445e42abf3558018edf97a93680650ec16354]
 // # BUT, on the final hand, once you lock it down to something concrete, the return value isn't "maybe a subset of T", it's precisely T. Ok so I don't think we have to get fancy.
 //
 // ### OK, so Something T
 type TInt = (v: Int) => string
+alias Ten#[hd7b522d36f31118c9c33c6ecce08bebf45e2c009]
 type TTen = (v: Ten) => string
 
 ==[default arg type]==
@@ -212,8 +217,9 @@ type Marray = DArray<int>
 type TArray = DArray<int, 10u>
 
 --[output:expected]--
-alias DArray#[hc727516769ee309abfec75e4ce4b47645a8088d4] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
 type DArray = <Element#[0], Length#[1]: uint = uint>int
+alias DArray#[hc727516769ee309abfec75e4ce4b47645a8088d4]
 type Marray = DArray<int>
 type TArray = DArray<int, 10u>
 
@@ -232,7 +238,7 @@ boundedDefault<int>
 takesArray(anArray)
 
 --[output:expected]--
-alias anArray#[ha841469a8732a704d4c19413e4c8b5da394d5e23] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] takesArray#[he4b6904ec900e70c055cc6f7f494b9b7b489323b]
+alias anArray#[ha841469a8732a704d4c19413e4c8b5da394d5e23] takesArray#[he4b6904ec900e70c055cc6f7f494b9b7b489323b]
 takesArray(anArray)
 // int
 /* takesArray(anArray) */

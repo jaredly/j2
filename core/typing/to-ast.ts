@@ -88,6 +88,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             if (!top) {
                 return this;
             }
+            console.log(`with toplevel`, top);
             const reverse = {
                 ...this.reverse,
                 types: { ...this.reverse.types },
@@ -157,6 +158,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
                 ref.type !== 'Local' &&
                 ref.type !== 'Recur'
             ) {
+                fctx.debugger();
                 if (!this.aliases[hash]) {
                     add(name, ref);
                 }

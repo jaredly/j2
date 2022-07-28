@@ -51,7 +51,6 @@
 --[output:expected]--
 alias error:notARecord#[hd698a9fde2a4cf1505e7a7bbb328bed86802f545]
 {...@error:notARecord() 10}
-// Error, no type!
 
 ==[New fixture__]==
 --[input]--

@@ -3,6 +3,17 @@ import * as React from 'react';
 import { Tree as TreeT } from './markUpTree';
 import { styles, colors } from './Highlight';
 
+const fixStyles = (styles: any) => {
+    if (!styles) {
+        return styles;
+    }
+    const res: { [key: string]: any } = {};
+    for (const key in styles) {
+        res[key.replace(/-[a-z]/g, (m) => m[1].toUpperCase())] = styles[key];
+    }
+    return res;
+};
+
 export const Tree = ({
     tree,
     hover,
@@ -16,7 +27,7 @@ export const Tree = ({
             // data-prefix={tree.hl.prefix ? tree.hl.prefix.text : undefined}
             // data-suffix={tree.hl.suffix ? tree.hl.suffix.text : undefined}
             style={{
-                ...styles[tree.hl.type],
+                ...fixStyles(styles[tree.hl.type]),
                 color: colors[tree.hl.type] ?? '#aaa',
             }}
         >

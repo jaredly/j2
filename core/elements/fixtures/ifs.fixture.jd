@@ -4,20 +4,19 @@
 if true { "ten" } else { "eleven" }
 
 --[output:expected]--
-alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 if true {
     "ten";
 } else {
     "eleven";
 }
 // string
-/* (() => {
+/* {
   if (true) {
     return `ten`;
   } else {
     return `eleven`;
   }
-})() */
+} */
 
 ==[in a block]==
 --[input]--
@@ -26,7 +25,7 @@ let x = 10;
 if x == 5 { 4 } else { 2 }}
 
 --[output:expected]--
-alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
 {
     let x#[0] = 10;
     if x#[0] == 5 {
@@ -36,7 +35,7 @@ alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb] int#[h942cd67cf31d350ec1f39
     };
 }
 // int
-/* (() => {
+/* {
   let x = 10;
 
   if (x == 5) {
@@ -44,7 +43,7 @@ alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb] int#[h942cd67cf31d350ec1f39
   } else {
     return 2;
   }
-})() */
+} */
 
 ==[New fixture]==
 --[input]--
@@ -53,7 +52,7 @@ let y = if x == 5 { 4 } else { 2 };
 y * 2}
 
 --[output:expected]--
-alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
 {
     let x#[0] = 10;
     let y#[1] = if x#[0] == 5 {
@@ -64,7 +63,7 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[h0e26cba9974393f0886bf43
     y#[1] * 2;
 }
 // int
-/* (() => {
+/* {
   let x = 10;
   let y;
 
@@ -75,7 +74,7 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[h0e26cba9974393f0886bf43
   }
 
   return y * 2;
-})() */
+} */
 
 ==[if else, and enums]==
 --[input]--
@@ -95,7 +94,7 @@ if 1 > 0 {
     `No(`SoMuchFail);
 }
 // [ `No([ `SoMuchFail | `MathFail ]) | `Yes(20) ]
-/* (() => {
+/* {
   if (1 > 0) {
     return {
       tag: "Yes",
@@ -112,4 +111,4 @@ if 1 > 0 {
       payload: "SoMuchFail"
     };
   }
-})() */
+} */
