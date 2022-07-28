@@ -4,7 +4,7 @@ import { processTypeFile } from '../../full/full';
 import { idToString } from '../../ids';
 import * as t from '../../typed-ast';
 import { initVerify } from '../analyze';
-import { assertions } from './utils';
+import { assertions, typeAssertById, typeTestCtx } from './utils';
 
 const base = __dirname + '/../../elements/typetest/';
 readdirSync(base)
@@ -12,18 +12,10 @@ readdirSync(base)
     .forEach((file) => {
         const fixtureFile = base + file;
 
-        const baseCtx = builtinContext.clone();
-        const assertById: { [key: string]: Function } = {};
-        Object.keys(assertions).forEach((key) => {
-            const { id } = addBuiltinDecorator(baseCtx, `type:${key}`, 0);
-            assertById[idToString(id)] =
-                assertions[key as keyof typeof assertions];
-        });
-
         describe(file, () => {
             const raw = readFileSync(fixtureFile, 'utf8');
 
-            const result = processTypeFile(raw, baseCtx);
+            const result = processTypeFile(raw, typeTestCtx);
             it('should parse', () => {
                 if (result.type === 'Error') {
                     expect(result).toBe(null);
@@ -67,8 +59,8 @@ readdirSync(base)
                                         const hash = idToString(
                                             (d.id.ref as t.GlobalRef).id,
                                         );
-                                        if (assertById[hash]) {
-                                            const err = assertById[hash](
+                                        if (typeAssertById[hash]) {
+                                            const err = typeAssertById[hash](
                                                 d.args.map((arg) => arg.arg),
                                                 inner,
                                                 ctx,

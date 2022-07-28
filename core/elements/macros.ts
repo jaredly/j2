@@ -30,6 +30,9 @@ export const ToTast = {
 
     TypeToplevel(node: p.TypeToplevel, ctx: TCtx): t.TypeToplevel {
         switch (node.type) {
+            case 'Aliases':
+                return ctx.ToTast.Aliases(node, ctx);
+
             case 'TypeAlias':
                 return ctx.ToTast.TypeAlias(node, ctx);
 
@@ -323,6 +326,9 @@ export const ToAst = {
             case 'TypeAlias':
                 return ctx.ToAst.TypeAlias(node, ctx);
 
+            case 'ToplevelAliases':
+                return ctx.ToAst.ToplevelAliases(node, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -551,6 +557,9 @@ export const ToPP = {
 
     TypeToplevel(node: p.TypeToplevel, ctx: PCtx): pp.PP {
         switch (node.type) {
+            case 'Aliases':
+                return ctx.ToPP.Aliases(node, ctx);
+
             case 'TypeAlias':
                 return ctx.ToPP.TypeAlias(node, ctx);
 

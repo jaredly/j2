@@ -1950,9 +1950,12 @@ function peg$parse(input, options) {
   function peg$parseTypeToplevel() {
     var s0;
 
-    s0 = peg$parseTypeAlias();
+    s0 = peg$parseAliases();
     if (s0 === peg$FAILED) {
-      s0 = peg$parseTOps();
+      s0 = peg$parseTypeAlias();
+      if (s0 === peg$FAILED) {
+        s0 = peg$parseTOps();
+      }
     }
 
     return s0;

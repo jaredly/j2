@@ -112,7 +112,7 @@ export type File = {
     loc: Loc;
 };
 
-export type TypeToplevel = Type | TypeAlias;
+export type TypeToplevel = Type | TypeAlias | ToplevelAliases;
 
 export type TypeFile = {
     type: 'TypeFile';

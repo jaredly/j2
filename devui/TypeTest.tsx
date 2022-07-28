@@ -8,10 +8,32 @@ import { printToString } from '../core/printer/pp';
 import { Card } from '@nextui-org/react';
 import { fixComments } from '../core/grammar/fixComments';
 import { parseTypeFile } from '../core/grammar/base.parser';
+import {
+    processTypeFile,
+    processTypeFileR,
+    TypeTestResult,
+} from '../core/full/full';
+import { typeResults, TypeWhat } from './App';
+import * as p from '../core/grammar/base.parser';
+import { noloc } from '../core/ctx';
+import { typeTestCtx } from '../core/typing/__test__/utils';
 
-const refmt = (test: TypeTest) => {
-    const actx = printCtx(test.ctx);
-    const ast = actx.ToAst.TypeFile(test.file, actx);
+const refmt = (file: TypeTestResult) => {
+    if (file.type === 'Error') {
+        return file.text;
+    }
+
+    const ast: p.TypeFile = {
+        type: 'TypeFile',
+        comments: file.comments,
+        toplevels: [],
+        loc: noloc,
+    };
+
+    file.info.forEach((info) => {
+        ast.toplevels.push(info.contents.refmt);
+    });
+
     const pctx = newPPCtx();
     const pp = injectComments(
         pctx.ToPP.TypeFile(ast, pctx),
@@ -26,10 +48,10 @@ export const TypeTestView = ({
     name,
 }: {
     name: string;
-    test: TypeTest;
-    onChange: (v: TypeTest) => void;
+    test: TypeWhat;
+    onChange: (v: TypeWhat) => void;
 }) => {
-    const [text, setText] = React.useState(() => refmt(test));
+    const [text, setText] = React.useState(() => refmt(test.file));
 
     return (
         <div
@@ -62,16 +84,29 @@ export const TypeTestView = ({
                             if (v.type === 'File') {
                                 return [];
                             }
-                            const results = runTypeTest(v, true);
-                            return results.statuses;
+                            const results = processTypeFileR(v, typeTestCtx);
+                            const values =
+                                results.type === 'Success'
+                                    ? typeResults(results)
+                                    : [];
+                            return values
+                                .filter((t) => !t.success)
+                                .map((v) => ({
+                                    loc: v.loc,
+                                    type: 'Error',
+                                    prefix: {
+                                        text: '🚨',
+                                    },
+                                    underline: true,
+                                }));
                         }}
                         onBlur={(text) => {
-                            const ran = runTypeTest(
-                                fixComments(parseTypeFile(text)),
-                            );
+                            const ran = processTypeFile(text, typeTestCtx);
+                            const values =
+                                ran.type === 'Success' ? typeResults(ran) : [];
                             const fmt = refmt(ran);
                             try {
-                                onChange(ran);
+                                onChange({ file: ran, values });
                                 setText(fmt);
                                 fetch(`/elements/typetest/${name}`, {
                                     method: 'POST',

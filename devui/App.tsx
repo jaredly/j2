@@ -6,11 +6,15 @@ import {
     executeFile,
     ExecutionInfo,
     processFile,
+    processTypeFile,
     SuccessTestResult,
+    SuccessTypeResult,
     TestResult,
+    TypeTestResult,
 } from '../core/full/full';
 import { parseFile, parseTypeFile } from '../core/grammar/base.parser';
 import { fixComments } from '../core/grammar/fixComments';
+import { idToString } from '../core/ids';
 import { Loc } from '../core/typed-ast';
 import { errorCount } from '../core/typing/analyze';
 import {
@@ -24,8 +28,8 @@ import {
     runFixture,
     splitAliases,
 } from '../core/typing/__test__/fixture-utils';
-import { runTest, Test } from '../core/typing/__test__/run-test';
-import { runTypeTest, TypeTest } from '../core/typing/__test__/typetest';
+import { TypeTest } from '../core/typing/__test__/typetest';
+import { typeAssertById, typeTestCtx } from '../core/typing/__test__/utils';
 import { FixtureFile } from './FixtureFile';
 import { HL } from './HL';
 import {
@@ -77,10 +81,13 @@ export type Status = {
 
 export type Files = {
     fixtures: { [key: string]: Status };
-    typetest: { [key: string]: TypeTest };
-    test: {
-        [key: string]: TestWhat;
-    };
+    typetest: { [key: string]: TypeWhat };
+    test: { [key: string]: TestWhat };
+};
+
+export type TypeWhat = {
+    file: TypeTestResult;
+    values: Array<{ success: boolean; loc: Loc }>;
 };
 
 export type TestWhat = {
@@ -95,6 +102,39 @@ export type TestValues = {
         loc: Loc;
     }>;
     failed: boolean;
+};
+
+export const typeResults = (
+    file: SuccessTypeResult,
+): Array<{ success: boolean; loc: Loc }> => {
+    const results: Array<{ success: boolean; loc: Loc }> = [];
+    const { info, ctx } = file;
+
+    info.forEach((info) => {
+        const type = info.contents.top;
+        if (type.type === 'TDecorated') {
+            const inner = type.inner;
+            type.decorators.forEach((d) => {
+                if (d.id.ref.type !== 'Global') {
+                    return;
+                }
+                const hash = idToString(d.id.ref.id);
+                if (typeAssertById[hash]) {
+                    const err = typeAssertById[hash](
+                        d.args.map((arg) => arg.arg),
+                        inner,
+                        ctx,
+                    );
+                    results.push({
+                        success: err == null,
+                        loc: d.loc,
+                    });
+                }
+            });
+        }
+    });
+
+    return results;
 };
 
 export const getTestResults = (file: SuccessTestResult): TestValues => {
@@ -269,14 +309,14 @@ export const App = () => {
             const typetestFiles = {} as Files['typetest'];
             typetestContents.forEach((contents, i) => {
                 try {
-                    typetestFiles[typetest[i]] = runTypeTest(
-                        fixComments(parseTypeFile(contents)),
-                    );
+                    const file = processTypeFile(contents, typeTestCtx);
+                    typetestFiles[typetest[i]] = {
+                        file,
+                        values:
+                            file.type === 'Success' ? typeResults(file) : [],
+                    };
                 } catch (err) {
                     old.error('Failed to parse typetest', err);
-                    // typetestFiles[typetest[i]] = runTypeTest(
-                    //     fixComments(parseTypeFile(contents)),
-                    // );
                 }
             });
             const testFiles = {} as Files['test'];
@@ -419,8 +459,8 @@ export const App = () => {
                                 }
                             >
                                 <ShowTest
-                                    failed={files.typetest[name].statuses.some(
-                                        (m) => m.type == 'Error',
+                                    failed={isFailedTypeTest(
+                                        files.typetest[name],
                                     )}
                                 />
                                 {name}
@@ -505,5 +545,16 @@ export const App = () => {
                 <div style={{ flex: 1 }}>Select a fixture</div>
             )}
         </div>
+    );
+};
+
+const isFailedTypeTest = (t: TypeWhat) => {
+    if (t.file.type === 'Error') {
+        return true;
+    }
+    console.log(t);
+    return (
+        // t.file.info.some((top) => errorCount(top.verify) > 0) ||
+        t.values.some((t) => !t.success)
     );
 };

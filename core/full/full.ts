@@ -34,6 +34,7 @@ import { toId } from '../ids';
 
 export type TestResult = Result<FileContents>;
 export type SuccessTestResult = Success<FileContents>;
+export type SuccessTypeResult = Success<TypeContents>;
 export type TypeTestResult = Result<TypeContents>;
 
 export const emptyFileResult: TestResult = {
@@ -127,7 +128,6 @@ export const processTypeFile = (
     text: string,
     baseCtx = builtinContext,
 ): Result<TypeContents> => {
-    const info: ToplevelInfo<TypeContents>[] = [];
     let ast: p.TypeFile;
     try {
         ast = fixComments(p.parseTypeFile(text));
@@ -139,6 +139,14 @@ export const processTypeFile = (
         };
     }
 
+    return processTypeFileR(ast, baseCtx);
+};
+
+export const processTypeFileR = (
+    ast: p.TypeFile,
+    baseCtx = builtinContext,
+): Success<TypeContents> => {
+    const info: ToplevelInfo<TypeContents>[] = [];
     let ctx = baseCtx.clone();
     let pctx = printCtx(ctx);
     const aliases: { [key: string]: string } = {};

@@ -10,6 +10,7 @@ import { printCtx } from '../to-ast';
 import { Ctx as JCtx, ExecutionContext } from '../../ir/to-js';
 import { Ctx as iCtx } from '../../ir/ir';
 import * as t from '../../typed-ast';
+import { idToString } from '../../ids';
 
 export const typeToString = (t: t.Type, ctx: FullContext) => {
     const actx = printCtx(ctx, false);
@@ -106,3 +107,10 @@ export const assertions = {
         }
     },
 };
+
+export const typeTestCtx = builtinContext.clone();
+export const typeAssertById: { [key: string]: Function } = {};
+Object.keys(assertions).forEach((key) => {
+    const { id } = addBuiltinDecorator(typeTestCtx, `type:${key}`, 0);
+    typeAssertById[idToString(id)] = assertions[key as keyof typeof assertions];
+});

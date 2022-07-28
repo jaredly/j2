@@ -37,7 +37,7 @@ _lineEnd = '\n' / _EOF
 _EOF = !.
 
 Toplevel = Aliases / TypeAlias / ToplevelLet / Expression
-TypeToplevel = TypeAlias / Type
+TypeToplevel = Aliases / TypeAlias / Type
 
 Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
 AliasItem = name:$AliasName hash:$HashRef

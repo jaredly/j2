@@ -817,6 +817,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Toplevel | [Toplevel | null, Ctx];
     ToplevelPost_ToplevelLet?: (node: ToplevelLet, ctx: Ctx) => null | Toplevel;
+    TypeToplevel_Aliases?: (
+        node: Aliases,
+        ctx: Ctx,
+    ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
+    TypeToplevelPost_Aliases?: (node: Aliases, ctx: Ctx) => null | TypeToplevel;
     TypeToplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
@@ -10290,6 +10295,25 @@ export const transformTypeToplevel = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
+        case 'Aliases': {
+            const transformed = visitor.TypeToplevel_Aliases
+                ? visitor.TypeToplevel_Aliases(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TypeAlias': {
             const transformed = visitor.TypeToplevel_TypeAlias
                 ? visitor.TypeToplevel_TypeAlias(node, ctx)
@@ -10313,6 +10337,12 @@ export const transformTypeToplevel = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
+        case 'Aliases': {
+            updatedNode = transformAliases(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TypeAlias': {
             updatedNode = transformTypeAlias(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -10329,6 +10359,16 @@ export const transformTypeToplevel = <Ctx>(
     }
 
     switch (updatedNode.type) {
+        case 'Aliases': {
+            const transformed = visitor.TypeToplevelPost_Aliases
+                ? visitor.TypeToplevelPost_Aliases(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
         case 'TypeAlias': {
             const transformed = visitor.TypeToplevelPost_TypeAlias
                 ? visitor.TypeToplevelPost_TypeAlias(updatedNode, ctx)

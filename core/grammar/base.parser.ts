@@ -69,7 +69,7 @@ export type _EOF = string;
 
 export type Toplevel = Aliases | TypeAlias | ToplevelLet | Expression;
 
-export type TypeToplevel = TypeAlias | Type;
+export type TypeToplevel = Aliases | TypeAlias | Type;
 
 export type Aliases = {
   type: "Aliases";
