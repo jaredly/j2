@@ -39,6 +39,7 @@ import {
 } from '../analyze';
 import { getType } from '../getType';
 import { Ctx, printCtx } from '../to-ast';
+import * as b from '@babel/types';
 
 export type FixtureFile = {
     builtins: Builtin[];
@@ -97,10 +98,7 @@ export const loadSections = (data: string, char = '=') => {
     return sections;
 };
 
-export const aliasesToString = (
-    aliases: { [key: string]: string },
-    mid = '=',
-) =>
+export const aliasesToString = (aliases: { [key: string]: string }) =>
     Object.keys(aliases).length
         ? 'alias ' +
           Object.entries(aliases)
@@ -139,6 +137,11 @@ export const fmtify = (text: string, builtins: Builtin[]) => {
     console.log();
     const [aliasesRaw, rest] = splitAliases(text);
     const aliases = aliasesFromString(aliasesRaw);
+
+    if (1 == 1) {
+        return aliasesToString(aliases) + rest;
+    }
+
     let ctx = builtinContext.clone();
     ctx = ctx.withAliases(aliases) as FullContext;
     loadBuiltins(builtins, ctx);
@@ -163,7 +166,14 @@ export const fmtify = (text: string, builtins: Builtin[]) => {
                         ]);
                     }
 
-                    const jsraw = generate(ir.js).code;
+                    let js: b.Node = ir.js;
+                    if (
+                        ir.js.body.length === 1 &&
+                        ir.js.body[0].type === 'ReturnStatement'
+                    ) {
+                        js = ir.js.body[0].argument!;
+                    }
+                    const jsraw = generate(js).code;
                     result.comments.push([
                         {
                             ...info.contents.top.loc,

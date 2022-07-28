@@ -43,6 +43,14 @@ const refmt = (file: TypeTestResult) => {
         ast.toplevels.push(info.contents.refmt);
     });
 
+    if (ast.toplevels.length > 0) {
+        ast.loc = {
+            start: ast.toplevels[0].loc.start,
+            end: ast.toplevels[ast.toplevels.length - 1].loc.end,
+            idx: -1,
+        };
+    }
+
     const pctx = newPPCtx();
     const pp = injectComments(
         pctx.ToPP.TypeFile(ast, pctx),

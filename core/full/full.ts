@@ -173,7 +173,7 @@ export const processTypeFileR = (
         // ctx.debugger();
         const config = typeToplevelT(res.i.contents.top, res.ctx);
         pctx = pctx.withToplevel(config);
-        console.log(pctx.reverse, config);
+        // console.log(pctx.reverse, config);
     });
 
     return { type: 'Success', info, ctx, pctx, comments: ast.comments };
