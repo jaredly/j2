@@ -1,4 +1,5 @@
 import generate from '@babel/generator';
+import * as b from '@babel/types';
 import * as fs from 'fs';
 import { refmt } from '../../../devui/refmt';
 import {
@@ -7,39 +8,19 @@ import {
     addBuiltinType,
     builtinContext,
     FullContext,
-    hashTypes,
     locClearVisitor,
     noloc,
 } from '../../ctx';
-import { fileToTast, typeToplevelT } from '../../elements/base';
+import { fileToTast } from '../../elements/base';
 import { TVar } from '../../elements/type-vbls';
 import { processFile } from '../../full/full';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
-import { toId } from '../../ids';
-import { iCtx } from '../../ir/ir';
-import { jCtx, Ctx as JCtx } from '../../ir/to-js';
 import { printToString } from '../../printer/pp';
-import { newPPCtx, pegPrinter } from '../../printer/to-pp';
-import {
-    transformExpression,
-    transformFile,
-    transformToplevel,
-    transformType,
-    Visitor,
-} from '../../transform-tast';
-import { Expression, File, Loc, Type } from '../../typed-ast';
-import {
-    errorCount,
-    initVerify,
-    populateSyms,
-    Verify,
-    verify,
-    verifyVisitor,
-} from '../analyze';
-import { getType } from '../getType';
-import { Ctx, printCtx } from '../to-ast';
-import * as b from '@babel/types';
+import { newPPCtx } from '../../printer/to-pp';
+import { transformFile } from '../../transform-tast';
+import { File } from '../../typed-ast';
+import { errorCount } from '../analyze';
 
 export type FixtureFile = {
     builtins: Builtin[];
@@ -274,172 +255,6 @@ export const parseRaw = (
     const [file, tctx] = fileToTast(fixComments(ast), ctx);
     return [file, tctx as FullContext];
 };
-
-export type FixtureResult = {
-    ctx: FullContext;
-    ctx2: FullContext;
-    input: string;
-    checked: File;
-    verify: Verify;
-    newOutput: string;
-    outputTast: File;
-    outputVerify: Verify;
-    aliases: { [key: string]: string };
-};
-
-export function runFixture(
-    { input, output_expected, output_failed, builtins }: Fixture,
-    baseCtx: FullContext,
-): FixtureResult {
-    let ctx = baseCtx.clone();
-    loadBuiltins(builtins, ctx);
-
-    let checked: File;
-    try {
-        [checked, ctx] = parseRaw(input, ctx);
-    } catch (err) {
-        console.log('Failed to parse input:', input);
-        console.log(err);
-        // throw err;
-        checked = { type: 'File', toplevels: [], loc: noloc, comments: [] };
-    }
-    let actx = printCtx(ctx);
-    // const backAliases = {};
-    let jctx = jCtx(ctx);
-
-    const printed = checked.toplevels.map((top) => {
-        ctx.resetSym();
-        populateSyms(top, ctx);
-        if (top.type === 'TypeAlias' || top.type === 'ToplevelLet') {
-            const tt = typeToplevelT(top, ctx)!;
-            jctx.actx = ctx = ctx.toplevelConfig(tt) as FullContext;
-            actx = actx.withToplevel(tt);
-            // jctx.actx = actx.actx as FullContext;
-            if (top.hash) {
-                tt.hash = top.hash;
-            }
-        }
-
-        if (top.type === 'ToplevelExpression') {
-            const { loc, expr } = top;
-            const t = getType(expr, ctx);
-            if (!t) {
-                checked.comments.push([
-                    {
-                        ...loc,
-                        start: loc.end,
-                    },
-                    '// Error, no type!',
-                ]);
-                return actx.ToAst.Toplevel(top, actx);
-            }
-            validateExpression(ctx, jctx, expr, actx, t, checked, loc);
-        }
-        if (top.type === 'ToplevelLet') {
-            top.elements.forEach((el, i) => {
-                jctx.addGlobalName(toId(top.hash!, i), el.name);
-            });
-            top.elements.forEach((el) => {
-                const t = getType(el.expr, ctx);
-                if (!t) {
-                    checked.comments.push([
-                        {
-                            ...el.loc,
-                            start: el.loc.end,
-                        },
-                        '// Error, no type!',
-                    ]);
-                    return;
-                }
-                validateExpression(
-                    ctx,
-                    jctx,
-                    el.expr,
-                    actx,
-                    t,
-                    checked,
-                    el.loc,
-                );
-            });
-        }
-
-        return actx.ToAst.Toplevel(top, actx);
-    });
-
-    const newOutput = printToString(
-        pegPrinter(
-            {
-                type: 'File',
-                toplevels: printed,
-                loc: checked.loc,
-                comments: checked.comments,
-            },
-            newPPCtx(false),
-        ),
-        100,
-    );
-
-    let outputTast: File;
-
-    let output = output_expected ? output_expected : output_failed;
-
-    let ctx2 = baseCtx.clone();
-    loadBuiltins(builtins, ctx2);
-    try {
-        // hmmmmm so what about ...
-        // removing error decorators, first? seems like I
-        // need to do it.
-        [outputTast, ctx2] = parseRaw(output, ctx2);
-    } catch (err) {
-        console.log(output);
-        console.log(err);
-        // throw err;
-        // throw err;
-        outputTast = { type: 'File', toplevels: [], loc: noloc, comments: [] };
-    }
-
-    return {
-        ctx,
-        ctx2,
-        input,
-        checked,
-        verify: verify(checked, ctx),
-        newOutput: aliasesToString(actx.backAliases) + newOutput,
-        outputTast,
-        outputVerify: verify(outputTast, ctx2),
-        aliases: actx.backAliases,
-    };
-}
-
-function validateExpression(
-    ctx: FullContext,
-    jctx: JCtx,
-    expr: Expression,
-    actx: Ctx,
-    t: Type,
-    checked: File,
-    loc: Loc,
-) {
-    const ictx = iCtx(ctx);
-    const ir = ictx.ToIR.Expression(expr, ictx);
-    const js = jctx.ToJS.IExpression(ir, jctx);
-    const jsraw = generate(js).code;
-    const pp = newPPCtx(false);
-    const ast = actx.ToAst.Type(t, actx);
-    const cm = printToString(pp.ToPP.Type(ast, pp), 200);
-    checked.comments.push([
-        { ...loc, start: loc.end },
-        '// ' + cm, // + ' ' + jsraw + ' */',
-    ]);
-    const results: Verify = initVerify();
-    transformExpression(expr, verifyVisitor(results, ctx), ctx);
-    if (!errorCount(results)) {
-        checked.comments.push([
-            { ...loc, start: loc.end },
-            '/* ' + jsraw + ' */',
-        ]);
-    }
-}
 
 export function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
     builtins.forEach((builtin) => {

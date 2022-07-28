@@ -8,6 +8,12 @@ import { newPPCtx } from '../core/printer/to-pp';
 import { errorCount } from '../core/typing/analyze';
 import * as b from '@babel/types';
 
+export const withFmt = (file: TestResult) => {
+    return file.type === 'Error'
+        ? { file, text: file.text }
+        : { file, text: refmt(file, true) };
+};
+
 export const refmt = (file: TestResult, addComments = false) => {
     if (file.type === 'Error') {
         return file.text;

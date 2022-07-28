@@ -27,7 +27,7 @@ and/or a nice error coalescing example.
 			- refmt (w/ sourcemap???)
 			- ToIR
 			- ToJS
-	- [ ] OK FOLKS, use `processFile` and `processTypeFile` everywhere
+	- [x] OK FOLKS, use `processFile` and `processTypeFile` everywhere
 		- [x] run-test.ts
 			- [x] initial
 			- [x] make sure failures propagate
@@ -41,13 +41,12 @@ and/or a nice error coalescing example.
 		- [x] Test.tsx
 		- [x] typetest.ts
 		- [x] TypeTest.tsx
-		- [ ] fixtures.test.ts
-			- ok, why am I printing with the wrong whatsit?
-			- also, why is my display in the UI all borked?
-		- [ ] OneFixture
+		- [x] OneFixture
 			- ugh why is my comment placement stuff not working?
 				why won't it place between lines?
 				I feel like I would want comments to be 'alwaysbreak' type things.
+				OH it was that my `loc`s on outer elements were wrong.
+		- [x] fixtures.test.ts
 - [ ] then get rid of `syms`, so that we can pave the way for type refinement
 - [ ] if/let it up my folks
 

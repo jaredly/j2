@@ -22,14 +22,8 @@ import { Editor } from './Editor';
 import { ShowBuiltins } from './FixtureFile';
 import { Highlight } from './Highlight';
 import { CancelIcon, ReportProblemIcon } from './Icons';
-import { refmt } from './refmt';
+import { withFmt } from './refmt';
 import { testStatuses } from './Test';
-
-const withFmt = (file: TestResult) => {
-    return file.type === 'Error'
-        ? { file, text: file.text }
-        : { file, text: refmt(file, true) };
-};
 
 export function OneFixture({
     fixture,

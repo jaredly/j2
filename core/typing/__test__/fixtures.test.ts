@@ -1,15 +1,9 @@
 import { readdirSync } from 'fs';
-import { builtinContext } from '../../ctx';
-import {
-    clearLocs,
-    loadBuiltins,
-    loadFixtures,
-    runFixture,
-} from './fixture-utils';
-import equal from 'fast-deep-equal';
-import { printToString } from '../../printer/pp';
-import { newPPCtx, pegPrinter } from '../../printer/to-pp';
-import { printCtx } from '../to-ast';
+import { withFmt } from '../../../devui/refmt';
+import { builtinContext, locClearVisitor } from '../../ctx';
+import { processFile } from '../../full/full';
+import { transformToplevel } from '../../transform-tast';
+import { loadBuiltins, loadFixtures } from './fixture-utils';
 
 export const diffPaths = (
     a: any,
@@ -68,50 +62,63 @@ readdirSync(base)
 
             it.each(file.fixtures)('$title', (fixture) => {
                 const baseCtx = builtinContext.clone();
-                loadBuiltins(file.builtins, baseCtx);
+                loadBuiltins(file.builtins.concat(fixture.builtins), baseCtx);
 
-                let { title, output_expected } = fixture;
+                let { title, output_expected, output_failed } = fixture;
 
-                let { checked, newOutput, outputTast, ctx2 } = runFixture(
-                    fixture,
-                    baseCtx,
+                if (output_failed) {
+                    throw new Error(`Has a failed output`);
+                }
+
+                const { text: newOutput, file: result } = withFmt(
+                    processFile(fixture.input, baseCtx.clone()),
                 );
 
                 const fullExpectedOutput = output_expected;
                 const fullOutput = newOutput;
 
                 if (output_expected && (!hasOnly || title.includes('[only]'))) {
-                    if (!outputTast) {
+                    if (result.type === 'Error') {
                         throw new Error(`Unable to process the output??`);
                     }
                     expect(fullOutput.trim()).toEqual(
                         fullExpectedOutput.trim(),
                     );
-                    const cc = { ...clearLocs(checked), comments: [] };
-                    const co = { ...clearLocs(outputTast), comments: [] };
-                    try {
-                        expect(cc).toEqual(co);
-                    } catch (err) {
-                        const ddd = diffPaths(cc, co, ['top']);
-                        const actx = printCtx(ctx2);
-                        const outputAgain = printToString(
-                            pegPrinter(
-                                actx.ToAst.File(outputTast, actx),
-                                newPPCtx(false),
-                            ),
-                            100,
-                        );
+
+                    const reprocessed = processFile(
+                        output_expected,
+                        baseCtx.clone(),
+                    );
+                    if (reprocessed.type === 'Error') {
+                        throw new Error(`Unable to reprocess the output??`);
+                    }
+                    if (reprocessed.info.length !== result.info.length) {
                         throw new Error(
-                            `${fullOutput}\n\n\n${fullExpectedOutput}\n\n${
-                                ddd
-                                    ? 'a=checked, b=outputTast ' +
-                                      JSON.stringify(ddd)
-                                    : null
-                            }\n${
-                                equal(cc, co) ? 'Equal' : 'Not equal'
-                            }\n\n${outputAgain}`,
+                            `Reprocessed output has different number of toplevels`,
                         );
                     }
+                    reprocessed.info.forEach((info, i) => {
+                        const orig = result.info[i];
+                        const got = transformToplevel(
+                            info.contents.top,
+                            locClearVisitor,
+                            null,
+                        );
+                        const old = transformToplevel(
+                            orig.contents.top,
+                            locClearVisitor,
+                            null,
+                        );
+                        try {
+                            expect(got).toEqual(old);
+                        } catch (err) {
+                            throw new Error(
+                                `Reprocessed toplevel ${i} differs in ${JSON.stringify(
+                                    diffPaths(got, old, ['top']),
+                                )}\n\n${(err as Error).message}`,
+                            );
+                        }
+                    });
                 }
             });
         });
