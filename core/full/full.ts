@@ -152,6 +152,15 @@ export const processTypeFileR = (
     const aliases: { [key: string]: string } = {};
 
     ast.toplevels.forEach((t) => {
+        if (t.type === 'Aliases') {
+            const aliases: { [key: string]: string } = {};
+            t.items.forEach(({ name, hash }) => {
+                aliases[name] = hash.slice(2, -1);
+            });
+            ctx = ctx.withAliases(aliases) as FullContext;
+            return;
+        }
+
         const res = processTypeToplevel(t, ctx, pctx, aliases);
         info.push(res.i);
         ctx = res.ctx;

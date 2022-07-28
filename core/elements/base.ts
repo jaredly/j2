@@ -223,21 +223,24 @@ export const removeErrorDecorators = (ctx: Ctx): Visitor<null> => {
 };
 
 export const ToTast = {
+    Aliases(top: p.Aliases, ctx: Ctx): t.ToplevelAliases {
+        return {
+            type: 'ToplevelAliases',
+            aliases: top.items.map((t) => ({
+                name: t.name,
+                hash: t.hash.slice(2, -1),
+                loc: t.loc,
+            })),
+            loc: top.loc,
+        };
+    },
     Toplevel(top: p.Toplevel, ctx: Ctx): t.Toplevel {
         if (top.type === 'TypeAlias') {
             return ctx.ToTast.TypeAlias(top, ctx);
         } else if (top.type === 'ToplevelLet') {
             return ctx.ToTast.ToplevelLet(top, ctx);
         } else if (top.type === 'Aliases') {
-            return {
-                type: 'ToplevelAliases',
-                aliases: top.items.map((t) => ({
-                    name: t.name,
-                    hash: t.hash.slice(2, -1),
-                    loc: t.loc,
-                })),
-                loc: top.loc,
-            };
+            return ctx.ToTast.Aliases(top, ctx);
         } else {
             return {
                 type: 'ToplevelExpression',
@@ -428,15 +431,16 @@ export const ToPP = {
             );
         }
         if (top.type === 'Aliases') {
-            return pp.text(
-                'alias ' +
-                    top.items
-                        .map((item) => `${item.name}${item.hash}`)
-                        .join(' '),
-                top.loc,
-            );
+            return ctx.ToPP.Aliases(top, ctx);
         }
         return ctx.ToPP.Expression(top, ctx);
+    },
+    Aliases(top: p.Aliases, ctx: PCtx): pp.PP {
+        return pp.text(
+            'alias ' +
+                top.items.map((item) => `${item.name}${item.hash}`).join(' '),
+            top.loc,
+        );
     },
     // ToplevelLet()
     TypeFile: (file: p.TypeFile, ctx: PCtx): pp.PP => {

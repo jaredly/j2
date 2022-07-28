@@ -9,6 +9,7 @@ import {
     transformToplevel,
     transformType,
     transformTypeAlias,
+    transformTypeToplevel,
     Visitor,
 } from '../transform-tast';
 import * as t from '../typed-ast';
@@ -182,14 +183,10 @@ export const decorate = (
 };
 
 export const analyzeTypeTop = (
-    ast: t.TypeAlias | t.Type,
+    ast: t.TypeToplevel,
     ctx: Ctx,
-): t.TypeAlias | t.Type => {
-    if (ast.type === 'TypeAlias') {
-        return transformTypeAlias(ast, analyzeVisitor(), { ctx, hit: {} });
-    } else {
-        return transformType(ast, analyzeVisitor(), { ctx, hit: {} });
-    }
+): t.TypeToplevel => {
+    return transformTypeToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
 };
 
 export const analyzeTop = (ast: t.Toplevel, ctx: Ctx): t.Toplevel => {

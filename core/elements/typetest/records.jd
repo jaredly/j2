@@ -1,3 +1,5 @@
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] type:shouldMatch#[h192c0e4997957120f145e35f197b06a370cc3115] type:shouldNotMatch#[h18cdade60873daf82b61c1a4804e2399e4d6fc4e]
+
 @type:shouldNotMatch(:int)
 @type:shouldMatch(:{hi: int}) {hi: int}
 
@@ -7,18 +9,26 @@
 @type:shouldNotMatch(:{hi: int})
 @type:shouldMatch(:{hi: int, *}) {hi: int, ho: int}
 
+alias error:notARecord#[hd698a9fde2a4cf1505e7a7bbb328bed86802f545]
+
 @type:shouldNotMatch(:{hi: int, ho: int})
-@type:shouldNotMatch(:{...int})
+@type:shouldNotMatch(:{...@error:notARecord() int})
 @type:shouldMatch(:{hi: int}) {hi: 10}
+
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 
 type HasName = {name: string}
 
-@type:shouldMatch(:{...HasName, age: int}) {name: string, age: int}
+@type:shouldMatch(:{...unnamed#[hf35e65da4ff782683a9f45b2eb205c9a942295f1], age: int}) {
+    name: string,
+    age: int,
+}
+
+alias float#[h1c9cc9450fe2e869a48abaa5e4a85271e1625474]
 
 @type:shouldMatch(:{...(10, int), 2: float})
 @type:shouldMatch(:(10, int, float)) (10, int, float)
 
-// Defaults!
 @type:shouldMatch(:{x: int = 5, y: float})
 @type:shouldNotMatch(:{x: int, y: float}) {y: 10.2}
 

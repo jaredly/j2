@@ -552,7 +552,6 @@ const isFailedTypeTest = (t: TypeWhat) => {
     if (t.file.type === 'Error') {
         return true;
     }
-    console.log(t);
     return (
         // t.file.info.some((top) => errorCount(top.verify) > 0) ||
         t.values.some((t) => !t.success)

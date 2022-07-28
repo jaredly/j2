@@ -31,6 +31,19 @@ const refmt = (file: TypeTestResult) => {
     };
 
     file.info.forEach((info) => {
+        const keys = Object.keys(info.aliases);
+        if (keys.length) {
+            ast.toplevels.push({
+                type: 'Aliases',
+                items: keys.sort().map((k) => ({
+                    type: 'AliasItem',
+                    name: k,
+                    hash: `#[${info.aliases[k]}]`,
+                    loc: noloc,
+                })),
+                loc: noloc,
+            });
+        }
         ast.toplevels.push(info.contents.refmt);
     });
 
@@ -97,7 +110,7 @@ export const TypeTestView = ({
                                     prefix: {
                                         text: '🚨',
                                     },
-                                    underline: true,
+                                    underline: 'red',
                                 }));
                         }}
                         onBlur={(text) => {
