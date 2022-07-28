@@ -55,8 +55,8 @@ readdirSync(base)
                             it(`should work`, () => {
                                 const { js, name, type } =
                                     info.contents.irtops![0];
-                                const res = ectx.executeJs(js, name);
                                 if (ctx.isBuiltinType(type!, 'bool')) {
+                                    const res = ectx.executeJs(js, name);
                                     expect(res).toEqual(true);
                                 }
                             });

@@ -147,18 +147,19 @@ export const Highlight = ({
         aliases: { [key: string]: string },
     ) => HL[];
 }) => {
-    const [aliases, rest] = React.useMemo(() => splitAliases(text), [text]);
-    text = rest;
+    // const [aliases, rest] = React.useMemo(() => splitAliases(text), [text]);
+    // text = rest;
 
     const marked = React.useMemo(() => {
         const locs = highlightLocations(
             text,
-            aliasesFromString(aliases),
+            {},
+            // aliasesFromString(aliases),
             typeFile,
             extraLocs,
         );
         return text.trim().length ? markUpTree(text, locs) : null;
-    }, [text, aliases]);
+    }, [text]);
 
     const annotations = React.useMemo(
         () => (info ? collectAnnotations(info.tast, info.ctx) : []),

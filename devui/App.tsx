@@ -349,6 +349,7 @@ export const App = () => {
     const hashPin =
         hashParts.length === 3 && hashParts[2] === 'pin' && hashParts[1];
 
+    console.log(files.fixtures[hashName]);
     return (
         <div
             style={{

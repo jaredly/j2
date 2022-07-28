@@ -41,6 +41,9 @@ and/or a nice error coalescing example.
 		- [x] Test.tsx
 		- [x] typetest.ts
 		- [x] TypeTest.tsx
+		- [ ] fixtures.test.ts
+			- ok, why am I printing with the wrong whatsit?
+			- also, why is my display in the UI all borked?
 		- [ ] OneFixture
 			- ugh why is my comment placement stuff not working?
 				why won't it place between lines?
