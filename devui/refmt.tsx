@@ -34,6 +34,12 @@ export const refmt = (file: TestResult) => {
         ast.toplevels.push(info.contents.refmt);
     });
 
+    ast.loc = {
+        start: ast.toplevels[0].loc.start,
+        end: ast.toplevels[ast.toplevels.length - 1].loc.end,
+        idx: -1,
+    };
+
     const pctx = newPPCtx();
     const pp = injectComments(pctx.ToPP.File(ast, pctx), ast.comments.slice());
     return printToString(pp, 100).replace(/[ \t]+$/gm, '');

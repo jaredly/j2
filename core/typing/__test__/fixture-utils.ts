@@ -132,12 +132,17 @@ export const splitAliases = (text: string): [string, string] => {
 };
 
 export const fmtify = (text: string, builtins: Builtin[]) => {
+    if (!text.trim()) {
+        return text.trim();
+    }
+    console.log(text);
+    console.log();
     const [aliasesRaw, rest] = splitAliases(text);
     const aliases = aliasesFromString(aliasesRaw);
     let ctx = builtinContext.clone();
     ctx = ctx.withAliases(aliases) as FullContext;
     loadBuiltins(builtins, ctx);
-    const result = processFile(rest);
+    const result = processFile(rest, ctx);
 
     if (result.type === 'Success') {
         const pctx = result.pctx;
@@ -171,13 +176,15 @@ export const fmtify = (text: string, builtins: Builtin[]) => {
         });
     }
 
-    return refmt(result);
+    const res = refmt(result);
+    console.log(res);
+    return text;
 };
 
 export const serializeFixtureFile = (file: FixtureFile) => {
     const fixmap: { [key: string]: string } = {};
     file.fixtures.forEach((fixture) => {
-        console.log('um', fixture.title);
+        // console.log('um', fixture.title, fixture.builtins);
         while (fixmap[fixture.title]) {
             fixture.title += '_';
         }

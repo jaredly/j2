@@ -42,6 +42,9 @@ and/or a nice error coalescing example.
 		- [x] typetest.ts
 		- [x] TypeTest.tsx
 		- [ ] OneFixture
+			- ugh why is my comment placement stuff not working?
+				why won't it place between lines?
+				I feel like I would want comments to be 'alwaysbreak' type things.
 - [ ] then get rid of `syms`, so that we can pave the way for type refinement
 - [ ] if/let it up my folks
 

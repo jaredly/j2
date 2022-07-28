@@ -3,81 +3,16 @@
 //:value:one:string
 
 ##[fixtures]##
-==[basic]==
+==[well-typed builtin call]==
 --[input]--
-switch (1, 2) {
-  (a, b) => a + b
-}
+toString(1)
+toString(3.4)
 
 --[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c
-switch (1, 2) {
-  (a#[0], b#[1]) => a#[0] + b#[1]
-}
-// 3
-/* (() => {
-  switch too complex;
-})() */
-
-==[types]==
---[input]--
-(a: int, b: int) => a + b
-
---[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
-(a#[0]: int, b#[1]: int) => a#[0] + b#[1]
-// (int, int) => int + int
-/* (a, b) => a + b */
-
-==[Kitchen Sink]==
---[input]--
-{
-let x = 10;
-let y = 20
-x + y
-}
-
---[output:expected]--
-alias +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c
-{
-    let x#[0] = 10;
-    let y#[1] = 20;
-    x#[0] + y#[1];
-}
-// 30
-/* (() => {
-  let x = 10;
-  let y = 20;
-  return x + y;
-})() */
-
-==[what]==
---[input]--
-let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
-    longSum#[r0](v#[0] - 1) + 1;
-} else {
-    0;
-} 
-longSum(3) == 3
-
---[output:expected]--
-alias -=h4dd9308469e477a4a756b4b286de0625d5a98af9 +=h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c ===h0e26cba9974393f0886bf43a5876c4132b1e69bb >=hc1d03250b26806868f520136d8a763b0c0edff9b bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f longSum=h180c08349290e3657b782708681044293779f0af
-let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
-    longSum#[r0](v#[0] - 1) + 1;
-} else {
-    0;
-}
-// (int) => int
-/* v => (() => {
-  if (v > 0) {
-    return $terms.longSum(v - 1) + 1;
-  } else {
-    return 0;
-  }
-})() */
-longSum(3) == 3
-// bool
-/* $terms.longSum(3) == 3 */
-
---[builtins]--
-//:type:Task:<E, T>
+alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h99b01457a189d1392ca641b22a79c97b3eda324c toString_h7=h7a085b7af0cace37678c385e00d352db9204d70a
+toString(1)
+// string
+/* toString(1) */
+toString_h7(3.4)
+// string
+/* toString(3.4) */
