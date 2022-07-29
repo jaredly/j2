@@ -75,7 +75,6 @@ type Internal = {
         values: { sym: Sym; type: Type }[];
     }[];
     syms: {
-        types: { [key: number]: { bound: Type | null; name: string } };
         // lots of questions about how Type variables
         // get inferred
         values: { [key: number]: { type: Type; name: string } };
@@ -369,7 +368,7 @@ export const newContext = (): FullContext => {
             aliases: {},
             locals: [],
             symid: 0,
-            syms: { types: {}, values: {} },
+            syms: { values: {} },
             decorators: { hashed: {}, names: {} },
             values: { hashed: {}, names: {} },
             types: { hashed: {}, names: {} },
@@ -390,12 +389,6 @@ export const newContext = (): FullContext => {
         },
 
         withBounds(bounds) {
-            const types = {
-                ...this[opaque].syms.types,
-                ...bounds,
-            };
-            this.debugger();
-            console.log('with bounds idk', bounds);
             return {
                 ...this,
                 [opaque]: {
@@ -410,8 +403,6 @@ export const newContext = (): FullContext => {
                             })),
                         },
                     ],
-                    // This is my first target: Disable it!
-                    // syms: { ...this[opaque].syms, types },
                 },
             };
         },
@@ -431,9 +422,9 @@ export const newContext = (): FullContext => {
         },
 
         getBound(sym) {
-            if (this[opaque].syms.types[sym] !== undefined) {
-                return this[opaque].syms.types[sym]?.bound;
-            }
+            // if (this[opaque].syms.types[sym] !== undefined) {
+            //     return this[opaque].syms.types[sym]?.bound;
+            // }
             for (let { types } of this[opaque].locals) {
                 for (let t of types) {
                     if (t.sym.id === sym) {
@@ -446,7 +437,7 @@ export const newContext = (): FullContext => {
         },
         resetSym() {
             this[opaque].symid = 0;
-            this[opaque].syms = { types: {}, values: {} };
+            this[opaque].syms = { values: {} };
             this[opaque].constraints = {};
         },
         isBuiltinType(t, name) {
@@ -504,12 +495,6 @@ export const newContext = (): FullContext => {
         // Modifiers
         withLocalTypes(types) {
             const locals: Internal['locals'][0] = { types, values: [] };
-            types.forEach((t) => {
-                this[opaque].syms.types[t.sym.id] = {
-                    bound: t.bound,
-                    name: t.sym.name,
-                };
-            });
             return {
                 ...this,
                 [opaque]: {

@@ -14,10 +14,6 @@ import { makeApply } from './apply';
 export const grammar = `
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
 TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
-
-TypeVariables = "<" _ vbls:TypeVbls ">" _ body:Expression
-TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
-TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
 `;
 
 // hello<T>(xyz)
@@ -144,6 +140,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
 
         return changed ? { ...node, args } : node;
     },
+    // TypeVariables(node, ctx) {},
     Type_TApply(node, { ctx, hit }) {
         const inner = ctx.resolveAnalyzeType(node.target);
         if (!inner) {

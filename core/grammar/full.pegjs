@@ -143,10 +143,6 @@ Star = pseudo:"*"
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
 TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
 
-TypeVariables = "<" _ vbls:TypeVbls ">" _ body:Expression
-TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
-TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
-
 
 // ifs.ts
 

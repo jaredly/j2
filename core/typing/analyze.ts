@@ -49,6 +49,7 @@ export type Ctx = {
     // This should only be in the analyze, not in to-tast
     resolveRecur(idx: number): Id | null;
     resolveTypeRecur(idx: number): t.Type | null;
+    withLocalTypes: (locals: { sym: t.Sym; bound: t.Type | null }[]) => Ctx;
 } & TMCtx;
 
 export type VisitorCtx = {

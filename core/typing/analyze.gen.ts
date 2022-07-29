@@ -12,6 +12,7 @@ import { Analyze as pattern } from '../elements/pattern';
 import { Analyze as recordexprs } from '../elements/record-exprs';
 import { Analyze as records } from '../elements/records';
 import { Analyze as switchs } from '../elements/switchs';
+import { Analyze as typevbls } from '../elements/type-vbls';
 import { Analyze as type } from '../elements/type';
 import {Ctx} from './analyze';
 import {Visitor} from '../transform-tast';
@@ -31,6 +32,7 @@ export const analyzeVisitor = (): Visitor<{ctx: Ctx, hit: {}}> => {
 		...recordexprs,
 		...records,
 		...switchs,
+		...typevbls,
 		...type
 	}
 }

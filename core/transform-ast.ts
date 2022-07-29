@@ -124,9 +124,6 @@ import {
     finalLineComment,
     tplStringChars,
     stringChar,
-    TypeVariables,
-    TypeVbls,
-    TypeVbl,
     PRecordPattern,
     top,
     AllTaggedTypes,
@@ -495,21 +492,6 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TypeAppVbls | [TypeAppVbls | null, Ctx];
     TypeAppVblsPost?: (node: TypeAppVbls, ctx: Ctx) => null | TypeAppVbls;
-    TypeVariables?: (
-        node: TypeVariables,
-        ctx: Ctx,
-    ) => null | false | TypeVariables | [TypeVariables | null, Ctx];
-    TypeVariablesPost?: (node: TypeVariables, ctx: Ctx) => null | TypeVariables;
-    TypeVbls?: (
-        node: TypeVbls,
-        ctx: Ctx,
-    ) => null | false | TypeVbls | [TypeVbls | null, Ctx];
-    TypeVblsPost?: (node: TypeVbls, ctx: Ctx) => null | TypeVbls;
-    TypeVbl?: (
-        node: TypeVbl,
-        ctx: Ctx,
-    ) => null | false | TypeVbl | [TypeVbl | null, Ctx];
-    TypeVblPost?: (node: TypeVbl, ctx: Ctx) => null | TypeVbl;
     If?: (node: If, ctx: Ctx) => null | false | If | [If | null, Ctx];
     IfPost?: (node: If, ctx: Ctx) => null | If;
     Else?: (node: Else, ctx: Ctx) => null | false | Else | [Else | null, Ctx];
@@ -1367,30 +1349,6 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_TypeAppVbls?: (
         node: TypeAppVbls,
-        ctx: Ctx,
-    ) => null | AllTaggedTypes;
-    AllTaggedTypes_TypeVariables?: (
-        node: TypeVariables,
-        ctx: Ctx,
-    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypesPost_TypeVariables?: (
-        node: TypeVariables,
-        ctx: Ctx,
-    ) => null | AllTaggedTypes;
-    AllTaggedTypes_TypeVbls?: (
-        node: TypeVbls,
-        ctx: Ctx,
-    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypesPost_TypeVbls?: (
-        node: TypeVbls,
-        ctx: Ctx,
-    ) => null | AllTaggedTypes;
-    AllTaggedTypes_TypeVbl?: (
-        node: TypeVbl,
-        ctx: Ctx,
-    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypesPost_TypeVbl?: (
-        node: TypeVbl,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_If?: (
@@ -11069,208 +11027,6 @@ export const transformstringChar = <Ctx>(
     return node;
 };
 
-export const transformTypeVbl = <Ctx>(
-    node: TypeVbl,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): TypeVbl => {
-    if (!node) {
-        throw new Error('No TypeVbl provided');
-    }
-
-    const transformed = visitor.TypeVbl ? visitor.TypeVbl(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        const updatedNode$vbl = transformIdentifier(node.vbl, visitor, ctx);
-        changed1 = changed1 || updatedNode$vbl !== node.vbl;
-
-        let updatedNode$bound = null;
-        const updatedNode$bound$current = node.bound;
-        if (updatedNode$bound$current != null) {
-            const updatedNode$bound$1$ = transformType(
-                updatedNode$bound$current,
-                visitor,
-                ctx,
-            );
-            changed1 =
-                changed1 || updatedNode$bound$1$ !== updatedNode$bound$current;
-            updatedNode$bound = updatedNode$bound$1$;
-        }
-
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                vbl: updatedNode$vbl,
-                bound: updatedNode$bound,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.TypeVblPost) {
-        const transformed = visitor.TypeVblPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformTypeVbls = <Ctx>(
-    node: TypeVbls,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): TypeVbls => {
-    if (!node) {
-        throw new Error('No TypeVbls provided');
-    }
-
-    const transformed = visitor.TypeVbls ? visitor.TypeVbls(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        let updatedNode$items = node.items;
-        {
-            let changed2 = false;
-            const arr1 = node.items.map((updatedNode$items$item1) => {
-                const result = transformTypeVbl(
-                    updatedNode$items$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$items$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$items = arr1;
-                changed1 = true;
-            }
-        }
-
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                items: updatedNode$items,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.TypeVblsPost) {
-        const transformed = visitor.TypeVblsPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformTypeVariables = <Ctx>(
-    node: TypeVariables,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): TypeVariables => {
-    if (!node) {
-        throw new Error('No TypeVariables provided');
-    }
-
-    const transformed = visitor.TypeVariables
-        ? visitor.TypeVariables(node, ctx)
-        : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        const updatedNode$vbls = transformTypeVbls(node.vbls, visitor, ctx);
-        changed1 = changed1 || updatedNode$vbls !== node.vbls;
-
-        const updatedNode$body = transformExpression(node.body, visitor, ctx);
-        changed1 = changed1 || updatedNode$body !== node.body;
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                vbls: updatedNode$vbls,
-                body: updatedNode$body,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.TypeVariablesPost) {
-        const transformed = visitor.TypeVariablesPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
 export const transformPRecordPattern = <Ctx>(
     node: PRecordPattern,
     visitor: Visitor<Ctx>,
@@ -12065,63 +11821,6 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'TypeAppVbls': {
             const transformed = visitor.AllTaggedTypes_TypeAppVbls
                 ? visitor.AllTaggedTypes_TypeAppVbls(node, ctx)
-                : null;
-            if (transformed != null) {
-                if (Array.isArray(transformed)) {
-                    ctx = transformed[1];
-                    if (transformed[0] != null) {
-                        node = transformed[0];
-                    }
-                } else if (transformed == false) {
-                    return node;
-                } else {
-                    node = transformed;
-                }
-            }
-            break;
-        }
-
-        case 'TypeVariables': {
-            const transformed = visitor.AllTaggedTypes_TypeVariables
-                ? visitor.AllTaggedTypes_TypeVariables(node, ctx)
-                : null;
-            if (transformed != null) {
-                if (Array.isArray(transformed)) {
-                    ctx = transformed[1];
-                    if (transformed[0] != null) {
-                        node = transformed[0];
-                    }
-                } else if (transformed == false) {
-                    return node;
-                } else {
-                    node = transformed;
-                }
-            }
-            break;
-        }
-
-        case 'TypeVbls': {
-            const transformed = visitor.AllTaggedTypes_TypeVbls
-                ? visitor.AllTaggedTypes_TypeVbls(node, ctx)
-                : null;
-            if (transformed != null) {
-                if (Array.isArray(transformed)) {
-                    ctx = transformed[1];
-                    if (transformed[0] != null) {
-                        node = transformed[0];
-                    }
-                } else if (transformed == false) {
-                    return node;
-                } else {
-                    node = transformed;
-                }
-            }
-            break;
-        }
-
-        case 'TypeVbl': {
-            const transformed = visitor.AllTaggedTypes_TypeVbl
-                ? visitor.AllTaggedTypes_TypeVbl(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -13223,24 +12922,6 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'TypeVariables': {
-            updatedNode = transformTypeVariables(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'TypeVbls': {
-            updatedNode = transformTypeVbls(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'TypeVbl': {
-            updatedNode = transformTypeVbl(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
         case 'If': {
             updatedNode = transformIf(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -13887,36 +13568,6 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'TypeAppVbls': {
             const transformed = visitor.AllTaggedTypesPost_TypeAppVbls
                 ? visitor.AllTaggedTypesPost_TypeAppVbls(updatedNode, ctx)
-                : null;
-            if (transformed != null) {
-                updatedNode = transformed;
-            }
-            break;
-        }
-
-        case 'TypeVariables': {
-            const transformed = visitor.AllTaggedTypesPost_TypeVariables
-                ? visitor.AllTaggedTypesPost_TypeVariables(updatedNode, ctx)
-                : null;
-            if (transformed != null) {
-                updatedNode = transformed;
-            }
-            break;
-        }
-
-        case 'TypeVbls': {
-            const transformed = visitor.AllTaggedTypesPost_TypeVbls
-                ? visitor.AllTaggedTypesPost_TypeVbls(updatedNode, ctx)
-                : null;
-            if (transformed != null) {
-                updatedNode = transformed;
-            }
-            break;
-        }
-
-        case 'TypeVbl': {
-            const transformed = visitor.AllTaggedTypesPost_TypeVbl
-                ? visitor.AllTaggedTypesPost_TypeVbl(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
