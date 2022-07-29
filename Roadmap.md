@@ -17,7 +17,7 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
-### [ ] Swithc type refinement!
+### [ ] Switch type refinement!
 ```
 let wantsTwo = (v: [`Two(int)]) => 123
 
