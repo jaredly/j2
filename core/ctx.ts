@@ -74,11 +74,6 @@ type Internal = {
         types: { sym: Sym; bound: Type | null }[];
         values: { sym: Sym; type: Type }[];
     }[];
-    syms: {
-        // lots of questions about how Type variables
-        // get inferred
-        values: { [key: number]: { type: Type; name: string } };
-    };
     toplevel: null | ToplevelConfig;
 };
 
@@ -338,19 +333,12 @@ export const newContext = (): FullContext => {
             };
         },
         toplevelConfig(toplevel) {
-            // if (toplevel && this[opaque].toplevel?.hash) {
-            //     toplevel.hash = this[opaque].toplevel.hash;
-            // }
-            // this[opaque].toplevel = toplevel;
             return {
                 ...this,
                 [opaque]: { ...this[opaque], toplevel },
             };
         },
         localType(sym) {
-            if (this[opaque].syms.values[sym] !== undefined) {
-                return this[opaque].syms.values[sym].type;
-            }
             for (let local of this[opaque].locals) {
                 for (let { sym: s, type } of local.values) {
                     if (s.id === sym) {
@@ -368,7 +356,6 @@ export const newContext = (): FullContext => {
             aliases: {},
             locals: [],
             symid: 0,
-            syms: { values: {} },
             decorators: { hashed: {}, names: {} },
             values: { hashed: {}, names: {} },
             types: { hashed: {}, names: {} },
@@ -394,7 +381,6 @@ export const newContext = (): FullContext => {
                 [opaque]: {
                     ...this[opaque],
                     locals: [
-                        ...this[opaque].locals,
                         {
                             values: [],
                             types: Object.keys(bounds).map((k) => ({
@@ -402,15 +388,13 @@ export const newContext = (): FullContext => {
                                 bound: bounds[+k].bound,
                             })),
                         },
+                        ...this[opaque].locals,
                     ],
                 },
             };
         },
 
         valueForSym(sym) {
-            if (this[opaque].syms.values[sym] !== undefined) {
-                return this[opaque].syms.values[sym];
-            }
             for (let { values } of this[opaque].locals) {
                 for (let t of values) {
                     if (t.sym.id === sym) {
@@ -434,7 +418,6 @@ export const newContext = (): FullContext => {
         },
         resetSym() {
             this[opaque].symid = 0;
-            this[opaque].syms = { values: {} };
             this[opaque].constraints = {};
         },
         isBuiltinType(t, name) {

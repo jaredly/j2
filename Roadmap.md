@@ -47,7 +47,7 @@ and/or a nice error coalescing example.
 				I feel like I would want comments to be 'alwaysbreak' type things.
 				OH it was that my `loc`s on outer elements were wrong.
 		- [x] fixtures.test.ts
-- [ ] then get rid of `syms`, so that we can pave the way for type refinement
+- [x] then get rid of `syms`, so that we can pave the way for type refinement
 - [ ] if/let it up my folks
 
 ## Switch next
