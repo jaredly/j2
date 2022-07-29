@@ -289,14 +289,6 @@ export const recordMatches = (
     if (!citems || !eitems) {
         return false;
     }
-    // const cnum = Object.keys(citems).length;
-    // const eenum = Object.keys(eitems).length;
-    // if (cnum < eenum) {
-    //     return false;
-    // }
-    // if (cnum > eenum && !expected.open) {
-    //     return false;
-    // }
     for (const key of Object.keys(eitems)) {
         if (!citems[key] && !eitems[key].default_) {
             return false;

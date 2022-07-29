@@ -17,6 +17,8 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
+- [ ] let's do some member expression support, so `makeSuper` will work better
+
 ### [ ] Switch type refinement!
 ```
 let wantsTwo = (v: [`Two(int)]) => 123

@@ -416,8 +416,9 @@ export const newContext = (): FullContext => {
             console.error('Failed to find bound for', sym);
             return null;
         },
-        resetSym() {
-            this[opaque].symid = 0;
+        resetSym(min) {
+            this[opaque].symid =
+                min == null ? 0 : Math.max(this[opaque].symid, min);
             this[opaque].constraints = {};
         },
         isBuiltinType(t, name) {

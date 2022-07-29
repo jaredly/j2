@@ -4,7 +4,7 @@ import { ToTast } from './to-tast.gen';
 export { makeToTast, type ToTast } from './to-tast.gen';
 
 export type Ctx = {
-    resetSym: () => void;
+    resetSym: (min?: number) => void;
     // hmm
     // seems like the ctx probably wants a say in the assignment of symbol IDs.
     // to ensure there aren't collisions.

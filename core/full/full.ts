@@ -10,6 +10,7 @@ import {
     typeToplevelT,
 } from '../elements/base';
 import * as p from '../grammar/base.parser';
+import * as trat from '../transform-ast';
 import { fixComments } from '../grammar/fixComments';
 import { iCtx } from '../ir/ir';
 import { jCtx, newExecutionContext } from '../ir/to-js';
@@ -316,6 +317,19 @@ export const processToplevel = (
     ctx.resetSym();
     const config = typeToplevel(t, ctx);
     ctx.resetSym();
+    trat.transformToplevel(
+        t,
+        {
+            PName(node) {
+                if (node.hash) {
+                    const num = +node.hash.slice(2, -1);
+                    ctx.resetSym(num + 1);
+                }
+                return null;
+            },
+        },
+        null,
+    );
     ctx = ctx.toplevelConfig(config) as FullContext;
     pctx = pctx.withToplevel(config);
     let top = ctx.ToTast.Toplevel(t, ctx);

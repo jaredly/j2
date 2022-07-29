@@ -126,21 +126,18 @@ export const TestView = ({
                         }}
                         onChange={(text) => setText(text)}
                     />
-                    <Button
-                        onPress={() => {
-                            if (test.file.type === 'Success' && test.values) {
-                                processFile(
-                                    text,
-                                    undefined,
-                                    test.values?.debugs,
-                                );
-                            }
-                        }}
-                    >
-                        Run with debug
-                    </Button>
                 </Card.Body>
             </Card>
+            <Button
+                css={{ marginTop: 16 }}
+                onPress={() => {
+                    if (test.file.type === 'Success' && test.values) {
+                        processFile(text, undefined, test.values?.debugs);
+                    }
+                }}
+            >
+                Run with debug
+            </Button>
         </div>
     );
 };

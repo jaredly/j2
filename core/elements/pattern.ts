@@ -229,14 +229,12 @@ export const getLocals = (
             locals.push({ sym: pat.sym, type });
             return;
         case 'PRecord':
+            type = ctx.resolveRefsAndApplies(type) ?? type;
             if (type.type !== 'TRecord') {
                 return;
             }
             const eitems = allRecordItems(type, ctx);
             if (eitems) {
-                // for (const [name, item] of eitems) {
-                //     locals.push({ sym: ctx.sym(name), type: item });
-                // }
                 pat.items.forEach(({ name, pat: item }) => {
                     if (eitems[name]) {
                         getLocals(item, eitems[name].value, locals, ctx);
@@ -245,6 +243,7 @@ export const getLocals = (
             }
             return;
         case 'PEnum': {
+            type = ctx.resolveRefsAndApplies(type) ?? type;
             if (type.type !== 'TEnum') {
                 return;
             }

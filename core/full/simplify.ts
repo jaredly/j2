@@ -3,14 +3,102 @@ import { transformExpression, transformStmt, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
 import { errorCount, initVerify, verifyVisitor } from '../typing/analyze';
 import { analyzeVisitor } from '../typing/analyze.gen';
+import { typeMatches } from '../typing/typeMatches';
+import * as b from '@babel/types';
+import { allRecordItems } from '../elements/records';
 
 type SCtx = FullContext & { tmpSym: number };
+
+const makeSuper = (
+    vtype: t.Type,
+    etype: t.Type,
+    target: t.Expression,
+    ctx: FullContext,
+): null | t.Expression => {
+    vtype = ctx.resolveAnalyzeType(vtype) ?? vtype;
+    etype = ctx.resolveAnalyzeType(etype) ?? etype;
+    if (vtype.type !== 'TRecord' || etype.type !== 'TRecord') {
+        return null;
+    }
+
+    const vitems = allRecordItems(vtype, ctx);
+    const eitems = allRecordItems(etype, ctx);
+    if (!vitems || !eitems) {
+        return null;
+    }
+
+    const thems: t.Record['items'] = [];
+    for (const [k, v] of Object.entries(eitems)) {
+        if (!vitems[k]) {
+            if (v.default_) {
+                thems.push({
+                    key: k,
+                    loc: v.default_.loc,
+                    type: 'RecordKeyValue',
+                    value: v.default_,
+                });
+            }
+        } else {
+            // const sup = makeSuper(
+            // 	vitems[k].value,
+            // 	eitems[k].value,
+            // 	// TODO: um lol I need to make member expressions work
+            // 	)
+        }
+    }
+
+    if (!thems.length) {
+        return null;
+    }
+
+    return {
+        type: 'Record',
+        spreads: [target],
+        loc: target.loc,
+        items: thems,
+    };
+    // return b.objectExpression([
+    // 	b.spreadElement(target),
+    // ])
+};
+
+const superify: Visitor<SCtx> = {
+    Apply(node, ctx) {
+        let changed = false;
+        const t = ctx.getType(node.target);
+        if (!t || t.type !== 'TLambda') {
+            return null;
+        }
+        const args = node.args.map((arg, i) => {
+            const argt = ctx.getType(arg);
+            if (!argt) {
+                return arg;
+            }
+            // One way, but not the other
+            const superr = makeSuper(argt, t.args[i].typ, arg, ctx);
+            if (superr) {
+                changed = true;
+                arg = superr;
+            }
+            // if (
+            //     typeMatches(argt, t.args[i].typ, ctx) &&
+            //     !typeMatches(t.args[i].typ, argt, ctx)
+            // ) {
+            //     console.log('GOUDN', argt, t.args[i]);
+            //     // changed = true
+            //     // return tdecorate(arg, 'argWrongType', ctx)
+            // }
+            return arg;
+        });
+        return changed ? { ...node, args } : null;
+    },
+};
 
 const liftStmts: Visitor<SCtx> = {
     Block(node, ctx) {
         const stmts: t.Stmt[] = [];
         let changed = false;
-        const lift = (stmt: t.Expression, prefix: string): t.Expression => {
+        const lift = (stmt: t.Expression, prefix = 'tmp'): t.Expression => {
             changed = true;
             const sym = ctx.tmpSym++;
             stmts.push({
@@ -34,19 +122,19 @@ const liftStmts: Visitor<SCtx> = {
                             return path[path.length - 2] === 'Let' ||
                                 node === stmt
                                 ? null
-                                : lift(node, 'result');
+                                : lift(node);
                         },
                         Expression_Switch(node, path) {
                             return path[path.length - 2] === 'Let' ||
                                 node === stmt
                                 ? null
-                                : lift(node, 'target');
+                                : lift(node);
                         },
                         Expression_If(node, path) {
                             return path[path.length - 2] === 'Let' ||
                                 node === stmt
                                 ? null
-                                : lift(node, 'cond');
+                                : lift(node);
                         },
                         // TODO: allow processing of lambda ... default args?
                         // or am I not going to make that a thing?
@@ -71,7 +159,7 @@ const liftStmts: Visitor<SCtx> = {
     },
 };
 
-const visitors: Visitor<SCtx>[] = [liftStmts];
+const visitors: Visitor<SCtx>[] = [liftStmts, superify];
 
 export const simplify = (expr: t.Expression, ctx: FullContext) => {
     visitors.forEach((visitor) => {

@@ -180,6 +180,7 @@ export const getTestResults = (file: SuccessTestResult): TestValues => {
             }
         }
         if (errorCount(info.verify)) {
+            values.debugs[i] = true;
             values.failed = true;
         }
     });

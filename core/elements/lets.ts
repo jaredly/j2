@@ -70,6 +70,7 @@ export const ToTast = {
                     const res = ctx.ToTast.Stmt(stmt, ctx);
                     if (res.type === 'Let') {
                         const locals: t.Locals = [];
+                        ctx.debugger();
                         const typ =
                             ctx.getType(res.expr) ??
                             typeForPattern(res.pat, ctx);
@@ -370,8 +371,12 @@ export const ToJS = {
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
     Let(node, ctx) {
-        const t = ctx.ctx.getType(node.expr);
+        let t = ctx.ctx.getType(node.expr);
+        if (t) {
+            t = ctx.ctx.resolveAnalyzeType(t);
+        }
         if (t && !typeMatchesPattern(node.pat, t, ctx.ctx)) {
+            ctx.ctx.debugger();
             return {
                 ...node,
                 expr: decorate(node.expr, 'patternMismatch', ctx.hit, ctx.ctx),
