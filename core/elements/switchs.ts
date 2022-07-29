@@ -16,6 +16,7 @@ import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
 import { iife } from './lets';
 import { unifyTypes } from '../typing/unifyTypes';
 import { dtype } from './ifs';
+import { patternIsExhaustive } from './exhaustive';
 
 export const grammar = `
 Switch = "switch" _ target:Expression _ "{" _ cases:Case* _ "}"
@@ -188,6 +189,30 @@ export const ToJS = {
     Switch(node: ISwitch, ctx: JCtx): b.Statement {
         let cases: b.SwitchCase[] = [];
         for (let kase of node.cases) {
+            if (patternIsExhaustive(kase.pat, node.ttype, ctx.actx)) {
+                cases.push(
+                    b.switchCase(
+                        null,
+                        ctx.ToJS.Block(
+                            {
+                                ...kase.expr,
+                                stmts: [
+                                    {
+                                        type: 'Let',
+                                        loc: kase.loc,
+                                        pat: kase.pat,
+                                        expr: node.target,
+                                        typ: node.ttype,
+                                    },
+                                    ...kase.expr.stmts,
+                                ],
+                            },
+                            ctx,
+                        ).body,
+                    ),
+                );
+                break;
+            }
             const test = asSimple(kase.pat);
             if (!test) {
                 return b.expressionStatement(
@@ -210,16 +235,24 @@ export const ToJS = {
         if (node.ttype.type === 'TBlank') {
             target = b.identifier(`_ blank type`);
         }
-        if (node.ttype.type === 'TEnum' && !allBare(node.ttype, ctx.actx)) {
-            target = b.conditionalExpression(
-                b.binaryExpression(
-                    '===',
-                    b.unaryExpression('typeof', target),
-                    b.stringLiteral('string'),
-                ),
-                target,
-                b.memberExpression(target, b.identifier('tag')),
-            );
+        if (node.ttype.type === 'TEnum') {
+            const cases = expandEnumCases(node.ttype, ctx.actx);
+            const allBare = cases?.every((kase) => !kase.payload) ?? false;
+            if (!allBare) {
+                if (cases?.length === 1) {
+                    target = b.memberExpression(target, b.identifier('tag'));
+                } else {
+                    target = b.conditionalExpression(
+                        b.binaryExpression(
+                            '===',
+                            b.unaryExpression('typeof', target),
+                            b.stringLiteral('string'),
+                        ),
+                        target,
+                        b.memberExpression(target, b.identifier('tag')),
+                    );
+                }
+            }
         }
         return b.switchStatement(target, cases);
     },

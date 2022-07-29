@@ -1,4 +1,77 @@
 
+
+
+
+(x:[`One | `Two(int)]) => {
+	switch x {
+		`Two => {
+			// x is refined to be `Two
+			let `Two(v) => x
+		}
+	}
+
+	switch (x, 3) {
+		(`Two, _) => {
+			// x is still refined to be `Two?
+			let `Two(v) => x
+		}
+	}
+
+	let m = (x, y)
+
+	switch m {
+		(`Two, _) => {
+			// x is still refined to be `Two?????
+			// I mean, that would be very cool.
+			let `Two(v) => x
+		}
+		:[`One | `Two] => {
+			// this seems like a nice way to say
+			// "if it belongs to this enum subset", right?
+			// now, this only makes sense for enums, right?
+			// hmmm oh or aliases. so yeah that makes sense.
+
+			// wellll what about :("prefix" + string)?
+			// or :(2u + uint)?
+			// could be a weird way of doing `if startsWith`,
+			// but in a way that makes type refinement make sense?
+			// 
+			// I mean I could also just have patterns /also/ support
+			// binops, so you could just do `"hi" + x => x`
+			// honestly that's kinda cool. Also regex patterns?
+			// hmm I probably don't want to be in the business of
+			// determining if several regexes are exaustive...
+		}
+	}
+
+	switch "mystring" {
+		// We would want to highlight those name groups,
+		// so that it's clear that they are variables.
+		/regex (?<x>hello+)/ => x
+		_ => 1111
+	}
+
+	if let "hello:" + name = text {
+		// now we can do something with name,
+		// also `text` has type `"hello:" + string`
+	}
+
+	// ohhh ok so first tangible application of type refinement:
+
+	let wantsTwo = (v: [`Two(int)]) => 123
+
+	(m: [`One | `Two(int)]) => switch m {
+		`One => 1
+		_ => wantsTwo(m)
+	}
+
+}
+
+
+
+
+------------------------
+
 https://antelang.org/docs/language/
 lots of cool things going on
 

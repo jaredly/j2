@@ -17,6 +17,43 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
+### [ ] Swithc type refinement!
+```
+let wantsTwo = (v: [`Two(int)]) => 123
+
+(m: [`One | `Two(int)]) => switch m {
+	`One => 1
+	x => wantsTwo(x)
+}
+```
+
+eh so I might not actually need type refinement to make if/let compile ok.
+like, maybe it would be nice idk. but, I can just compile if/lets in tojs, and
+I think it'll be fine.
+
+- [ ] make if/let work!
+	hmmmmmm might be awkward. like
+	for traversal I mean. I'll have to have a node
+	that combines the (test) with the (yes) so I can ensure that type
+	refinements happen correctly.
+
+	yeah that sounds fine!
+
+	SOULD if/let be a different thing entirely from if?
+	eh, probably not.
+
+	if let hello = what,
+		 someboolean,
+		 let other = things {
+			// yeah it's all one happy family.
+		 }
+
+		relatedly, you could do
+		if 1 < 3, 3 > 2 { }
+		so `,` instead of `&`.
+
+
+
 - [x] get it so that there's one codepath, used by both the web ui & the jest tests.
 	- outputs: validation, annotations, jsraw & stuff
 		- text -> ast
@@ -48,6 +85,7 @@ and/or a nice error coalescing example.
 				OH it was that my `loc`s on outer elements were wrong.
 		- [x] fixtures.test.ts
 - [x] then get rid of `syms`, so that we can pave the way for type refinement
+	- [ ] basic type refinement?
 - [ ] if/let it up my folks
 
 ## Switch next
