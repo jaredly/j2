@@ -22,7 +22,8 @@ if true {
 --[input]--
 {
 let x = 10;
-if x == 5 { 4 } else { 2 }}
+if x == 5 { 4 } else { 2 }
+}
 
 --[output:expected]--
 alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]

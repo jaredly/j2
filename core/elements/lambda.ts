@@ -65,7 +65,7 @@ local variables and stuff.
 */
 
 export const ToTast = {
-    Lambda({ type, args, res, body, loc }: p.Lambda, ctx: TCtx): t.Lambda {
+    Lambda({ args, res, body, loc }: p.Lambda, ctx: TCtx): t.Lambda {
         const locals: Locals = [];
         const targs: Lambda['args'] =
             args?.items.map((arg) => {
@@ -90,9 +90,8 @@ export const ToTast = {
             }) ?? [];
         ctx = ctx.withLocals(locals) as TCtx;
         const tbody = ctx.ToTast.Expression(body, ctx);
-        // console.log(tbody);
         const tres =
-            res && res.type !== 'TBlank' ? ctx.ToTast.Type(res, ctx) : null; //ctx.getType(tbody);
+            res && res.type !== 'TBlank' ? ctx.ToTast.Type(res, ctx) : null;
         return {
             type: 'Lambda',
             args: targs,
@@ -109,6 +108,9 @@ export const ToAst = {
         { type, args, res, resInferred, body, loc }: t.Lambda,
         ctx: TACtx,
     ): p.Lambda {
+        const locals: Locals = [];
+        args.map((arg) => getLocals(arg.pat, arg.typ, locals, ctx.actx));
+        ctx = { ...ctx, actx: ctx.actx.withLocals(locals) as JCtx['actx'] };
         return {
             type: 'Lambda',
             args: {
@@ -206,7 +208,11 @@ import {
 import { dtype } from './ifs';
 
 export const ToJS = {
-    Lambda({ type, args, res, body, loc }: ILambda, ctx: JCtx): b.Expression {
+    Lambda({ args, body }: ILambda, ctx: JCtx): b.Expression {
+        const locals: Locals = [];
+        args.map((arg) => getLocals(arg.pat, arg.typ, locals, ctx.actx));
+        ctx = { ...ctx, actx: ctx.actx.withLocals(locals) as JCtx['actx'] };
+
         return b.arrowFunctionExpression(
             args?.map((arg) => ctx.ToJS.Pattern(arg.pat, ctx)) ?? [],
             body.type === 'Block'
@@ -232,6 +238,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             }
             return arg;
         });
+        ctx = { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx };
         if (node.res) {
             const res = ctx.ctx.getType(node.body);
             if (res && !typeMatches(res, node.res, ctx.ctx)) {
@@ -244,9 +251,6 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
                 };
             }
         }
-        return [
-            changed ? { ...node, args } : null,
-            { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx },
-        ];
+        return [changed ? { ...node, args } : null, ctx];
     },
 };

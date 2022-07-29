@@ -51,7 +51,7 @@ export type Ctx = {
     withBounds(bounds: {
         [sym: number]: { bound: Type | null; name: string };
     }): Ctx;
-    withLocals: (locals: { sym: Sym; type: Type }[]) => Ctx;
+    withLocals: (locals: { sym: Sym; type: Type }[], better?: boolean) => Ctx;
     typeForRecur: (idx: number) => Type | null;
 };
 

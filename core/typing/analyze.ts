@@ -3,28 +3,20 @@
 // Should I separate the two steps? idk.
 
 import { FullContext, GlobalType, GlobalValue, noloc } from '../ctx';
+import { typeToplevelT } from '../elements/base';
+import { getLocals, typeForPattern } from '../elements/pattern';
 import { ErrorTag } from '../errors';
+import { Id, idsEqual } from '../ids';
 import {
     transformFile,
     transformToplevel,
-    transformType,
-    transformTypeAlias,
     transformTypeToplevel,
     Visitor,
 } from '../transform-tast';
 import * as t from '../typed-ast';
-import { extract, Id, idsEqual, idToString } from '../ids';
-import { Ctx as TMCtx } from './typeMatches';
 import { analyzeVisitor } from './analyze.gen';
 import { ToplevelConfig, TopTypeKind } from './to-tast';
-import {
-    getLocals,
-    Pattern,
-    typeForPattern,
-    typeMatchesPattern,
-} from '../elements/pattern';
-import { printTopLevel } from '../debug';
-import { typeToplevelT } from '../elements/base';
+import { Ctx as TMCtx } from './typeMatches';
 
 export type Ctx = {
     getTypeArgs(ref: t.RefKind): t.TVar[] | null;
@@ -238,7 +230,6 @@ export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
                     ctx.getType(node.expr) ??
                     typeForPattern(node.pat, ctx as FullContext);
                 getLocals(node.pat, typ, locals, ctx);
-                ctx.withLocals(locals);
                 return null;
             },
             Switch(node) {
@@ -252,7 +243,6 @@ export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
                         ctx,
                     );
                 });
-                ctx.withLocals(locals);
                 return null;
             },
             Lambda(node) {
@@ -260,7 +250,6 @@ export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
                 node.args.forEach((arg) => {
                     getLocals(arg.pat, arg.typ, locals, ctx);
                 });
-                ctx.withLocals(locals);
                 return null;
             },
         },
@@ -280,7 +269,6 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
             return null;
         },
         Toplevel(node, ctx) {
-            // populateSyms(node, ctx);
             return [
                 null,
                 ctx.toplevelConfig(typeToplevelT(node, ctx)) as FullContext,

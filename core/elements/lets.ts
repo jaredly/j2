@@ -4,12 +4,7 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { transformIBlock, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import {
-    Ctx as ACtx,
-    decorate,
-    pdecorate,
-    populateSyms,
-} from '../typing/analyze';
+import { Ctx as ACtx, decorate, pdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
@@ -103,9 +98,21 @@ export const ToAst = {
             stmts: node.stmts.length
                 ? {
                       type: 'Stmts',
-                      items: node.stmts.map((stmt, i) =>
-                          ctx.ToAst.Stmt(stmt, ctx),
-                      ),
+                      items: node.stmts.map((stmt, i) => {
+                          if (stmt.type === 'Let') {
+                              const locals: t.Locals = [];
+                              const typ =
+                                  ctx.actx.getType(stmt.expr) ??
+                                  typeForPattern(stmt.pat);
+                              getLocals(stmt.pat, typ, locals, ctx.actx);
+                              ctx = {
+                                  ...ctx,
+                                  actx: ctx.actx.withLocals(locals) as TCtx,
+                              };
+                          }
+
+                          return ctx.ToAst.Stmt(stmt, ctx);
+                      }),
                       loc: node.loc,
                   }
                 : null,
@@ -121,7 +128,6 @@ export const ToAst = {
         };
     },
     ToplevelLet(top: t.ToplevelLet, ctx: TACtx): p.ToplevelLet {
-        // populateSyms(top, ctx.actx);
         const tt = typeToplevelT(top, ctx.actx);
         ctx = ctx.withToplevel(tt);
         ctx.actx = ctx.actx.toplevelConfig(tt);
@@ -137,8 +143,6 @@ export const ToAst = {
             loc: top.loc,
         };
     },
-    // Apply({ type, target, args, loc }: t.Apply, ctx: TACtx): p.Apply {
-    // },
 };
 
 export const ToPP = {
@@ -199,8 +203,6 @@ export const ToIR = {
             loc: node.loc,
         };
     },
-    // Stmt(node: t.Stmt, ctx: ICtx): IStmt {
-    // },
     Block(node: t.Block, ctx: ICtx): t.IExpression {
         return iife(ctx.ToIR.BlockSt(node, ctx), ctx);
     },
@@ -288,10 +290,10 @@ export const iife = (st: t.IStmt, ctx: ICtx): t.IExpression => {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
+import { typeToplevelT } from './base';
+import { patternIsExhaustive } from './exhaustive';
 import { IIf } from './ifs';
 import { ISwitch } from './switchs';
-import { patternIsExhaustive } from './exhaustive';
-import { typeToplevelT } from './base';
 export const ToJS = {
     Block(node: t.IBlock, ctx: JCtx): b.BlockStatement {
         return b.blockStatement(
@@ -364,6 +366,18 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             };
         }
         return null;
+    },
+    Block(node, ctx) {
+        node.stmts?.map((stmt) => {
+            if (stmt.type === 'Let') {
+                const locals: t.Locals = [];
+                const typ =
+                    ctx.ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
+                getLocals(stmt.pat, typ, locals, ctx.ctx);
+                ctx = { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx };
+            }
+        });
+        return [null, ctx];
     },
     // Expression_Apply(node, { ctx, hit }) {
     // },

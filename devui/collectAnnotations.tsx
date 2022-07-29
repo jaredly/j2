@@ -3,7 +3,6 @@ import * as tt from '../core/transform-tast';
 import { File, Loc, refHash } from '../core/typed-ast';
 import { getType } from '../core/typing/getType';
 import { getLocals, Locals } from '../core/elements/pattern';
-import { populateSyms } from '../core/typing/analyze';
 import { typeToplevelT } from '../core/elements/base';
 import { typeToString } from './Highlight';
 
@@ -20,7 +19,6 @@ export function annotationVisitor(
 ): tt.Visitor<FullContext> {
     return {
         Toplevel(node, ctx) {
-            // populateSyms(node, ctx);
             return [
                 null,
                 ctx.toplevelConfig(typeToplevelT(node, ctx)) as FullContext,

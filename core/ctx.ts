@@ -358,6 +358,7 @@ export const newContext = (): FullContext => {
                     }
                 }
             }
+            this.debugger();
             return null;
         },
         extract() {
@@ -422,9 +423,6 @@ export const newContext = (): FullContext => {
         },
 
         getBound(sym) {
-            // if (this[opaque].syms.types[sym] !== undefined) {
-            //     return this[opaque].syms.types[sym]?.bound;
-            // }
             for (let { types } of this[opaque].locals) {
                 for (let t of types) {
                     if (t.sym.id === sym) {
@@ -513,14 +511,16 @@ export const newContext = (): FullContext => {
             };
         },
 
-        withLocals(values) {
+        withLocals(values, better = true) {
             const locals: Internal['locals'][0] = { types: [], values };
-            values.forEach((t) => {
-                this[opaque].syms.values[t.sym.id] = {
-                    type: t.type,
-                    name: t.sym.name,
-                };
-            });
+            if (!better) {
+                values.forEach((t) => {
+                    this[opaque].syms.values[t.sym.id] = {
+                        type: t.type,
+                        name: t.sym.name,
+                    };
+                });
+            }
             return {
                 ...this,
                 [opaque]: {
