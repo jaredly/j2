@@ -31,6 +31,7 @@ import { printCtx } from '../typing/to-ast';
 import * as b from '@babel/types';
 import { annotationVisitor } from '../../devui/collectAnnotations';
 import { toId } from '../ids';
+import { simplify } from './simplify';
 
 export type TestResult = Result<FileContents>;
 export type SuccessTestResult = Success<FileContents>;
@@ -96,10 +97,13 @@ export const toJs = (
     ctx: FullContext,
     name?: string,
 ): IrTop => {
+    // Here's where we simplify! and then re-verify.
+    // and ... return something invalid if we messed up.
+
     const ir = ictx.ToIR.BlockSt(
         {
             type: 'Block',
-            stmts: [t],
+            stmts: [simplify(t, ctx)],
             loc: t.loc,
         },
         ictx,

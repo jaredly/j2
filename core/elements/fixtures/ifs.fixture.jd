@@ -140,3 +140,31 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
     return 100;
   }
 } */
+
+==[very nested]==
+--[input]--
+let x = {
+  10 + (if true { 10 } else { 5 })
+}
+
+--[output:expected]--
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+let x = {
+    10 + if true {
+        10;
+    } else {
+        5;
+    };
+}
+// 10 + int
+/* {
+  let cond1000;
+
+  if (true) {
+    cond1000 = 10;
+  } else {
+    cond1000 = 5;
+  }
+
+  return 10 + cond1000;
+} */
