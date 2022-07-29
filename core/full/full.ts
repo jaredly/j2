@@ -133,6 +133,7 @@ export const executeFile = (file: Success<FileContents>) => {
 export const processTypeFile = (
     text: string,
     baseCtx = builtinContext,
+    debugs?: { [key: number]: boolean },
 ): Result<TypeContents> => {
     let ast: p.TypeFile;
     try {
@@ -145,19 +146,20 @@ export const processTypeFile = (
         };
     }
 
-    return processTypeFileR(ast, baseCtx);
+    return processTypeFileR(ast, baseCtx, debugs);
 };
 
 export const processTypeFileR = (
     ast: p.TypeFile,
     baseCtx = builtinContext,
+    debugs?: { [key: number]: boolean },
 ): Success<TypeContents> => {
     const info: ToplevelInfo<TypeContents>[] = [];
     let ctx = baseCtx.clone();
     let pctx = printCtx(ctx);
     const aliases: { [key: string]: string } = {};
 
-    ast.toplevels.forEach((t) => {
+    ast.toplevels.forEach((t, i) => {
         if (t.type === 'Aliases') {
             const aliases: { [key: string]: string } = {};
             t.items.forEach(({ name, hash }) => {
@@ -167,7 +169,20 @@ export const processTypeFileR = (
             return;
         }
 
-        const res = processTypeToplevel(t, ctx, pctx, aliases);
+        if (debugs && debugs[i]) {
+            console.log(`Debugging toplevel ${i}`);
+            debugger;
+        }
+        const maybeDebug =
+            debugs && debugs[i]
+                ? {
+                      ...ctx,
+                      debugger() {
+                          debugger;
+                      },
+                  }
+                : ctx;
+        const res = processTypeToplevel(t, maybeDebug, pctx, aliases);
         info.push(res.i);
         ctx = res.ctx;
         // ctx.debugger();
@@ -182,6 +197,7 @@ export const processTypeFileR = (
 export const processFileR = (
     ast: p.File,
     baseCtx: FullContext = builtinContext,
+    debugs?: { [key: number]: boolean },
 ): Success<FileContents> => {
     const info: ToplevelInfo<FileContents>[] = [];
     let ctx = baseCtx.clone();
@@ -191,7 +207,7 @@ export const processFileR = (
     const aliases: { [key: string]: string } = {};
     // TODO: load builtins?
 
-    ast.toplevels.forEach((t) => {
+    ast.toplevels.forEach((t, i) => {
         if (t.type === 'Aliases') {
             const aliases: { [key: string]: string } = {};
             t.items.forEach(({ name, hash }) => {
@@ -201,7 +217,16 @@ export const processFileR = (
             return;
         }
 
-        const res = processToplevel(t, ctx, ictx, jctx, pctx, aliases);
+        const maybeDebug =
+            debugs && debugs[i]
+                ? {
+                      ...ctx,
+                      debugger() {
+                          debugger;
+                      },
+                  }
+                : ctx;
+        const res = processToplevel(t, maybeDebug, ictx, jctx, pctx, aliases);
         info.push(res.i);
         ctx = res.ctx;
         pctx = res.pctx;
@@ -214,6 +239,7 @@ export const processFileR = (
 export const processFile = (
     text: string,
     baseCtx?: FullContext,
+    debugs?: { [key: number]: boolean },
 ): Result<FileContents> => {
     let ast: p.File;
     try {
@@ -225,7 +251,7 @@ export const processFile = (
             err: (err as p.SyntaxError).location,
         };
     }
-    return processFileR(ast, baseCtx);
+    return processFileR(ast, baseCtx, debugs);
 };
 
 export const processTypeToplevel = (
@@ -345,6 +371,18 @@ export const processToplevel = (
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
     transformToplevel(top, annotationVisitor(annotations), ctx);
+
+    // Ok, so here we want any extra verification.
+    // Because I want to be able to ... re-run with
+    // debugging on, if need be.
+
+    // ALternatively,
+    // I could allow, like right-clicking on a term
+    // and saying "debug". Which tbh might be better.
+
+    // Cheap & dirty is to say "debug number X"
+    // OH wait, I'm already showing a little red emoji,
+    // maybe when you click that it sets it to debug that one.
 
     return {
         i: {

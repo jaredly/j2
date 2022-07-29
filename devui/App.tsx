@@ -88,7 +88,7 @@ export type Files = {
 
 export type TypeWhat = {
     file: TypeTestResult;
-    values: Array<{ success: boolean; loc: Loc }>;
+    values: Array<{ success: boolean; loc: Loc; idx: number }>;
 };
 
 export type TestWhat = {
@@ -98,6 +98,7 @@ export type TestWhat = {
 
 export type TestValues = {
     info: ExecutionInfo;
+    debugs: { [key: number]: boolean };
     testResults: Array<{
         success: boolean;
         loc: Loc;
@@ -107,11 +108,12 @@ export type TestValues = {
 
 export const typeResults = (
     file: SuccessTypeResult,
-): Array<{ success: boolean; loc: Loc }> => {
-    const results: Array<{ success: boolean; loc: Loc }> = [];
+    debug?: boolean,
+): Array<{ success: boolean; loc: Loc; idx: number }> => {
+    const results: Array<{ success: boolean; loc: Loc; idx: number }> = [];
     const { info, ctx } = file;
 
-    info.forEach((info) => {
+    info.forEach((info, i) => {
         const type = info.contents.top;
         if (type.type === 'TDecorated') {
             const inner = type.inner;
@@ -129,7 +131,22 @@ export const typeResults = (
                     results.push({
                         success: err == null,
                         loc: d.loc,
+                        idx: i,
                     });
+                    if (err && debug) {
+                        console.log(`Debugging failing assertion`);
+                        debugger;
+                        typeAssertById[hash](
+                            d.args.map((arg) => arg.arg),
+                            inner,
+                            {
+                                ...ctx,
+                                debugger() {
+                                    debugger;
+                                },
+                            },
+                        );
+                    }
                 }
             });
         }
@@ -143,6 +160,7 @@ export const getTestResults = (file: SuccessTestResult): TestValues => {
         info: executeFile(file),
         testResults: [],
         failed: false,
+        debugs: {},
     };
     file.info.forEach((info, i) => {
         if (
@@ -156,6 +174,7 @@ export const getTestResults = (file: SuccessTestResult): TestValues => {
                     loc: info.contents.top.loc,
                 });
                 if (!values.info.exprs[i]) {
+                    values.debugs[i] = true;
                     values.failed = true;
                 }
             }
@@ -411,6 +430,7 @@ export const App = () => {
                                         info: { terms: {}, exprs: {} },
                                         testResults: [],
                                         failed: false,
+                                        debugs: {},
                                     },
                                 };
                                 break;

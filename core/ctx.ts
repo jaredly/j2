@@ -394,11 +394,24 @@ export const newContext = (): FullContext => {
                 ...this[opaque].syms.types,
                 ...bounds,
             };
+            this.debugger();
+            console.log('with bounds idk', bounds);
             return {
                 ...this,
                 [opaque]: {
                     ...this[opaque],
-                    syms: { ...this[opaque].syms, types },
+                    locals: [
+                        ...this[opaque].locals,
+                        {
+                            values: [],
+                            types: Object.keys(bounds).map((k) => ({
+                                sym: { name: bounds[+k].name, id: +k },
+                                bound: bounds[+k].bound,
+                            })),
+                        },
+                    ],
+                    // This is my first target: Disable it!
+                    // syms: { ...this[opaque].syms, types },
                 },
             };
         },

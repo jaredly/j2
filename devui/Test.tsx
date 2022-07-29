@@ -1,4 +1,4 @@
-import { Card } from '@nextui-org/react';
+import { Button, Card } from '@nextui-org/react';
 import * as React from 'react';
 import { builtinContext, FullContext } from '../core/ctx';
 import {
@@ -126,6 +126,19 @@ export const TestView = ({
                         }}
                         onChange={(text) => setText(text)}
                     />
+                    <Button
+                        onPress={() => {
+                            if (test.file.type === 'Success' && test.values) {
+                                processFile(
+                                    text,
+                                    undefined,
+                                    test.values?.debugs,
+                                );
+                            }
+                        }}
+                    >
+                        Run with debug
+                    </Button>
                 </Card.Body>
             </Card>
         </div>

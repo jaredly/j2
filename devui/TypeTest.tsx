@@ -1,4 +1,4 @@
-import { Card } from '@nextui-org/react';
+import { Button, Card } from '@nextui-org/react';
 import * as React from 'react';
 import { noloc } from '../core/ctx';
 import { injectComments } from '../core/elements/comments';
@@ -140,6 +140,23 @@ export const TypeTestView = ({
                         }}
                         onChange={(text) => setText(text)}
                     />
+                    <Button
+                        disabled={test.file.type === 'Error' || !test.values}
+                        onPress={() => {
+                            if (test.file.type === 'Success' && test.values) {
+                                const debugs: { [key: number]: boolean } = {};
+                                test.values.forEach((v) => {
+                                    if (!v.success) {
+                                        debugs[v.idx] = true;
+                                    }
+                                });
+                                processTypeFile(text, undefined, debugs);
+                                typeResults(test.file, true);
+                            }
+                        }}
+                    >
+                        Run with debug
+                    </Button>
                 </Card.Body>
             </Card>
         </div>

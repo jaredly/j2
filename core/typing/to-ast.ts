@@ -88,7 +88,6 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             if (!top) {
                 return this;
             }
-            console.log(`with toplevel`, top);
             const reverse = {
                 ...this.reverse,
                 types: { ...this.reverse.types },
