@@ -81,10 +81,17 @@ export const ToAst = {
             type: 'Switch',
             target: ctx.ToAst.Expression(tast.target, ctx),
             cases: tast.cases.map((c) => {
+                const typ =
+                    ctx.actx.getType(tast.target) ?? typeForPattern(c.pat);
+                const locals: t.Locals = [];
+                getLocals(c.pat, typ, locals, ctx.actx);
                 return {
                     type: 'Case',
                     pat: ctx.ToAst.Pattern(c.pat, ctx),
-                    expr: ctx.ToAst.Expression(c.expr, ctx),
+                    expr: ctx.ToAst.Expression(c.expr, {
+                        ...ctx,
+                        actx: ctx.actx.withLocals(locals) as ACtx,
+                    }),
                     loc: c.loc,
                 };
             }),
@@ -200,7 +207,13 @@ export const ToJS = {
     },
 };
 
-export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
+export type AVCtx = {
+    ctx: ACtx;
+    hit: {};
+    switchType?: t.Type | null;
+};
+
+export const Analyze: Visitor<AVCtx> = {
     Switch(node, { ctx, hit }) {
         const target = ctx.getType(node.target);
         if (!target) {
@@ -236,6 +249,21 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             }
             return c;
         });
-        return changed ? { ...node, cases } : null;
+        return [
+            changed ? { ...node, cases } : null,
+            { ctx, hit, switchType: target },
+        ];
+    },
+    Case(node, ctx) {
+        if (!ctx.switchType) {
+            console.error('no switch type');
+            return null;
+        }
+
+        const typ = ctx.switchType;
+        const locals: t.Locals = [];
+        getLocals(node.pat, typ, locals, ctx.ctx);
+
+        return [null, { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx }];
     },
 };

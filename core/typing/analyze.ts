@@ -257,7 +257,9 @@ export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
     );
 };
 
-export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
+type VCtx = Ctx & { switchType?: t.Type };
+
+export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
     const errorDecorators = _ctx.errorDecorators();
     return {
         TVbl(node, ctx) {
@@ -324,6 +326,24 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
                 }
             });
             return [null, ctx];
+        },
+        Switch(node, ctx) {
+            return [
+                null,
+                { ...ctx, switchType: ctx.getType(node.target) ?? undefined },
+            ];
+        },
+        Case(node, ctx) {
+            if (!ctx.switchType) {
+                console.error('no switch type');
+                return null;
+            }
+
+            const typ = ctx.switchType;
+            const locals: t.Locals = [];
+            getLocals(node.pat, typ, locals, ctx);
+
+            return [null, ctx.withLocals(locals) as Ctx];
         },
     };
 };
