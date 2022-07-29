@@ -158,13 +158,13 @@ let x = {
 }
 // 10 + int
 /* {
-  let cond1000;
+  let tmp1000;
 
   if (true) {
-    cond1000 = 10;
+    tmp1000 = 10;
   } else {
-    cond1000 = 5;
+    tmp1000 = 5;
   }
 
-  return 10 + cond1000;
+  return 10 + tmp1000;
 } */

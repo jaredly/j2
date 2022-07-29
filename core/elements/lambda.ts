@@ -242,7 +242,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         let changed = false;
         const args = node.args.map((arg) => {
             getLocals(arg.pat, arg.typ, locals, ctx.ctx);
-            const t = ctx.ctx.resolveAnalyzeType(arg.typ);
+            const t = ctx.ctx.resolveAnalyzeType(arg.typ) ?? arg.typ;
             // console.log('check it', arg.pat, arg.typ);
             if (!t || !typeMatchesPattern(arg.pat, t, ctx.ctx)) {
                 // console.log('hup hit it');
