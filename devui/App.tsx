@@ -434,7 +434,9 @@ export const App = () => {
                                 href={`#test:${name}`}
                                 block
                                 color={
-                                    name === hashName ? 'primary' : 'secondary'
+                                    name === hashName?.slice('text:'.length)
+                                        ? 'primary'
+                                        : 'secondary'
                                 }
                             >
                                 <ShowTest

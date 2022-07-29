@@ -60,7 +60,7 @@ and/or a nice error coalescing example.
 		BUT I do need to get type refinement working
 	- ehm. ... 
 
-- [ ] ugh it's really vexing that the UI uses different codepaths for at least some of its stuff, such that it can be broken without the jest tests being alerted.
+- [x] ugh it's really vexing that the UI uses different codepaths for at least some of its stuff, such that it can be broken without the jest tests being alerted.
 
 ... run 'analyze' after 'simplify', to ensure that nothing went wrong
 hmmm, so if/let
