@@ -297,7 +297,21 @@ import { ISwitch } from './switchs';
 export const ToJS = {
     Block(node: t.IBlock, ctx: JCtx): b.BlockStatement {
         return b.blockStatement(
-            node.stmts.map((stmt) => ctx.ToJS.IStmt(stmt, ctx)),
+            node.stmts.map((stmt) => {
+                node.stmts?.forEach((stmt) => {
+                    if (stmt.type === 'Let') {
+                        const locals: t.Locals = [];
+                        const typ = stmt.typ;
+                        getLocals(stmt.pat, typ, locals, ctx.actx);
+                        ctx = {
+                            ...ctx,
+                            actx: ctx.actx.withLocals(locals) as ACtx,
+                        };
+                    }
+                });
+
+                return ctx.ToJS.IStmt(stmt, ctx);
+            }),
         );
     },
     Let(node: t.ILet, ctx: JCtx): b.Statement {
@@ -368,7 +382,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         return null;
     },
     Block(node, ctx) {
-        node.stmts?.map((stmt) => {
+        node.stmts?.forEach((stmt) => {
             if (stmt.type === 'Let') {
                 const locals: t.Locals = [];
                 const typ =
@@ -379,6 +393,4 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         });
         return [null, ctx];
     },
-    // Expression_Apply(node, { ctx, hit }) {
-    // },
 };

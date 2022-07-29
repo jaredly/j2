@@ -81,7 +81,6 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             ctx = ctx.withLocals(locals);
             const res = getType(expr.body, ctx);
             if (!res) {
-                // ctx.debugger();
                 return null;
             }
             return {
@@ -110,7 +109,6 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             }
             return maybeTref(ctx.getBuiltinRef('string'));
         case 'Ref':
-            // ctx.debugger();
             switch (expr.kind.type) {
                 case 'Unresolved':
                     return null;

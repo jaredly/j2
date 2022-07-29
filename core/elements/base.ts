@@ -616,7 +616,6 @@ export const ToJS = {
             const id = ctx.actx.resolveRecur(x.kind.idx);
             if (!id) {
                 console.log(id, x.kind.idx, ctx.actx);
-                // ctx.actx.debugger();
             }
             if (ctx.namespaced) {
                 return b.memberExpression(

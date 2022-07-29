@@ -313,6 +313,18 @@ export const verifyVisitor = (results: Verify, _ctx: Ctx): Visitor<Ctx> => {
             }
             return null;
         },
+        Block(node, ctx) {
+            node.stmts?.forEach((stmt) => {
+                if (stmt.type === 'Let') {
+                    const locals: t.Locals = [];
+                    const typ =
+                        ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
+                    getLocals(stmt.pat, typ, locals, ctx);
+                    ctx = ctx.withLocals(locals) as Ctx;
+                }
+            });
+            return [null, ctx];
+        },
     };
 };
 

@@ -343,8 +343,6 @@ export const expandEnumCases = (
     ctx: Ctx,
     path: string[] = [],
 ): null | EnumCase[] => {
-    // ctx.debugger();
-    // console.log('expanding?', path);
     const cases: EnumCase[] = [];
     for (let kase of type.cases) {
         if (kase.type === 'EnumCase') {

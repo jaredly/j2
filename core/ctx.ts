@@ -358,7 +358,6 @@ export const newContext = (): FullContext => {
                     }
                 }
             }
-            this.debugger();
             return null;
         },
         extract() {
@@ -649,7 +648,6 @@ export const newContext = (): FullContext => {
                         loc: noloc,
                     };
                 } else {
-                    // ctx.debugger();
                     console.log('no hash on toplevel sry', toplevel);
                 }
             }
