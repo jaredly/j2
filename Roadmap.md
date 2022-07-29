@@ -17,6 +17,18 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
+- [ ] andThen!
+	- [x] basic support with specified args
+	- [ ] could be cool to be able to infer the type variables.
+		however, I assume we won't be doing too much of that.
+- [ ] await!
+	- [x] syntaxxx
+	- [x] getType of the await
+	- [ ] getType of the lambda, gotta do it
+- [ ] MAKE A THING
+	- power-call! Also known as `await` probably.
+		`print!()`.
+		`let m = print!(); ...` => `andThen<??, ??, ??, ??>(print(), m => ...)`
 - [ ] let's do some member expression support, so `makeSuper` will work better
 
 ### [ ] Switch type refinement!
@@ -152,7 +164,7 @@ BIG NEXT
 	- [x] oh wait, aliases ...
 		hm ok
 		...
-- [ ] switch/enum patterns
+- [x] switch/enum patterns
 	- next up! switch!
 	- hm should I do if/let first?
 		that way I can change switch to a series of if/lets.

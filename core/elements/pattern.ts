@@ -204,7 +204,7 @@ export const typeForPattern = (pat: Pattern, ctx?: TCtx): t.Type => {
                     default_: null,
                 })),
                 loc: pat.loc,
-                open: true,
+                open: pat.items.length > 0,
                 spreads: [],
             };
         case 'PBlank':
@@ -567,7 +567,7 @@ export const ToJS = {
             case 'PDecorated':
                 return ctx.ToJS.PatternCond(p.inner, target, type, ctx);
             case 'PRecord':
-                if (type.type !== 'TRecord') {
+                if (type.type !== 'TRecord' || p.items.length === 0) {
                     return null;
                 }
                 if (p.items.every((item, i) => item.name === i.toString())) {
@@ -631,6 +631,9 @@ export const ToJS = {
             case 'PDecorated':
                 return ctx.ToJS.Pattern(p.inner, ctx);
             case 'PRecord':
+                if (p.items.length === 0) {
+                    return null;
+                }
                 if (p.items.every((item, i) => item.name === i.toString())) {
                     return b.arrayPattern(
                         p.items.map((item) => ctx.ToJS.Pattern(item.pat, ctx)),

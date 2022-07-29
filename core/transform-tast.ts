@@ -50,6 +50,7 @@ import {
     Switch,
     Case,
     Boolean,
+    Await,
     TemplateString,
     TypeApplication,
     DecoratedExpression,
@@ -321,6 +322,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | ILambda | [ILambda | null, Ctx];
     ILambdaPost?: (node: ILambda, ctx: Ctx) => null | ILambda;
+    Await?: (
+        node: Await,
+        ctx: Ctx,
+    ) => null | false | Await | [Await | null, Ctx];
+    AwaitPost?: (node: Await, ctx: Ctx) => null | Await;
     Block?: (
         node: Block,
         ctx: Ctx,
@@ -352,6 +358,8 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IAssign | [IAssign | null, Ctx];
     IAssignPost?: (node: IAssign, ctx: Ctx) => null | IAssign;
+    Ctx?: (node: Ctx, ctx: Ctx) => null | false | Ctx | [Ctx | null, Ctx];
+    CtxPost?: (node: Ctx, ctx: Ctx) => null | Ctx;
     TApply?: (
         node: TApply,
         ctx: Ctx,
@@ -550,6 +558,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
     ExpressionPost_Boolean?: (node: Boolean, ctx: Ctx) => null | Expression;
+    Expression_Await?: (
+        node: Await,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Await?: (node: Await, ctx: Ctx) => null | Expression;
     Expression_TemplateString?: (
         node: TemplateString,
         ctx: Ctx,
@@ -4660,6 +4673,65 @@ export const transformBoolean = <Ctx>(
     return node;
 };
 
+export const transformAwait = <Ctx>(
+    node: Await,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Await => {
+    if (!node) {
+        throw new Error('No Await provided');
+    }
+
+    const transformed = visitor.Await ? visitor.Await(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$target = transformExpression(
+            node.target,
+            visitor,
+            ctx,
+        );
+        changed1 = changed1 || updatedNode$target !== node.target;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                target: updatedNode$target,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.AwaitPost) {
+        const transformed = visitor.AwaitPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformTemplateString = <Ctx>(
     node: TemplateString,
     visitor: Visitor<Ctx>,
@@ -5130,6 +5202,25 @@ export const transformExpression = <Ctx>(
             break;
         }
 
+        case 'Await': {
+            const transformed = visitor.Expression_Await
+                ? visitor.Expression_Await(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TemplateString': {
             const transformed = visitor.Expression_TemplateString
                 ? visitor.Expression_TemplateString(node, ctx)
@@ -5247,6 +5338,12 @@ export const transformExpression = <Ctx>(
 
         case 'Boolean': {
             updatedNode = transformBoolean(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Await': {
+            updatedNode = transformAwait(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -5370,6 +5467,16 @@ export const transformExpression = <Ctx>(
         case 'Boolean': {
             const transformed = visitor.ExpressionPost_Boolean
                 ? visitor.ExpressionPost_Boolean(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Await': {
+            const transformed = visitor.ExpressionPost_Await
+                ? visitor.ExpressionPost_Await(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

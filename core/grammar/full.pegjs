@@ -25,9 +25,14 @@ UnresolvedHash = "#[" ":unresolved:" "]"
 // apply.ts
 
 Apply = target:Atom suffixes_drop:Suffix*
-Suffix = CallSuffix / TypeApplicationSuffix
+Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix
 CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
+
+
+// awaits.ts
+
+AwaitSuffix = pseudo:"!"
 
 
 // base.ts

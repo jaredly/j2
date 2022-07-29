@@ -1,5 +1,6 @@
 
 import { ToAst as apply } from '../elements/apply';
+import { ToAst as awaits } from '../elements/awaits';
 import { ToAst as base } from '../elements/base';
 import { ToAst as binops } from '../elements/binops';
 import { ToAst as constants } from '../elements/constants';
@@ -18,11 +19,12 @@ import { ToAst as switchs } from '../elements/switchs';
 import { ToAst as typevbls } from '../elements/type-vbls';
 import { ToAst as type } from '../elements/type';
 
-export type ToAst = typeof apply & typeof base & typeof binops & typeof constants & typeof decorators & typeof enumexprs & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof recordexprs & typeof records & typeof switchs & typeof typevbls & typeof type;
+export type ToAst = typeof apply & typeof awaits & typeof base & typeof binops & typeof constants & typeof decorators & typeof enumexprs & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof recordexprs & typeof records & typeof switchs & typeof typevbls & typeof type;
 
 export const makeToAst = (): ToAst => {
 	return {
 		...apply,
+		...awaits,
 		...base,
 		...binops,
 		...constants,

@@ -257,11 +257,70 @@ export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
     );
 };
 
-type VCtx = Ctx & { switchType?: t.Type };
+export const localTrackingVisitor: Visitor<TMCtx & { switchType?: t.Type }> = {
+    Lambda(node, ctx) {
+        const locals: t.Locals = [];
 
+        node.args.forEach((arg) => getLocals(arg.pat, arg.typ, locals, ctx));
+        return [null, ctx.withLocals(locals) as Ctx];
+    },
+    Block(node, ctx) {
+        node.stmts?.forEach((stmt) => {
+            if (stmt.type === 'Let') {
+                const locals: t.Locals = [];
+                const typ = ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
+                getLocals(stmt.pat, typ, locals, ctx);
+                ctx = ctx.withLocals(locals) as Ctx;
+            }
+        });
+        return [null, ctx];
+    },
+    IfYes(node, ctx) {
+        const locals: t.Locals = [];
+        node.conds.map((cond) => {
+            if (cond.type === 'Let') {
+                getLocals(
+                    cond.pat,
+                    ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
+                    locals,
+                    ctx,
+                );
+            }
+            return cond;
+        });
+        return [null, ctx.withLocals(locals) as Ctx];
+    },
+    Switch(node, ctx) {
+        return [
+            null,
+            { ...ctx, switchType: ctx.getType(node.target) ?? undefined },
+        ];
+    },
+    Case(node, ctx) {
+        if (!ctx.switchType) {
+            console.error('no switch type');
+            return null;
+        }
+
+        const typ = ctx.switchType;
+        const locals: t.Locals = [];
+        getLocals(node.pat, typ, locals, ctx);
+
+        return [null, ctx.withLocals(locals) as Ctx];
+    },
+};
+
+type VCtx = Ctx & { switchType?: t.Type };
 export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
     const errorDecorators = _ctx.errorDecorators();
     return {
+        ...(localTrackingVisitor as any as Visitor<VCtx>),
+        Toplevel(node, ctx) {
+            return [
+                null,
+                ctx.toplevelConfig(typeToplevelT(node, ctx)) as FullContext,
+            ];
+        },
         TVbl(node, ctx) {
             results.errors.push(node.loc);
             return null;
@@ -269,12 +328,6 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
         TBlank(node) {
             results.errors.push(node.loc);
             return null;
-        },
-        Toplevel(node, ctx) {
-            return [
-                null,
-                ctx.toplevelConfig(typeToplevelT(node, ctx)) as FullContext,
-            ];
         },
         TRef(node) {
             if (node.ref.type === 'Unresolved') {
@@ -287,14 +340,6 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
                 results.unresolved.value.push(node.loc);
             }
             return null;
-        },
-        Lambda(node, ctx) {
-            const locals: t.Locals = [];
-
-            node.args.forEach((arg) =>
-                getLocals(arg.pat, arg.typ, locals, ctx),
-            );
-            return [null, ctx.withLocals(locals) as Ctx];
         },
         Expression(node, ctx) {
             if (!ctx.getType(node)) {
@@ -314,51 +359,6 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
                 }
             }
             return null;
-        },
-        Block(node, ctx) {
-            node.stmts?.forEach((stmt) => {
-                if (stmt.type === 'Let') {
-                    const locals: t.Locals = [];
-                    const typ =
-                        ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
-                    getLocals(stmt.pat, typ, locals, ctx);
-                    ctx = ctx.withLocals(locals) as Ctx;
-                }
-            });
-            return [null, ctx];
-        },
-        IfYes(node, ctx) {
-            const locals: t.Locals = [];
-            node.conds.map((cond) => {
-                if (cond.type === 'Let') {
-                    getLocals(
-                        cond.pat,
-                        ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
-                        locals,
-                        ctx,
-                    );
-                }
-                return cond;
-            });
-            return [null, ctx.withLocals(locals) as Ctx];
-        },
-        Switch(node, ctx) {
-            return [
-                null,
-                { ...ctx, switchType: ctx.getType(node.target) ?? undefined },
-            ];
-        },
-        Case(node, ctx) {
-            if (!ctx.switchType) {
-                console.error('no switch type');
-                return null;
-            }
-
-            const typ = ctx.switchType;
-            const locals: t.Locals = [];
-            getLocals(node.pat, typ, locals, ctx);
-
-            return [null, ctx.withLocals(locals) as Ctx];
         },
     };
 };

@@ -81,6 +81,7 @@ import {
     CallSuffix,
     TypeApplicationSuffix,
     TypeAppVbls,
+    AwaitSuffix,
     BinOpRight,
     TApply,
     TApply_inner,
@@ -172,6 +173,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | CommaExpr | [CommaExpr | null, Ctx];
     CommaExprPost?: (node: CommaExpr, ctx: Ctx) => null | CommaExpr;
+    AwaitSuffix?: (
+        node: AwaitSuffix,
+        ctx: Ctx,
+    ) => null | false | AwaitSuffix | [AwaitSuffix | null, Ctx];
+    AwaitSuffixPost?: (node: AwaitSuffix, ctx: Ctx) => null | AwaitSuffix;
     _lineEnd?: (
         node: _lineEnd,
         ctx: Ctx,
@@ -802,6 +808,11 @@ export type Visitor<Ctx> = {
         node: TypeApplicationSuffix,
         ctx: Ctx,
     ) => null | Suffix;
+    Suffix_AwaitSuffix?: (
+        node: AwaitSuffix,
+        ctx: Ctx,
+    ) => null | false | Suffix | [Suffix | null, Ctx];
+    SuffixPost_AwaitSuffix?: (node: AwaitSuffix, ctx: Ctx) => null | Suffix;
     Toplevel_Aliases?: (
         node: Aliases,
         ctx: Ctx,
@@ -1125,6 +1136,14 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_CommaExpr?: (
         node: CommaExpr,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_AwaitSuffix?: (
+        node: AwaitSuffix,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_AwaitSuffix?: (
+        node: AwaitSuffix,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_Aliases?: (
@@ -6143,6 +6162,56 @@ export const transformTypeApplicationSuffix = <Ctx>(
     return node;
 };
 
+export const transformAwaitSuffix = <Ctx>(
+    node: AwaitSuffix,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): AwaitSuffix => {
+    if (!node) {
+        throw new Error('No AwaitSuffix provided');
+    }
+
+    const transformed = visitor.AwaitSuffix
+        ? visitor.AwaitSuffix(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.AwaitSuffixPost) {
+        const transformed = visitor.AwaitSuffixPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformSuffix = <Ctx>(
     node: Suffix,
     visitor: Visitor<Ctx>,
@@ -6207,6 +6276,25 @@ export const transformSuffix = <Ctx>(
             }
             break;
         }
+
+        case 'AwaitSuffix': {
+            const transformed = visitor.Suffix_AwaitSuffix
+                ? visitor.Suffix_AwaitSuffix(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -6218,14 +6306,16 @@ export const transformSuffix = <Ctx>(
             break;
         }
 
+        case 'TypeApplicationSuffix': {
+            updatedNode = transformTypeApplicationSuffix(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformTypeApplicationSuffix(
-                node,
-                visitor,
-                ctx,
-            );
+            const updatedNode$0node = transformAwaitSuffix(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -6245,6 +6335,16 @@ export const transformSuffix = <Ctx>(
         case 'TypeApplicationSuffix': {
             const transformed = visitor.SuffixPost_TypeApplicationSuffix
                 ? visitor.SuffixPost_TypeApplicationSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'AwaitSuffix': {
+            const transformed = visitor.SuffixPost_AwaitSuffix
+                ? visitor.SuffixPost_AwaitSuffix(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -11478,6 +11578,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'AwaitSuffix': {
+            const transformed = visitor.AllTaggedTypes_AwaitSuffix
+                ? visitor.AllTaggedTypes_AwaitSuffix(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Aliases': {
             const transformed = visitor.AllTaggedTypes_Aliases
                 ? visitor.AllTaggedTypes_Aliases(node, ctx)
@@ -13013,6 +13132,12 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'AwaitSuffix': {
+            updatedNode = transformAwaitSuffix(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Aliases': {
             updatedNode = transformAliases(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -13538,6 +13663,16 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'CommaExpr': {
             const transformed = visitor.AllTaggedTypesPost_CommaExpr
                 ? visitor.AllTaggedTypesPost_CommaExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'AwaitSuffix': {
+            const transformed = visitor.AllTaggedTypesPost_AwaitSuffix
+                ? visitor.AllTaggedTypesPost_AwaitSuffix(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

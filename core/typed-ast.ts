@@ -12,9 +12,11 @@ import { Type } from './elements/type';
 import { Id, idToString } from './ids';
 import { IRecord, Record } from './elements/record-exprs';
 import { ILambda, Lambda } from './elements/lambda';
+import { Await } from './elements/awaits';
 import { Block } from './elements/lets';
 export type { Id };
 export type { Apply, IApply } from './elements/apply';
+export type { Ctx as ACtx } from './typing/analyze';
 export type {
     Boolean,
     ITemplateString,
@@ -77,6 +79,7 @@ import { If } from './elements/ifs';
 import { Switch } from './elements/switchs';
 export type { IIf, IIfYes, If, IfYes } from './elements/ifs';
 export type { AVCtx, Case, ICase, ISwitch, Switch } from './elements/switchs';
+export type { Await } from './elements/awaits';
 
 export type GlobalRef = {
     type: 'Global';
@@ -182,6 +185,7 @@ export type Expression =
     | Number
     | Switch
     | Boolean
+    | Await
     | TemplateString
     | TypeApplication
     | DecoratedExpression;

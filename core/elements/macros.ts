@@ -22,6 +22,9 @@ export const ToTast = {
             case 'TypeApplicationSuffix':
                 return ctx.ToTast.TypeApplicationSuffix(node, next, ctx);
 
+            case 'AwaitSuffix':
+                return ctx.ToTast.AwaitSuffix(node, next, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -387,6 +390,9 @@ export const ToAst = {
             case 'Boolean':
                 return ctx.ToAst.Boolean(node, ctx);
 
+            case 'Await':
+                return ctx.ToAst.Await(node, ctx);
+
             case 'TemplateString':
                 return ctx.ToAst.TemplateString(node, ctx);
 
@@ -495,6 +501,9 @@ export const ToAst = {
             case 'Boolean':
                 return ctx.ToAst.Boolean(node, ctx);
 
+            case 'Await':
+                return ctx.ToAst.Await(node, ctx);
+
             case 'TemplateString':
                 return ctx.ToAst.TemplateString(node, ctx);
 
@@ -548,6 +557,9 @@ export const ToPP = {
 
             case 'TypeApplicationSuffix':
                 return ctx.ToPP.TypeApplicationSuffix(node, ctx);
+
+            case 'AwaitSuffix':
+                return ctx.ToPP.AwaitSuffix(node, ctx);
 
             default:
                 let _: never = node;
@@ -844,6 +856,9 @@ export const ToIR = {
             case 'Boolean':
                 return ctx.ToIR.Boolean(node, ctx);
 
+            case 'Await':
+                return ctx.ToIR.Await(node, ctx);
+
             case 'TemplateString':
                 return ctx.ToIR.TemplateString(node, ctx);
 
@@ -893,6 +908,9 @@ export const ToIR = {
 
             case 'Boolean':
                 return ctx.ToIR.Boolean(node, ctx);
+
+            case 'Await':
+                return ctx.ToIR.Await(node, ctx);
 
             case 'TemplateString':
                 return ctx.ToIR.TemplateString(node, ctx);

@@ -14,7 +14,7 @@ import { constrainTypes, unifyTypes } from '../typing/unifyTypes';
 
 export const grammar = `
 Apply = target:Atom suffixes_drop:Suffix*
-Suffix = CallSuffix / TypeApplicationSuffix
+Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix
 CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 `;
@@ -335,6 +335,7 @@ export const ToIR = {
 import { Ctx as JCtx } from '../ir/to-js';
 import * as b from '@babel/types';
 import { findBuiltinName } from './base';
+import { expandTask } from '../typing/tasks';
 export const ToJS = {
     Apply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
         if (
@@ -500,9 +501,15 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             if (at.type === 'TVbl') {
                 at = ctx.addTypeConstraint(at.id, atype.args[i].typ);
             }
+            const expected = atype.args[i].typ;
             // hmm so 'unconstrained' would be a thing.
-            if (!typeMatches(at, atype.args[i].typ, ctx)) {
+            if (!typeMatches(at, expected, ctx)) {
                 changed = true;
+                const taskEnum =
+                    expected.type === 'TApply' &&
+                    ctx.isBuiltinType(expected.target, 'Task')
+                        ? expandTask(expected.loc, expected.args, ctx)
+                        : null;
                 return decorate(arg, 'argWrongType', hit, ctx, [
                     {
                         label: 'expected',
@@ -512,7 +519,20 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                             typ: atype.args[i].typ,
                         },
                         loc: noloc,
-                    },
+                    } as t.Decorator['args'][0],
+                    ...(taskEnum
+                        ? [
+                              {
+                                  label: 'task',
+                                  arg: {
+                                      type: 'DType',
+                                      loc: noloc,
+                                      typ: taskEnum,
+                                  },
+                                  loc: noloc,
+                              } as t.Decorator['args'][0],
+                          ]
+                        : []),
                     // {
                     //     label: 'got',
                     //     arg: {
@@ -521,7 +541,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                     //         typ: at,
                     //     },
                     //     loc: noloc,
-                    // },
+                    // } as t.Decorator['args'][0],
                 ]);
             }
             return arg;

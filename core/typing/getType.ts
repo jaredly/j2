@@ -5,6 +5,7 @@ import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
 import { transformType } from '../transform-tast';
 import { Expression, GlobalRef, Loc, TVars, Type } from '../typed-ast';
 import { collapseOps } from './ops';
+import { collectEffects, inferTaskType, makeTaskType } from './tasks';
 import { Ctx, typeMatches } from './typeMatches';
 import { unifyTypes } from './unifyTypes';
 
@@ -71,6 +72,18 @@ const maybeTref = (ref: GlobalRef | null) => (ref ? tref(ref) : null);
 // this could maybe do a ...visitor kind of thing as well.
 export const getType = (expr: Expression, ctx: Ctx): Type | null => {
     switch (expr.type) {
+        case 'Await': {
+            const res = getType(expr.target, ctx);
+            if (!res) {
+                return null;
+            }
+            const asTask = inferTaskType(res, ctx);
+            if (asTask) {
+                return asTask.args[1];
+            }
+            console.log('wait no', res, asTask);
+            return null;
+        }
         case 'Lambda': {
             // TODO Args! Got to ... make type variables,
             // and then figure things out.
@@ -79,9 +92,13 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 getLocals(arg.pat, arg.typ, locals, ctx),
             );
             ctx = ctx.withLocals(locals);
-            const res = getType(expr.body, ctx);
+            let res = getType(expr.body, ctx);
             if (!res) {
                 return null;
+            }
+            const effects = collectEffects(expr.body, ctx);
+            if (effects.length) {
+                res = makeTaskType(effects, res, ctx);
             }
             return {
                 type: 'TLambda',
