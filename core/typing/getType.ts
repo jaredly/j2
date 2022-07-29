@@ -209,8 +209,17 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             return unit(expr.loc);
         }
         case 'Switch': {
+            const ttype = getType(expr.target, ctx);
+            if (!ttype) {
+                return null;
+            }
             const types = expr.cases
-                .map((c) => getType(c.expr, ctx))
+                .map((c) => {
+                    const typ = ttype ?? typeForPattern(c.pat);
+                    const locals: Locals = [];
+                    getLocals(c.pat, typ, locals, ctx);
+                    return getType(c.expr, ctx.withLocals(locals));
+                })
                 .filter(Boolean) as Type[];
             if (!types.length) {
                 return unit(expr.loc);

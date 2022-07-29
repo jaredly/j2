@@ -185,10 +185,8 @@ export const processTypeFileR = (
         const res = processTypeToplevel(t, maybeDebug, pctx, aliases);
         info.push(res.i);
         ctx = res.ctx;
-        // ctx.debugger();
         const config = typeToplevelT(res.i.contents.top, res.ctx);
         pctx = pctx.withToplevel(config);
-        // console.log(pctx.reverse, config);
     });
 
     return { type: 'Success', info, ctx, pctx, comments: ast.comments };
@@ -282,7 +280,6 @@ export const processTypeToplevel = (
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
     transformTypeToplevel(type, annotationVisitor(annotations), ctx);
-    // ctx.debugger();
 
     return {
         i: {

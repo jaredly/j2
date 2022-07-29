@@ -510,16 +510,8 @@ export const newContext = (): FullContext => {
             };
         },
 
-        withLocals(values, better = true) {
+        withLocals(values) {
             const locals: Internal['locals'][0] = { types: [], values };
-            if (!better) {
-                values.forEach((t) => {
-                    this[opaque].syms.values[t.sym.id] = {
-                        type: t.type,
-                        name: t.sym.name,
-                    };
-                });
-            }
             return {
                 ...this,
                 [opaque]: {

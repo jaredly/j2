@@ -129,8 +129,6 @@ export const ToPP = {
             'always',
         );
     },
-    // Apply(apply: p.Apply_inner, ctx: PCtx): pp.PP {
-    // },
 };
 
 export const ToIR = {
@@ -146,10 +144,17 @@ export const ToIR = {
                 loc: tast.loc,
             },
             cases: tast.cases.map((c) => {
+                const typ =
+                    ctx.actx.getType(tast.target) ?? typeForPattern(c.pat);
+                const locals: t.Locals = [];
+                getLocals(c.pat, typ, locals, ctx.actx);
                 return {
                     type: 'Case',
                     pat: c.pat,
-                    expr: ctx.ToIR.BlockSt(c.expr, ctx),
+                    expr: ctx.ToIR.BlockSt(c.expr, {
+                        ...ctx,
+                        actx: ctx.actx.withLocals(locals) as ACtx,
+                    }),
                     loc: c.loc,
                 };
             }),
@@ -189,9 +194,22 @@ export const ToJS = {
                     b.identifier(`switch too complex`),
                 );
             }
-            cases.push(b.switchCase(test, [ctx.ToJS.Block(kase.expr, ctx)]));
+            const typ = node.ttype;
+            const locals: t.Locals = [];
+            getLocals(kase.pat, typ, locals, ctx.actx);
+            cases.push(
+                b.switchCase(test, [
+                    ctx.ToJS.Block(kase.expr, {
+                        ...ctx,
+                        actx: ctx.actx.withLocals(locals) as ACtx,
+                    }),
+                ]),
+            );
         }
         let target = ctx.ToJS.IExpression(node.target, ctx);
+        if (node.ttype.type === 'TBlank') {
+            target = b.identifier(`_ blank type`);
+        }
         if (node.ttype.type === 'TEnum' && !allBare(node.ttype, ctx.actx)) {
             target = b.conditionalExpression(
                 b.binaryExpression(

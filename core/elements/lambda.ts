@@ -176,6 +176,9 @@ export const ToIR = {
         { type, args, resInferred, res, body, loc }: t.Lambda,
         ctx: ICtx,
     ): t.ILambda {
+        const locals: Locals = [];
+        args.map((arg) => getLocals(arg.pat, arg.typ, locals, ctx.actx));
+        ctx = { ...ctx, actx: ctx.actx.withLocals(locals) as JCtx['actx'] };
         // hmm so if there are argssss
         return {
             type: 'Lambda',
