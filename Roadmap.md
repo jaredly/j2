@@ -158,8 +158,17 @@ BIG NEXT
 		that way I can change switch to a series of if/lets.
 	- [x] basic
 	- [x] whyyyyy isn't resolve working?
-	- [ ] Enum?
+	- [x] Enum?
 - [ ] figure out withHandler and andThen
+	- so, the function won't have a real type, right?
+		andThen<A: [*], B: [*]>(
+			Task<A, R>,
+			R => Task<B, V>
+		) => Task<[A, B], V>
+	- withHandler<A: [*], B: [A | *], R>(
+			Task<B, R>,
+			t => Task<A, R>,
+		)
 - [ ] eq deriving for realsies
 
 # Much more fancy type arithmatic

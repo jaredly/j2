@@ -784,7 +784,9 @@ toString: (value: bool) => string
 -: (a: float, b: float) => float
 -: (a: int, b: int) => int
 ==: <T: eq>(a: T, b: T) => bool
+andThen: <A: task, B: task, R, R2>(a: Task<A, R>, b: (res: R) => Task<B, R2>) => Task<[A | B], R2>
 `;
+// withHandler: <A: task, B: task>
 
 export const setupDefaults = (ctx: FullContext) => {
     const named: { [key: string]: RefKind } = {};
