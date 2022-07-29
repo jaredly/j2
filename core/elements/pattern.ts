@@ -499,23 +499,134 @@ export const ToIR = {
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { allRecordItems } from './records';
+import { and } from './ifs';
 export const ToJS = {
-    Pattern(p: Pattern, ctx: JCtx): b.Pattern | b.Identifier {
+    PatternCond(
+        p: Pattern,
+        target: b.Expression,
+        type: t.Type,
+        ctx: JCtx,
+    ): b.Expression | null {
+        switch (p.type) {
+            case 'PBlank':
+                return null;
+            case 'Number':
+            case 'String':
+                return b.binaryExpression(
+                    '===',
+                    target,
+                    p.type === 'Number'
+                        ? b.numericLiteral(p.value)
+                        : b.stringLiteral(p.text),
+                );
+            case 'PEnum':
+                if (type.type !== 'TEnum') {
+                    // TODO: make this an error
+                    return null;
+                }
+                const cases = expandEnumCases(type, ctx.actx);
+                if (!cases) {
+                    return null;
+                }
+                const allBare = cases.every((kase) => !kase.payload);
+                const anyBare = cases.some((kase) => !kase.payload);
+                const targetCheck = allBare
+                    ? target
+                    : anyBare
+                    ? b.conditionalExpression(
+                          b.binaryExpression(
+                              '===',
+                              b.unaryExpression('typeof', target),
+                              b.stringLiteral('string'),
+                          ),
+                          target,
+                          b.memberExpression(target, b.identifier('tag')),
+                      )
+                    : b.memberExpression(target, b.identifier('payload'));
+                const one =
+                    cases.length === 1
+                        ? null
+                        : b.binaryExpression(
+                              '===',
+                              targetCheck,
+                              b.stringLiteral(p.tag),
+                          );
+                if (!p.payload) {
+                    return one;
+                }
+                const inner = ctx.ToJS.PatternCond(
+                    p.payload,
+                    b.memberExpression(target, b.identifier('payload'), true),
+                    type,
+                    ctx,
+                );
+                return inner && one
+                    ? b.logicalExpression('&&', one, inner)
+                    : one ?? inner;
+            case 'PName':
+                return null;
+            case 'PDecorated':
+                return ctx.ToJS.PatternCond(p.inner, target, type, ctx);
+            case 'PRecord':
+                if (type.type !== 'TRecord') {
+                    return null;
+                }
+                if (p.items.every((item, i) => item.name === i.toString())) {
+                    const hello = p.items
+                        .map((item, i) => {
+                            return ctx.ToJS.PatternCond(
+                                item.pat,
+                                b.memberExpression(
+                                    target,
+                                    b.numericLiteral(i),
+                                    true,
+                                ),
+                                type.items[i].value,
+                                ctx,
+                            );
+                        })
+                        .filter(Boolean) as b.Expression[];
+                    if (!hello.length) {
+                        return null;
+                    }
+                    return and(hello);
+                } else {
+                    const hello = p.items
+                        .map((item, i) => {
+                            return ctx.ToJS.PatternCond(
+                                item.pat,
+                                b.memberExpression(
+                                    target,
+                                    b.identifier(item.name),
+                                ),
+                                type.items[i].value,
+                                ctx,
+                            );
+                        })
+                        .filter(Boolean) as b.Expression[];
+                    if (!hello.length) {
+                        return null;
+                    }
+                    return and(hello);
+                }
+        }
+    },
+    Pattern(p: Pattern, ctx: JCtx): b.Pattern | b.Identifier | null {
         switch (p.type) {
             case 'Number':
             case 'String':
             case 'PBlank':
-                return b.identifier('_');
+                return null;
             case 'PEnum':
                 if (p.payload) {
-                    return b.objectPattern([
-                        b.objectProperty(
-                            b.identifier('payload'),
-                            ctx.ToJS.Pattern(p.payload, ctx),
-                        ),
-                    ]);
+                    const inner = ctx.ToJS.Pattern(p.payload, ctx);
+                    return inner
+                        ? b.objectPattern([
+                              b.objectProperty(b.identifier('payload'), inner),
+                          ])
+                        : null;
                 }
-                return b.identifier('_');
+                return null;
             case 'PName':
                 return b.identifier(p.sym.name);
             case 'PDecorated':
@@ -527,12 +638,17 @@ export const ToJS = {
                     );
                 } else {
                     return b.objectPattern(
-                        p.items.map((item) =>
-                            b.objectProperty(
-                                b.identifier(item.name),
-                                ctx.ToJS.Pattern(item.pat, ctx),
-                            ),
-                        ),
+                        p.items
+                            .map((item) => {
+                                const inner = ctx.ToJS.Pattern(item.pat, ctx);
+                                return inner
+                                    ? b.objectProperty(
+                                          b.identifier(item.name),
+                                          inner,
+                                      )
+                                    : null;
+                            })
+                            .filter(Boolean) as b.ObjectProperty[],
                     );
                 }
         }

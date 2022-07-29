@@ -327,6 +327,21 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
             });
             return [null, ctx];
         },
+        IfYes(node, ctx) {
+            const locals: t.Locals = [];
+            node.conds.map((cond) => {
+                if (cond.type === 'Let') {
+                    getLocals(
+                        cond.pat,
+                        ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
+                        locals,
+                        ctx,
+                    );
+                }
+                return cond;
+            });
+            return [null, ctx.withLocals(locals) as Ctx];
+        },
         Switch(node, ctx) {
             return [
                 null,

@@ -202,7 +202,18 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
         case 'If': {
             if (expr.no) {
                 const no = getType(expr.no, ctx);
-                const yes = getType(expr.yes, ctx);
+                const locals: Locals = [];
+                expr.yes.conds.forEach((cond) => {
+                    if (cond.type === 'Let') {
+                        getLocals(
+                            cond.pat,
+                            ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
+                            locals,
+                            ctx,
+                        );
+                    }
+                });
+                const yes = getType(expr.yes.block, ctx.withLocals(locals));
                 const unified = no && yes && unifyTypes(yes, no, ctx);
                 return unified ? unified : null;
             }

@@ -325,21 +325,25 @@ export const ToJS = {
                 ),
             );
         }
+        const pat = ctx.ToJS.Pattern(node.pat, ctx);
+        if (!pat) {
+            return b.expressionStatement(b.stringLiteral('no-op pattern'));
+        }
         return b.variableDeclaration('let', [
             b.variableDeclarator(
-                ctx.ToJS.Pattern(node.pat, ctx),
+                pat,
                 node.expr ? ctx.ToJS.IExpression(node.expr, ctx) : null,
             ),
         ]);
     },
     Assign(node: IAssign, ctx: JCtx): b.Statement {
-        return b.expressionStatement(
-            b.assignmentExpression(
-                '=',
-                ctx.ToJS.Pattern(node.pat, ctx),
-                ctx.ToJS.IExpression(node.expr, ctx),
-            ),
-        );
+        const pat = ctx.ToJS.Pattern(node.pat, ctx);
+        const expr = ctx.ToJS.IExpression(node.expr, ctx);
+        if (!pat) {
+            // return b.expressionStatement(expr)
+            return b.expressionStatement(b.stringLiteral('no-op pattern'));
+        }
+        return b.expressionStatement(b.assignmentExpression('=', pat, expr));
     },
     IStmt(node: t.IStmt, ctx: JCtx): b.Statement {
         if (node.type === 'Let') {

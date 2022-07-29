@@ -148,14 +148,14 @@ let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
     0;
 }
 // (int) => int
-/* v => (() => {
+/* v => {
   if (v > 0) {
     return $terms.longSum(v + 1) - 1 + 1;
   } else {
     return 0;
   }
-})() */
-alias longSum#[h3d44783fbc41440a5b756f93c349991bfb88d221]
+} */
+alias longSum#[h2426fc14862cedb51ff5d20b91bc738f16864752]
 longSum(0)
 // int
 /* $terms.longSum(0) */

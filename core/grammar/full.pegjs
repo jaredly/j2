@@ -146,7 +146,10 @@ TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
 
 // ifs.ts
 
-If = "if" __ cond:Expression _ yes:Block no:(_ "else" _ Else)?
+If = "if" __ yes:IfYes no:(_ "else" _ Else)?
+IfYes = conds:IfConds _ block:Block
+IfConds = first:IfCond rest:(_ "," _ IfCond)*
+IfCond = Let / Expression
 Else = Block / If
 
 

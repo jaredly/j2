@@ -75,8 +75,8 @@ export type {
 } from './elements/lets';
 import { If } from './elements/ifs';
 import { Switch } from './elements/switchs';
-export type { IIf, If } from './elements/ifs';
-export type { Case, ICase, ISwitch, Switch } from './elements/switchs';
+export type { IIf, IIfYes, If, IfYes } from './elements/ifs';
+export type { AVCtx, Case, ICase, ISwitch, Switch } from './elements/switchs';
 
 export type GlobalRef = {
     type: 'Global';

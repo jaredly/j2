@@ -24,5 +24,6 @@ export const errors = {
     resMismatch: 1,
     notExhaustive: 0,
     caseMismatch: 1,
+    conditionNotBoolean: 1,
 };
 export type ErrorTag = keyof typeof errors;

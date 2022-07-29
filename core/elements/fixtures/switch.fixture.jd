@@ -45,7 +45,19 @@ switch `What(10) {
 }
 // 10
 /* (() => {
-  switch too complex;
+  switch ({
+    tag: "What",
+    payload: 10
+  }.tag) {
+    default:
+      let {
+        payload: hello
+      } = {
+        tag: "What",
+        payload: 10
+      };
+      return hello;
+  }
 })() */
 
 ==[New fixture]==

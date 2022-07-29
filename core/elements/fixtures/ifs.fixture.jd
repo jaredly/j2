@@ -113,3 +113,30 @@ if 1 > 0 {
     };
   }
 } */
+
+==[New fixture_]==
+--[input]--
+(m: [`Hello(int) | `Bye]) => if let `Hello(v) = m {
+  v
+} else {
+  100
+}
+
+--[output:expected]--
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+(m#[0]: [ `Hello(int) | `Bye ]) => if let `Hello(v#[1]) = m#[0] {
+    v#[1];
+} else {
+    100;
+}
+// ([ `Hello(int) | `Bye ]) => int
+/* m => {
+  if ((typeof m === "string" ? m : m.tag) === "Hello") {
+    let {
+      payload: v
+    } = m;
+    return v;
+  } else {
+    return 100;
+  }
+} */

@@ -8,6 +8,7 @@ import {
     ToplevelExpression,
     Expression,
     If,
+    IfYes,
     Block,
     Stmt,
     Let,
@@ -70,6 +71,7 @@ import {
     IAssign,
     IReturn,
     IIf,
+    IIfYes,
     ISwitch,
     ICase,
     DecoratorDecl,
@@ -77,6 +79,8 @@ import {
     TAdd,
     TSub,
     TOr,
+    AVCtx,
+    ACtx,
 } from './typed-ast';
 
 export type Visitor<Ctx> = {
@@ -415,8 +419,18 @@ export type Visitor<Ctx> = {
     PBlankPost?: (node: PBlank, ctx: Ctx) => null | PBlank;
     If?: (node: If, ctx: Ctx) => null | false | If | [If | null, Ctx];
     IfPost?: (node: If, ctx: Ctx) => null | If;
+    IfYes?: (
+        node: IfYes,
+        ctx: Ctx,
+    ) => null | false | IfYes | [IfYes | null, Ctx];
+    IfYesPost?: (node: IfYes, ctx: Ctx) => null | IfYes;
     IIf?: (node: IIf, ctx: Ctx) => null | false | IIf | [IIf | null, Ctx];
     IIfPost?: (node: IIf, ctx: Ctx) => null | IIf;
+    IIfYes?: (
+        node: IIfYes,
+        ctx: Ctx,
+    ) => null | false | IIfYes | [IIfYes | null, Ctx];
+    IIfYesPost?: (node: IIfYes, ctx: Ctx) => null | IIfYes;
     Switch?: (
         node: Switch,
         ctx: Ctx,
@@ -434,6 +448,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | ICase | [ICase | null, Ctx];
     ICasePost?: (node: ICase, ctx: Ctx) => null | ICase;
+    AVCtx?: (
+        node: AVCtx,
+        ctx: Ctx,
+    ) => null | false | AVCtx | [AVCtx | null, Ctx];
+    AVCtxPost?: (node: AVCtx, ctx: Ctx) => null | AVCtx;
     RefKind_Global?: (
         node: GlobalRef,
         ctx: Ctx,
@@ -3795,6 +3814,61 @@ export const transformBlock = <Ctx>(
     return node;
 };
 
+export const transformIfYes = <Ctx>(
+    node: IfYes,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IfYes => {
+    if (!node) {
+        throw new Error('No IfYes provided');
+    }
+
+    const transformed = visitor.IfYes ? visitor.IfYes(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$block = transformBlock(node.block, visitor, ctx);
+        changed1 = changed1 || updatedNode$block !== node.block;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                block: updatedNode$block,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IfYesPost) {
+        const transformed = visitor.IfYesPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformIf = <Ctx>(
     node: If,
     visitor: Visitor<Ctx>,
@@ -3825,10 +3899,7 @@ export const transformIf = <Ctx>(
     {
         let changed1 = false;
 
-        const updatedNode$cond = transformExpression(node.cond, visitor, ctx);
-        changed1 = changed1 || updatedNode$cond !== node.cond;
-
-        const updatedNode$yes = transformBlock(node.yes, visitor, ctx);
+        const updatedNode$yes = transformIfYes(node.yes, visitor, ctx);
         changed1 = changed1 || updatedNode$yes !== node.yes;
 
         let updatedNode$no = undefined;
@@ -3871,7 +3942,6 @@ export const transformIf = <Ctx>(
         if (changed1) {
             updatedNode = {
                 ...updatedNode,
-                cond: updatedNode$cond,
                 yes: updatedNode$yes,
                 no: updatedNode$no,
                 loc: updatedNode$loc,
@@ -6716,6 +6786,61 @@ export const transformIReturn = <Ctx>(
     return node;
 };
 
+export const transformIIfYes = <Ctx>(
+    node: IIfYes,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IIfYes => {
+    if (!node) {
+        throw new Error('No IIfYes provided');
+    }
+
+    const transformed = visitor.IIfYes ? visitor.IIfYes(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$block = transformIBlock(node.block, visitor, ctx);
+        changed1 = changed1 || updatedNode$block !== node.block;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                block: updatedNode$block,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IIfYesPost) {
+        const transformed = visitor.IIfYesPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformIIf = <Ctx>(
     node: IIf,
     visitor: Visitor<Ctx>,
@@ -6746,10 +6871,7 @@ export const transformIIf = <Ctx>(
     {
         let changed1 = false;
 
-        const updatedNode$cond = transformIExpression(node.cond, visitor, ctx);
-        changed1 = changed1 || updatedNode$cond !== node.cond;
-
-        const updatedNode$yes = transformIBlock(node.yes, visitor, ctx);
+        const updatedNode$yes = transformIIfYes(node.yes, visitor, ctx);
         changed1 = changed1 || updatedNode$yes !== node.yes;
 
         let updatedNode$no = undefined;
@@ -6792,7 +6914,6 @@ export const transformIIf = <Ctx>(
         if (changed1) {
             updatedNode = {
                 ...updatedNode,
-                cond: updatedNode$cond,
                 yes: updatedNode$yes,
                 no: updatedNode$no,
                 loc: updatedNode$loc,
@@ -8160,6 +8281,79 @@ export const transformTOr = <Ctx>(
     node = updatedNode;
     if (visitor.TOrPost) {
         const transformed = visitor.TOrPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+// not a type ACtx
+
+export const transformAVCtx = <Ctx>(
+    node: AVCtx,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): AVCtx => {
+    if (!node) {
+        throw new Error('No AVCtx provided');
+    }
+
+    const transformed = visitor.AVCtx ? visitor.AVCtx(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$switchType = undefined;
+        const updatedNode$switchType$current = node.switchType;
+        if (updatedNode$switchType$current != null) {
+            let updatedNode$switchType$1$ = null;
+            const updatedNode$switchType$1$$current =
+                updatedNode$switchType$current;
+            if (updatedNode$switchType$1$$current != null) {
+                const updatedNode$switchType$1$$1$ = transformType(
+                    updatedNode$switchType$1$$current,
+                    visitor,
+                    ctx,
+                );
+                changed1 =
+                    changed1 ||
+                    updatedNode$switchType$1$$1$ !==
+                        updatedNode$switchType$1$$current;
+                updatedNode$switchType$1$ = updatedNode$switchType$1$$1$;
+            }
+
+            updatedNode$switchType = updatedNode$switchType$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                switchType: updatedNode$switchType,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.AVCtxPost) {
+        const transformed = visitor.AVCtxPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }

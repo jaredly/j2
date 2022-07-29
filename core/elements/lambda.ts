@@ -193,6 +193,12 @@ export const ToIR = {
                           stmts: [ctx.ToIR.SwitchSt(body, ctx)],
                           loc: body.loc,
                       }
+                    : body.type === 'If'
+                    ? {
+                          type: 'Block',
+                          stmts: [ctx.ToIR.IfSt(body, ctx)],
+                          loc: body.loc,
+                      }
                     : ctx.ToIR.Expression(body, ctx),
             resInferred,
             loc,
@@ -217,7 +223,10 @@ export const ToJS = {
         ctx = { ...ctx, actx: ctx.actx.withLocals(locals) as JCtx['actx'] };
 
         return b.arrowFunctionExpression(
-            args?.map((arg) => ctx.ToJS.Pattern(arg.pat, ctx)) ?? [],
+            args?.map(
+                (arg, i) =>
+                    ctx.ToJS.Pattern(arg.pat, ctx) ?? b.identifier(`__${i}`),
+            ) ?? [],
             body.type === 'Block'
                 ? ctx.ToJS.Block(body, ctx)
                 : ctx.ToJS.IExpression(body, ctx),

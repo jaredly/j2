@@ -50,10 +50,13 @@ import {
     Apply_inner,
     Atom,
     If,
+    IfYes,
+    IfConds,
+    IfCond,
+    Let,
     Block,
     Stmts,
     Stmt,
-    Let,
     Else,
     Switch,
     Case,
@@ -494,6 +497,21 @@ export type Visitor<Ctx> = {
     TypeAppVblsPost?: (node: TypeAppVbls, ctx: Ctx) => null | TypeAppVbls;
     If?: (node: If, ctx: Ctx) => null | false | If | [If | null, Ctx];
     IfPost?: (node: If, ctx: Ctx) => null | If;
+    IfYes?: (
+        node: IfYes,
+        ctx: Ctx,
+    ) => null | false | IfYes | [IfYes | null, Ctx];
+    IfYesPost?: (node: IfYes, ctx: Ctx) => null | IfYes;
+    IfConds?: (
+        node: IfConds,
+        ctx: Ctx,
+    ) => null | false | IfConds | [IfConds | null, Ctx];
+    IfCondsPost?: (node: IfConds, ctx: Ctx) => null | IfConds;
+    IfCond?: (
+        node: IfCond,
+        ctx: Ctx,
+    ) => null | false | IfCond | [IfCond | null, Ctx];
+    IfCondPost?: (node: IfCond, ctx: Ctx) => null | IfCond;
     Else?: (node: Else, ctx: Ctx) => null | false | Else | [Else | null, Ctx];
     ElsePost?: (node: Else, ctx: Ctx) => null | Else;
     Lambda?: (
@@ -913,6 +931,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | EnumCase | [EnumCase | null, Ctx];
     EnumCasePost_Star?: (node: Star, ctx: Ctx) => null | EnumCase;
+    IfCond_Let?: (
+        node: Let,
+        ctx: Ctx,
+    ) => null | false | IfCond | [IfCond | null, Ctx];
+    IfCondPost_Let?: (node: Let, ctx: Ctx) => null | IfCond;
     Else_Block?: (
         node: Block,
         ctx: Ctx,
@@ -1356,6 +1379,19 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_If?: (node: If, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_IfYes?: (
+        node: IfYes,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_IfYes?: (node: IfYes, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_IfConds?: (
+        node: IfConds,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_IfConds?: (
+        node: IfConds,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Lambda?: (
         node: Lambda,
         ctx: Ctx,
@@ -3594,6 +3630,164 @@ export const transformLet = <Ctx>(
     return node;
 };
 
+export const transformIfCond = <Ctx>(
+    node: IfCond,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IfCond => {
+    if (!node) {
+        throw new Error('No IfCond provided');
+    }
+
+    const transformed = visitor.IfCond ? visitor.IfCond(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'Let': {
+            const transformed = visitor.IfCond_Let
+                ? visitor.IfCond_Let(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'Let': {
+            updatedNode = transformLet(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformExpression(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Let': {
+            const transformed = visitor.IfCondPost_Let
+                ? visitor.IfCondPost_Let(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IfCondPost) {
+        const transformed = visitor.IfCondPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformIfConds = <Ctx>(
+    node: IfConds,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IfConds => {
+    if (!node) {
+        throw new Error('No IfConds provided');
+    }
+
+    const transformed = visitor.IfConds ? visitor.IfConds(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformIfCond(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IfCondsPost) {
+        const transformed = visitor.IfCondsPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformStmt = <Ctx>(
     node: Stmt,
     visitor: Visitor<Ctx>,
@@ -3818,6 +4012,65 @@ export const transformBlock = <Ctx>(
     return node;
 };
 
+export const transformIfYes = <Ctx>(
+    node: IfYes,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IfYes => {
+    if (!node) {
+        throw new Error('No IfYes provided');
+    }
+
+    const transformed = visitor.IfYes ? visitor.IfYes(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$conds = transformIfConds(node.conds, visitor, ctx);
+        changed1 = changed1 || updatedNode$conds !== node.conds;
+
+        const updatedNode$block = transformBlock(node.block, visitor, ctx);
+        changed1 = changed1 || updatedNode$block !== node.block;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                conds: updatedNode$conds,
+                block: updatedNode$block,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IfYesPost) {
+        const transformed = visitor.IfYesPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformElse = <Ctx>(
     node: Else,
     visitor: Visitor<Ctx>,
@@ -3967,10 +4220,7 @@ export const transformIf = <Ctx>(
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
 
-        const updatedNode$cond = transformExpression(node.cond, visitor, ctx);
-        changed1 = changed1 || updatedNode$cond !== node.cond;
-
-        const updatedNode$yes = transformBlock(node.yes, visitor, ctx);
+        const updatedNode$yes = transformIfYes(node.yes, visitor, ctx);
         changed1 = changed1 || updatedNode$yes !== node.yes;
 
         let updatedNode$no = null;
@@ -3989,7 +4239,6 @@ export const transformIf = <Ctx>(
             updatedNode = {
                 ...updatedNode,
                 loc: updatedNode$loc,
-                cond: updatedNode$cond,
                 yes: updatedNode$yes,
                 no: updatedNode$no,
             };
@@ -11856,6 +12105,44 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'IfYes': {
+            const transformed = visitor.AllTaggedTypes_IfYes
+                ? visitor.AllTaggedTypes_IfYes(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'IfConds': {
+            const transformed = visitor.AllTaggedTypes_IfConds
+                ? visitor.AllTaggedTypes_IfConds(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Lambda': {
             const transformed = visitor.AllTaggedTypes_Lambda
                 ? visitor.AllTaggedTypes_Lambda(node, ctx)
@@ -12928,6 +13215,18 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'IfYes': {
+            updatedNode = transformIfYes(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'IfConds': {
+            updatedNode = transformIfConds(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Lambda': {
             updatedNode = transformLambda(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -13578,6 +13877,26 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'If': {
             const transformed = visitor.AllTaggedTypesPost_If
                 ? visitor.AllTaggedTypesPost_If(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'IfYes': {
+            const transformed = visitor.AllTaggedTypesPost_IfYes
+                ? visitor.AllTaggedTypesPost_IfYes(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'IfConds': {
+            const transformed = visitor.AllTaggedTypesPost_IfConds
+                ? visitor.AllTaggedTypesPost_IfConds(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
