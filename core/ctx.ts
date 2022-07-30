@@ -784,6 +784,8 @@ toString: (value: bool) => string
 -: (a: int, b: int) => int
 ==: <T: eq>(a: T, b: T) => bool
 andThen: <A: task, B: task, R, R2>(a: Task<A, R>, b: (res: R) => Task<B, R2>) => Task<[A | B], R2>
+testIO: <T>(read: string, task: Task<[\`Read((), string) | \`Print(string, ())], T>) => T
+withStore: <T, R, Other: task>(task: Task<[Other | \`Set(T, ()), | \`Get((), T)], R>, initial: T) => Task<Other, R>
 `;
 // withHandler: <A: task, B: task>
 

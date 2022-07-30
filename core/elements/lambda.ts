@@ -258,7 +258,7 @@ import {
     typeMatchesPattern,
 } from './pattern';
 import { dtype } from './ifs';
-import { collectEffects } from '../typing/tasks';
+import { collectEffects, makeTaskType } from '../typing/tasks';
 
 export const ToJS = {
     Lambda({ args, body }: ILambda, ctx: JCtx): b.Expression {
@@ -297,15 +297,21 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
         });
         ctx = { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx };
         if (node.res) {
-            const res = ctx.ctx.getType(node.body);
-            if (res && !typeMatches(res, node.res, ctx.ctx)) {
-                changed = true;
-                node = {
-                    ...node,
-                    res: tdecorate(node.res, 'resMismatch', ctx, [
-                        dtype('inferrred', res, node.res.loc),
-                    ]),
-                };
+            let res = ctx.ctx.getType(node.body);
+            if (res) {
+                const effects = collectEffects(node.body, ctx.ctx);
+                if (effects.length) {
+                    res = makeTaskType(effects, res, ctx.ctx);
+                }
+                if (!typeMatches(res, node.res, ctx.ctx)) {
+                    changed = true;
+                    node = {
+                        ...node,
+                        res: tdecorate(node.res, 'resMismatch', ctx, [
+                            dtype('inferrred', res, node.res.loc),
+                        ]),
+                    };
+                }
             }
         }
         return [changed ? { ...node, args } : null, ctx];

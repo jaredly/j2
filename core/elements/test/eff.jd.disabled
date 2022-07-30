@@ -71,8 +71,6 @@ const collect = <T: taskable>(task: Task<[T | Write(string, ())], ()>): Task<T> 
 	}
 }
 
-
-
 const alwaysRead = <T, E: taskable>(value: string, task: Task<[E | Read((), string)], T>): Task<E, T> => {
 	switch task {
 		`Return(v) => `Return(v)

@@ -33,6 +33,7 @@ import * as b from '@babel/types';
 import { annotationVisitor } from '../../devui/collectAnnotations';
 import { toId } from '../ids';
 import { simplify } from './simplify';
+import generate from '@babel/generator';
 
 export type TestResult = Result<FileContents>;
 export type SuccessTestResult = Success<FileContents>;
@@ -128,10 +129,13 @@ export const executeFile = (file: Success<FileContents>) => {
                     results.exprs[i] = res;
                 }
             } catch (err) {
-                // ok
+                console.log(`Failed to execute`);
+                console.log(err);
+                console.log(generate(irtop.js).code);
             }
         });
     });
+
     return results;
 };
 

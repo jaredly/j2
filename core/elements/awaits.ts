@@ -404,7 +404,7 @@ export const awaitBlock = (expr: t.Block, ctx: Ctx): AwaitChunk | null => {
                                             type: 'PBlank',
                                             loc: noloc,
                                         },
-                                        typ: tunit,
+                                        typ: result,
                                         inferred: true,
                                         loc: noloc,
                                     },

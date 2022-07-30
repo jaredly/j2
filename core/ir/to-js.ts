@@ -59,16 +59,71 @@ export type ExecutionContext = {
     execute(expr: Expression): any;
 };
 
+// const withHandler = (
+//     {
+//         type,
+//         payload: [value, k],
+//     }: { type: string; payload: [any, Function | null] },
+//     handler: Function,
+// ) => ({ type, payload: [value, k ? (x: any) => handler(k(x)) : null] });
+
+// and ...
+
+const andThen = (
+    { tag, payload }: { tag: string; payload: any },
+    next: (v: any) => any,
+) => {
+    return tag === 'Return'
+        ? next(payload)
+        : {
+              tag,
+              payload: [
+                  payload[0],
+                  payload[1] ? (x: any) => andThen(payload[1](x), next) : null,
+              ],
+          };
+};
+
+type IO<R> =
+    | { tag: 'Read'; payload: [null, (v: string) => IO<R>] }
+    | {
+          tag: 'Print';
+          payload: [string, (x: null) => IO<R>];
+      }
+    | {
+          tag: 'Return';
+          payload: R;
+      };
+const testIO = <T>(read: string, task: IO<T>): T => {
+    // console.log('TESTIO', task);
+    if (task.tag === 'Read') {
+        return testIO(read, task.payload[1](read));
+    } else if (task.tag === 'Print') {
+        console.log(task.payload[0]);
+        return testIO(read, task.payload[1](null));
+    } else {
+        return task.payload;
+    }
+};
+
+// const andThen = (a, b) => {
+//     switch (a.tag) {
+//         case 'Result':
+//             return b(a.payload)
+//         default:
+//             return {...}
+//     }
+// }
+
 export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
     return {
         ctx,
         terms: {},
         executeJs(expr: b.BlockStatement, name?: string) {
             const jsraw = generate(expr).code;
-            // console.log('ok', name, jsraw);
             let f;
             try {
-                f = new Function('$terms', jsraw);
+                f = new Function('$terms', 'testIO', 'andThen', jsraw);
             } catch (err) {
                 throw new Error(
                     `Syntax probably: ${(err as Error).message}\n` + jsraw,
@@ -79,7 +134,7 @@ export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
             }
             let res;
             try {
-                res = f(this.terms);
+                res = f(this.terms, testIO, andThen);
             } catch (err) {
                 // console.log(this.terms);
                 throw new Error(
