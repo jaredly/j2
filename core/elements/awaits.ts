@@ -59,125 +59,164 @@ export const ToPP = {
 
 export const ToIR = {
     Await({ target, loc }: Await, ctx: ICtx): t.IExpression {
-        return ctx.ToIR.Expression(target, ctx);
+        return {
+            type: 'TemplateString',
+            loc,
+            first: 'no awaits in ir',
+            rest: [],
+        };
+        // return ctx.ToIR.Expression(target, ctx);
     },
 };
 
-export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
-    // Expression_TypeApplication(node, { ctx, hit }) {
-    //     const target = ctx.getType(node.target);
-    //     if (!target) {
-    //         return null;
-    //     }
-    //     let targs: t.TVar[];
-    //     if (target.type !== 'TVars') {
-    //         if (target.type === 'TRef' && target.ref.type !== 'Unresolved') {
-    //             let got = ctx.getTypeArgs(target.ref);
-    //             if (got != null) {
-    //                 targs = got;
-    //             } else {
-    //                 return decorate(node, 'notATypeVars', hit, ctx);
-    //             }
-    //         } else {
-    //             return decorate(node, 'notATypeVars', hit, ctx);
-    //         }
-    //     } else {
-    //         targs = target.args;
-    //     }
-    //     // Hmm ok what about,
-    //     let changed = false;
-    //     const args = node.args.map((arg, i) => {
-    //         const targ = targs[i];
-    //         if (!targ) {
-    //             changed = true;
-    //             return tdecorate(arg, 'extraArg', { hit, ctx });
-    //         }
-    //         if (targ.bound && !typeMatches(arg, targ.bound, ctx)) {
-    //             changed = true;
-    //             return tdecorate(arg, 'argWrongType', { hit, ctx }, [
-    //                 {
-    //                     label: 'expected',
-    //                     arg: { type: 'DType', loc: noloc, typ: targ.bound },
-    //                     loc: noloc,
-    //                 },
-    //             ]);
-    //         }
-    //         return arg;
-    //     });
-    //     node = changed ? { ...node, args } : node;
-    //     let minArgs = targs.findIndex((arg) => arg.default_);
-    //     if (minArgs === -1) {
-    //         minArgs = targs.length;
-    //     }
-    //     if (node.args.length < minArgs || node.args.length > targs.length) {
-    //         return decorate(node, 'wrongNumberOfTypeArgs', hit, ctx);
-    //     }
-    //     return changed ? { ...node, args } : node;
-    // },
-    // // TypeVariables(node, ctx) {},
-    // Type_TApply(node, { ctx, hit }) {
-    //     const inner = ctx.resolveAnalyzeType(node.target);
-    //     if (!inner) {
-    //         return null;
-    //     }
-    //     // if (inner.type !== 'TVars') {
-    //     //     return tdecorate(node, 'notATypeVars', hit, ctx._full);
-    //     // }
-    //     let targs: t.TVar[];
-    //     if (inner.type !== 'TVars') {
-    //         if (inner.type === 'TRef' && inner.ref.type !== 'Unresolved') {
-    //             let got = ctx.getTypeArgs(inner.ref);
-    //             if (got != null) {
-    //                 targs = got;
-    //             } else {
-    //                 return tdecorate(node, 'notATypeVars', { hit, ctx });
-    //             }
-    //         } else {
-    //             return tdecorate(node, 'notATypeVars', { hit, ctx });
-    //         }
-    //     } else {
-    //         targs = inner.args;
-    //     }
-    //     let changed = false;
-    //     const args = node.args.map((arg, i) => {
-    //         if (i >= targs.length) {
-    //             return tdecorate(arg, 'extraArg', { hit, ctx });
-    //         }
-    //         const { bound } = targs[i];
-    //         if (bound && !typeMatches(arg, bound, ctx)) {
-    //             changed = true;
-    //             return tdecorate(arg, 'argWrongType', { hit, ctx }, [
-    //                 {
-    //                     label: 'expected',
-    //                     arg: { type: 'DType', loc: noloc, typ: bound },
-    //                     loc: noloc,
-    //                 },
-    //                 // {
-    //                 //     label: 'received',
-    //                 //     arg: {
-    //                 //         type: 'DType',
-    //                 //         loc: noloc,
-    //                 //         typ: ctx.resolveRefsAndApplies(arg) ?? arg,
-    //                 //     },
-    //                 //     loc: noloc,
-    //                 // },
-    //             ]);
-    //         }
-    //         return arg;
-    //     });
-    //     if (changed) {
-    //         node = { ...node, args };
-    //     }
-    //     let minArgs = targs.findIndex((arg) => arg.default_);
-    //     if (minArgs === -1) {
-    //         minArgs = targs.length;
-    //     }
-    //     if (node.args.length < minArgs || node.args.length > targs.length) {
-    //         return tdecorate(node, 'wrongNumberOfTypeArgs', { hit, ctx });
-    //     }
-    //     return changed ? node : null;
-    // },
-    // // Expression_TypeApplication(node, ctx) {
-    // // 	// node.args.forEach(arg => { })
-    // // },
+export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {};
+
+/*
+
+what's my base case?
+a lambda, with 
+
+*/
+
+export const reduceAwaits = (expr: t.Lambda, ctx: Ctx): t.Lambda => {
+    // console.log('hi', expr.body.type);
+    if (expr.body.type === 'Block') {
+        if (!expr.body.stmts.some((n) => n.type === 'Await')) {
+            return expr;
+        }
+        console.log(expr.body.stmts.filter((s) => s.type === 'Await'));
+        const chunks: {
+            stmts: t.Stmt[];
+            expr: t.Await;
+            pattern?: t.Pattern;
+        }[] = [];
+        let res: t.Stmt[] = [];
+        for (let stmt of expr.body.stmts) {
+            if (stmt.type === 'Await') {
+                chunks.push({
+                    stmts: res,
+                    expr: stmt,
+                });
+                res = [];
+                continue;
+            }
+            if (stmt.type === 'Let' && stmt.expr.type === 'Await') {
+                chunks.push({
+                    stmts: res,
+                    expr: stmt.expr,
+                    pattern: stmt.pat,
+                });
+                res = [];
+                continue;
+            }
+            res.push(stmt);
+        }
+        console.log('chunks', chunks.slice());
+        let inner: t.Block;
+        if (
+            !res.length &&
+            chunks.length &&
+            chunks[chunks.length - 1].pattern == null
+        ) {
+            inner = {
+                type: 'Block',
+                stmts: [
+                    ...chunks[chunks.length - 1].stmts,
+                    chunks[chunks.length - 1].expr.target,
+                ],
+                loc: expr.loc,
+            };
+            chunks.pop();
+        } else {
+            const body = res.slice();
+            if (body.length) {
+                const last = body[body.length - 1];
+                if (last.type !== 'Let') {
+                    body.pop();
+                    body.push({
+                        type: 'Enum',
+                        tag: 'Return',
+                        payload: last,
+                        loc: last.loc,
+                    });
+                } else {
+                    body.push({
+                        type: 'Enum',
+                        tag: 'Return',
+                        payload: unit(last.loc),
+                        loc: last.loc,
+                    });
+                }
+            } else {
+                body.push({
+                    type: 'Enum',
+                    tag: 'Return',
+                    payload: unit(expr.loc),
+                    loc: expr.loc,
+                });
+            }
+            inner = {
+                type: 'Block',
+                stmts: body,
+                loc: expr.loc,
+            };
+        }
+        while (chunks.length) {
+            const next = chunks.pop()!;
+            inner = {
+                type: 'Block',
+                stmts: [
+                    ...next.stmts,
+                    {
+                        type: 'Apply',
+                        target: {
+                            type: 'TypeApplication',
+                            target: {
+                                type: 'Ref',
+                                kind: ctx.getBuiltinRef('andThen')!,
+                                loc: noloc,
+                            },
+                            args: [],
+                            loc: noloc,
+                        },
+                        loc: noloc,
+                        args: [
+                            next.expr.target,
+                            {
+                                type: 'Lambda',
+                                args: [
+                                    {
+                                        type: 'LArg',
+                                        pat: next.pattern || {
+                                            type: 'PBlank',
+                                            loc: noloc,
+                                        },
+                                        typ: { type: 'TBlank', loc: noloc },
+                                        inferred: true,
+                                        loc: noloc,
+                                    },
+                                ],
+                                body: inner,
+                                loc: noloc,
+                                res: null,
+                                resInferred: false,
+                            },
+                        ],
+                    }, //as t.Apply
+                ],
+                loc: noloc,
+            };
+        }
+        console.log('did', inner);
+        // debugger;
+        return { ...expr, body: inner };
+    }
+    return expr;
 };
+
+const unit = (loc: t.Loc): t.Record => ({
+    type: 'Record',
+    items: [],
+    loc: loc,
+    spreads: [],
+});

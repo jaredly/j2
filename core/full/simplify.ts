@@ -6,6 +6,7 @@ import { analyzeVisitor } from '../typing/analyze.gen';
 import { typeMatches } from '../typing/typeMatches';
 import * as b from '@babel/types';
 import { allRecordItems } from '../elements/records';
+import { reduceAwaits } from '../elements/awaits';
 
 type SCtx = FullContext & { tmpSym: number };
 
@@ -94,6 +95,14 @@ const superify: Visitor<SCtx> = {
     },
 };
 
+const reduceAwaitVisitor: Visitor<SCtx> = {
+    Lambda(node, ctx) {
+        const changed = reduceAwaits(node, ctx);
+        // do your thing
+        return changed !== node ? changed : null;
+    },
+};
+
 const liftStmts: Visitor<SCtx> = {
     Block(node, ctx) {
         const stmts: t.Stmt[] = [];
@@ -159,7 +168,7 @@ const liftStmts: Visitor<SCtx> = {
     },
 };
 
-const visitors: Visitor<SCtx>[] = [liftStmts, superify];
+const visitors: Visitor<SCtx>[] = [liftStmts, superify, reduceAwaitVisitor];
 
 export const simplify = (expr: t.Expression, ctx: FullContext) => {
     visitors.forEach((visitor) => {
@@ -173,7 +182,7 @@ export const simplify = (expr: t.Expression, ctx: FullContext) => {
         if (errorCount(v)) {
             console.error(`Visitor produced errors`);
             console.log(v);
-            return;
+            // return;
         }
         expr = changed;
     });

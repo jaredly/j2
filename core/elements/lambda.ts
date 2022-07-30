@@ -1,4 +1,4 @@
-import { Visitor } from '../transform-tast';
+import { transformExpression, Visitor } from '../transform-tast';
 import { decorate, tdecorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
 import { typeMatches } from '../typing/typeMatches';
@@ -179,6 +179,49 @@ export const ToIR = {
         const locals: Locals = [];
         args.map((arg) => getLocals(arg.pat, arg.typ, locals, ctx.actx));
         ctx = { ...ctx, actx: ctx.actx.withLocals(locals) as JCtx['actx'] };
+
+        let hasAwaits = false;
+        transformExpression(
+            body,
+            {
+                Await(node, ctx) {
+                    hasAwaits = true;
+                    return false;
+                },
+            },
+            null,
+        );
+        if (hasAwaits && false) {
+            return {
+                type: 'Lambda',
+                args: [],
+                res,
+                body: {
+                    type: 'Block',
+                    stmts: [
+                        {
+                            type: 'TemplateString',
+                            loc,
+                            first: 'awaits found, not transformed',
+                            rest: [],
+                        },
+                    ],
+                    loc,
+                },
+                loc,
+                resInferred: false,
+            };
+        }
+        // const effects = collectEffects(body, ctx.actx);
+        // OH WAIT
+        // yeah it's a simpify dealio
+        // ok
+
+        // if (effects.length) {
+        //     res = makeTaskType(effects, res, ctx);
+        // }
+        //\\
+
         // hmm so if there are argssss
         return {
             type: 'Lambda',
@@ -215,6 +258,7 @@ import {
     typeMatchesPattern,
 } from './pattern';
 import { dtype } from './ifs';
+import { collectEffects } from '../typing/tasks';
 
 export const ToJS = {
     Lambda({ args, body }: ILambda, ctx: JCtx): b.Expression {

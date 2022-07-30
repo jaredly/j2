@@ -141,7 +141,7 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
 // ->
 // Task<[`Print(string, ()), `Read((), string)], int>
 export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
-    ctx.debugger();
+    // ctx.debugger();
     const res = ctx.resolveRefsAndApplies(t) ?? t;
     if (
         res.type === 'TApply' &&

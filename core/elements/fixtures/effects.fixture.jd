@@ -161,7 +161,7 @@ let helloFolks = ():Task<[ `Read((), string) | `Print(string, ()) ], string> => 
   return andThen($terms.print(`What is your name?`), res => $terms.read());
 } */
 
-==[New fixture__]==
+==[awaittt]==
 --[input]--
 let print = (value#[0]: string) => `Print(
     value#[0],
@@ -176,7 +176,7 @@ let helloFolks = () => {
 --[output:expected]--
 alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let print = (value#[0]: string) => `Print(value#[0], (()) => `Return())
-// (string) => [ `Print(string, ((*)) => [ `Return() ]) ]
+// (string) => [ `Print(string, (()) => [ `Return() ]) ]
 /* value => ({
   tag: "Print",
   payload: [value, __0 => ({
@@ -193,12 +193,12 @@ let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
     payload: v
   })]
 }) */
-alias print#[h1a3d3d7c6890ccbe902f6c7192d6eb5bd42fb386] read#[hf1cbfa159d4d6ec5581f4a6706b6ebd6816f8091]
+alias print#[h795e726bf4f5e172635cc0179d9ca57474b0b4d1] read#[hf1cbfa159d4d6ec5581f4a6706b6ebd6816f8091]
 let helloFolks = () => {
     print("What is your name?")!;
     read()!;
 }
-// () => string
+// () => Task<[ `Print(string, ()) | `Read((), string) ], string>
 /* () => {
   $terms.print(`What is your name?`);
   return $terms.read();

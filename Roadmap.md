@@ -24,7 +24,8 @@ and/or a nice error coalescing example.
 - [ ] await!
 	- [x] syntaxxx
 	- [x] getType of the await
-	- [ ] getType of the lambda, gotta do it
+	- [x] getType of the lambda, gotta do it
+	- [ ] transform the IR pls
 - [ ] MAKE A THING
 	- power-call! Also known as `await` probably.
 		`print!()`.

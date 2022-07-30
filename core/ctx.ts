@@ -433,6 +433,9 @@ export const newContext = (): FullContext => {
 
         getBuiltinRef(name) {
             const gref = this[opaque].types.names[name];
+            if (!gref) {
+                return this[opaque].values.names[name][0];
+            }
             return gref;
         },
         resolveRefsAndApplies(t, path) {
