@@ -1,33 +1,34 @@
-import { noloc, refsEqual } from '../ctx';
+import { refsEqual } from '../ctx';
+import { noloc } from '../consts';
 import { enumTypeMatches } from '../elements/enums';
 import { recordMatches } from '../elements/records';
 import { tvarsMatches } from '../elements/type-vbls';
 import { Id } from '../ids';
-import { transformType, Visitor } from '../transform-tast';
 import {
     EnumCase,
+    Expression,
     GlobalRef,
     refHash,
     RefKind,
+    Sym,
     TApply,
     TEnum,
     TLambda,
     TOps,
     TRef,
-    TVar,
-    TVars,
     Type,
 } from '../typed-ast';
-import { applyType } from './getType';
+import { hasFunctions } from './hasFunctions';
 import {
     collapseOps,
-    justStringAdds,
-    stringAddsMatch,
-    numOps,
     eopsMatch,
     justAdds,
+    justStringAdds,
+    numOps,
+    stringAddsMatch,
     stringOps,
 } from './ops';
+import { isTaskable, matchesTask } from './tasks';
 import { unifyTypes } from './unifyTypes';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
@@ -38,15 +39,21 @@ export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
 };
 
 export type Ctx = {
+    getType(expr: Expression): Type | null;
     isBuiltinType(t: Type, name: string): boolean;
     getBuiltinRef(name: string): GlobalRef | null;
     resolveRefsAndApplies(t: Type, path?: string[]): Type | null;
     getValueType(id: Id): Type | null;
+    localType(sym: number): Type | null;
     getBound(sym: number): Type | null;
     log(...args: any[]): void;
     /** Only triggers the devtools debugger if the fixture is pinned. */
     debugger(): void;
-    withBounds(bounds: { [sym: number]: Type | null }): Ctx;
+    withBounds(bounds: {
+        [sym: number]: { bound: Type | null; name: string };
+    }): Ctx;
+    withLocals: (locals: { sym: Sym; type: Type }[], better?: boolean) => Ctx;
+    typeForRecur: (idx: number) => Type | null;
 };
 
 export const unifyPayloads = (
@@ -83,10 +90,11 @@ export const typeMatches = (
     candidate: Type,
     expected: Type,
     ctx: Ctx,
+    path?: string[],
 ): boolean => {
     // Ok I need like a "resolve refs" function
-    const c2 = ctx.resolveRefsAndApplies(candidate)!;
-    const e2 = ctx.resolveRefsAndApplies(expected);
+    const c2 = ctx.resolveRefsAndApplies(candidate, path);
+    const e2 = ctx.resolveRefsAndApplies(expected, path);
     if (c2 != null) {
         candidate = c2;
     }
@@ -108,33 +116,32 @@ export const typeMatches = (
         candidate = collapseOps(candidate, ctx);
     }
 
-    // console.log('at', candidate, expected);
-    // if (expected.type === 'TOr') {
-    //     if (candidate.type === 'TOr') {
-    //         return candidate.elements.every((can) =>
-    //             (expected as TOr).elements.some((t) =>
-    //                 typeMatches(can, t, ctx),
-    //             ),
-    //         );
-    //     }
-    //     return expected.elements.some((t) => typeMatches(candidate, t, ctx));
-    // }
-    // if (candidate.type === 'TOr') {
-    //     return candidate.elements.every((can) =>
-    //         typeMatches(can, expected, ctx),
-    //     );
-    // }
-    // candidate = reduceConstant(candidate);
-    // if (candidate.type !== expected.type) {
-    //     return false;
-    // }
-    // console.log(candidate, expected);
+    if (ctx.isBuiltinType(expected, 'task')) {
+        return isTaskable(candidate, ctx);
+    }
+    if (
+        expected.type === 'TApply' &&
+        candidate.type === 'TEnum' &&
+        ctx.isBuiltinType(expected.target, 'Task')
+    ) {
+        return matchesTask(candidate, expected.loc, expected.args, ctx);
+    }
+
+    if (ctx.isBuiltinType(expected, 'eq')) {
+        return !hasFunctions(candidate, ctx);
+    }
+
+    if (candidate.type === 'TBlank' || expected.type === 'TBlank') {
+        return false;
+    }
 
     switch (candidate.type) {
+        case 'TVbl':
+            return false;
         case 'TRecord':
             return recordMatches(candidate, expected, ctx);
         case 'TEnum':
-            return enumTypeMatches(candidate, expected, ctx);
+            return enumTypeMatches(candidate, expected, ctx, path);
         case 'TDecorated':
             return typeMatches(candidate.inner, expected, ctx);
         case 'TVars': {
@@ -350,8 +357,9 @@ export const expandEnumCases = (
                 }
                 path = path.concat([k]);
             }
-            const res = ctx.resolveRefsAndApplies(kase);
+            const res = ctx.resolveRefsAndApplies(kase, path);
             if (res?.type === 'TEnum') {
+                // console.log('ok next');
                 const expanded = expandEnumCases(res, ctx, path);
                 if (!expanded) {
                     return null;
@@ -362,6 +370,7 @@ export const expandEnumCases = (
             }
         }
     }
+    // console.log('resolved', cases, path);
     return cases;
 };
 

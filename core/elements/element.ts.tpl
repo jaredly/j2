@@ -9,6 +9,9 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
+import { Ctx as ICtx } from '../ir/ir';
+import * as b from '@babel/types';
+import { Ctx as JCtx } from '../ir/to-js';
 
 export const grammar = `
 `;
@@ -27,6 +30,10 @@ export const ToPP = {
     // Apply(apply: p.Apply_inner, ctx: PCtx): pp.PP {
     // },
 };
+
+export const ToIR = {};
+
+export const ToJS = {};
 
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
     // Expression_Apply(node, { ctx, hit }) {

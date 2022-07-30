@@ -10,7 +10,7 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 
 export const grammar = `
 TRecord = "{" _ items:TRecordItems? _ "}"
@@ -70,7 +70,7 @@ export const ToTast = {
 };
 
 export const recordAsTuple = (t: TRecord) => {
-    if (!t.open && t.spreads.length == 0) {
+    if (t.spreads.length == 0) {
         let nums = [];
         for (let item of t.items) {
             const i = parseInt(item.key);
@@ -131,6 +131,7 @@ export const ToAst = {
                     items: tup.map((v) => ctx.ToAst.Type(v, ctx)),
                     loc: t.loc,
                 },
+                open: t.open ? '*' : null,
             };
         }
         return {
@@ -288,14 +289,6 @@ export const recordMatches = (
     if (!citems || !eitems) {
         return false;
     }
-    // const cnum = Object.keys(citems).length;
-    // const eenum = Object.keys(eitems).length;
-    // if (cnum < eenum) {
-    //     return false;
-    // }
-    // if (cnum > eenum && !expected.open) {
-    //     return false;
-    // }
     for (const key of Object.keys(eitems)) {
         if (!citems[key] && !eitems[key].default_) {
             return false;
@@ -350,12 +343,30 @@ export const allRecordItems = (
     return items;
 };
 
+import { Ctx as ICtx } from '../ir/ir';
+export const ToIR = {
+    Record({ items, loc, spreads }: t.Record, ctx: ICtx): t.IRecord {
+        return {
+            type: 'Record',
+            loc,
+            items: items.map((item) => ({
+                ...item,
+                value: ctx.ToIR.Expression(item.value, ctx),
+            })),
+            spreads: spreads.map((spread) => ctx.ToIR.Expression(spread, ctx)),
+        };
+    },
+};
+
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 export const ToJS = {
-    IRecord({ items, spreads, loc }: t.IRecord, ctx: JCtx): b.Expression {
-        const nums = irecordAsTuple({ items, spreads, loc, type: 'IRecord' });
+    Record({ items, spreads, loc }: t.IRecord, ctx: JCtx): b.Expression {
+        const nums = irecordAsTuple({ items, spreads, loc, type: 'Record' });
         if (nums) {
+            if (!nums.length) {
+                return b.nullLiteral();
+            }
             return b.arrayExpression(
                 nums.map((num) => ctx.ToJS.IExpression(num, ctx)),
             );

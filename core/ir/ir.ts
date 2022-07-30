@@ -1,6 +1,7 @@
 import * as t from '../typed-ast';
 import { makeToIR, ToIR } from './to-ir.gen';
 export type { ToIR };
+import { Ctx as ACtx } from '../typing/analyze';
 
 /*
 
@@ -18,6 +19,7 @@ let and such ... block
 
 export type Ctx = {
     ToIR: ToIR;
+    actx: ACtx;
 };
 
-export const iCtx = (): Ctx => ({ ToIR: makeToIR() });
+export const iCtx = (actx: ACtx): Ctx => ({ ToIR: makeToIR(), actx });

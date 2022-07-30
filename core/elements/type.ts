@@ -15,7 +15,7 @@ export const grammar = `
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
+TAtom = TBlank / TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
 
 TOps = left:TOpInner right_drop:TRight*
@@ -23,7 +23,7 @@ TRight = _ top:$top _ right:TOpInner
 top = "-" / "+"
 TOpInner = TDecorated / TApply
 
-TParens = "(" _ items:TComma? _ ")"
+TParens = "(" _ items:TComma? open:(_ "*")? _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
@@ -31,6 +31,8 @@ TLambda = "(" _ args:TArgs? ")" _ "=>" _ result:Type
 
 TypeAlias = "type" _ first:TypePair rest:(_ "and" _ TypePair)*
 TypePair = name:$IdText _ "=" _ typ:Type
+
+TBlank = pseudo:"_"
 
 `;
 
@@ -70,10 +72,22 @@ export type TLambda = {
     loc: t.Loc;
 };
 
-// Ok so also, you can just drop an inline record declaration, right?
+export type TVbl = {
+    type: 'TVbl';
+    id: number;
+    loc: t.Loc;
+};
+
+// Unconstrained
+export type TBlank = {
+    type: 'TBlank';
+    loc: t.Loc;
+};
 
 export type Type =
     | TRef
+    | TVbl
+    | TBlank
     | TLambda
     | t.TEnum
     | t.Number
@@ -106,10 +120,14 @@ export const asApply = (t: p.Type): p.TApply =>
               type: 'TParens',
               items: { type: 'TComma', items: [t], loc: t.loc },
               loc: t.loc,
+              open: null,
           }
         : t;
 
 export const ToTast = {
+    TBlank({ type, loc }: p.TBlank, ctx: TCtx): t.TBlank {
+        return { type, loc };
+    },
     TypeAlias({ loc, items }: p.TypeAlias, ctx: TCtx): t.TypeAlias {
         return {
             type: 'TypeAlias',
@@ -134,7 +152,7 @@ export const ToTast = {
             })),
         };
     },
-    TParens({ loc, items }: p.TParens, ctx: TCtx): t.Type {
+    TParens({ loc, items, open }: p.TParens, ctx: TCtx): t.Type {
         if (items?.items.length === 1) {
             return ctx.ToTast.Type(items.items[0], ctx);
         }
@@ -150,7 +168,7 @@ export const ToTast = {
                     value: ctx.ToTast.Type(x, ctx),
                     loc: x.loc,
                 })) ?? [],
-            open: false,
+            open: !!open,
         };
     },
     TDecorated(
@@ -199,6 +217,9 @@ export const ToTast = {
 };
 
 export const ToAst = {
+    TBlank(blank: t.TBlank, ctx: TACtx): p.TBlank {
+        return { ...blank, pseudo: '_' };
+    },
     TypeAlias({ elements, loc }: t.TypeAlias, ctx: TACtx): p.TypeAlias {
         return {
             type: 'TypeAlias',
@@ -245,6 +266,7 @@ export const ToAst = {
                     type: 'TParens',
                     loc: inner.loc,
                     items: { type: 'TComma', items: [inner], loc: inner.loc },
+                    open: '',
                 },
                 decorators,
             };
@@ -291,6 +313,9 @@ export const ToAst = {
 };
 
 export const ToPP = {
+    TBlank({ loc }: t.TBlank, ctx: PCtx): pp.PP {
+        return pp.atom('_', loc);
+    },
     TypeAlias({ items, loc }: p.TypeAlias, ctx: PCtx): pp.PP {
         const lines: pp.PP[] = [];
         items.forEach(({ name, typ, loc }, i) => {
@@ -368,9 +393,11 @@ export const ToPP = {
             loc,
         );
     },
-    TParens({ items, loc }: p.TParens, ctx: PCtx): pp.PP {
+    TParens({ items, loc, open }: p.TParens, ctx: PCtx): pp.PP {
         return pp.args(
-            items?.items.map((x) => ctx.ToPP.Type(x, ctx)) ?? [],
+            items?.items
+                .map((x) => ctx.ToPP.Type(x, ctx))
+                .concat(open ? [pp.text('*', loc)] : []) ?? [],
             loc,
         );
         // return pp.items(

@@ -1,9 +1,10 @@
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { transformType, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
+import { Ctx } from '../typing/analyze';
 import { applyType } from '../typing/getType';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
@@ -86,6 +87,13 @@ export const ToTast = {
     },
 };
 
+export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
+    TVars(node, ctx) {
+        let innerCtx = ctx.ctx.withLocalTypes(node.args);
+        return [null, { ...ctx, ctx: innerCtx }];
+    },
+};
+
 export const ToAst = {
     TApply({ target, args, loc }: TApply, ctx: TACtx): p.TApply_inner {
         const inner: p.Type = ctx.ToAst.Type(target, ctx);
@@ -105,6 +113,7 @@ export const ToAst = {
                       type: 'TParens',
                       items: { type: 'TComma', items: [inner], loc },
                       loc,
+                      open: null,
                   }
                 : inner;
         return {
@@ -245,10 +254,11 @@ export const tvarsMatches = (
     };
     transformType(expected, visit, null);
     transformType(candidate, visit, null);
-    const bounds: { [key: number]: t.Type | null } = {};
+    const bounds: { [key: number]: { bound: t.Type | null; name: string } } =
+        {};
     let newTypes: t.TRef[] = expected.args.map((arg, i) => {
         const sym = maxSym + i + 1;
-        bounds[sym] = arg.bound;
+        bounds[sym] = { bound: arg.bound, name: arg.sym.name };
         return {
             type: 'TRef',
             loc: noloc,

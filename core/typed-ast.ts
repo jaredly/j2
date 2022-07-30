@@ -11,8 +11,12 @@ import { TypeApplication } from './elements/generics';
 import { Type } from './elements/type';
 import { Id, idToString } from './ids';
 import { IRecord, Record } from './elements/record-exprs';
+import { ILambda, Lambda } from './elements/lambda';
+import { Await } from './elements/awaits';
+import { Block } from './elements/lets';
 export type { Id };
 export type { Apply, IApply } from './elements/apply';
+export type { Ctx as ACtx } from './typing/analyze';
 export type {
     Boolean,
     ITemplateString,
@@ -32,12 +36,14 @@ export type { TypeApplication, TypeVariables } from './elements/generics';
 export type { TApply, TVar, TVars } from './elements/type-vbls';
 export type {
     TAdd,
+    TBlank,
     TDecorated,
     TLambda,
     TOps,
     TOr,
     TRef,
     TSub,
+    TVbl,
     Type,
 } from './elements/type';
 export type { EnumCase, TEnum } from './elements/enums';
@@ -49,6 +55,31 @@ export type {
     Record,
     RecordKeyValue,
 } from './elements/record-exprs';
+export type { ILambda, LArg, Lambda } from './elements/lambda';
+export type {
+    Locals,
+    PBlank,
+    PDecorated,
+    PEnum,
+    PName,
+    PRecord,
+    Pattern,
+} from './elements/pattern';
+export type {
+    Block,
+    IAssign,
+    IBlock,
+    ILet,
+    IReturn,
+    IStmt,
+    Let,
+    Stmt,
+} from './elements/lets';
+import { If } from './elements/ifs';
+import { Switch } from './elements/switchs';
+export type { IIf, IIfYes, If, IfYes } from './elements/ifs';
+export type { AVCtx, Case, ICase, ISwitch, Switch } from './elements/switchs';
+export type { Await } from './elements/awaits';
 
 export type GlobalRef = {
     type: 'Global';
@@ -84,7 +115,7 @@ export type File = {
     loc: Loc;
 };
 
-export type TypeToplevel = Type | TypeAlias;
+export type TypeToplevel = Type | TypeAlias | ToplevelAliases;
 
 export type TypeFile = {
     type: 'TypeFile';
@@ -110,20 +141,51 @@ export type ToplevelExpression = {
     expr: Expression;
     loc: Loc;
 };
-export type Toplevel = ToplevelExpression | TypeAlias;
+export type ToplevelLet = {
+    type: 'ToplevelLet';
+    hash?: string;
+    elements: Array<{
+        name: string;
+        typ: Type | null;
+        expr: Expression;
+        loc: Loc;
+    }>;
+    loc: Loc;
+};
+export type Toplevel =
+    | ToplevelExpression
+    | TypeAlias
+    | ToplevelLet
+    | ToplevelAliases;
+export type ToplevelAliases = {
+    type: 'ToplevelAliases';
+    aliases: Array<{
+        name: string;
+        hash: string;
+        loc: Loc;
+    }>;
+    loc: Loc;
+};
+
 export type TypeAlias = {
     type: 'TypeAlias';
+    hash?: string;
     elements: Array<{ name: string; type: Type }>;
     loc: Loc;
 };
 
 export type Expression =
+    | If
     | Ref
-    | Apply
     | Enum
+    | Block
+    | Apply
+    | Lambda
     | Record
     | Number
+    | Switch
     | Boolean
+    | Await
     | TemplateString
     | TypeApplication
     | DecoratedExpression;
@@ -131,6 +193,7 @@ export type Expression =
 export type IExpression =
     | Ref
     | Number
+    | ILambda
     | Boolean
     | IApply
     | ITemplateString

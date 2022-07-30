@@ -4,6 +4,7 @@ import * as pp from '../printer/pp';
 export const grammar = `
 newline = "\n"
 _nonnewline = [ \t\r]* (comment [ \t\r]*)*
+__nonnewline = [ \t\r]+ (comment [ \t\r]*)*
 _ "whitespace"
   = [ \t\n\r]* (comment _)*
 __ "whitespace"
@@ -15,7 +16,7 @@ finalLineComment = $("//" (!"\n" .)*)
 `;
 
 export const injectComments = (pretty: pp.PP, comments: [p.Loc, string][]) => {
-    return pp.crawl(pretty, (item) => {
+    const res = pp.crawl(pretty, (item) => {
         if (!comments.length) {
             return item;
         }
@@ -27,6 +28,9 @@ export const injectComments = (pretty: pp.PP, comments: [p.Loc, string][]) => {
             contents = item.contents;
         } else if (item.type === 'items') {
             contents = item.items;
+            if (item.breakMode === 'never') {
+                return item;
+            }
         } else {
             return item;
         }
@@ -38,9 +42,16 @@ export const injectComments = (pretty: pp.PP, comments: [p.Loc, string][]) => {
 
             if (mstart <= loc.start.offset && loc.end.offset <= mend) {
                 let dontappend = false;
+                let nextup = false;
                 for (let ci = 0; ci < contents.length; ci++) {
                     const item = contents[ci];
                     if (item.loc.start.offset > loc.start.offset) {
+                        contents.splice(ci, 0, atom);
+                        dontappend = true;
+                        used.push(i);
+                        break;
+                    }
+                    if (nextup && item.loc.start.offset === -1) {
                         contents.splice(ci, 0, atom);
                         dontappend = true;
                         used.push(i);
@@ -53,6 +64,9 @@ export const injectComments = (pretty: pp.PP, comments: [p.Loc, string][]) => {
                         dontappend = true;
                         break;
                     }
+                    if (item.loc.end.offset === loc.start.offset) {
+                        nextup = true;
+                    }
                 }
                 if (!dontappend) {
                     contents.push(atom);
@@ -64,4 +78,20 @@ export const injectComments = (pretty: pp.PP, comments: [p.Loc, string][]) => {
         comments = comments.filter((_, i) => !used.includes(i));
         return item;
     });
+    if (comments.length) {
+        let contents: Array<pp.PP>;
+        if (res.type === 'block' || res.type === 'args') {
+            contents = res.contents;
+        } else if (res.type === 'items') {
+            contents = res.items;
+        } else {
+            return res;
+        }
+        comments.forEach((comment) => {
+            contents.push(
+                pp.atom(comment[1].trim(), comment[0], undefined, true),
+            );
+        });
+    }
+    return res;
 };

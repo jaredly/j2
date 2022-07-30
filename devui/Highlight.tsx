@@ -1,8 +1,9 @@
-import { Card, Popover, Text, Tooltip } from '@nextui-org/react';
+import { Card, Popover, styled, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { parseTypeFile, SyntaxError } from '../core/grammar/base.parser';
-import { FullContext, noloc } from '../core/ctx';
+import { FullContext } from '../core/ctx';
+import { noloc } from '../core/consts';
 import { AllTaggedTypeNames, parseFile } from '../core/grammar/base.parser';
 import { printToString } from '../core/printer/pp';
 import { newPPCtx } from '../core/printer/to-pp';
@@ -11,21 +12,51 @@ import {
     transformTypeFile,
     Visitor,
 } from '../core/transform-ast';
-import * as tt from '../core/transform-tast';
-import { File, Loc, refHash, Type } from '../core/typed-ast';
-import { getType } from '../core/typing/getType';
+import { File, Loc, ToplevelLet, Type } from '../core/typed-ast';
 import { printCtx } from '../core/typing/to-ast';
-import { markUpTree, Tree as TreeT } from './markUpTree';
+import { markUpTree } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
+import {
+    aliasesFromString,
+    splitAliases,
+} from '../core/typing/__test__/fixture-utils';
+import { HL } from './HL';
+import { Tree } from './Tree';
+import { collectAnnotations } from './collectAnnotations';
 
-export type Colorable = keyof Visitor<null> | 'Error' | 'Success';
+export type Colorable = keyof Visitor<null> | 'Error' | 'Success' | 'LetName';
+
+export const styles: {
+    [key in Colorable]?: any; // React.CSSProperties;
+} = {
+    AliasItem: {
+        // 'font-size': '50%',
+        color: '#555',
+        'max-width': '200px',
+        display: 'inline-block',
+        contentEditable: false,
+        // 'user-select': 'none',
+        overflow: 'hidden',
+        'white-space': 'nowrap',
+        'text-overflow': 'ellipsis',
+        'margin-bottom': '-7px',
+    },
+    Error: {
+        textDecoration: 'underline',
+        textDecorationColor: '#f00',
+    },
+};
 
 export const colors: {
     [key in Colorable]?: string;
 } = {
+    LetName: '#00f000',
     TagDecl: '#33ff4e',
     TRef: 'green',
+    PName: 'green',
     String: '#afa',
+    Enum: '#ff5c5c',
+    PEnum: '#ff5c5c',
     TemplateString: '#afa',
     TemplatePair: '#afa',
     TBArg: 'magenta',
@@ -36,24 +67,22 @@ export const colors: {
     Decorator: 'orange',
     DecoratorId: '#ffbf88',
     TemplateWrap: 'yellow',
+    Aliases: '#777',
+    AliasItem: '#555',
     // Error: 'red',
     // Success: 'green',
 };
 
 const n = (n: number): Loc['start'] => ({ ...noloc.start, offset: n });
 
-export type HL = {
-    loc: Loc;
-    type: Colorable;
-    prefix?: { text: string; message?: string };
-    suffix?: { text: string; message?: string };
-    underline?: string;
-};
-
 export const highlightLocations = (
     text: string,
+    aliases: { [key: string]: string },
     typeFile = false,
-    extraLocs?: (v: p.File | p.TypeFile) => HL[],
+    extraLocs?: (
+        v: p.File | p.TypeFile,
+        aliases: { [key: string]: string },
+    ) => HL[],
 ): HL[] => {
     try {
         const locs: HL[] = [];
@@ -62,18 +91,18 @@ export const highlightLocations = (
             ast.comments.forEach(([loc, _]) => {
                 locs.push({ loc, type: 'comment' });
             });
-            transformTypeFile(ast, visitor, locs);
+            transformTypeFile(ast, highlightVisitor, locs);
             if (extraLocs) {
-                locs.push(...extraLocs(ast));
+                locs.push(...extraLocs(ast, aliases));
             }
         } else {
             const ast = p.parseFile(text);
             ast.comments.forEach(([loc, _]) => {
                 locs.push({ loc, type: 'comment' });
             });
-            transformFile(ast, visitor, locs);
+            transformFile(ast, highlightVisitor, locs);
             if (extraLocs) {
-                locs.push(...extraLocs(ast));
+                locs.push(...extraLocs(ast, aliases));
             }
         }
         return locs;
@@ -96,6 +125,11 @@ export const highlightLocations = (
     }
 };
 
+const Container = styled('div', {
+    whiteSpace: 'pre-wrap',
+    fontFamily: '$mono',
+});
+
 export const Highlight = ({
     text,
     info,
@@ -109,14 +143,22 @@ export const Highlight = ({
     portal: HTMLDivElement;
     onClick?: () => void;
     typeFile?: boolean;
-    extraLocs?: (v: p.File | p.TypeFile) => HL[];
+    extraLocs?: (
+        v: p.File | p.TypeFile,
+        aliases: { [key: string]: string },
+    ) => HL[];
 }) => {
-    if (text.startsWith('alias ')) {
-        text = text.slice(text.indexOf('\n') + 1);
-    }
+    // const [aliases, rest] = React.useMemo(() => splitAliases(text), [text]);
+    // text = rest;
 
     const marked = React.useMemo(() => {
-        const locs = highlightLocations(text, typeFile, extraLocs);
+        const locs = highlightLocations(
+            text,
+            {},
+            // aliasesFromString(aliases),
+            typeFile,
+            extraLocs,
+        );
         return text.trim().length ? markUpTree(text, locs) : null;
     }, [text]);
 
@@ -124,7 +166,6 @@ export const Highlight = ({
         () => (info ? collectAnnotations(info.tast, info.ctx) : []),
         [info],
     );
-    // console.log(annotations);
 
     const [hover, setHover] = React.useState(
         null as null | {
@@ -135,10 +176,8 @@ export const Highlight = ({
 
     return (
         <div onClick={onClick}>
-            <Text
+            <Container
                 css={{
-                    whiteSpace: 'pre-wrap',
-                    fontFamily: '$mono',
                     cursor: onClick ? 'pointer' : 'default',
                 }}
                 onMouseLeave={(evt) => {
@@ -183,7 +222,7 @@ export const Highlight = ({
                         'Error parsing: ' + text
                     )}
                 </span>
-            </Text>
+            </Container>
             {hover && annotations.length && portal
                 ? createPortal(
                       <Card
@@ -221,93 +260,42 @@ export const Highlight = ({
     );
 };
 
-const visitor: Visitor<Array<{ loc: Loc; type: string }>> = {};
+const highlightVisitor: Visitor<Array<{ loc: Loc; type: Colorable }>> = {};
 AllTaggedTypeNames.forEach((name) => {
-    visitor[name] = (node: any, ctx): any => {
+    highlightVisitor[name] = (node: any, ctx): any => {
         ctx.push({ loc: node.loc, type: name });
         return null;
     };
 });
-
-export const Tree = ({
-    tree,
-    hover,
-}: {
-    tree: TreeT;
-    hover: null | [number, number];
-}) => {
-    return (
-        <span
-            className={tree.hl.type}
-            // data-prefix={tree.hl.prefix ? tree.hl.prefix.text : undefined}
-            // data-suffix={tree.hl.suffix ? tree.hl.suffix.text : undefined}
-            style={{
-                color: colors[tree.hl.type] ?? '#aaa',
-            }}
-        >
-            {tree.children.map((child, i) =>
-                child.type === 'leaf' ? (
-                    <span
-                        data-span={`${child.span[0]}:${child.span[1]}`}
-                        style={
-                            hover &&
-                            hover[0] === child.span[0] &&
-                            hover[1] === child.span[1]
-                                ? {
-                                      // outline: '3px dotted rgba(255,255,0,0.1)'
-                                      textDecoration: 'underline',
-                                  }
-                                : {}
-                        }
-                        key={i}
-                    >
-                        {child.text}
-                    </span>
-                ) : (
-                    <Tree tree={child} key={i} hover={hover} />
-                ),
-            )}
-            {tree.hl.suffix && tree.hl.suffix.message ? (
-                <Tooltip content={tree.hl.suffix.message}>
-                    <span>{tree.hl.suffix.text}</span>
-                </Tooltip>
-            ) : null}
-        </span>
-    );
+const advance = (
+    { offset, line, column }: Loc['start'],
+    v: number,
+): Loc['start'] => {
+    return {
+        offset: offset + v,
+        column: column + v,
+        line,
+    };
+};
+highlightVisitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
+    ctx.push({ loc: node.loc, type: 'ToplevelLet' });
+    const { start, end } = node.loc;
+    node.items.forEach((item) => {
+        ctx.push({
+            loc: {
+                ...node.loc,
+                start: advance(start, 4),
+                end: advance(start, 4 + item.name.length),
+            },
+            type: 'LetName',
+        });
+    });
+    return null;
 };
 
 export const typeToString = (t: Type, ctx: FullContext) => {
     const actx = printCtx(ctx, false);
     const pctx = newPPCtx(false);
-    const ast = actx.ToAst[t.type](t as any, actx);
-    return printToString(pctx.ToPP[ast.type](ast as any, pctx), 100);
-};
-
-const collectAnnotations = (tast: File, ctx: FullContext) => {
-    const annotations: { loc: Loc; text: string }[] = [];
-    const visitor: tt.Visitor<null> = {
-        Expression: (node) => {
-            const t = getType(node, ctx);
-            if (t) {
-                annotations.push({
-                    loc: node.loc,
-                    text: typeToString(t, ctx),
-                });
-            }
-            return node;
-        },
-        Ref(node, ctx) {
-            annotations.push({
-                loc: node.loc,
-                text:
-                    node.kind.type === 'Unresolved'
-                        ? 'unresolved'
-                        : refHash(node.kind),
-            });
-            return null;
-        },
-    };
-    tt.transformFile(tast, visitor, null);
-    // console.log(annotations);
-    return annotations;
+    const ast = actx.ToAst.Type(t, actx);
+    return printToString(pctx.ToPP.Type(ast, pctx), 100);
 };

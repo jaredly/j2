@@ -32,6 +32,8 @@ export type TypeFile = {
 
 // No data on HashRef
 
+// No data on HashRefInner
+
 // No data on ShortRef
 
 // No data on BuiltinHash
@@ -47,7 +49,7 @@ export type Apply_inner = {
 
 export type Apply = Apply_inner | Atom;
 
-export type Suffix = CallSuffix | TypeApplicationSuffix;
+export type Suffix = CallSuffix | TypeApplicationSuffix | AwaitSuffix;
 
 export type CallSuffix = {
   type: "CallSuffix";
@@ -61,24 +63,47 @@ export type CommaExpr = {
   items: Expression[];
 };
 
+export type AwaitSuffix = {
+  type: "AwaitSuffix";
+  loc: Loc;
+  pseudo: string;
+};
+
 export type _lineEnd = string;
 
 export type _EOF = string;
 
-export type Toplevel = TypeAlias | Expression;
+export type Toplevel = Aliases | TypeAlias | ToplevelLet | Expression;
 
-export type TypeToplevel = TypeAlias | Type;
+export type TypeToplevel = Aliases | TypeAlias | Type;
 
-export type Expression = DecoratedExpression;
+export type Aliases = {
+  type: "Aliases";
+  loc: Loc;
+  items: AliasItem[];
+};
+
+export type AliasItem = {
+  type: "AliasItem";
+  loc: Loc;
+  name: string;
+  hash: string;
+};
+
+export type AliasName = string | string;
+
+export type Expression = Lambda | BinOp;
 
 export type Identifier = {
   type: "Identifier";
   loc: Loc;
   text: string;
-  hash: (string | string | string | string | string | string) | null;
+  hash: IdHash | null;
 };
 
-export type Atom = Number | Boolean | Identifier | ParenedExpression | TemplateString | Enum | Record;
+export type IdHash = string;
+
+export type Atom = If | Switch | Number | Boolean | Identifier | ParenedOp | ParenedExpression | TemplateString | Enum | Record | Block;
 
 export type ParenedExpression = {
   type: "ParenedExpression";
@@ -90,9 +115,62 @@ export type ParenedExpression = {
 
 export type AttrText = string;
 
+export type BinOp_inner = {
+  type: "BinOp";
+  loc: Loc;
+  first: WithUnary;
+  rest: BinOpRight[];
+};
+
+export type BinOp = BinOp_inner | WithUnary;
+
+export type BinOpRight = {
+  type: "BinOpRight";
+  loc: Loc;
+  op: binopWithHash;
+  right: WithUnary;
+};
+
+export type WithUnary_inner = {
+  type: "WithUnary";
+  loc: Loc;
+  op: UnaryOpWithHash;
+  inner: DecoratedExpression;
+};
+
+export type WithUnary = WithUnary_inner | DecoratedExpression;
+
+export type UnaryOpWithHash = {
+  type: "UnaryOpWithHash";
+  loc: Loc;
+  op: UnaryOp;
+  hash: IdHash | null;
+};
+
+export type UnaryOp = "-" | "!";
+
+export type binopWithHash = {
+  type: "binopWithHash";
+  loc: Loc;
+  op: binop;
+  hash: IdHash | null;
+};
+
+export type binop = string;
+
+export type ParenedOp = {
+  type: "ParenedOp";
+  loc: Loc;
+  inner: binopWithHash;
+};
+
+export type Binop = Expression;
+
 export type newline = string;
 
 export type _nonnewline = string;
+
+export type __nonnewline = string;
 
 export type _ = string;
 
@@ -204,7 +282,13 @@ export type Enum = {
   type: "Enum";
   loc: Loc;
   text: string;
-  payload: (CommaExpr | null) | null;
+  payload: EnumPayload | null;
+};
+
+export type EnumPayload = {
+  type: "EnumPayload";
+  loc: Loc;
+  items: CommaExpr | null;
 };
 
 export type TEnum = {
@@ -232,7 +316,7 @@ export type TagDecl = {
 export type TagPayload = {
   type: "TagPayload";
   loc: Loc;
-  items: Type[];
+  items: TComma | null;
 };
 
 export type Star = {
@@ -253,24 +337,154 @@ export type TypeAppVbls = {
   items: Type[];
 };
 
-export type TypeVariables = {
-  type: "TypeVariables";
+export type If = {
+  type: "If";
   loc: Loc;
-  vbls: TypeVbls;
+  yes: IfYes;
+  no: Else | null;
+};
+
+export type IfYes = {
+  type: "IfYes";
+  loc: Loc;
+  conds: IfConds;
+  block: Block;
+};
+
+export type IfConds = {
+  type: "IfConds";
+  loc: Loc;
+  items: IfCond[];
+};
+
+export type IfCond = Let | Expression;
+
+export type Else = Block | If;
+
+export type Lambda = {
+  type: "Lambda";
+  loc: Loc;
+  args: LArgs | null;
+  res: Type | null;
   body: Expression;
 };
 
-export type TypeVbls = {
-  type: "TypeVbls";
+export type LArgs = {
+  type: "LArgs";
   loc: Loc;
-  items: TypeVbl[];
+  items: LArg[];
 };
 
-export type TypeVbl = {
-  type: "TypeVbl";
+export type LArg = {
+  type: "LArg";
   loc: Loc;
-  vbl: Identifier;
-  bound: Type | null;
+  pat: Pattern;
+  typ: Type | null;
+};
+
+export type Block = {
+  type: "Block";
+  loc: Loc;
+  stmts: Stmts | null;
+};
+
+export type Stmts = {
+  type: "Stmts";
+  loc: Loc;
+  items: Stmt[];
+};
+
+export type Stmt = Let | Expression;
+
+export type Let = {
+  type: "Let";
+  loc: Loc;
+  pat: Pattern;
+  expr: Expression;
+};
+
+export type ToplevelLet = {
+  type: "ToplevelLet";
+  loc: Loc;
+  items: LetPair[];
+};
+
+export type LetPair = {
+  type: "LetPair";
+  loc: Loc;
+  name: string;
+  typ: Type | null;
+  expr: Expression;
+};
+
+export type Pattern = PDecorated | PEnum | PName | PTuple | PRecord | PBlank | Number | String;
+
+export type PBlank = {
+  type: "PBlank";
+  loc: Loc;
+  pseudo: string;
+};
+
+export type PName = {
+  type: "PName";
+  loc: Loc;
+  name: string;
+  hash: string | null;
+};
+
+export type PTuple = {
+  type: "PTuple";
+  loc: Loc;
+  items: PTupleItems | null;
+};
+
+export type PTupleItems = {
+  type: "PTupleItems";
+  loc: Loc;
+  items: Pattern[];
+};
+
+export type PRecord = {
+  type: "PRecord";
+  loc: Loc;
+  fields: PRecordFields | null;
+};
+
+export type PRecordFields = {
+  type: "PRecordFields";
+  loc: Loc;
+  items: PRecordField[];
+};
+
+export type PRecordField = {
+  type: "PRecordField";
+  loc: Loc;
+  name: string;
+  pat: PRecordValue | null;
+};
+
+export type PRecordValue = PRecordPattern | PHash;
+
+export type PRecordPattern = Pattern;
+
+export type PHash = {
+  type: "PHash";
+  loc: Loc;
+  hash: string;
+};
+
+export type PDecorated = {
+  type: "PDecorated";
+  loc: Loc;
+  decorators: Decorator[];
+  inner: Pattern;
+};
+
+export type PEnum = {
+  type: "PEnum";
+  loc: Loc;
+  text: string;
+  payload: PTuple | null;
 };
 
 export type Record = {
@@ -328,6 +542,20 @@ export type TRecordKeyValue = {
   default_: Expression | null;
 };
 
+export type Switch = {
+  type: "Switch";
+  loc: Loc;
+  target: Expression;
+  cases: Case[];
+};
+
+export type Case = {
+  type: "Case";
+  loc: Loc;
+  pat: Pattern;
+  expr: Expression;
+};
+
 export type TApply_inner = {
   type: "TApply";
   loc: Loc;
@@ -374,7 +602,7 @@ export type TDecorated = {
   inner: TApply;
 };
 
-export type TAtom = TRef | Number | String | TLambda | TVars | TParens | TEnum | TRecord;
+export type TAtom = TBlank | TRef | Number | String | TLambda | TVars | TParens | TEnum | TRecord;
 
 export type TRef = {
   type: "TRef";
@@ -407,6 +635,7 @@ export type TParens = {
   type: "TParens";
   loc: Loc;
   items: TComma | null;
+  open: string | null;
 };
 
 export type TArg = {
@@ -442,9 +671,15 @@ export type TypePair = {
   typ: Type;
 };
 
-export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | Identifier | ParenedExpression | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeVariables | TypeVbls | TypeVbl | Record | RecordItems | RecordSpread | RecordKeyValue | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair;
+export type TBlank = {
+  type: "TBlank";
+  loc: Loc;
+  pseudo: string;
+};
 
-export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "Identifier", "ParenedExpression", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeVariables", "TypeVbls", "TypeVbl", "Record", "RecordItems", "RecordSpread", "RecordKeyValue", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair"];
+export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | AwaitSuffix | Aliases | AliasItem | Identifier | ParenedExpression | BinOp_inner | BinOpRight | WithUnary_inner | UnaryOpWithHash | binopWithHash | ParenedOp | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | EnumPayload | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | If | IfYes | IfConds | Lambda | LArgs | LArg | Block | Stmts | Let | ToplevelLet | LetPair | PBlank | PName | PTuple | PTupleItems | PRecord | PRecordFields | PRecordField | PHash | PDecorated | PEnum | Record | RecordItems | RecordSpread | RecordKeyValue | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | Switch | Case | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair | TBlank;
+
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "AwaitSuffix", "Aliases", "AliasItem", "Identifier", "ParenedExpression", "BinOp", "BinOpRight", "WithUnary", "UnaryOpWithHash", "binopWithHash", "ParenedOp", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "EnumPayload", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "If", "IfYes", "IfConds", "Lambda", "LArgs", "LArg", "Block", "Stmts", "Let", "ToplevelLet", "LetPair", "PBlank", "PName", "PTuple", "PTupleItems", "PRecord", "PRecordFields", "PRecordField", "PHash", "PDecorated", "PEnum", "Record", "RecordItems", "RecordSpread", "RecordKeyValue", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "Switch", "Case", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair", "TBlank"];
 
 // @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});

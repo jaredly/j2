@@ -1,17 +1,41 @@
 import hashObject from 'object-hash';
 import { Ctx } from '.';
+import { noloc } from './consts';
 import { DecoratorDecl } from './elements/decorators';
+import { typeForPattern } from './elements/pattern';
 import { TVar } from './elements/type-vbls';
-import { Loc } from './grammar/base.parser';
+import { errors } from './errors';
+import { Loc, parseType } from './grammar/base.parser';
 import { extract, Id, idsEqual, toId } from './ids';
 import { resolveAnalyzeType } from './resolveAnalyzeType';
-import { transformType } from './transform-tast';
-import { Expression, GlobalRef, RefKind, Sym, TVars, Type } from './typed-ast';
+import { transformExpression, transformType, Visitor } from './transform-tast';
+import {
+    Expression,
+    GlobalRef,
+    RefKind,
+    Sym,
+    TVars,
+    Type,
+    UnresolvedRef,
+} from './typed-ast';
 import { Ctx as ACtx } from './typing/analyze';
 import { getType } from './typing/getType';
-import { makeToTast, Toplevel } from './typing/to-tast';
+import { makeToTast, ToplevelConfig } from './typing/to-tast';
 import { Ctx as TCtx } from './typing/typeMatches';
-import { locClearVisitor } from './typing/__test__/fixture-utils';
+import { constrainTypes } from './typing/unifyTypes';
+
+export const locClearVisitor: Visitor<null> = {
+    // ToplevelLet(node, ctx) {
+    //     return node.hash ? { ...node, hash: undefined } : null;
+    // },
+    Loc: () => noloc,
+    // RefKind(node) {
+    //     if (node.type === 'Global') {
+    //         return { ...node, id: idToString(node.id) as any } as RefKind;
+    //     }
+    //     return null;
+    // },
+};
 
 export type HashedNames<Contents, NameV> = {
     hashed: { [hash: string]: Array<Contents> };
@@ -44,17 +68,14 @@ type Internal = {
     >;
     // Used in the first traversal & resolving
     // After that, we use syms
+    constraints: {
+        [key: number]: Type;
+    };
     locals: {
         types: { sym: Sym; bound: Type | null }[];
         values: { sym: Sym; type: Type }[];
     }[];
-    syms: {
-        types: { [key: number]: Type | null };
-        // lots of questions about how Type variables
-        // get inferred
-        values: { [key: number]: Type };
-    };
-    toplevel: null | Toplevel;
+    toplevel: null | ToplevelConfig;
 };
 
 export type FullContext = {
@@ -149,7 +170,9 @@ const resolveDecorator = (
     if (rawHash || Object.hasOwn(ctx.aliases, name)) {
         const hash = parseHash(rawHash ?? ctx.aliases[name]);
         if (hash.type === 'sym') {
-            throw new Error('decorators can only be global');
+            throw new Error(
+                `decorators can only be global ${name} - ${rawHash} ${ctx.aliases[name]}`,
+            );
         } else if (hash.type === 'recur') {
             throw new Error('decorators can only be global');
         } else {
@@ -202,7 +225,6 @@ const resolveType = (
             }
         }
     }
-    // TODO: local resolution
     if (ctx.types.names[name]) {
         return ctx.types.names[name];
     }
@@ -214,12 +236,26 @@ const resolve = (
     name: string,
     rawHash?: string | null,
 ): RefKind[] => {
+    if (ctx.toplevel?.type === 'Expr') {
+        const idx = ctx.toplevel.items.findIndex((v) => v.name === name);
+        if (idx !== -1) {
+            return [{ type: 'Recur', idx }];
+        }
+    }
     // console.log(ctx.aliases, name, Object.hasOwn(ctx.aliases, name), rawHash);
     if (rawHash || Object.hasOwn(ctx.aliases, name)) {
         // console.log('ok', name);
         const hash = parseHash(rawHash ?? ctx.aliases[name]);
-        if (hash.type === 'sym' || hash.type === 'recur') {
-            throw new Error('not yet: ' + rawHash);
+        if (hash.type === 'sym') {
+            for (let { values } of ctx.locals) {
+                for (let { sym, type } of values) {
+                    if (sym.id === hash.num) {
+                        return [{ type: 'Local', sym: sym.id }]; // , bound};
+                    }
+                }
+            }
+        } else if (hash.type === 'recur') {
+            return [{ type: 'Recur', idx: hash.idx }];
             // const ref = ctx.values.names[name]
             // if (ref) {
             // 	return ref
@@ -232,6 +268,13 @@ const resolve = (
             }
         }
     }
+    for (let { values } of ctx.locals) {
+        for (let { sym, type } of values) {
+            if (sym.name === name) {
+                return [{ type: 'Local', sym: sym.id }]; // , bound};
+            }
+        }
+    }
     // TODO: local resolution
     if (ctx.values.names[name]) {
         return ctx.values.names[name];
@@ -239,8 +282,14 @@ const resolve = (
     return [];
 };
 
-export const refsEqual = (a: RefKind, b: RefKind): boolean => {
+export const refsEqual = (
+    a: RefKind | UnresolvedRef,
+    b: RefKind | UnresolvedRef,
+): boolean => {
     if (a.type !== b.type) {
+        return false;
+    }
+    if (a.type === 'Unresolved' || b.type === 'Unresolved') {
         return false;
     }
     if (a.type === 'Global') {
@@ -270,12 +319,14 @@ const cloneInternal = (internal: Internal) => ({
     aliases: { ...internal.aliases },
 });
 
+export const nodebug = () => {};
+
 export const newContext = (): FullContext => {
     const ctx: FullContext = {
         log(...args) {
             console.log(...args);
         },
-        debugger() {},
+        debugger: nodebug,
         clone() {
             return {
                 ...this,
@@ -283,22 +334,29 @@ export const newContext = (): FullContext => {
             };
         },
         toplevelConfig(toplevel) {
-            if (toplevel && this[opaque].toplevel?.hash) {
-                toplevel.hash = this[opaque].toplevel.hash;
-            }
             return {
                 ...this,
                 [opaque]: { ...this[opaque], toplevel },
             };
         },
+        localType(sym) {
+            for (let local of this[opaque].locals) {
+                for (let { sym: s, type } of local.values) {
+                    if (s.id === sym) {
+                        return type;
+                    }
+                }
+            }
+            return null;
+        },
         extract() {
             return this[opaque];
         },
         [opaque]: {
+            constraints: {},
             aliases: {},
             locals: [],
             symid: 0,
-            syms: { types: {}, values: {} },
             decorators: { hashed: {}, names: {} },
             values: { hashed: {}, names: {} },
             types: { hashed: {}, names: {} },
@@ -306,27 +364,49 @@ export const newContext = (): FullContext => {
         },
 
         withAliases(aliases) {
-            return { ...this, [opaque]: { ...this[opaque], aliases } };
-        },
-
-        withBounds(bounds) {
-            const types = {
-                ...this[opaque].syms.types,
-                ...bounds,
-            };
             return {
                 ...this,
                 [opaque]: {
                     ...this[opaque],
-                    syms: { ...this[opaque].syms, types },
+                    aliases: {
+                        ...this[opaque].aliases,
+                        ...aliases,
+                    },
                 },
             };
         },
 
-        getBound(sym) {
-            if (this[opaque].syms.types[sym] !== undefined) {
-                return this[opaque].syms.types[sym];
+        withBounds(bounds) {
+            return {
+                ...this,
+                [opaque]: {
+                    ...this[opaque],
+                    locals: [
+                        {
+                            values: [],
+                            types: Object.keys(bounds).map((k) => ({
+                                sym: { name: bounds[+k].name, id: +k },
+                                bound: bounds[+k].bound,
+                            })),
+                        },
+                        ...this[opaque].locals,
+                    ],
+                },
+            };
+        },
+
+        valueForSym(sym) {
+            for (let { values } of this[opaque].locals) {
+                for (let t of values) {
+                    if (t.sym.id === sym) {
+                        return { type: t.type, name: t.sym.name };
+                    }
+                }
             }
+            return null;
+        },
+
+        getBound(sym) {
             for (let { types } of this[opaque].locals) {
                 for (let t of types) {
                     if (t.sym.id === sym) {
@@ -337,9 +417,10 @@ export const newContext = (): FullContext => {
             console.error('Failed to find bound for', sym);
             return null;
         },
-        resetSym() {
-            this[opaque].symid = 0;
-            this[opaque].syms = { types: {}, values: {} };
+        resetSym(min) {
+            this[opaque].symid =
+                min == null ? 0 : Math.max(this[opaque].symid, min);
+            this[opaque].constraints = {};
         },
         isBuiltinType(t, name) {
             return (
@@ -353,6 +434,9 @@ export const newContext = (): FullContext => {
 
         getBuiltinRef(name) {
             const gref = this[opaque].types.names[name];
+            if (!gref) {
+                return this[opaque].values.names[name][0];
+            }
             return gref;
         },
         resolveRefsAndApplies(t, path) {
@@ -396,9 +480,6 @@ export const newContext = (): FullContext => {
         // Modifiers
         withLocalTypes(types) {
             const locals: Internal['locals'][0] = { types, values: [] };
-            types.forEach((t) => {
-                this[opaque].syms.types[t.sym.id] = t.bound;
-            });
             return {
                 ...this,
                 [opaque]: {
@@ -407,6 +488,89 @@ export const newContext = (): FullContext => {
                 },
             };
         },
+
+        newTypeVar() {
+            const id = this[opaque].symid++;
+            return {
+                type: 'TVbl',
+                id,
+                loc: noloc,
+            };
+        },
+
+        withLocals(values) {
+            const locals: Internal['locals'][0] = { types: [], values };
+            return {
+                ...this,
+                [opaque]: {
+                    ...this[opaque],
+                    locals: [locals, ...this[opaque].locals],
+                },
+            };
+        },
+
+        addTypeConstraint(id, constraint) {
+            if (!this[opaque].constraints[id]) {
+                this[opaque].constraints[id] = constraint;
+                return constraint;
+            }
+            const mix = constrainTypes(
+                this[opaque].constraints[id],
+                constraint,
+                this,
+            );
+            if (!mix) {
+                return this[opaque].constraints[id];
+            }
+            this[opaque].constraints[id] = mix;
+            return mix;
+        },
+
+        currentConstraints(id) {
+            // console.log('get', id, this[opaque].constraints[id]);
+            if (!this[opaque].constraints[id]) {
+                return { type: 'TBlank', loc: noloc };
+            }
+            return this[opaque].constraints[id];
+        },
+
+        withValues(exprs) {
+            const defns = exprs.map((t) =>
+                transformExpression(t.expr, locClearVisitor, null),
+            );
+            const hash = hashExprs(defns);
+            // console.log(hash, defns);
+            // require('fs').writeFileSync(hash, JSON.stringify(defns));
+            const ctx = { ...this[opaque] };
+            ctx.values = {
+                ...ctx.values,
+                hashed: {
+                    ...ctx.values.hashed,
+                    [hash]: exprs.map(({ name, expr }) => ({
+                        type: 'user',
+                        typ: this.getType(expr)!,
+                        expr,
+                    })),
+                },
+                names: {
+                    ...ctx.values.names,
+                },
+            };
+            exprs.forEach(({ name }, i) => {
+                if (!ctx.values.names[name]) {
+                    ctx.values.names[name] = [];
+                }
+                ctx.values.names[name].push({
+                    type: 'Global',
+                    id: toId(hash, i),
+                });
+            });
+            if (ctx.toplevel?.type === 'Expr') {
+                ctx.toplevel.hash = hash;
+            }
+            return { hash, ctx: { ...this, [opaque]: ctx } };
+        },
+
         withTypes(types) {
             const defns = types.map((m) =>
                 transformType(m.type, locClearVisitor, null),
@@ -433,7 +597,7 @@ export const newContext = (): FullContext => {
             if (ctx.toplevel?.type === 'Type') {
                 ctx.toplevel.hash = hash;
             }
-            return { ...this, [opaque]: ctx };
+            return { hash, ctx: { ...this, [opaque]: ctx } };
         },
 
         // Analyze!
@@ -443,19 +607,42 @@ export const newContext = (): FullContext => {
         resolveAnalyzeType(type: Type) {
             return resolveAnalyzeType(type, this);
         },
-        resolveRecur(idx) {
-            if (this[opaque].toplevel?.type === 'Type') {
-                const hash = this[opaque].toplevel.hash;
-                if (hash) {
-                    return toId(hash, idx);
-                } else {
-                    console.log(
-                        'no hash on toplevel sry',
-                        this[opaque].toplevel,
-                    );
+        typeForRecur(idx) {
+            const { toplevel } = this[opaque];
+            if (!toplevel || toplevel.type !== 'Expr') {
+                return null;
+            }
+            return toplevel.items[idx].type;
+        },
+        resolveTypeRecur(idx) {
+            const { toplevel } = this[opaque];
+            if (toplevel && toplevel.type === 'Type') {
+                if (toplevel.items[idx].actual) {
+                    return toplevel.items[idx].actual!;
                 }
+                const hash = toplevel.hash;
+                if (hash) {
+                    return {
+                        type: 'TRef',
+                        ref: { type: 'Global', id: toId(hash, idx) },
+                        loc: noloc,
+                    };
+                } else {
+                    console.log('no hash on toplevel sry', toplevel);
+                }
+            }
+            return null;
+        },
+        resolveRecur(idx) {
+            const { toplevel } = this[opaque];
+            if (!toplevel) {
+                return null;
+            }
+            const hash = toplevel.hash;
+            if (hash) {
+                return toId(hash, idx);
             } else {
-                console.log('cant resolve recur', this[opaque].toplevel, idx);
+                console.log('no hash on toplevel sry', toplevel);
             }
             return null;
         },
@@ -467,9 +654,7 @@ export const newContext = (): FullContext => {
         },
         typeByName(name: string) {
             const ref = this[opaque].types.names[name];
-            return ref
-                ? { type: 'TRef', ref: ref, loc: noloc, args: [] }
-                : null;
+            return ref ? { type: 'TRef', ref: ref, loc: noloc } : null;
         },
         getTypeArgs(ref) {
             if (ref.type === 'Global') {
@@ -521,12 +706,10 @@ export const hashType = (type: Type): string => {
     return hashObject(serial(type));
 };
 export const hashTypes = (t: Type[]): string => hashObject(t.map(hashType));
+export const hashExpr = (t: Expression) =>
+    hashObject(serial(transformExpression(t, locClearVisitor, null)));
+export const hashExprs = (t: Expression[]) => hashObject(serial(t));
 
-export const noloc: Loc = {
-    start: { line: 0, column: 0, offset: -1 },
-    end: { line: 0, column: 0, offset: -1 },
-    idx: -1,
-};
 export const tref = (ref: RefKind): Type => ({
     type: 'TRef',
     ref,
@@ -572,28 +755,6 @@ struct Ok<Ok>{v: Ok}
 struct Failure<Failure>{v: Failure}
 `;
 
-// So ... the ....
-// types here, I think I'm going to want them to be
-// in the in-universe AST. hmm.
-export const errors = {
-    extraArg: 0,
-    typeNotFound: 3,
-    notAFunction: 1,
-    wrongNumberOfArgs: 4,
-    wrongNumberOfTypeArgs: 1,
-    argWrongType: 5,
-    notAString: 6,
-    notATypeVars: 1,
-    invalidOps: 0,
-    invalidEnum: 0,
-    notAnEnum: 0,
-    conflictingEnumTag: 1,
-    invalidType: 0,
-    notARecord: 0,
-    invalidRecord: 0,
-};
-export type ErrorTag = keyof typeof errors;
-
 const builtinTypes = `
 int
 uint
@@ -601,69 +762,79 @@ float
 bool
 string
 eq
+task
 `
     .trim()
     .split('\n');
 
-// TODO: allow parsing from a `Declaration` rule,
-// which will let us declare our builtins like this.
-// although ... maybe what I want is to autogenerate
+// ... maybe what I want is to autogenerate
 // the types from the .ts file of builtins 🤔
 const builtinValues = `
-.toString: (value: int) => () => string
-.toString: (value: float) => () => string
-.toString: (value: bool) => () => string
+toString: (value: int) => string
+toString: (value: float) => string
+toString: (value: bool) => string
++: <A: int, B: int>(a: A, b: B) => A + B
+>: (a: int, b: int) => bool
+<: (a: int, b: int) => bool
+>=: (a: int, b: int) => bool
+<=: (a: int, b: int) => bool
++: (a: float, b: float) => float
+*: (a: int, b: int) => int
+-: (a: float, b: float) => float
+-: (a: int, b: int) => int
+==: <T: eq>(a: T, b: T) => bool
+andThen: <A: task, B: task, R, R2>(a: Task<A, R>, b: (res: R) => Task<B, R2>) => Task<[A | B], R2>
 `;
+// withHandler: <A: task, B: task>
 
 export const setupDefaults = (ctx: FullContext) => {
     const named: { [key: string]: RefKind } = {};
     builtinTypes.forEach((name) => {
         named[name] = addBuiltinType(ctx, name, []);
     });
+    addBuiltinType(ctx, 'Task', [
+        {
+            sym: { id: 0, name: 'Effects' },
+            bound: tref(named['task']),
+            loc: noloc,
+            default_: null,
+        },
+        {
+            sym: { id: 0, name: 'Effects' },
+            bound: null,
+            loc: noloc,
+            default_: {
+                type: 'TRecord',
+                items: [],
+                loc: noloc,
+                spreads: [],
+                open: false,
+            },
+        },
+    ]);
     Object.keys(errors).forEach((tag) => {
         addBuiltinDecorator(ctx, `error:` + tag, 0);
     });
     addBuiltinDecorator(ctx, `test:type`, 0);
-    addBuiltin(
-        ctx,
-        'toString',
-        tlam(
-            [{ label: 'v', typ: tref(named.int), loc: noloc }],
-            tref(named.string),
-        ),
-    );
-    addBuiltin(
-        ctx,
-        'toString',
-        tlam(
-            [{ label: 'v', typ: tref(named.float), loc: noloc }],
-            tref(named.string),
-        ),
-    );
 
-    addBuiltin(
-        ctx,
-        'add',
-        tlam(
-            [
-                { label: 'a', typ: tref(named.int), loc: noloc },
-                { label: 'b', typ: tref(named.int), loc: noloc },
-            ],
-            tref(named.int),
-        ),
-    );
-
-    addBuiltin(
-        ctx,
-        'add',
-        tlam(
-            [
-                { label: 'a', typ: tref(named.float), loc: noloc },
-                { label: 'b', typ: tref(named.float), loc: noloc },
-            ],
-            tref(named.float),
-        ),
-    );
+    builtinValues
+        .split('\n')
+        .filter((line) => line.trim())
+        .forEach((line) => {
+            const [name, ...rest] = line.split(':');
+            const type = rest.join(':');
+            try {
+                const t = parseType(type.trim());
+                const tast = ctx.ToTast.Type(t, ctx);
+                addBuiltin(
+                    ctx,
+                    name,
+                    transformType(tast, locClearVisitor, null),
+                );
+            } catch (err) {
+                console.log(type);
+            }
+        });
 };
 
 export const fullContext = () => {
@@ -683,6 +854,7 @@ export const serial = (x: any): any => {
         return (
             '{' +
             Object.keys(x)
+                .sort()
                 .map((k) => k + ': ' + serial(x[k]))
                 .join(', ') +
             '}'

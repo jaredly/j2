@@ -8,16 +8,12 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 import { makeApply } from './apply';
 
 export const grammar = `
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
 TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
-
-TypeVariables = "<" _ vbls:TypeVbls ">" _ body:Expression
-TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
-TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
 `;
 
 // hello<T>(xyz)
@@ -62,7 +58,7 @@ export const ToAst = {
     TypeApplication(
         { target, args, loc }: TypeApplication,
         ctx: TACtx,
-    ): p.Apply_inner {
+    ): p.Expression {
         return makeApply(
             ctx.ToAst.Expression(target, ctx),
             {
@@ -144,6 +140,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
 
         return changed ? { ...node, args } : node;
     },
+    // TypeVariables(node, ctx) {},
     Type_TApply(node, { ctx, hit }) {
         const inner = ctx.resolveAnalyzeType(node.target);
         if (!inner) {

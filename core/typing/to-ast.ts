@@ -2,9 +2,10 @@ import { FullContext } from '../ctx';
 import * as p from '../grammar/base.parser';
 import * as t from '../typed-ast';
 import { makeToAst, ToAst } from './to-ast.gen';
-import { Toplevel } from './to-tast';
+import { ToplevelConfig } from './to-tast';
 export { type ToAst } from './to-ast.gen';
 import { Ctx as ACtx } from './analyze';
+import { toId } from '../ids';
 
 export type Ctx = {
     printRef: (
@@ -17,7 +18,7 @@ export type Ctx = {
     recordSym: (sym: t.Sym, kind: 'value' | 'type') => void;
     aliases: { [key: string]: string };
     backAliases: { [key: string]: string };
-    withToplevel: (t: Toplevel) => Ctx;
+    withToplevel: (t: ToplevelConfig | null) => Ctx;
 
     reverse: {
         decorators: { [key: string]: string };
@@ -84,11 +85,40 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
         reverse,
 
         withToplevel(top) {
-            const reverse = { ...this.reverse };
+            if (!top) {
+                return this;
+            }
+            const reverse = {
+                ...this.reverse,
+                types: { ...this.reverse.types },
+                values: { ...this.reverse.values },
+            };
             if (top.type === 'Type') {
                 top.items.forEach((item, i) => {
                     reverse.types[t.refHash({ type: 'Recur', idx: i })] =
                         item.name;
+                    if (top.hash) {
+                        reverse.types[
+                            t.refHash({
+                                type: 'Global',
+                                id: toId(top.hash, i),
+                            })
+                        ] = item.name;
+                    }
+                });
+            }
+            if (top.type === 'Expr') {
+                top.items.forEach((item, i) => {
+                    reverse.values[t.refHash({ type: 'Recur', idx: i })] =
+                        item.name;
+                    if (top.hash) {
+                        reverse.values[
+                            t.refHash({
+                                type: 'Global',
+                                id: toId(top.hash, i),
+                            })
+                        ] = item.name;
+                    }
                 });
             }
             return { ...this, reverse };

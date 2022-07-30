@@ -10,14 +10,26 @@
 --[output:expected]--
 {x: 10, y: "hl", x: 2}
 // {x: 2, y: "hl"}
+/* {
+  x: 10,
+  y: `hl`,
+  x: 2
+} */
 (1, 2)
 // (1, 2)
+/* [1, 2] */
 ()
 // ()
+/* null */
 ()
 // ()
+/* null */
 {tag: "Something", payload: 200}
 // {tag: "Something", payload: 200}
+/* {
+  tag: `Something`,
+  payload: 200
+} */
 
 ==[New fixture]==
 --[input]--
@@ -26,15 +38,19 @@
 --[output:expected]--
 {...{x: 10}, y: 100}
 // {x: 10, y: 100}
+/* { ...{
+    x: 10
+  },
+  y: 100
+} */
 
 ==[bad spread]==
 --[input:shouldFail]--
 {...10}
 
 --[output:expected]--
-alias error:notARecord=hd698a9fde2a4cf1505e7a7bbb328bed86802f545
+alias error:notARecord#[hd698a9fde2a4cf1505e7a7bbb328bed86802f545]
 {...@error:notARecord() 10}
-// Error, no type!
 
 ==[New fixture__]==
 --[input]--

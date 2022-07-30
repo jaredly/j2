@@ -1,3 +1,4 @@
+import { noloc } from '../consts';
 import { idsEqual } from '../ids';
 import { Number, String, TOps, TRef, Type } from '../typed-ast';
 import { Ctx } from './typeMatches';
@@ -49,6 +50,19 @@ type EOps = {
     kind: Number['kind'];
 };
 
+export const unifyOps = (one: EOps, two: EOps, ctx: Ctx): Type | null => {
+    if (one.kind !== two.kind) {
+        return null;
+    }
+    const ref = ctx.getBuiltinRef(one.kind.toLowerCase());
+    if (!ref) {
+        return null;
+    }
+
+    // TODO: unify better
+    return { type: 'TRef', ref, loc: noloc };
+};
+
 export const numOps = (
     expected: TOps | Number | TRef,
     // kind: Number['kind'],
@@ -88,10 +102,15 @@ export const numOps = (
     let num = 0;
     const mm = { upperLimit: true, lowerLimit: true };
     // let ismax = false;
-    const elements = [{ op: '+', right: expected.left }].concat(
+    const elements = [
+        {
+            op: '+',
+            right: ctx.resolveRefsAndApplies(expected.left) ?? expected.left,
+        },
+    ].concat(
         expected.right.map(({ top, right }) => ({
             op: top,
-            right,
+            right: ctx.resolveRefsAndApplies(right) ?? right,
         })),
     );
     let kind: Number['kind'] | null = null;

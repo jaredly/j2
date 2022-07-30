@@ -15,6 +15,9 @@ export const resolveAnalyzeType = (
     ctx: FullContext,
     path: string[] = [],
 ): Type | null => {
+    if (type.type === 'TVbl') {
+        return ctx.currentConstraints(type.id);
+    }
     if (type.type === 'TDecorated') {
         return resolveAnalyzeType(type.inner, ctx, path);
     }
@@ -62,13 +65,13 @@ export const resolveAnalyzeType = (
             return bound;
         }
         if (type.ref.type === 'Recur') {
-            const id = ctx.resolveRecur(type.ref.idx);
+            const k = ':recur:' + type.ref.idx;
+            if (path.includes(k)) {
+                return null;
+            }
+            const id = ctx.resolveTypeRecur(type.ref.idx);
             if (id) {
-                return resolveAnalyzeType(
-                    { ...type, ref: { type: 'Global', id } },
-                    ctx,
-                    path,
-                );
+                return resolveAnalyzeType(id, ctx, path.concat([k]));
             }
             // ctx.getBound
         }
@@ -78,7 +81,7 @@ export const resolveAnalyzeType = (
         if (!target || target.type !== 'TVars') {
             return null;
         }
-        const applied = applyType(type.args, target, ctx);
+        const applied = applyType(type.args, target, ctx, path);
         return applied ? resolveAnalyzeType(applied, ctx, path) : null;
     }
     return type;

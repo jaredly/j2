@@ -33,11 +33,11 @@ import { createServer as vite } from 'vite';
                 return res.end('Invalid element name');
             }
             const fname = `./core/elements/${element}`;
-            if (!existsSync(fname)) {
-                res.writeHead(404);
-                return res.end(`Element not found ${fname}`);
-            }
             if (req.method === 'GET') {
+                if (!existsSync(fname)) {
+                    res.writeHead(404);
+                    return res.end(`Element not found ${fname}`);
+                }
                 res.writeHead(200, { 'Content-Type': 'text/plain' });
                 res.end(readFileSync(fname, 'utf8'));
             } else if (req.method === 'POST') {

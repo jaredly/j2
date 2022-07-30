@@ -43,13 +43,30 @@ const Parser: { [key: string]: string | false } = {
 
 const Taster: { [key: string]: string | false } = {
     RefKind: false,
+    PPath: false,
 };
 
 const keys = Object.keys(parserUnions).filter(
     (x) => Parser[x] !== false && (tastTypes[x] || !!Parser[x]),
 );
-console.log(Object.keys(parserUnions), keys);
-console.log(Object.keys(tastTypes));
+// console.log(Object.keys(parserUnions), keys);
+// console.log(Object.keys(tastTypes));
+
+const extraArgs: { [key: string]: string } = {
+    Suffix: ' next: t.Expression,',
+    // Pattern: ' expected: t.Type | null,',
+};
+const extraPass: { [key: string]: string } = {
+    Suffix: ' next,',
+    // Pattern: ' expected,',
+};
+
+const jsTypes: { [key: string]: false | string } = {
+    IStmt: false, // 'Statement',
+    IExpression: 'Expression',
+};
+
+const IStart = /^I[A-Z]/;
 
 const text = `
 import { Visitor } from '../transform-tast';
@@ -72,15 +89,15 @@ export const ToTast = {
 	${keys
         .map((type) => {
             return `
-		${type}(node: p.${type},${
-                type === 'Suffix' ? ' next: t.Expression,' : ''
-            } ctx: TCtx): t.${Parser[type] || type} {
+		${type}(node: p.${type},${extraArgs[type] || ''} ctx: TCtx): t.${
+                Parser[type] || type
+            } {
 			switch (node.type) {
 				${parserUnions[type]
                     .map((union) => {
                         return `
 					case '${union}':
-						return ctx.ToTast.${union}(node,${type === 'Suffix' ? ' next,' : ''} ctx);
+						return ctx.ToTast.${union}(node,${extraPass[type] || ''} ctx);
 					`;
                     })
                     .join('\n')}
@@ -96,7 +113,7 @@ export const ToTast = {
 
 export const ToAst = {
 	${Object.keys(tastUnions)
-        .filter((n) => !n.startsWith('I') && Taster[n] !== false)
+        .filter((n) => !n.match(IStart) && Taster[n] !== false)
         .map((type) => {
             return `
 		${type}(node: t.${type}, ctx: TACtx): p.${type} {
@@ -147,7 +164,7 @@ export const ToIR = {
 	${Object.keys(tastUnions)
         .filter(
             (n) =>
-                !n.startsWith('I') && // && Taster[n] !== false
+                !n.match(IStart) && // && Taster[n] !== false
                 tastTypes['I' + n],
         )
         .map((type) => {
@@ -174,10 +191,10 @@ export const ToIR = {
 
 export const ToJS = {
 	${Object.keys(tastUnions)
-        .filter((n) => n.startsWith('I'))
+        .filter((n) => n.match(IStart) && jsTypes[n] !== false)
         .map((type) => {
             return `
-		${type}(node: t.${type}, ctx: JCtx): b.${type.slice(1)} {
+		${type}(node: t.${type}, ctx: JCtx): b.${jsTypes[type]} {
 			switch (node.type) {
 				${tastUnions[type]
                     .map((union) => {

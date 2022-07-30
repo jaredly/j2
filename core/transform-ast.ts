@@ -3,6 +3,8 @@ import {
     Loc,
     File,
     Toplevel,
+    Aliases,
+    AliasItem,
     TypeAlias,
     TypePair,
     Type,
@@ -18,20 +20,58 @@ import {
     DecType,
     DecExpr,
     Expression,
+    Lambda,
+    LArgs,
+    LArg,
+    Pattern,
+    PDecorated,
+    PEnum,
+    PTuple,
+    PTupleItems,
+    PName,
+    PRecord,
+    PRecordFields,
+    PRecordField,
+    PRecordValue,
+    PBlank,
+    Number,
+    String,
+    PHash,
+    BinOp,
+    BinOp_inner,
+    WithUnary,
+    WithUnary_inner,
+    UnaryOpWithHash,
+    UnaryOp,
+    IdHash,
     DecoratedExpression,
     DecoratedExpression_inner,
     Apply,
     Apply_inner,
     Atom,
-    Number,
+    If,
+    IfYes,
+    IfConds,
+    IfCond,
+    Let,
+    Block,
+    Stmts,
+    Stmt,
+    Else,
+    Switch,
+    Case,
     Boolean,
     Identifier,
+    ParenedOp,
+    binopWithHash,
+    binop,
     ParenedExpression,
     CommaExpr,
     TemplateString,
     TemplatePair,
     TemplateWrap,
     Enum,
+    EnumPayload,
     Record,
     RecordItems,
     RecordItem,
@@ -41,11 +81,13 @@ import {
     CallSuffix,
     TypeApplicationSuffix,
     TypeAppVbls,
+    AwaitSuffix,
+    BinOpRight,
     TApply,
     TApply_inner,
     TAtom,
+    TBlank,
     TRef,
-    String,
     TLambda,
     TArgs,
     TArg,
@@ -66,13 +108,18 @@ import {
     TRecordKeyValue,
     Star,
     TRight,
+    ToplevelLet,
+    LetPair,
     TypeFile,
     TypeToplevel,
     _lineEnd,
     _EOF,
+    AliasName,
     AttrText,
+    Binop,
     newline,
     _nonnewline,
+    __nonnewline,
     _,
     __,
     comment,
@@ -81,9 +128,7 @@ import {
     finalLineComment,
     tplStringChars,
     stringChar,
-    TypeVariables,
-    TypeVbls,
-    TypeVbl,
+    PRecordPattern,
     top,
     AllTaggedTypes,
 } from './grammar/base.parser';
@@ -128,6 +173,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | CommaExpr | [CommaExpr | null, Ctx];
     CommaExprPost?: (node: CommaExpr, ctx: Ctx) => null | CommaExpr;
+    AwaitSuffix?: (
+        node: AwaitSuffix,
+        ctx: Ctx,
+    ) => null | false | AwaitSuffix | [AwaitSuffix | null, Ctx];
+    AwaitSuffixPost?: (node: AwaitSuffix, ctx: Ctx) => null | AwaitSuffix;
     _lineEnd?: (
         node: _lineEnd,
         ctx: Ctx,
@@ -145,6 +195,21 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
     TypeToplevelPost?: (node: TypeToplevel, ctx: Ctx) => null | TypeToplevel;
+    Aliases?: (
+        node: Aliases,
+        ctx: Ctx,
+    ) => null | false | Aliases | [Aliases | null, Ctx];
+    AliasesPost?: (node: Aliases, ctx: Ctx) => null | Aliases;
+    AliasItem?: (
+        node: AliasItem,
+        ctx: Ctx,
+    ) => null | false | AliasItem | [AliasItem | null, Ctx];
+    AliasItemPost?: (node: AliasItem, ctx: Ctx) => null | AliasItem;
+    AliasName?: (
+        node: AliasName,
+        ctx: Ctx,
+    ) => null | false | AliasName | [AliasName | null, Ctx];
+    AliasNamePost?: (node: AliasName, ctx: Ctx) => null | AliasName;
     Expression?: (
         node: Expression,
         ctx: Ctx,
@@ -155,6 +220,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Identifier | [Identifier | null, Ctx];
     IdentifierPost?: (node: Identifier, ctx: Ctx) => null | Identifier;
+    IdHash?: (
+        node: IdHash,
+        ctx: Ctx,
+    ) => null | false | IdHash | [IdHash | null, Ctx];
+    IdHashPost?: (node: IdHash, ctx: Ctx) => null | IdHash;
     Atom?: (node: Atom, ctx: Ctx) => null | false | Atom | [Atom | null, Ctx];
     AtomPost?: (node: Atom, ctx: Ctx) => null | Atom;
     ParenedExpression?: (
@@ -170,6 +240,67 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | AttrText | [AttrText | null, Ctx];
     AttrTextPost?: (node: AttrText, ctx: Ctx) => null | AttrText;
+    BinOp_inner?: (
+        node: BinOp_inner,
+        ctx: Ctx,
+    ) => null | false | BinOp_inner | [BinOp_inner | null, Ctx];
+    BinOp_innerPost?: (node: BinOp_inner, ctx: Ctx) => null | BinOp_inner;
+    BinOp?: (
+        node: BinOp,
+        ctx: Ctx,
+    ) => null | false | BinOp | [BinOp | null, Ctx];
+    BinOpPost?: (node: BinOp, ctx: Ctx) => null | BinOp;
+    BinOpRight?: (
+        node: BinOpRight,
+        ctx: Ctx,
+    ) => null | false | BinOpRight | [BinOpRight | null, Ctx];
+    BinOpRightPost?: (node: BinOpRight, ctx: Ctx) => null | BinOpRight;
+    WithUnary_inner?: (
+        node: WithUnary_inner,
+        ctx: Ctx,
+    ) => null | false | WithUnary_inner | [WithUnary_inner | null, Ctx];
+    WithUnary_innerPost?: (
+        node: WithUnary_inner,
+        ctx: Ctx,
+    ) => null | WithUnary_inner;
+    WithUnary?: (
+        node: WithUnary,
+        ctx: Ctx,
+    ) => null | false | WithUnary | [WithUnary | null, Ctx];
+    WithUnaryPost?: (node: WithUnary, ctx: Ctx) => null | WithUnary;
+    UnaryOpWithHash?: (
+        node: UnaryOpWithHash,
+        ctx: Ctx,
+    ) => null | false | UnaryOpWithHash | [UnaryOpWithHash | null, Ctx];
+    UnaryOpWithHashPost?: (
+        node: UnaryOpWithHash,
+        ctx: Ctx,
+    ) => null | UnaryOpWithHash;
+    UnaryOp?: (
+        node: UnaryOp,
+        ctx: Ctx,
+    ) => null | false | UnaryOp | [UnaryOp | null, Ctx];
+    UnaryOpPost?: (node: UnaryOp, ctx: Ctx) => null | UnaryOp;
+    binopWithHash?: (
+        node: binopWithHash,
+        ctx: Ctx,
+    ) => null | false | binopWithHash | [binopWithHash | null, Ctx];
+    binopWithHashPost?: (node: binopWithHash, ctx: Ctx) => null | binopWithHash;
+    binop?: (
+        node: binop,
+        ctx: Ctx,
+    ) => null | false | binop | [binop | null, Ctx];
+    binopPost?: (node: binop, ctx: Ctx) => null | binop;
+    ParenedOp?: (
+        node: ParenedOp,
+        ctx: Ctx,
+    ) => null | false | ParenedOp | [ParenedOp | null, Ctx];
+    ParenedOpPost?: (node: ParenedOp, ctx: Ctx) => null | ParenedOp;
+    Binop?: (
+        node: Binop,
+        ctx: Ctx,
+    ) => null | false | Binop | [Binop | null, Ctx];
+    BinopPost?: (node: Binop, ctx: Ctx) => null | Binop;
     newline?: (
         node: newline,
         ctx: Ctx,
@@ -180,6 +311,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | _nonnewline | [_nonnewline | null, Ctx];
     _nonnewlinePost?: (node: _nonnewline, ctx: Ctx) => null | _nonnewline;
+    __nonnewline?: (
+        node: __nonnewline,
+        ctx: Ctx,
+    ) => null | false | __nonnewline | [__nonnewline | null, Ctx];
+    __nonnewlinePost?: (node: __nonnewline, ctx: Ctx) => null | __nonnewline;
     _?: (node: _, ctx: Ctx) => null | false | _ | [_ | null, Ctx];
     _Post?: (node: _, ctx: Ctx) => null | _;
     __?: (node: __, ctx: Ctx) => null | false | __ | [__ | null, Ctx];
@@ -316,6 +452,11 @@ export type Visitor<Ctx> = {
     DecExprPost?: (node: DecExpr, ctx: Ctx) => null | DecExpr;
     Enum?: (node: Enum, ctx: Ctx) => null | false | Enum | [Enum | null, Ctx];
     EnumPost?: (node: Enum, ctx: Ctx) => null | Enum;
+    EnumPayload?: (
+        node: EnumPayload,
+        ctx: Ctx,
+    ) => null | false | EnumPayload | [EnumPayload | null, Ctx];
+    EnumPayloadPost?: (node: EnumPayload, ctx: Ctx) => null | EnumPayload;
     TEnum?: (
         node: TEnum,
         ctx: Ctx,
@@ -360,21 +501,129 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TypeAppVbls | [TypeAppVbls | null, Ctx];
     TypeAppVblsPost?: (node: TypeAppVbls, ctx: Ctx) => null | TypeAppVbls;
-    TypeVariables?: (
-        node: TypeVariables,
+    If?: (node: If, ctx: Ctx) => null | false | If | [If | null, Ctx];
+    IfPost?: (node: If, ctx: Ctx) => null | If;
+    IfYes?: (
+        node: IfYes,
         ctx: Ctx,
-    ) => null | false | TypeVariables | [TypeVariables | null, Ctx];
-    TypeVariablesPost?: (node: TypeVariables, ctx: Ctx) => null | TypeVariables;
-    TypeVbls?: (
-        node: TypeVbls,
+    ) => null | false | IfYes | [IfYes | null, Ctx];
+    IfYesPost?: (node: IfYes, ctx: Ctx) => null | IfYes;
+    IfConds?: (
+        node: IfConds,
         ctx: Ctx,
-    ) => null | false | TypeVbls | [TypeVbls | null, Ctx];
-    TypeVblsPost?: (node: TypeVbls, ctx: Ctx) => null | TypeVbls;
-    TypeVbl?: (
-        node: TypeVbl,
+    ) => null | false | IfConds | [IfConds | null, Ctx];
+    IfCondsPost?: (node: IfConds, ctx: Ctx) => null | IfConds;
+    IfCond?: (
+        node: IfCond,
         ctx: Ctx,
-    ) => null | false | TypeVbl | [TypeVbl | null, Ctx];
-    TypeVblPost?: (node: TypeVbl, ctx: Ctx) => null | TypeVbl;
+    ) => null | false | IfCond | [IfCond | null, Ctx];
+    IfCondPost?: (node: IfCond, ctx: Ctx) => null | IfCond;
+    Else?: (node: Else, ctx: Ctx) => null | false | Else | [Else | null, Ctx];
+    ElsePost?: (node: Else, ctx: Ctx) => null | Else;
+    Lambda?: (
+        node: Lambda,
+        ctx: Ctx,
+    ) => null | false | Lambda | [Lambda | null, Ctx];
+    LambdaPost?: (node: Lambda, ctx: Ctx) => null | Lambda;
+    LArgs?: (
+        node: LArgs,
+        ctx: Ctx,
+    ) => null | false | LArgs | [LArgs | null, Ctx];
+    LArgsPost?: (node: LArgs, ctx: Ctx) => null | LArgs;
+    LArg?: (node: LArg, ctx: Ctx) => null | false | LArg | [LArg | null, Ctx];
+    LArgPost?: (node: LArg, ctx: Ctx) => null | LArg;
+    Block?: (
+        node: Block,
+        ctx: Ctx,
+    ) => null | false | Block | [Block | null, Ctx];
+    BlockPost?: (node: Block, ctx: Ctx) => null | Block;
+    Stmts?: (
+        node: Stmts,
+        ctx: Ctx,
+    ) => null | false | Stmts | [Stmts | null, Ctx];
+    StmtsPost?: (node: Stmts, ctx: Ctx) => null | Stmts;
+    Stmt?: (node: Stmt, ctx: Ctx) => null | false | Stmt | [Stmt | null, Ctx];
+    StmtPost?: (node: Stmt, ctx: Ctx) => null | Stmt;
+    Let?: (node: Let, ctx: Ctx) => null | false | Let | [Let | null, Ctx];
+    LetPost?: (node: Let, ctx: Ctx) => null | Let;
+    ToplevelLet?: (
+        node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | false | ToplevelLet | [ToplevelLet | null, Ctx];
+    ToplevelLetPost?: (node: ToplevelLet, ctx: Ctx) => null | ToplevelLet;
+    LetPair?: (
+        node: LetPair,
+        ctx: Ctx,
+    ) => null | false | LetPair | [LetPair | null, Ctx];
+    LetPairPost?: (node: LetPair, ctx: Ctx) => null | LetPair;
+    Pattern?: (
+        node: Pattern,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost?: (node: Pattern, ctx: Ctx) => null | Pattern;
+    PBlank?: (
+        node: PBlank,
+        ctx: Ctx,
+    ) => null | false | PBlank | [PBlank | null, Ctx];
+    PBlankPost?: (node: PBlank, ctx: Ctx) => null | PBlank;
+    PName?: (
+        node: PName,
+        ctx: Ctx,
+    ) => null | false | PName | [PName | null, Ctx];
+    PNamePost?: (node: PName, ctx: Ctx) => null | PName;
+    PTuple?: (
+        node: PTuple,
+        ctx: Ctx,
+    ) => null | false | PTuple | [PTuple | null, Ctx];
+    PTuplePost?: (node: PTuple, ctx: Ctx) => null | PTuple;
+    PTupleItems?: (
+        node: PTupleItems,
+        ctx: Ctx,
+    ) => null | false | PTupleItems | [PTupleItems | null, Ctx];
+    PTupleItemsPost?: (node: PTupleItems, ctx: Ctx) => null | PTupleItems;
+    PRecord?: (
+        node: PRecord,
+        ctx: Ctx,
+    ) => null | false | PRecord | [PRecord | null, Ctx];
+    PRecordPost?: (node: PRecord, ctx: Ctx) => null | PRecord;
+    PRecordFields?: (
+        node: PRecordFields,
+        ctx: Ctx,
+    ) => null | false | PRecordFields | [PRecordFields | null, Ctx];
+    PRecordFieldsPost?: (node: PRecordFields, ctx: Ctx) => null | PRecordFields;
+    PRecordField?: (
+        node: PRecordField,
+        ctx: Ctx,
+    ) => null | false | PRecordField | [PRecordField | null, Ctx];
+    PRecordFieldPost?: (node: PRecordField, ctx: Ctx) => null | PRecordField;
+    PRecordValue?: (
+        node: PRecordValue,
+        ctx: Ctx,
+    ) => null | false | PRecordValue | [PRecordValue | null, Ctx];
+    PRecordValuePost?: (node: PRecordValue, ctx: Ctx) => null | PRecordValue;
+    PRecordPattern?: (
+        node: PRecordPattern,
+        ctx: Ctx,
+    ) => null | false | PRecordPattern | [PRecordPattern | null, Ctx];
+    PRecordPatternPost?: (
+        node: PRecordPattern,
+        ctx: Ctx,
+    ) => null | PRecordPattern;
+    PHash?: (
+        node: PHash,
+        ctx: Ctx,
+    ) => null | false | PHash | [PHash | null, Ctx];
+    PHashPost?: (node: PHash, ctx: Ctx) => null | PHash;
+    PDecorated?: (
+        node: PDecorated,
+        ctx: Ctx,
+    ) => null | false | PDecorated | [PDecorated | null, Ctx];
+    PDecoratedPost?: (node: PDecorated, ctx: Ctx) => null | PDecorated;
+    PEnum?: (
+        node: PEnum,
+        ctx: Ctx,
+    ) => null | false | PEnum | [PEnum | null, Ctx];
+    PEnumPost?: (node: PEnum, ctx: Ctx) => null | PEnum;
     Record?: (
         node: Record,
         ctx: Ctx,
@@ -431,6 +680,13 @@ export type Visitor<Ctx> = {
         node: TRecordKeyValue,
         ctx: Ctx,
     ) => null | TRecordKeyValue;
+    Switch?: (
+        node: Switch,
+        ctx: Ctx,
+    ) => null | false | Switch | [Switch | null, Ctx];
+    SwitchPost?: (node: Switch, ctx: Ctx) => null | Switch;
+    Case?: (node: Case, ctx: Ctx) => null | false | Case | [Case | null, Ctx];
+    CasePost?: (node: Case, ctx: Ctx) => null | Case;
     TApply_inner?: (
         node: TApply_inner,
         ctx: Ctx,
@@ -521,6 +777,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TypePair | [TypePair | null, Ctx];
     TypePairPost?: (node: TypePair, ctx: Ctx) => null | TypePair;
+    TBlank?: (
+        node: TBlank,
+        ctx: Ctx,
+    ) => null | false | TBlank | [TBlank | null, Ctx];
+    TBlankPost?: (node: TBlank, ctx: Ctx) => null | TBlank;
     AllTaggedTypes?: (
         node: AllTaggedTypes,
         ctx: Ctx,
@@ -530,353 +791,936 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     Apply_Apply?: (
-        node: Apply,
+        node: Apply_inner,
         ctx: Ctx,
     ) => null | false | Apply | [Apply | null, Ctx];
+    ApplyPost_Apply?: (node: Apply_inner, ctx: Ctx) => null | Apply;
     Suffix_CallSuffix?: (
         node: CallSuffix,
         ctx: Ctx,
     ) => null | false | Suffix | [Suffix | null, Ctx];
+    SuffixPost_CallSuffix?: (node: CallSuffix, ctx: Ctx) => null | Suffix;
     Suffix_TypeApplicationSuffix?: (
         node: TypeApplicationSuffix,
         ctx: Ctx,
     ) => null | false | Suffix | [Suffix | null, Ctx];
+    SuffixPost_TypeApplicationSuffix?: (
+        node: TypeApplicationSuffix,
+        ctx: Ctx,
+    ) => null | Suffix;
+    Suffix_AwaitSuffix?: (
+        node: AwaitSuffix,
+        ctx: Ctx,
+    ) => null | false | Suffix | [Suffix | null, Ctx];
+    SuffixPost_AwaitSuffix?: (node: AwaitSuffix, ctx: Ctx) => null | Suffix;
+    Toplevel_Aliases?: (
+        node: Aliases,
+        ctx: Ctx,
+    ) => null | false | Toplevel | [Toplevel | null, Ctx];
+    ToplevelPost_Aliases?: (node: Aliases, ctx: Ctx) => null | Toplevel;
     Toplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
     ) => null | false | Toplevel | [Toplevel | null, Ctx];
+    ToplevelPost_TypeAlias?: (node: TypeAlias, ctx: Ctx) => null | Toplevel;
+    Toplevel_ToplevelLet?: (
+        node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | false | Toplevel | [Toplevel | null, Ctx];
+    ToplevelPost_ToplevelLet?: (node: ToplevelLet, ctx: Ctx) => null | Toplevel;
+    TypeToplevel_Aliases?: (
+        node: Aliases,
+        ctx: Ctx,
+    ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
+    TypeToplevelPost_Aliases?: (node: Aliases, ctx: Ctx) => null | TypeToplevel;
     TypeToplevel_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
     ) => null | false | TypeToplevel | [TypeToplevel | null, Ctx];
+    TypeToplevelPost_TypeAlias?: (
+        node: TypeAlias,
+        ctx: Ctx,
+    ) => null | TypeToplevel;
+    Expression_Lambda?: (
+        node: Lambda,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_Lambda?: (node: Lambda, ctx: Ctx) => null | Expression;
+    Atom_If?: (node: If, ctx: Ctx) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_If?: (node: If, ctx: Ctx) => null | Atom;
+    Atom_Switch?: (
+        node: Switch,
+        ctx: Ctx,
+    ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Switch?: (node: Switch, ctx: Ctx) => null | Atom;
     Atom_Number?: (
         node: Number,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Number?: (node: Number, ctx: Ctx) => null | Atom;
     Atom_Boolean?: (
         node: Boolean,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Boolean?: (node: Boolean, ctx: Ctx) => null | Atom;
     Atom_Identifier?: (
         node: Identifier,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Identifier?: (node: Identifier, ctx: Ctx) => null | Atom;
+    Atom_ParenedOp?: (
+        node: ParenedOp,
+        ctx: Ctx,
+    ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_ParenedOp?: (node: ParenedOp, ctx: Ctx) => null | Atom;
     Atom_ParenedExpression?: (
         node: ParenedExpression,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_ParenedExpression?: (
+        node: ParenedExpression,
+        ctx: Ctx,
+    ) => null | Atom;
     Atom_TemplateString?: (
         node: TemplateString,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_TemplateString?: (node: TemplateString, ctx: Ctx) => null | Atom;
     Atom_Enum?: (
         node: Enum,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Enum?: (node: Enum, ctx: Ctx) => null | Atom;
     Atom_Record?: (
         node: Record,
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Record?: (node: Record, ctx: Ctx) => null | Atom;
+    Atom_Block?: (
+        node: Block,
+        ctx: Ctx,
+    ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_Block?: (node: Block, ctx: Ctx) => null | Atom;
+    BinOp_BinOp?: (
+        node: BinOp_inner,
+        ctx: Ctx,
+    ) => null | false | BinOp | [BinOp | null, Ctx];
+    BinOpPost_BinOp?: (node: BinOp_inner, ctx: Ctx) => null | BinOp;
+    WithUnary_WithUnary?: (
+        node: WithUnary_inner,
+        ctx: Ctx,
+    ) => null | false | WithUnary | [WithUnary | null, Ctx];
+    WithUnaryPost_WithUnary?: (
+        node: WithUnary_inner,
+        ctx: Ctx,
+    ) => null | WithUnary;
     DecoratedExpression_DecoratedExpression?: (
-        node: DecoratedExpression,
+        node: DecoratedExpression_inner,
         ctx: Ctx,
     ) => null | false | DecoratedExpression | [DecoratedExpression | null, Ctx];
+    DecoratedExpressionPost_DecoratedExpression?: (
+        node: DecoratedExpression_inner,
+        ctx: Ctx,
+    ) => null | DecoratedExpression;
     DecoratorArg_DecType?: (
         node: DecType,
         ctx: Ctx,
     ) => null | false | DecoratorArg | [DecoratorArg | null, Ctx];
+    DecoratorArgPost_DecType?: (node: DecType, ctx: Ctx) => null | DecoratorArg;
     DecoratorArg_DecExpr?: (
         node: DecExpr,
         ctx: Ctx,
     ) => null | false | DecoratorArg | [DecoratorArg | null, Ctx];
+    DecoratorArgPost_DecExpr?: (node: DecExpr, ctx: Ctx) => null | DecoratorArg;
     EnumCase_TagDecl?: (
         node: TagDecl,
         ctx: Ctx,
     ) => null | false | EnumCase | [EnumCase | null, Ctx];
+    EnumCasePost_TagDecl?: (node: TagDecl, ctx: Ctx) => null | EnumCase;
     EnumCase_Star?: (
         node: Star,
         ctx: Ctx,
     ) => null | false | EnumCase | [EnumCase | null, Ctx];
+    EnumCasePost_Star?: (node: Star, ctx: Ctx) => null | EnumCase;
+    IfCond_Let?: (
+        node: Let,
+        ctx: Ctx,
+    ) => null | false | IfCond | [IfCond | null, Ctx];
+    IfCondPost_Let?: (node: Let, ctx: Ctx) => null | IfCond;
+    Else_Block?: (
+        node: Block,
+        ctx: Ctx,
+    ) => null | false | Else | [Else | null, Ctx];
+    ElsePost_Block?: (node: Block, ctx: Ctx) => null | Else;
+    Else_If?: (node: If, ctx: Ctx) => null | false | Else | [Else | null, Ctx];
+    ElsePost_If?: (node: If, ctx: Ctx) => null | Else;
+    Stmt_Let?: (
+        node: Let,
+        ctx: Ctx,
+    ) => null | false | Stmt | [Stmt | null, Ctx];
+    StmtPost_Let?: (node: Let, ctx: Ctx) => null | Stmt;
+    Pattern_PDecorated?: (
+        node: PDecorated,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PDecorated?: (node: PDecorated, ctx: Ctx) => null | Pattern;
+    Pattern_PEnum?: (
+        node: PEnum,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PEnum?: (node: PEnum, ctx: Ctx) => null | Pattern;
+    Pattern_PName?: (
+        node: PName,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PName?: (node: PName, ctx: Ctx) => null | Pattern;
+    Pattern_PTuple?: (
+        node: PTuple,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PTuple?: (node: PTuple, ctx: Ctx) => null | Pattern;
+    Pattern_PRecord?: (
+        node: PRecord,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PRecord?: (node: PRecord, ctx: Ctx) => null | Pattern;
+    Pattern_PBlank?: (
+        node: PBlank,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PBlank?: (node: PBlank, ctx: Ctx) => null | Pattern;
+    Pattern_Number?: (
+        node: Number,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_Number?: (node: Number, ctx: Ctx) => null | Pattern;
+    Pattern_String?: (
+        node: String,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_String?: (node: String, ctx: Ctx) => null | Pattern;
+    PRecordValue_PHash?: (
+        node: PHash,
+        ctx: Ctx,
+    ) => null | false | PRecordValue | [PRecordValue | null, Ctx];
+    PRecordValuePost_PHash?: (node: PHash, ctx: Ctx) => null | PRecordValue;
     RecordItem_RecordSpread?: (
         node: RecordSpread,
         ctx: Ctx,
     ) => null | false | RecordItem | [RecordItem | null, Ctx];
+    RecordItemPost_RecordSpread?: (
+        node: RecordSpread,
+        ctx: Ctx,
+    ) => null | RecordItem;
     RecordItem_RecordKeyValue?: (
         node: RecordKeyValue,
         ctx: Ctx,
     ) => null | false | RecordItem | [RecordItem | null, Ctx];
+    RecordItemPost_RecordKeyValue?: (
+        node: RecordKeyValue,
+        ctx: Ctx,
+    ) => null | RecordItem;
     TRecordItem_TRecordSpread?: (
         node: TRecordSpread,
         ctx: Ctx,
     ) => null | false | TRecordItem | [TRecordItem | null, Ctx];
+    TRecordItemPost_TRecordSpread?: (
+        node: TRecordSpread,
+        ctx: Ctx,
+    ) => null | TRecordItem;
     TRecordItem_TRecordKeyValue?: (
         node: TRecordKeyValue,
         ctx: Ctx,
     ) => null | false | TRecordItem | [TRecordItem | null, Ctx];
+    TRecordItemPost_TRecordKeyValue?: (
+        node: TRecordKeyValue,
+        ctx: Ctx,
+    ) => null | TRecordItem;
     TRecordItem_Star?: (
         node: Star,
         ctx: Ctx,
     ) => null | false | TRecordItem | [TRecordItem | null, Ctx];
+    TRecordItemPost_Star?: (node: Star, ctx: Ctx) => null | TRecordItem;
     TApply_TApply?: (
-        node: TApply,
+        node: TApply_inner,
         ctx: Ctx,
     ) => null | false | TApply | [TApply | null, Ctx];
+    TApplyPost_TApply?: (node: TApply_inner, ctx: Ctx) => null | TApply;
+    TAtom_TBlank?: (
+        node: TBlank,
+        ctx: Ctx,
+    ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TBlank?: (node: TBlank, ctx: Ctx) => null | TAtom;
     TAtom_TRef?: (
         node: TRef,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TRef?: (node: TRef, ctx: Ctx) => null | TAtom;
     TAtom_Number?: (
         node: Number,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_Number?: (node: Number, ctx: Ctx) => null | TAtom;
     TAtom_String?: (
         node: String,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_String?: (node: String, ctx: Ctx) => null | TAtom;
     TAtom_TLambda?: (
         node: TLambda,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TLambda?: (node: TLambda, ctx: Ctx) => null | TAtom;
     TAtom_TVars?: (
         node: TVars,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TVars?: (node: TVars, ctx: Ctx) => null | TAtom;
     TAtom_TParens?: (
         node: TParens,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TParens?: (node: TParens, ctx: Ctx) => null | TAtom;
     TAtom_TEnum?: (
         node: TEnum,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TEnum?: (node: TEnum, ctx: Ctx) => null | TAtom;
     TAtom_TRecord?: (
         node: TRecord,
         ctx: Ctx,
     ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TRecord?: (node: TRecord, ctx: Ctx) => null | TAtom;
     TOps_TOps?: (
-        node: TOps,
+        node: TOps_inner,
         ctx: Ctx,
     ) => null | false | TOps | [TOps | null, Ctx];
+    TOpsPost_TOps?: (node: TOps_inner, ctx: Ctx) => null | TOps;
     TOpInner_TDecorated?: (
         node: TDecorated,
         ctx: Ctx,
     ) => null | false | TOpInner | [TOpInner | null, Ctx];
+    TOpInnerPost_TDecorated?: (node: TDecorated, ctx: Ctx) => null | TOpInner;
     AllTaggedTypes_File?: (
         node: File,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_File?: (node: File, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TypeFile?: (
         node: TypeFile,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeFile?: (
+        node: TypeFile,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Apply?: (
-        node: Apply,
+        node: Apply_inner,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Apply?: (
+        node: Apply_inner,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_CallSuffix?: (
         node: CallSuffix,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_CallSuffix?: (
+        node: CallSuffix,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_CommaExpr?: (
         node: CommaExpr,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_CommaExpr?: (
+        node: CommaExpr,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_AwaitSuffix?: (
+        node: AwaitSuffix,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_AwaitSuffix?: (
+        node: AwaitSuffix,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_Aliases?: (
+        node: Aliases,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Aliases?: (
+        node: Aliases,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_AliasItem?: (
+        node: AliasItem,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_AliasItem?: (
+        node: AliasItem,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Identifier?: (
         node: Identifier,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Identifier?: (
+        node: Identifier,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_ParenedExpression?: (
         node: ParenedExpression,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_ParenedExpression?: (
+        node: ParenedExpression,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_BinOp?: (
+        node: BinOp_inner,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_BinOp?: (
+        node: BinOp_inner,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_BinOpRight?: (
+        node: BinOpRight,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_BinOpRight?: (
+        node: BinOpRight,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_WithUnary?: (
+        node: WithUnary_inner,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_WithUnary?: (
+        node: WithUnary_inner,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_UnaryOpWithHash?: (
+        node: UnaryOpWithHash,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_UnaryOpWithHash?: (
+        node: UnaryOpWithHash,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_binopWithHash?: (
+        node: binopWithHash,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_binopWithHash?: (
+        node: binopWithHash,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_ParenedOp?: (
+        node: ParenedOp,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_ParenedOp?: (
+        node: ParenedOp,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Boolean?: (
         node: Boolean,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Boolean?: (
+        node: Boolean,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Number?: (
         node: Number,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Number?: (
+        node: Number,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_String?: (
         node: String,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_String?: (
+        node: String,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TemplateString?: (
         node: TemplateString,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TemplateString?: (
+        node: TemplateString,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TemplatePair?: (
         node: TemplatePair,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TemplatePair?: (
+        node: TemplatePair,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TemplateWrap?: (
         node: TemplateWrap,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TemplateWrap?: (
+        node: TemplateWrap,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_DecoratedExpression?: (
-        node: DecoratedExpression,
+        node: DecoratedExpression_inner,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_DecoratedExpression?: (
+        node: DecoratedExpression_inner,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Decorator?: (
         node: Decorator,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Decorator?: (
+        node: Decorator,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_DecoratorId?: (
         node: DecoratorId,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_DecoratorId?: (
+        node: DecoratorId,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_DecoratorArgs?: (
         node: DecoratorArgs,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_DecoratorArgs?: (
+        node: DecoratorArgs,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_LabeledDecoratorArg?: (
         node: LabeledDecoratorArg,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_LabeledDecoratorArg?: (
+        node: LabeledDecoratorArg,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_DecType?: (
         node: DecType,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_DecType?: (
+        node: DecType,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_DecExpr?: (
         node: DecExpr,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_DecExpr?: (
+        node: DecExpr,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Enum?: (
         node: Enum,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Enum?: (node: Enum, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_EnumPayload?: (
+        node: EnumPayload,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_EnumPayload?: (
+        node: EnumPayload,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TEnum?: (
         node: TEnum,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TEnum?: (node: TEnum, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_EnumCases?: (
         node: EnumCases,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_EnumCases?: (
+        node: EnumCases,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TagDecl?: (
         node: TagDecl,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TagDecl?: (
+        node: TagDecl,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TagPayload?: (
         node: TagPayload,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TagPayload?: (
+        node: TagPayload,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_Star?: (
         node: Star,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Star?: (node: Star, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TypeApplicationSuffix?: (
         node: TypeApplicationSuffix,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeApplicationSuffix?: (
+        node: TypeApplicationSuffix,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TypeAppVbls?: (
         node: TypeAppVbls,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypes_TypeVariables?: (
-        node: TypeVariables,
+    AllTaggedTypesPost_TypeAppVbls?: (
+        node: TypeAppVbls,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_If?: (
+        node: If,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypes_TypeVbls?: (
-        node: TypeVbls,
+    AllTaggedTypesPost_If?: (node: If, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_IfYes?: (
+        node: IfYes,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypes_TypeVbl?: (
-        node: TypeVbl,
+    AllTaggedTypesPost_IfYes?: (node: IfYes, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_IfConds?: (
+        node: IfConds,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_IfConds?: (
+        node: IfConds,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_Lambda?: (
+        node: Lambda,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Lambda?: (
+        node: Lambda,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_LArgs?: (
+        node: LArgs,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_LArgs?: (node: LArgs, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_LArg?: (
+        node: LArg,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_LArg?: (node: LArg, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_Block?: (
+        node: Block,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Block?: (node: Block, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_Stmts?: (
+        node: Stmts,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Stmts?: (node: Stmts, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_Let?: (
+        node: Let,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Let?: (node: Let, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_ToplevelLet?: (
+        node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_ToplevelLet?: (
+        node: ToplevelLet,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_LetPair?: (
+        node: LetPair,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_LetPair?: (
+        node: LetPair,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PBlank?: (
+        node: PBlank,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PBlank?: (
+        node: PBlank,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PName?: (
+        node: PName,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PName?: (node: PName, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_PTuple?: (
+        node: PTuple,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PTuple?: (
+        node: PTuple,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PTupleItems?: (
+        node: PTupleItems,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PTupleItems?: (
+        node: PTupleItems,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PRecord?: (
+        node: PRecord,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PRecord?: (
+        node: PRecord,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PRecordFields?: (
+        node: PRecordFields,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PRecordFields?: (
+        node: PRecordFields,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PRecordField?: (
+        node: PRecordField,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PRecordField?: (
+        node: PRecordField,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PHash?: (
+        node: PHash,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PHash?: (node: PHash, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_PDecorated?: (
+        node: PDecorated,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PDecorated?: (
+        node: PDecorated,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_PEnum?: (
+        node: PEnum,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_PEnum?: (node: PEnum, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_Record?: (
         node: Record,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Record?: (
+        node: Record,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_RecordItems?: (
         node: RecordItems,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_RecordItems?: (
+        node: RecordItems,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_RecordSpread?: (
         node: RecordSpread,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_RecordSpread?: (
+        node: RecordSpread,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_RecordKeyValue?: (
         node: RecordKeyValue,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_RecordKeyValue?: (
+        node: RecordKeyValue,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRecord?: (
         node: TRecord,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRecord?: (
+        node: TRecord,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRecordItems?: (
         node: TRecordItems,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRecordItems?: (
+        node: TRecordItems,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRecordSpread?: (
         node: TRecordSpread,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRecordSpread?: (
+        node: TRecordSpread,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRecordKeyValue?: (
         node: TRecordKeyValue,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypes_TApply?: (
-        node: TApply,
+    AllTaggedTypesPost_TRecordKeyValue?: (
+        node: TRecordKeyValue,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_Switch?: (
+        node: Switch,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Switch?: (
+        node: Switch,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_Case?: (
+        node: Case,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_Case?: (node: Case, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_TApply?: (
+        node: TApply_inner,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TApply?: (
+        node: TApply_inner,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TComma?: (
         node: TComma,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TComma?: (
+        node: TComma,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TVars?: (
         node: TVars,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TVars?: (node: TVars, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TBargs?: (
         node: TBargs,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TBargs?: (
+        node: TBargs,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TBArg?: (
         node: TBArg,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TBArg?: (node: TBArg, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TDecorated?: (
         node: TDecorated,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TDecorated?: (
+        node: TDecorated,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRef?: (
         node: TRef,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRef?: (node: TRef, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TOps?: (
-        node: TOps,
+        node: TOps_inner,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TOps?: (
+        node: TOps_inner,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TRight?: (
         node: TRight,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TRight?: (
+        node: TRight,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TParens?: (
         node: TParens,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TParens?: (
+        node: TParens,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TArg?: (
         node: TArg,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TArg?: (node: TArg, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TArgs?: (
         node: TArgs,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TArgs?: (node: TArgs, ctx: Ctx) => null | AllTaggedTypes;
     AllTaggedTypes_TLambda?: (
         node: TLambda,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TLambda?: (
+        node: TLambda,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TypeAlias?: (
         node: TypeAlias,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeAlias?: (
+        node: TypeAlias,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TypePair?: (
         node: TypePair,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypePair?: (
+        node: TypePair,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_TBlank?: (
+        node: TBlank,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TBlank?: (
+        node: TBlank,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
 };
 export const transformLoc = <Ctx>(
     node: Loc,
@@ -958,6 +1802,125 @@ export const transformSyntaxError = <Ctx>(
     node = updatedNode;
     if (visitor.SyntaxErrorPost) {
         const transformed = visitor.SyntaxErrorPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformAliasItem = <Ctx>(
+    node: AliasItem,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): AliasItem => {
+    if (!node) {
+        throw new Error('No AliasItem provided');
+    }
+
+    const transformed = visitor.AliasItem ? visitor.AliasItem(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.AliasItemPost) {
+        const transformed = visitor.AliasItemPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformAliases = <Ctx>(
+    node: Aliases,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Aliases => {
+    if (!node) {
+        throw new Error('No Aliases provided');
+    }
+
+    const transformed = visitor.Aliases ? visitor.Aliases(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformAliasItem(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.AliasesPost) {
+        const transformed = visitor.AliasesPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -1070,6 +2033,384 @@ export const transformDecType = <Ctx>(
     return node;
 };
 
+export const transformPDecorated = <Ctx>(
+    node: PDecorated,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PDecorated => {
+    if (!node) {
+        throw new Error('No PDecorated provided');
+    }
+
+    const transformed = visitor.PDecorated
+        ? visitor.PDecorated(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$decorators = node.decorators;
+        {
+            let changed2 = false;
+            const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
+                const result = transformDecorator(
+                    updatedNode$decorators$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$decorators$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$decorators = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$inner = transformPattern(node.inner, visitor, ctx);
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                decorators: updatedNode$decorators,
+                inner: updatedNode$inner,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PDecoratedPost) {
+        const transformed = visitor.PDecoratedPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPTupleItems = <Ctx>(
+    node: PTupleItems,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PTupleItems => {
+    if (!node) {
+        throw new Error('No PTupleItems provided');
+    }
+
+    const transformed = visitor.PTupleItems
+        ? visitor.PTupleItems(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformPattern(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PTupleItemsPost) {
+        const transformed = visitor.PTupleItemsPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPTuple = <Ctx>(
+    node: PTuple,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PTuple => {
+    if (!node) {
+        throw new Error('No PTuple provided');
+    }
+
+    const transformed = visitor.PTuple ? visitor.PTuple(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = null;
+        const updatedNode$items$current = node.items;
+        if (updatedNode$items$current != null) {
+            const updatedNode$items$1$ = transformPTupleItems(
+                updatedNode$items$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$items$1$ !== updatedNode$items$current;
+            updatedNode$items = updatedNode$items$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PTuplePost) {
+        const transformed = visitor.PTuplePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPEnum = <Ctx>(
+    node: PEnum,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PEnum => {
+    if (!node) {
+        throw new Error('No PEnum provided');
+    }
+
+    const transformed = visitor.PEnum ? visitor.PEnum(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$payload = null;
+        const updatedNode$payload$current = node.payload;
+        if (updatedNode$payload$current != null) {
+            const updatedNode$payload$1$ = transformPTuple(
+                updatedNode$payload$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 ||
+                updatedNode$payload$1$ !== updatedNode$payload$current;
+            updatedNode$payload = updatedNode$payload$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                payload: updatedNode$payload,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PEnumPost) {
+        const transformed = visitor.PEnumPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPName = <Ctx>(
+    node: PName,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PName => {
+    if (!node) {
+        throw new Error('No PName provided');
+    }
+
+    const transformed = visitor.PName ? visitor.PName(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PNamePost) {
+        const transformed = visitor.PNamePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPBlank = <Ctx>(
+    node: PBlank,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PBlank => {
+    if (!node) {
+        throw new Error('No PBlank provided');
+    }
+
+    const transformed = visitor.PBlank ? visitor.PBlank(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PBlankPost) {
+        const transformed = visitor.PBlankPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformNumber = <Ctx>(
     node: Number,
     visitor: Visitor<Ctx>,
@@ -1111,6 +2452,1960 @@ export const transformNumber = <Ctx>(
     node = updatedNode;
     if (visitor.NumberPost) {
         const transformed = visitor.NumberPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformString = <Ctx>(
+    node: String,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): String => {
+    if (!node) {
+        throw new Error('No String provided');
+    }
+
+    const transformed = visitor.String ? visitor.String(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.StringPost) {
+        const transformed = visitor.StringPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPHash = <Ctx>(
+    node: PHash,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PHash => {
+    if (!node) {
+        throw new Error('No PHash provided');
+    }
+
+    const transformed = visitor.PHash ? visitor.PHash(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PHashPost) {
+        const transformed = visitor.PHashPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPRecordValue = <Ctx>(
+    node: PRecordValue,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PRecordValue => {
+    if (!node) {
+        throw new Error('No PRecordValue provided');
+    }
+
+    const transformed = visitor.PRecordValue
+        ? visitor.PRecordValue(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'PHash': {
+            const transformed = visitor.PRecordValue_PHash
+                ? visitor.PRecordValue_PHash(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'PDecorated': {
+            updatedNode = transformPDecorated(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PEnum': {
+            updatedNode = transformPEnum(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PName': {
+            updatedNode = transformPName(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PTuple': {
+            updatedNode = transformPTuple(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PRecord': {
+            updatedNode = transformPRecord(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PBlank': {
+            updatedNode = transformPBlank(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Number': {
+            updatedNode = transformNumber(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'String': {
+            updatedNode = transformString(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformPHash(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'PHash': {
+            const transformed = visitor.PRecordValuePost_PHash
+                ? visitor.PRecordValuePost_PHash(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PRecordValuePost) {
+        const transformed = visitor.PRecordValuePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPRecordField = <Ctx>(
+    node: PRecordField,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PRecordField => {
+    if (!node) {
+        throw new Error('No PRecordField provided');
+    }
+
+    const transformed = visitor.PRecordField
+        ? visitor.PRecordField(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$pat = null;
+        const updatedNode$pat$current = node.pat;
+        if (updatedNode$pat$current != null) {
+            const updatedNode$pat$1$ = transformPRecordValue(
+                updatedNode$pat$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$pat$1$ !== updatedNode$pat$current;
+            updatedNode$pat = updatedNode$pat$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                pat: updatedNode$pat,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PRecordFieldPost) {
+        const transformed = visitor.PRecordFieldPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPRecordFields = <Ctx>(
+    node: PRecordFields,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PRecordFields => {
+    if (!node) {
+        throw new Error('No PRecordFields provided');
+    }
+
+    const transformed = visitor.PRecordFields
+        ? visitor.PRecordFields(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformPRecordField(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PRecordFieldsPost) {
+        const transformed = visitor.PRecordFieldsPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPRecord = <Ctx>(
+    node: PRecord,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PRecord => {
+    if (!node) {
+        throw new Error('No PRecord provided');
+    }
+
+    const transformed = visitor.PRecord ? visitor.PRecord(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$fields = null;
+        const updatedNode$fields$current = node.fields;
+        if (updatedNode$fields$current != null) {
+            const updatedNode$fields$1$ = transformPRecordFields(
+                updatedNode$fields$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 ||
+                updatedNode$fields$1$ !== updatedNode$fields$current;
+            updatedNode$fields = updatedNode$fields$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                fields: updatedNode$fields,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PRecordPost) {
+        const transformed = visitor.PRecordPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPattern = <Ctx>(
+    node: Pattern,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Pattern => {
+    if (!node) {
+        throw new Error('No Pattern provided');
+    }
+
+    const transformed = visitor.Pattern ? visitor.Pattern(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'PDecorated': {
+            const transformed = visitor.Pattern_PDecorated
+                ? visitor.Pattern_PDecorated(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PEnum': {
+            const transformed = visitor.Pattern_PEnum
+                ? visitor.Pattern_PEnum(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PName': {
+            const transformed = visitor.Pattern_PName
+                ? visitor.Pattern_PName(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PTuple': {
+            const transformed = visitor.Pattern_PTuple
+                ? visitor.Pattern_PTuple(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PRecord': {
+            const transformed = visitor.Pattern_PRecord
+                ? visitor.Pattern_PRecord(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PBlank': {
+            const transformed = visitor.Pattern_PBlank
+                ? visitor.Pattern_PBlank(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Number': {
+            const transformed = visitor.Pattern_Number
+                ? visitor.Pattern_Number(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'String': {
+            const transformed = visitor.Pattern_String
+                ? visitor.Pattern_String(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'PDecorated': {
+            updatedNode = transformPDecorated(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PEnum': {
+            updatedNode = transformPEnum(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PName': {
+            updatedNode = transformPName(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PTuple': {
+            updatedNode = transformPTuple(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PRecord': {
+            updatedNode = transformPRecord(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PBlank': {
+            updatedNode = transformPBlank(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Number': {
+            updatedNode = transformNumber(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformString(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'PDecorated': {
+            const transformed = visitor.PatternPost_PDecorated
+                ? visitor.PatternPost_PDecorated(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PEnum': {
+            const transformed = visitor.PatternPost_PEnum
+                ? visitor.PatternPost_PEnum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PName': {
+            const transformed = visitor.PatternPost_PName
+                ? visitor.PatternPost_PName(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PTuple': {
+            const transformed = visitor.PatternPost_PTuple
+                ? visitor.PatternPost_PTuple(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PRecord': {
+            const transformed = visitor.PatternPost_PRecord
+                ? visitor.PatternPost_PRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PBlank': {
+            const transformed = visitor.PatternPost_PBlank
+                ? visitor.PatternPost_PBlank(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Number': {
+            const transformed = visitor.PatternPost_Number
+                ? visitor.PatternPost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'String': {
+            const transformed = visitor.PatternPost_String
+                ? visitor.PatternPost_String(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PatternPost) {
+        const transformed = visitor.PatternPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformLArg = <Ctx>(
+    node: LArg,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): LArg => {
+    if (!node) {
+        throw new Error('No LArg provided');
+    }
+
+    const transformed = visitor.LArg ? visitor.LArg(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$pat = transformPattern(node.pat, visitor, ctx);
+        changed1 = changed1 || updatedNode$pat !== node.pat;
+
+        let updatedNode$typ = null;
+        const updatedNode$typ$current = node.typ;
+        if (updatedNode$typ$current != null) {
+            const updatedNode$typ$1$ = transformType(
+                updatedNode$typ$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$typ$1$ !== updatedNode$typ$current;
+            updatedNode$typ = updatedNode$typ$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                pat: updatedNode$pat,
+                typ: updatedNode$typ,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.LArgPost) {
+        const transformed = visitor.LArgPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformLArgs = <Ctx>(
+    node: LArgs,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): LArgs => {
+    if (!node) {
+        throw new Error('No LArgs provided');
+    }
+
+    const transformed = visitor.LArgs ? visitor.LArgs(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformLArg(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.LArgsPost) {
+        const transformed = visitor.LArgsPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformLambda = <Ctx>(
+    node: Lambda,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Lambda => {
+    if (!node) {
+        throw new Error('No Lambda provided');
+    }
+
+    const transformed = visitor.Lambda ? visitor.Lambda(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$args = null;
+        const updatedNode$args$current = node.args;
+        if (updatedNode$args$current != null) {
+            const updatedNode$args$1$ = transformLArgs(
+                updatedNode$args$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$args$1$ !== updatedNode$args$current;
+            updatedNode$args = updatedNode$args$1$;
+        }
+
+        let updatedNode$res = null;
+        const updatedNode$res$current = node.res;
+        if (updatedNode$res$current != null) {
+            const updatedNode$res$1$ = transformType(
+                updatedNode$res$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$res$1$ !== updatedNode$res$current;
+            updatedNode$res = updatedNode$res$1$;
+        }
+
+        const updatedNode$body = transformExpression(node.body, visitor, ctx);
+        changed1 = changed1 || updatedNode$body !== node.body;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                args: updatedNode$args,
+                res: updatedNode$res,
+                body: updatedNode$body,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.LambdaPost) {
+        const transformed = visitor.LambdaPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformUnaryOp = <Ctx>(
+    node: UnaryOp,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): UnaryOp => {
+    if (!node) {
+        throw new Error('No UnaryOp provided');
+    }
+
+    const transformed = visitor.UnaryOp ? visitor.UnaryOp(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.UnaryOpPost) {
+        const transformed = visitor.UnaryOpPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformIdHash = <Ctx>(
+    node: IdHash,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IdHash => {
+    if (!node) {
+        throw new Error('No IdHash provided');
+    }
+
+    const transformed = visitor.IdHash ? visitor.IdHash(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.IdHashPost) {
+        const transformed = visitor.IdHashPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformUnaryOpWithHash = <Ctx>(
+    node: UnaryOpWithHash,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): UnaryOpWithHash => {
+    if (!node) {
+        throw new Error('No UnaryOpWithHash provided');
+    }
+
+    const transformed = visitor.UnaryOpWithHash
+        ? visitor.UnaryOpWithHash(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$op = transformUnaryOp(node.op, visitor, ctx);
+        changed1 = changed1 || updatedNode$op !== node.op;
+
+        let updatedNode$hash = null;
+        const updatedNode$hash$current = node.hash;
+        if (updatedNode$hash$current != null) {
+            const updatedNode$hash$1$ = transformIdHash(
+                updatedNode$hash$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$hash$1$ !== updatedNode$hash$current;
+            updatedNode$hash = updatedNode$hash$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                op: updatedNode$op,
+                hash: updatedNode$hash,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.UnaryOpWithHashPost) {
+        const transformed = visitor.UnaryOpWithHashPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformLet = <Ctx>(
+    node: Let,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Let => {
+    if (!node) {
+        throw new Error('No Let provided');
+    }
+
+    const transformed = visitor.Let ? visitor.Let(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$pat = transformPattern(node.pat, visitor, ctx);
+        changed1 = changed1 || updatedNode$pat !== node.pat;
+
+        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                pat: updatedNode$pat,
+                expr: updatedNode$expr,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.LetPost) {
+        const transformed = visitor.LetPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformIfCond = <Ctx>(
+    node: IfCond,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IfCond => {
+    if (!node) {
+        throw new Error('No IfCond provided');
+    }
+
+    const transformed = visitor.IfCond ? visitor.IfCond(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'Let': {
+            const transformed = visitor.IfCond_Let
+                ? visitor.IfCond_Let(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'Let': {
+            updatedNode = transformLet(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformExpression(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Let': {
+            const transformed = visitor.IfCondPost_Let
+                ? visitor.IfCondPost_Let(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IfCondPost) {
+        const transformed = visitor.IfCondPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformIfConds = <Ctx>(
+    node: IfConds,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IfConds => {
+    if (!node) {
+        throw new Error('No IfConds provided');
+    }
+
+    const transformed = visitor.IfConds ? visitor.IfConds(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformIfCond(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IfCondsPost) {
+        const transformed = visitor.IfCondsPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformStmt = <Ctx>(
+    node: Stmt,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Stmt => {
+    if (!node) {
+        throw new Error('No Stmt provided');
+    }
+
+    const transformed = visitor.Stmt ? visitor.Stmt(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'Let': {
+            const transformed = visitor.Stmt_Let
+                ? visitor.Stmt_Let(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'Let': {
+            updatedNode = transformLet(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformExpression(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Let': {
+            const transformed = visitor.StmtPost_Let
+                ? visitor.StmtPost_Let(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.StmtPost) {
+        const transformed = visitor.StmtPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformStmts = <Ctx>(
+    node: Stmts,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Stmts => {
+    if (!node) {
+        throw new Error('No Stmts provided');
+    }
+
+    const transformed = visitor.Stmts ? visitor.Stmts(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformStmt(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.StmtsPost) {
+        const transformed = visitor.StmtsPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformBlock = <Ctx>(
+    node: Block,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Block => {
+    if (!node) {
+        throw new Error('No Block provided');
+    }
+
+    const transformed = visitor.Block ? visitor.Block(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$stmts = null;
+        const updatedNode$stmts$current = node.stmts;
+        if (updatedNode$stmts$current != null) {
+            const updatedNode$stmts$1$ = transformStmts(
+                updatedNode$stmts$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$stmts$1$ !== updatedNode$stmts$current;
+            updatedNode$stmts = updatedNode$stmts$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                stmts: updatedNode$stmts,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.BlockPost) {
+        const transformed = visitor.BlockPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformIfYes = <Ctx>(
+    node: IfYes,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IfYes => {
+    if (!node) {
+        throw new Error('No IfYes provided');
+    }
+
+    const transformed = visitor.IfYes ? visitor.IfYes(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$conds = transformIfConds(node.conds, visitor, ctx);
+        changed1 = changed1 || updatedNode$conds !== node.conds;
+
+        const updatedNode$block = transformBlock(node.block, visitor, ctx);
+        changed1 = changed1 || updatedNode$block !== node.block;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                conds: updatedNode$conds,
+                block: updatedNode$block,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IfYesPost) {
+        const transformed = visitor.IfYesPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformElse = <Ctx>(
+    node: Else,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Else => {
+    if (!node) {
+        throw new Error('No Else provided');
+    }
+
+    const transformed = visitor.Else ? visitor.Else(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'Block': {
+            const transformed = visitor.Else_Block
+                ? visitor.Else_Block(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'If': {
+            const transformed = visitor.Else_If
+                ? visitor.Else_If(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'Block': {
+            updatedNode = transformBlock(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformIf(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Block': {
+            const transformed = visitor.ElsePost_Block
+                ? visitor.ElsePost_Block(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'If': {
+            const transformed = visitor.ElsePost_If
+                ? visitor.ElsePost_If(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ElsePost) {
+        const transformed = visitor.ElsePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformIf = <Ctx>(
+    node: If,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): If => {
+    if (!node) {
+        throw new Error('No If provided');
+    }
+
+    const transformed = visitor.If ? visitor.If(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$yes = transformIfYes(node.yes, visitor, ctx);
+        changed1 = changed1 || updatedNode$yes !== node.yes;
+
+        let updatedNode$no = null;
+        const updatedNode$no$current = node.no;
+        if (updatedNode$no$current != null) {
+            const updatedNode$no$1$ = transformElse(
+                updatedNode$no$current,
+                visitor,
+                ctx,
+            );
+            changed1 = changed1 || updatedNode$no$1$ !== updatedNode$no$current;
+            updatedNode$no = updatedNode$no$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                yes: updatedNode$yes,
+                no: updatedNode$no,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IfPost) {
+        const transformed = visitor.IfPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformCase = <Ctx>(
+    node: Case,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Case => {
+    if (!node) {
+        throw new Error('No Case provided');
+    }
+
+    const transformed = visitor.Case ? visitor.Case(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$pat = transformPattern(node.pat, visitor, ctx);
+        changed1 = changed1 || updatedNode$pat !== node.pat;
+
+        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                pat: updatedNode$pat,
+                expr: updatedNode$expr,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.CasePost) {
+        const transformed = visitor.CasePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformSwitch = <Ctx>(
+    node: Switch,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Switch => {
+    if (!node) {
+        throw new Error('No Switch provided');
+    }
+
+    const transformed = visitor.Switch ? visitor.Switch(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$target = transformExpression(
+            node.target,
+            visitor,
+            ctx,
+        );
+        changed1 = changed1 || updatedNode$target !== node.target;
+
+        let updatedNode$cases = node.cases;
+        {
+            let changed2 = false;
+            const arr1 = node.cases.map((updatedNode$cases$item1) => {
+                const result = transformCase(
+                    updatedNode$cases$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$cases$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$cases = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                target: updatedNode$target,
+                cases: updatedNode$cases,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.SwitchPost) {
+        const transformed = visitor.SwitchPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -1200,8 +4495,26 @@ export const transformIdentifier = <Ctx>(
 
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$hash = null;
+        const updatedNode$hash$current = node.hash;
+        if (updatedNode$hash$current != null) {
+            const updatedNode$hash$1$ = transformIdHash(
+                updatedNode$hash$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$hash$1$ !== updatedNode$hash$current;
+            updatedNode$hash = updatedNode$hash$1$;
+        }
+
         if (changed1) {
-            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                hash: updatedNode$hash,
+            };
             changed0 = true;
         }
     }
@@ -1209,6 +4522,174 @@ export const transformIdentifier = <Ctx>(
     node = updatedNode;
     if (visitor.IdentifierPost) {
         const transformed = visitor.IdentifierPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformbinop = <Ctx>(
+    node: binop,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): binop => {
+    if (!node) {
+        throw new Error('No binop provided');
+    }
+
+    const transformed = visitor.binop ? visitor.binop(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.binopPost) {
+        const transformed = visitor.binopPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformbinopWithHash = <Ctx>(
+    node: binopWithHash,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): binopWithHash => {
+    if (!node) {
+        throw new Error('No binopWithHash provided');
+    }
+
+    const transformed = visitor.binopWithHash
+        ? visitor.binopWithHash(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$op = transformbinop(node.op, visitor, ctx);
+        changed1 = changed1 || updatedNode$op !== node.op;
+
+        let updatedNode$hash = null;
+        const updatedNode$hash$current = node.hash;
+        if (updatedNode$hash$current != null) {
+            const updatedNode$hash$1$ = transformIdHash(
+                updatedNode$hash$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$hash$1$ !== updatedNode$hash$current;
+            updatedNode$hash = updatedNode$hash$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                op: updatedNode$op,
+                hash: updatedNode$hash,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.binopWithHashPost) {
+        const transformed = visitor.binopWithHashPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformParenedOp = <Ctx>(
+    node: ParenedOp,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ParenedOp => {
+    if (!node) {
+        throw new Error('No ParenedOp provided');
+    }
+
+    const transformed = visitor.ParenedOp ? visitor.ParenedOp(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$inner = transformbinopWithHash(
+            node.inner,
+            visitor,
+            ctx,
+        );
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                inner: updatedNode$inner,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ParenedOpPost) {
+        const transformed = visitor.ParenedOpPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -1542,6 +5023,74 @@ export const transformTemplateString = <Ctx>(
     return node;
 };
 
+export const transformEnumPayload = <Ctx>(
+    node: EnumPayload,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): EnumPayload => {
+    if (!node) {
+        throw new Error('No EnumPayload provided');
+    }
+
+    const transformed = visitor.EnumPayload
+        ? visitor.EnumPayload(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = null;
+        const updatedNode$items$current = node.items;
+        if (updatedNode$items$current != null) {
+            const updatedNode$items$1$ = transformCommaExpr(
+                updatedNode$items$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$items$1$ !== updatedNode$items$current;
+            updatedNode$items = updatedNode$items$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.EnumPayloadPost) {
+        const transformed = visitor.EnumPayloadPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformEnum = <Ctx>(
     node: Enum,
     visitor: Visitor<Ctx>,
@@ -1574,8 +5123,27 @@ export const transformEnum = <Ctx>(
 
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$payload = null;
+        const updatedNode$payload$current = node.payload;
+        if (updatedNode$payload$current != null) {
+            const updatedNode$payload$1$ = transformEnumPayload(
+                updatedNode$payload$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 ||
+                updatedNode$payload$1$ !== updatedNode$payload$current;
+            updatedNode$payload = updatedNode$payload$1$;
+        }
+
         if (changed1) {
-            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                payload: updatedNode$payload,
+            };
             changed0 = true;
         }
     }
@@ -1794,6 +5362,28 @@ export const transformRecordItem = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'RecordSpread': {
+            const transformed = visitor.RecordItemPost_RecordSpread
+                ? visitor.RecordItemPost_RecordSpread(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'RecordKeyValue': {
+            const transformed = visitor.RecordItemPost_RecordKeyValue
+                ? visitor.RecordItemPost_RecordKeyValue(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.RecordItemPost) {
         const transformed = visitor.RecordItemPost(node, ctx);
@@ -1970,6 +5560,44 @@ export const transformAtom = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
+        case 'If': {
+            const transformed = visitor.Atom_If
+                ? visitor.Atom_If(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Switch': {
+            const transformed = visitor.Atom_Switch
+                ? visitor.Atom_Switch(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Number': {
             const transformed = visitor.Atom_Number
                 ? visitor.Atom_Number(node, ctx)
@@ -2011,6 +5639,25 @@ export const transformAtom = <Ctx>(
         case 'Identifier': {
             const transformed = visitor.Atom_Identifier
                 ? visitor.Atom_Identifier(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'ParenedOp': {
+            const transformed = visitor.Atom_ParenedOp
+                ? visitor.Atom_ParenedOp(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -2102,11 +5749,42 @@ export const transformAtom = <Ctx>(
             }
             break;
         }
+
+        case 'Block': {
+            const transformed = visitor.Atom_Block
+                ? visitor.Atom_Block(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
 
     switch (node.type) {
+        case 'If': {
+            updatedNode = transformIf(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Switch': {
+            updatedNode = transformSwitch(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Number': {
             updatedNode = transformNumber(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -2121,6 +5799,12 @@ export const transformAtom = <Ctx>(
 
         case 'Identifier': {
             updatedNode = transformIdentifier(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'ParenedOp': {
+            updatedNode = transformParenedOp(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -2143,12 +5827,130 @@ export const transformAtom = <Ctx>(
             break;
         }
 
+        case 'Record': {
+            updatedNode = transformRecord(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformRecord(node, visitor, ctx);
+            const updatedNode$0node = transformBlock(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'If': {
+            const transformed = visitor.AtomPost_If
+                ? visitor.AtomPost_If(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Switch': {
+            const transformed = visitor.AtomPost_Switch
+                ? visitor.AtomPost_Switch(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Number': {
+            const transformed = visitor.AtomPost_Number
+                ? visitor.AtomPost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Boolean': {
+            const transformed = visitor.AtomPost_Boolean
+                ? visitor.AtomPost_Boolean(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Identifier': {
+            const transformed = visitor.AtomPost_Identifier
+                ? visitor.AtomPost_Identifier(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ParenedOp': {
+            const transformed = visitor.AtomPost_ParenedOp
+                ? visitor.AtomPost_ParenedOp(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ParenedExpression': {
+            const transformed = visitor.AtomPost_ParenedExpression
+                ? visitor.AtomPost_ParenedExpression(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TemplateString': {
+            const transformed = visitor.AtomPost_TemplateString
+                ? visitor.AtomPost_TemplateString(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Enum': {
+            const transformed = visitor.AtomPost_Enum
+                ? visitor.AtomPost_Enum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Record': {
+            const transformed = visitor.AtomPost_Record
+                ? visitor.AtomPost_Record(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Block': {
+            const transformed = visitor.AtomPost_Block
+                ? visitor.AtomPost_Block(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -2360,6 +6162,56 @@ export const transformTypeApplicationSuffix = <Ctx>(
     return node;
 };
 
+export const transformAwaitSuffix = <Ctx>(
+    node: AwaitSuffix,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): AwaitSuffix => {
+    if (!node) {
+        throw new Error('No AwaitSuffix provided');
+    }
+
+    const transformed = visitor.AwaitSuffix
+        ? visitor.AwaitSuffix(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.AwaitSuffixPost) {
+        const transformed = visitor.AwaitSuffixPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformSuffix = <Ctx>(
     node: Suffix,
     visitor: Visitor<Ctx>,
@@ -2424,6 +6276,25 @@ export const transformSuffix = <Ctx>(
             }
             break;
         }
+
+        case 'AwaitSuffix': {
+            const transformed = visitor.Suffix_AwaitSuffix
+                ? visitor.Suffix_AwaitSuffix(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -2435,16 +6306,50 @@ export const transformSuffix = <Ctx>(
             break;
         }
 
+        case 'TypeApplicationSuffix': {
+            updatedNode = transformTypeApplicationSuffix(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformTypeApplicationSuffix(
-                node,
-                visitor,
-                ctx,
-            );
+            const updatedNode$0node = transformAwaitSuffix(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'CallSuffix': {
+            const transformed = visitor.SuffixPost_CallSuffix
+                ? visitor.SuffixPost_CallSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeApplicationSuffix': {
+            const transformed = visitor.SuffixPost_TypeApplicationSuffix
+                ? visitor.SuffixPost_TypeApplicationSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'AwaitSuffix': {
+            const transformed = visitor.SuffixPost_AwaitSuffix
+                ? visitor.SuffixPost_AwaitSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -2597,6 +6502,18 @@ export const transformApply = <Ctx>(
             const updatedNode$0node = transformAtom(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Apply': {
+            const transformed = visitor.ApplyPost_Apply
+                ? visitor.ApplyPost_Apply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -2757,9 +6674,406 @@ export const transformDecoratedExpression = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'DecoratedExpression': {
+            const transformed =
+                visitor.DecoratedExpressionPost_DecoratedExpression
+                    ? visitor.DecoratedExpressionPost_DecoratedExpression(
+                          updatedNode,
+                          ctx,
+                      )
+                    : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.DecoratedExpressionPost) {
         const transformed = visitor.DecoratedExpressionPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformWithUnary_inner = <Ctx>(
+    node: WithUnary_inner,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): WithUnary_inner => {
+    if (!node) {
+        throw new Error('No WithUnary_inner provided');
+    }
+
+    const transformed = visitor.WithUnary_inner
+        ? visitor.WithUnary_inner(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$op = transformUnaryOpWithHash(node.op, visitor, ctx);
+        changed1 = changed1 || updatedNode$op !== node.op;
+
+        const updatedNode$inner = transformDecoratedExpression(
+            node.inner,
+            visitor,
+            ctx,
+        );
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                op: updatedNode$op,
+                inner: updatedNode$inner,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.WithUnary_innerPost) {
+        const transformed = visitor.WithUnary_innerPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformWithUnary = <Ctx>(
+    node: WithUnary,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): WithUnary => {
+    if (!node) {
+        throw new Error('No WithUnary provided');
+    }
+
+    const transformed = visitor.WithUnary ? visitor.WithUnary(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'WithUnary': {
+            const transformed = visitor.WithUnary_WithUnary
+                ? visitor.WithUnary_WithUnary(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'WithUnary': {
+            updatedNode = transformWithUnary_inner(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformDecoratedExpression(
+                node,
+                visitor,
+                ctx,
+            );
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'WithUnary': {
+            const transformed = visitor.WithUnaryPost_WithUnary
+                ? visitor.WithUnaryPost_WithUnary(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.WithUnaryPost) {
+        const transformed = visitor.WithUnaryPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformBinOpRight = <Ctx>(
+    node: BinOpRight,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): BinOpRight => {
+    if (!node) {
+        throw new Error('No BinOpRight provided');
+    }
+
+    const transformed = visitor.BinOpRight
+        ? visitor.BinOpRight(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$op = transformbinopWithHash(node.op, visitor, ctx);
+        changed1 = changed1 || updatedNode$op !== node.op;
+
+        const updatedNode$right = transformWithUnary(node.right, visitor, ctx);
+        changed1 = changed1 || updatedNode$right !== node.right;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                op: updatedNode$op,
+                right: updatedNode$right,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.BinOpRightPost) {
+        const transformed = visitor.BinOpRightPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformBinOp_inner = <Ctx>(
+    node: BinOp_inner,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): BinOp_inner => {
+    if (!node) {
+        throw new Error('No BinOp_inner provided');
+    }
+
+    const transformed = visitor.BinOp_inner
+        ? visitor.BinOp_inner(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$first = transformWithUnary(node.first, visitor, ctx);
+        changed1 = changed1 || updatedNode$first !== node.first;
+
+        let updatedNode$rest = node.rest;
+        {
+            let changed2 = false;
+            const arr1 = node.rest.map((updatedNode$rest$item1) => {
+                const result = transformBinOpRight(
+                    updatedNode$rest$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$rest$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$rest = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                first: updatedNode$first,
+                rest: updatedNode$rest,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.BinOp_innerPost) {
+        const transformed = visitor.BinOp_innerPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformBinOp = <Ctx>(
+    node: BinOp,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): BinOp => {
+    if (!node) {
+        throw new Error('No BinOp provided');
+    }
+
+    const transformed = visitor.BinOp ? visitor.BinOp(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'BinOp': {
+            const transformed = visitor.BinOp_BinOp
+                ? visitor.BinOp_BinOp(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'BinOp': {
+            updatedNode = transformBinOp_inner(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformWithUnary(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'BinOp': {
+            const transformed = visitor.BinOpPost_BinOp
+                ? visitor.BinOpPost_BinOp(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.BinOpPost) {
+        const transformed = visitor.BinOpPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2795,8 +7109,56 @@ export const transformExpression = <Ctx>(
 
     let changed0 = false;
 
-    const updatedNode = transformDecoratedExpression(node, visitor, ctx);
-    changed0 = changed0 || updatedNode !== node;
+    switch (node.type) {
+        case 'Lambda': {
+            const transformed = visitor.Expression_Lambda
+                ? visitor.Expression_Lambda(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'Lambda': {
+            updatedNode = transformLambda(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformBinOp(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Lambda': {
+            const transformed = visitor.ExpressionPost_Lambda
+                ? visitor.ExpressionPost_Lambda(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
 
     node = updatedNode;
     if (visitor.ExpressionPost) {
@@ -2946,6 +7308,28 @@ export const transformDecoratorArg = <Ctx>(
             const updatedNode$0node = transformDecExpr(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'DecType': {
+            const transformed = visitor.DecoratorArgPost_DecType
+                ? visitor.DecoratorArgPost_DecType(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecExpr': {
+            const transformed = visitor.DecoratorArgPost_DecExpr
+                ? visitor.DecoratorArgPost_DecExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -3159,6 +7543,54 @@ export const transformDecorator = <Ctx>(
     return node;
 };
 
+export const transformTBlank = <Ctx>(
+    node: TBlank,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TBlank => {
+    if (!node) {
+        throw new Error('No TBlank provided');
+    }
+
+    const transformed = visitor.TBlank ? visitor.TBlank(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TBlankPost) {
+        const transformed = visitor.TBlankPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformTRef = <Ctx>(
     node: TRef,
     visitor: Visitor<Ctx>,
@@ -3200,54 +7632,6 @@ export const transformTRef = <Ctx>(
     node = updatedNode;
     if (visitor.TRefPost) {
         const transformed = visitor.TRefPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformString = <Ctx>(
-    node: String,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): String => {
-    if (!node) {
-        throw new Error('No String provided');
-    }
-
-    const transformed = visitor.String ? visitor.String(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-        if (changed1) {
-            updatedNode = { ...updatedNode, loc: updatedNode$loc };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.StringPost) {
-        const transformed = visitor.StringPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -3833,22 +8217,17 @@ export const transformTagPayload = <Ctx>(
         const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
         changed1 = changed1 || updatedNode$loc !== node.loc;
 
-        let updatedNode$items = node.items;
-        {
-            let changed2 = false;
-            const arr1 = node.items.map((updatedNode$items$item1) => {
-                const result = transformType(
-                    updatedNode$items$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$items$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$items = arr1;
-                changed1 = true;
-            }
+        let updatedNode$items = null;
+        const updatedNode$items$current = node.items;
+        if (updatedNode$items$current != null) {
+            const updatedNode$items$1$ = transformTComma(
+                updatedNode$items$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$items$1$ !== updatedNode$items$current;
+            updatedNode$items = updatedNode$items$1$;
         }
 
         if (changed1) {
@@ -4246,6 +8625,38 @@ export const transformTRecordItem = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'TRecordSpread': {
+            const transformed = visitor.TRecordItemPost_TRecordSpread
+                ? visitor.TRecordItemPost_TRecordSpread(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecordKeyValue': {
+            const transformed = visitor.TRecordItemPost_TRecordKeyValue
+                ? visitor.TRecordItemPost_TRecordKeyValue(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Star': {
+            const transformed = visitor.TRecordItemPost_Star
+                ? visitor.TRecordItemPost_Star(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.TRecordItemPost) {
         const transformed = visitor.TRecordItemPost(node, ctx);
@@ -4488,6 +8899,12 @@ export const transformEnumCase = <Ctx>(
             break;
         }
 
+        case 'TBlank': {
+            updatedNode = transformTBlank(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TRef': {
             updatedNode = transformTRef(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -4542,6 +8959,28 @@ export const transformEnumCase = <Ctx>(
             const updatedNode$0node = transformStar(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'TagDecl': {
+            const transformed = visitor.EnumCasePost_TagDecl
+                ? visitor.EnumCasePost_TagDecl(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Star': {
+            const transformed = visitor.EnumCasePost_Star
+                ? visitor.EnumCasePost_Star(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -4719,6 +9158,25 @@ export const transformTAtom = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
+        case 'TBlank': {
+            const transformed = visitor.TAtom_TBlank
+                ? visitor.TAtom_TBlank(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TRef': {
             const transformed = visitor.TAtom_TRef
                 ? visitor.TAtom_TRef(node, ctx)
@@ -4875,6 +9333,12 @@ export const transformTAtom = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
+        case 'TBlank': {
+            updatedNode = transformTBlank(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TRef': {
             updatedNode = transformTRef(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -4923,6 +9387,98 @@ export const transformTAtom = <Ctx>(
             const updatedNode$0node = transformTRecord(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'TBlank': {
+            const transformed = visitor.TAtomPost_TBlank
+                ? visitor.TAtomPost_TBlank(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRef': {
+            const transformed = visitor.TAtomPost_TRef
+                ? visitor.TAtomPost_TRef(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Number': {
+            const transformed = visitor.TAtomPost_Number
+                ? visitor.TAtomPost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'String': {
+            const transformed = visitor.TAtomPost_String
+                ? visitor.TAtomPost_String(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TLambda': {
+            const transformed = visitor.TAtomPost_TLambda
+                ? visitor.TAtomPost_TLambda(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TVars': {
+            const transformed = visitor.TAtomPost_TVars
+                ? visitor.TAtomPost_TVars(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TParens': {
+            const transformed = visitor.TAtomPost_TParens
+                ? visitor.TAtomPost_TParens(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TEnum': {
+            const transformed = visitor.TAtomPost_TEnum
+                ? visitor.TAtomPost_TEnum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecord': {
+            const transformed = visitor.TAtomPost_TRecord
+                ? visitor.TAtomPost_TRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -5078,6 +9634,18 @@ export const transformTApply = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'TApply': {
+            const transformed = visitor.TApplyPost_TApply
+                ? visitor.TApplyPost_TApply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.TApplyPost) {
         const transformed = visitor.TApplyPost(node, ctx);
@@ -5226,6 +9794,18 @@ export const transformTOpInner = <Ctx>(
             const updatedNode$0node = transformTApply(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'TDecorated': {
+            const transformed = visitor.TOpInnerPost_TDecorated
+                ? visitor.TOpInnerPost_TDecorated(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -5436,6 +10016,18 @@ export const transformTOps = <Ctx>(
         }
     }
 
+    switch (updatedNode.type) {
+        case 'TOps': {
+            const transformed = visitor.TOpsPost_TOps
+                ? visitor.TOpsPost_TOps(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
     node = updatedNode;
     if (visitor.TOpsPost) {
         const transformed = visitor.TOpsPost(node, ctx);
@@ -5611,6 +10203,148 @@ export const transformTypeAlias = <Ctx>(
     return node;
 };
 
+export const transformLetPair = <Ctx>(
+    node: LetPair,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): LetPair => {
+    if (!node) {
+        throw new Error('No LetPair provided');
+    }
+
+    const transformed = visitor.LetPair ? visitor.LetPair(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$typ = null;
+        const updatedNode$typ$current = node.typ;
+        if (updatedNode$typ$current != null) {
+            const updatedNode$typ$1$ = transformType(
+                updatedNode$typ$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$typ$1$ !== updatedNode$typ$current;
+            updatedNode$typ = updatedNode$typ$1$;
+        }
+
+        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                typ: updatedNode$typ,
+                expr: updatedNode$expr,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.LetPairPost) {
+        const transformed = visitor.LetPairPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformToplevelLet = <Ctx>(
+    node: ToplevelLet,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ToplevelLet => {
+    if (!node) {
+        throw new Error('No ToplevelLet provided');
+    }
+
+    const transformed = visitor.ToplevelLet
+        ? visitor.ToplevelLet(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformLetPair(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ToplevelLetPost) {
+        const transformed = visitor.ToplevelLetPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformToplevel = <Ctx>(
     node: Toplevel,
     visitor: Visitor<Ctx>,
@@ -5638,9 +10372,47 @@ export const transformToplevel = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
+        case 'Aliases': {
+            const transformed = visitor.Toplevel_Aliases
+                ? visitor.Toplevel_Aliases(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TypeAlias': {
             const transformed = visitor.Toplevel_TypeAlias
                 ? visitor.Toplevel_TypeAlias(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'ToplevelLet': {
+            const transformed = visitor.Toplevel_ToplevelLet
+                ? visitor.Toplevel_ToplevelLet(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -5661,8 +10433,20 @@ export const transformToplevel = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
+        case 'Aliases': {
+            updatedNode = transformAliases(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TypeAlias': {
             updatedNode = transformTypeAlias(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'ToplevelLet': {
+            updatedNode = transformToplevelLet(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -5673,6 +10457,38 @@ export const transformToplevel = <Ctx>(
             const updatedNode$0node = transformExpression(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Aliases': {
+            const transformed = visitor.ToplevelPost_Aliases
+                ? visitor.ToplevelPost_Aliases(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAlias': {
+            const transformed = visitor.ToplevelPost_TypeAlias
+                ? visitor.ToplevelPost_TypeAlias(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ToplevelLet': {
+            const transformed = visitor.ToplevelPost_ToplevelLet
+                ? visitor.ToplevelPost_ToplevelLet(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -5786,6 +10602,25 @@ export const transformTypeToplevel = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
+        case 'Aliases': {
+            const transformed = visitor.TypeToplevel_Aliases
+                ? visitor.TypeToplevel_Aliases(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TypeAlias': {
             const transformed = visitor.TypeToplevel_TypeAlias
                 ? visitor.TypeToplevel_TypeAlias(node, ctx)
@@ -5809,6 +10644,12 @@ export const transformTypeToplevel = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
+        case 'Aliases': {
+            updatedNode = transformAliases(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TypeAlias': {
             updatedNode = transformTypeAlias(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -5821,6 +10662,28 @@ export const transformTypeToplevel = <Ctx>(
             const updatedNode$0node = transformType(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Aliases': {
+            const transformed = visitor.TypeToplevelPost_Aliases
+                ? visitor.TypeToplevelPost_Aliases(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAlias': {
+            const transformed = visitor.TypeToplevelPost_TypeAlias
+                ? visitor.TypeToplevelPost_TypeAlias(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 
@@ -5979,6 +10842,43 @@ export const transform_EOF = <Ctx>(
     return node;
 };
 
+export const transformAliasName = <Ctx>(
+    node: AliasName,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): AliasName => {
+    if (!node) {
+        throw new Error('No AliasName provided');
+    }
+
+    const transformed = visitor.AliasName ? visitor.AliasName(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.AliasNamePost) {
+        const transformed = visitor.AliasNamePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformAttrText = <Ctx>(
     node: AttrText,
     visitor: Visitor<Ctx>,
@@ -6009,6 +10909,45 @@ export const transformAttrText = <Ctx>(
     node = updatedNode;
     if (visitor.AttrTextPost) {
         const transformed = visitor.AttrTextPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformBinop = <Ctx>(
+    node: Binop,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Binop => {
+    if (!node) {
+        throw new Error('No Binop provided');
+    }
+
+    const transformed = visitor.Binop ? visitor.Binop(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    const updatedNode = transformExpression(node, visitor, ctx);
+    changed0 = changed0 || updatedNode !== node;
+
+    node = updatedNode;
+    if (visitor.BinopPost) {
+        const transformed = visitor.BinopPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -6085,6 +11024,45 @@ export const transform_nonnewline = <Ctx>(
     node = updatedNode;
     if (visitor._nonnewlinePost) {
         const transformed = visitor._nonnewlinePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transform__nonnewline = <Ctx>(
+    node: __nonnewline,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): __nonnewline => {
+    if (!node) {
+        throw new Error('No __nonnewline provided');
+    }
+
+    const transformed = visitor.__nonnewline
+        ? visitor.__nonnewline(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.__nonnewlinePost) {
+        const transformed = visitor.__nonnewlinePost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -6398,158 +11376,17 @@ export const transformstringChar = <Ctx>(
     return node;
 };
 
-export const transformTypeVbl = <Ctx>(
-    node: TypeVbl,
+export const transformPRecordPattern = <Ctx>(
+    node: PRecordPattern,
     visitor: Visitor<Ctx>,
     ctx: Ctx,
-): TypeVbl => {
+): PRecordPattern => {
     if (!node) {
-        throw new Error('No TypeVbl provided');
+        throw new Error('No PRecordPattern provided');
     }
 
-    const transformed = visitor.TypeVbl ? visitor.TypeVbl(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        const updatedNode$vbl = transformIdentifier(node.vbl, visitor, ctx);
-        changed1 = changed1 || updatedNode$vbl !== node.vbl;
-
-        let updatedNode$bound = null;
-        const updatedNode$bound$current = node.bound;
-        if (updatedNode$bound$current != null) {
-            const updatedNode$bound$1$ = transformType(
-                updatedNode$bound$current,
-                visitor,
-                ctx,
-            );
-            changed1 =
-                changed1 || updatedNode$bound$1$ !== updatedNode$bound$current;
-            updatedNode$bound = updatedNode$bound$1$;
-        }
-
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                vbl: updatedNode$vbl,
-                bound: updatedNode$bound,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.TypeVblPost) {
-        const transformed = visitor.TypeVblPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformTypeVbls = <Ctx>(
-    node: TypeVbls,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): TypeVbls => {
-    if (!node) {
-        throw new Error('No TypeVbls provided');
-    }
-
-    const transformed = visitor.TypeVbls ? visitor.TypeVbls(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        let updatedNode$items = node.items;
-        {
-            let changed2 = false;
-            const arr1 = node.items.map((updatedNode$items$item1) => {
-                const result = transformTypeVbl(
-                    updatedNode$items$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$items$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$items = arr1;
-                changed1 = true;
-            }
-        }
-
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                items: updatedNode$items,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.TypeVblsPost) {
-        const transformed = visitor.TypeVblsPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformTypeVariables = <Ctx>(
-    node: TypeVariables,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): TypeVariables => {
-    if (!node) {
-        throw new Error('No TypeVariables provided');
-    }
-
-    const transformed = visitor.TypeVariables
-        ? visitor.TypeVariables(node, ctx)
+    const transformed = visitor.PRecordPattern
+        ? visitor.PRecordPattern(node, ctx)
         : null;
     if (transformed === false) {
         return node;
@@ -6567,32 +11404,12 @@ export const transformTypeVariables = <Ctx>(
 
     let changed0 = false;
 
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        const updatedNode$vbls = transformTypeVbls(node.vbls, visitor, ctx);
-        changed1 = changed1 || updatedNode$vbls !== node.vbls;
-
-        const updatedNode$body = transformExpression(node.body, visitor, ctx);
-        changed1 = changed1 || updatedNode$body !== node.body;
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                vbls: updatedNode$vbls,
-                body: updatedNode$body,
-            };
-            changed0 = true;
-        }
-    }
+    const updatedNode = transformPattern(node, visitor, ctx);
+    changed0 = changed0 || updatedNode !== node;
 
     node = updatedNode;
-    if (visitor.TypeVariablesPost) {
-        const transformed = visitor.TypeVariablesPost(node, ctx);
+    if (visitor.PRecordPatternPost) {
+        const transformed = visitor.PRecordPatternPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -6761,6 +11578,63 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'AwaitSuffix': {
+            const transformed = visitor.AllTaggedTypes_AwaitSuffix
+                ? visitor.AllTaggedTypes_AwaitSuffix(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Aliases': {
+            const transformed = visitor.AllTaggedTypes_Aliases
+                ? visitor.AllTaggedTypes_Aliases(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'AliasItem': {
+            const transformed = visitor.AllTaggedTypes_AliasItem
+                ? visitor.AllTaggedTypes_AliasItem(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Identifier': {
             const transformed = visitor.AllTaggedTypes_Identifier
                 ? visitor.AllTaggedTypes_Identifier(node, ctx)
@@ -6783,6 +11657,120 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'ParenedExpression': {
             const transformed = visitor.AllTaggedTypes_ParenedExpression
                 ? visitor.AllTaggedTypes_ParenedExpression(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'BinOp': {
+            const transformed = visitor.AllTaggedTypes_BinOp
+                ? visitor.AllTaggedTypes_BinOp(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'BinOpRight': {
+            const transformed = visitor.AllTaggedTypes_BinOpRight
+                ? visitor.AllTaggedTypes_BinOpRight(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'WithUnary': {
+            const transformed = visitor.AllTaggedTypes_WithUnary
+                ? visitor.AllTaggedTypes_WithUnary(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'UnaryOpWithHash': {
+            const transformed = visitor.AllTaggedTypes_UnaryOpWithHash
+                ? visitor.AllTaggedTypes_UnaryOpWithHash(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'binopWithHash': {
+            const transformed = visitor.AllTaggedTypes_binopWithHash
+                ? visitor.AllTaggedTypes_binopWithHash(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'ParenedOp': {
+            const transformed = visitor.AllTaggedTypes_ParenedOp
+                ? visitor.AllTaggedTypes_ParenedOp(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -7065,6 +12053,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'EnumPayload': {
+            const transformed = visitor.AllTaggedTypes_EnumPayload
+                ? visitor.AllTaggedTypes_EnumPayload(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TEnum': {
             const transformed = visitor.AllTaggedTypes_TEnum
                 ? visitor.AllTaggedTypes_TEnum(node, ctx)
@@ -7198,9 +12205,9 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'TypeVariables': {
-            const transformed = visitor.AllTaggedTypes_TypeVariables
-                ? visitor.AllTaggedTypes_TypeVariables(node, ctx)
+        case 'If': {
+            const transformed = visitor.AllTaggedTypes_If
+                ? visitor.AllTaggedTypes_If(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -7217,9 +12224,9 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'TypeVbls': {
-            const transformed = visitor.AllTaggedTypes_TypeVbls
-                ? visitor.AllTaggedTypes_TypeVbls(node, ctx)
+        case 'IfYes': {
+            const transformed = visitor.AllTaggedTypes_IfYes
+                ? visitor.AllTaggedTypes_IfYes(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -7236,9 +12243,351 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'TypeVbl': {
-            const transformed = visitor.AllTaggedTypes_TypeVbl
-                ? visitor.AllTaggedTypes_TypeVbl(node, ctx)
+        case 'IfConds': {
+            const transformed = visitor.AllTaggedTypes_IfConds
+                ? visitor.AllTaggedTypes_IfConds(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Lambda': {
+            const transformed = visitor.AllTaggedTypes_Lambda
+                ? visitor.AllTaggedTypes_Lambda(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'LArgs': {
+            const transformed = visitor.AllTaggedTypes_LArgs
+                ? visitor.AllTaggedTypes_LArgs(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'LArg': {
+            const transformed = visitor.AllTaggedTypes_LArg
+                ? visitor.AllTaggedTypes_LArg(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Block': {
+            const transformed = visitor.AllTaggedTypes_Block
+                ? visitor.AllTaggedTypes_Block(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Stmts': {
+            const transformed = visitor.AllTaggedTypes_Stmts
+                ? visitor.AllTaggedTypes_Stmts(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Let': {
+            const transformed = visitor.AllTaggedTypes_Let
+                ? visitor.AllTaggedTypes_Let(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'ToplevelLet': {
+            const transformed = visitor.AllTaggedTypes_ToplevelLet
+                ? visitor.AllTaggedTypes_ToplevelLet(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'LetPair': {
+            const transformed = visitor.AllTaggedTypes_LetPair
+                ? visitor.AllTaggedTypes_LetPair(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PBlank': {
+            const transformed = visitor.AllTaggedTypes_PBlank
+                ? visitor.AllTaggedTypes_PBlank(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PName': {
+            const transformed = visitor.AllTaggedTypes_PName
+                ? visitor.AllTaggedTypes_PName(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PTuple': {
+            const transformed = visitor.AllTaggedTypes_PTuple
+                ? visitor.AllTaggedTypes_PTuple(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PTupleItems': {
+            const transformed = visitor.AllTaggedTypes_PTupleItems
+                ? visitor.AllTaggedTypes_PTupleItems(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PRecord': {
+            const transformed = visitor.AllTaggedTypes_PRecord
+                ? visitor.AllTaggedTypes_PRecord(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PRecordFields': {
+            const transformed = visitor.AllTaggedTypes_PRecordFields
+                ? visitor.AllTaggedTypes_PRecordFields(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PRecordField': {
+            const transformed = visitor.AllTaggedTypes_PRecordField
+                ? visitor.AllTaggedTypes_PRecordField(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PHash': {
+            const transformed = visitor.AllTaggedTypes_PHash
+                ? visitor.AllTaggedTypes_PHash(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PDecorated': {
+            const transformed = visitor.AllTaggedTypes_PDecorated
+                ? visitor.AllTaggedTypes_PDecorated(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'PEnum': {
+            const transformed = visitor.AllTaggedTypes_PEnum
+                ? visitor.AllTaggedTypes_PEnum(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -7391,6 +12740,44 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'TRecordKeyValue': {
             const transformed = visitor.AllTaggedTypes_TRecordKeyValue
                 ? visitor.AllTaggedTypes_TRecordKeyValue(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Switch': {
+            const transformed = visitor.AllTaggedTypes_Switch
+                ? visitor.AllTaggedTypes_Switch(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'Case': {
+            const transformed = visitor.AllTaggedTypes_Case
+                ? visitor.AllTaggedTypes_Case(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -7691,6 +13078,25 @@ export const transformAllTaggedTypes = <Ctx>(
             }
             break;
         }
+
+        case 'TBlank': {
+            const transformed = visitor.AllTaggedTypes_TBlank
+                ? visitor.AllTaggedTypes_TBlank(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -7726,6 +13132,24 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'AwaitSuffix': {
+            updatedNode = transformAwaitSuffix(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Aliases': {
+            updatedNode = transformAliases(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'AliasItem': {
+            updatedNode = transformAliasItem(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Identifier': {
             updatedNode = transformIdentifier(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -7734,6 +13158,42 @@ export const transformAllTaggedTypes = <Ctx>(
 
         case 'ParenedExpression': {
             updatedNode = transformParenedExpression(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'BinOp': {
+            updatedNode = transformBinOp_inner(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'BinOpRight': {
+            updatedNode = transformBinOpRight(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'WithUnary': {
+            updatedNode = transformWithUnary_inner(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'UnaryOpWithHash': {
+            updatedNode = transformUnaryOpWithHash(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'binopWithHash': {
+            updatedNode = transformbinopWithHash(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'ParenedOp': {
+            updatedNode = transformParenedOp(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -7826,6 +13286,12 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'EnumPayload': {
+            updatedNode = transformEnumPayload(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TEnum': {
             updatedNode = transformTEnum(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -7868,20 +13334,128 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'TypeVariables': {
-            updatedNode = transformTypeVariables(node, visitor, ctx);
+        case 'If': {
+            updatedNode = transformIf(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
 
-        case 'TypeVbls': {
-            updatedNode = transformTypeVbls(node, visitor, ctx);
+        case 'IfYes': {
+            updatedNode = transformIfYes(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
 
-        case 'TypeVbl': {
-            updatedNode = transformTypeVbl(node, visitor, ctx);
+        case 'IfConds': {
+            updatedNode = transformIfConds(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Lambda': {
+            updatedNode = transformLambda(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'LArgs': {
+            updatedNode = transformLArgs(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'LArg': {
+            updatedNode = transformLArg(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Block': {
+            updatedNode = transformBlock(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Stmts': {
+            updatedNode = transformStmts(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Let': {
+            updatedNode = transformLet(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'ToplevelLet': {
+            updatedNode = transformToplevelLet(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'LetPair': {
+            updatedNode = transformLetPair(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PBlank': {
+            updatedNode = transformPBlank(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PName': {
+            updatedNode = transformPName(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PTuple': {
+            updatedNode = transformPTuple(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PTupleItems': {
+            updatedNode = transformPTupleItems(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PRecord': {
+            updatedNode = transformPRecord(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PRecordFields': {
+            updatedNode = transformPRecordFields(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PRecordField': {
+            updatedNode = transformPRecordField(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PHash': {
+            updatedNode = transformPHash(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PDecorated': {
+            updatedNode = transformPDecorated(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'PEnum': {
+            updatedNode = transformPEnum(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -7930,6 +13504,18 @@ export const transformAllTaggedTypes = <Ctx>(
 
         case 'TRecordKeyValue': {
             updatedNode = transformTRecordKeyValue(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Switch': {
+            updatedNode = transformSwitch(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'Case': {
+            updatedNode = transformCase(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -8018,12 +13604,879 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'TypePair': {
+            updatedNode = transformTypePair(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformTypePair(node, visitor, ctx);
+            const updatedNode$0node = transformTBlank(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'File': {
+            const transformed = visitor.AllTaggedTypesPost_File
+                ? visitor.AllTaggedTypesPost_File(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeFile': {
+            const transformed = visitor.AllTaggedTypesPost_TypeFile
+                ? visitor.AllTaggedTypesPost_TypeFile(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Apply': {
+            const transformed = visitor.AllTaggedTypesPost_Apply
+                ? visitor.AllTaggedTypesPost_Apply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'CallSuffix': {
+            const transformed = visitor.AllTaggedTypesPost_CallSuffix
+                ? visitor.AllTaggedTypesPost_CallSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'CommaExpr': {
+            const transformed = visitor.AllTaggedTypesPost_CommaExpr
+                ? visitor.AllTaggedTypesPost_CommaExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'AwaitSuffix': {
+            const transformed = visitor.AllTaggedTypesPost_AwaitSuffix
+                ? visitor.AllTaggedTypesPost_AwaitSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Aliases': {
+            const transformed = visitor.AllTaggedTypesPost_Aliases
+                ? visitor.AllTaggedTypesPost_Aliases(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'AliasItem': {
+            const transformed = visitor.AllTaggedTypesPost_AliasItem
+                ? visitor.AllTaggedTypesPost_AliasItem(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Identifier': {
+            const transformed = visitor.AllTaggedTypesPost_Identifier
+                ? visitor.AllTaggedTypesPost_Identifier(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ParenedExpression': {
+            const transformed = visitor.AllTaggedTypesPost_ParenedExpression
+                ? visitor.AllTaggedTypesPost_ParenedExpression(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'BinOp': {
+            const transformed = visitor.AllTaggedTypesPost_BinOp
+                ? visitor.AllTaggedTypesPost_BinOp(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'BinOpRight': {
+            const transformed = visitor.AllTaggedTypesPost_BinOpRight
+                ? visitor.AllTaggedTypesPost_BinOpRight(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'WithUnary': {
+            const transformed = visitor.AllTaggedTypesPost_WithUnary
+                ? visitor.AllTaggedTypesPost_WithUnary(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'UnaryOpWithHash': {
+            const transformed = visitor.AllTaggedTypesPost_UnaryOpWithHash
+                ? visitor.AllTaggedTypesPost_UnaryOpWithHash(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'binopWithHash': {
+            const transformed = visitor.AllTaggedTypesPost_binopWithHash
+                ? visitor.AllTaggedTypesPost_binopWithHash(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ParenedOp': {
+            const transformed = visitor.AllTaggedTypesPost_ParenedOp
+                ? visitor.AllTaggedTypesPost_ParenedOp(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Boolean': {
+            const transformed = visitor.AllTaggedTypesPost_Boolean
+                ? visitor.AllTaggedTypesPost_Boolean(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Number': {
+            const transformed = visitor.AllTaggedTypesPost_Number
+                ? visitor.AllTaggedTypesPost_Number(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'String': {
+            const transformed = visitor.AllTaggedTypesPost_String
+                ? visitor.AllTaggedTypesPost_String(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TemplateString': {
+            const transformed = visitor.AllTaggedTypesPost_TemplateString
+                ? visitor.AllTaggedTypesPost_TemplateString(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TemplatePair': {
+            const transformed = visitor.AllTaggedTypesPost_TemplatePair
+                ? visitor.AllTaggedTypesPost_TemplatePair(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TemplateWrap': {
+            const transformed = visitor.AllTaggedTypesPost_TemplateWrap
+                ? visitor.AllTaggedTypesPost_TemplateWrap(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecoratedExpression': {
+            const transformed = visitor.AllTaggedTypesPost_DecoratedExpression
+                ? visitor.AllTaggedTypesPost_DecoratedExpression(
+                      updatedNode,
+                      ctx,
+                  )
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Decorator': {
+            const transformed = visitor.AllTaggedTypesPost_Decorator
+                ? visitor.AllTaggedTypesPost_Decorator(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecoratorId': {
+            const transformed = visitor.AllTaggedTypesPost_DecoratorId
+                ? visitor.AllTaggedTypesPost_DecoratorId(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecoratorArgs': {
+            const transformed = visitor.AllTaggedTypesPost_DecoratorArgs
+                ? visitor.AllTaggedTypesPost_DecoratorArgs(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'LabeledDecoratorArg': {
+            const transformed = visitor.AllTaggedTypesPost_LabeledDecoratorArg
+                ? visitor.AllTaggedTypesPost_LabeledDecoratorArg(
+                      updatedNode,
+                      ctx,
+                  )
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecType': {
+            const transformed = visitor.AllTaggedTypesPost_DecType
+                ? visitor.AllTaggedTypesPost_DecType(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'DecExpr': {
+            const transformed = visitor.AllTaggedTypesPost_DecExpr
+                ? visitor.AllTaggedTypesPost_DecExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Enum': {
+            const transformed = visitor.AllTaggedTypesPost_Enum
+                ? visitor.AllTaggedTypesPost_Enum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'EnumPayload': {
+            const transformed = visitor.AllTaggedTypesPost_EnumPayload
+                ? visitor.AllTaggedTypesPost_EnumPayload(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TEnum': {
+            const transformed = visitor.AllTaggedTypesPost_TEnum
+                ? visitor.AllTaggedTypesPost_TEnum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'EnumCases': {
+            const transformed = visitor.AllTaggedTypesPost_EnumCases
+                ? visitor.AllTaggedTypesPost_EnumCases(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TagDecl': {
+            const transformed = visitor.AllTaggedTypesPost_TagDecl
+                ? visitor.AllTaggedTypesPost_TagDecl(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TagPayload': {
+            const transformed = visitor.AllTaggedTypesPost_TagPayload
+                ? visitor.AllTaggedTypesPost_TagPayload(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Star': {
+            const transformed = visitor.AllTaggedTypesPost_Star
+                ? visitor.AllTaggedTypesPost_Star(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeApplicationSuffix': {
+            const transformed = visitor.AllTaggedTypesPost_TypeApplicationSuffix
+                ? visitor.AllTaggedTypesPost_TypeApplicationSuffix(
+                      updatedNode,
+                      ctx,
+                  )
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAppVbls': {
+            const transformed = visitor.AllTaggedTypesPost_TypeAppVbls
+                ? visitor.AllTaggedTypesPost_TypeAppVbls(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'If': {
+            const transformed = visitor.AllTaggedTypesPost_If
+                ? visitor.AllTaggedTypesPost_If(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'IfYes': {
+            const transformed = visitor.AllTaggedTypesPost_IfYes
+                ? visitor.AllTaggedTypesPost_IfYes(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'IfConds': {
+            const transformed = visitor.AllTaggedTypesPost_IfConds
+                ? visitor.AllTaggedTypesPost_IfConds(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Lambda': {
+            const transformed = visitor.AllTaggedTypesPost_Lambda
+                ? visitor.AllTaggedTypesPost_Lambda(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'LArgs': {
+            const transformed = visitor.AllTaggedTypesPost_LArgs
+                ? visitor.AllTaggedTypesPost_LArgs(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'LArg': {
+            const transformed = visitor.AllTaggedTypesPost_LArg
+                ? visitor.AllTaggedTypesPost_LArg(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Block': {
+            const transformed = visitor.AllTaggedTypesPost_Block
+                ? visitor.AllTaggedTypesPost_Block(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Stmts': {
+            const transformed = visitor.AllTaggedTypesPost_Stmts
+                ? visitor.AllTaggedTypesPost_Stmts(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Let': {
+            const transformed = visitor.AllTaggedTypesPost_Let
+                ? visitor.AllTaggedTypesPost_Let(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ToplevelLet': {
+            const transformed = visitor.AllTaggedTypesPost_ToplevelLet
+                ? visitor.AllTaggedTypesPost_ToplevelLet(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'LetPair': {
+            const transformed = visitor.AllTaggedTypesPost_LetPair
+                ? visitor.AllTaggedTypesPost_LetPair(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PBlank': {
+            const transformed = visitor.AllTaggedTypesPost_PBlank
+                ? visitor.AllTaggedTypesPost_PBlank(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PName': {
+            const transformed = visitor.AllTaggedTypesPost_PName
+                ? visitor.AllTaggedTypesPost_PName(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PTuple': {
+            const transformed = visitor.AllTaggedTypesPost_PTuple
+                ? visitor.AllTaggedTypesPost_PTuple(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PTupleItems': {
+            const transformed = visitor.AllTaggedTypesPost_PTupleItems
+                ? visitor.AllTaggedTypesPost_PTupleItems(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PRecord': {
+            const transformed = visitor.AllTaggedTypesPost_PRecord
+                ? visitor.AllTaggedTypesPost_PRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PRecordFields': {
+            const transformed = visitor.AllTaggedTypesPost_PRecordFields
+                ? visitor.AllTaggedTypesPost_PRecordFields(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PRecordField': {
+            const transformed = visitor.AllTaggedTypesPost_PRecordField
+                ? visitor.AllTaggedTypesPost_PRecordField(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PHash': {
+            const transformed = visitor.AllTaggedTypesPost_PHash
+                ? visitor.AllTaggedTypesPost_PHash(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PDecorated': {
+            const transformed = visitor.AllTaggedTypesPost_PDecorated
+                ? visitor.AllTaggedTypesPost_PDecorated(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PEnum': {
+            const transformed = visitor.AllTaggedTypesPost_PEnum
+                ? visitor.AllTaggedTypesPost_PEnum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Record': {
+            const transformed = visitor.AllTaggedTypesPost_Record
+                ? visitor.AllTaggedTypesPost_Record(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'RecordItems': {
+            const transformed = visitor.AllTaggedTypesPost_RecordItems
+                ? visitor.AllTaggedTypesPost_RecordItems(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'RecordSpread': {
+            const transformed = visitor.AllTaggedTypesPost_RecordSpread
+                ? visitor.AllTaggedTypesPost_RecordSpread(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'RecordKeyValue': {
+            const transformed = visitor.AllTaggedTypesPost_RecordKeyValue
+                ? visitor.AllTaggedTypesPost_RecordKeyValue(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecord': {
+            const transformed = visitor.AllTaggedTypesPost_TRecord
+                ? visitor.AllTaggedTypesPost_TRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecordItems': {
+            const transformed = visitor.AllTaggedTypesPost_TRecordItems
+                ? visitor.AllTaggedTypesPost_TRecordItems(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecordSpread': {
+            const transformed = visitor.AllTaggedTypesPost_TRecordSpread
+                ? visitor.AllTaggedTypesPost_TRecordSpread(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRecordKeyValue': {
+            const transformed = visitor.AllTaggedTypesPost_TRecordKeyValue
+                ? visitor.AllTaggedTypesPost_TRecordKeyValue(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Switch': {
+            const transformed = visitor.AllTaggedTypesPost_Switch
+                ? visitor.AllTaggedTypesPost_Switch(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'Case': {
+            const transformed = visitor.AllTaggedTypesPost_Case
+                ? visitor.AllTaggedTypesPost_Case(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TApply': {
+            const transformed = visitor.AllTaggedTypesPost_TApply
+                ? visitor.AllTaggedTypesPost_TApply(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TComma': {
+            const transformed = visitor.AllTaggedTypesPost_TComma
+                ? visitor.AllTaggedTypesPost_TComma(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TVars': {
+            const transformed = visitor.AllTaggedTypesPost_TVars
+                ? visitor.AllTaggedTypesPost_TVars(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TBargs': {
+            const transformed = visitor.AllTaggedTypesPost_TBargs
+                ? visitor.AllTaggedTypesPost_TBargs(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TBArg': {
+            const transformed = visitor.AllTaggedTypesPost_TBArg
+                ? visitor.AllTaggedTypesPost_TBArg(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TDecorated': {
+            const transformed = visitor.AllTaggedTypesPost_TDecorated
+                ? visitor.AllTaggedTypesPost_TDecorated(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRef': {
+            const transformed = visitor.AllTaggedTypesPost_TRef
+                ? visitor.AllTaggedTypesPost_TRef(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TOps': {
+            const transformed = visitor.AllTaggedTypesPost_TOps
+                ? visitor.AllTaggedTypesPost_TOps(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TRight': {
+            const transformed = visitor.AllTaggedTypesPost_TRight
+                ? visitor.AllTaggedTypesPost_TRight(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TParens': {
+            const transformed = visitor.AllTaggedTypesPost_TParens
+                ? visitor.AllTaggedTypesPost_TParens(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TArg': {
+            const transformed = visitor.AllTaggedTypesPost_TArg
+                ? visitor.AllTaggedTypesPost_TArg(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TArgs': {
+            const transformed = visitor.AllTaggedTypesPost_TArgs
+                ? visitor.AllTaggedTypesPost_TArgs(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TLambda': {
+            const transformed = visitor.AllTaggedTypesPost_TLambda
+                ? visitor.AllTaggedTypesPost_TLambda(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAlias': {
+            const transformed = visitor.AllTaggedTypesPost_TypeAlias
+                ? visitor.AllTaggedTypesPost_TypeAlias(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypePair': {
+            const transformed = visitor.AllTaggedTypesPost_TypePair
+                ? visitor.AllTaggedTypesPost_TypePair(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TBlank': {
+            const transformed = visitor.AllTaggedTypesPost_TBlank
+                ? visitor.AllTaggedTypesPost_TBlank(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
         }
     }
 

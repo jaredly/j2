@@ -1,20 +1,26 @@
-import { Divider, Link, Text } from '@nextui-org/react';
+import { Button, Divider, Link, Text } from '@nextui-org/react';
 import * as React from 'react';
-import { builtinContext, FullContext } from '../core/ctx';
-import { typeFileToTast } from '../core/elements/base';
-import { parseTypeFile } from '../core/grammar/base.parser';
-import { fixComments } from '../core/grammar/fixComments';
-import { Loc, Type, TypeAlias, TypeFile } from '../core/typed-ast';
+import { builtinContext } from '../core/ctx';
+import {
+    emptyFileResult,
+    executeFile,
+    ExecutionInfo,
+    processFile,
+    processTypeFile,
+    SuccessTestResult,
+    SuccessTypeResult,
+    TestResult,
+    TypeTestResult,
+} from '../core/full/full';
+import { idToString } from '../core/ids';
+import { Loc } from '../core/typed-ast';
+import { errorCount } from '../core/typing/analyze';
 import {
     Builtin,
-    Fixture,
-    FixtureFile as FixtureFileType,
-    FixtureResult,
     loadBuiltins,
     parseFixtureFile,
-    runFixture,
 } from '../core/typing/__test__/fixture-utils';
-import { runTypeTest, TypeTest } from '../core/typing/__test__/typetest';
+import { typeAssertById, typeTestCtx } from '../core/typing/__test__/utils';
 import { FixtureFile } from './FixtureFile';
 import {
     CancelIcon,
@@ -23,6 +29,8 @@ import {
     PushpinIconFilled,
     ReportProblemIcon,
 } from './Icons';
+import { refmt } from './refmt';
+import { TestView } from './Test';
 import { TypeTestView } from './TypeTest';
 
 export const usePromise = <T,>(
@@ -51,36 +59,142 @@ export const useHash = () => {
     return hash;
 };
 
+export type FixtureFileType = {
+    builtins: Builtin[];
+    fixtures: Array<FixtureWithResult>;
+};
+
+export type FixtureWithResult = {
+    title: string;
+    input: string;
+    builtins: Builtin[];
+    output_expected: string;
+    output_failed: string;
+    shouldFail: boolean;
+    result: TestResult;
+    newOutput: string;
+};
+
 export type Status = {
     name: string;
     file: FixtureFileType;
-    ctx: FullContext;
-    results: Array<{
-        result: FixtureResult;
-        input: string;
-        builtins: Builtin[];
-    }>;
 };
-
-// export const processTypeTest = (raw: string, ctx: FullContext) => {
-//     const parsed = parseTypeFile(raw);
-//     const tast = typeFileToTast(parsed, ctx);
-// };
 
 export type Files = {
     fixtures: { [key: string]: Status };
-    typetest: { [key: string]: TypeTest };
+    typetest: { [key: string]: TypeWhat };
+    test: { [key: string]: TestWhat };
+};
+
+export type TypeWhat = {
+    file: TypeTestResult;
+    values: Array<{ success: boolean; loc: Loc; idx: number }>;
+};
+
+export type TestWhat = {
+    file: TestResult;
+    values: null | TestValues;
+};
+
+export type TestValues = {
+    info: ExecutionInfo;
+    debugs: { [key: number]: boolean };
+    testResults: Array<{
+        success: boolean;
+        loc: Loc;
+    }>;
+    failed: boolean;
+};
+
+export const typeResults = (
+    file: SuccessTypeResult,
+    debug?: boolean,
+): Array<{ success: boolean; loc: Loc; idx: number }> => {
+    const results: Array<{ success: boolean; loc: Loc; idx: number }> = [];
+    const { info, ctx } = file;
+
+    info.forEach((info, i) => {
+        const type = info.contents.top;
+        if (type.type === 'TDecorated') {
+            const inner = type.inner;
+            type.decorators.forEach((d) => {
+                if (d.id.ref.type !== 'Global') {
+                    return;
+                }
+                const hash = idToString(d.id.ref.id);
+                if (typeAssertById[hash]) {
+                    const err = typeAssertById[hash](
+                        d.args.map((arg) => arg.arg),
+                        inner,
+                        ctx,
+                    );
+                    results.push({
+                        success: err == null,
+                        loc: d.loc,
+                        idx: i,
+                    });
+                    if (err && debug) {
+                        console.log(`Debugging failing assertion`);
+                        debugger;
+                        typeAssertById[hash](
+                            d.args.map((arg) => arg.arg),
+                            inner,
+                            {
+                                ...ctx,
+                                debugger() {
+                                    debugger;
+                                },
+                            },
+                        );
+                    }
+                }
+            });
+        }
+    });
+
+    return results;
+};
+
+export const getTestResults = (file: SuccessTestResult): TestValues => {
+    const values: TestValues = {
+        info: executeFile(file),
+        testResults: [],
+        failed: false,
+        debugs: {},
+    };
+    file.info.forEach((info, i) => {
+        if (
+            info.contents.top.type === 'ToplevelExpression' &&
+            info.contents.irtops
+        ) {
+            const top = info.contents.irtops[0];
+            if (top.type && file.ctx.isBuiltinType(top.type!, 'bool')) {
+                values.testResults.push({
+                    success: values.info.exprs[i],
+                    loc: info.contents.top.loc,
+                });
+                if (!values.info.exprs[i]) {
+                    values.debugs[i] = true;
+                    values.failed = true;
+                }
+            }
+        }
+        if (errorCount(info.verify)) {
+            values.debugs[i] = true;
+            values.failed = true;
+        }
+    });
+    return values;
 };
 
 export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
-    const result = status.results[idx].result;
     const fixture = status.file.fixtures[idx];
     const prev = fixture.output_expected
         ? fixture.output_expected
         : fixture.output_failed;
     return (
         <span style={{ marginRight: 8 }}>
-            {prev !== result.newOutput ? (
+            {prev !== fixture.newOutput ? (
                 <ReportProblemIcon style={{ color: 'orange' }} />
             ) : fixture.output_failed ? (
                 <CancelIcon style={{ color: 'red' }} />
@@ -91,10 +205,10 @@ export const FixStatus = ({ status, idx }: { status: Status; idx: number }) => {
     );
 };
 
-export const ShowTest = ({ statuses }: { statuses: TypeTest['statuses'] }) => {
+export const ShowTest = ({ failed }: { failed: boolean }) => {
     return (
         <span style={{ marginRight: 8 }}>
-            {statuses.some((m) => m.text != null) ? (
+            {failed ? (
                 <CancelIcon style={{ color: 'red' }} />
             ) : (
                 <CheckmarkIcon style={{ color: 'green' }} />
@@ -110,7 +224,7 @@ export const ShowStatus = ({ status }: { status: Status }) => {
         const prev = fixture.output_expected
             ? fixture.output_expected
             : fixture.output_failed;
-        if (prev !== status.results[i].result.newOutput) {
+        if (prev !== status.file.fixtures[i].newOutput) {
             changes++;
         } else if (fixture.output_failed) {
             failures++;
@@ -130,35 +244,34 @@ export const ShowStatus = ({ status }: { status: Status }) => {
 };
 
 export const fileStatus = (name: string, file: FixtureFileType): Status => {
-    const ctx = builtinContext.clone();
-    loadBuiltins(file.builtins, ctx);
-    return {
-        name,
-        file,
-        ctx,
-        results: file.fixtures.map((f) => ({
-            result: runFixture(f, ctx),
-            builtins: file.builtins,
-            input: f.input,
-        })),
-    };
+    return { name, file };
 };
 
 export const App = () => {
     const hash = useHash();
 
-    const [listing] = usePromise<{ fixtures: string[]; typetest: string[] }>(
+    const [listing] = usePromise<{
+        fixtures: string[];
+        typetest: string[];
+        test: string[];
+    }>(
         () =>
             Promise.all([
                 fetch('/elements/fixtures/').then((res) => res.json()),
                 fetch('/elements/typetest/').then((res) => res.json()),
-            ]).then(([fixtures, typetest]) => ({ fixtures, typetest })),
+                fetch('/elements/test/').then((res) => res.json()),
+            ]).then(([fixtures, typetest, test]) => ({
+                fixtures,
+                typetest,
+                test,
+            })),
         [],
     );
 
     const [files, setFiles] = React.useState<Files>({
         fixtures: {},
         typetest: {},
+        test: {},
     });
 
     // Ok, so when we update a fixture, we might update things off built
@@ -166,7 +279,7 @@ export const App = () => {
         if (!listing) {
             return;
         }
-        const { fixtures, typetest } = listing;
+        const { fixtures, typetest, test } = listing;
         Promise.all([
             Promise.all(
                 fixtures.map((line) =>
@@ -178,7 +291,12 @@ export const App = () => {
                     fetch(`/elements/typetest/${line}`).then((v) => v.text()),
                 ),
             ),
-        ]).then(([fixtureContents, typetestContents]) => {
+            Promise.all(
+                test.map((line) =>
+                    fetch(`/elements/test/${line}`).then((v) => v.text()),
+                ),
+            ),
+        ]).then(([fixtureContents, typetestContents, testContents]) => {
             const old = window.console;
 
             // Silence console during others
@@ -195,22 +313,50 @@ export const App = () => {
             const files = {} as Files['fixtures'];
             fixtureContents.forEach((contents, i) => {
                 const file = parseFixtureFile(contents);
-                files[fixtures[i]] = fileStatus(fixtures[i], file);
+                const ctx = builtinContext.clone();
+                loadBuiltins(file.builtins, ctx);
+                const news = file.fixtures.map((fixture) => {
+                    const bctx = ctx.clone();
+                    loadBuiltins(fixture.builtins, bctx);
+                    const result = processFile(fixture.input, bctx);
+                    return {
+                        ...fixture,
+                        result,
+                        newOutput: refmt(result, true),
+                    };
+                });
+                files[fixtures[i]] = fileStatus(fixtures[i], {
+                    ...file,
+                    fixtures: news,
+                });
             });
             const typetestFiles = {} as Files['typetest'];
             typetestContents.forEach((contents, i) => {
                 try {
-                    typetestFiles[typetest[i]] = runTypeTest(
-                        fixComments(parseTypeFile(contents)),
-                    );
+                    const file = processTypeFile(contents, typeTestCtx);
+                    typetestFiles[typetest[i]] = {
+                        file,
+                        values:
+                            file.type === 'Success' ? typeResults(file) : [],
+                    };
                 } catch (err) {
                     old.error('Failed to parse typetest', err);
-                    // typetestFiles[typetest[i]] = runTypeTest(
-                    //     fixComments(parseTypeFile(contents)),
-                    // );
                 }
             });
-            setFiles({ fixtures: files, typetest: typetestFiles });
+            const testFiles = {} as Files['test'];
+            testContents.forEach((contents, i) => {
+                const file = processFile(contents);
+                testFiles[test[i]] = {
+                    file,
+                    values:
+                        file.type === 'Success' ? getTestResults(file) : null,
+                };
+            });
+            setFiles({
+                fixtures: files,
+                typetest: typetestFiles,
+                test: testFiles,
+            });
 
             window.console = old;
         });
@@ -225,6 +371,7 @@ export const App = () => {
     const hashPin =
         hashParts.length === 3 && hashParts[2] === 'pin' && hashParts[1];
 
+    console.log(files.fixtures[hashName]);
     return (
         <div
             style={{
@@ -245,42 +392,113 @@ export const App = () => {
                 }}
             >
                 <Text>Fixtures</Text>
-                {Object.keys(files.fixtures)
-                    .sort()
-                    .map((fixture) => (
-                        <Link
-                            key={fixture}
-                            href={`#${fixture}`}
-                            block
-                            color={
-                                fixture === hashName ? 'primary' : 'secondary'
+                <details
+                    open={!!files.fixtures[hashName]}
+                    style={{ backgroundColor: 'transparent' }}
+                >
+                    {Object.keys(files.fixtures)
+                        .sort()
+                        .map((fixture) => (
+                            <Link
+                                key={fixture}
+                                href={`#${fixture}`}
+                                block
+                                color={
+                                    fixture === hashName
+                                        ? 'primary'
+                                        : 'secondary'
+                                }
+                            >
+                                <ShowStatus status={files.fixtures[fixture]} />
+                                {fixture}
+                            </Link>
+                        ))}
+                </details>
+                <Divider css={{ marginBottom: 24, marginTop: 24 }} />
+                <Text>Tests</Text>
+                <Button
+                    style={{ flexShrink: 0 }}
+                    size="xs"
+                    onClick={() => {
+                        const newFiles = { ...files.test };
+                        let num = 0;
+                        while (true) {
+                            const name = `test${num}.jd`;
+                            if (newFiles[name] == null) {
+                                newFiles[name] = {
+                                    file: emptyFileResult,
+                                    values: {
+                                        info: { terms: {}, exprs: {} },
+                                        testResults: [],
+                                        failed: false,
+                                        debugs: {},
+                                    },
+                                };
+                                break;
                             }
-                        >
-                            <ShowStatus status={files.fixtures[fixture]} />
-                            {fixture}
-                        </Link>
-                    ))}
+                            num++;
+                        }
+                        setFiles({ ...files, test: newFiles });
+                    }}
+                >
+                    New Test
+                </Button>
+                <details
+                    open={!!files.test[hashName?.slice('test:'.length) ?? '']}
+                    style={{ backgroundColor: 'transparent' }}
+                >
+                    {Object.keys(files.test)
+                        .sort()
+                        .map((name) => (
+                            <Link
+                                key={name}
+                                href={`#test:${name}`}
+                                block
+                                color={
+                                    name === hashName?.slice('text:'.length)
+                                        ? 'primary'
+                                        : 'secondary'
+                                }
+                            >
+                                <ShowTest
+                                    failed={
+                                        files.test[name].values?.failed ?? true
+                                    }
+                                />
+                                {name}
+                            </Link>
+                        ))}
+                </details>
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 <Text>Type Tests</Text>
-                {Object.keys(files.typetest)
-                    .sort()
-                    .map((name) => (
-                        <Link
-                            key={name}
-                            href={`#${name}`}
-                            block
-                            color={name === hashName ? 'primary' : 'secondary'}
-                        >
-                            <ShowTest
-                                statuses={files.typetest[name].statuses}
-                            />
-                            {name}
-                        </Link>
-                    ))}
+                <details
+                    open={!!files.typetest[hashName]}
+                    style={{ backgroundColor: 'transparent' }}
+                >
+                    {Object.keys(files.typetest)
+                        .sort()
+                        .map((name) => (
+                            <Link
+                                key={name}
+                                href={`#${name}`}
+                                block
+                                color={
+                                    name === hashName ? 'primary' : 'secondary'
+                                }
+                            >
+                                <ShowTest
+                                    failed={isFailedTypeTest(
+                                        files.typetest[name],
+                                    )}
+                                />
+                                {name}
+                            </Link>
+                        ))}
+                </details>
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 {files.fixtures[hashName]
                     ? files.fixtures[hashName].file.fixtures.map(
-                          (fixture: Fixture, i) => (
+                          (fixture: FixtureWithResult, i) => (
                               <div
                                   key={i}
                                   style={{
@@ -320,11 +538,11 @@ export const App = () => {
                 <FixtureFile
                     data={files.fixtures[hashName].file}
                     setData={(data) => {
+                        // STOPSHIP
                         const newFixtures = { ...files.fixtures };
                         newFixtures[hashName] = fileStatus(hashName, data);
                         setFiles({ ...files, fixtures: newFixtures });
                     }}
-                    files={files.fixtures}
                     name={hashName}
                     pin={hash.endsWith('/pin') ? +hash.split('/')[1] : null}
                 />
@@ -339,9 +557,31 @@ export const App = () => {
                         setFiles({ ...files, typetest: newTypes });
                     }}
                 />
+            ) : hashName?.startsWith('test:') &&
+              files.test[hashName.slice('test:'.length)] ? (
+                <TestView
+                    name={hashName}
+                    key={hashName}
+                    test={files.test[hashName.slice('test:'.length)]}
+                    onChange={(data) => {
+                        const newTest = { ...files.test };
+                        newTest[hashName.slice('test:'.length)] = data;
+                        setFiles({ ...files, test: newTest });
+                    }}
+                />
             ) : (
                 <div style={{ flex: 1 }}>Select a fixture</div>
             )}
         </div>
+    );
+};
+
+const isFailedTypeTest = (t: TypeWhat) => {
+    if (t.file.type === 'Error') {
+        return true;
+    }
+    return (
+        // t.file.info.some((top) => errorCount(top.verify) > 0) ||
+        t.values.some((t) => !t.success)
     );
 };

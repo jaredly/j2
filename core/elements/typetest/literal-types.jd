@@ -18,5 +18,4 @@
 @type:shouldNotMatch(:uint + 10) 9u
 
 // Decorators are ignored
-@type:shouldMatch(:@some#[:unresolved:]() 10)
-@other#[:unresolved:]() 10
+@type:shouldMatch(:@some#[:unresolved:]() 10) 10

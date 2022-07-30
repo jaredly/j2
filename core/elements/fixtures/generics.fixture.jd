@@ -16,18 +16,20 @@
 hello<int>(10)
 
 --[output:expected]--
-alias hello=hf6e269898d7d9d035467350db13cfa38ac824c31 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias hello#[h8ac1c50a7167405ba26492a9692cbe8a3c822db2] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 hello<int>(10)
 // int
+/* hello(10) */
 
 ==[decorate target]==
 --[input]--
 (@decorate() hello)<10>(10)
 
 --[output:expected]--
-alias decorate=h5a7fc9170718190f9388084b28fb49f6cb4602fc hello=hf6e269898d7d9d035467350db13cfa38ac824c31
-(@decorate() hello)<10>(10)
+alias decorate#[h5a7fc9170718190f9388084b28fb49f6cb4602fc] hello#[h8ac1c50a7167405ba26492a9692cbe8a3c822db2]
+(@decorate() hello)(10)
 // 10
+/* hello(10) */
 
 ==[multiple args]==
 --[input]--
@@ -35,29 +37,36 @@ multi<int, string>
 multi<int, string>(10, "hello")
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f multi=h088d53f5e3ddc6bf12a7e3054c4a52ebae49789d string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] multi#[h1b8792ce5c0db25af6ea54a9d997288898d2481b] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 multi<int, string>
 // (a: int, b: string) => int
+/* multi */
 multi<int, string>(10, "hello")
 // int
+/* multi(10, `hello`) */
 
 ==[bounded]==
 --[input]--
 bounded<10>(10)
+bounded<int>(10)
 
 --[output:expected]--
-alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d
-bounded<10>(10)
+alias bounded#[he55fda2da37928bde7c433cb9ce3567fb6fa78df]
+bounded(10)
 // 10
+/* bounded(10) */
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+bounded<int>(10)
+// int
+/* bounded(10) */
 
 ==[bound fail]==
 --[input:shouldFail]--
 bounded<string>("wat")
 
 --[output:expected]--
-alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias bounded#[he55fda2da37928bde7c433cb9ce3567fb6fa78df] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 bounded<@error:argWrongType(expected: :int) string>("wat")
-// Error, no type!
 
 ==[wrong args]==
 --[input:shouldFail]--
@@ -65,18 +74,17 @@ bounded<int, string>(20)
 takesInt<int>(10)
 
 --[output:expected]--
-alias bounded=h6b72cf1b6234557dd3846b2452db4a5f991da15d error:extraArg=haae12b260f3d25abb4b67dfe8895a3c6fb00eb59 error:notATypeVars=hf975b139e8972496b3acf4c415c5bc460d39dd08 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesInt=hd724811982a4afd89c79872d8c1d55048540a958
+alias bounded#[he55fda2da37928bde7c433cb9ce3567fb6fa78df] error:extraArg#[haae12b260f3d25abb4b67dfe8895a3c6fb00eb59] error:wrongNumberOfTypeArgs#[h861c5babf48bbd7fc0325178615769bdb2837d5a] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 (@error:wrongNumberOfTypeArgs() bounded<int, @error:extraArg() string>)(20)
-// int
+alias error:notATypeVars#[hf975b139e8972496b3acf4c415c5bc460d39dd08] takesInt#[hd724811982a4afd89c79872d8c1d55048540a958]
 (@error:notATypeVars() takesInt<int>)(10)
-// int
 
 ==[arg default]==
 --[input:shouldFail]--
 @test:type(:Array<int, string, int>) 10
 
 --[output:expected]--
-alias Array=h8de4ecae93abe8de85536031f6f8a05742a6ee53 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f error:extraArg=haae12b260f3d25abb4b67dfe8895a3c6fb00eb59 error:wrongNumberOfTypeArgs=h861c5babf48bbd7fc0325178615769bdb2837d5a int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 test:type=he071eaec952a7917f20d1828e42268ca3a10c513 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+alias Array#[h48679c8034e11161fefaf39e737a9d6064579568] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] error:extraArg#[haae12b260f3d25abb4b67dfe8895a3c6fb00eb59] error:wrongNumberOfTypeArgs#[h861c5babf48bbd7fc0325178615769bdb2837d5a] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] test:type#[he071eaec952a7917f20d1828e42268ca3a10c513] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
 @test:type(
     :@error:wrongNumberOfTypeArgs() Array<
         int,
@@ -84,7 +92,6 @@ alias Array=h8de4ecae93abe8de85536031f6f8a05742a6ee53 error:argWrongType=hfcfe64
         @error:extraArg() int,
     >,
 ) 10
-// 10
 
 ==[taking a generic argument]==
 --[input:shouldFail]--
@@ -92,11 +99,12 @@ takesArray(10)
 takesArray(anArray)
 
 --[output:expected]--
-alias anArray=h37011200e8faacc0a381c6d95d6f90d45e6cbdf3 Array=h8de4ecae93abe8de85536031f6f8a05742a6ee53 error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4 takesArray=hf3cd697d8478f4e33cc628cbd7e9b42d4d13aace
+alias Array#[h48679c8034e11161fefaf39e737a9d6064579568] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takesArray#[hdde0b2a4033b87069eb02c77f89d8b94f7259f81]
 takesArray(@error:argWrongType(expected: :Array<string, 10u>) 10)
-// int
+alias anArray#[hade77c046427a432f0ffce3a9f05e5d0f287eeee]
 takesArray(anArray)
 // int
+/* takesArray(anArray) */
 
 ==[chained]==
 --[input]--
@@ -104,8 +112,9 @@ type x=<A: int><B: int>int
 type y=x<int><10>
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f x=h3e41c83bbb51caebc377dccc7d3f00afc719d763
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type x = <A#[0]: int><B#[1]: int>int
+alias x#[h4030489d339f026aa8858c34765267f75dfef6c4]
 type y = x<int><10>
 
 ==[parnes]==
@@ -114,8 +123,9 @@ type Array = <Element, Length: uint>int
 type x = (@test:type() Array)<int, 10u>
 
 --[output:expected]--
-alias Array=h7fc6ad7cebab7784c65cdf4ea15a11722e5ea809 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f test:type=he071eaec952a7917f20d1828e42268ca3a10c513 uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
 type Array = <Element#[0], Length#[1]: uint>int
+alias Array#[h577eb136f0b535623a6285f1ede380b9c4f1add4] test:type#[he071eaec952a7917f20d1828e42268ca3a10c513]
 type x = (@test:type() Array)<int, 10u>
 
 ==[variance?]==
@@ -141,19 +151,23 @@ type TwoTen = <T: 10>(v: (m: T) => string) => string
 // ## And then I think it would reverse again here?
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f One=h782f3ce2b7c72249be64f4b9b8d4f0360597e092 OneInt=h1a17e948f13bdde3d6bcc891d4868a8cc1424ab8 OneTen=h8f5793e9567e2ebaf1ac87095dd9b703e322b4b7 string=hd978df838905e7e1bd7bb33530ae12436e3756f4 Two=h7e3fe5c70f6f8ff6d5e481b2cf6ac0518e0eb98e
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type One = (v: int) => int
 type Two = (v: 10) => int
+alias One#[h97b45df3cb872742a19659c4162f58fa0ca4f56a] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 // Should Three accept Two? NO
 // Should Four accept One? YES
 type Three = (l: One) => string
+alias Two#[hbffca9db7c25ed458611638f6abddc3444468c2b]
 // might pass any int to it
 type Four = (l: Two) => string
 // will only pass 10 to it
 // ## OK now to the actual question ##
 type OneInt = <T#[0]: int>(v: T#[0]) => string
 type OneTen = <T#[0]: 10>(v: T#[0]) => string
+alias OneInt#[h61ea0764cb509d7342d351bad1e4c571deaf41d5]
 type TOneInt = (v: OneInt) => string
+alias OneTen#[h5161012229cdcf7badd3fdfc996bb99638767974]
 type TOneTen = (v: OneTen) => string
 // ## Does TOneInt accept TOneTen? NO
 // ## Does TOneTen accept TOneInt? YES
@@ -180,7 +194,7 @@ type TInt = (v: Int) => string
 type TTen = (v: Ten) => string
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f Int=h9c73bde69a9ef5ef73fece595b08bb30890e97fa string=hd978df838905e7e1bd7bb33530ae12436e3756f4 Ten=hd5194c1cf3ebd11b04a83687209da35927a6b535
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 type IntA = (x: int) => string
 type TenA = (x: 10) => string
 // # First we have basic variance. IntA can be passed to something expected a TenA, but not reversed.
@@ -189,10 +203,12 @@ type TenR = (x: string) => 10
 // # On the other hand, something producing an int can't be given to someone expecting something that produces a 10.
 type Int = <T#[0]: int>(x: T#[0]) => T#[0]
 type Ten = <T#[0]: 10>(x: T#[0]) => T#[0]
+alias Int#[h3de445e42abf3558018edf97a93680650ec16354]
 // # BUT, on the final hand, once you lock it down to something concrete, the return value isn't "maybe a subset of T", it's precisely T. Ok so I don't think we have to get fancy.
 //
 // ### OK, so Something T
 type TInt = (v: Int) => string
+alias Ten#[hd7b522d36f31118c9c33c6ecce08bebf45e2c009]
 type TTen = (v: Ten) => string
 
 ==[default arg type]==
@@ -202,8 +218,9 @@ type Marray = DArray<int>
 type TArray = DArray<int, 10u>
 
 --[output:expected]--
-alias DArray=h2e071faf3d824e5b58693ca6e0adf4c58e0c5f0e int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f uint=h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
 type DArray = <Element#[0], Length#[1]: uint = uint>int
+alias DArray#[hc727516769ee309abfec75e4ce4b47645a8088d4]
 type Marray = DArray<int>
 type TArray = DArray<int, 10u>
 
@@ -212,24 +229,27 @@ type TArray = DArray<int, 10u>
 boundedDefault<int>
 
 --[output:expected]--
-alias boundedDefault=hf829343d5e24e95742cf66bed885a35f66c19a43 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias boundedDefault#[hb7d19b781a23011e7dba51405ac25b4223871137] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 boundedDefault<int>
 // (a: int, b: 10u) => int
+/* boundedDefault */
 
 ==[generic arg works]==
 --[input]--
 takesArray(anArray)
 
 --[output:expected]--
-alias anArray=h37011200e8faacc0a381c6d95d6f90d45e6cbdf3 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takesArray=hf3cd697d8478f4e33cc628cbd7e9b42d4d13aace
+alias anArray#[hade77c046427a432f0ffce3a9f05e5d0f287eeee] takesArray#[hdde0b2a4033b87069eb02c77f89d8b94f7259f81]
 takesArray(anArray)
 // int
+/* takesArray(anArray) */
 
-==[New fixture]==
+==[iadd apply]==
 --[input]--
-iadd<10, 20>(10, 20)
+iadd(10, 20)
 
 --[output:expected]--
-alias iadd=h70384774f43136b4971f36930f8dd583892ac08d
-iadd<10, 20>(10, 20)
-// 10 + 20
+alias iadd#[h1ea72973ffa12b8ed2161bbd86a4698840d5be04]
+iadd(10, 20)
+// 30
+/* iadd(10, 20) */

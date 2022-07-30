@@ -3,13 +3,23 @@
 --[input]--
 true
 false
+1 == 1
+1 == 2
 
 --[output:expected]--
-alias bool=h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150
 true
 // bool
+/* true */
 false
 // bool
+/* false */
+alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
+1 == 1
+// bool
+/* 1 == 1 */
+1 == 2
+// bool
+/* 1 == 2 */
 
 ==[numbers]==
 --[input]--
@@ -19,8 +29,10 @@ false
 --[output:expected]--
 123
 // 123
+/* 123 */
 1.23
 // 1.23
+/* 1.23 */
 
 ==[strings]==
 --[input]--
@@ -29,30 +41,31 @@ false
 --[output:expected]--
 "hello"
 // "hello"
+/* `hello` */
 
 ==[basic template]==
 --[input]--
 "hello ${toString(123)}"
 
 --[output:expected]--
-alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4 toString=h0ac4106142a4522c2471a4bc4c3cc92ae5c381f8
+alias toString#[h99b01457a189d1392ca641b22a79c97b3eda324c]
 "hello ${toString(123)}"
 // string
+/* `hello ${toString(123)}` */
 
 ==[right next to each other]==
 --[input]--
 "One${"1"}${"2"} and ${"3"}"
 
 --[output:expected]--
-alias string=hd978df838905e7e1bd7bb33530ae12436e3756f4
 "One${"1"}${"2"} and ${"3"}"
 // string
+/* `One${`1`}${`2`} and ${`3`}` */
 
 ==[expression wrong type]==
 --[input:shouldFail]--
 "${12}"
 
 --[output:expected]--
-alias error:notAString=h78fb9682caf6cb8dc34febba83e591c06884dc73 string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias error:notAString#[h78fb9682caf6cb8dc34febba83e591c06884dc73]
 "${@error:notAString() 12}"
-// string

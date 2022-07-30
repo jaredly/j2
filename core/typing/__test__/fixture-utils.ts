@@ -1,26 +1,26 @@
 import generate from '@babel/generator';
+import * as b from '@babel/types';
 import * as fs from 'fs';
+import { refmt } from '../../../devui/refmt';
 import {
     addBuiltin,
     addBuiltinDecorator,
     addBuiltinType,
+    builtinContext,
     FullContext,
-    hashTypes,
-    noloc,
+    locClearVisitor,
 } from '../../ctx';
+import { noloc } from '../../consts';
 import { fileToTast } from '../../elements/base';
 import { TVar } from '../../elements/type-vbls';
+import { processFile } from '../../full/full';
 import { parseFile, parseType } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
-import { iCtx } from '../../ir/ir';
-import { jCtx } from '../../ir/to-js';
 import { printToString } from '../../printer/pp';
-import { newPPCtx, pegPrinter } from '../../printer/to-pp';
-import { transformFile, transformType, Visitor } from '../../transform-tast';
+import { newPPCtx } from '../../printer/to-pp';
+import { transformFile } from '../../transform-tast';
 import { File } from '../../typed-ast';
-import { analyze, Verify, verify } from '../analyze';
-import { getType } from '../getType';
-import { printCtx } from '../to-ast';
+import { errorCount } from '../analyze';
 
 export type FixtureFile = {
     builtins: Builtin[];
@@ -34,16 +34,6 @@ export type Fixture = {
     output_expected: string;
     output_failed: string;
     shouldFail: boolean;
-};
-
-export const locClearVisitor: Visitor<null> = {
-    Loc: () => noloc,
-    // RefKind(node) {
-    //     if (node.type === 'Global') {
-    //         return { ...node, id: idToString(node.id) as any } as RefKind;
-    //     }
-    //     return null;
-    // },
 };
 
 export const clearLocs = (ast: File) => {
@@ -95,7 +85,7 @@ export const aliasesToString = (aliases: { [key: string]: string }) =>
           Object.entries(aliases)
               .sort((a, b) => a[0].localeCompare(b[0]))
               .map(([key, value]) => {
-                  return `${key}=${value}`;
+                  return `${key}#[${value}]`;
               })
               .join(' ') +
           '\n'
@@ -105,9 +95,10 @@ export const aliasesFromString = (raw: string) => {
     return raw
         .slice('alias '.length)
         .split(' ')
+        .filter((s) => s.trim())
         .reduce((acc, cur) => {
-            const [key, value] = cur.split('=');
-            acc[key] = value;
+            const [key, value] = cur.split('#');
+            acc[key] = value.slice(1, -1);
             return acc;
         }, {} as { [key: string]: string });
 };
@@ -120,9 +111,70 @@ export const splitAliases = (text: string): [string, string] => {
     return ['', text];
 };
 
+export const fmtify = (text: string, builtins: Builtin[]) => {
+    if (!text.trim()) {
+        return text.trim();
+    }
+    const [aliasesRaw, rest] = splitAliases(text);
+    const aliases = aliasesFromString(aliasesRaw);
+
+    if (1 == 1) {
+        return aliasesToString(aliases) + rest;
+    }
+
+    let ctx = builtinContext.clone();
+    ctx = ctx.withAliases(aliases) as FullContext;
+    loadBuiltins(builtins, ctx);
+    const result = processFile(rest, ctx);
+
+    if (result.type === 'Success') {
+        const pctx = result.pctx;
+        const pp = newPPCtx(false);
+        result.info.forEach((info) => {
+            const errors = errorCount(info.verify);
+            if (!errors) {
+                info.contents.irtops?.forEach((ir) => {
+                    if (ir.type) {
+                        const ast = pctx.ToAst.Type(ir.type, pctx);
+                        const cm = printToString(pp.ToPP.Type(ast, pp), 200);
+                        result.comments.push([
+                            {
+                                ...info.contents.top.loc,
+                                start: info.contents.top.loc.end,
+                            },
+                            '// ' + cm,
+                        ]);
+                    }
+
+                    let js: b.Node = ir.js;
+                    if (
+                        ir.js.body.length === 1 &&
+                        ir.js.body[0].type === 'ReturnStatement'
+                    ) {
+                        js = ir.js.body[0].argument!;
+                    }
+                    const jsraw = generate(js).code;
+                    result.comments.push([
+                        {
+                            ...info.contents.top.loc,
+                            start: info.contents.top.loc.end,
+                        },
+                        '/* ' + jsraw + ' */',
+                    ]);
+                });
+            }
+        });
+    }
+
+    const res = refmt(result);
+    // console.log(res);
+    return res;
+};
+
 export const serializeFixtureFile = (file: FixtureFile) => {
     const fixmap: { [key: string]: string } = {};
     file.fixtures.forEach((fixture) => {
+        // console.log('um', fixture.title, fixture.builtins);
         while (fixmap[fixture.title]) {
             fixture.title += '_';
         }
@@ -191,7 +243,6 @@ export const loadFixtures = (fixtureFile: string) => {
 export const parseRaw = (
     raw: string,
     ctx: FullContext,
-    analyze = true,
 ): [File, FullContext] => {
     if (raw.startsWith('alias ')) {
         const idx = raw.indexOf('\n');
@@ -201,121 +252,9 @@ export const parseRaw = (
         raw = raw.slice(idx + 1);
     }
     const ast = parseFile(raw);
-    const [file, tctx] = fileToTast(fixComments(ast), ctx, analyze);
+    const [file, tctx] = fileToTast(fixComments(ast), ctx);
     return [file, tctx as FullContext];
 };
-
-export type FixtureResult = {
-    ctx: FullContext;
-    ctx2: FullContext;
-    input: string;
-    checked: File;
-    verify: Verify;
-    newOutput: string;
-    outputTast: File;
-    outputVerify: Verify;
-    aliases: { [key: string]: string };
-};
-
-export function runFixture(
-    { input, output_expected, output_failed, builtins }: Fixture,
-    baseCtx: FullContext,
-): FixtureResult {
-    let ctx = baseCtx.clone();
-    loadBuiltins(builtins, ctx);
-
-    let checked: File;
-    try {
-        [checked, ctx] = parseRaw(input, ctx);
-    } catch (err) {
-        console.log('Failed to parse input:', input);
-        console.log(err);
-        throw err;
-    }
-
-    const actx = printCtx(ctx);
-
-    // const checked = analyze(tast, ctx);
-    checked.toplevels.forEach((top) => {
-        if (top.type === 'ToplevelExpression') {
-            const t = getType(top.expr, ctx);
-            if (!t) {
-                checked.comments.push([
-                    {
-                        ...top.loc,
-                        start: top.loc.end,
-                    },
-                    '// Error, no type!',
-                ]);
-                return;
-            }
-            const ictx = iCtx();
-            const ir = ictx.ToIR[top.expr.type](top.expr as any, ictx);
-            const jctx = jCtx();
-            const js = jctx.ToJS.IExpression(ir, jctx);
-            const jsraw = generate(js).code;
-            const pp = newPPCtx(false);
-            const ast = actx.ToAst[t.type](t as any, actx);
-            const cm = printToString(pp.ToPP[ast.type](ast as any, pp), 200);
-            checked.comments.push([
-                {
-                    ...top.loc,
-                    start: top.loc.end,
-                },
-                '// ' + cm, // + ' ' + jsraw + ' */',
-            ]);
-            // TODO: surface the IDs of things in the UI.
-            // eh, and maybe as a suffix on the whole thing?
-            // That way we still know if the hashes change (which is maybe useful?)
-            // but we can easily split out those changing from other things.
-
-            // } else if (top.type === 'TypeAlias') {
-            //     const hash = hashTypes(
-            //         top.elements.map((t) =>
-            //             transformType(t.type, locClearVisitor, null),
-            //         ),
-            //     );
-            //     // checked.comments.push([
-            //     //     {
-            //     //         ...top.loc,
-            //     //         start: top.loc.end,
-            //     //     },
-            //     //     '// h' + hash,
-            //     // ]);
-        }
-    });
-
-    const newOutput = printToString(
-        pegPrinter(actx.ToAst.File(checked, actx), newPPCtx(false)),
-        100,
-    );
-
-    let outputTast;
-
-    let output = output_expected ? output_expected : output_failed;
-
-    let ctx2 = baseCtx.clone();
-    loadBuiltins(builtins, ctx2);
-    try {
-        [outputTast, ctx2] = parseRaw(output, ctx2, false);
-    } catch (err) {
-        console.log(output);
-        console.log(err);
-        throw err;
-    }
-
-    return {
-        ctx,
-        ctx2,
-        input,
-        checked,
-        verify: verify(checked, ctx),
-        newOutput: aliasesToString(actx.backAliases) + newOutput,
-        outputTast,
-        outputVerify: verify(outputTast, ctx2),
-        aliases: actx.backAliases,
-    };
-}
 
 export function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
     builtins.forEach((builtin) => {
@@ -323,7 +262,7 @@ export function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
             case 'value':
                 try {
                     const ast = parseType(builtin.type);
-                    const tast = ctx.ToTast[ast.type](ast as any, ctx);
+                    const tast = ctx.ToTast.Type(ast, ctx);
                     addBuiltin(ctx, builtin.name, tast);
                 } catch (err) {
                     console.error(err);
@@ -333,7 +272,7 @@ export function loadBuiltins(builtins: Builtin[], ctx: FullContext) {
                 let args: TVar[] = [];
                 if (builtin.args) {
                     const ast = parseType(builtin.args + 'ok');
-                    const tast = ctx.ToTast[ast.type](ast as any, ctx);
+                    const tast = ctx.ToTast.Type(ast, ctx);
                     if (tast.type === 'TVars') {
                         args = tast.args.map((arg) => ({ ...arg, loc: noloc }));
                     }

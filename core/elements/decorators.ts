@@ -1,5 +1,5 @@
 import { Ctx } from '..';
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 import * as p from '../grammar/base.parser';
 import { Ctx as PCtx } from '../printer/to-pp';
 import * as pp from '../printer/pp';
@@ -131,13 +131,24 @@ export const ToAst = {
         { type, decorators, expr, loc }: t.DecoratedExpression,
         ctx: ACtx,
     ): p.DecoratedExpression_inner {
-        const inner = ctx.ToAst.Expression(expr, ctx);
+        let inner = ctx.ToAst.Expression(expr, ctx);
         if (inner.type === 'DecoratedExpression') {
             return {
                 ...inner,
                 decorators: decorators
                     .map((d) => ctx.ToAst[d.type](d, ctx))
                     .concat(inner.decorators),
+            };
+        }
+        if (
+            inner.type === 'BinOp' ||
+            inner.type === 'WithUnary' ||
+            inner.type === 'Lambda'
+        ) {
+            inner = {
+                type: 'ParenedExpression',
+                items: { type: 'CommaExpr', items: [inner], loc: inner.loc },
+                loc: inner.loc,
             };
         }
         return {

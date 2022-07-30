@@ -1,8 +1,12 @@
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] type:shouldMatch#[h192c0e4997957120f145e35f197b06a370cc3115]
+
 @type:shouldMatch(:() => int) () => int
 
 @type:shouldMatch(:<A#[1]>(a: A#[1]) => A#[1]) <B#[0]>(a: B#[0]) => B#[0]
 
 @type:shouldMatch(:(a: 10) => int) (a: int) => int
+
+alias type:shouldNotMatch#[h18cdade60873daf82b61c1a4804e2399e4d6fc4e]
 
 @type:shouldNotMatch(:(a: int) => int) (a: 10) => int
 
@@ -10,8 +14,10 @@
 
 @type:shouldMatch(:<A#[1]: int>() => A#[1]) <A#[0]: int>() => A#[0]
 
+alias float#[h1c9cc9450fe2e869a48abaa5e4a85271e1625474]
+
 @type:shouldNotMatch(:<A#[1]: int, B#[1]: float>() => B#[1]) <A#[0]: int, B#[1]: float>() => A#[0]
-@type:shouldMatch(:<A#[1]: int, B#[1]: float>() => B#[1])
-<A#[0]: int, B#[1]: float>() => A#[1]
+
+@type:shouldMatch(:<A#[1]: int, B#[1]: float>() => B#[1]) <A#[0]: int, B#[1]: float>() => B#[1]
 
 //@type:shouldMatch(:<A#[1]: 10>(a: A#[1]) => A#[1]) <B#[0]: int>(a: B#[0]) => B#[0]

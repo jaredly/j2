@@ -1,13 +1,13 @@
 import { readdirSync, writeFileSync } from 'fs';
 import { builtinContext } from '../core/ctx';
+import { processFile } from '../core/full/full';
 import {
-    clearLocs,
     loadBuiltins,
     loadFixtures,
-    runFixture,
     serializeFixtureFile,
     splitAliases,
 } from '../core/typing/__test__/fixture-utils';
+import { withFmt } from '../devui/refmt';
 
 const base = './core/elements/';
 readdirSync(base)
@@ -24,18 +24,20 @@ readdirSync(base)
 
         file.fixtures.forEach((fixture, i) => {
             let { title, output_expected } = fixture;
+            const withb = baseCtx.clone();
+            loadBuiltins(fixture.builtins, withb);
 
-            let result = runFixture(fixture, baseCtx);
+            let result = withFmt(processFile(fixture.input, withb));
 
-            if (output_expected === result.newOutput) {
+            if (output_expected === result.text) {
                 return;
             }
 
             const current = splitAliases(output_expected);
-            const expected = splitAliases(result.newOutput);
+            const expected = splitAliases(result.text);
 
             if (current[1] === expected[1]) {
-                file.fixtures[i].output_expected = result.newOutput;
+                file.fixtures[i].output_expected = result.text;
                 updates++;
                 return;
             }

@@ -3,28 +3,29 @@ import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as ICtx } from '../ir/ir';
-import {
-    analyze,
-    analyzeTop,
-    analyzeTypeTop,
-    Ctx as ACtx,
-} from '../typing/analyze';
+import { analyzeTop, analyzeTypeTop, Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { Ctx, Toplevel, TopTypeKind } from '../typing/to-tast';
+import { Ctx, ToplevelConfig, TopTypeKind } from '../typing/to-tast';
 
 export const grammar = `
 _lineEnd = '\n' / _EOF
 
 _EOF = !.
 
-Toplevel = TypeAlias / Expression
-TypeToplevel = TypeAlias / Type
+Toplevel = Aliases / TypeAlias / ToplevelLet / Expression
+TypeToplevel = Aliases / TypeAlias / Type
 
-Expression = DecoratedExpression
+Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
+AliasItem = name:$AliasName hash:$HashRef
+AliasName = $NamespacedIdText / $binop
 
-Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $BuiltinHash / $UnresolvedHash)?
+Expression = Lambda / BinOp
 
-Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum / Record
+Identifier = text:$IdText hash:IdHash?
+
+IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
+
+Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -33,54 +34,88 @@ AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 `;
 
-export const typeToplevelT = (t: t.TypeAlias, ctx: ACtx): Toplevel => {
-    return {
-        type: 'Type',
-        items: t.elements.map((t) => {
-            const kind = determineKindT(t.type, ctx);
-            if (t.type.type === 'TVars') {
-                const args = t.type.args;
-                return { name: t.name, args, kind };
-            }
-            return { name: t.name, args: [], kind };
-        }),
-    };
+export const typeToplevelT = (
+    t: t.Toplevel | t.TypeToplevel,
+    ctx: ACtx,
+): ToplevelConfig | null => {
+    if (t.type === 'TypeAlias') {
+        return {
+            type: 'Type',
+            items: t.elements.map((t) => {
+                const kind = determineKindT(t.type, ctx);
+                if (t.type.type === 'TVars') {
+                    const args = t.type.args;
+                    return { name: t.name, args, kind };
+                }
+                return { name: t.name, args: [], kind };
+            }),
+            hash: t.hash,
+        };
+    }
+    if (t.type === 'ToplevelLet') {
+        return {
+            type: 'Expr',
+            hash: t.hash,
+            items: t.elements.map((t) => ({
+                name: t.name,
+                type: ctx.getType(t.expr) ?? { type: 'TBlank', loc: t.loc },
+            })),
+        };
+    }
+    return null;
 };
 
-export const typeToplevel = (t: p.TypeAlias, ctx: Ctx): Toplevel => {
-    return {
-        type: 'Type',
-        items: t.items.map((t) => {
-            const kind = determineKind(t.typ, ctx);
-            if (t.typ.type === 'TVars') {
-                const args = t.typ.args.items.map((arg) =>
-                    ctx.ToTast[arg.type](arg, ctx),
-                );
-                return { name: t.name, args, kind };
-            }
-            return { name: t.name, args: [], kind };
-        }),
-    };
+export const typeToplevel = (
+    t: p.Toplevel | p.TypeToplevel,
+    ctx: Ctx,
+): ToplevelConfig | null => {
+    if (t.type === 'TypeAlias') {
+        return {
+            type: 'Type',
+            items: t.items.map((t) => {
+                const kind = determineKind(t.typ, ctx);
+                if (t.typ.type === 'TVars') {
+                    const args = t.typ.args.items.map((arg) =>
+                        ctx.ToTast[arg.type](arg, ctx),
+                    );
+                    return { name: t.name, args, kind };
+                }
+                return { name: t.name, args: [], kind };
+            }),
+        };
+    } else if (t.type === 'ToplevelLet') {
+        return {
+            type: 'Expr',
+            items: t.items.map((t) => {
+                return {
+                    name: t.name,
+                    type: t.typ
+                        ? ctx.ToTast.Type(t.typ, ctx)
+                        : { type: 'TBlank', loc: t.loc },
+                };
+            }),
+        };
+    }
+    return null;
 };
 
 export const typeFileToTast = (
     { toplevels, loc, comments }: p.TypeFile,
     ctx: Ctx,
-    analyze = true,
 ): [t.TypeFile, Ctx] => {
     let parsed = toplevels.map((t) => {
         ctx.resetSym();
-        let config: null | Toplevel = null;
-        if (t.type === 'TypeAlias') {
-            config = typeToplevel(t, ctx);
-            ctx.resetSym();
-        }
+        let config = typeToplevel(t, ctx);
+        ctx.resetSym();
         ctx = ctx.toplevelConfig(config);
         let top = ctx.ToTast.TypeToplevel(t, ctx);
+        top = analyzeTypeTop(top, ctx);
         if (top.type === 'TypeAlias') {
-            ctx = ctx.withTypes(top.elements);
+            const res = ctx.withTypes(top.elements);
+            ctx = res.ctx;
         }
-        return analyze ? analyzeTypeTop(top, ctx) : top;
+        // return analyze ? analyzeTypeTop(top, ctx) : top;
+        return top;
     });
     return [
         {
@@ -96,21 +131,30 @@ export const typeFileToTast = (
 export const fileToTast = (
     { toplevels, loc, comments }: p.File,
     ctx: Ctx,
-    analyze = true,
 ): [t.File, Ctx] => {
     let parsed = toplevels.map((t) => {
         ctx.resetSym();
-        let config: null | Toplevel = null;
-        if (t.type === 'TypeAlias') {
-            config = typeToplevel(t, ctx);
-            ctx.resetSym();
-        }
+        let config = typeToplevel(t, ctx);
+        ctx.resetSym();
         ctx = ctx.toplevelConfig(config);
         let top = ctx.ToTast.Toplevel(t, ctx);
-        if (top.type === 'TypeAlias') {
-            ctx = ctx.withTypes(top.elements);
+        top = transformToplevel(top, removeErrorDecorators(ctx), null);
+        if (config?.type === 'Type' && top.type === 'TypeAlias') {
+            config.items.forEach((item, i) => {
+                item.actual = (top as t.TypeAlias).elements[i].type;
+            });
         }
-        return analyze ? analyzeTop(top, ctx) : top;
+        top = analyzeTop(top, ctx);
+        if (top.type === 'TypeAlias') {
+            const res = ctx.withTypes(top.elements);
+            ctx = res.ctx;
+        } else if (top.type === 'ToplevelLet') {
+            // ok
+            const res = ctx.withValues(top.elements);
+            ctx = res.ctx;
+            top.hash = res.hash;
+        }
+        return top;
     });
     return [
         {
@@ -123,10 +167,81 @@ export const fileToTast = (
     ];
 };
 
+export const removeErrorDecorators = (ctx: Ctx): Visitor<null> => {
+    const errorDecs = ctx.errorDecorators();
+    function removeErrorDecorators(decorators: t.Decorator[]) {
+        return decorators.filter(
+            (t) =>
+                !(
+                    t.id.ref.type === 'Global' &&
+                    errorDecs.some((i) =>
+                        idsEqual(i, (t.id.ref as t.GlobalRef).id),
+                    )
+                ),
+        );
+    }
+
+    return {
+        EnumCase(node, ctx) {
+            const left = removeErrorDecorators(node.decorators);
+            return left.length < node.decorators.length
+                ? { ...node, decorators: left }
+                : null;
+        },
+        ExpressionPost_DecoratedExpression(node, ctx) {
+            if (!node.decorators.length) {
+                return node.expr;
+            }
+            return null;
+        },
+        DecoratedExpression(node, ctx) {
+            const left = removeErrorDecorators(node.decorators);
+            return left.length < node.decorators.length
+                ? { ...node, decorators: left }
+                : null;
+        },
+        TypePost_TDecorated(node, ctx) {
+            if (!node.decorators.length) {
+                return node.inner;
+            }
+            return null;
+        },
+        Pattern_PDecorated(node, ctx) {
+            const left = removeErrorDecorators(node.decorators);
+            return left.length < node.decorators.length
+                ? left.length
+                    ? { ...node, decorators: left }
+                    : node.inner
+                : null;
+        },
+        TDecorated(node, ctx) {
+            const left = removeErrorDecorators(node.decorators);
+            return left.length < node.decorators.length
+                ? { ...node, decorators: left }
+                : null;
+        },
+    };
+};
+
 export const ToTast = {
+    Aliases(top: p.Aliases, ctx: Ctx): t.ToplevelAliases {
+        return {
+            type: 'ToplevelAliases',
+            aliases: top.items.map((t) => ({
+                name: t.name,
+                hash: t.hash.slice(2, -1),
+                loc: t.loc,
+            })),
+            loc: top.loc,
+        };
+    },
     Toplevel(top: p.Toplevel, ctx: Ctx): t.Toplevel {
         if (top.type === 'TypeAlias') {
             return ctx.ToTast.TypeAlias(top, ctx);
+        } else if (top.type === 'ToplevelLet') {
+            return ctx.ToTast.ToplevelLet(top, ctx);
+        } else if (top.type === 'Aliases') {
+            return ctx.ToTast.Aliases(top, ctx);
         } else {
             return {
                 type: 'ToplevelExpression',
@@ -135,9 +250,23 @@ export const ToTast = {
             };
         }
     },
-    TypeToplevel(top: p.TypeAlias | p.Type, ctx: Ctx): t.Type | t.TypeAlias {
+    ToplevelLet(top: p.ToplevelLet, ctx: Ctx): t.ToplevelLet {
+        return {
+            type: 'ToplevelLet',
+            elements: top.items.map((item) => ({
+                expr: ctx.ToTast.Expression(item.expr, ctx),
+                name: item.name,
+                loc: item.loc,
+                typ: item.typ ? ctx.ToTast.Type(item.typ, ctx) : null,
+            })),
+            loc: top.loc,
+        };
+    },
+    TypeToplevel(top: p.TypeToplevel, ctx: Ctx): t.TypeToplevel {
         if (top.type === 'TypeAlias') {
             return ctx.ToTast.TypeAlias(top, ctx);
+        } else if (top.type === 'Aliases') {
+            return ctx.ToTast.Aliases(top, ctx);
         } else {
             return ctx.ToTast.Type(top, ctx);
         }
@@ -201,14 +330,27 @@ export const ToAst = {
         return {
             type,
             toplevels: toplevels.map((t) => {
-                let inner = ctx;
-                if (t.type === 'TypeAlias') {
-                    inner = ctx.withToplevel(typeToplevelT(t, ctx.actx));
-                }
+                let inner = ctx.withToplevel(typeToplevelT(t, ctx.actx));
                 return inner.ToAst.Toplevel(t, inner);
             }),
             loc,
             comments,
+        };
+    },
+
+    ToplevelAliases(
+        { aliases, loc }: t.ToplevelAliases,
+        ctx: TACtx,
+    ): p.Aliases {
+        return {
+            type: 'Aliases',
+            items: aliases.map((a) => ({
+                type: 'AliasItem',
+                name: a.name,
+                hash: `#[${a.hash}]`,
+                loc: a.loc,
+            })),
+            loc,
         };
     },
 
@@ -265,8 +407,45 @@ export const ToPP = {
         if (top.type === 'TypeAlias') {
             return ctx.ToPP.TypeAlias(top, ctx);
         }
+        if (top.type === 'ToplevelLet') {
+            return pp.items(
+                top.items.map((item, i) =>
+                    pp.items(
+                        [
+                            pp.text(i > 0 ? 'and ' : 'let ', item.loc),
+                            pp.text(item.name, item.loc),
+                            item.typ != null
+                                ? pp.items(
+                                      [
+                                          pp.text(': ', item.loc),
+                                          ctx.ToPP.Type(item.typ, ctx),
+                                      ],
+                                      item.loc,
+                                  )
+                                : null,
+                            pp.text(' = ', item.loc),
+                            ctx.ToPP.Expression(item.expr, ctx),
+                        ],
+                        item.loc,
+                    ),
+                ),
+                top.loc,
+                'always',
+            );
+        }
+        if (top.type === 'Aliases') {
+            return ctx.ToPP.Aliases(top, ctx);
+        }
         return ctx.ToPP.Expression(top, ctx);
     },
+    Aliases(top: p.Aliases, ctx: PCtx): pp.PP {
+        return pp.text(
+            'alias ' +
+                top.items.map((item) => `${item.name}${item.hash}`).join(' '),
+            top.loc,
+        );
+    },
+    // ToplevelLet()
     TypeFile: (file: p.TypeFile, ctx: PCtx): pp.PP => {
         return pp.items(
             file.toplevels.map((t) =>
@@ -286,6 +465,21 @@ export const ToPP = {
         );
     },
     Identifier(identifier: p.Identifier, ctx: PCtx): pp.PP {
+        if (!identifier.text.match(/^[a-zA-Z_0-0]/)) {
+            return pp.items(
+                [
+                    pp.text('(', identifier.loc),
+                    pp.atom(
+                        // ctx.hideIds
+                        //     ? identifier.text :
+                        identifier.text + (identifier.hash ?? ''),
+                        identifier.loc,
+                    ),
+                    pp.text(')', identifier.loc),
+                ],
+                identifier.loc,
+            );
+        }
         return pp.atom(
             // ctx.hideIds
             //     ? identifier.text :
@@ -300,6 +494,7 @@ function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
         case 'Number':
         case 'String':
         case 'TOps':
+        case 'TBlank':
             return 'builtin';
         case 'TRecord':
             return 'record';
@@ -334,9 +529,11 @@ function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
 
 function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
     switch (t.type) {
+        case 'TVbl':
         case 'Number':
         case 'String':
         case 'TOps':
+        case 'TBlank':
             return 'builtin';
         case 'TDecorated':
         case 'TVars':
@@ -370,62 +567,70 @@ function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
     }
 }
 
+export const findBuiltinName = (id: t.Id, ctx: ACtx): string | null => {
+    const got = ctx.valueForId(id);
+    if (got && got.type === 'builtin') {
+        const inner = (ctx as FullContext).extract();
+
+        for (let key of Object.keys(inner.values.names)) {
+            if (inner.values.names[key].some((ref) => idsEqual(ref.id, id))) {
+                return key;
+            }
+        }
+    }
+    return null;
+};
+
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
+import { FullContext, nodebug } from '../ctx';
+import { idsEqual } from '../ids';
+import { transformToplevel, Visitor } from '../transform-tast';
+
 export const ToJS = {
-    IApply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
-        return b.callExpression(
-            ctx.ToJS.IExpression(target, ctx),
-            args.map((arg) => ctx.ToJS.IExpression(arg, ctx)),
-        );
-    },
-    IEnum({ tag, payload, loc }: t.IEnum, ctx: JCtx): b.Expression {
-        if (!payload) {
-            return b.stringLiteral(tag);
+    Ref(x: t.Ref, ctx: JCtx): b.Expression {
+        if (x.kind.type === 'Global') {
+            const name = findBuiltinName(x.kind.id, ctx.actx);
+            if (name) {
+                return b.identifier(name);
+            } else {
+                if (ctx.namespaced) {
+                    return b.memberExpression(
+                        b.identifier('$terms'),
+                        b.identifier(ctx.globalName(x.kind.id)),
+                        false,
+                    );
+                }
+                return b.identifier(ctx.globalName(x.kind.id));
+            }
         }
-        return b.objectExpression([
-            b.objectProperty(b.identifier('tag'), b.stringLiteral(tag)),
-            b.objectProperty(
-                b.identifier('payload'),
-                ctx.ToJS.IExpression(payload, ctx),
-            ),
-        ]);
+        if (x.kind.type === 'Local') {
+            const found = ctx.actx.valueForSym(x.kind.sym);
+            if (found) {
+                return b.identifier(found.name);
+            } else {
+                return b.identifier(`unresolved sym!`);
+            }
+        }
+        if (x.kind.type === 'Recur') {
+            const id = ctx.actx.resolveRecur(x.kind.idx);
+            if (!id) {
+                console.log(id, x.kind.idx, ctx.actx);
+            }
+            if (ctx.namespaced) {
+                return b.memberExpression(
+                    b.identifier('$terms'),
+                    b.identifier(id ? ctx.globalName(id) : ':no recur found:'),
+                    false,
+                );
+            }
+            return b.identifier(id ? ctx.globalName(id) : ':no recur found:');
+        }
+        return b.identifier(`:unresovled:`);
     },
 };
 
 export const ToIR = {
-    Apply({ args, loc, target }: t.Apply, ctx: ICtx): t.IApply {
-        return {
-            type: 'IApply',
-            loc,
-            args: args.map((arg) => ctx.ToIR[arg.type](arg as any, ctx)),
-            target: ctx.ToIR[target.type](target as any, ctx),
-        };
-    },
-    Enum({ loc, tag, payload }: t.Enum, ctx: ICtx): t.IEnum {
-        return {
-            type: 'IEnum',
-            loc,
-            tag,
-            payload: payload
-                ? ctx.ToIR[payload.type](payload as any, ctx)
-                : undefined,
-        };
-    },
-    Record({ loc, spreads, items }: t.Record, ctx: ICtx): t.IRecord {
-        return {
-            type: 'IRecord',
-            loc,
-            spreads: spreads.map((spread) =>
-                ctx.ToIR[spread.type](spread as any, ctx),
-            ),
-            items: items.map((item) => ({
-                ...item,
-                type: 'IRecordKeyValue',
-                value: ctx.ToIR[item.value.type](item.value as any, ctx),
-            })),
-        };
-    },
     TypeApplication(
         { loc, target, args }: t.TypeApplication,
         ctx: ICtx,
@@ -435,12 +640,12 @@ export const ToIR = {
         // at least to be able to know what types things are?
         // on the other hand, maybe I can bake types at this point?
         // like, monomorphizing is going to happen before this.
-        return ctx.ToIR[target.type](target as any, ctx);
+        return ctx.ToIR.Expression(target, ctx);
     },
     DecoratedExpression(
         { loc, expr }: t.DecoratedExpression,
         ctx: ICtx,
     ): t.IExpression {
-        return ctx.ToIR[expr.type](expr as any, ctx);
+        return ctx.ToIR.Expression(expr, ctx);
     },
 };

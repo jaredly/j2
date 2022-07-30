@@ -22,6 +22,9 @@ export const ToTast = {
             case 'TypeApplicationSuffix':
                 return ctx.ToTast.TypeApplicationSuffix(node, next, ctx);
 
+            case 'AwaitSuffix':
+                return ctx.ToTast.AwaitSuffix(node, next, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -30,6 +33,9 @@ export const ToTast = {
 
     TypeToplevel(node: p.TypeToplevel, ctx: TCtx): t.TypeToplevel {
         switch (node.type) {
+            case 'Aliases':
+                return ctx.ToTast.Aliases(node, ctx);
+
             case 'TypeAlias':
                 return ctx.ToTast.TypeAlias(node, ctx);
 
@@ -41,6 +47,9 @@ export const ToTast = {
 
             case 'TApply':
                 return ctx.ToTast.TApply(node, ctx);
+
+            case 'TBlank':
+                return ctx.ToTast.TBlank(node, ctx);
 
             case 'TRef':
                 return ctx.ToTast.TRef(node, ctx);
@@ -74,11 +83,26 @@ export const ToTast = {
 
     Expression(node: p.Expression, ctx: TCtx): t.Expression {
         switch (node.type) {
+            case 'Lambda':
+                return ctx.ToTast.Lambda(node, ctx);
+
+            case 'BinOp':
+                return ctx.ToTast.BinOp(node, ctx);
+
+            case 'WithUnary':
+                return ctx.ToTast.WithUnary(node, ctx);
+
             case 'DecoratedExpression':
                 return ctx.ToTast.DecoratedExpression(node, ctx);
 
             case 'Apply':
                 return ctx.ToTast.Apply(node, ctx);
+
+            case 'If':
+                return ctx.ToTast.If(node, ctx);
+
+            case 'Switch':
+                return ctx.ToTast.Switch(node, ctx);
 
             case 'Number':
                 return ctx.ToTast.Number(node, ctx);
@@ -88,6 +112,9 @@ export const ToTast = {
 
             case 'Identifier':
                 return ctx.ToTast.Identifier(node, ctx);
+
+            case 'ParenedOp':
+                return ctx.ToTast.ParenedOp(node, ctx);
 
             case 'ParenedExpression':
                 return ctx.ToTast.ParenedExpression(node, ctx);
@@ -100,6 +127,9 @@ export const ToTast = {
 
             case 'Record':
                 return ctx.ToTast.Record(node, ctx);
+
+            case 'Block':
+                return ctx.ToTast.Block(node, ctx);
 
             default:
                 let _: never = node;
@@ -121,6 +151,97 @@ export const ToTast = {
         }
     },
 
+    Stmt(node: p.Stmt, ctx: TCtx): t.Stmt {
+        switch (node.type) {
+            case 'Let':
+                return ctx.ToTast.Let(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToTast.Lambda(node, ctx);
+
+            case 'BinOp':
+                return ctx.ToTast.BinOp(node, ctx);
+
+            case 'WithUnary':
+                return ctx.ToTast.WithUnary(node, ctx);
+
+            case 'DecoratedExpression':
+                return ctx.ToTast.DecoratedExpression(node, ctx);
+
+            case 'Apply':
+                return ctx.ToTast.Apply(node, ctx);
+
+            case 'If':
+                return ctx.ToTast.If(node, ctx);
+
+            case 'Switch':
+                return ctx.ToTast.Switch(node, ctx);
+
+            case 'Number':
+                return ctx.ToTast.Number(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToTast.Boolean(node, ctx);
+
+            case 'Identifier':
+                return ctx.ToTast.Identifier(node, ctx);
+
+            case 'ParenedOp':
+                return ctx.ToTast.ParenedOp(node, ctx);
+
+            case 'ParenedExpression':
+                return ctx.ToTast.ParenedExpression(node, ctx);
+
+            case 'TemplateString':
+                return ctx.ToTast.TemplateString(node, ctx);
+
+            case 'Enum':
+                return ctx.ToTast.Enum(node, ctx);
+
+            case 'Record':
+                return ctx.ToTast.Record(node, ctx);
+
+            case 'Block':
+                return ctx.ToTast.Block(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    Pattern(node: p.Pattern, ctx: TCtx): t.Pattern {
+        switch (node.type) {
+            case 'PDecorated':
+                return ctx.ToTast.PDecorated(node, ctx);
+
+            case 'PEnum':
+                return ctx.ToTast.PEnum(node, ctx);
+
+            case 'PName':
+                return ctx.ToTast.PName(node, ctx);
+
+            case 'PTuple':
+                return ctx.ToTast.PTuple(node, ctx);
+
+            case 'PRecord':
+                return ctx.ToTast.PRecord(node, ctx);
+
+            case 'PBlank':
+                return ctx.ToTast.PBlank(node, ctx);
+
+            case 'Number':
+                return ctx.ToTast.Number(node, ctx);
+
+            case 'String':
+                return ctx.ToTast.String(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
     Type(node: p.Type, ctx: TCtx): t.Type {
         switch (node.type) {
             case 'TOps':
@@ -131,6 +252,9 @@ export const ToTast = {
 
             case 'TApply':
                 return ctx.ToTast.TApply(node, ctx);
+
+            case 'TBlank':
+                return ctx.ToTast.TBlank(node, ctx);
 
             case 'TRef':
                 return ctx.ToTast.TRef(node, ctx);
@@ -169,6 +293,12 @@ export const ToAst = {
             case 'TRef':
                 return ctx.ToAst.TRef(node, ctx);
 
+            case 'TVbl':
+                return ctx.ToAst.TVbl(node, ctx);
+
+            case 'TBlank':
+                return ctx.ToAst.TBlank(node, ctx);
+
             case 'TLambda':
                 return ctx.ToAst.TLambda(node, ctx);
 
@@ -199,6 +329,9 @@ export const ToAst = {
             case 'TypeAlias':
                 return ctx.ToAst.TypeAlias(node, ctx);
 
+            case 'ToplevelAliases':
+                return ctx.ToAst.ToplevelAliases(node, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -213,6 +346,12 @@ export const ToAst = {
             case 'TypeAlias':
                 return ctx.ToAst.TypeAlias(node, ctx);
 
+            case 'ToplevelLet':
+                return ctx.ToAst.ToplevelLet(node, ctx);
+
+            case 'ToplevelAliases':
+                return ctx.ToAst.ToplevelAliases(node, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -221,14 +360,23 @@ export const ToAst = {
 
     Expression(node: t.Expression, ctx: TACtx): p.Expression {
         switch (node.type) {
+            case 'If':
+                return ctx.ToAst.If(node, ctx);
+
             case 'Ref':
                 return ctx.ToAst.Ref(node, ctx);
+
+            case 'Enum':
+                return ctx.ToAst.Enum(node, ctx);
+
+            case 'Block':
+                return ctx.ToAst.Block(node, ctx);
 
             case 'Apply':
                 return ctx.ToAst.Apply(node, ctx);
 
-            case 'Enum':
-                return ctx.ToAst.Enum(node, ctx);
+            case 'Lambda':
+                return ctx.ToAst.Lambda(node, ctx);
 
             case 'Record':
                 return ctx.ToAst.Record(node, ctx);
@@ -236,8 +384,14 @@ export const ToAst = {
             case 'Number':
                 return ctx.ToAst.Number(node, ctx);
 
+            case 'Switch':
+                return ctx.ToAst.Switch(node, ctx);
+
             case 'Boolean':
                 return ctx.ToAst.Boolean(node, ctx);
+
+            case 'Await':
+                return ctx.ToAst.Await(node, ctx);
 
             case 'TemplateString':
                 return ctx.ToAst.TemplateString(node, ctx);
@@ -273,6 +427,12 @@ export const ToAst = {
             case 'TRef':
                 return ctx.ToAst.TRef(node, ctx);
 
+            case 'TVbl':
+                return ctx.ToAst.TVbl(node, ctx);
+
+            case 'TBlank':
+                return ctx.ToAst.TBlank(node, ctx);
+
             case 'TLambda':
                 return ctx.ToAst.TLambda(node, ctx);
 
@@ -305,6 +465,88 @@ export const ToAst = {
                 throw new Error('Nope');
         }
     },
+
+    Stmt(node: t.Stmt, ctx: TACtx): p.Stmt {
+        switch (node.type) {
+            case 'Let':
+                return ctx.ToAst.Let(node, ctx);
+
+            case 'If':
+                return ctx.ToAst.If(node, ctx);
+
+            case 'Ref':
+                return ctx.ToAst.Ref(node, ctx);
+
+            case 'Enum':
+                return ctx.ToAst.Enum(node, ctx);
+
+            case 'Block':
+                return ctx.ToAst.Block(node, ctx);
+
+            case 'Apply':
+                return ctx.ToAst.Apply(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToAst.Lambda(node, ctx);
+
+            case 'Record':
+                return ctx.ToAst.Record(node, ctx);
+
+            case 'Number':
+                return ctx.ToAst.Number(node, ctx);
+
+            case 'Switch':
+                return ctx.ToAst.Switch(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToAst.Boolean(node, ctx);
+
+            case 'Await':
+                return ctx.ToAst.Await(node, ctx);
+
+            case 'TemplateString':
+                return ctx.ToAst.TemplateString(node, ctx);
+
+            case 'TypeApplication':
+                return ctx.ToAst.TypeApplication(node, ctx);
+
+            case 'DecoratedExpression':
+                return ctx.ToAst.DecoratedExpression(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    Pattern(node: t.Pattern, ctx: TACtx): p.Pattern {
+        switch (node.type) {
+            case 'PName':
+                return ctx.ToAst.PName(node, ctx);
+
+            case 'PRecord':
+                return ctx.ToAst.PRecord(node, ctx);
+
+            case 'PBlank':
+                return ctx.ToAst.PBlank(node, ctx);
+
+            case 'PEnum':
+                return ctx.ToAst.PEnum(node, ctx);
+
+            case 'Number':
+                return ctx.ToAst.Number(node, ctx);
+
+            case 'String':
+                return ctx.ToAst.String(node, ctx);
+
+            case 'PDecorated':
+                return ctx.ToAst.PDecorated(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
 };
 
 export const ToPP = {
@@ -316,6 +558,9 @@ export const ToPP = {
             case 'TypeApplicationSuffix':
                 return ctx.ToPP.TypeApplicationSuffix(node, ctx);
 
+            case 'AwaitSuffix':
+                return ctx.ToPP.AwaitSuffix(node, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -324,6 +569,9 @@ export const ToPP = {
 
     TypeToplevel(node: p.TypeToplevel, ctx: PCtx): pp.PP {
         switch (node.type) {
+            case 'Aliases':
+                return ctx.ToPP.Aliases(node, ctx);
+
             case 'TypeAlias':
                 return ctx.ToPP.TypeAlias(node, ctx);
 
@@ -335,6 +583,9 @@ export const ToPP = {
 
             case 'TApply':
                 return ctx.ToPP.TApply(node, ctx);
+
+            case 'TBlank':
+                return ctx.ToPP.TBlank(node, ctx);
 
             case 'TRef':
                 return ctx.ToPP.TRef(node, ctx);
@@ -368,11 +619,26 @@ export const ToPP = {
 
     Expression(node: p.Expression, ctx: PCtx): pp.PP {
         switch (node.type) {
+            case 'Lambda':
+                return ctx.ToPP.Lambda(node, ctx);
+
+            case 'BinOp':
+                return ctx.ToPP.BinOp(node, ctx);
+
+            case 'WithUnary':
+                return ctx.ToPP.WithUnary(node, ctx);
+
             case 'DecoratedExpression':
                 return ctx.ToPP.DecoratedExpression(node, ctx);
 
             case 'Apply':
                 return ctx.ToPP.Apply(node, ctx);
+
+            case 'If':
+                return ctx.ToPP.If(node, ctx);
+
+            case 'Switch':
+                return ctx.ToPP.Switch(node, ctx);
 
             case 'Number':
                 return ctx.ToPP.Number(node, ctx);
@@ -382,6 +648,9 @@ export const ToPP = {
 
             case 'Identifier':
                 return ctx.ToPP.Identifier(node, ctx);
+
+            case 'ParenedOp':
+                return ctx.ToPP.ParenedOp(node, ctx);
 
             case 'ParenedExpression':
                 return ctx.ToPP.ParenedExpression(node, ctx);
@@ -394,6 +663,9 @@ export const ToPP = {
 
             case 'Record':
                 return ctx.ToPP.Record(node, ctx);
+
+            case 'Block':
+                return ctx.ToPP.Block(node, ctx);
 
             default:
                 let _: never = node;
@@ -415,6 +687,97 @@ export const ToPP = {
         }
     },
 
+    Stmt(node: p.Stmt, ctx: PCtx): pp.PP {
+        switch (node.type) {
+            case 'Let':
+                return ctx.ToPP.Let(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToPP.Lambda(node, ctx);
+
+            case 'BinOp':
+                return ctx.ToPP.BinOp(node, ctx);
+
+            case 'WithUnary':
+                return ctx.ToPP.WithUnary(node, ctx);
+
+            case 'DecoratedExpression':
+                return ctx.ToPP.DecoratedExpression(node, ctx);
+
+            case 'Apply':
+                return ctx.ToPP.Apply(node, ctx);
+
+            case 'If':
+                return ctx.ToPP.If(node, ctx);
+
+            case 'Switch':
+                return ctx.ToPP.Switch(node, ctx);
+
+            case 'Number':
+                return ctx.ToPP.Number(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToPP.Boolean(node, ctx);
+
+            case 'Identifier':
+                return ctx.ToPP.Identifier(node, ctx);
+
+            case 'ParenedOp':
+                return ctx.ToPP.ParenedOp(node, ctx);
+
+            case 'ParenedExpression':
+                return ctx.ToPP.ParenedExpression(node, ctx);
+
+            case 'TemplateString':
+                return ctx.ToPP.TemplateString(node, ctx);
+
+            case 'Enum':
+                return ctx.ToPP.Enum(node, ctx);
+
+            case 'Record':
+                return ctx.ToPP.Record(node, ctx);
+
+            case 'Block':
+                return ctx.ToPP.Block(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    Pattern(node: p.Pattern, ctx: PCtx): pp.PP {
+        switch (node.type) {
+            case 'PDecorated':
+                return ctx.ToPP.PDecorated(node, ctx);
+
+            case 'PEnum':
+                return ctx.ToPP.PEnum(node, ctx);
+
+            case 'PName':
+                return ctx.ToPP.PName(node, ctx);
+
+            case 'PTuple':
+                return ctx.ToPP.PTuple(node, ctx);
+
+            case 'PRecord':
+                return ctx.ToPP.PRecord(node, ctx);
+
+            case 'PBlank':
+                return ctx.ToPP.PBlank(node, ctx);
+
+            case 'Number':
+                return ctx.ToPP.Number(node, ctx);
+
+            case 'String':
+                return ctx.ToPP.String(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
     Type(node: p.Type, ctx: PCtx): pp.PP {
         switch (node.type) {
             case 'TOps':
@@ -425,6 +788,9 @@ export const ToPP = {
 
             case 'TApply':
                 return ctx.ToPP.TApply(node, ctx);
+
+            case 'TBlank':
+                return ctx.ToPP.TBlank(node, ctx);
 
             case 'TRef':
                 return ctx.ToPP.TRef(node, ctx);
@@ -460,14 +826,23 @@ export const ToPP = {
 export const ToIR = {
     Expression(node: t.Expression, ctx: ICtx): t.IExpression {
         switch (node.type) {
+            case 'If':
+                return ctx.ToIR.If(node, ctx);
+
             case 'Ref':
                 return ctx.ToIR.Ref(node, ctx);
+
+            case 'Enum':
+                return ctx.ToIR.Enum(node, ctx);
+
+            case 'Block':
+                return ctx.ToIR.Block(node, ctx);
 
             case 'Apply':
                 return ctx.ToIR.Apply(node, ctx);
 
-            case 'Enum':
-                return ctx.ToIR.Enum(node, ctx);
+            case 'Lambda':
+                return ctx.ToIR.Lambda(node, ctx);
 
             case 'Record':
                 return ctx.ToIR.Record(node, ctx);
@@ -475,8 +850,67 @@ export const ToIR = {
             case 'Number':
                 return ctx.ToIR.Number(node, ctx);
 
+            case 'Switch':
+                return ctx.ToIR.Switch(node, ctx);
+
             case 'Boolean':
                 return ctx.ToIR.Boolean(node, ctx);
+
+            case 'Await':
+                return ctx.ToIR.Await(node, ctx);
+
+            case 'TemplateString':
+                return ctx.ToIR.TemplateString(node, ctx);
+
+            case 'TypeApplication':
+                return ctx.ToIR.TypeApplication(node, ctx);
+
+            case 'DecoratedExpression':
+                return ctx.ToIR.DecoratedExpression(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    Stmt(node: t.Stmt, ctx: ICtx): t.IStmt {
+        switch (node.type) {
+            case 'Let':
+                return ctx.ToIR.Let(node, ctx);
+
+            case 'If':
+                return ctx.ToIR.If(node, ctx);
+
+            case 'Ref':
+                return ctx.ToIR.Ref(node, ctx);
+
+            case 'Enum':
+                return ctx.ToIR.Enum(node, ctx);
+
+            case 'Block':
+                return ctx.ToIR.Block(node, ctx);
+
+            case 'Apply':
+                return ctx.ToIR.Apply(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToIR.Lambda(node, ctx);
+
+            case 'Record':
+                return ctx.ToIR.Record(node, ctx);
+
+            case 'Number':
+                return ctx.ToIR.Number(node, ctx);
+
+            case 'Switch':
+                return ctx.ToIR.Switch(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToIR.Boolean(node, ctx);
+
+            case 'Await':
+                return ctx.ToIR.Await(node, ctx);
 
             case 'TemplateString':
                 return ctx.ToIR.TemplateString(node, ctx);
@@ -503,20 +937,23 @@ export const ToJS = {
             case 'Number':
                 return ctx.ToJS.Number(node, ctx);
 
+            case 'Lambda':
+                return ctx.ToJS.Lambda(node, ctx);
+
             case 'Boolean':
                 return ctx.ToJS.Boolean(node, ctx);
 
-            case 'IApply':
-                return ctx.ToJS.IApply(node, ctx);
+            case 'Apply':
+                return ctx.ToJS.Apply(node, ctx);
 
-            case 'ITemplateString':
-                return ctx.ToJS.ITemplateString(node, ctx);
+            case 'TemplateString':
+                return ctx.ToJS.TemplateString(node, ctx);
 
-            case 'IEnum':
-                return ctx.ToJS.IEnum(node, ctx);
+            case 'Enum':
+                return ctx.ToJS.Enum(node, ctx);
 
-            case 'IRecord':
-                return ctx.ToJS.IRecord(node, ctx);
+            case 'Record':
+                return ctx.ToJS.Record(node, ctx);
 
             default:
                 let _: never = node;

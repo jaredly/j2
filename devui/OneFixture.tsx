@@ -1,32 +1,29 @@
-import generate from '@babel/generator';
-import { Button, Card, Checkbox, Input, Spacer, Text } from '@nextui-org/react';
-import * as React from 'react';
-import { builtinContext, FullContext } from '../core/ctx';
-import { fileToTast } from '../core/elements/base';
-import { fixComments } from '../core/grammar/fixComments';
-import { iCtx } from '../core/ir/ir';
-import { jCtx } from '../core/ir/to-js';
-import { transformExpression } from '../core/transform-tast';
 import {
-    analyzeTop,
-    errorCount,
-    initVerify,
-    verify,
-    verifyVisitor,
-} from '../core/typing/analyze';
+    Button,
+    Card,
+    Checkbox,
+    Input,
+    Spacer,
+    Text,
+    Tooltip,
+} from '@nextui-org/react';
+import * as React from 'react';
+import { FullContext } from '../core/ctx';
+import { processFile, processFileR, TestResult } from '../core/full/full';
+import { errorCount } from '../core/typing/analyze';
 import {
     aliasesFromString,
     Builtin,
-    Fixture,
-    FixtureResult,
     loadBuiltins,
-    runFixture,
     splitAliases,
 } from '../core/typing/__test__/fixture-utils';
+import { FixtureWithResult, getTestResults } from './App';
 import { Editor } from './Editor';
 import { ShowBuiltins } from './FixtureFile';
-import { Highlight, HL } from './Highlight';
+import { Highlight } from './Highlight';
 import { CancelIcon, ReportProblemIcon } from './Icons';
+import { withFmt } from './refmt';
+import { testStatuses } from './Test';
 
 export function OneFixture({
     fixture,
@@ -41,8 +38,8 @@ export function OneFixture({
     id: string;
     ctx: FullContext;
     portal: HTMLDivElement;
-    fixture: Fixture;
-    onChange: (v: Fixture) => void;
+    fixture: FixtureWithResult;
+    onChange: (v: FixtureWithResult) => void;
     builtins: Builtin[];
 }) {
     const { title, input, output_expected, output_failed } = fixture;
@@ -56,9 +53,7 @@ export function OneFixture({
         return cloned;
     }, [fixture.builtins, ctx]);
 
-    const newOutput = React.useMemo(():
-        | { type: 'error'; error: Error }
-        | { type: 'success'; result: FixtureResult } => {
+    const newOutput = React.useMemo((): { file: TestResult; text: string } => {
         if (isPinned) {
             ctx = {
                 ...ctx,
@@ -67,29 +62,25 @@ export function OneFixture({
                 },
             };
         }
+        const withBuiltins = ctx.clone();
+        loadBuiltins(fixture.builtins, withBuiltins);
         if (editing != null) {
-            try {
-                return {
-                    type: 'success',
-                    result: runFixture({ ...fixture, input: editing }, ctx),
-                };
-            } catch (err) {}
+            return withFmt(processFile(editing, withBuiltins));
         }
         // hmmmmm I think I'd rather the fallback be "the last successful one"
-        try {
-            return { type: 'success', result: runFixture(fixture, ctx) };
-        } catch (err) {
-            return { type: 'error', error: err as Error };
-        }
+        return withFmt(processFile(fixture.input, withBuiltins));
     }, [fixture, builtins, editing, isPinned]);
     const [titleEdit, setTitleEdit] = React.useState(null as null | string);
 
     const changed =
-        newOutput.type === 'error' ||
-        compare(prevOutput, newOutput.result.newOutput);
+        newOutput.file.type === 'Error' || compare(prevOutput, newOutput.text);
 
     const numErrors =
-        newOutput.type === 'error' ? 1 : errorCount(newOutput.result.verify);
+        newOutput.file.type === 'Error'
+            ? 1
+            : newOutput.file.info
+                  .map((i) => errorCount(i.verify))
+                  .reduce((a, b) => a + b, 0);
 
     return (
         <div id={id} style={{ paddingTop: 24 }}>
@@ -102,7 +93,7 @@ export function OneFixture({
                 }}
             >
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
-                    {titleEdit ? (
+                    {titleEdit != null ? (
                         <Input
                             autoFocus
                             aria-label="Fixture title"
@@ -175,7 +166,7 @@ export function OneFixture({
                             justifyContent: 'flex-end',
                         }}
                     >
-                        {newOutput.type === 'success' ? (
+                        {newOutput.file.type === 'Success' ? (
                             <div
                                 style={{
                                     marginTop: 4,
@@ -188,14 +179,14 @@ export function OneFixture({
                                     size={'xs'}
                                     disabled={
                                         !changed &&
-                                        newOutput.result.newOutput ===
+                                        newOutput.text ===
                                             fixture.output_expected
                                     }
                                     onPress={() => {
                                         onChange({
                                             ...fixture,
-                                            output_expected:
-                                                newOutput.result.newOutput,
+                                            result: newOutput.file,
+                                            output_expected: newOutput.text,
                                             output_failed: '',
                                         });
                                     }}
@@ -215,8 +206,8 @@ export function OneFixture({
                                         // but if the old one is accepted, then we keep it around as "the right one"
                                         onChange({
                                             ...fixture,
-                                            output_failed:
-                                                newOutput.result.newOutput,
+                                            result: newOutput.file,
+                                            output_failed: newOutput.text,
                                             output_expected: '',
                                         });
                                     }}
@@ -256,15 +247,17 @@ export function OneFixture({
                     <Editor
                         text={editing ?? input}
                         onChange={setEditing}
-                        ctx={loadedCtx}
                         onBlur={(input) => {
                             setEditing(null);
                             if (
-                                newOutput.type === 'error' ||
-                                input === newOutput.result.input
+                                newOutput.file.type === 'Error' ||
+                                // STOPSHIP: what?
+                                input !== fixture.input
                             ) {
                                 onChange({
                                     ...fixture,
+                                    result: newOutput.file,
+                                    newOutput: newOutput.text,
                                     input,
                                 });
                             }
@@ -272,8 +265,9 @@ export function OneFixture({
                     />
                     <Card.Divider css={{ marginBlock: '$6' }} />
                     <div style={{ position: 'relative' }}>
-                        {numErrors != 0 ? (
+                        {numErrors != 0 && newOutput.file.type === 'Success' ? (
                             <TopRight
+                                tooltip={'lots of errors, come back later'}
                                 text={`${numErrors} issue${
                                     numErrors > 1 ? 's' : ''
                                 }`}
@@ -284,99 +278,67 @@ export function OneFixture({
                             />
                         ) : null}
 
-                        {newOutput.type === 'success' ? (
+                        {newOutput.file.type === 'Success' ? (
                             <>
-                                <Aliases aliases={parseAliases(prevOutput)} />
+                                {/* <Aliases aliases={parseAliases(prevOutput)} /> */}
                                 <Highlight
                                     portal={portal}
                                     text={prevOutput}
-                                    info={{
-                                        tast: newOutput.result.outputTast,
-                                        ctx: newOutput.result.ctx2,
-                                    }}
+                                    // info={{
+                                    //     tast: newOutput.result.outputTast,
+                                    //     ctx: newOutput.result.ctx2,
+                                    // }}
+                                    // TODO: pass in annotations that
+                                    // we already have
                                     extraLocs={(ast) => {
-                                        console.log('ex', ast.type);
                                         if (ast.type !== 'File') {
                                             return [];
                                         }
 
-                                        // TODO: Just be able to use newOutput
-                                        // with a source map for locs
-                                        const fctx = ctx.clone();
-                                        loadBuiltins(fixture.builtins, fctx);
-
-                                        const [file, tctx] = fileToTast(
-                                            fixComments(ast),
-                                            fctx,
-                                            true,
+                                        const file = processFileR(
+                                            ast,
+                                            loadedCtx,
                                         );
-                                        const ictx = iCtx();
-
-                                        const locs: HL[] = [];
-                                        file.toplevels.forEach((top) => {
-                                            if (
-                                                top.type !==
-                                                'ToplevelExpression'
-                                            ) {
-                                                return;
-                                            }
-
-                                            const v = initVerify();
-                                            transformExpression(
-                                                top.expr,
-                                                verifyVisitor(v, fctx),
-                                                null,
-                                            );
-                                            if (errorCount(v)) {
-                                                return;
-                                            }
-
-                                            const ir = ictx.ToIR[top.expr.type](
-                                                top.expr as any,
-                                                ictx,
-                                            );
-                                            const jctx = jCtx();
-                                            const js = jctx.ToJS.IExpression(
-                                                ir,
-                                                jctx,
-                                            );
-                                            const jsraw = generate(js).code;
-                                            locs.push({
-                                                loc: top.loc,
-                                                type: 'Success',
-                                                suffix: {
-                                                    text: '🏃‍♀️',
-                                                    message: jsraw,
-                                                },
-                                            });
-                                        });
-                                        console.log('ok', locs);
-                                        return locs;
+                                        const results = getTestResults(file);
+                                        return testStatuses(file, results);
                                     }}
                                 />
                             </>
                         ) : (
                             <Text>
                                 Failed to parse probably{' '}
-                                {newOutput.error.message}{' '}
+                                {/* {newOutput.error.message}{' '} */}
                             </Text>
                         )}
                     </div>
-                    {changed && newOutput.type === 'success' ? (
+                    {changed && newOutput.file.type === 'Success' ? (
                         <>
                             <Card.Divider css={{ marginBlock: '$6' }} />
-                            <Aliases
+                            {/* <Aliases
                                 aliases={parseAliases(
                                     newOutput.result.newOutput,
                                 )}
-                            />
+                            /> */}
                             {changed !== 'aliases' ? (
                                 <Highlight
                                     portal={portal}
-                                    text={newOutput.result.newOutput}
-                                    info={{
-                                        tast: newOutput.result.checked,
-                                        ctx: newOutput.result.ctx,
+                                    text={newOutput.text}
+                                    // TODO: pass in annotations
+                                    // info={{
+                                    //     tast: newOutput.result.checked,
+                                    //     ctx: newOutput.result.ctx,
+                                    // }}
+                                    extraLocs={(ast) => {
+                                        if (ast.type !== 'File') {
+                                            return [];
+                                        }
+
+                                        const file = processFileR(
+                                            ast,
+                                            loadedCtx,
+                                        );
+                                        const results = getTestResults(file);
+                                        return testStatuses(file, results);
                                     }}
                                 />
                             ) : null}
@@ -431,19 +393,22 @@ export const compare = (one: string, two: string): boolean | 'aliases' => {
     }
     const [oneAliases, oneText] = splitAliases(one);
     const [twoAliases, twoText] = splitAliases(two);
-    if (oneText === twoText) {
-        return 'aliases';
-    }
+    // if (oneText === twoText) {
+    //     return 'aliases';
+    // }
     return true;
 };
 
-export const TopRight = ({ text }: { text: string }) => {
-    return (
+export const TopRight = ({
+    text,
+    tooltip,
+}: {
+    text: string;
+    tooltip?: string;
+}) => {
+    const inner = (
         <Text
             css={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
                 flex: 1,
                 textAlign: 'right',
                 flexShrink: 0,
@@ -454,5 +419,16 @@ export const TopRight = ({ text }: { text: string }) => {
         >
             {text}
         </Text>
+    );
+    return (
+        <div
+            style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+            }}
+        >
+            {tooltip ? <Tooltip content={tooltip}>{inner}</Tooltip> : inner}
+        </div>
     );
 };

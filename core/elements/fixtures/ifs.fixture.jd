@@ -1,0 +1,170 @@
+##[fixtures]##
+==[basic]==
+--[input]--
+if true { "ten" } else { "eleven" }
+
+--[output:expected]--
+if true {
+    "ten";
+} else {
+    "eleven";
+}
+// string
+/* {
+  if (true) {
+    return `ten`;
+  } else {
+    return `eleven`;
+  }
+} */
+
+==[in a block]==
+--[input]--
+{
+let x = 10;
+if x == 5 { 4 } else { 2 }
+}
+
+--[output:expected]--
+alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
+{
+    let x#[0] = 10;
+    if x#[0] == 5 {
+        4;
+    } else {
+        2;
+    };
+}
+// int
+/* {
+  let x = 10;
+
+  if (x == 5) {
+    return 4;
+  } else {
+    return 2;
+  }
+} */
+
+==[New fixture]==
+--[input]--
+{let x = 10;
+let y = if x == 5 { 4 } else { 2 };
+y * 2}
+
+--[output:expected]--
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
+{
+    let x#[0] = 10;
+    let y#[1] = if x#[0] == 5 {
+        4;
+    } else {
+        2;
+    };
+    y#[1] * 2;
+}
+// int
+/* {
+  let x = 10;
+  let y;
+
+  if (x == 5) {
+    y = 4;
+  } else {
+    y = 2;
+  }
+
+  return y * 2;
+} */
+
+==[if else, and enums]==
+--[input]--
+if 1 > 0 {
+`Yes(20)
+} else if 1 > 2 {
+`No(`MathFail)
+} else { `No(`SoMuchFail) }
+
+--[output:expected]--
+alias >#[hc1d03250b26806868f520136d8a763b0c0edff9b]
+if 1 > 0 {
+    `Yes(20);
+} else if 1 > 2 {
+    `No(`MathFail);
+} else {
+    `No(`SoMuchFail);
+}
+// [ `No([ `SoMuchFail | `MathFail ]) | `Yes(20) ]
+/* {
+  if (1 > 0) {
+    return {
+      tag: "Yes",
+      payload: 20
+    };
+  } else if (1 > 2) {
+    return {
+      tag: "No",
+      payload: "MathFail"
+    };
+  } else {
+    return {
+      tag: "No",
+      payload: "SoMuchFail"
+    };
+  }
+} */
+
+==[New fixture_]==
+--[input]--
+(m: [`Hello(int) | `Bye]) => if let `Hello(v) = m {
+  v
+} else {
+  100
+}
+
+--[output:expected]--
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+(m#[0]: [ `Hello(int) | `Bye ]) => if let `Hello(v#[1]) = m#[0] {
+    v#[1];
+} else {
+    100;
+}
+// ([ `Hello(int) | `Bye ]) => int
+/* m => {
+  if ((typeof m === "string" ? m : m.tag) === "Hello") {
+    let {
+      payload: v
+    } = m;
+    return v;
+  } else {
+    return 100;
+  }
+} */
+
+==[very nested]==
+--[input]--
+let x = {
+  10 + (if true { 10 } else { 5 })
+}
+
+--[output:expected]--
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+let x = {
+    10 + if true {
+        10;
+    } else {
+        5;
+    };
+}
+// 10 + int
+/* {
+  let tmp1000;
+
+  if (true) {
+    tmp1000 = 10;
+  } else {
+    tmp1000 = 5;
+  }
+
+  return 10 + tmp1000;
+} */

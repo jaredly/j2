@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { FullContext } from '../core/ctx';
 import { Visitor } from '../core/transform-ast';
-import { Colorable, colors, highlightLocations, HL } from './Highlight';
+import { Colorable, colors, highlightLocations, styles } from './Highlight';
+import { HL } from './HL';
 import { markUpTree, Tree } from './markUpTree';
 import * as p from '../core/grammar/base.parser';
 
@@ -63,14 +64,12 @@ const initial = (v: string): History => ({
 });
 
 export const Editor = ({
-    ctx,
     text,
     onBlur,
     onChange,
     typeFile,
     extraLocs,
 }: {
-    ctx: FullContext;
     text: string;
     onBlur: (text: string) => void;
     onChange: (v: string) => void;
@@ -84,7 +83,7 @@ export const Editor = ({
 
     React.useEffect(() => {
         if (getText(ref.current!) !== text) {
-            const locs = highlightLocations(text, typeFile, extraLocs);
+            const locs = highlightLocations(text, {}, typeFile, extraLocs);
             if (text.length) {
                 setHtmlAndClean(
                     ref.current!,
@@ -137,7 +136,7 @@ export const Editor = ({
                 );
                 prevPos.current = pos;
                 obs.disconnect();
-                const locs = highlightLocations(text, typeFile, extraLocs);
+                const locs = highlightLocations(text, {}, typeFile, extraLocs);
                 const html = treeToHtmlLines(markUpTree(text, locs));
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, pos);
@@ -163,6 +162,7 @@ export const Editor = ({
                 obs.disconnect();
                 const locs = highlightLocations(
                     entry.text,
+                    {},
                     typeFile,
                     extraLocs,
                 );
@@ -178,7 +178,6 @@ export const Editor = ({
         const selfn = () => {
             prevPos.current = getPos(ref.current!);
         };
-        // document.addEventListener('selectionchange', selfn);
 
         return () => {
             obs.disconnect();
@@ -208,11 +207,19 @@ export const Editor = ({
             onFocus={() => setEditing(true)}
             onKeyDown={(evt) => {
                 if (evt.key === 'Escape') {
-                    // setEditing(false);
-                    // onBlur(getText(ref.current!));
                     ref.current!.blur();
-                    // document.body.focus();
                     document.getSelection()?.removeAllRanges();
+                }
+                if (evt.key === 'Tab') {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    const range = document.getSelection()?.getRangeAt(0);
+                    if (range) {
+                        const node = document.createTextNode('  ');
+                        range.insertNode(node);
+                        range.selectNode(node);
+                        range.collapse(false);
+                    }
                 }
             }}
             ref={(node) => (ref.current = node)}
@@ -220,19 +227,42 @@ export const Editor = ({
     );
 };
 
-export const openSpan = (hl: HL) =>
+const serializeStyles = (styles?: React.CSSProperties) => {
+    if (!styles) {
+        return '';
+    }
+    let items: string[] = [];
+    Object.keys(styles).forEach((k) => {
+        items.push(`${k}:${(styles as any)[k]}`);
+    });
+    return '; ' + items.join('; ');
+};
+
+export const openSpan = (hl: HL, noPrefix = false) =>
     `<span class="${hl.type}" style="color: ${colors[hl.type] ?? '#aaa'}${
         hl.underline
             ? '; text-decoration: underline; text-decoration-style: wavy; text-decoration-color: ' +
               hl.underline
             : ''
-    }"${hl.prefix ? ` data-prefix="${hl.prefix.text}"` : ''}${
-        hl.prefix?.message
-            ? ` data-message="${hl.prefix.message}" title="${hl.prefix.message}"`
+    }${serializeStyles(styles[hl.type])}"${
+        hl.prefix && !noPrefix
+            ? ` data-prefix="${escapeLine(hl.prefix.text)}"`
             : ''
-    }${hl.suffix ? ` data-suffix="${hl.suffix.text}"` : ''}${
+    }${
+        !noPrefix && hl.prefix?.message
+            ? ` data-message="${escapeLine(
+                  hl.prefix.message,
+              )}" title="${escapeLine(hl.prefix.message)}"`
+            : ''
+    }${hl.suffix ? ` data-suffix="${escapeLine(hl.suffix.text)}"` : ''}${
         hl.suffix?.message
-            ? ` data-suffix-message="${hl.suffix.message}" title="${hl.suffix.message}"`
+            ? ` data-suffix-message="${escapeLine(
+                  hl.suffix.message,
+              )}" title="${escapeLine(hl.suffix.message)}"`
+            : ''
+    }${
+        styles[hl.type]?.contentEditable == false
+            ? ' contentEditable="false"'
             : ''
     }>`;
 
@@ -260,7 +290,7 @@ export const treeToHtmlLinesInner = (tree: Tree, path: HL[]): string => {
                       .join(
                           path.map(() => '</span>').join('') +
                               '</div><div>' +
-                              path.map(openSpan).join(''),
+                              path.map((h) => openSpan(h, true)).join(''),
                       )}</span>`
                 : treeToHtmlLinesInner(child, path.concat([tree.hl])),
         )

@@ -1,17 +1,56 @@
-import { runTypeTest, TypeTest } from '../core/typing/__test__/typetest';
+import { Button, Card } from '@nextui-org/react';
 import * as React from 'react';
-import { Editor } from './Editor';
-import { printCtx } from '../core/typing/to-ast';
-import { newPPCtx } from '../core/printer/to-pp';
+import { noloc } from '../core/consts';
 import { injectComments } from '../core/elements/comments';
+import {
+    processTypeFile,
+    processTypeFileR,
+    TypeTestResult,
+} from '../core/full/full';
+import * as p from '../core/grammar/base.parser';
 import { printToString } from '../core/printer/pp';
-import { Card } from '@nextui-org/react';
-import { fixComments } from '../core/grammar/fixComments';
-import { parseTypeFile } from '../core/grammar/base.parser';
+import { newPPCtx } from '../core/printer/to-pp';
+import { typeTestCtx } from '../core/typing/__test__/utils';
+import { typeResults, TypeWhat } from './App';
+import { Editor } from './Editor';
 
-const refmt = (test: TypeTest) => {
-    const actx = printCtx(test.ctx);
-    const ast = actx.ToAst.TypeFile(test.file, actx);
+const refmt = (file: TypeTestResult) => {
+    if (file.type === 'Error') {
+        return file.text;
+    }
+
+    const ast: p.TypeFile = {
+        type: 'TypeFile',
+        comments: file.comments,
+        toplevels: [],
+        loc: noloc,
+    };
+
+    file.info.forEach((info) => {
+        const keys = Object.keys(info.aliases);
+        if (keys.length) {
+            ast.toplevels.push({
+                type: 'Aliases',
+                items: keys.sort().map((k) => ({
+                    type: 'AliasItem',
+                    name: k,
+                    hash: `#[${info.aliases[k]}]`,
+                    loc: noloc,
+                })),
+                loc: noloc,
+            });
+        }
+        ast.toplevels.push(info.contents.refmt);
+    });
+
+    if (ast.toplevels.length > 0) {
+        ast.loc = {
+            start: { line: 0, column: 0, offset: 0 },
+            end: ast.toplevels[ast.toplevels.length - 1].loc.end,
+            idx: -1,
+        };
+    }
+
     const pctx = newPPCtx();
     const pp = injectComments(
         pctx.ToPP.TypeFile(ast, pctx),
@@ -26,10 +65,10 @@ export const TypeTestView = ({
     name,
 }: {
     name: string;
-    test: TypeTest;
-    onChange: (v: TypeTest) => void;
+    test: TypeWhat;
+    onChange: (v: TypeWhat) => void;
 }) => {
-    const [text, setText] = React.useState(() => refmt(test));
+    const [text, setText] = React.useState(() => refmt(test.file));
 
     return (
         <div
@@ -58,42 +97,38 @@ export const TypeTestView = ({
                     <Editor
                         typeFile
                         text={text}
-                        ctx={test.ctx}
                         extraLocs={(v) => {
                             if (v.type === 'File') {
                                 return [];
                             }
-                            const results = runTypeTest(v, true);
-                            // console.log('extra', results.statuses);
-                            return results.statuses.map((status) => {
-                                if (status.text) {
-                                    return {
-                                        loc: status.loc,
-                                        type: 'Error',
-                                        prefix: {
-                                            text: `🚨`,
-                                            message: status.text,
-                                        },
-                                        underline: 'red',
-                                    };
-                                } else {
-                                    return {
-                                        type: 'Success',
-                                        loc: status.loc,
-                                        prefix: {
-                                            text: `✅`,
-                                        },
-                                    };
-                                }
-                            });
+                            const results = processTypeFileR(v, typeTestCtx);
+                            const values =
+                                results.type === 'Success'
+                                    ? typeResults(results)
+                                    : [];
+                            return values
+                                .filter((t) => !t.success)
+                                .map((v) => ({
+                                    loc: v.loc,
+                                    type: 'Error',
+                                    prefix: {
+                                        text: '🚨',
+                                    },
+                                    underline: 'red',
+                                }));
                         }}
                         onBlur={(text) => {
-                            const ran = runTypeTest(
-                                fixComments(parseTypeFile(text)),
-                            );
+                            const ran = processTypeFile(text, {
+                                ...typeTestCtx,
+                                debugger() {
+                                    debugger;
+                                },
+                            });
+                            const values =
+                                ran.type === 'Success' ? typeResults(ran) : [];
                             const fmt = refmt(ran);
                             try {
-                                onChange(ran);
+                                onChange({ file: ran, values });
                                 setText(fmt);
                                 fetch(`/elements/typetest/${name}`, {
                                     method: 'POST',
@@ -105,6 +140,23 @@ export const TypeTestView = ({
                         }}
                         onChange={(text) => setText(text)}
                     />
+                    <Button
+                        disabled={test.file.type === 'Error' || !test.values}
+                        onPress={() => {
+                            if (test.file.type === 'Success' && test.values) {
+                                const debugs: { [key: number]: boolean } = {};
+                                test.values.forEach((v) => {
+                                    if (!v.success) {
+                                        debugs[v.idx] = true;
+                                    }
+                                });
+                                processTypeFile(text, undefined, debugs);
+                                typeResults(test.file, true);
+                            }
+                        }}
+                    >
+                        Run with debug
+                    </Button>
                 </Card.Body>
             </Card>
         </div>

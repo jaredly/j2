@@ -1,0 +1,19 @@
+alias Task#[h36ea667ef0c00c6fcbfe2206360b8ce768e10926] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+let print = (value#[0]: string):Task<[ `Print(string, ()) ], ()> => `Print(
+    value#[0],
+    () => `Return(),
+)
+let read = ():Task<[ `Read((), string) ], string> => `Read((), (v#[0]: string) => `Return(v#[0]))
+alias andThen#[h98026f00fa782af79f115cf074faf3d04db06254] print#[he76ebf65079f6e6165c543967ddf344e04a21196] read#[h9a363f2b6907fcabe3bb866a4d9d96971fc54128]
+let helloFolks = ():Task<[ `Read((), string) | `Print(string, ()) ], string> => {
+    andThen<[ `Print(string, ()) ], [ `Read((), string) ], (), string>(
+        print("What is your name?"),
+        (res#[0]: ()) => read(),
+    );
+}
+alias helloFolks#[h26a52804afd85405a786759f2b431cc185734f08]
+helloFolks()
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
+2 == 2 * 1
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+3 == 2 + 1

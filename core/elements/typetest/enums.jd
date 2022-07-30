@@ -1,10 +1,16 @@
+alias type:shouldMatch#[h192c0e4997957120f145e35f197b06a370cc3115]
+
 @type:shouldMatch(:[ `Hi ]) [ `Hi ]
+
+alias type:shouldNotMatch#[h18cdade60873daf82b61c1a4804e2399e4d6fc4e]
 
 @type:shouldNotMatch(:[ `One ])
 @type:shouldMatch(:[ `One | `Two ]) [ `Two ]
 
 @type:shouldMatch(:[ `One | `Two ])
 @type:shouldNotMatch(:[ `One ]) [ `One | `Two ]
+
+alias float#[h1c9cc9450fe2e869a48abaa5e4a85271e1625474] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 
 @type:shouldNotMatch(:[ `Hi(int) ]) [ `Hi(float) ]
 
@@ -17,27 +23,36 @@
 
 @type:shouldMatch(:[ `Hi(int) ]) [ `Hi(10) ]
 
-@type:shouldMatch(:[ `Hi(int) ]) [ `Hi(10) | `Hi(int) ]
+alias error:conflictingEnumTag#[h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec]
+
+@type:shouldMatch(:[ `Hi(int) ]) [ `Hi(10) | @error:conflictingEnumTag() `Hi(int) ]
 
 type One = [ `A | `B ]
+
+alias One#[hfb353110432771bdb690ef67d47cf80f61032eb9]
 
 @type:shouldMatch(:One) [ `A ]
 
 @type:shouldMatch(:One) [ `A | One ]
 
-type Tree = [ Node#[r1] | `Leaf ]
-and Node = [ `Tree(Tree#[r0]) ]
+type Tree = [ unnamed#[r1] | `Leaf ]
+and Node = [ `Tree(One#[r0]) ]
+
+alias Tree#[hb41c04d40f94a999d5d4cb50d21d5aa9ea8d1f41]
 
 @type:shouldMatch(:Tree) [ `Leaf ]
 
-// These should not trigger an infinite loop 😂
-type X = Y#[r1]
-and Y = X#[r0]
+type X = Node#[r1]
+and Y = Tree#[r0]
 
-@type:shouldNotMatch(:X) 1
+alias X#[h2495d8c329fa7e611015ad434c8fa4293a4d7681] error:invalidType#[h8ad8219d907bce91b14c7d3e00812287b0ab7056]
 
-type A = [ `A | B#[r1] ]
-and B = [ `B | A#[r0] ]
+@type:shouldNotMatch(:@error:invalidType() X) 1
+
+type A = [ `A | Y#[r1] ]
+and B = [ `B | X#[r0] ]
+
+alias A#[hf00e851aab10952af4676246e65dc2c8c00cdcdd]
 
 @type:shouldNotMatch(:A) [ `A ]
 
@@ -45,12 +60,11 @@ type N = [ `A(int, float) ]
 
 @type:shouldMatch(:{x: [ `A | `B ]}) {x: [ `A ]}
 
-// Unification!
-@type:shouldMatch(:[ `Failure([ `TooBad | `Timeout | `SomethingElse ]) ]) [ `Failure([ `TooBad ]) | `Failure(
+@type:shouldMatch(:[ `Failure([ `TooBad | `Timeout | `SomethingElse ]) ]) [ `Failure([ `TooBad ]) | @error:conflictingEnumTag() `Failure(
     [ `Timeout ],
 ) ]
 
-@type:shouldMatch(:[ `Failure([ `TooBad | `Timeout | `C ], int) ]) [ `Failure([ `TooBad ], int) | `Failure(
+@type:shouldMatch(:[ `Failure([ `TooBad | `Timeout | `C ], int) ]) [ `Failure([ `TooBad ], int) | @error:conflictingEnumTag() `Failure(
     [ `Timeout ],
     int,
 ) ]

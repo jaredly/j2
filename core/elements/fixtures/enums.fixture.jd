@@ -7,7 +7,7 @@
 type x = [`hi | `what(int)]
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type x = [ `hi | `what(int) ]
 
 ==[recursive!]==
@@ -16,7 +16,7 @@ type Tree = <T>[Node<T> | `Leaf(T)]
 and Node = <T>[`Tree(Array<Tree<T>>)]
 
 --[output:expected]--
-alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78
+alias Array#[h686ad33f72feff3c8a1dc8ab3bb8b9f87e6c0d70]
 type Tree = <T#[0]>[ Node#[r1]<T#[0]> | `Leaf(T#[0]) ]
 and Node = <T#[1]>[ `Tree(Array<Tree#[r0]<T#[1]>>) ]
 
@@ -27,9 +27,10 @@ type z = [`Z]
 type x = [int | `Hello | y | z]
 
 --[output:expected]--
-alias Array=he7bf755aa7882e15fa79faeef0820a69a5955b78 error:notAnEnum=hf16010a7ae4b37140f787a2e06b17030e8329fb3 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f y=h1b0e8917e6173706d1c1e1863436851ee8877ebb z=h0134ffd3e646c10f4287b09aec0838d7ac4f5cb8
+alias Array#[h686ad33f72feff3c8a1dc8ab3bb8b9f87e6c0d70]
 type y = Array<10>
 type z = [ `Z ]
+alias error:notAnEnum#[hf16010a7ae4b37140f787a2e06b17030e8329fb3] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] y#[h947b2deed78015639d07bafffa40e59e0a81d055] z#[h114960c32561e86d49cc34f0af6e3db3deb19ffc]
 type x = [ @error:notAnEnum() int | `Hello | @error:notAnEnum() y | z ]
 
 ==[recursive bound propagation]==
@@ -37,7 +38,7 @@ type x = [ @error:notAnEnum() int | `Hello | @error:notAnEnum() y | z ]
 type What = <T: int>[ `Hello(What<10>) ]
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type What = <T#[0]: int>[ `Hello(What#[r0]<10>) ]
 
 ==[recursive bound propagation, failure]==
@@ -45,7 +46,7 @@ type What = <T#[0]: int>[ `Hello(What#[r0]<10>) ]
 type X = <T: int>[ `Hello(X<"string">) ]
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type X = <T#[0]: int>[ `Hello(X#[r0]<@error:argWrongType(expected: :int) "string">) ]
 
 ==[recursive bound, own tvar]==
@@ -55,7 +56,7 @@ type M = (<What>[ `X(What) | `Z(M) ])<int>
 type N = int
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type X = <T#[0]: int>[ `X(X#[r0]<T#[0]>) ]
 type M = (<What#[0]>[ `X(What#[0]) | `Z(M#[r0]) ])<int>
 type N = int
@@ -65,7 +66,7 @@ type N = int
 type X = <T: int, N: string>[ `X(X<N, N>) ]
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f string=hd978df838905e7e1bd7bb33530ae12436e3756f4
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 type X = <T#[0]: int, N#[1]: string>[ `X(X#[r0]<@error:argWrongType(expected: :int) N#[1], N#[1]>) ]
 
 ==[enum join should indicate failure]==
@@ -77,11 +78,13 @@ type Four = [ `A(int)]
 type Five = [One | Four]
 
 --[output:expected]--
-alias error:conflictingEnumTag=h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec Four=hfbfd4d194279c72bb9c377f367cf241b9c616849 int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f One=h3ab180fda5303b065a4bbf9b8ec23df40d83636a
 type One = [ `A | `B ]
+alias One#[hfb353110432771bdb690ef67d47cf80f61032eb9]
 type Two = [ `A | One ]
+alias error:conflictingEnumTag#[h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type Three = [ `A(int) | @error:conflictingEnumTag(tag: "A") One ]
 type Four = [ `A(int) ]
+alias Four#[h08e809c3cb23e4a94960588a78b6b0d43e80b5fe]
 type Five = [ One | @error:conflictingEnumTag(tag: "A") Four ]
 
 ==[duplicate recursive]==
@@ -90,7 +93,7 @@ type One = [`A | Two]
 and Two = [`A(int)]
 
 --[output:expected]--
-alias error:conflictingEnumTag=h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias error:conflictingEnumTag#[h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type One = [ `A | @error:conflictingEnumTag(tag: "A") Two#[r1] ]
 and Two = [ `A(int) ]
 
@@ -99,7 +102,7 @@ and Two = [ `A(int) ]
 type Self = [`A | Self]
 
 --[output:expected]--
-alias error:invalidEnum=h49fbf0ea340043d002204371f9e00926593bae65
+alias error:invalidEnum#[h49fbf0ea340043d002204371f9e00926593bae65]
 type Self = [ `A | @error:invalidEnum() Self#[r0] ]
 
 ==[infinite]==
@@ -111,9 +114,10 @@ type A = [ `A | B#[r1] ]
 and B = [ `B | A#[r0] ]
 
 --[output:expected]--
-alias error:invalidEnum=h49fbf0ea340043d002204371f9e00926593bae65 error:invalidType=h8ad8219d907bce91b14c7d3e00812287b0ab7056
+alias error:invalidType#[h8ad8219d907bce91b14c7d3e00812287b0ab7056]
 type X = @error:invalidType() Y#[r1]
 and Y = @error:invalidType() X#[r0]
+alias error:invalidEnum#[h49fbf0ea340043d002204371f9e00926593bae65]
 type A = [ `A | @error:invalidEnum() B#[r1] ]
 and B = [ `B | @error:invalidEnum() A#[r0] ]
 
@@ -122,7 +126,7 @@ and B = [ `B | @error:invalidEnum() A#[r0] ]
 type X = [`A | `A(int)]
 
 --[output:expected]--
-alias error:conflictingEnumTag=h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
+alias error:conflictingEnumTag#[h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type X = [ `A | @error:conflictingEnumTag() `A(int) ]
 
 ==[New fixture]==
@@ -132,7 +136,19 @@ type B = [ A | `Awe(int) ]
 type C = [ `Awe(int) | A]
 
 --[output:expected]--
-alias A=hb5bc2b50d14c16cc0502a9fc8587a1c720291fb5 error:conflictingEnumTag=h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f
 type A = [ `Awe ]
+alias A#[h96f3e9d89eef2da1279133d573e53be8aa09e51e] error:conflictingEnumTag#[h33c8bdf60ea9b504da53d8f33b34a1096a62d8ec] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 type B = [ A | @error:conflictingEnumTag() `Awe(int) ]
 type C = [ `Awe(int) | @error:conflictingEnumTag(tag: "Awe") A ]
+
+==[crafty recursive]==
+--[input:shouldFail]--
+type A = <T: [*]>[T | `A]
+type B = [A<[B]> | `B]
+
+--[output:expected]--
+type A = <T#[0]: [ * ]>[ T#[0] | `A ]
+alias A#[hcab8a150870690a5be4fddec6c6cef35bb9e9b91] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] error:invalidEnum#[h49fbf0ea340043d002204371f9e00926593bae65] error:notAnEnum#[hf16010a7ae4b37140f787a2e06b17030e8329fb3]
+type B = [ @error:notAnEnum() A<
+    @error:argWrongType(expected: :[ * ]) [ @error:invalidEnum() B#[r0] ],
+> | `B ]

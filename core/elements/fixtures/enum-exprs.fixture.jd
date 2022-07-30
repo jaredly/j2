@@ -8,10 +8,22 @@
 --[output:expected]--
 `What(10)
 // [ `What(10) ]
+/* {
+  tag: "What",
+  payload: 10
+} */
 `Hello(`Folks)
 // [ `Hello([ `Folks ]) ]
+/* {
+  tag: "Hello",
+  payload: "Folks"
+} */
 `Two(1, 2, 3)
 // [ `Two(1, 2, 3) ]
+/* {
+  tag: "Two",
+  payload: [1, 2, 3]
+} */
 
 ==[Calling functions]==
 --[input]--
@@ -21,15 +33,21 @@ takeWhatOrWho(`Who)
 takeWhatOrWho(whatOrWho)
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takeWhat=hcd85de6a1facbf2c1efb33da755b321680e36ac0 takeWhatOrWho=hec17aa97b0206ca8dff97b9503182d31f5ee9cfa whatOrWho=h75f1fc730ce550f6a810507b53f871dcb253bcc1
+alias takeWhat#[hcd85de6a1facbf2c1efb33da755b321680e36ac0]
 takeWhat(`What)
 // int
+/* takeWhat("What") */
+alias takeWhatOrWho#[hec17aa97b0206ca8dff97b9503182d31f5ee9cfa]
 takeWhatOrWho(`What)
 // int
+/* takeWhatOrWho("What") */
 takeWhatOrWho(`Who)
 // int
+/* takeWhatOrWho("Who") */
+alias whatOrWho#[h75f1fc730ce550f6a810507b53f871dcb253bcc1]
 takeWhatOrWho(whatOrWho)
 // int
+/* takeWhatOrWho(whatOrWho) */
 
 --[builtins]--
 //:value:takeWhat:(v: [`What]) => int
@@ -41,9 +59,8 @@ takeWhatOrWho(whatOrWho)
 takeWhat(whatOrWho)
 
 --[output:expected]--
-alias error:argWrongType=hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f takeWhat=hc1ddb2c963e54ef87d12bad3be77c118e2fca6dd whatOrWho=h75f1fc730ce550f6a810507b53f871dcb253bcc1
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] takeWhat#[hc1ddb2c963e54ef87d12bad3be77c118e2fca6dd] whatOrWho#[h75f1fc730ce550f6a810507b53f871dcb253bcc1]
 takeWhat(@error:argWrongType(expected: :[ `What ]) whatOrWho)
-// int
 
 --[builtins]--
 //:value:takeWhat:(v: [ `What ]) => int
@@ -55,11 +72,20 @@ whatNum(`What(110))
 whatTen(`What(10))
 
 --[output:expected]--
-alias int=h942cd67cf31d350ec1f39bcd0c933f586dcd176f whatNum=hed7f1742a075998ffaaf39fd584a3cb31c2df29d whatTen=hb6a4ee646daa689f2ce7cc5cb71f48c02c4532fd
+alias whatNum#[h7688dfb0e0b91d9137afcb7a0693cb57eb1c60c9]
 whatNum(`What(110))
 // int
+/* whatNum({
+  tag: "What",
+  payload: 110
+}) */
+alias whatTen#[h41fe87ae3122488bc9be5b65f06685bd4b38f914]
 whatTen(`What(10))
 // int
+/* whatTen({
+  tag: "What",
+  payload: 10
+}) */
 
 --[builtins]--
 //:value:whatTen:(v: [`What(10) ]) => int

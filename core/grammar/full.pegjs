@@ -15,7 +15,8 @@ NamespacedIdText "identifier" = $IdText (":" IdText)*
 
 JustSym = "#[" [0-9]+ "]"
 RecurHash = "#[r" [0-9]+ "]"
-HashRef = "#[h" [0-9a-zA-Z]+ "]"
+HashRef = "#[" HashRefInner "]"
+HashRefInner = "h" [0-9a-zA-Z]+ 
 ShortRef = "#[:" [0-9a-zA-Z]+ "]"
 BuiltinHash = "#[" ("builtin" / "b") "]"
 UnresolvedHash = "#[" ":unresolved:" "]"
@@ -24,9 +25,14 @@ UnresolvedHash = "#[" ":unresolved:" "]"
 // apply.ts
 
 Apply = target:Atom suffixes_drop:Suffix*
-Suffix = CallSuffix / TypeApplicationSuffix
+Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix
 CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
+
+
+// awaits.ts
+
+AwaitSuffix = pseudo:"!"
 
 
 // base.ts
@@ -35,14 +41,20 @@ _lineEnd = '\n' / _EOF
 
 _EOF = !.
 
-Toplevel = TypeAlias / Expression
-TypeToplevel = TypeAlias / Type
+Toplevel = Aliases / TypeAlias / ToplevelLet / Expression
+TypeToplevel = Aliases / TypeAlias / Type
 
-Expression = DecoratedExpression
+Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
+AliasItem = name:$AliasName hash:$HashRef
+AliasName = $NamespacedIdText / $binop
 
-Identifier = text:$IdText hash:($JustSym / $HashRef / $RecurHash / $ShortRef / $BuiltinHash / $UnresolvedHash)?
+Expression = Lambda / BinOp
 
-Atom = Number / Boolean / Identifier / ParenedExpression / TemplateString / Enum / Record
+Identifier = text:$IdText hash:IdHash?
+
+IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
+
+Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -51,10 +63,28 @@ AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 
 
+// binops.ts
+
+BinOp = first:WithUnary rest_drop:BinOpRight* 
+BinOpRight = _ op:binopWithHash _ right:WithUnary
+WithUnary = op_drop:UnaryOpWithHash? inner:DecoratedExpression
+UnaryOpWithHash = op:UnaryOp hash:IdHash?
+UnaryOp = "-" / "!"
+
+binopWithHash = op:binop hash:IdHash?
+binop = $(!"//" [+*^/<>=|&-]+)
+
+ParenedOp = "(" _ inner:binopWithHash _ ")"
+
+Binop = Expression
+
+
+
 // comments.ts
 
 newline = "\n"
 _nonnewline = [ \t\r]* (comment [ \t\r]*)*
+__nonnewline = [ \t\r]+ (comment [ \t\r]*)*
 _ "whitespace"
   = [ \t\n\r]* (comment _)*
 __ "whitespace"
@@ -97,7 +127,8 @@ DecExpr = expr:Expression
 
 // enum-exprs.ts
 
-Enum = "\`" text:$IdText payload:("(" _ CommaExpr? _ ")")?
+Enum = "\`" text:$IdText payload:EnumPayload?
+EnumPayload = "(" _ items:CommaExpr? _ ")"
 
 
 // enums.ts
@@ -107,7 +138,7 @@ EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"?
 EnumCase = TagDecl / Type / Star
 TagDecl = decorators:(Decorator _)* "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
-TagPayload = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
+TagPayload = "(" _ items:TComma? _ ")"
 Star = pseudo:"*"
 
 
@@ -117,9 +148,51 @@ Star = pseudo:"*"
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
 TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
 
-TypeVariables = "<" _ vbls:TypeVbls ">" _ body:Expression
-TypeVbls = first:TypeVbl rest:( _ "," _ TypeVbl)* _ ","? _
-TypeVbl = vbl:Identifier bound:(_ ":" _ Type)?
+
+// ifs.ts
+
+If = "if" __ yes:IfYes no:(_ "else" _ Else)?
+IfYes = conds:IfConds _ block:Block
+IfConds = first:IfCond rest:(_ "," _ IfCond)*
+IfCond = Let / Expression
+Else = Block / If
+
+
+// lambda.ts
+
+Lambda = "(" _ args:LArgs? _ ")" _ res:(":" _ Type)? _ "=>" _ body:Expression
+LArgs = first:LArg rest:(_ "," _ LArg)*
+LArg = pat:Pattern typ:(_ ":" _ Type)?
+
+
+// lets.ts
+
+Block = "{" _ stmts:Stmts? _ "}"
+Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)* _ ';'?
+Stmt = Let / Expression
+Let = "let" _ pat:Pattern _ "=" _ expr:Expression
+
+ToplevelLet = "let" _ first:LetPair rest:(__ "and" __ LetPair)*
+LetPair = name:$IdText typ:(_ ":" _ Type)? _ "=" _ expr:Expression
+
+
+// pattern.ts
+
+Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PBlank / Number / String
+PBlank = pseudo:"_"
+PName = name:$IdText hash:($JustSym)?
+PTuple = "(" _  items:PTupleItems? _ ")"
+PTupleItems = first:Pattern rest:(_ "," _ Pattern)*
+PRecord = "{" _ fields:PRecordFields? _ ","? _ "}"
+PRecordFields = first:PRecordField rest:(_ "," _ PRecordField)*
+PRecordField = name:$IdText pat:PRecordValue?
+PRecordValue = PRecordPattern / PHash
+PRecordPattern = _ ":" _ just:Pattern
+PHash = hash:$JustSym
+
+PDecorated = decorators:(Decorator _)+ inner:Pattern
+PEnum = "\`" text:$IdText payload:PTuple?
+// PUnion
 
 
 // record-exprs.ts
@@ -141,6 +214,12 @@ TRecordKeyValue = key:$AttrText _ ":" _ value:Type default_:(_ "=" _ Expression)
 
 
 
+// switchs.ts
+
+Switch = "switch" _ target:Expression _ "{" _ cases:Case* _ "}"
+Case = _ pat:Pattern _ "=>" _ expr:Expression ";"?
+
+
 // type-vbls.ts
 
 TApply = inner:TAtom args_drop:(_ "<" _ TComma _ ">")*
@@ -156,7 +235,7 @@ TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Typ
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
+TAtom = TBlank / TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
 
 TOps = left:TOpInner right_drop:TRight*
@@ -164,7 +243,7 @@ TRight = _ top:$top _ right:TOpInner
 top = "-" / "+"
 TOpInner = TDecorated / TApply
 
-TParens = "(" _ items:TComma? _ ")"
+TParens = "(" _ items:TComma? open:(_ "*")? _ ")"
 
 TArg = label:($IdText _ ":" _)? typ:Type
 TArgs = first:TArg rest:( _ "," _ TArg)* _ ","? _
@@ -172,3 +251,5 @@ TLambda = "(" _ args:TArgs? ")" _ "=>" _ result:Type
 
 TypeAlias = "type" _ first:TypePair rest:(_ "and" _ TypePair)*
 TypePair = name:$IdText _ "=" _ typ:Type
+
+TBlank = pseudo:"_"

@@ -31,14 +31,14 @@ export type RecordKeyValue = {
 };
 
 export type IRecord = {
-    type: 'IRecord';
+    type: 'Record';
     items: IRecordKeyValue[];
     spreads: t.IExpression[];
     loc: t.Loc;
 };
 
 export type IRecordKeyValue = {
-    type: 'IRecordKeyValue';
+    type: 'RecordKeyValue';
     key: string;
     value: t.IExpression;
     loc: t.Loc;

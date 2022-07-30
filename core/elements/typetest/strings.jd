@@ -5,5 +5,3 @@
 @type:shouldBe(:"hello") "hello"
 
 @type:shouldMatch(:"hello") ("he" + "llo")
-
-// @type:shouldMatch(:"h" + string) ("he" + string)

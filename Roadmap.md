@@ -1,13 +1,356 @@
 
+# North Starnstuff
+
+WHAT IS MY
+current north star
+
+- getting a basic Task / async/await / error coalescence story going
+	- need withHandler, andThen
+	- and a bunch of custom js dealio
+- getting some kind of UI framework going
+	- hmmmm i dunno what the story is
+- GLSL PLSSS
+
 So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
-- [ ] little cleanup, remove all of the `as any`s
+## Next little minute
 
-- [ ] binops
-	- [ ] parse/print/etc?
-- [ ] lambdas
+- [ ] andThen!
+	- [x] basic support with specified args
+	- [ ] could be cool to be able to infer the type variables.
+		however, I assume we won't be doing too much of that.
+- [ ] await!
+	- [x] syntaxxx
+	- [x] getType of the await
+	- [x] getType of the lambda, gotta do it
+	- [ ] transform the IR pls
+- [ ] MAKE A THING
+	- power-call! Also known as `await` probably.
+		`print!()`.
+		`let m = print!(); ...` => `andThen<??, ??, ??, ??>(print(), m => ...)`
+- [ ] let's do some member expression support, so `makeSuper` will work better
+
+### [ ] Switch type refinement!
+```
+let wantsTwo = (v: [`Two(int)]) => 123
+
+(m: [`One | `Two(int)]) => switch m {
+	`One => 1
+	x => wantsTwo(x)
+}
+```
+
+eh so I might not actually need type refinement to make if/let compile ok.
+like, maybe it would be nice idk. but, I can just compile if/lets in tojs, and
+I think it'll be fine.
+
+- [ ] make if/let work!
+	hmmmmmm might be awkward. like
+	for traversal I mean. I'll have to have a node
+	that combines the (test) with the (yes) so I can ensure that type
+	refinements happen correctly.
+
+	yeah that sounds fine!
+
+	SOULD if/let be a different thing entirely from if?
+	eh, probably not.
+
+	if let hello = what,
+		 someboolean,
+		 let other = things {
+			// yeah it's all one happy family.
+		 }
+
+		relatedly, you could do
+		if 1 < 3, 3 > 2 { }
+		so `,` instead of `&`.
+
+
+
+- [x] get it so that there's one codepath, used by both the web ui & the jest tests.
+	- outputs: validation, annotations, jsraw & stuff
+		- text -> ast
+		- ast -> tast
+		- tast (analyze)
+		- for each toplevel
+			- validate
+			- refmt (w/ sourcemap???)
+			- ToIR
+			- ToJS
+	- [x] OK FOLKS, use `processFile` and `processTypeFile` everywhere
+		- [x] run-test.ts
+			- [x] initial
+			- [x] make sure failures propagate
+			- [x] see if any other validation needs to come through
+			- [x] figure out the Alias toplevel dealio
+				- when fmting things back out, we probably want to ..
+					.. ok maybe include 'aliases' in the toplevelinfo
+						for a given thing?
+					which means we might as well just not return the
+					`ast`, but instead use our custom object. 🤔.
+		- [x] Test.tsx
+		- [x] typetest.ts
+		- [x] TypeTest.tsx
+		- [x] OneFixture
+			- ugh why is my comment placement stuff not working?
+				why won't it place between lines?
+				I feel like I would want comments to be 'alwaysbreak' type things.
+				OH it was that my `loc`s on outer elements were wrong.
+		- [x] fixtures.test.ts
+- [x] then get rid of `syms`, so that we can pave the way for type refinement
+	- [ ] basic type refinement?
+- [ ] if/let it up my folks
+
+## Switch next
+
+- [ ] set up a `simplify` thing
+	like, 'if a switch target is complex, bring it out into a let'
+- [ ] also a `extract stmts to the toplevel`
+- [ ] and 'switch to if/lets'
+	- once we're at `if let`s, I think we're in good shape?
+		BUT I do need to get type refinement working
+	- ehm. ... 
+
+- [x] ugh it's really vexing that the UI uses different codepaths for at least some of its stuff, such that it can be broken without the jest tests being alerted.
+
+... run 'analyze' after 'simplify', to ensure that nothing went wrong
+hmmm, so if/let
+can IR .. do things like 
+
+```js
+/*
+
+switch hello {
+	`One(thing) => thing
+	`Two(12, b) => 2 * b
+	`Three => 23
+}
+
+// typeof hello !== 'string' && hello.tag === 'One'
+if let `One(thing) = hello {
+	thing
+// typeof hello !== 'string' && hello.tag === 'Two' && hello.payload[0] === 12
+} else if let `Two(12, b) = hello {
+	let `Two(_, b) = hello
+	2 * b
+} else {
+	23
+}
+
+*/
+```
+
+OK um . 
+
+### Type Refinement!
+So, in order for type refinement to work...
+I'll need to get rid of syminfo? 🤔
+
+
+
+
+
+ok so, I need much better inference (typeMatches should return new constraints)
+
+also, I want : 
+
+
+
+BIG NEXT
+
+- [x] tests in browser
+- [x] value/fn recursion
+	- [x] oh wait, aliases ...
+		hm ok
+		...
+- [x] switch/enum patterns
+	- next up! switch!
+	- hm should I do if/let first?
+		that way I can change switch to a series of if/lets.
+	- [x] basic
+	- [x] whyyyyy isn't resolve working?
+	- [x] Enum?
+- [ ] figure out withHandler and andThen
+	- so, the function won't have a real type, right?
+		andThen<A: [*], B: [*]>(
+			Task<A, R>,
+			R => Task<B, V>
+		) => Task<[A, B], V>
+	- withHandler<A: [*], B: [A | *], R>(
+			Task<B, R>,
+			t => Task<A, R>,
+		)
+- [ ] eq deriving for realsies
+
+# Much more fancy type arithmatic
+
+- comparison ops, let's do this
+- mul/div why not
+
+# TYPE INFERENCE
+
+Ok sooo I think I want `typeMatches` to return `false` or
+a list of new constraints that must be successfully applied
+in order for the types to match.
+... and ... I need a way to constrain variables to be equal
+to each other ...
+
+anyway, worst that happens is people need to annotate stuff.
+which is kinda fine. idk.
+
+ohhh also what happens when we .. have a type variable on
+either side of the typeMatches?
+like `(a, b) => a(b) + takesInt(a)`?
+
+hmmm so `(a, b) => (a == b, takesInt(a), a == b)`
+.. the first a == b fails, the second one succeeds.
+I guess I need to do an inference pass first, and then
+a 'highlight all errors' pass. Yeah it doesn't work to mix them.
+
+
+
+
+ooohhhh what if the type restriction shortcut syntax looks like:
+- `Type 'where' Pattern`?
+that could be cool.
+ok also with type arithmetic, I might need to allow
+an upper & lower bound to a number. idk.
+
+
+# Patternings
+
+- Enum (w/ or w/o payload specified)
+- Constants
+- Exaustiveness
+- `as` pls
+
+# SWitches
+
+
+
+
+# Let & If
+What validation do I need?
+- [x] let, pattern must match initializer type
+- [ ] let, pattern needs to be exhaustive.
+	- ok this doesn't actually enter into the picture until
+		we can have Enum patterns. because so far we only have
+		record patterns, which are always exaustive.
+- if, cond/yes/no ... I think that's it?
+- it might be good to allow full patterns at the toplevel?
+	although, the UI coud make it so that it doesn't come up.
+	If you're making a toplevel term, you fill in the name,
+	and then go to the "body". Which is a block by default.
+
+
+# Make ExprTests
+or probably just tests
+
+- [x] make the tests, make them work
+- [x] toplevel let! gotta have it folks, for the tests
+	- [x] jctx addName, my jctx needs to persist, and know
+		about toplevel, and such.
+- [x] if/else comes next
+- [x] unwrap iffe pls
+	- [x] why is transform not getting all the sub dealios?
+- [x] oh with empty let, need to just grab the syms out of the pattern.
+- [ ] then recursive functions pls
+
+
+# Up nExtt
+
+- [ ] hm for `unit` value, maybe have a global variable `unit` or something?
+	so that you can do cheap comparisons? idk can just do a .length
+
+- [x] (a) => a + 2
+	- so we're looking at a given option, so we don't want to just constrain
+		in case this isn't the one
+		So we like ... return a list of ... constraints?
+- [x] `let` thanks
+	- [x] basic working
+	- [x] keep track of generated js in fixture output, I'd say yes
+		- hmmm orrr ToIR? like the IR output?
+
+- [x] tvbl as apply target
+- [x] (a, b, *) for open tuples?
+
+## Inferred stuff, feel free to drop it!
+
+hm I guess I need to have some tests that are like
+"print & reparse" and make sure it matches? oh wait I already have that.
+
+## so can we do some type variable stuff
+tvbl, is like ok folks
+
+- with patterns, should I be ... passing up ... a 'path' or constraint things. yeah I think so.
+hm nope. make a `typeForPattern`, should suffice.
+Also need a `constrainType` that's the opposite of `unifyTypes`.
+
+- [x] lambda getType make it work
+- [x] .res, we should keep track if it was inferred, and
+	if so, don't print it in toast. Same for arg types.
+
+- [x] ok, when adding decorators - clear them first
+- [x] fix jest tests so I can like run them
+	- [x] turns out I need to do analyze after parsing because I'm doing inference stufffss, so that comparing them works.
+	- [x] fix the pattern to not have an array so we can traverse it
+	- [x] figure out what I want to do with type variables...
+		ok yeah, in the anaalyze pass I want to replace the TVbl
+		with whatever it was inferref to be. Sounds reasonable.
+
+
+- [x] make a basic collectSymInfo
+	- oh but like ... 
+
+SO
+I think I want a `symInfo` dealio that I can get by
+traversing a tast
+
+and then pass to to-ast and to-ir and to-js ctx's
+So that they don't have to keep track of a bunch of madness.
+
+Does that make sense?
+Seems like it would.
+
+
+# and such
+
+
+So ... what about
+- [x] ... having a `TBlank` type. would be good. For when there's an `apply` that needs application. like "underscore"
+
+
+- [x] normal (reolved) apply, let it infer type args
+- [x] oh I need to support Expression_ApplyPost in transformer
+- [x] when printing apply's, drop type args if inferrable
+
+- [x] little cleanup, remove all of the `as any`s
+	- [x] do some by hand
+	- [x] make a little macro system for generating some switch statements
+	- [x] get fed up, do a full codegen step for all aggregate types
+	- [x] YAYYY love it
+
+- [x] binops
+	- [x] parse
+	- [x] totast
+		- [x] basic
+		- [x] honor precendence
+	- [x] allow referencing binops like (*)
+	- [x] print with parens if appropriate in an apply
+	- [x] print for real, with parens for precedence where needed
+	- [x] print js too? like yeah
+	- [x] binops w/ type variables, so
+		<A: int, B: int>(a: A, b: B) => A + B
+	- [x] eq! <A: eq>(a: A, b: A) => bool
+	- [ ] ohhhh am I going to need multiple & divide at the type level?
+		Or, am I just going to have fanciness for + and -?
+		Because, once I get fancy, it might be hard to go back.
+		Although my precedence tree rebalancing dealio does seem
+		very slick & simple to understand.
+
+- [x] lambdas
 - [ ] ifs
 - [ ] lets
 - [ ] have js gen use pretty names where possible

@@ -1,14 +1,14 @@
 import { Ctx } from '..';
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 import * as p from '../grammar/base.parser';
-import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as ICtx } from '../ir/ir';
 import * as pp from '../printer/pp';
+import { Ctx as PCtx } from '../printer/to-pp';
+import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
 import { Expression, Loc } from '../typed-ast';
-import { Ctx as ACtx } from '../typing/to-ast';
-import { Visitor } from '../transform-tast';
 import { decorate, VisitorCtx } from '../typing/analyze';
+import { Ctx as ACtx } from '../typing/to-ast';
 import { typeMatches } from '../typing/typeMatches';
 
 export const grammar = `
@@ -42,7 +42,7 @@ export type TemplateString = {
 };
 
 export type ITemplateString = {
-    type: 'ITemplateString';
+    type: 'TemplateString';
     first: string;
     rest: Array<{ expr: t.IExpression; suffix: string; loc: Loc }>;
     loc: Loc;
@@ -55,7 +55,13 @@ export const Analyze: Visitor<VisitorCtx> = {
         let changed = false;
         const rest: TemplateString['rest'] = node.rest.map(
             ({ expr, suffix, loc }) => {
-                const expt = ctx.getType(expr);
+                let expt = ctx.getType(expr);
+                if (expt?.type === 'TVbl') {
+                    expt = ctx.addTypeConstraint(
+                        expt.id,
+                        ctx.typeByName('string')!,
+                    );
+                }
                 // HMMMM This might ... end up wrapping multiple times?
                 // like ... and the idxs we're doing to be having with noloc
                 // are not going to disambiguate. I think I need to think
@@ -186,12 +192,10 @@ export const ToIR = {
     Ref: (x: t.Ref, ctx: ICtx) => x,
     TemplateString(x: t.TemplateString, ctx: ICtx): t.ITemplateString {
         return {
-            type: 'ITemplateString',
-            loc: x.loc,
-            first: x.first,
+            ...x,
             rest: x.rest.map((part) => ({
                 ...part,
-                expr: ctx.ToIR[part.expr.type](part.expr as any, ctx),
+                expr: ctx.ToIR.Expression(part.expr, ctx),
             })),
         };
     },
@@ -206,10 +210,10 @@ export const ToJS = {
     Boolean(x: t.Boolean, ctx: JCtx): b.BooleanLiteral {
         return b.booleanLiteral(x.value);
     },
-    Ref(x: t.Ref, ctx: JCtx): b.Identifier {
-        return b.identifier(t.refHash(x.kind));
-    },
-    ITemplateString(x: t.ITemplateString, ctx: JCtx): b.TemplateLiteral {
+    TemplateString(x: t.ITemplateString, ctx: JCtx): b.Expression {
+        // if (!x.rest.length) {
+        //     return b.stringLiteral(x.first);
+        // }
         return b.templateLiteral(
             [x.first]
                 .concat(x.rest.map((r) => r.suffix))

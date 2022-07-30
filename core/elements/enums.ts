@@ -1,4 +1,4 @@
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
@@ -7,9 +7,12 @@ import * as t from '../typed-ast';
 import { addDecorator, Ctx, tdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { Ctx as TMCtx, unifyPayloads } from '../typing/typeMatches';
-import { unifyTypes } from '../typing/unifyTypes';
-import { expandEnumCases, payloadsEqual } from '../typing/typeMatches';
+import {
+    Ctx as TMCtx,
+    expandEnumCases,
+    payloadsEqual,
+    unifyPayloads,
+} from '../typing/typeMatches';
 import { recordAsTuple } from './records';
 
 // type State:Effect = <T>[ `Get | `Set(T) ]
@@ -21,7 +24,7 @@ EnumCases = first:EnumCase rest:( _ "|" _ EnumCase)* _ "|"?
 EnumCase = TagDecl / Type / Star
 TagDecl = decorators:(Decorator _)* "\`" text:$IdText payload:TagPayload?
 // add '/ Record' here?
-TagPayload = "(" _ first:Type rest:(_ "," _ Type)* _ ","? _ ")"
+TagPayload = "(" _ items:TComma? _ ")"
 Star = pseudo:"*"
 
 `;
@@ -60,9 +63,9 @@ export const ToTast = {
                                     ctx.ToTast.Decorator(d, ctx),
                                 ),
                                 payload: c.payload
-                                    ? c.payload.items.length === 1
+                                    ? c.payload.items?.items.length === 1
                                         ? ctx.ToTast.Type(
-                                              c.payload.items[0],
+                                              c.payload.items.items[0],
                                               ctx,
                                           )
                                         : {
@@ -70,17 +73,18 @@ export const ToTast = {
                                               loc: noloc,
                                               spreads: [],
                                               open: false,
-                                              items: c.payload.items.map(
-                                                  (p, i) => ({
-                                                      type: 'TRecordKeyValue',
-                                                      loc: noloc,
-                                                      key: i.toString(),
-                                                      value: ctx.ToTast.Type(
-                                                          p,
-                                                          ctx,
-                                                      ),
-                                                  }),
-                                              ),
+                                              items:
+                                                  c.payload.items?.items.map(
+                                                      (p, i) => ({
+                                                          type: 'TRecordKeyValue',
+                                                          loc: noloc,
+                                                          key: i.toString(),
+                                                          value: ctx.ToTast.Type(
+                                                              p,
+                                                              ctx,
+                                                          ),
+                                                      }),
+                                                  ) ?? [],
                                           }
                                     : undefined,
                                 loc: c.loc,
@@ -115,11 +119,15 @@ export const ToAst = {
                                     ? {
                                           type: 'TagPayload',
                                           loc: c.loc,
-                                          items: enumPayload(
-                                              c.payload,
-                                              ctx,
-                                              c.loc,
-                                          ),
+                                          items: {
+                                              type: 'TComma',
+                                              items: enumPayload(
+                                                  c.payload,
+                                                  ctx,
+                                                  c.loc,
+                                              ),
+                                              loc: c.loc,
+                                          },
                                       }
                                     : null,
                                 loc: c.loc,
@@ -143,7 +151,7 @@ export const ToPP = {
     TEnum(t: p.TEnum, ctx: PCtx): pp.PP {
         return pp.items(
             [
-                pp.text('[ ', noloc),
+                pp.text('[' + (t.cases?.items.length ? ' ' : ''), noloc),
                 ...pp.interleave(
                     t.cases?.items.map((c) => {
                         if (c.type === 'Star') {
@@ -158,9 +166,10 @@ export const ToPP = {
                                     pp.text(`\`${c.text}`, noloc),
                                     c.payload
                                         ? pp.args(
-                                              c.payload.items.map((item) =>
-                                                  ctx.ToPP.Type(item, ctx),
-                                              ),
+                                              c.payload.items?.items.map(
+                                                  (item) =>
+                                                      ctx.ToPP.Type(item, ctx),
+                                              ) ?? [],
                                               c.payload.loc,
                                           )
                                         : // pp.items(
@@ -186,15 +195,45 @@ export const ToPP = {
                     }) || [],
                     ' | ',
                 ),
-                pp.text(' ]', noloc),
+                pp.text((t.cases?.items.length ? ' ' : '') + ']', noloc),
             ],
             t.loc,
         );
     },
 };
 
+import { Ctx as ICtx } from '../ir/ir';
+export const ToIR = {
+    Enum({ loc, tag, payload }: t.Enum, ctx: ICtx): t.IEnum {
+        return {
+            type: 'Enum',
+            loc,
+            tag,
+            payload: payload ? ctx.ToIR.Expression(payload, ctx) : undefined,
+        };
+    },
+};
+
+import * as b from '@babel/types';
+import { Ctx as JCtx } from '../ir/to-js';
+export const ToJS = {
+    Enum({ loc, tag, payload }: t.IEnum, ctx: JCtx): b.Expression {
+        if (!payload) {
+            return b.stringLiteral(tag);
+        }
+        return b.objectExpression([
+            b.objectProperty(b.identifier('tag'), b.stringLiteral(tag)),
+            b.objectProperty(
+                b.identifier('payload'),
+                ctx.ToJS.IExpression(payload, ctx),
+            ),
+        ]);
+    },
+};
+
 const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
     // We'll special case 'recur ref that's applied'
+    // ctx.debugger();
     if (
         c.type === 'TApply' &&
         c.target.type === 'TRef' &&
@@ -212,12 +251,14 @@ const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
         case 'String':
         case 'TOps':
         case 'TLambda':
+        case 'TVbl':
         case 'TVars':
         // These are taken care of by resolveAnalyzeType
         case 'TDecorated':
         case 'TApply':
         case 'TRecord':
             return false;
+        case 'TBlank':
         case 'TEnum':
             return true;
         case 'TRef':
@@ -264,7 +305,9 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                 used[k.tag] = k;
                 return k;
             } else {
+                // ctx.ctx.debugger();
                 const res = ctx.ctx.resolveRefsAndApplies(k);
+                // console.log('resolving', k, res);
                 if (res?.type === 'TEnum') {
                     const expanded = expandEnumCases(res, ctx.ctx);
                     if (!expanded) {
@@ -315,24 +358,6 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         });
         return changed ? { ...node, cases } : null;
     },
-    // Type_TEnum(node, ctx) {
-    //     const enums = expandEnumCases(node, ctx.ctx);
-    //     if (!enums) {
-    //         return tdecorate(node, 'invalidEnum', ctx.hit, ctx.ctx);
-    //     }
-    //     const map: { [key: string]: EnumCase } = {};
-    //     for (let kase of enums) {
-    //         // Multiple cases with the same name
-    //         if (
-    //             map[kase.tag] &&
-    //             !payloadsEqual(kase.payload, map[kase.tag].payload, ctx.ctx)
-    //         ) {
-    //             return tdecorate(node, 'invalidEnum', ctx.hit, ctx.ctx);
-    //         }
-    //         map[kase.tag] = kase;
-    //     }
-    //     return null;
-    // },
 };
 
 export const enumCaseMap = (canEnums: EnumCase[], ctx: TMCtx) => {
@@ -359,6 +384,7 @@ export const enumTypeMatches = (
     candidate: TEnum,
     expected: t.Type,
     ctx: TMCtx,
+    path?: string[],
 ) => {
     // [ `What ] matches [ `What | `Who ]
     // So everything in candidate needs to match something
@@ -366,8 +392,8 @@ export const enumTypeMatches = (
     if (expected.type !== 'TEnum') {
         return false;
     }
-    const canEnums = expandEnumCases(candidate, ctx);
-    const expEnums = expandEnumCases(expected, ctx);
+    const canEnums = expandEnumCases(candidate, ctx, path);
+    const expEnums = expandEnumCases(expected, ctx, path);
     if (!canEnums || !expEnums) {
         return false;
     }
@@ -385,12 +411,18 @@ export const enumTypeMatches = (
             if (expected.open) {
                 continue;
             }
-            console.log('no extra', kase.tag, expected.open, candidate.open);
+            // console.log('no extra', kase.tag, expected.open, candidate.open);
             return false;
         }
         if (
             !payloadsEqual(kase.payload, expMap[kase.tag].payload, ctx, false)
         ) {
+            // console.log(`Payload not equal ${kase.tag}`);
+            // console.log(typeToString(kase.payload!, ctx as FullContext));
+            // console.log(
+            //     typeToString(expMap[kase.tag].payload!, ctx as FullContext),
+            // );
+            // console.log(kase.payload, expMap[kase.tag].payload);
             return false;
         }
     }

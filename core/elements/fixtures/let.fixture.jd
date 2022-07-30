@@ -1,0 +1,179 @@
+##[fixtures]##
+==[trying out some blocks]==
+--[input]--
+{ 
+let x = 10
+let y = 20
+x + y
+};
+ { 1 }
+
+--[output:expected]--
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+{
+    let x#[0] = 10;
+    let y#[1] = 20;
+    x#[0] + y#[1];
+}
+// 30
+/* {
+  let x = 10;
+  let y = 20;
+  return x + y;
+} */
+{
+    1;
+}
+// 1
+/* 1 */
+
+==[toplevel let]==
+--[input]--
+let x = 10
+let y = x + 10
+
+--[output:expected]--
+let x = 10
+// 10
+/* 10 */
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] x#[hfb3ab6073655e042df98cf160644857639baed08]
+let y = x + 10
+// 20
+/* $terms.x + 10 */
+
+==[New fixture]==
+--[input]--
+{
+let (x, y) = if true { (2 ,3) } else { (3, 4)};
+}
+
+--[output:expected]--
+{
+    let (x#[0], y#[1]) = if true {
+        (2, 3);
+    } else {
+        (3, 4);
+    };
+}
+// ()
+/* {
+  let x, y;
+
+  if (true) {
+    [x, y] = [2, 3];
+  } else {
+    [x, y] = [3, 4];
+  }
+} */
+
+==[New fixture_]==
+--[input]--
+{
+let {x, y} = if true { {x: 10, y: 20} } else { {x: 10, y: 20} }
+}
+
+--[output:expected]--
+{
+    let {x#[0], y#[1]} = if true {
+        {x: 10, y: 20};
+    } else {
+        {x: 10, y: 20};
+    };
+}
+// ()
+/* {
+  let x, y;
+
+  if (true) {
+    ({
+      x: x,
+      y: y
+    } = {
+      x: 10,
+      y: 20
+    });
+  } else {
+    ({
+      x: x,
+      y: y
+    } = {
+      x: 10,
+      y: 20
+    });
+  }
+} */
+
+==[New fixture__]==
+--[input:shouldFail]--
+{
+  let (x, y) = {a: 1, b: 2};
+}
+
+--[output:expected]--
+alias error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280]
+{
+    let (x#[0], y#[1]) = @error:patternMismatch() {a: 1, b: 2};
+}
+
+==[nest that pattern up]==
+--[input]--
+{
+let {x: {a: b}} = {x: {a: 10}}
+b + 2
+}
+
+--[output:expected]--
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+{
+    let {x: {a: b#[0]}} = {x: {a: 10}};
+    b#[0] + 2;
+}
+// 12
+/* {
+  let {
+    x: {
+      a: b
+    }
+  } = {
+    x: {
+      a: 10
+    }
+  };
+  return b + 2;
+} */
+
+==[not exhaustive]==
+--[input:shouldFail]--
+{
+let 1 = 1
+}
+
+--[output:expected]--
+alias error:notExhaustive#[h8800c0a4e23ff598b839e081d716b8b28bf0b0e7]
+{
+    let @error:notExhaustive() 1 = 1;
+}
+
+==[let enum]==
+--[input]--
+{
+  let `One(a) = `One(20)
+  a
+} == 20
+
+--[output:expected]--
+alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
+{
+    let `One(a#[0]) = `One(20);
+    a#[0];
+} == 20
+// bool
+/* (() => {
+  let {
+    payload: a
+  } = {
+    tag: "One",
+    payload: 20
+  };
+  return a;
+})() == 20 */

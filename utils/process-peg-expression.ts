@@ -163,6 +163,9 @@ export const processExpression = (
                     ]);
                 }
             });
+            if (attributes.length === 1 && attributes[0][0] === 'just') {
+                return [attributes[0][1], attributes[0][2]];
+            }
 
             // TODO: if the type is | or null, and we're verifying that it exists, then
             // we can drop the orNull
@@ -209,7 +212,7 @@ export const processExpression = (
             if (hasTypeAttribute) {
                 throw new Error(`Can't have an attribute named type`);
             }
-            const typeName = hasTypeAttribute ? '$type' : 'type';
+            const typeName = 'type';
             ruleTags.push(ctx.ruleName);
 
             const recordType = t.tsTypeLiteral(
