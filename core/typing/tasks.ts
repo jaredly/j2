@@ -119,16 +119,27 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
                     },
                     {
                         key: '1',
-                        value: {
-                            type: 'TLambda',
-                            loc: one.loc,
-                            args:
-                                // isUnit(karg)
-                                //     ? []
-                                // :
-                                [{ label: 'arg', typ: karg, loc: karg.loc }],
-                            result: taskType(targs, ctx, loc),
-                        },
+                        value:
+                            karg.type === 'TEnum' &&
+                            !karg.open &&
+                            !karg.cases.length
+                                ? tunit
+                                : {
+                                      type: 'TLambda',
+                                      loc: one.loc,
+                                      args:
+                                          // isUnit(karg)
+                                          //     ? []
+                                          // :
+                                          [
+                                              {
+                                                  label: 'arg',
+                                                  typ: karg,
+                                                  loc: karg.loc,
+                                              },
+                                          ],
+                                      result: taskType(targs, ctx, loc),
+                                  },
                         type: 'TRecordKeyValue',
                         default_: null,
                         loc: value.loc,

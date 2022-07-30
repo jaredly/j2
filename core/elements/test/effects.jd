@@ -1,21 +1,17 @@
-alias Task#[h36ea667ef0c00c6fcbfe2206360b8ce768e10926] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
-let print = (value#[0]: string):Task<[ `Print(string, ()) ], ()> => `Print(
-    value#[0],
-    (()) => `Return(),
-)
-let read = ():Task<[ `Read((), string) ], string> => `Read((), (v#[0]: string) => `Return(v#[0]))
-alias print#[hde7cec5951f3f0eab2a07e2fdaf91663d3d54f59] read#[h9a363f2b6907fcabe3bb866a4d9d96971fc54128]
-let helloFolks = ():Task<[ `Read((), string) | `Print(string, ()) ], string> => {
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+let print = (value#[0]: string) => `Print(value#[0], (()) => `Return())
+let read = `Read((), (v#[0]: string) => `Return(v#[0]))
+alias print#[h795e726bf4f5e172635cc0179d9ca57474b0b4d1] read#[hb4960a73062670598fa2100bb3c961af8368de28]
+let helloFolks = () => {
     print("Hello folks")!;
-    let v#[0] = read()!;
-    print("Got ${v#[0]}")!;
-    v#[0];
+    print("Got ${read!}!")!;
+    "done ${read!}";
 }
-alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb] helloFolks#[h215bd42b5fc4b4651436263d4862a0666313de1d] testIO#[h25df8d32da0257765155b8b1efef23b29d91a707]
-testIO<string>("test", helloFolks()) == "test"
-alias *#[hc964b8e32721e8a2764054a069ab98c885f00921]
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
+// testIO<string>("test", helloFolks()) == "done test"
 2 == 2 * 1
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
 3 == 2 + 1
-/*let get = (x#[1]: ()) => `Get((), (v#[0]: T#[:unresolved:]) => v#[0])
-let getAndSet = () => ()*/
+alias Task#[h36ea667ef0c00c6fcbfe2206360b8ce768e10926]
+// Hmm some
+let fail: Task<[ `Failure([ `Bad | `News(string) ], []) ]> = `Failure(`Bad, ())

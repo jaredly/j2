@@ -295,6 +295,7 @@ import { typeToplevelT } from './base';
 import { patternIsExhaustive } from './exhaustive';
 import { IIf } from './ifs';
 import { ISwitch } from './switchs';
+import { typeMatches } from '../typing/typeMatches';
 export const ToJS = {
     Block(node: t.IBlock, ctx: JCtx): b.BlockStatement {
         return b.blockStatement(
@@ -409,5 +410,27 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             return stmt;
         });
         return [changed ? { ...node, stmts } : null, ctx];
+    },
+    ToplevelLet(node, ctx) {
+        let changed = false;
+        const items = node.elements.map((el) => {
+            if (el.typ) {
+                const t = ctx.ctx.getType(el.expr);
+                if (t && !typeMatches(t, el.typ, ctx.ctx)) {
+                    changed = true;
+                    return {
+                        ...el,
+                        expr: decorate(
+                            el.expr,
+                            'resMismatch',
+                            ctx.hit,
+                            ctx.ctx,
+                        ),
+                    };
+                }
+            }
+            return el;
+        });
+        return changed ? { ...node, elements: items } : null;
     },
 };

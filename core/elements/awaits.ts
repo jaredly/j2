@@ -405,7 +405,7 @@ export const awaitBlock = (expr: t.Block, ctx: Ctx): AwaitChunk | null => {
                                             loc: noloc,
                                         },
                                         typ: result,
-                                        inferred: true,
+                                        inferred: false,
                                         loc: noloc,
                                     },
                                 ],

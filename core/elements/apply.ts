@@ -536,24 +536,15 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                               } as t.Decorator['args'][0],
                           ]
                         : []),
-                    // {
-                    //     label: 'got',
-                    //     arg: {
-                    //         type: 'DType',
-                    //         loc: noloc,
-                    //         typ: at,
-                    //     },
-                    //     loc: noloc,
-                    // } as t.Decorator['args'][0],
-                    // {
-                    //     label: 'got',
-                    //     arg: {
-                    //         type: 'DType',
-                    //         loc: noloc,
-                    //         typ: at,
-                    //     },
-                    //     loc: noloc,
-                    // } as t.Decorator['args'][0],
+                    {
+                        label: 'got',
+                        arg: {
+                            type: 'DType',
+                            loc: noloc,
+                            typ: at,
+                        },
+                        loc: noloc,
+                    } as t.Decorator['args'][0],
                 ]);
             }
             return arg;

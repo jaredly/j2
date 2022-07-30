@@ -17,13 +17,30 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
+### Moving forward with effect crushing
+
+- [ ] wow gotta make generic functions folks
+- [x] hoist awaits to a block-level, thanks!
+	- [x] make sure nested awaits still work
+- [ ] and then withHandler! yes please.
+- [ ] then we can actually start into some of those eff paper examples!
+	That would be charming.
+
+	Oh also can we do some error coalescing?
+
+
+
+
+
+
+
 - [x] TSTEES are broken
 	we've got an import loop somewhere, and its bad
 - [ ] ALSOOOO Why does `FullContext` have `ToTast` on it????
 	we should definitely have the conversion ctx's be like
 	`FullContext & {ToTast: ToTast}`.
 
-- [ ] STOP SHORTENING ALIASES it jumps too much
+- [x] STOP SHORTENING ALIASES it jumps too much
 
 	because now defaultCtx is dying.
 - [-] try doing ... a more forgiving parser! closing things are optional! but recommended.

@@ -132,6 +132,12 @@ const liftStmts: Visitor<SCtx> = {
                 transformStmt(
                     stmt,
                     {
+                        ExpressionPost_Await(node, path) {
+                            return path[path.length - 2] === 'Let' ||
+                                node === stmt
+                                ? null
+                                : lift(node);
+                        },
                         Expression_Block(node, path) {
                             return path[path.length - 2] === 'Let' ||
                                 node === stmt
