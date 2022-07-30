@@ -1,4 +1,5 @@
-import { noloc, refsEqual } from '../ctx';
+import { refsEqual } from '../ctx';
+import { noloc } from '../consts';
 import { enumTypeMatches } from '../elements/enums';
 import { recordMatches } from '../elements/records';
 import { tvarsMatches } from '../elements/type-vbls';

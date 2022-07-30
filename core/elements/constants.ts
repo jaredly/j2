@@ -1,5 +1,5 @@
 import { Ctx } from '..';
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 import * as p from '../grammar/base.parser';
 import { Ctx as ICtx } from '../ir/ir';
 import * as pp from '../printer/pp';

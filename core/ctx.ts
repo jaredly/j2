@@ -1,5 +1,6 @@
 import hashObject from 'object-hash';
 import { Ctx } from '.';
+import { noloc } from './consts';
 import { DecoratorDecl } from './elements/decorators';
 import { typeForPattern } from './elements/pattern';
 import { TVar } from './elements/type-vbls';
@@ -709,11 +710,6 @@ export const hashExpr = (t: Expression) =>
     hashObject(serial(transformExpression(t, locClearVisitor, null)));
 export const hashExprs = (t: Expression[]) => hashObject(serial(t));
 
-export const noloc: Loc = {
-    start: { line: 0, column: 0, offset: -1 },
-    end: { line: 0, column: 0, offset: -1 },
-    idx: -1,
-};
 export const tref = (ref: RefKind): Type => ({
     type: 'TRef',
     ref,

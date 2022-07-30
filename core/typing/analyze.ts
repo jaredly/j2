@@ -2,7 +2,8 @@
 // Also, this is where we try to do type-based resolution.
 // Should I separate the two steps? idk.
 
-import { FullContext, GlobalType, GlobalValue, noloc } from '../ctx';
+import { FullContext, GlobalType, GlobalValue } from '../ctx';
+import { noloc } from '../consts';
 import { typeToplevelT } from '../elements/base';
 import { getLocals, typeForPattern } from '../elements/pattern';
 import { ErrorTag } from '../errors';
@@ -257,6 +258,46 @@ export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
     );
 };
 
+export const blockLocals = (node: t.Block, ctx: TMCtx) => {
+    const locals: t.Locals = [];
+    node.stmts.forEach((stmt) => {
+        if (stmt.type === 'Let') {
+            const typ = ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
+            getLocals(stmt.pat, typ, locals, ctx);
+        }
+    });
+    return locals;
+};
+
+export const letLocals = (node: t.Let, ctx: TMCtx) => {
+    const locals: t.Locals = [];
+    const typ = ctx.getType(node.expr) ?? typeForPattern(node.pat);
+    getLocals(node.pat, typ, locals, ctx);
+    return locals;
+};
+
+export const ifLocals = (node: t.IfYes, ctx: TMCtx) => {
+    const locals: t.Locals = [];
+    node.conds.map((cond) => {
+        if (cond.type === 'Let') {
+            getLocals(
+                cond.pat,
+                ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
+                locals,
+                ctx,
+            );
+        }
+        return cond;
+    });
+    return locals;
+};
+
+export const caseLocals = (switchType: t.Type, node: t.Case, ctx: TMCtx) => {
+    const locals: t.Locals = [];
+    getLocals(node.pat, switchType, locals, ctx);
+    return locals;
+};
+
 export const localTrackingVisitor: Visitor<TMCtx & { switchType?: t.Type }> = {
     Lambda(node, ctx) {
         const locals: t.Locals = [];
@@ -265,30 +306,10 @@ export const localTrackingVisitor: Visitor<TMCtx & { switchType?: t.Type }> = {
         return [null, ctx.withLocals(locals) as Ctx];
     },
     Block(node, ctx) {
-        node.stmts?.forEach((stmt) => {
-            if (stmt.type === 'Let') {
-                const locals: t.Locals = [];
-                const typ = ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
-                getLocals(stmt.pat, typ, locals, ctx);
-                ctx = ctx.withLocals(locals) as Ctx;
-            }
-        });
-        return [null, ctx];
+        return [null, ctx.withLocals(blockLocals(node, ctx as Ctx)) as Ctx];
     },
     IfYes(node, ctx) {
-        const locals: t.Locals = [];
-        node.conds.map((cond) => {
-            if (cond.type === 'Let') {
-                getLocals(
-                    cond.pat,
-                    ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
-                    locals,
-                    ctx,
-                );
-            }
-            return cond;
-        });
-        return [null, ctx.withLocals(locals) as Ctx];
+        return [null, ctx.withLocals(ifLocals(node, ctx as Ctx)) as Ctx];
     },
     Switch(node, ctx) {
         return [
@@ -302,11 +323,10 @@ export const localTrackingVisitor: Visitor<TMCtx & { switchType?: t.Type }> = {
             return null;
         }
 
-        const typ = ctx.switchType;
-        const locals: t.Locals = [];
-        getLocals(node.pat, typ, locals, ctx);
-
-        return [null, ctx.withLocals(locals) as Ctx];
+        return [
+            null,
+            ctx.withLocals(caseLocals(ctx.switchType, node, ctx as Ctx)) as Ctx,
+        ];
     },
 };
 

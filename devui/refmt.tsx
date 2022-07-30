@@ -1,5 +1,5 @@
 import generate from '@babel/generator';
-import { noloc } from '../core/ctx';
+import { noloc } from '../core/consts';
 import { injectComments } from '../core/elements/comments';
 import { TestResult } from '../core/full/full';
 import * as p from '../core/grammar/base.parser';

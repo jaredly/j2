@@ -1,6 +1,6 @@
 import { Button, Card } from '@nextui-org/react';
 import * as React from 'react';
-import { noloc } from '../core/ctx';
+import { noloc } from '../core/consts';
 import { injectComments } from '../core/elements/comments';
 import {
     processTypeFile,

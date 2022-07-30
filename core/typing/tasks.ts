@@ -1,4 +1,4 @@
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 import { enumTypeMatches } from '../elements/enums';
 import { recordAsTuple, TRecord } from '../elements/records';
 import { transformExpression } from '../transform-tast';
@@ -28,6 +28,13 @@ export const isTaskable = (t: Type, ctx: Ctx): boolean => {
             );
         })
     );
+};
+
+export const tnever: TEnum = {
+    type: 'TEnum',
+    loc: noloc,
+    open: false,
+    cases: [],
 };
 
 export const tunit: Type = {
@@ -115,9 +122,11 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
                         value: {
                             type: 'TLambda',
                             loc: one.loc,
-                            args: isUnit(karg)
-                                ? []
-                                : [{ label: 'arg', typ: karg, loc: karg.loc }],
+                            args:
+                                // isUnit(karg)
+                                //     ? []
+                                // :
+                                [{ label: 'arg', typ: karg, loc: karg.loc }],
                             result: taskType(targs, ctx, loc),
                         },
                         type: 'TRecordKeyValue',

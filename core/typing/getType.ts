@@ -4,6 +4,7 @@ import { getLocals, Locals, typeForPattern } from '../elements/pattern';
 import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
 import { transformType } from '../transform-tast';
 import { Expression, GlobalRef, Loc, TVars, Type } from '../typed-ast';
+import { ifLocals } from './analyze';
 import { collapseOps } from './ops';
 import { collectEffects, inferTaskType, makeTaskType } from './tasks';
 import { Ctx, typeMatches } from './typeMatches';
@@ -219,18 +220,10 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
         case 'If': {
             if (expr.no) {
                 const no = getType(expr.no, ctx);
-                const locals: Locals = [];
-                expr.yes.conds.forEach((cond) => {
-                    if (cond.type === 'Let') {
-                        getLocals(
-                            cond.pat,
-                            ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
-                            locals,
-                            ctx,
-                        );
-                    }
-                });
-                const yes = getType(expr.yes.block, ctx.withLocals(locals));
+                const yes = getType(
+                    expr.yes.block,
+                    ctx.withLocals(ifLocals(expr.yes, ctx)),
+                );
                 const unified = no && yes && unifyTypes(yes, no, ctx);
                 return unified ? unified : null;
             }

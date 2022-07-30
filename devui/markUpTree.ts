@@ -1,4 +1,4 @@
-import { noloc } from '../core/ctx';
+import { noloc } from '../core/consts';
 import { Loc } from '../core/typed-ast';
 import { Colorable } from './Highlight';
 import { HL } from './HL';

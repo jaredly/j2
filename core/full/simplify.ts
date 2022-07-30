@@ -1,4 +1,5 @@
-import { FullContext, noloc } from '../ctx';
+import { FullContext } from '../ctx';
+import { noloc } from '../consts';
 import { transformExpression, transformStmt, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
 import { errorCount, initVerify, verifyVisitor } from '../typing/analyze';
@@ -6,7 +7,11 @@ import { analyzeVisitor } from '../typing/analyze.gen';
 import { typeMatches } from '../typing/typeMatches';
 import * as b from '@babel/types';
 import { allRecordItems } from '../elements/records';
-import { reduceAwaits } from '../elements/awaits';
+import { awaitExpr } from '../elements/awaits';
+import { printCtx } from '../typing/to-ast';
+import { newPPCtx } from '../printer/to-pp';
+import { printToString } from '../printer/pp';
+// import { reduceAwaits } from '../elements/awaits';
 
 type SCtx = FullContext & { tmpSym: number };
 
@@ -97,9 +102,9 @@ const superify: Visitor<SCtx> = {
 
 const reduceAwaitVisitor: Visitor<SCtx> = {
     Lambda(node, ctx) {
-        const changed = reduceAwaits(node, ctx);
+        const changed = awaitExpr(node.body, ctx);
         // do your thing
-        return changed !== node ? changed : null;
+        return changed ? { ...node, body: changed.expr } : null;
     },
 };
 
@@ -170,6 +175,13 @@ const liftStmts: Visitor<SCtx> = {
 
 const visitors: Visitor<SCtx>[] = [liftStmts, superify, reduceAwaitVisitor];
 
+export const debugExpr = (expr: t.Expression, ctx: FullContext) => {
+    const pctx = printCtx(ctx);
+    const refmt = pctx.ToAst.Expression(expr, pctx);
+    const pp = newPPCtx(false);
+    return printToString(pp.ToPP.Expression(refmt, pp), 200);
+};
+
 export const simplify = (expr: t.Expression, ctx: FullContext) => {
     visitors.forEach((visitor) => {
         const changed = transformExpression(
@@ -182,6 +194,7 @@ export const simplify = (expr: t.Expression, ctx: FullContext) => {
         if (errorCount(v)) {
             console.error(`Visitor produced errors`);
             console.log(v);
+            console.log(debugExpr(changed, ctx));
             // return;
         }
         expr = changed;

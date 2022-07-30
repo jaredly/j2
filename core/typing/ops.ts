@@ -1,4 +1,4 @@
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 import { idsEqual } from '../ids';
 import { Number, String, TOps, TRef, Type } from '../typed-ast';
 import { Ctx } from './typeMatches';

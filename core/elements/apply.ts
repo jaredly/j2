@@ -8,7 +8,7 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 import { opLevel } from './binops';
 import { constrainTypes, unifyTypes } from '../typing/unifyTypes';
 
@@ -510,6 +510,9 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                     ctx.isBuiltinType(expected.target, 'Task')
                         ? expandTask(expected.loc, expected.args, ctx)
                         : null;
+                ctx.debugger();
+                typeMatches(at, expected, ctx);
+
                 return decorate(arg, 'argWrongType', hit, ctx, [
                     {
                         label: 'expected',
@@ -533,6 +536,15 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                               } as t.Decorator['args'][0],
                           ]
                         : []),
+                    // {
+                    //     label: 'got',
+                    //     arg: {
+                    //         type: 'DType',
+                    //         loc: noloc,
+                    //         typ: at,
+                    //     },
+                    //     loc: noloc,
+                    // } as t.Decorator['args'][0],
                     // {
                     //     label: 'got',
                     //     arg: {

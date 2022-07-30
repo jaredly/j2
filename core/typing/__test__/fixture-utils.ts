@@ -9,8 +9,8 @@ import {
     builtinContext,
     FullContext,
     locClearVisitor,
-    noloc,
 } from '../../ctx';
+import { noloc } from '../../consts';
 import { fileToTast } from '../../elements/base';
 import { TVar } from '../../elements/type-vbls';
 import { processFile } from '../../full/full';

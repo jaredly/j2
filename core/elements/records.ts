@@ -10,7 +10,7 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
-import { noloc } from '../ctx';
+import { noloc } from '../consts';
 
 export const grammar = `
 TRecord = "{" _ items:TRecordItems? _ "}"
