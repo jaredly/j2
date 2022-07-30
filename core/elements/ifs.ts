@@ -34,10 +34,11 @@ export type If = {
 
 export type IfYes = {
     type: 'IfYes';
-    conds: (t.Let | t.Expression)[];
+    conds: IfCond[];
     block: t.Block;
     loc: t.Loc;
 };
+export type IfCond = t.Let | t.Expression;
 
 export type IIf = {
     type: 'If';

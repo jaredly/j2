@@ -17,7 +17,14 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
-- [ ] andThen!
+- [ ] TSTEES are broken
+- [ ] try doing ... a more forgiving parser! closing things are optional! but recommended.
+
+
+
+
+
+- [x] andThen!
 	- [x] basic support with specified args
 	- [ ] could be cool to be able to infer the type variables.
 		however, I assume we won't be doing too much of that.

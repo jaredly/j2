@@ -77,7 +77,7 @@ export type {
 } from './elements/lets';
 import { If } from './elements/ifs';
 import { Switch } from './elements/switchs';
-export type { IIf, IIfYes, If, IfYes } from './elements/ifs';
+export type { IIf, IIfYes, If, IfCond, IfYes } from './elements/ifs';
 export type { AVCtx, Case, ICase, ISwitch, Switch } from './elements/switchs';
 export type { Await } from './elements/awaits';
 

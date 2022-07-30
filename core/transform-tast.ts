@@ -9,8 +9,7 @@ import {
     Expression,
     If,
     IfYes,
-    Block,
-    Stmt,
+    IfCond,
     Let,
     Pattern,
     PName,
@@ -40,6 +39,8 @@ import {
     TRecord,
     TRecordKeyValue,
     TOps,
+    Block,
+    Stmt,
     Ref,
     Enum,
     Apply,
@@ -432,6 +433,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IfYes | [IfYes | null, Ctx];
     IfYesPost?: (node: IfYes, ctx: Ctx) => null | IfYes;
+    IfCond?: (
+        node: IfCond,
+        ctx: Ctx,
+    ) => null | false | IfCond | [IfCond | null, Ctx];
+    IfCondPost?: (node: IfCond, ctx: Ctx) => null | IfCond;
     IIf?: (node: IIf, ctx: Ctx) => null | false | IIf | [IIf | null, Ctx];
     IIfPost?: (node: IIf, ctx: Ctx) => null | IIf;
     IIfYes?: (
@@ -770,6 +776,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost_PDecorated?: (node: PDecorated, ctx: Ctx) => null | Pattern;
+    IfCond_Let?: (
+        node: Let,
+        ctx: Ctx,
+    ) => null | false | IfCond | [IfCond | null, Ctx];
+    IfCondPost_Let?: (node: Let, ctx: Ctx) => null | IfCond;
 };
 export const transformId = <Ctx>(
     node: Id,
@@ -3670,6 +3681,93 @@ export const transformLet = <Ctx>(
     return node;
 };
 
+export const transformIfCond = <Ctx>(
+    node: IfCond,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IfCond => {
+    if (!node) {
+        throw new Error('No IfCond provided');
+    }
+
+    const transformed = visitor.IfCond ? visitor.IfCond(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'Let': {
+            const transformed = visitor.IfCond_Let
+                ? visitor.IfCond_Let(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'Let': {
+            updatedNode = transformLet(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformExpression(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'Let': {
+            const transformed = visitor.IfCondPost_Let
+                ? visitor.IfCondPost_Let(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IfCondPost) {
+        const transformed = visitor.IfCondPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformStmt = <Ctx>(
     node: Stmt,
     visitor: Visitor<Ctx>,
@@ -3857,6 +3955,24 @@ export const transformIfYes = <Ctx>(
     {
         let changed1 = false;
 
+        let updatedNode$conds = node.conds;
+        {
+            let changed2 = false;
+            const arr1 = node.conds.map((updatedNode$conds$item1) => {
+                const result = transformIfCond(
+                    updatedNode$conds$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$conds$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$conds = arr1;
+                changed1 = true;
+            }
+        }
+
         const updatedNode$block = transformBlock(node.block, visitor, ctx);
         changed1 = changed1 || updatedNode$block !== node.block;
 
@@ -3865,6 +3981,7 @@ export const transformIfYes = <Ctx>(
         if (changed1) {
             updatedNode = {
                 ...updatedNode,
+                conds: updatedNode$conds,
                 block: updatedNode$block,
                 loc: updatedNode$loc,
             };
@@ -8394,6 +8511,44 @@ export const transformTOr = <Ctx>(
     }
     return node;
 };
+
+export const transformCtx = <Ctx>(
+    node: Ctx,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Ctx => {
+    if (!node) {
+        throw new Error('No Ctx provided');
+    }
+
+    const transformed = visitor.Ctx ? visitor.Ctx(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+    const updatedNode = node;
+
+    node = updatedNode;
+    if (visitor.CtxPost) {
+        const transformed = visitor.CtxPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 
 // not a type ACtx
 
