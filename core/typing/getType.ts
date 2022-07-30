@@ -1,4 +1,4 @@
-import { tref } from '../ctx';
+import { tref } from '../consts';
 import { unifiedTypes } from '../elements/apply';
 import { getLocals, Locals, typeForPattern } from '../elements/pattern';
 import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';

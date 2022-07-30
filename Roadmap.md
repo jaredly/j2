@@ -17,8 +17,21 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
-- [ ] TSTEES are broken
-- [ ] try doing ... a more forgiving parser! closing things are optional! but recommended.
+- [x] TSTEES are broken
+	we've got an import loop somewhere, and its bad
+- [ ] ALSOOOO Why does `FullContext` have `ToTast` on it????
+	we should definitely have the conversion ctx's be like
+	`FullContext & {ToTast: ToTast}`.
+
+- [ ] STOP SHORTENING ALIASES it jumps too much
+
+	because now defaultCtx is dying.
+- [-] try doing ... a more forgiving parser! closing things are optional! but recommended.
+	- lol that went poorly. I'd have to lock down keywords a bunch more I think.
+		better plan: hoist all aliases to the top? at least then things won't be jumping around
+		also, if the cursor is right after a '(' and parsing fails, insert the dealio. Same for {
+
+- [x] ohhhh `if let`, my Analysis for `let` is being wrong :( I'll have to do it under /block/ now :/.
 
 
 

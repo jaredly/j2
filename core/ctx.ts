@@ -1,23 +1,16 @@
 import hashObject from 'object-hash';
 import { Ctx } from '.';
-import { noloc } from './consts';
+import { noloc, tref } from './consts';
 import { DecoratorDecl } from './elements/decorators';
 import { typeForPattern } from './elements/pattern';
 import { TVar } from './elements/type-vbls';
 import { errors } from './errors';
 import { Loc, parseType } from './grammar/base.parser';
-import { extract, Id, idsEqual, toId } from './ids';
+import { extract, Id, toId } from './ids';
+import { refsEqual } from './refsEqual';
 import { resolveAnalyzeType } from './resolveAnalyzeType';
 import { transformExpression, transformType, Visitor } from './transform-tast';
-import {
-    Expression,
-    GlobalRef,
-    RefKind,
-    Sym,
-    TVars,
-    Type,
-    UnresolvedRef,
-} from './typed-ast';
+import { Expression, GlobalRef, RefKind, Sym, TVars, Type } from './typed-ast';
 import { Ctx as ACtx } from './typing/analyze';
 import { getType } from './typing/getType';
 import { makeToTast, ToplevelConfig } from './typing/to-tast';
@@ -280,25 +273,6 @@ const resolve = (
         return ctx.values.names[name];
     }
     return [];
-};
-
-export const refsEqual = (
-    a: RefKind | UnresolvedRef,
-    b: RefKind | UnresolvedRef,
-): boolean => {
-    if (a.type !== b.type) {
-        return false;
-    }
-    if (a.type === 'Unresolved' || b.type === 'Unresolved') {
-        return false;
-    }
-    if (a.type === 'Global') {
-        return b.type === 'Global' && idsEqual(a.id, b.id);
-    }
-    if (a.type === 'Recur') {
-        return b.type === 'Recur' && a.idx === b.idx;
-    }
-    return b.type === 'Local' && a.sym === b.sym;
 };
 
 const cloneInternal = (internal: Internal) => ({
@@ -710,12 +684,6 @@ export const hashExpr = (t: Expression) =>
     hashObject(serial(transformExpression(t, locClearVisitor, null)));
 export const hashExprs = (t: Expression[]) => hashObject(serial(t));
 
-export const tref = (ref: RefKind): Type => ({
-    type: 'TRef',
-    ref,
-    loc: noloc,
-    // args: [],
-});
 const ref = (kind: RefKind): Expression => ({ type: 'Ref', kind, loc: noloc });
 const tlam = (
     args: Array<{ label: string; typ: Type; loc: Loc }>,

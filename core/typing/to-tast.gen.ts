@@ -1,4 +1,3 @@
-
 import { ToTast as apply } from '../elements/apply';
 import { ToTast as awaits } from '../elements/awaits';
 import { ToTast as base } from '../elements/base';
@@ -19,28 +18,49 @@ import { ToTast as switchs } from '../elements/switchs';
 import { ToTast as typevbls } from '../elements/type-vbls';
 import { ToTast as type } from '../elements/type';
 
-export type ToTast = typeof apply & typeof awaits & typeof base & typeof binops & typeof constants & typeof decorators & typeof enumexprs & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof recordexprs & typeof records & typeof switchs & typeof typevbls & typeof type;
+export type ToTast = typeof apply &
+    typeof awaits &
+    typeof base &
+    typeof binops &
+    typeof constants &
+    typeof decorators &
+    typeof enumexprs &
+    typeof enums &
+    typeof generics &
+    typeof ifs &
+    typeof lambda &
+    typeof lets &
+    typeof macros &
+    typeof pattern &
+    typeof recordexprs &
+    typeof records &
+    typeof switchs &
+    typeof typevbls &
+    typeof type;
 
 export const makeToTast = (): ToTast => {
-	return {
-		...apply,
-		...awaits,
-		...base,
-		...binops,
-		...constants,
-		...decorators,
-		...enumexprs,
-		...enums,
-		...generics,
-		...ifs,
-		...lambda,
-		...lets,
-		...macros,
-		...pattern,
-		...recordexprs,
-		...records,
-		...switchs,
-		...typevbls,
-		...type
-	}
-}
+    if (!apply) {
+        throw new Error(`What are we up to now`);
+    }
+    return {
+        ...apply,
+        ...awaits,
+        ...base,
+        ...binops,
+        ...constants,
+        ...decorators,
+        ...enumexprs,
+        ...enums,
+        ...generics,
+        ...ifs,
+        ...lambda,
+        ...lets,
+        ...macros,
+        ...pattern,
+        ...recordexprs,
+        ...records,
+        ...switchs,
+        ...typevbls,
+        ...type,
+    };
+};

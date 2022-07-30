@@ -369,37 +369,45 @@ export const ToJS = {
     },
 };
 
+const checkLet = (node: t.Let, ctx: { ctx: ACtx; hit: {} }) => {
+    let t = ctx.ctx.getType(node.expr);
+    if (t) {
+        t = ctx.ctx.resolveAnalyzeType(t);
+    }
+    if (t && !typeMatchesPattern(node.pat, t, ctx.ctx)) {
+        ctx.ctx.debugger();
+        return {
+            ...node,
+            expr: decorate(node.expr, 'patternMismatch', ctx.hit, ctx.ctx),
+        };
+    }
+    if (t && !patternIsExhaustive(node.pat, t, ctx.ctx)) {
+        return {
+            ...node,
+            pat: pdecorate(node.pat, 'notExhaustive', ctx),
+        };
+    }
+    return null;
+};
+
 export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
-    Let(node, ctx) {
-        let t = ctx.ctx.getType(node.expr);
-        if (t) {
-            t = ctx.ctx.resolveAnalyzeType(t);
-        }
-        if (t && !typeMatchesPattern(node.pat, t, ctx.ctx)) {
-            ctx.ctx.debugger();
-            return {
-                ...node,
-                expr: decorate(node.expr, 'patternMismatch', ctx.hit, ctx.ctx),
-            };
-        }
-        if (t && !patternIsExhaustive(node.pat, t, ctx.ctx)) {
-            return {
-                ...node,
-                pat: pdecorate(node.pat, 'notExhaustive', ctx),
-            };
-        }
-        return null;
-    },
     Block(node, ctx) {
-        node.stmts?.forEach((stmt) => {
+        let changed = false;
+        const stmts: t.Stmt[] = node.stmts.map((stmt) => {
             if (stmt.type === 'Let') {
                 const locals: t.Locals = [];
                 const typ =
                     ctx.ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
                 getLocals(stmt.pat, typ, locals, ctx.ctx);
                 ctx = { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx };
+                const res = checkLet(stmt, ctx);
+                if (res) {
+                    changed = true;
+                    return res;
+                }
             }
+            return stmt;
         });
-        return [null, ctx];
+        return [changed ? { ...node, stmts } : null, ctx];
     },
 };
