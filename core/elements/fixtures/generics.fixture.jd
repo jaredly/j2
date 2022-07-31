@@ -16,7 +16,7 @@
 hello<int>(10)
 
 --[output:expected]--
-alias hello#[h12b0734fe748e4d9321970b5716bf9d2cb8fbab4] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias hello#[hf6e269898d7d9d035467350db13cfa38ac824c31] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 hello<int>(10)
 // int
 /* hello(10) */
@@ -26,7 +26,7 @@ hello<int>(10)
 (@decorate() hello)<10>(10)
 
 --[output:expected]--
-alias decorate#[h5a7fc9170718190f9388084b28fb49f6cb4602fc] hello#[h12b0734fe748e4d9321970b5716bf9d2cb8fbab4]
+alias decorate#[h5a7fc9170718190f9388084b28fb49f6cb4602fc] hello#[hf6e269898d7d9d035467350db13cfa38ac824c31]
 (@decorate() hello)(10)
 // 10
 /* hello(10) */
@@ -37,7 +37,7 @@ multi<int, string>
 multi<int, string>(10, "hello")
 
 --[output:expected]--
-alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] multi#[hbc0485f5c81ff05c8bd530b4805ae56ebf782c0e] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] multi#[h088d53f5e3ddc6bf12a7e3054c4a52ebae49789d] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 multi<int, string>
 // (a: int, b: string) => int
 /* multi */
@@ -51,7 +51,7 @@ bounded<10>(10)
 bounded<int>(10)
 
 --[output:expected]--
-alias bounded#[hc0e795df1e0aab24bf0802863f048f146a30e43b]
+alias bounded#[h6b72cf1b6234557dd3846b2452db4a5f991da15d]
 bounded(10)
 // 10
 /* bounded(10) */
@@ -65,7 +65,7 @@ bounded<int>(10)
 bounded<string>("wat")
 
 --[output:expected]--
-alias bounded#[hc0e795df1e0aab24bf0802863f048f146a30e43b] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias bounded#[h6b72cf1b6234557dd3846b2452db4a5f991da15d] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 bounded<@error:argWrongType(expected: :int) string>("wat")
 
 ==[wrong args]==
@@ -74,7 +74,7 @@ bounded<int, string>(20)
 takesInt<int>(10)
 
 --[output:expected]--
-alias bounded#[hc0e795df1e0aab24bf0802863f048f146a30e43b] error:extraArg#[haae12b260f3d25abb4b67dfe8895a3c6fb00eb59] error:wrongNumberOfTypeArgs#[h861c5babf48bbd7fc0325178615769bdb2837d5a] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias bounded#[h6b72cf1b6234557dd3846b2452db4a5f991da15d] error:extraArg#[haae12b260f3d25abb4b67dfe8895a3c6fb00eb59] error:wrongNumberOfTypeArgs#[h861c5babf48bbd7fc0325178615769bdb2837d5a] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 (@error:wrongNumberOfTypeArgs() bounded<int, @error:extraArg() string>)(20)
 alias error:notATypeVars#[hf975b139e8972496b3acf4c415c5bc460d39dd08] takesInt#[hd724811982a4afd89c79872d8c1d55048540a958]
 (@error:notATypeVars() takesInt<int>)(10)
@@ -84,7 +84,7 @@ alias error:notATypeVars#[hf975b139e8972496b3acf4c415c5bc460d39dd08] takesInt#[h
 @test:type(:Array<int, string, int>) 10
 
 --[output:expected]--
-alias Array#[he0b51bbc5a7bdb8ded74d71b4c8f25d9e30cbdc2] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] error:extraArg#[haae12b260f3d25abb4b67dfe8895a3c6fb00eb59] error:wrongNumberOfTypeArgs#[h861c5babf48bbd7fc0325178615769bdb2837d5a] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] test:type#[he071eaec952a7917f20d1828e42268ca3a10c513] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
+alias Array#[h8de4ecae93abe8de85536031f6f8a05742a6ee53] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] error:extraArg#[haae12b260f3d25abb4b67dfe8895a3c6fb00eb59] error:wrongNumberOfTypeArgs#[h861c5babf48bbd7fc0325178615769bdb2837d5a] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] test:type#[he071eaec952a7917f20d1828e42268ca3a10c513] uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
 @test:type(
     :@error:wrongNumberOfTypeArgs() Array<
         int,
@@ -99,9 +99,9 @@ takesArray(10)
 takesArray(anArray)
 
 --[output:expected]--
-alias Array#[he0b51bbc5a7bdb8ded74d71b4c8f25d9e30cbdc2] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takesArray#[ha90c1aece77df512944b5640e73bc30830c3dfbe]
+alias Array#[h8de4ecae93abe8de85536031f6f8a05742a6ee53] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takesArray#[hf3cd697d8478f4e33cc628cbd7e9b42d4d13aace]
 takesArray(@error:argWrongType(expected: :Array<string, 10u>) 10)
-alias anArray#[h7f04f762c119c07311c3e0e6da8c6e627bf249b7]
+alias anArray#[h37011200e8faacc0a381c6d95d6f90d45e6cbdf3]
 takesArray(anArray)
 // int
 /* takesArray(anArray) */
@@ -229,7 +229,7 @@ type TArray = DArray<int, 10u>
 boundedDefault<int>
 
 --[output:expected]--
-alias boundedDefault#[hd049e16e0f7b241a47eed8f1726a981d03475bf2] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias boundedDefault#[hf829343d5e24e95742cf66bed885a35f66c19a43] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 boundedDefault<int>
 // (a: int, b: 10u) => int
 /* boundedDefault */
@@ -239,7 +239,7 @@ boundedDefault<int>
 takesArray(anArray)
 
 --[output:expected]--
-alias anArray#[h7f04f762c119c07311c3e0e6da8c6e627bf249b7] takesArray#[ha90c1aece77df512944b5640e73bc30830c3dfbe]
+alias anArray#[h37011200e8faacc0a381c6d95d6f90d45e6cbdf3] takesArray#[hf3cd697d8478f4e33cc628cbd7e9b42d4d13aace]
 takesArray(anArray)
 // int
 /* takesArray(anArray) */
@@ -249,7 +249,7 @@ takesArray(anArray)
 iadd(10, 20)
 
 --[output:expected]--
-alias iadd#[h80ce600253f1a24d31d0a84712e221f32935f29b]
+alias iadd#[h70384774f43136b4971f36930f8dd583892ac08d]
 iadd(10, 20)
 // 30
 /* iadd(10, 20) */

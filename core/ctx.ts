@@ -13,6 +13,7 @@ import { transformExpression, transformType, Visitor } from './transform-tast';
 import { Expression, GlobalRef, RefKind, Sym, TVars, Type } from './typed-ast';
 import { Ctx as ACtx } from './typing/analyze';
 import { getType } from './typing/getType';
+import { tnever, tunit } from './typing/tasks';
 import { makeToTast, ToplevelConfig } from './typing/to-tast';
 import { Ctx as TCtx } from './typing/typeMatches';
 import { constrainTypes } from './typing/unifyTypes';
@@ -703,25 +704,6 @@ const tvars = (
     inner,
     loc: noloc,
 });
-// const tapply = (args: Array<Type>, target: Type): TApply => ({
-//     type: 'TApply',
-//     args,
-//     loc: noloc,
-//     target,
-// });
-
-const prelude = `
-enum Result<Ok, Failure> {
-	Ok<Ok>{v: Ok}<Ok>,
-	Failure<Failure>{v: Failure}<Failure>, // lol
-	// maybe we'll allow it as shorthand?
-	// Failure{v: Failure} gets turned into that, because it can tell
-	// that we're using some locally defined types
-}
-
-struct Ok<Ok>{v: Ok}
-struct Failure<Failure>{v: Failure}
-`;
 
 const builtinTypes = `
 int
@@ -753,9 +735,19 @@ toString: (value: bool) => string
 ==: <T: eq>(a: T, b: T) => bool
 andThen: <A: task, B: task, R, R2>(a: Task<A, R>, b: (res: R) => Task<B, R2>) => Task<[A | B], R2>
 testIO: <T>(read: string, task: Task<[\`Read((), string) | \`Print(string, ())], T>) => T
-withStore: <T, R, Other: task>(task: Task<[Other | \`Set(T, ()), | \`Get((), T)], R>, initial: T) => Task<Other, R>
 `;
+// withHandler: <Effects: task, Result, HandledEffects: task>(task: Task<Effects, Result, HandledEffects>, handler: (input: Task<[Effects | HandledEffects], Result>) => Task<Effects, Result>) => Task<Effects, Result>
 // withHandler: <A: task, B: task>
+/*
+
+withHandler
+takes a thing
+hmmmmmm what if Task gets a third optional argument?
+
+Task<Effects, Result=(), InnerEffects=[]>
+
+
+*/
 
 export const setupDefaults = (ctx: FullContext) => {
     const named: { [key: string]: RefKind } = {};
@@ -770,16 +762,16 @@ export const setupDefaults = (ctx: FullContext) => {
             default_: null,
         },
         {
-            sym: { id: 0, name: 'Effects' },
+            sym: { id: 1, name: 'Result' },
             bound: null,
             loc: noloc,
-            default_: {
-                type: 'TRecord',
-                items: [],
-                loc: noloc,
-                spreads: [],
-                open: false,
-            },
+            default_: tunit,
+        },
+        {
+            sym: { id: 1, name: 'ExtraInner' },
+            bound: tref(named['task']),
+            loc: noloc,
+            default_: tnever,
         },
     ]);
     Object.keys(errors).forEach((tag) => {
@@ -791,6 +783,7 @@ export const setupDefaults = (ctx: FullContext) => {
         .split('\n')
         .filter((line) => line.trim())
         .forEach((line) => {
+            ctx.resetSym();
             const [name, ...rest] = line.split(':');
             const type = rest.join(':');
             try {
@@ -805,6 +798,7 @@ export const setupDefaults = (ctx: FullContext) => {
                 console.log(type);
             }
         });
+    ctx.resetSym();
 };
 
 export const fullContext = () => {

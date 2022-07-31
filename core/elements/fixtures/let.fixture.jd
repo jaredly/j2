@@ -162,7 +162,7 @@ alias error:notExhaustive#[h8800c0a4e23ff598b839e081d716b8b28bf0b0e7]
 } == 20
 
 --[output:expected]--
-alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc]
 {
     let `One(a#[0]) = `One(20);
     a#[0];

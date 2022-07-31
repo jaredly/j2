@@ -4,7 +4,7 @@
 let print = (v: string): Task<[`Print(string, ())]> => `Print(v, (()) => `Return())
 
 --[output:expected]--
-alias Task#[h36ea667ef0c00c6fcbfe2206360b8ce768e10926] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let print = (v#[0]: string):Task<[ `Print(string, ()) ]> => `Print(v#[0], (()) => `Return())
 // (string) => [ `Print(string, (()) => [ `Return() ]) ]
 /* v => ({
@@ -36,7 +36,7 @@ let print = (v#[0]: string) => `Print(v#[0], (()) => `Return())
 (v: Task<[`One((), [])]>): Task<[`One((), []) | `Two((), [])]> => v
 
 --[output:expected]--
-alias Task#[h36ea667ef0c00c6fcbfe2206360b8ce768e10926]
+alias Task#[h67d00eba961cd5135110775d8654598dc22e7274]
 (v#[0]: Task<[ `One((), []) ]>):Task<[ `One((), []) | `Two((), []) ]> => v#[0]
 // (Task<[ `One((), []) ]>) => Task<[ `One((), []) ]>
 /* v => v */
@@ -47,7 +47,7 @@ let print = (v: string): Task<[`Print(string, ())]> => `Pront(v, () => `Return()
 let print = (v: string): Task<[`Print(string, ())]> => `Print(v, () => `Return(10))
 
 --[output:expected]--
-alias Task#[h36ea667ef0c00c6fcbfe2206360b8ce768e10926] error:resMismatch#[hb090f18487ae3bd77546a5c35ccf59b6adf3aa59] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] error:resMismatch#[hb090f18487ae3bd77546a5c35ccf59b6adf3aa59] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let print = (v#[0]: string):@error:resMismatch(inferrred: :[ `Pront(string, () => [ `Return() ]) ]) Task<
     [ `Print(string, ()) ],
 > => `Pront(v#[0], () => `Return())
@@ -68,7 +68,7 @@ let hello = (): Task<[`Print(string, ()) | `Read((), string)]> => {
 }
 
 --[output:expected]--
-alias Task#[h36ea667ef0c00c6fcbfe2206360b8ce768e10926] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let hello = ():Task<[ `Print(string, ()) | `Read((), string) ]> => {
     `Print(
         "hello",
@@ -127,7 +127,7 @@ let helloFolks = ():Task<[ `Read((), string) | `Print(string, ()) ], string> => 
 }
 
 --[output:expected]--
-alias Task#[h36ea667ef0c00c6fcbfe2206360b8ce768e10926] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let print = (value#[0]: string):Task<[ `Print(string, ()) ], ()> => `Print(
     value#[0],
     (()) => `Return(),
@@ -149,7 +149,7 @@ let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
     payload: v
   })]
 }) */
-alias andThen#[h98026f00fa782af79f115cf074faf3d04db06254] print#[hde7cec5951f3f0eab2a07e2fdaf91663d3d54f59] read#[hf1cbfa159d4d6ec5581f4a6706b6ebd6816f8091]
+alias andThen#[h350018996371f8a646e144d264506c10d2ebde8b] print#[h9cd486c4e02278d3ec4134bd776fae112435529b] read#[hf1cbfa159d4d6ec5581f4a6706b6ebd6816f8091]
 let helloFolks = ():Task<[ `Read((), string) | `Print(string, ()) ], string> => {
     andThen<[ `Print(string, ()) ], [ `Read((), string) ], (), string>(
         print("What is your name?"),
@@ -196,11 +196,18 @@ let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
 alias print#[h98844d56b6470b17502bda64e11ca3589410f204] read#[hf1cbfa159d4d6ec5581f4a6706b6ebd6816f8091]
 let helloFolks = () => {
     print("What is your name?")!;
-    read()!;
+    print(read()!)!;
 }
-// () => Task<[ `Print(string, ()) | `Read((), string) ], string>
+// () => Task<[ `Print(string, ()) | `Print(string, ()) | `Read((), string) ], ()>
 /* () => {
   return andThen($terms.print(`What is your name?`), __0 => {
-    return $terms.read();
+    return andThen($terms.read(), tmp1000 => {
+      return andThen($terms.print(tmp1000), tmp1001 => {
+        return {
+          tag: "Return",
+          payload: tmp1001
+        };
+      });
+    });
   });
 } */
