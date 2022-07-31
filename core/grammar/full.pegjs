@@ -161,7 +161,7 @@ Else = Block / If
 // lambda.ts
 
 Lambda = "(" _ args:LArgs? _ ")" _ res:(":" _ Type)? _ "=>" _ body:Expression
-LArgs = first:LArg rest:(_ "," _ LArg)*
+LArgs = first:LArg rest:(_ "," _ LArg)* _ ","? _
 LArg = pat:Pattern typ:(_ ":" _ Type)?
 
 

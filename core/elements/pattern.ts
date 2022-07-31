@@ -123,6 +123,7 @@ export const typeMatchesPattern = (
             return typeMatchesPattern(pat.inner, type, ctx);
         }
         case 'PEnum': {
+            type = maybeExpandTask(type, ctx) ?? type;
             if (type.type !== 'TEnum') {
                 return false;
             }
@@ -499,6 +500,7 @@ import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { allRecordItems } from './records';
 import { and } from './ifs';
+import { maybeExpandTask } from '../typing/tasks';
 export const ToJS = {
     PatternCond(
         p: Pattern,

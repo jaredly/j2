@@ -88,7 +88,7 @@ export type Files = {
 
 export type TypeWhat = {
     file: TypeTestResult;
-    values: Array<{ success: boolean; loc: Loc; idx: number }>;
+    values: Array<{ message: string | null; loc: Loc; idx: number }>;
 };
 
 export type TestWhat = {
@@ -109,8 +109,9 @@ export type TestValues = {
 export const typeResults = (
     file: SuccessTypeResult,
     debug?: boolean,
-): Array<{ success: boolean; loc: Loc; idx: number }> => {
-    const results: Array<{ success: boolean; loc: Loc; idx: number }> = [];
+): Array<{ loc: Loc; idx: number; message: string | null }> => {
+    const results: Array<{ loc: Loc; idx: number; message: string | null }> =
+        [];
     const { info, ctx } = file;
 
     info.forEach((info, i) => {
@@ -129,7 +130,8 @@ export const typeResults = (
                         ctx,
                     );
                     results.push({
-                        success: err == null,
+                        // success: err == null,
+                        message: err,
                         loc: d.loc,
                         idx: i,
                     });
@@ -371,7 +373,6 @@ export const App = () => {
     const hashPin =
         hashParts.length === 3 && hashParts[2] === 'pin' && hashParts[1];
 
-    console.log(files.fixtures[hashName]);
     return (
         <div
             style={{
@@ -582,6 +583,6 @@ const isFailedTypeTest = (t: TypeWhat) => {
     }
     return (
         // t.file.info.some((top) => errorCount(top.verify) > 0) ||
-        t.values.some((t) => !t.success)
+        t.values.some((t) => t.message != null)
     );
 };

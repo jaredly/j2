@@ -28,7 +28,7 @@ import {
     stringAddsMatch,
     stringOps,
 } from './ops';
-import { isTaskable, matchesTask } from './tasks';
+import { expandTask, isTaskable, matchesTask } from './tasks';
 import { unifyTypes } from './unifyTypes';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
@@ -124,7 +124,14 @@ export const typeMatches = (
         candidate.type === 'TEnum' &&
         ctx.isBuiltinType(expected.target, 'Task')
     ) {
-        return matchesTask(candidate, expected.loc, expected.args, ctx);
+        expected = expandTask(expected.loc, expected.args, ctx) ?? expected;
+    }
+    if (
+        candidate.type === 'TApply' &&
+        expected.type === 'TEnum' &&
+        ctx.isBuiltinType(candidate.target, 'Task')
+    ) {
+        candidate = expandTask(candidate.loc, candidate.args, ctx) ?? candidate;
     }
 
     if (ctx.isBuiltinType(expected, 'eq')) {

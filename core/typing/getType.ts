@@ -24,7 +24,6 @@ export const applyType = (
     const symbols: { [num: number]: Type } = {};
     // So, I'm kindof allowing them to apply more?
     if (args.length < minArgs) {
-        console.log('len');
         return null;
     }
     let failed = false;

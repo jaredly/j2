@@ -3,6 +3,7 @@ import { transformType } from './transform-tast';
 import { Type } from './typed-ast';
 import { applyType } from './typing/getType';
 import { FullContext, opaque } from './ctx';
+import { expandTask } from './typing/tasks';
 
 // ugh ok so because
 // i've tied application to TRef, it makes things
@@ -73,10 +74,13 @@ export const resolveAnalyzeType = (
             if (id) {
                 return resolveAnalyzeType(id, ctx, path.concat([k]));
             }
-            // ctx.getBound
         }
     }
     if (type.type === 'TApply') {
+        // if (ctx.isBuiltinType(type.target, 'Task')) {
+        //     return expandTask(type.loc, type.args, ctx);
+        // }
+
         const target = resolveAnalyzeType(type.target, ctx, path);
         if (!target || target.type !== 'TVars') {
             return null;

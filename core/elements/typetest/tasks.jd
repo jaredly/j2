@@ -1,0 +1,10 @@
+alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] type:shouldMatch#[h192c0e4997957120f145e35f197b06a370cc3115]
+
+@type:shouldMatch(:Task<[]>) Task<[]>
+
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] type:shouldBe#[hed595bff9012d9d0ff8b45907447ef97ab8c3a72]
+
+@type:shouldBe(:Task<[ `Print(string, ()) ], string>) [ `Return(string) | `Print(
+    string,
+    (v: ()) => Task<[ `Print(string, ()) ], string>,
+) ]

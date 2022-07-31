@@ -107,12 +107,13 @@ export const TypeTestView = ({
                                     ? typeResults(results)
                                     : [];
                             return values
-                                .filter((t) => !t.success)
+                                .filter((t) => t.message != null)
                                 .map((v) => ({
                                     loc: v.loc,
                                     type: 'Error',
                                     prefix: {
                                         text: '🚨',
+                                        message: v.message!,
                                     },
                                     underline: 'red',
                                 }));
@@ -140,25 +141,26 @@ export const TypeTestView = ({
                         }}
                         onChange={(text) => setText(text)}
                     />
-                    <Button
-                        disabled={test.file.type === 'Error' || !test.values}
-                        onPress={() => {
-                            if (test.file.type === 'Success' && test.values) {
-                                const debugs: { [key: number]: boolean } = {};
-                                test.values.forEach((v) => {
-                                    if (!v.success) {
-                                        debugs[v.idx] = true;
-                                    }
-                                });
-                                processTypeFile(text, undefined, debugs);
-                                typeResults(test.file, true);
-                            }
-                        }}
-                    >
-                        Run with debug
-                    </Button>
                 </Card.Body>
             </Card>
+            <Button
+                css={{ marginTop: 16 }}
+                disabled={test.file.type === 'Error' || !test.values}
+                onPress={() => {
+                    if (test.file.type === 'Success' && test.values) {
+                        const debugs: { [key: number]: boolean } = {};
+                        test.values.forEach((v) => {
+                            if (v.message) {
+                                debugs[v.idx] = true;
+                            }
+                        });
+                        processTypeFile(text, undefined, debugs);
+                        typeResults(test.file, true);
+                    }
+                }}
+            >
+                Run with debug
+            </Button>
         </div>
     );
 };

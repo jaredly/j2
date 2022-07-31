@@ -13,7 +13,7 @@ import { Ctx as ICtx } from '../ir/ir';
 
 export const grammar = `
 Lambda = "(" _ args:LArgs? _ ")" _ res:(":" _ Type)? _ "=>" _ body:Expression
-LArgs = first:LArg rest:(_ "," _ LArg)*
+LArgs = first:LArg rest:(_ "," _ LArg)* _ ","? _
 LArg = pat:Pattern typ:(_ ":" _ Type)?
 `;
 

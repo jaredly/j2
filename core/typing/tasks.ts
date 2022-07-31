@@ -285,6 +285,13 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
     };
 };
 
+export const maybeExpandTask = (t: Type, ctx: Ctx): Type | null => {
+    if (t.type === 'TApply' && ctx.isBuiltinType(t.target, 'Task')) {
+        return expandTask(t.loc, t.args, ctx);
+    }
+    return t;
+};
+
 export const matchesTask = (
     t: TEnum,
     loc: Loc,
