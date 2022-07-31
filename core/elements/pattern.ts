@@ -601,6 +601,7 @@ export const ToJS = {
         type: t.Type,
         ctx: JCtx,
     ): b.Expression | null {
+        ctx.actx.debugger();
         switch (p.type) {
             case 'PBlank':
                 return null;
@@ -613,12 +614,13 @@ export const ToJS = {
                         ? b.numericLiteral(p.value)
                         : b.stringLiteral(p.text),
                 );
-            case 'PEnum':
-                if (type.type !== 'TEnum') {
+            case 'PEnum': {
+                const etype = maybeExpandTask(type, ctx.actx) ?? type;
+                if (etype.type !== 'TEnum') {
                     // TODO: make this an error
                     return null;
                 }
-                const cases = expandEnumCases(type, ctx.actx);
+                const cases = expandEnumCases(etype, ctx.actx);
                 if (!cases) {
                     return null;
                 }
@@ -648,15 +650,24 @@ export const ToJS = {
                 if (!p.payload) {
                     return one;
                 }
+                const myCase = cases.find((k) => k.tag === p.tag);
+                if (!myCase) {
+                    return b.logicalExpression(
+                        '&&',
+                        one || b.booleanLiteral(false),
+                        b.identifier('invalid case ' + p.tag),
+                    );
+                }
                 const inner = ctx.ToJS.PatternCond(
                     p.payload,
                     b.memberExpression(target, b.identifier('payload')),
-                    type,
+                    myCase.payload ?? { type: 'TBlank', loc: p.loc },
                     ctx,
                 );
                 return inner && one
                     ? b.logicalExpression('&&', one, inner)
                     : one ?? inner;
+            }
             case 'PName':
                 return null;
             case 'PDecorated':

@@ -192,6 +192,83 @@ export const allBare = (typ: t.TEnum, ctx: ACtx): boolean => {
 
 export const ToJS = {
     Switch(node: ISwitch, ctx: JCtx): b.Statement {
+        if (
+            node.cases.length === 1 ||
+            !node.cases.every(
+                (k) =>
+                    asSimple(k.pat) ||
+                    patternIsExhaustive(k.pat, node.ttype, ctx.actx),
+            )
+        ) {
+            let refined = node.ttype;
+            const withTypes = node.cases.map((kase) => {
+                const v = { kase, refined };
+
+                // const matches = typeMatchesPattern(kase.pat, refined, ctx);
+                const res = refineType(kase.pat, refined, ctx.actx);
+                if (res) {
+                    refined = res;
+                } else {
+                    refined = { type: 'TBlank', loc: node.loc };
+                }
+
+                return v;
+            });
+            const { kase: last, refined: lt } = withTypes.pop()!;
+            let inner: b.Statement = ctx.ToJS.Block(
+                {
+                    type: 'Block',
+                    loc: last.loc,
+                    stmts: [
+                        {
+                            type: 'Let',
+                            expr: node.target,
+                            pat: last.pat,
+                            loc: last.loc,
+                            typ: lt,
+                        },
+                        last.expr,
+                    ],
+                },
+                ctx,
+            );
+
+            while (withTypes.length) {
+                const { kase: next, refined } = withTypes.pop()!;
+                const [cond, yes] = ctx.ToJS.IfYes(
+                    {
+                        type: 'IfYes',
+                        conds: [
+                            {
+                                type: 'Let',
+                                expr: node.target,
+                                pat: next.pat,
+                                loc: next.loc,
+                                typ: refined,
+                            },
+                        ],
+                        block:
+                            next.expr.type === 'Block'
+                                ? next.expr
+                                : {
+                                      type: 'Block',
+                                      stmts: [next.expr],
+                                      loc: next.loc,
+                                  },
+                        loc: next.loc,
+                    },
+                    ctx,
+                );
+
+                inner = b.ifStatement(
+                    cond ?? b.booleanLiteral(true),
+                    yes,
+                    inner,
+                );
+            }
+            return inner;
+        }
+
         let cases: b.SwitchCase[] = [];
         for (let kase of node.cases) {
             if (patternIsExhaustive(kase.pat, node.ttype, ctx.actx)) {

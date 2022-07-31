@@ -44,15 +44,19 @@ switch `What(10) {
   `What(hello#[0]) => hello#[0]
 }
 // 10
-/* {
-  let {
-    payload: hello
-  } = {
-    tag: "What",
-    payload: 10
-  };
-  return hello;
-} */
+/* (() => {
+  {
+    let {
+      payload: hello
+    } = {
+      tag: "What",
+      payload: 10
+    };
+    {
+      return hello;
+    }
+  }
+})() */
 
 ==[too many]==
 --[input]--
@@ -120,15 +124,17 @@ switch (1, 2) {
   (a#[0], b#[1]) => a#[0] + b#[1]
 }
 // int
-/* {
+/* (() => {
   if ([1, 2][0] === 1) {
     let [, _] = [1, 2];
     return 1;
   } else {
     let [a, b] = [1, 2];
-    return a + b;
+    {
+      return a + b;
+    }
   }
-} */
+})() */
 
 ==[type refinement]==
 --[input]--
@@ -201,10 +207,12 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
     let {
       payload: res
     } = m;
-    let {
-      payload: v
-    } = res;
-    return unresolved sym!;
+    {
+      let {
+        payload: v
+      } = res;
+      return v;
+    }
   }
 } */
 
@@ -212,18 +220,18 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 --[input]--
 (m: [`Hi(int, [`One | `Two(int)])]) => switch m {
   `Hi(v, `One) => 10
-`Hi(v, `Two(2)) => 12
+`Hi(v, `Two(2)) => 12 + v
   `Hi(v, x) => {
     let `Two(n) = x;
     v + n
-  }
+  } 
 }
 
---[output:failed]--
+--[output:expected]--
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (m#[0]: [ `Hi(int, [ `One | `Two(int) ]) ]) => switch m#[0] {
   `Hi(v#[1], `One) => 10
-  `Hi(v#[2], `Two(2)) => 1
+  `Hi(v#[2], `Two(2)) => 12 + v#[2]
   `Hi(v#[3], x#[4]) => {
     let `Two(n#[5]) = x#[4];
     v#[3] + n#[5];
@@ -231,10 +239,25 @@ alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39b
 }
 // ([ `Hi(int, [ `One | `Two(int) ]) ]) => int
 /* m => {
-  {
+  if ((typeof m.payload[1] === "string" ? m.payload[1] : m.payload[1].tag) === "One") {
     let {
       payload: [v,,]
     } = m;
     return 10;
+  } else if (m.payload[1].payload === 2) {
+    let {
+      payload: [v,,]
+    } = m;
+    return 12 + v;
+  } else {
+    let {
+      payload: [v, x]
+    } = m;
+    {
+      let {
+        payload: n
+      } = x;
+      return v + n;
+    }
   }
 } */

@@ -247,7 +247,25 @@ let alwaysRead: (value: string, task: Task<[ `Read((), string) | `Print(string, 
 // (string, Task<[ `Read((), string) | `Print(string, ()) ], string>) => [ `Return(string) | `Print(string, (arg: ()) => Task<[ `Print(string, ()) ], string>) ]
 /* (value, task) => {
   return (() => {
-    switch too complex;
+    if (task.payload === "Return") {
+      let {
+        payload: v
+      } = task;
+      return {
+        tag: "Return",
+        payload: `${v}`
+      };
+    } else if (task.payload === "Read") {
+      let {
+        payload: [v, k]
+      } = task;
+      return $terms.alwaysRead(value, k(value));
+    } else {
+      let otherwise = task;
+      {
+        return withHandler(otherwise, task => $terms.alwaysRead(value, task));
+      }
+    }
   })();
 } */
 // whyy does this break, if we just do (v)
@@ -274,6 +292,23 @@ let hello = (t#[0]: Task<[ `Read((), string) | `Print(string, ()) ], int>) => {
 // (Task<[ `Read((), string) | `Print(string, ()) ], int>) => int
 /* t => {
   return (() => {
-    switch too complex;
+    if (t.payload === "Return") {
+      let {
+        payload: v
+      } = t;
+      return v;
+    } else if (t.payload === "Read") {
+      let {
+        payload: [, k]
+      } = t;
+      return 100;
+    } else {
+      let {
+        payload: [hello, k]
+      } = t;
+      {
+        return 1000;
+      }
+    }
   })();
 } */
