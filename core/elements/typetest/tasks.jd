@@ -8,3 +8,8 @@ alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] type:shouldBe#[hed595bf
     string,
     (v: ()) => Task<[ `Print(string, ()) ], string>,
 ) ]
+
+@type:shouldBe(:Task<[ `Print(string, ()) ], string, [ `Read((), string) ]>) [ `Return(string) | `Print(
+    string,
+    (v: ()) => Task<[ `Print(string, ()) | `Read((), string) ], string>,
+) ]

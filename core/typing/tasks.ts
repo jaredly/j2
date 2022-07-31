@@ -86,6 +86,10 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
             payload: targs.length > 1 ? targs[1] : tunit,
         },
     ];
+    const extraInner =
+        targs.length > 2 && targs[2].type === 'TEnum'
+            ? expandEnumCases(targs[2], ctx)
+            : null;
     if (targs[0].type !== 'TEnum') {
         return null;
     }
@@ -93,12 +97,34 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
     if (!expanded) {
         return null;
     }
+    const innerTask = taskType(
+        [
+            {
+                type: 'TEnum',
+                cases: expanded.concat(extraInner ?? []),
+                loc: loc,
+                open: false,
+            },
+            targs.length > 1 ? targs[1] : tunit,
+        ],
+        ctx,
+        loc,
+    );
     for (let one of expanded) {
         const two = asTwopul(one.payload);
         if (!two) {
             return null;
         }
         const [value, karg] = two;
+        const k: Type =
+            karg.type === 'TEnum' && !karg.open && !karg.cases.length
+                ? tunit
+                : {
+                      type: 'TLambda',
+                      loc: one.loc,
+                      args: [{ label: 'arg', typ: karg, loc: karg.loc }],
+                      result: innerTask,
+                  };
         cases.push({
             type: 'EnumCase',
             decorators: [],
@@ -119,27 +145,7 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
                     },
                     {
                         key: '1',
-                        value:
-                            karg.type === 'TEnum' &&
-                            !karg.open &&
-                            !karg.cases.length
-                                ? tunit
-                                : {
-                                      type: 'TLambda',
-                                      loc: one.loc,
-                                      args:
-                                          // isUnit(karg)
-                                          //     ? []
-                                          // :
-                                          [
-                                              {
-                                                  label: 'arg',
-                                                  typ: karg,
-                                                  loc: karg.loc,
-                                              },
-                                          ],
-                                      result: taskType(targs, ctx, loc),
-                                  },
+                        value: k,
                         type: 'TRecordKeyValue',
                         default_: null,
                         loc: value.loc,

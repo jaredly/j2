@@ -98,6 +98,60 @@ can we bring this back?
 //     }
 // };
 
+export const refineType = (
+    pat: Pattern,
+    type: t.Type,
+    ctx: TMCtx,
+): t.Type | null => {
+    switch (pat.type) {
+        case 'PDecorated': {
+            return refineType(pat.inner, type, ctx);
+        }
+        case 'PEnum': {
+            type = maybeExpandTask(type, ctx) ?? type;
+            if (type.type !== 'TEnum') {
+                return type;
+            }
+            const cases = expandEnumCases(type, ctx);
+            if (!cases) {
+                return null; // all out of cases!
+            }
+            const res: t.EnumCase[] = [];
+            for (let kase of cases) {
+                if (kase.tag === pat.tag) {
+                    if (!pat.payload) {
+                        // return {
+                        //     ...type,
+                        //     cases: cases.filter(k => k.tag !== pat.tag)
+                        // };
+                        continue;
+                    }
+                    if (kase.payload) {
+                        const inner = refineType(
+                            pat.payload,
+                            kase.payload,
+                            ctx,
+                        );
+                        if (inner == null) {
+                            continue;
+                        }
+                        res.push({ ...kase, payload: inner });
+                    }
+                    // return (
+                    //     kase.payload != null &&
+                    //     typeMatchesPattern(pat.payload, kase.payload, ctx)
+                    // );
+                } else {
+                    res.push(kase);
+                }
+            }
+            return { ...type, cases: res };
+        }
+        // TODO: Records and such
+    }
+    return type;
+};
+
 /**
  * Checks to see if the type of an arg or let is appropriate.
  */

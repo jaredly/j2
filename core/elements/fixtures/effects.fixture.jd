@@ -212,8 +212,8 @@ let helloFolks = () => {
   });
 } */
 
-==[trying out withhandler]==
---[input]--
+==[trying out withhandler - skip]==
+--[input:shouldFail]--
 let alwaysRead: (value: string, task: Task<[]>) => Task<[], string> = (value: string, task: Task<[`Read((), string)], string>): Task<[], string> => {
   switch task {
     `Return(v) => `Return(v)
@@ -225,7 +225,7 @@ let alwaysRead: (value: string, task: Task<[]>) => Task<[], string> = (value: st
   }
 }
 
---[output:failed]--
+--[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] error:caseMismatch#[h83cceed949f4c31221b67a1e36c66dbd1dbcf86f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] withHandler#[h8c01e15c5414bbe2883805e74dc148e8b9811f04]
 let alwaysRead: (value: string, task: Task<[]>) => Task<[], string> = (
     value#[0]: string,
@@ -253,8 +253,8 @@ let alwaysRead: (value: string, task: Task<[]>) => Task<[], string> = (
     };
 }
 
-==[switch on a task]==
---[input]--
+==[switch on a task - skip]==
+--[input:shouldFail]--
 let hello = (t: Task<[`Read((), string) | `Print(string, ())], int>) => {
   switch t { 
     `Return(v) => v
@@ -263,7 +263,7 @@ let hello = (t: Task<[`Read((), string) | `Print(string, ())], int>) => {
   }
 }
 
---[output:failed]--
+--[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let hello = (t#[0]: Task<[ `Read((), string) | `Print(string, ()) ], int>) => {
     switch t#[0] {

@@ -12,7 +12,12 @@ import { Ctx as TMCtx } from '../typing/typeMatches';
 import { Ctx as ICtx } from '../ir/ir';
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
+import {
+    getLocals,
+    refineType,
+    typeForPattern,
+    typeMatchesPattern,
+} from './pattern';
 import { iife } from './lets';
 import { unifyTypes } from '../typing/unifyTypes';
 import { dtype } from './ifs';
@@ -261,7 +266,7 @@ export const ToJS = {
 export type AVCtx = {
     ctx: ACtx;
     hit: {};
-    switchType?: t.Type | null;
+    switchType?: { s: t.Switch; t: t.Type } | null;
 };
 
 export const Analyze: Visitor<AVCtx> = {
@@ -300,9 +305,12 @@ export const Analyze: Visitor<AVCtx> = {
             }
             return c;
         });
+        if (changed) {
+            node = { ...node, cases };
+        }
         return [
-            changed ? { ...node, cases } : null,
-            { ctx, hit, switchType: target },
+            changed ? node : null,
+            { ctx, hit, switchType: { t: target, s: node } },
         ];
     },
     Case(node, ctx) {
@@ -311,7 +319,22 @@ export const Analyze: Visitor<AVCtx> = {
             return null;
         }
 
-        const typ = ctx.switchType;
+        let { s, t: typ } = ctx.switchType;
+        const idx = s.cases.indexOf(node);
+        if (idx === -1) {
+            console.error(
+                `Unable to refine type! This will result in overly-cautious type errors`,
+            );
+        } else {
+            for (let i = 0; i < idx; i++) {
+                const refined = refineType(s.cases[i].pat, typ, ctx.ctx);
+                if (refined) {
+                    typ = refined;
+                } else {
+                    typ = { type: 'TBlank', loc: node.loc };
+                }
+            }
+        }
         const locals: t.Locals = [];
         getLocals(node.pat, typ, locals, ctx.ctx);
 

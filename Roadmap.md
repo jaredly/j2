@@ -23,6 +23,13 @@ and/or a nice error coalescing example.
 - [x] hoist awaits to a block-level, thanks!
 	- [x] make sure nested awaits still work
 - [ ] and then withHandler! yes please.
+	- [x] figure out the type
+	- [ ] make a third arg to Task for 'inner effects'
+	- [ ] get switch case type refinement happening
+		- ooooof. how do I .. capture the fact that ... the parent ...
+			ugh I'll maybe just stick the whole switch onto the dealio.
+			don't love it.
+	- [ ] see if it can all come together???
 - [ ] then we can actually start into some of those eff paper examples!
 	That would be charming.
 

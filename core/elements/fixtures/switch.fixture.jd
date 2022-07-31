@@ -148,3 +148,46 @@ switch (1, 2) {
       return a + b;
   }
 })() */
+
+==[type refinement]==
+--[input]--
+(m: [`One | `Two | `Three(int)]) => switch m {
+  `One => 1
+  `Two => 2
+  otherwise => {
+    let `Three(v) = otherwise;
+    v
+  }
+}
+
+--[output:expected]--
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+(m#[0]: [ `One | `Two | `Three(int) ]) => switch m#[0] {
+  `One => 1
+  `Two => 2
+  otherwise#[1] => {
+    let `Three(v#[2]) = otherwise#[1];
+    v#[2];
+}
+}
+// ([ `One | `Two | `Three(int) ]) => int
+/* m => {
+  switch (typeof m === "string" ? m : m.tag) {
+    case "One":
+      {
+        return 1;
+      }
+
+    case "Two":
+      {
+        return 2;
+      }
+
+    default:
+      let otherwise = m;
+      let {
+        payload: v
+      } = otherwise;
+      return v;
+  }
+} */
