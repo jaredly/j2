@@ -169,7 +169,7 @@ export const ToIR = {
     },
 };
 
-const asSimple = (pat: t.Pattern): b.Expression | null => {
+export const asSimple = (pat: t.Pattern): b.Expression | null => {
     if (pat.type === 'Number') {
         return b.numericLiteral(pat.value);
     }
@@ -279,7 +279,7 @@ export const Analyze: Visitor<AVCtx> = {
         let changed = false;
 
         let refined = target;
-        ctx.debugger();
+        // ctx.debugger();
 
         const cases = node.cases.map((c) => {
             const matches = typeMatchesPattern(c.pat, refined, ctx);

@@ -44,21 +44,15 @@ switch `What(10) {
   `What(hello#[0]) => hello#[0]
 }
 // 10
-/* (() => {
-  switch ({
+/* {
+  let {
+    payload: hello
+  } = {
     tag: "What",
     payload: 10
-  }.tag) {
-    default:
-      let {
-        payload: hello
-      } = {
-        tag: "What",
-        payload: 10
-      };
-      return hello;
-  }
-})() */
+  };
+  return hello;
+} */
 
 ==[too many]==
 --[input]--
@@ -115,22 +109,26 @@ alias error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] int#[h94
 ==[New fixture_]==
 --[input]--
 switch (1, 2) {
+  (1, _) => 1
   (a#[0], b#[1]) => a#[0] + b#[1]
 }
 
 --[output:expected]--
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
 switch (1, 2) {
+  (1, _#[2]) => 1
   (a#[0], b#[1]) => a#[0] + b#[1]
 }
-// 3
-/* (() => {
-  switch ([1, 2]) {
-    default:
-      let [a, b] = [1, 2];
-      return a + b;
+// int
+/* {
+  if ([1, 2][0] === 1) {
+    let [, _] = [1, 2];
+    return 1;
+  } else {
+    let [a, b] = [1, 2];
+    return a + b;
   }
-})() */
+} */
 
 ==[type refinement]==
 --[input]--
@@ -196,29 +194,47 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 }
 // ([ `One | `Two([ `A | `B(int) ]) ]) => int
 /* m => {
-  switch too complex;
+  if ((typeof m === "string" ? m : m.tag) === "Two" && (typeof m.payload === "string" ? m.payload : m.payload.tag) === "A") {
+    "no-op pattern";
+    return 10;
+  } else {
+    let {
+      payload: res
+    } = m;
+    let {
+      payload: v
+    } = res;
+    return unresolved sym!;
+  }
 } */
 
 ==[Nested Record Refinement]==
 --[input]--
 (m: [`Hi(int, [`One | `Two(int)])]) => switch m {
   `Hi(v, `One) => 10
+`Hi(v, `Two(2)) => 12
   `Hi(v, x) => {
     let `Two(n) = x;
     v + n
   }
 }
 
---[output:expected]--
+--[output:failed]--
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (m#[0]: [ `Hi(int, [ `One | `Two(int) ]) ]) => switch m#[0] {
   `Hi(v#[1], `One) => 10
-  `Hi(v#[2], x#[3]) => {
-    let `Two(n#[4]) = x#[3];
-    v#[2] + n#[4];
+  `Hi(v#[2], `Two(2)) => 1
+  `Hi(v#[3], x#[4]) => {
+    let `Two(n#[5]) = x#[4];
+    v#[3] + n#[5];
 }
 }
-// ([ `Hi(int, [ `One | `Two(int) ]) ]) => int + int
+// ([ `Hi(int, [ `One | `Two(int) ]) ]) => int
 /* m => {
-  switch too complex;
+  {
+    let {
+      payload: [v,,]
+    } = m;
+    return 10;
+  }
 } */

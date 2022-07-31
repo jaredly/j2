@@ -266,7 +266,6 @@ export function OneFixture({
                     <Card.Divider css={{ marginBlock: '$6' }} />
                     {changed && newOutput.file.type === 'Success' ? (
                         <>
-                            <Card.Divider css={{ marginBlock: '$6' }} />
                             {/* <Aliases
                                 aliases={parseAliases(
                                     newOutput.result.newOutput,
@@ -295,6 +294,7 @@ export function OneFixture({
                                     }}
                                 />
                             ) : null}
+                            <Card.Divider css={{ marginBlock: '$6' }} />
                         </>
                     ) : null}
                     <div style={{ position: 'relative' }}>

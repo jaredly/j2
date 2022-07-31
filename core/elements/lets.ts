@@ -70,7 +70,7 @@ export const ToTast = {
                     const res = ctx.ToTast.Stmt(stmt, ctx);
                     if (res.type === 'Let') {
                         const locals: t.Locals = [];
-                        ctx.debugger();
+                        // ctx.debugger();
                         const typ =
                             ctx.getType(res.expr) ??
                             typeForPattern(res.pat, ctx);

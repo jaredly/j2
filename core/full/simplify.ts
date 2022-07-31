@@ -2,7 +2,12 @@ import { FullContext } from '../ctx';
 import { noloc } from '../consts';
 import { transformExpression, transformStmt, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { errorCount, initVerify, verifyVisitor } from '../typing/analyze';
+import {
+    errorCount,
+    initVerify,
+    localTrackingVisitor,
+    verifyVisitor,
+} from '../typing/analyze';
 import { analyzeVisitor } from '../typing/analyze.gen';
 import { typeMatches } from '../typing/typeMatches';
 import * as b from '@babel/types';
@@ -11,9 +16,11 @@ import { awaitExpr } from '../elements/awaits';
 import { printCtx } from '../typing/to-ast';
 import { newPPCtx } from '../printer/to-pp';
 import { printToString } from '../printer/pp';
+import { asSimple } from '../elements/switchs';
+import { patternIsExhaustive } from '../elements/exhaustive';
 // import { reduceAwaits } from '../elements/awaits';
 
-type SCtx = FullContext & { tmpSym: number };
+type SCtx = FullContext & { tmpSym: number; switchType?: t.Type };
 
 const makeSuper = (
     vtype: t.Type,
@@ -66,6 +73,70 @@ const makeSuper = (
     // return b.objectExpression([
     // 	b.spreadElement(target),
     // ])
+};
+
+const switchToIfLets: Visitor<SCtx> = {
+    ...(localTrackingVisitor as any as Visitor<SCtx>),
+    Expression_Switch(node, ctx) {
+        // So we could techincally allow shenanigans if only the very last
+        // case is complex. but whatever
+        // ctx.debugger();
+        const t = ctx.getType(node.target);
+        if (
+            node.cases.length > 1 &&
+            node.cases.every(
+                (k) =>
+                    asSimple(k.pat) ||
+                    (t && patternIsExhaustive(k.pat, t, ctx)),
+            )
+        ) {
+            return null;
+        }
+        const cases = node.cases.slice();
+        const last = cases.pop()!;
+        let inner: t.If | t.Block = {
+            type: 'Block',
+            stmts: [
+                {
+                    type: 'Let',
+                    expr: node.target,
+                    pat: last.pat,
+                    loc: last.loc,
+                },
+                last.expr,
+            ],
+            loc: last.loc,
+        };
+        while (cases.length) {
+            const next = cases.pop()!;
+            inner = {
+                type: 'If',
+                loc: next.loc,
+                yes: {
+                    type: 'IfYes',
+                    conds: [
+                        {
+                            type: 'Let',
+                            expr: node.target,
+                            pat: next.pat,
+                            loc: next.loc,
+                        },
+                    ],
+                    block:
+                        next.expr.type === 'Block'
+                            ? next.expr
+                            : {
+                                  type: 'Block',
+                                  stmts: [next.expr],
+                                  loc: next.loc,
+                              },
+                    loc: next.loc,
+                },
+                no: inner,
+            };
+        }
+        return inner;
+    },
 };
 
 const superify: Visitor<SCtx> = {
@@ -179,7 +250,12 @@ const liftStmts: Visitor<SCtx> = {
     },
 };
 
-const visitors: Visitor<SCtx>[] = [liftStmts, superify, reduceAwaitVisitor];
+const visitors: Visitor<SCtx>[] = [
+    liftStmts,
+    superify,
+    reduceAwaitVisitor,
+    // switchToIfLets,
+];
 
 export const debugExpr = (expr: t.Expression, ctx: FullContext) => {
     const pctx = printCtx(ctx);

@@ -650,7 +650,7 @@ export const ToJS = {
                 }
                 const inner = ctx.ToJS.PatternCond(
                     p.payload,
-                    b.memberExpression(target, b.identifier('payload'), true),
+                    b.memberExpression(target, b.identifier('payload')),
                     type,
                     ctx,
                 );

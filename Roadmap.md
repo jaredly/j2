@@ -29,7 +29,18 @@ and/or a nice error coalescing example.
 		- ooooof. how do I .. capture the fact that ... the parent ...
 			ugh I'll maybe just stick the whole switch onto the dealio.
 			don't love it.
-	- [ ] see if it can all come together???
+	- [x] see if it can all come together???
+
+NOW YES
+
+- [ ] switch -> if-let
+	- lol ok this is causing some problems!
+- [ ] if-let needs to refine the types my good folks! no two ways about it.
+	which meeeans, we need a way to set locals in the `else` side of the if-let...
+	probably by pulling another fast one and putting the whole if on the context.
+	and makeing an `IfElse` node, that we can visitor it up on.
+
+
 - [ ] then we can actually start into some of those eff paper examples!
 	That would be charming.
 
