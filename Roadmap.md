@@ -33,12 +33,21 @@ and/or a nice error coalescing example.
 
 NOW YES
 
-- [ ] switch -> if-let
+- [-] switch -> if-let simplifyer
 	- lol ok this is causing some problems!
-- [ ] if-let needs to refine the types my good folks! no two ways about it.
-	which meeeans, we need a way to set locals in the `else` side of the if-let...
-	probably by pulling another fast one and putting the whole if on the context.
-	and makeing an `IfElse` node, that we can visitor it up on.
+	<!-- - [ ] if-let needs to refine the types my good folks! no two ways about it.
+		which meeeans, we need a way to set locals in the `else` side of the if-let...
+		probably by pulling another fast one and putting the whole if on the context.
+		and makeing an `IfElse` node, that we can visitor it up on. -->
+	- ugh I'll just do the switch->iflet transition at the to-ir boundary. cleaner.
+- [x] do switch->if-let at the to-ir border. a little riskier, but I think it's fine
+- [x] get withHandler working!
+- [ ] I want things to be /much/ more introspectable, now that I'm actually doing complex computation.
+	- breakpoints? could be nice to be able to drop in a `debuggerfy()` anywhere. with a decorator? sure why not.
+	- also `log`? yeah, love it.
+- [ ] response time is suffering in the large editor. I think it's time to break up into separate "editors"?
+	- definitely, one per toplevel
+	- also, what about: @break and @log / @trace
 
 
 - [ ] then we can actually start into some of those eff paper examples!

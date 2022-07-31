@@ -247,7 +247,7 @@ let alwaysRead: (value: string, task: Task<[ `Read((), string) | `Print(string, 
 // (string, Task<[ `Read((), string) | `Print(string, ()) ], string>) => [ `Return(string) | `Print(string, (arg: ()) => Task<[ `Print(string, ()) ], string>) ]
 /* (value, task) => {
   return (() => {
-    if (task.payload === "Return") {
+    if (task.tag === "Return") {
       let {
         payload: v
       } = task;
@@ -255,7 +255,7 @@ let alwaysRead: (value: string, task: Task<[ `Read((), string) | `Print(string, 
         tag: "Return",
         payload: v
       };
-    } else if (task.payload === "Read") {
+    } else if (task.tag === "Read") {
       let {
         payload: [v, k]
       } = task;
@@ -291,12 +291,12 @@ let hello = (t#[0]: Task<[ `Read((), string) | `Print(string, ()) ], int>) => {
 // (Task<[ `Read((), string) | `Print(string, ()) ], int>) => int
 /* t => {
   return (() => {
-    if (t.payload === "Return") {
+    if (t.tag === "Return") {
       let {
         payload: v
       } = t;
       return v;
-    } else if (t.payload === "Read") {
+    } else if (t.tag === "Read") {
       let {
         payload: [, k]
       } = t;
