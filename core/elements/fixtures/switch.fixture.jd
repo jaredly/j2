@@ -26,10 +26,10 @@ switch `What {
 }
 
 --[output:expected]--
-alias error:caseMismatch#[h83cceed949f4c31221b67a1e36c66dbd1dbcf86f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias error:caseMismatch#[h83cceed949f4c31221b67a1e36c66dbd1dbcf86f] error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 switch `What {
-  `Who => 1
-  `Yes => 2
+  @error:patternMismatch() `Who => 1
+  @error:patternMismatch() `Yes => 2
   `What => @error:caseMismatch(expected: :int) "hello"
 }
 

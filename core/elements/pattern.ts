@@ -152,7 +152,7 @@ export const refineType = (
             }
             const cases = expandEnumCases(type, ctx);
             if (!cases) {
-                return null; // all out of cases!
+                return { ...type, cases: [] }; // all out of cases!
             }
             const res: t.EnumCase[] = [];
             for (let kase of cases) {
@@ -182,9 +182,6 @@ export const refineType = (
                 } else {
                     res.push(kase);
                 }
-            }
-            if (!res.length) {
-                return null;
             }
             return { ...type, cases: res };
         }
@@ -237,7 +234,7 @@ export const typeMatchesPattern = (
                     );
                 }
             }
-            return true;
+            return false;
         }
         case 'PRecord': {
             if (type.type !== 'TRecord') {
@@ -340,6 +337,7 @@ export const getLocals = (
             return;
         case 'PEnum': {
             type = ctx.resolveRefsAndApplies(type) ?? type;
+            type = maybeExpandTask(type, ctx) ?? type;
             if (type.type !== 'TEnum') {
                 return;
             }

@@ -318,7 +318,14 @@ export const Analyze: Visitor<AVCtx> = {
         if (changed) {
             node = { ...node, cases };
         }
-        if (refined.type !== 'TBlank') {
+        if (
+            refined.type !== 'TBlank' &&
+            !(
+                refined.type === 'TEnum' &&
+                !refined.cases.length &&
+                !refined.open
+            )
+        ) {
             node = {
                 ...node,
                 target: decorate(node.target, 'notExhaustive', hit, ctx),
