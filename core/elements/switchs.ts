@@ -277,8 +277,18 @@ export const Analyze: Visitor<AVCtx> = {
         }
         let body: null | t.Type = null;
         let changed = false;
+
+        let refined = target;
+        ctx.debugger();
+
         const cases = node.cases.map((c) => {
-            const matches = typeMatchesPattern(c.pat, target, ctx);
+            const matches = typeMatchesPattern(c.pat, refined, ctx);
+            const res = refineType(c.pat, refined, ctx);
+            if (res) {
+                refined = res;
+            } else {
+                refined = { type: 'TBlank', loc: node.loc };
+            }
             let bt = ctx.getType(c.expr);
             if (body && bt) {
                 let un = unifyTypes(body, bt, ctx);
@@ -307,6 +317,12 @@ export const Analyze: Visitor<AVCtx> = {
         });
         if (changed) {
             node = { ...node, cases };
+        }
+        if (refined.type !== 'TBlank') {
+            node = {
+                ...node,
+                target: decorate(node.target, 'notExhaustive', hit, ctx),
+            };
         }
         return [
             changed ? node : null,

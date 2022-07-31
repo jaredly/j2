@@ -22,7 +22,7 @@ switch (1, 2) {
 switch `What {
   `Who => 1
   `Yes => 2
-  `What => "hello"
+  `What =>  "hello"
 }
 
 --[output:expected]--
@@ -60,7 +60,7 @@ switch `What(10) {
   }
 })() */
 
-==[New fixture]==
+==[too many]==
 --[input]--
 ((m: [`One | `Two(int)]) => switch m {
   `One => 1
@@ -69,31 +69,14 @@ switch `What(10) {
 })(`One)
 
 --[output:expected]--
-alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
-((m#[0]: [ `One | `Two(int) ]) => switch m#[0] {
-  `One => 1
-  `Two => 4
-  `Three => 2
-})(`One)
-// int
-/* (m => {
-  switch (typeof m === "string" ? m : m.tag) {
-    case "One":
-      {
-        return 1;
-      }
-
-    case "Two":
-      {
-        return 4;
-      }
-
-    case "Three":
-      {
-        return 2;
-      }
-  }
-})("One") */
+alias error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+(
+    (m#[0]: [ `One | `Two(int) ]) => switch m#[0] {
+      `One => 1
+      `Two => 4
+      @error:patternMismatch() `Three => 2
+    },
+)(`One)
 
 ==[bare switch]==
 --[input]--
@@ -190,4 +173,52 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
       } = otherwise;
       return v;
   }
+} */
+
+==[nested refinement]==
+--[input]--
+(m: [`One | `Two([`A | `B(int)])]) => switch m {
+  `Two(`A) => 10
+  `Two(res) => {
+    let `B(v) = res;
+    v
+  }
+}
+
+--[output:expected]--
+alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+(m#[0]: [ `One | `Two([ `A | `B(int) ]) ]) => switch m#[0] {
+  `Two(`A) => 10
+  `Two(res#[1]) => {
+    let `B(v#[2]) = res#[1];
+    v#[2];
+}
+}
+// ([ `One | `Two([ `A | `B(int) ]) ]) => int
+/* m => {
+  switch too complex;
+} */
+
+==[Nested Record Refinement]==
+--[input]--
+(m: [`Hi(int, [`One | `Two(int)])]) => switch m {
+  `Hi(v, `One) => 10
+  `Hi(v, x) => {
+    let `Two(n) = x;
+    v + n
+  }
+}
+
+--[output:expected]--
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+(m#[0]: [ `Hi(int, [ `One | `Two(int) ]) ]) => switch m#[0] {
+  `Hi(v#[1], `One) => 10
+  `Hi(v#[2], x#[3]) => {
+    let `Two(n#[4]) = x#[3];
+    v#[2] + n#[4];
+}
+}
+// ([ `Hi(int, [ `One | `Two(int) ]) ]) => int + int
+/* m => {
+  switch too complex;
 } */

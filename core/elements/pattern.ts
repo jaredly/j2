@@ -104,6 +104,44 @@ export const refineType = (
     ctx: TMCtx,
 ): t.Type | null => {
     switch (pat.type) {
+        case 'PBlank':
+        case 'PName':
+            return null;
+        case 'PRecord': {
+            if (type.type !== 'TRecord') {
+                return type;
+            }
+            const items = allRecordItems(type, ctx);
+            if (!items) {
+                return type;
+            }
+            // let res: t.RecordKeyValue = [];
+            // const byName: {[key: string]: Pattern} = {}
+            // pat.items.forEach(({name, pat}) => byName[name] = pat)
+            // for (let [name, value] of Object.entries(items)) {
+            //     if (byName[name]) {
+            //     }
+            // }
+            let remaining = false;
+
+            for (let { name, pat: cpat } of pat.items) {
+                if (!items[name]) {
+                    return type;
+                }
+                const res = refineType(cpat, items[name].value, ctx);
+                if (res != null) {
+                    remaining = true;
+                    items[name] = { ...items[name], value: res };
+                }
+            }
+            return remaining
+                ? {
+                      ...type,
+                      spreads: [],
+                      items: Object.values(items),
+                  }
+                : null;
+        }
         case 'PDecorated': {
             return refineType(pat.inner, type, ctx);
         }
@@ -144,6 +182,9 @@ export const refineType = (
                 } else {
                     res.push(kase);
                 }
+            }
+            if (!res.length) {
+                return null;
             }
             return { ...type, cases: res };
         }
