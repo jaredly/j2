@@ -1,5 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { decorate, pdecorate } from '../typing/analyze';
+import { caseLocals, decorate, pdecorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
 import { expandEnumCases, typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
@@ -361,12 +361,14 @@ export const Analyze: Visitor<AVCtx> = {
         const cases = node.cases.map((c) => {
             const matches = typeMatchesPattern(c.pat, refined, ctx);
             const res = refineType(c.pat, refined, ctx);
+            let bt = ctx
+                .withLocals(caseLocals(refined, c, ctx))
+                .getType(c.expr);
             if (res) {
                 refined = res;
             } else {
                 refined = { type: 'TBlank', loc: node.loc };
             }
-            let bt = ctx.getType(c.expr);
             if (body && bt) {
                 let un = unifyTypes(body, bt, ctx);
                 if (un == false) {

@@ -59,13 +59,19 @@ export type ExecutionContext = {
     execute(expr: Expression): any;
 };
 
-// const withHandler = (
-//     {
-//         type,
-//         payload: [value, k],
-//     }: { type: string; payload: [any, Function | null] },
-//     handler: Function,
-// ) => ({ type, payload: [value, k ? (x: any) => handler(k(x)) : null] });
+const withHandler = (
+    { tag, payload }: { tag: string; payload: [any, Function | null] },
+    handler: Function,
+) =>
+    tag === 'Return'
+        ? { tag, payload }
+        : {
+              tag,
+              payload: [
+                  payload[0],
+                  payload[1] ? (x: any) => handler(payload[1]!(x)) : null,
+              ],
+          };
 
 // and ...
 
@@ -123,7 +129,13 @@ export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
             const jsraw = generate(expr).code;
             let f;
             try {
-                f = new Function('$terms', 'testIO', 'andThen', jsraw);
+                f = new Function(
+                    '$terms',
+                    'testIO',
+                    'andThen',
+                    'withHandler',
+                    jsraw,
+                );
             } catch (err) {
                 throw new Error(
                     `Syntax probably: ${(err as Error).message}\n` + jsraw,
@@ -134,7 +146,7 @@ export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
             }
             let res;
             try {
-                res = f(this.terms, testIO, andThen);
+                res = f(this.terms, testIO, andThen, withHandler);
             } catch (err) {
                 // console.log(this.terms);
                 throw new Error(

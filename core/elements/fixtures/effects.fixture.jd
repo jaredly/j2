@@ -216,11 +216,11 @@ let helloFolks = () => {
 --[input]--
 let alwaysRead: (value: string, task: Task<[`Read((), string) | `Print(string, ())], string>) => Task<[`Print(string, ())], string> = (value: string, task: Task<[`Read((), string) | `Print(string, ())], string>): Task<[`Print(string, ())], string> => {
   switch task {
-    `Return(v) => `Return("${v}") // whyy does this break, if we just do (v)
+    `Return(v) => `Return(v)
     `Read(v, k) => alwaysRead(value, k(value))
     otherwise => 
 withHandler<[`Print(string, ())], string, [`Read((), string)]>(
-      otherwise,
+      otherwise, 
       (task) => alwaysRead(value, task)
     )
   }
@@ -236,7 +236,7 @@ let alwaysRead: (value: string, task: Task<[ `Read((), string) | `Print(string, 
     string,
 > => {
     switch task#[1] {
-      `Return(v#[2]) => `Return("${v#[2]}")
+      `Return(v#[2]) => `Return(v#[2])
       `Read(v#[3], k#[4]) => alwaysRead#[r0](value#[0], k#[4](value#[0]))
       otherwise#[5] => withHandler<[ `Print(string, ()) ], string, [ `Read((), string) ]>(
         otherwise#[5],
@@ -253,7 +253,7 @@ let alwaysRead: (value: string, task: Task<[ `Read((), string) | `Print(string, 
       } = task;
       return {
         tag: "Return",
-        payload: `${v}`
+        payload: v
       };
     } else if (task.payload === "Read") {
       let {
@@ -268,7 +268,6 @@ let alwaysRead: (value: string, task: Task<[ `Read((), string) | `Print(string, 
     }
   })();
 } */
-// whyy does this break, if we just do (v)
 
 ==[switch on a task]==
 --[input]--

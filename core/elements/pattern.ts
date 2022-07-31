@@ -601,7 +601,7 @@ export const ToJS = {
         type: t.Type,
         ctx: JCtx,
     ): b.Expression | null {
-        ctx.actx.debugger();
+        // ctx.actx.debugger();
         switch (p.type) {
             case 'PBlank':
                 return null;
@@ -638,7 +638,7 @@ export const ToJS = {
                           target,
                           b.memberExpression(target, b.identifier('tag')),
                       )
-                    : b.memberExpression(target, b.identifier('payload'));
+                    : b.memberExpression(target, b.identifier('tag'));
                 const one =
                     cases.length === 1
                         ? null
