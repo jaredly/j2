@@ -140,6 +140,7 @@ const switchToIfLets: Visitor<SCtx> = {
 };
 
 const superify: Visitor<SCtx> = {
+    ...(localTrackingVisitor as any as Visitor<SCtx>),
     Apply(node, ctx) {
         let changed = false;
         const t = ctx.getType(node.target);
@@ -172,6 +173,7 @@ const superify: Visitor<SCtx> = {
 };
 
 const reduceAwaitVisitor: Visitor<SCtx> = {
+    ...(localTrackingVisitor as any as Visitor<SCtx>),
     Lambda(node, ctx) {
         const changed = awaitExpr(node.body, ctx);
         // do your thing
@@ -180,6 +182,7 @@ const reduceAwaitVisitor: Visitor<SCtx> = {
 };
 
 const liftStmts: Visitor<SCtx> = {
+    ...(localTrackingVisitor as any as Visitor<SCtx>),
     Block(node, ctx) {
         const stmts: t.Stmt[] = [];
         let changed = false;
@@ -265,7 +268,7 @@ export const debugExpr = (expr: t.Expression, ctx: FullContext) => {
 };
 
 export const simplify = (expr: t.Expression, ctx: FullContext) => {
-    visitors.forEach((visitor) => {
+    visitors.forEach((visitor, i) => {
         const changed = transformExpression(
             transformExpression(expr, visitor, { ...ctx, tmpSym: 1000 }),
             analyzeVisitor(),

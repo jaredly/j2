@@ -11,35 +11,31 @@ type Read = [ `Read((), string) ];
 type Print = [ `Print(string, ()) ];
 type Other = <T#[0]: [ * ]>[ `One | T#[0] ];
 let again = <T#[0]: [ * ]>(v#[1]: T#[0]):[ `One | T#[0] ] => v#[1];
-alias Read#[h39d4a8221a80e1486be57f401a27a7eb6b0afc3c] Task#[h67d00eba961cd5135110775d8654598dc22e7274] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] error:caseMismatch#[h83cceed949f4c31221b67a1e36c66dbd1dbcf86f] error:needsTypeVariables#[hf5fb5541892dfc05b0afa3069bc28a0cddf64c70] error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe] withHandler#[h8c01e15c5414bbe2883805e74dc148e8b9811f04]
+alias Read#[h39d4a8221a80e1486be57f401a27a7eb6b0afc3c] Task#[h67d00eba961cd5135110775d8654598dc22e7274] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe] withHandler#[h8c01e15c5414bbe2883805e74dc148e8b9811f04]
 let alwaysRead: <Inner#[7]: task>(string, Task<[ Read | Inner#[7] ], string>) => Task<
-    Inner#[7],
+    [ Inner#[7] ],
     string,
-> = <Inner#[8]: task>(readResponse#[0]: string, task#[1]: Task<[ Read | Inner#[8] ], string>) => {
+> = <Inner#[8]: task>(readResponse#[0]: string, task#[1]: Task<[ Read | Inner#[8] ], string>):Task<
+    [ Inner#[8] ],
+    string,
+> => {
     switch task#[1] {
-      `Return(result#[2]) => `Return(result#[:unresolved:])
-      @error:patternMismatch() `Read(_, k#[4]) => @error:caseMismatch(expected: :[ `Return ]) alwaysRead#[r0]<
-        Inner#[8],
-    >(readResponse#[0], k#[:unresolved:](readResponse#[0]))
-      otherwise#[5] => @error:caseMismatch(expected: :[ `Return ]) withHandler<
-        Inner#[8],
-        string,
-        [ Read ],
-    >(
-        @error:argWrongType(expected: :Task<Inner#[8], string, [ Read ]>) otherwise#[5],
-        (task#[6]) => (@error:needsTypeVariables() alwaysRead#[r0])(readResponse#[0], task#[6]),
+      `Return(result#[2]) => `Return(result#[2])
+      `Read(_, k#[4]) => alwaysRead#[r0]<Inner#[8]>(readResponse#[0], k#[4](readResponse#[0]))
+      otherwise#[5] => withHandler<[ Inner#[8] ], string, [ Read ]>(
+        otherwise#[5],
+        (task#[6]) => alwaysRead#[r0]<Inner#[8]>(readResponse#[0], task#[6]),
     )
     };
 };
-alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] helloFolks#[h907740149dc7a326fac4ece47072406dde331098] testIO#[h69ce4c33e9e9ba9af7129accb6794008258bb41c]
-testIO<string>("what", alwaysRead#[:unresolved:]("who", helloFolks())) == "done who";
-alias Print#[h54ed15b99ee8e24a9deca9b4c3d180679bfcf096]
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] Print#[h54ed15b99ee8e24a9deca9b4c3d180679bfcf096] alwaysRead#[hd9f063291257fe2b884a5edf9bf8ffa7dc00921c] helloFolks#[h907740149dc7a326fac4ece47072406dde331098] testIO#[h69ce4c33e9e9ba9af7129accb6794008258bb41c]
+testIO<string>("what", alwaysRead<[ Print ]>("who", helloFolks())) == "done who";
 let collect: (string, Task<[ Print ], ()>) => string = (collected#[0], task#[1]) => switch task#[1] {
   `Return() => collected#[0]
   `Print(value#[2], k#[3]) => collect#[r0]("${collected#[0]}\n${value#[2]}", k#[3](()))
 };
 let inner = () => {
-    print(alwaysRead#[:unresolved:]("who", helloFolks())!)!;
+    print(alwaysRead<Print>("who", helloFolks())!)!;
 };
-alias collect#[hce5100d4828e88b73d486cd07381c43e7817954e]
-collect("Initial", inner#[:unresolved:]()) == "Initial\nHello folks\nGot who!\ndone who";
+alias collect#[hce5100d4828e88b73d486cd07381c43e7817954e] inner#[h967a8e189fb242232b5fd32af06773919cd644e7]
+collect("Initial", inner()) == "Initial\nHello folks\nGot who!\ndone who";

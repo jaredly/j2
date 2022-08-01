@@ -185,7 +185,11 @@ export const refineType = (
             }
             return {
                 ...type,
-                cases: res.concat(cases.bounded.map((m) => m.local)),
+                cases: res.concat(
+                    cases.bounded.map((m) =>
+                        m.type === 'local' ? m.local : m.inner,
+                    ),
+                ),
             };
         }
         // TODO: Records and such

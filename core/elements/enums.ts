@@ -417,12 +417,25 @@ export const enumTypeMatches = (
     }
 
     for (let bound of canEnums.bounded) {
-        if (
-            !expEnums.bounded.some((b) =>
-                refsEqual(bound.local.ref, b.local.ref),
-            )
-        ) {
-            return false;
+        if (bound.type === 'local') {
+            const ref = bound.local.ref;
+            if (
+                !expEnums.bounded.some(
+                    (b) => b.type === 'local' && refsEqual(ref, b.local.ref),
+                )
+            ) {
+                return false;
+            }
+        } else {
+            const inner = bound.inner;
+            if (
+                !expEnums.bounded.some(
+                    (b) =>
+                        b.type === 'task' && typeMatches(inner, b.inner, ctx),
+                )
+            ) {
+                return false;
+            }
         }
     }
 
@@ -500,8 +513,12 @@ export const unifyEnums = (
         cases: [
             ...Object.values(expMap),
             // TODO: dedup?
-            ...canEnums.bounded.map((m) => m.local),
-            ...expEnums.bounded.map((m) => m.local),
+            ...canEnums.bounded.map((m) =>
+                m.type === 'local' ? m.local : m.inner,
+            ),
+            ...expEnums.bounded.map((m) =>
+                m.type === 'local' ? m.local : m.inner,
+            ),
         ],
     };
 };

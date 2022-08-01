@@ -263,6 +263,9 @@ export const ToJS = {
                     },
                     ctx,
                 );
+                if (!cond) {
+                    console.log('Ran out of conditions?', next, refined);
+                }
 
                 inner = b.ifStatement(
                     cond ?? b.booleanLiteral(true),

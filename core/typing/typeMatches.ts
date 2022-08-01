@@ -28,7 +28,7 @@ import {
     stringAddsMatch,
     stringOps,
 } from './ops';
-import { expandTask, isTaskable, matchesTask } from './tasks';
+import { expandTask, isTaskable, matchesTask, maybeExpandTask } from './tasks';
 import { unifyTypes } from './unifyTypes';
 import { TopTypeKind } from './to-tast';
 
@@ -259,8 +259,10 @@ export const typeMatches = (
                     if (expected.type === 'TEnum') {
                         const got = expandEnumCases(expected, ctx);
                         return (
-                            got?.bounded.some((b) =>
-                                refsEqual(b.local.ref, ref),
+                            got?.bounded.some(
+                                (b) =>
+                                    b.type === 'local' &&
+                                    refsEqual(b.local.ref, ref),
                             ) ?? false
                         );
                     }
@@ -363,44 +365,81 @@ export const typeMatches = (
     }
 };
 
+export type Unexpandable =
+    | { type: 'task'; inner: TApply }
+    | { type: 'local'; local: TRef; bound: Type };
+
 // ok so recursion checking ... right
 // like, if we pass through the same 'recur' thing multiple times...
 export const expandEnumCases = (
     type: TEnum,
     ctx: Ctx,
     path: string[] = [],
-): null | { cases: EnumCase[]; bounded: { local: TRef; bound: Type }[] } => {
+): null | { cases: EnumCase[]; bounded: Unexpandable[] } => {
     const cases: EnumCase[] = [];
-    const bounded: { local: TRef; bound: Type }[] = [];
+    const bounded: Unexpandable[] = [];
     for (let kase of type.cases) {
         if (kase.type === 'EnumCase') {
             cases.push(kase);
         } else {
+            let inner = path;
             const r = getRef(kase);
             if (r) {
                 const k = refHash(r.ref);
                 if (path.includes(k)) {
                     return null;
                 }
-                path = path.concat([k]);
+                inner = path.concat([k]);
             }
-            const res = ctx.resolveRefsAndApplies(kase, path);
+            const res = ctx.resolveRefsAndApplies(kase, inner);
             if (res?.type === 'TRef' && res.ref.type === 'Local') {
                 const bound = ctx.getBound(res.ref.sym);
                 if (bound) {
-                    bounded.push({ bound, local: res });
+                    bounded.push({ type: 'local', bound, local: res });
                 } else {
                     return null;
                 }
             } else if (res?.type === 'TEnum') {
                 // console.log('ok next');
-                const expanded = expandEnumCases(res, ctx, path);
+                const expanded = expandEnumCases(res, ctx, inner);
                 if (!expanded) {
                     return null;
                 }
                 cases.push(...expanded.cases);
                 bounded.push(...expanded.bounded);
             } else {
+                if (
+                    kase.type === 'TApply' &&
+                    ctx.isBuiltinType(kase.target, 'Task')
+                ) {
+                    const task = expandTask(kase.loc, kase.args, ctx);
+                    if (task) {
+                        task.cases.forEach((item) => {
+                            if (item.type === 'EnumCase') {
+                                cases.push(item);
+                            } else {
+                                // STOPSHIP: I think `bounded` needs to become `misc`?
+                                // like ... things we're not going to expand just now?
+                                // hmm maybe it'll only be `Task<xyz>` .. so maybe
+                                // we also want a `Tasks`? or something.
+                                // or maybeeee bounded needs a flag that's like "this
+                                // one is wrapped in a task"? that might be it.
+                                // bounded.push()
+                                if (item.type === 'TApply') {
+                                    bounded.push({
+                                        type: 'task',
+                                        inner: item as TApply,
+                                    });
+                                } else {
+                                    throw new Error(
+                                        `Got ${item.type}, expected a task`,
+                                    );
+                                }
+                            }
+                        });
+                        continue;
+                    }
+                }
                 return null;
             }
         }
