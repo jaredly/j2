@@ -24,7 +24,12 @@ import { HL } from './HL';
 import { Tree } from './Tree';
 import { collectAnnotations } from './collectAnnotations';
 
-export type Colorable = keyof Visitor<null> | 'Error' | 'Success' | 'LetName';
+export type Colorable =
+    | keyof Visitor<null>
+    | 'Error'
+    | 'Success'
+    | 'LetName'
+    | 'Hash';
 
 export const styles: {
     [key in Colorable]?: any; // React.CSSProperties;
@@ -48,6 +53,7 @@ export const styles: {
 export const colors: {
     [key in Colorable]?: string;
 } = {
+    Hash: 'rgba(200,200,200, 0.3)',
     LetName: '#00f000',
     TagDecl: '#33ff4e',
     TRef: 'green',
@@ -286,6 +292,36 @@ highlightVisitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
             type: 'LetName',
         });
     });
+    return null;
+};
+highlightVisitor.Identifier = (node: p.Identifier, ctx) => {
+    ctx.push({ loc: node.loc, type: 'Identifier' });
+    if (node.hash != null) {
+        const { start, end } = node.loc;
+        ctx.push({
+            loc: {
+                ...node.loc,
+                start: advance(start, node.text.length),
+                end,
+            },
+            type: 'Hash',
+        });
+    }
+    return null;
+};
+highlightVisitor.PName = (node: p.PName, ctx) => {
+    ctx.push({ loc: node.loc, type: 'Identifier' });
+    if (node.hash != null) {
+        const { start, end } = node.loc;
+        ctx.push({
+            loc: {
+                ...node.loc,
+                start: advance(start, node.name.length),
+                end,
+            },
+            type: 'Hash',
+        });
+    }
     return null;
 };
 

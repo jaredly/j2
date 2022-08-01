@@ -13,8 +13,8 @@ type Read = [ `Read((), string) ]
 type Print = [ `Print(string, ()) ]
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] Print#[h54ed15b99ee8e24a9deca9b4c3d180679bfcf096] Read#[h39d4a8221a80e1486be57f401a27a7eb6b0afc3c] withHandler#[h8c01e15c5414bbe2883805e74dc148e8b9811f04]
 let alwaysRead: (value: string, task: Task<[ Read | Print ], string>) => Task<[ Print ], string> = (
-    value#[0]: string,
-    task#[1]: Task<[ Read | Print ], string>,
+    value#[0],
+    task#[1],
 ) => {
     2 + 123;
     switch task#[1] {
@@ -26,7 +26,7 @@ let alwaysRead: (value: string, task: Task<[ Read | Print ], string>) => Task<[ 
     )
     };
 }
-alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] alwaysRead#[hb1bb4ee03a533be35db4b46bc218ac09020f7d3c] helloFolks#[hb34eb29d75f7574d7fd901955681919a20fa757a] testIO#[h69ce4c33e9e9ba9af7129accb6794008258bb41c]
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] alwaysRead#[h1d446e6b8a86c86d4310f977ae8d29c8ef030c56] helloFolks#[hb34eb29d75f7574d7fd901955681919a20fa757a] testIO#[h69ce4c33e9e9ba9af7129accb6794008258bb41c]
 testIO<string>("what", alwaysRead("who", helloFolks())) == "done who"
 let collect: (c: string, t: Task<[ Print ], ()>) => string = (
     collected#[0]: string,
@@ -39,6 +39,6 @@ let inner = () => {
     let res#[0] = alwaysRead("who", helloFolks())!;
     print(res#[0])!;
 }
-alias collect#[hafed69e0b1c3913640dace4be6f08fa580ed5737] inner#[hc24294540bdb2599d0f7a61d20ffa6ed04a2dae1]
+alias collect#[hafed69e0b1c3913640dace4be6f08fa580ed5737] inner#[he4a7ae0f4215910d420449723144c613ca689c45]
 collect("Initial", inner()) == "Initial\nHello folks\nGot who!\ndone who"
 10 + 10 == 20

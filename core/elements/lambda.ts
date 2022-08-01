@@ -65,13 +65,19 @@ local variables and stuff.
 */
 
 export const ToTast = {
-    Lambda({ args, res, body, loc }: p.Lambda, ctx: TCtx): t.Lambda {
+    Lambda(
+        { args, res, body, loc }: p.Lambda,
+        ctx: TCtx,
+        expectedType?: t.TLambda,
+    ): t.Lambda {
         const locals: Locals = [];
         const targs: Lambda['args'] =
-            args?.items.map((arg) => {
+            args?.items.map((arg, i) => {
                 const pat = ctx.ToTast.Pattern(arg.pat, ctx);
                 const typ = arg.typ
                     ? ctx.ToTast.Type(arg.typ, ctx)
+                    : expectedType && expectedType.args.length > i
+                    ? expectedType.args[i].typ
                     : typeForPattern(pat, ctx);
                 getLocals(pat, typ, locals, ctx);
                 if (!arg.typ) {

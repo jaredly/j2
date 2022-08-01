@@ -253,12 +253,18 @@ export const ToTast = {
     ToplevelLet(top: p.ToplevelLet, ctx: Ctx): t.ToplevelLet {
         return {
             type: 'ToplevelLet',
-            elements: top.items.map((item) => ({
-                expr: ctx.ToTast.Expression(item.expr, ctx),
-                name: item.name,
-                loc: item.loc,
-                typ: item.typ ? ctx.ToTast.Type(item.typ, ctx) : null,
-            })),
+            elements: top.items.map((item) => {
+                const typ = item.typ ? ctx.ToTast.Type(item.typ, ctx) : null;
+                return {
+                    expr:
+                        typ?.type === 'TLambda' && item.expr.type === 'Lambda'
+                            ? ctx.ToTast.Lambda(item.expr, ctx, typ)
+                            : ctx.ToTast.Expression(item.expr, ctx),
+                    name: item.name,
+                    loc: item.loc,
+                    typ,
+                };
+            }),
             loc: top.loc,
         };
     },
