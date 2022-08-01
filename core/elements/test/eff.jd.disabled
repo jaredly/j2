@@ -237,3 +237,294 @@ let collect = <Handlers: {*}>(handlers: Handlers, text: string, k: (handlers: Ha
 printFullName({
 	Print: collect,
 })
+
+
+
+
+effect Read {
+    read: () => string,
+}
+effect Write {
+    write: (string) => void,
+}
+
+const go = <T,>(v: T) => 10;
+
+const goat = () => {
+    const one = go<float>(1.0);
+    const two = go<float>(2.0);
+    one + two
+}
+
+
+// TODO once I have tuples
+// const collect = <T,>(fn: () ={Stdio}> T): (string, T) => {
+//     handle! fn {
+//         Write.write((v) => k) => {
+//             let (collected, a) = collect(v);
+//             (collected ++ v, a)
+//         }
+//         pure(a) => ("", a)
+//     }
+// }
+
+const tee = (x: string): string => {
+    log("> " ++ x);
+    x
+}
+
+const print = (x: string) ={Write}> raise!(Write.write(x))
+const read = () ={Read}> raise!(Read.read())
+
+const rec alwaysRead: <T,>{e}(string, () ={Read, e}> T) ={e}> T = <T,>{e}(value: string, fn: () ={Read, e}> T): T ={e}> {
+    handle! fn {
+        Read.read(() => k) => {
+            // OOF ok this bit doesn't have the `directOrEffectful` set...
+            // why not?
+            // is it that the self isn't populating things right?
+            alwaysRead<T>{e}(value, () ={Read, e}> k(value))
+        },
+        pure(a) => a
+    }
+}
+
+// This is so we can test the results
+const rec collect: {e}(() ={Write, e}> void) ={e}> string = {e}(fn: () ={Write, e}> void): string => {
+    handle! fn {
+        Write.write((v) => k) => {
+            v ++ "\n" ++ collect{e}(() ={Write, e}> k())
+        },
+        pure(a) => "end"
+    }
+}
+
+collect{}((): void => {
+    raise!(Write.write("one"));
+    raise!(Write.write("two"));
+    raise!(Write.write("three"))
+}) == "one\ntwo\nthree\nend"
+
+collect{}((): void => {
+    print("HI")
+}) == "HI\nend"
+
+collect{}((): void => {
+    print("HI");
+    print("HO");
+}) == "HI\nHO\nend"
+
+collect{}((): void => {
+    raise!(Write.write("HI"));
+    raise!(Write.write("HO"));
+}) == "HI\nHO\nend"
+
+// Working
+collect{}(() => alwaysRead<void>{Write}("hi", () => print(raise!(Read.read()) ++ " and " ++ raise!(Read.read())) )) == "hi and hi\nend"
+
+collect{}((): void => {
+    print("A");
+    print("B")
+}) == "A\nB\nend"
+
+collect{}(() => alwaysRead<void>{Write}("hi", () => {
+    print(read());
+    print("YA");
+    print(read());
+    print("B")
+})) == "hi\nYA\nhi\nB\nend"
+
+
+collect{}(() => alwaysRead<void>{Write}("hi", () => {
+    raise!(Write.write("A"));
+    const x = raise!(Read.read());
+    raise!(Write.write("B"));
+})) == "A\nB\nend"
+
+collect{}(() => alwaysRead<void>{Write}("hi", () => {
+    const x = raise!(Read.read());
+    raise!(Write.write("B"));
+})) == "B\nend"
+
+// Here are the examples from the paper
+
+
+const printFullName = () ={Read, Write}> {
+    print("What is your forename?");
+    const foreName = raise!(Read.read());
+    print("What is your surname?");
+    const surName = raise!(Read.read());
+    print(foreName ++ " " ++ surName)
+}
+
+// Full first example from the eff paper
+// # 2.1.1
+collect{}((): void => {
+    alwaysRead<void>{Write}("Me", printFullName)
+}) == "What is your forename?\nWhat is your surname?\nMe Me\nend"
+
+// This is so we can test the results
+const rec reverse: (() ={Write}> void) ={Write}> void = (fn: () ={Write}> void): void ={Write}> {
+    handle! fn {
+        Write.write((v) => k) => {
+            reverse(k);
+            print(v)
+        },
+        pure(a) => a
+    }
+}
+
+collect{}(() => reverse(() => {print("A"); print("B")})) == "B\nA\nend"
+
+// # 2.1.2
+collect{}((): void => {
+    reverse(() => {
+        alwaysRead<void>{Write}("Me", printFullName)
+    })
+}) == "Me Me\nWhat is your surname?\nWhat is your forename?\nend"
+
+
+// # 2.3
+effect Decide {
+    decide: () => bool,
+}
+const decide = () ={Decide}> raise!(Decide.decide())
+
+const choose: <T,>(T, T) ={Decide}> T = <T,>(x: T, y: T): T ={Decide}> {
+    if decide() { x } else { y }
+}
+const rec pickTrue: <T,>(() ={Decide}> T) => T = <T,>(fn: () ={Decide}> T): T => handle! fn {
+    Decide.decide(() => k) => pickTrue<T>(() => k(true)),
+    pure(x) => x
+}
+const chooseDiff = () ={Decide}> {
+    const x1 = choose<int>(15, 30);
+    const x2 = choose<int>(5, 10);
+    x1 - x2
+}
+pickTrue<int>(chooseDiff) == 10
+
+// #2.3.1
+const rec pickMax: (() ={Decide}> int) => int = (fn: () ={Decide}> int): int => handle! fn {
+    Decide.decide(() => k) => {
+        const xt = pickMax(() => k(true));
+        const xf = pickMax(() => k(false));
+        if xt > xf { xt } else { xf }
+    },
+    pure(x) => x
+}
+pickMax(chooseDiff) == 25
+
+// #2.3.2
+// Note that I'm using one effect for Decide and Fail, to fit within
+// restrictions required by my implementation of polymorphic effects.
+
+effect DecideOrFail {
+    decide: () => bool,
+    fail: () => int, // TODO this should really be an exit continuation... and return never
+}
+const fail = () ={DecideOrFail}> raise!(DecideOrFail.fail())
+const decide = () ={DecideOrFail}> raise!(DecideOrFail.decide())
+
+const rec chooseInt: (int, int) ={DecideOrFail}> int = (m: int, n: int): int ={DecideOrFail}> {
+    if m > n {
+        fail();
+        10
+    } else {
+        if decide() {
+            m
+        } else {
+            chooseInt(m + 1, n)
+        }
+    }
+}
+
+const pythagorean = (m: int, n: int) ={DecideOrFail}> {
+    const a = chooseInt(m, n - 1);
+    const b = chooseInt(a + 1, n);
+    const a2 = a * a;
+    const b2 = b * b;
+    // log("a " + a2 as string + " b " + b2 as string);
+    if isSquare(a2 + b2) {
+        intToString(a) ++ ":" ++ intToString(b)
+    } else {
+        fail();
+        "??? how did this return"
+    }
+}
+
+const rec backtrack: <T,>(() ={DecideOrFail}> T, () ={}> T) ={}> T = <T,>(
+    fn: () ={DecideOrFail}> T,
+    orElse: () ={}> T,
+): T ={}> {
+    handle! fn {
+        DecideOrFail.decide(() => k) => {
+            backtrack<T>(() => k(true), () => backtrack<T>(() => k(false), orElse))
+        },
+        DecideOrFail.fail(() => _) => {
+            orElse()
+        },
+        pure(x) => x
+    }
+}
+
+const rec backtrackReverse: <T,>(() ={DecideOrFail}> T, () ={}> T) ={}> T = <T,>(
+    fn: () ={DecideOrFail}> T,
+    orElse: () ={}> T,
+): T ={}> {
+    handle! fn {
+        DecideOrFail.decide(() => k) => {
+            backtrackReverse<T>(() => k(false), () => backtrackReverse<T>(() => k(true), orElse))
+        },
+        DecideOrFail.fail(() => _) => {
+            orElse()
+        },
+        pure(x) => x
+    }
+}
+
+const backtrackPythag = (m: int, n: int) => backtrack<string>(
+    () => pythagorean(m, n),
+    () => "No solution found",
+)
+
+// 🤔
+backtrackPythag(4, 15) == "5:12"
+backtrackPythag(7, 10) == "No solution found"
+
+const backtrackPythagReverse = (m: int, n: int) => backtrackReverse<string>(
+    () => pythagorean(m, n),
+    () => "No solution found"
+)
+backtrackPythagReverse(4, 15) == "9:12"
+10
+
+// #2.4 State
+
+effect Store {
+    get: () => int,
+    set: (int) => void,
+}
+
+const rec withInitialValue: <T,>(int, () ={Store}> T) => T = <T,>(value: int, fn: () ={Store}> T): T ={}> {
+    handle! fn {
+        Store.get(() => k) => withInitialValue<T>(value, () => k(value)),
+        Store.set((newValue) => k) => withInitialValue<T>(newValue, k),
+        pure(x) => x
+    }
+}
+
+const getAndSet = () ={Store}> {
+    const x = raise!(Store.get());
+    raise!(Store.set(x + 4));
+    intToString(x) ++ ":" ++ intToString(raise!(Store.get()))
+}
+
+withInitialValue<string>(10, getAndSet) == "10:14"
+
+// # Effect variables! Got to have it.
+
+const callPlus5 = {e}(x: () ={e}> int) ={e}> x() + 5
+
+withInitialValue<int>(4, () ={Store}> callPlus5{Store}(() ={Store}> raise!(Store.get()))) == 9
+
+callPlus5{}(() ={}> 4) == 9

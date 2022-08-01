@@ -29,12 +29,26 @@ export const applyType = (
     }
     let failed = false;
 
+    const replacers: Type[] = [];
+
     target.args.forEach((targ, i) => {
         const arg = i < args.length ? args[i] : targ.default_;
         if (arg == null) {
             failed = true;
+            return;
         }
-        symbols[targ.sym.id] = arg!;
+        symbols[targ.sym.id] = arg;
+        replacers.push(arg);
+        transformType(
+            arg,
+            {
+                TRef(node) {
+                    replacers.push(node);
+                    return null;
+                },
+            },
+            null,
+        );
         if (targ.bound && !matchesBound(arg!, targ.bound, ctx, path)) {
             failed = true;
         }
@@ -49,6 +63,10 @@ export const applyType = (
         target.inner,
         {
             Type_TRef(node, ctx) {
+                // Already applied
+                if (replacers.includes(node)) {
+                    return false;
+                }
                 if (node.ref.type === 'Local' && symbols[node.ref.sym]) {
                     return symbols[node.ref.sym];
                 }

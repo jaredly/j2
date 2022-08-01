@@ -24,6 +24,7 @@ export type TypeApplication = {
     type: 'TypeApplication';
     target: t.Expression;
     args: Array<t.Type>;
+    inferred: boolean;
     loc: t.Loc;
 };
 
@@ -58,6 +59,7 @@ export const ToTast = {
         return {
             type: 'TypeApplication',
             target,
+            inferred: false,
             args: suffix.vbls.items.map((vbl) => ctx.ToTast.Type(vbl, ctx)),
             loc: { ...suffix.loc, start: target.loc.start },
         };

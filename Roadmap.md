@@ -15,6 +15,11 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+## Eff paper discoveries
+
+- I really want to support `Task<What>`, not just `Task<[What]>`
+- auto-inference is letting me down somehow
+
 ## Next little minute
 
 - [x] on first load of the TestSplit, nothing works!
@@ -27,6 +32,11 @@ and/or a nice error coalescing example.
 - [x] HMMM so enum type bounds, means that `expandEnumCases` needs to be able to indicate that we
 	have unresolved, but potentially fine parts of the deal.
 - [ ] preserve comments in my TestSplit dealio
+- [ ] ohhh now we get into equalllll gotta gen an equalityier
+	- well not quite! I can dodge again.
+- [ ] bUT what about, making an accessor syntax, and allowing it to drill through enums?
+	- 🤔 but oh actually 'Return(v) <- how to access v?
+	- maybe I'll make a `.payload` and allow you to access an enum's payload that way?
 
 VERIFY TASK + GENERIC
 - [ ] need to make it impossible to apply a generic that would result in an invalid enum type.

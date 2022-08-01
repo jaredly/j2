@@ -240,7 +240,7 @@ export const makeApply = (
 
 export const ToAst = {
     Apply({ target, args, loc }: Apply, ctx: TACtx): p.Expression {
-        if (target.type === 'TypeApplication') {
+        if (target.type === 'TypeApplication' && target.inferred) {
             const ttype = ctx.actx.getType(target.target);
             const argTypes = args.map((arg) => ctx.actx.getType(arg));
             if (
@@ -529,6 +529,15 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         },
                         loc: noloc,
                     } as t.Decorator['args'][0],
+                    {
+                        label: 'got',
+                        arg: {
+                            type: 'DType',
+                            loc: noloc,
+                            typ: at,
+                        },
+                        loc: noloc,
+                    } as t.Decorator['args'][0],
                     ...(taskEnum
                         ? [
                               {
@@ -677,6 +686,7 @@ export const autoTypeApply = (
             target: {
                 type: 'TypeApplication',
                 target: node.target,
+                inferred: true,
                 args: vars.map((arg) =>
                     unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
                 ),

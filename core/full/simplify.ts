@@ -247,6 +247,9 @@ const liftStmts: Visitor<SCtx> = {
                         Block(node, ctx) {
                             return false;
                         },
+                        Switch(node, ctx) {
+                            return false;
+                        },
                         Expression(node, path) {
                             return [null, path.concat([node.type])];
                         },
@@ -286,7 +289,7 @@ export const simplify = (expr: t.Expression, ctx: FullContext) => {
             console.error(`Visitor produced errors`);
             console.log(v);
             console.log(debugExpr(changed, ctx));
-            // return;
+            return;
         }
         expr = changed;
     });

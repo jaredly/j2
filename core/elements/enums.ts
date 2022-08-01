@@ -242,6 +242,14 @@ export const isValidEnumCase = (c: t.Type, ctx: TMCtx): boolean => {
     ) {
         return ctx.getTopKind(c.target.ref.idx) === 'enum';
     }
+    if (
+        c.type === 'TApply' &&
+        c.target.type === 'TRef' &&
+        c.target.ref.type === 'Global' &&
+        ctx.isBuiltinType(c.target, 'Task')
+    ) {
+        return true;
+    }
     const resolved = ctx.resolveAnalyzeType(c);
     if (!resolved) {
         return false;

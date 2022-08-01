@@ -4,7 +4,7 @@ type Read = [ `Read((), string) ]
 type Write = [ `Write(string, ()) ]
 let print = (x#[0]: string) => `Write(x#[0], (()) => `Return())
 let read = `Read((), (v#[0]: string) => `Return(v#[0]))
-alias Read#[h39d4a8221a80e1486be57f401a27a7eb6b0afc3c] Task#[h67d00eba961cd5135110775d8654598dc22e7274] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe] withHandler#[h8c01e15c5414bbe2883805e74dc148e8b9811f04]
+alias Read#[h39d4a8221a80e1486be57f401a27a7eb6b0afc3c] Task#[h67d00eba961cd5135110775d8654598dc22e7274] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe] withHandler#[ha096a125d17e577335cba67a01ae6f08c8a8254b]
 let alwaysRead: <Inner#[7]: task, R#[8]>(string, Task<[ Read | Inner#[7] ], R#[8]>) => Task<
     [ Inner#[7] ],
     R#[8],
@@ -15,9 +15,155 @@ let alwaysRead: <Inner#[7]: task, R#[8]>(string, Task<[ Read | Inner#[7] ], R#[8
             readResponse#[0],
             k#[4](readResponse#[0]),
         );
-        otherwise#[5] => withHandler<[ Inner#[8] ], R#[9], [ Read ]>(
+        otherwise#[5] => withHandler<[ Inner#[8] ], R#[9], [ Read ], R#[9]>(
             otherwise#[5],
             (task#[6]) => alwaysRead#[r0]<Inner#[8], R#[9]>(readResponse#[0], task#[6]),
         );
     };
 }
+alias Write#[heb2d48403fd429ed06727a7877b3a05cd5229596] andThen#[h350018996371f8a646e144d264506c10d2ebde8b]
+let collect: <Inner#[0]: task>(Task<[ Write | Inner#[0] ], ()>) => Task<[ Inner#[0] ], string> = <
+    Inner#[1]: task,
+>(task#[2]: Task<[ Write | Inner#[1] ], ()>):Task<[ Inner#[1] ], string> => switch task#[2] {
+    `Return() => `Return("end");
+    `Write(v#[3], k#[4]) => andThen<[ Inner#[1] ], [], string, string>(
+        collect#[r0]<[ Inner#[1] ]>(k#[4](())),
+        (res#[5]) => `Return("${v#[3]}\n${res#[5]}"),
+    );
+    otherwise#[5] => withHandler<[ Inner#[1] ], (), [ Write ], string>(
+        otherwise#[5],
+        collect#[r0]<Inner#[1]>,
+    );
+}
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] collect#[hee614f3b187d294f18cda155b88b97bd92c4c0b9] print#[h7f2c4f7e1b479be94892d7e98869816c0fc8683e]
+{
+    let `Return(v#[0]) = collect<[]>((() => {
+        print("Hello")!;
+        print("World")!;
+    })());
+    v#[0] == "Hello\nWorld\nend";
+}
+alias alwaysRead#[h461f8a0a95126caee7ff6304f45c289fa43cd917] read#[hb4960a73062670598fa2100bb3c961af8368de28]
+{
+    let `Return(v#[0]) = collect<[]>(
+        alwaysRead<[ Write ], ()>("hi", (() => {
+            print("${read!} and ${read!}")!;
+        })()),
+    );
+    v#[0] == "hi and hi\nend";
+}
+let reverse: (t: Task<[ Write ], ()>) => Task<[ Write ], ()> = (task#[0]: Task<[ Write ], ()>) => switch task#[0] {
+    `Return(v#[1]) => `Return(v#[1]);
+    `Write(v#[2], k#[3]) => (() => {
+        reverse#[r0](k#[3](()))!;
+        print(v#[2])!;
+    })();
+}
+alias eq#[h160938f3c683c32e39a494546124c1d40bcde082]
+let expect = <T#[0]: eq>(`Return(m#[1]): Task<[], T#[0]>, e#[2]: T#[0]) => m#[1] == e#[2]
+alias expect#[h1f12eaef67c0292e9145431abf15b7bf90d1ceb6] reverse#[h410708bcc73f12c6e48898323bc86d3092d3f180]
+expect<string>(
+    collect<[]>(reverse((() => {
+        print("A")!;
+        print("B")!;
+        print("C")!;
+    })())),
+    "C\nB\nA\nend",
+)
+alias bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150]
+type Decide = [ `Decide((), bool) ]
+alias Decide#[hd53a584b44751c2fbfdf1a3826912162cf36c920]
+let decide: Task<[ Decide ], bool> = `Decide((), (b#[0]: bool) => `Return(b#[0]))
+alias decide#[h108816cca299511520fd3d43f5ab7840105958ea]
+let choose = <T#[0]>(x#[1]: T#[0], y#[2]: T#[0]) => {
+    if decide! {
+        x#[1];
+    } else {
+        y#[2];
+    };
+}
+let pickTrue: <T#[4]>(Task<[ Decide ], T#[4]>) => T#[4] = <T#[0]>(task#[1]: Task<[ Decide ], T#[0]>):T#[0] => switch task#[1] {
+    `Return(v#[2]) => v#[2];
+    `Decide(_, k#[3]) => pickTrue#[r0]<T#[0]>(k#[3](true));
+}
+alias -#[h4dd9308469e477a4a756b4b286de0625d5a98af9] choose#[h42dd33e9bb01737d406ba5c4241da56f1096c111] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+let chooseDiff = () => {
+    let x1#[0] = choose<int>(15, 30)!;
+    let x2#[1] = choose<int>(5, 10)!;
+    x1#[0] - x2#[1];
+}
+alias chooseDiff#[h0dd1475991c109145d9e76868cfecef5ddabd1c5] pickTrue#[h8a729f1237605af284a32e9dd00da5be76a258ea]
+pickTrue<int>(chooseDiff()) == 10
+alias >#[hc1d03250b26806868f520136d8a763b0c0edff9b]
+let pickMax: (Task<[ Decide ], int>) => int = (task#[2]: Task<[ Decide ], int>):int => {
+    switch task#[2] {
+        `Return(v#[3]) => v#[3];
+        `Decide(_, k#[4]) => {
+            let one#[5] = pickMax#[r0](k#[4](true));
+            let two#[6] = pickMax#[r0](k#[4](false));
+            if one#[5] > two#[6] {
+                one#[5];
+            } else {
+                two#[6];
+            };
+        };
+    };
+}
+alias pickMax#[h5d4a2e8e51bdad142169851b1e6a449fb684559e]
+pickMax(chooseDiff()) == 25
+type Fail = [ `Fail((), []) ]
+alias Fail#[h2b5445c7100f54327177f27fdbdafaf46e537c5e]
+let fail: Task<[ Fail ], int> = `Fail((), ())
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] fail#[h729036fc5f9ed540cc3ad62576eeed107866166b]
+let chooseInt: (int, int) => Task<[ Decide | Fail ], int> = (m#[0]: int, n#[1]: int):Task<
+    [ Decide | Fail ],
+    int,
+> => {
+    if m#[0] > n#[1] {
+        fail!;
+    } else {
+        if decide! {
+            m#[0];
+        } else {
+            chooseInt#[r0](m#[0] + 1, n#[1])!;
+        };
+    };
+}
+let fail2: Task<[ Fail ], (int, int)> = `Fail((), ())
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] chooseInt#[h51d8a99418bd42082d9a3915220cb16ea0e95898] isSquare#[hb6ce0e79bc7b4832f4b2b564eac779a40d12f007]
+let pythagorean = (m#[0]: int, n#[1]: int) => {
+    let a#[2] = chooseInt(m#[0], n#[1] - 1)!;
+    let b#[3] = chooseInt(a#[2] + 1, n#[1])!;
+    let a2#[4] = a#[2] * a#[2];
+    let b2#[5] = b#[3] * b#[3];
+    if isSquare(a2#[4] + b2#[5]) {
+        (a#[2], b#[3]);
+    } else {
+        fail!;
+    };
+}
+let backtrack: <T#[0]>(Task<[ Decide | Fail ], T#[0]>, () => T#[0]) => T#[0] = <T#[1]>(
+    task#[2]: Task<[ Decide | Fail ], T#[1]>,
+    orElse#[3]: () => T#[1],
+):T#[1] => {
+    switch task#[2] {
+        `Decide(_, k#[4]) => {
+            backtrack#[r0]<T#[1]>(
+                k#[4](true),
+                () => backtrack#[r0]<T#[1]>(k#[4](false), orElse#[3]),
+            );
+        };
+        `Fail(_, _) => {
+            orElse#[3]();
+        };
+        `Return(x#[5]) => x#[5];
+    };
+}
+alias backtrack#[h8864f73597b6dc6b53002132e677411e5db4e989] pythagorean#[hce71fb6dfb5bbec59351789b6279dd5deba69d29]
+let backtrackPythag = (m#[0]: int, n#[1]: int) => backtrack<(int, int)>(
+    pythagorean(m#[0], n#[1]),
+    () => (0, 0),
+)
+alias backtrackPythag#[h61b3bf5e1d048138d818fdd8d2a8b22afdce742d]
+backtrackPythag(4, 15)
+backtrackPythag(7, 10)

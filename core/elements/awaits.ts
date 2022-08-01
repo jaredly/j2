@@ -384,6 +384,7 @@ export const awaitBlock = (expr: t.Block, ctx: Ctx): AwaitChunk | null => {
                                 kind: ctx.getBuiltinRef('andThen')!,
                                 loc: noloc,
                             },
+                            inferred: false,
                             args: [
                                 effects,
                                 inner.effects,

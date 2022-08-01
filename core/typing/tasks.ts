@@ -258,6 +258,10 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
             }
             let [input, fn] = items;
             fn = ctx.resolveRefsAndApplies(fn) ?? fn;
+            if (fn.type === 'TEnum' && fn.cases.length === 0 && !fn.open) {
+                // no result
+                // continue
+            }
             if (fn.type !== 'TLambda' || fn.args.length !== 1) {
                 return null;
             }
