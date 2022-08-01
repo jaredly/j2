@@ -324,6 +324,7 @@ export const processToplevel = (
     pctx: PCtx,
     allAliases: Aliases,
 ): { i: ToplevelInfo<FileContents>; ctx: FullContext; pctx: PCtx } => {
+    ctx = ctx.toplevelConfig(null) as FullContext;
     ctx.resetSym();
     const config = typeToplevel(t, ctx);
     ctx.resetSym();

@@ -7,40 +7,27 @@ let helloFolks = () => {
     print("Got ${read!}!")!;
     "done ${read!}";
 }
-alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[ha4d3e814b6e823e777273070f4e78f59487993dc]
-2 == 2 * 1
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
-3 == 2 + 1
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274]
 let fail: Task<[ `Failure([ `Bad | `News(string) ], []) ]> = `Failure(`Bad, ())
 type Read = [ `Read((), string) ]
 type Print = [ `Print(string, ()) ]
-alias Print#[h54ed15b99ee8e24a9deca9b4c3d180679bfcf096] Read#[h39d4a8221a80e1486be57f401a27a7eb6b0afc3c] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] error:caseMismatch#[h83cceed949f4c31221b67a1e36c66dbd1dbcf86f] withHandler#[h8c01e15c5414bbe2883805e74dc148e8b9811f04]
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] Print#[h54ed15b99ee8e24a9deca9b4c3d180679bfcf096] Read#[h39d4a8221a80e1486be57f401a27a7eb6b0afc3c] withHandler#[h8c01e15c5414bbe2883805e74dc148e8b9811f04]
 let alwaysRead: (value: string, task: Task<[ Read | Print ], string>) => Task<[ Print ], string> = (
     value#[0]: string,
     task#[1]: Task<[ Read | Print ], string>,
 ) => {
+    2 + 123;
     switch task#[1] {
       `Return(v#[2]) => `Return(v#[2])
-      `Read(v#[3], k#[4]) => @error:caseMismatch(expected: :[ `Return(string) ]) alwaysRead#[r0](
-        value#[0],
-        @error:argWrongType(expected: :Task<[ Read | Print#[r0] ], string>) k#[4](value#[0]),
-    )
+      `Read(v#[3], k#[4]) => alwaysRead#[r0](value#[0], k#[4](value#[0]))
       otherwise#[5] => withHandler<[ Print ], string, [ Read ]>(
         otherwise#[5],
-        @error:argWrongType(
-            expected: :(input: Task<[ [ Print ] | [ Read ] ], string>) => Task<[ Print ], string>,
-        ) (
-            (task#[6]) => alwaysRead#[r0](
-                value#[0],
-                @error:argWrongType(expected: :Task<[ Read | Print#[r0] ], string>) task#[6],
-            ),
-        ),
+        (task#[6]) => alwaysRead#[r0](value#[0], task#[6]),
     )
     };
 }
-alias helloFolks#[hb34eb29d75f7574d7fd901955681919a20fa757a] testIO#[h69ce4c33e9e9ba9af7129accb6794008258bb41c]
-testIO<string>("what", alwaysRead#[:unresolved:]("who", helloFolks())) == "done who"
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] alwaysRead#[hb1bb4ee03a533be35db4b46bc218ac09020f7d3c] helloFolks#[hb34eb29d75f7574d7fd901955681919a20fa757a] testIO#[h69ce4c33e9e9ba9af7129accb6794008258bb41c]
+testIO<string>("what", alwaysRead("who", helloFolks())) == "done who"
 let collect: (c: string, t: Task<[ Print ], ()>) => string = (
     collected#[0]: string,
     task#[1]: Task<[ Print ], ()>,
@@ -49,8 +36,9 @@ let collect: (c: string, t: Task<[ Print ], ()>) => string = (
   `Print(value#[2], k#[3]) => collect#[r0]("${collected#[0]}\n${value#[2]}", k#[3](()))
 }
 let inner = () => {
-    let res#[0] = alwaysRead#[:unresolved:]("who", helloFolks())!;
-    print(@error:argWrongType(expected: :string) res#[0])!;
+    let res#[0] = alwaysRead("who", helloFolks())!;
+    print(res#[0])!;
 }
-alias collect#[hafed69e0b1c3913640dace4be6f08fa580ed5737]
-collect("Initial", inner#[:unresolved:]()) == "Initial\nHello folks\nGot who!\ndone who"
+alias collect#[hafed69e0b1c3913640dace4be6f08fa580ed5737] inner#[hc24294540bdb2599d0f7a61d20ffa6ed04a2dae1]
+collect("Initial", inner()) == "Initial\nHello folks\nGot who!\ndone who"
+10 + 10 == 20

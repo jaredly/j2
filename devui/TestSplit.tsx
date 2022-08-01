@@ -145,12 +145,17 @@ export const TestSplit = ({
     } as { track: NameTrack; terms: { [key: string]: any } });
 
     React.useEffect(() => {
-        const res = processFileR({
-            type: 'File',
-            comments: [],
-            toplevels: items.map((item) => item.contents.refmt),
-            loc: noloc,
-        });
+        const res = processFileR(
+            {
+                type: 'File',
+                comments: [],
+                toplevels: items.map((item) => item.contents.refmt),
+                loc: noloc,
+            },
+            undefined,
+            // shared.current.track,
+            shared.current.terms,
+        );
         const fmt = refmt(res);
         fetch(`/elements/test/${name}`, {
             method: 'POST',
@@ -303,69 +308,74 @@ export const TopEditor = ({
                         onChange(file.info);
                     }
                 }}
-                onChange={(text) => {}}
+                onChange={(text) => setText(text)}
                 extraLocs={extraLocs}
             />
-            {file.type === 'Success' && (
-                <div>
-                    <Hoverr
-                        className="hello"
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: -10,
-                            cursor: 'pointer',
-                        }}
-                        onClick={() => setOpen(!open)}
-                    >
-                        {open ? 'v' : '>'}
-                    </Hoverr>
-                    {open ? (
-                        <div>
-                            {file.info.map((item, i) => (
-                                <div key={i}>
-                                    {item.contents.irtops?.map((item, j) => (
-                                        <div key={j}>
-                                            {/* <strong>
+            {file.type === 'Success' &&
+                file.info.some((m) => m.contents.irtops?.length) && (
+                    <div>
+                        <Hoverr
+                            className="hello"
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: -10,
+                                cursor: 'pointer',
+                            }}
+                            onClick={() => setOpen(!open)}
+                        >
+                            {open ? 'v' : '>'}
+                        </Hoverr>
+                        {open ? (
+                            <div>
+                                {file.info.map((item, i) => (
+                                    <div key={i}>
+                                        {item.contents.irtops?.map(
+                                            (item, j) => (
+                                                <div key={j}>
+                                                    {/* <strong>
                                             {item.name ?? 'unnamed'}
                                         </strong> */}
-                                            <div
-                                                style={{
-                                                    fontStyle: 'italic',
-                                                    opacity: 0.5,
-                                                }}
-                                            >
-                                                type:{' '}
-                                                {item.type
-                                                    ? typeToString(
-                                                          item.type,
-                                                          ctx,
-                                                      )
-                                                    : 'No type!'}
-                                            </div>
-                                            <pre
-                                                style={{
-                                                    margin: 0,
-                                                    padding: 0,
-                                                }}
-                                            >
-                                                {
-                                                    generate(
-                                                        item.js.body.length ===
-                                                            1
-                                                            ? item.js.body[0]
-                                                            : item.js,
-                                                    ).code
-                                                }
-                                            </pre>
-                                        </div>
-                                    ))}
-                                </div>
-                            ))}
-                        </div>
-                    ) : null}
-                </div>
-            )}
+                                                    <div
+                                                        style={{
+                                                            fontStyle: 'italic',
+                                                            opacity: 0.5,
+                                                        }}
+                                                    >
+                                                        type:{' '}
+                                                        {item.type
+                                                            ? typeToString(
+                                                                  item.type,
+                                                                  ctx,
+                                                              )
+                                                            : 'No type!'}
+                                                    </div>
+                                                    <pre
+                                                        style={{
+                                                            margin: 0,
+                                                            padding: 0,
+                                                        }}
+                                                    >
+                                                        {
+                                                            generate(
+                                                                item.js.body
+                                                                    .length ===
+                                                                    1
+                                                                    ? item.js
+                                                                          .body[0]
+                                                                    : item.js,
+                                                            ).code
+                                                        }
+                                                    </pre>
+                                                </div>
+                                            ),
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : null}
+                    </div>
+                )}
         </Hovery>
     );
 };
