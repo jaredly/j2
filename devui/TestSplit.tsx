@@ -272,6 +272,24 @@ export const TopEditor = ({
     }
     let file = cache[text];
     const [open, setOpen] = React.useState(false);
+
+    const extraLocs = React.useCallback(
+        (v: p.File | p.TypeFile, text: string) => {
+            if (v.type !== 'File') {
+                return [];
+            }
+            const file =
+                cache[text]?.type === 'Success'
+                    ? (cache[text] as Success<FileContents>)
+                    : processFileR(v, ctx, undefined, shared.current.track);
+            cache[text] = file;
+            const results = getTestResults(file, shared.current.terms);
+            console.log(file, results);
+            // ok, so we have an AST
+            return testStatuses(file, results);
+        },
+        [ctx],
+    );
     return (
         <Hovery style={{ position: 'relative' }}>
             <Editor
@@ -286,25 +304,7 @@ export const TopEditor = ({
                     }
                 }}
                 onChange={(text) => {}}
-                extraLocs={(v, text) => {
-                    if (v.type !== 'File') {
-                        return [];
-                    }
-                    const file =
-                        cache[text]?.type === 'Success'
-                            ? (cache[text] as Success<FileContents>)
-                            : processFileR(
-                                  v,
-                                  ctx,
-                                  undefined,
-                                  shared.current.track,
-                              );
-                    cache[text] = file;
-                    const results = getTestResults(file, shared.current.terms);
-                    console.log(file, results);
-                    // ok, so we have an AST
-                    return testStatuses(file, results);
-                }}
+                extraLocs={extraLocs}
             />
             {file.type === 'Success' && (
                 <div>

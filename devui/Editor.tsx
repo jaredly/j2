@@ -72,15 +72,20 @@ export const Editor = ({
     onBlur: (text: string) => void;
     onChange: (v: string) => void;
     typeFile?: boolean;
-    extraLocs?: (v: p.File | p.TypeFile) => HL[];
+    extraLocs?: (v: p.File | p.TypeFile, text: string) => HL[];
 }) => {
     const ref = React.useRef(null as null | HTMLDivElement);
     const [editing, setEditing] = React.useState(false);
 
     const history = React.useRef(initial(text));
+    const curExtraLocs = React.useRef(extraLocs);
 
     React.useEffect(() => {
-        if (getText(ref.current!) !== text) {
+        if (
+            getText(ref.current!) !== text ||
+            curExtraLocs.current !== extraLocs
+        ) {
+            curExtraLocs.current = extraLocs;
             const locs = highlightLocations(text, {}, typeFile, extraLocs);
             if (text.length) {
                 setHtmlAndClean(
@@ -99,11 +104,10 @@ export const Editor = ({
                 });
             }
         }
-    }, [text]);
+    }, [text, extraLocs]);
     const latest = React.useRef(text);
     latest.current = text;
-    const curExtraLocs = React.useRef(extraLocs);
-    curExtraLocs.current = extraLocs;
+    // curExtraLocs.current = extraLocs;
 
     const prevPos = React.useRef(0);
 
