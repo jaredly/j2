@@ -15,34 +15,42 @@ export type Ctx = {
     addGlobalName(id: Id, name: string): string;
 };
 
-export const jCtx = (actx: ACtx, namespaced = true): Ctx => {
-    const names: { [key: string]: string } = {};
-    const used: { [key: string]: true } = {};
+export type NameTrack = {
+    names: { [key: string]: string };
+    used: { [key: string]: true };
+};
+
+export const jCtx = (
+    actx: ACtx,
+    namespaced = true,
+    useTrack?: NameTrack,
+): Ctx => {
+    const track = useTrack ?? { names: {}, used: {} };
     return {
         namespaced,
         ToJS: makeToJS(),
         actx,
         globalName(id) {
             const key = idToString(id);
-            if (names[key]) {
-                return names[key];
+            if (track.names[key]) {
+                return track.names[key];
             }
             return this.addGlobalName(id, 'unnamed');
         },
         addGlobalName(id, name) {
             const key = idToString(id);
-            if (names[key]) {
-                return names[key];
+            if (track.names[key]) {
+                return track.names[key];
             }
-            if (!used[name]) {
-                used[name] = true;
-                return (names[key] = name);
+            if (!track.used[name]) {
+                track.used[name] = true;
+                return (track.names[key] = name);
             }
             for (let i = 0; i < key.length; i++) {
                 const n = name + '_' + key.slice(0, i);
-                if (!used[n]) {
-                    used[n] = true;
-                    return (names[key] = n);
+                if (!track.used[n]) {
+                    track.used[n] = true;
+                    return (track.names[key] = n);
                 }
             }
             throw new Error(`Unable to find unique name for ${key} : ${name}`);

@@ -159,9 +159,12 @@ export const typeResults = (
     return results;
 };
 
-export const getTestResults = (file: SuccessTestResult): TestValues => {
+export const getTestResults = (
+    file: SuccessTestResult,
+    shared?: { [key: string]: any },
+): TestValues => {
     const values: TestValues = {
-        info: executeFile(file),
+        info: executeFile(file, shared),
         testResults: [],
         failed: false,
         debugs: {},

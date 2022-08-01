@@ -16,7 +16,7 @@ import * as p from '../grammar/base.parser';
 import { fixComments } from '../grammar/fixComments';
 import { toId } from '../ids';
 import { iCtx } from '../ir/ir';
-import { jCtx, newExecutionContext } from '../ir/to-js';
+import { jCtx, NameTrack, newExecutionContext } from '../ir/to-js';
 import * as trat from '../transform-ast';
 import { transformToplevel, transformTypeToplevel } from '../transform-tast';
 import * as t from '../typed-ast';
@@ -115,8 +115,14 @@ export type ExecutionInfo = {
     exprs: { [key: number]: any };
     errors: { [key: number]: Error };
 };
-export const executeFile = (file: Success<FileContents>) => {
+export const executeFile = (
+    file: Success<FileContents>,
+    shared?: { [key: string]: any },
+) => {
     const ectx = newExecutionContext(file.ctx);
+    if (shared) {
+        ectx.terms = shared;
+    }
     const results: ExecutionInfo = { terms: ectx.terms, exprs: [], errors: {} };
     file.info.forEach((info, i) => {
         info.contents.irtops?.forEach((irtop) => {
@@ -203,11 +209,12 @@ export const processFileR = (
     ast: p.File,
     baseCtx: FullContext = builtinContext,
     debugs?: { [key: number]: boolean },
+    track?: NameTrack,
 ): Success<FileContents> => {
     const info: ToplevelInfo<FileContents>[] = [];
     let ctx = baseCtx.clone();
     let pctx = printCtx(ctx);
-    let jctx = jCtx(ctx);
+    let jctx = jCtx(ctx, true, track);
     let ictx = iCtx(ctx);
     const aliases: { [key: string]: string } = {};
     // TODO: load builtins?

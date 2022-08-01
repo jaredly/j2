@@ -20,6 +20,7 @@ import * as p from '../core/grammar/base.parser';
 import { noloc } from '../core/consts';
 import { newPPCtx } from '../core/printer/to-pp';
 import { printToString } from '../core/printer/pp';
+import { NameTrack } from '../core/ir/to-js';
 
 /*
 
@@ -124,6 +125,11 @@ export const TestSplit = ({
         return test.file.info;
     });
 
+    const shared = React.useRef({
+        track: { names: {}, used: {} },
+        terms: {},
+    } as { track: NameTrack; terms: { [key: string]: any } });
+
     React.useEffect(() => {
         const res = processFileR({
             type: 'File',
@@ -171,8 +177,16 @@ export const TestSplit = ({
                         if (v.type !== 'File') {
                             return [];
                         }
-                        const file = processFileR(v, myctx);
-                        const results = getTestResults(file);
+                        const file = processFileR(
+                            v,
+                            myctx,
+                            undefined,
+                            shared.current.track,
+                        );
+                        const results = getTestResults(
+                            file,
+                            shared.current.terms,
+                        );
                         console.log(file, results);
                         // ok, so we have an AST
                         return testStatuses(file, results);
