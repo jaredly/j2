@@ -18,6 +18,7 @@ import { newPPCtx } from '../printer/to-pp';
 import { printToString } from '../printer/pp';
 import { asSimple } from '../elements/switchs';
 import { patternIsExhaustive } from '../elements/exhaustive';
+import { getLocals } from '../elements/pattern';
 // import { reduceAwaits } from '../elements/awaits';
 
 type SCtx = FullContext & { tmpSym: number; switchType?: t.Type };
@@ -175,9 +176,14 @@ const superify: Visitor<SCtx> = {
 const reduceAwaitVisitor: Visitor<SCtx> = {
     ...(localTrackingVisitor as any as Visitor<SCtx>),
     Lambda(node, ctx) {
+        const locals: t.Locals = [];
+
+        node.args.forEach((arg) => getLocals(arg.pat, arg.typ, locals, ctx));
+        ctx = ctx.withLocals(locals) as SCtx;
+
         const changed = awaitExpr(node.body, ctx);
         // do your thing
-        return changed ? { ...node, body: changed.expr } : null;
+        return [changed ? { ...node, body: changed.expr } : null, ctx];
     },
 };
 

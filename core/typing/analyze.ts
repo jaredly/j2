@@ -309,10 +309,11 @@ export const localTrackingVisitor: Visitor<TMCtx & { switchType?: t.Type }> = {
         return [null, ctx.withLocals(ifLocals(node, ctx as Ctx)) as Ctx];
     },
     Switch(node, ctx) {
-        return [
-            null,
-            { ...ctx, switchType: ctx.getType(node.target) ?? undefined },
-        ];
+        const res = ctx.getType(node.target);
+        if (!res) {
+            console.error(`Unable to get type for switch!`);
+        }
+        return [null, { ...ctx, switchType: res ?? undefined }];
     },
     TypeAbstraction(node, ctx) {
         return [null, ctx.withLocalTypes(node.items)];
