@@ -41,3 +41,16 @@ let alwaysRead: (value: string, task: Task<[ Read | Print ], string>) => Task<[ 
 }
 alias helloFolks#[hb34eb29d75f7574d7fd901955681919a20fa757a] testIO#[h69ce4c33e9e9ba9af7129accb6794008258bb41c]
 testIO<string>("what", alwaysRead#[:unresolved:]("who", helloFolks())) == "done who"
+let collect: (c: string, t: Task<[ Print ], ()>) => string = (
+    collected#[0]: string,
+    task#[1]: Task<[ Print ], ()>,
+) => switch task#[1] {
+  `Return() => collected#[0]
+  `Print(value#[2], k#[3]) => collect#[r0]("${collected#[0]}\n${value#[2]}", k#[3](()))
+}
+let inner = () => {
+    let res#[0] = alwaysRead#[:unresolved:]("who", helloFolks())!;
+    print(@error:argWrongType(expected: :string) res#[0])!;
+}
+alias collect#[hafed69e0b1c3913640dace4be6f08fa580ed5737]
+collect("Initial", inner#[:unresolved:]()) == "Initial\nHello folks\nGot who!\ndone who"

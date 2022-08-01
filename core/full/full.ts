@@ -125,9 +125,9 @@ export const executeFile = (
     }
     const results: ExecutionInfo = { terms: ectx.terms, exprs: [], errors: {} };
     file.info.forEach((info, i) => {
-        info.contents.irtops?.forEach((irtop) => {
+        info.contents.irtops?.forEach((irtop, j) => {
             try {
-                const res = ectx.executeJs(irtop.js, irtop.name);
+                const res = ectx.executeJs(irtop.js, irtop.name, `${i}-${j}`);
                 if (info.contents.irtops?.length === 1) {
                     results.exprs[i] = res;
                 }

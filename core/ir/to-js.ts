@@ -63,7 +63,7 @@ export type ExecutionContext = {
     // I wonder .. should 'unit' evaluate to 'null'?
     // kinda might as well, idk
     terms: { [key: string]: any };
-    executeJs(js: b.BlockStatement, name?: string): any;
+    executeJs(js: b.BlockStatement, name?: string, hash?: string): any;
     execute(expr: Expression): any;
 };
 
@@ -133,8 +133,13 @@ export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
     return {
         ctx,
         terms: {},
-        executeJs(expr: b.BlockStatement, name?: string) {
-            const jsraw = generate(expr).code;
+        executeJs(expr: b.BlockStatement, name?: string, hash?: string) {
+            const jsraw =
+                generate(expr).code +
+                '\n//# sourceURL=' +
+                (name ?? 'unnamed') +
+                '_' +
+                (hash ?? Math.random());
             let f;
             try {
                 f = new Function(
