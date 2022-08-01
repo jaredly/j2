@@ -31,6 +31,7 @@ import {
 } from './Icons';
 import { refmt } from './refmt';
 import { TestView } from './Test';
+import { TestSplit } from './TestSplit';
 import { TypeTestView } from './TypeTest';
 
 export const usePromise = <T,>(
@@ -560,10 +561,19 @@ export const App = () => {
                 />
             ) : hashName?.startsWith('test:') &&
               files.test[hashName.slice('test:'.length)] ? (
-                <TestView
-                    name={hashName}
+                <TestSplit
+                    // TestView
+                    name={hashName.slice('test:'.length)}
                     key={hashName}
                     test={files.test[hashName.slice('test:'.length)]}
+                    changeName={(name) => {
+                        const newTest = { ...files.test };
+                        const old = hashName.slice('test:'.length);
+                        newTest[name] = newTest[old];
+                        delete newTest[old];
+                        setFiles({ ...files, test: newTest });
+                        location.hash = `#test:${name}`;
+                    }}
                     onChange={(data) => {
                         const newTest = { ...files.test };
                         newTest[hashName.slice('test:'.length)] = data;

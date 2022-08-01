@@ -3,6 +3,9 @@
 // orwait, maybe all I need is to be able to record the hash of a toplevel?
 // So, after analyze, we record the hash. then that is used from here on out.
 
+import generate from '@babel/generator';
+import * as b from '@babel/types';
+import { annotationVisitor } from '../../devui/collectAnnotations';
 import { builtinContext, FullContext } from '../ctx';
 import {
     removeErrorDecorators,
@@ -10,15 +13,12 @@ import {
     typeToplevelT,
 } from '../elements/base';
 import * as p from '../grammar/base.parser';
-import * as trat from '../transform-ast';
 import { fixComments } from '../grammar/fixComments';
+import { toId } from '../ids';
 import { iCtx } from '../ir/ir';
 import { jCtx, newExecutionContext } from '../ir/to-js';
-import {
-    transformToplevel,
-    transformType,
-    transformTypeToplevel,
-} from '../transform-tast';
+import * as trat from '../transform-ast';
+import { transformToplevel, transformTypeToplevel } from '../transform-tast';
 import * as t from '../typed-ast';
 import {
     analyzeTop,
@@ -29,11 +29,7 @@ import {
     verifyVisitor,
 } from '../typing/analyze';
 import { printCtx } from '../typing/to-ast';
-import * as b from '@babel/types';
-import { annotationVisitor } from '../../devui/collectAnnotations';
-import { toId } from '../ids';
 import { simplify } from './simplify';
-import generate from '@babel/generator';
 
 export type TestResult = Result<FileContents>;
 export type SuccessTestResult = Success<FileContents>;

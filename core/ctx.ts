@@ -546,6 +546,16 @@ export const newContext = (): FullContext => {
             return { hash, ctx: { ...this, [opaque]: ctx } };
         },
 
+        withToplevel(t) {
+            if (t.type === 'TypeAlias') {
+                return this.withTypes(t.elements).ctx;
+            }
+            if (t.type === 'ToplevelLet') {
+                return this.withValues(t.elements).ctx;
+            }
+            return this;
+        },
+
         withTypes(types) {
             const defns = types.map((m) =>
                 transformType(m.type, locClearVisitor, null),

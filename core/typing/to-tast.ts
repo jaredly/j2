@@ -12,6 +12,7 @@ export type Ctx = {
     newTypeVar: () => t.TVbl;
     withLocalTypes: (locals: { sym: t.Sym; bound: t.Type | null }[]) => Ctx;
     withAliases: (aliases: { [readableName: string]: string }) => Ctx;
+    withToplevel(t: t.Toplevel): Ctx;
     withTypes: (types: { name: string; type: t.Type }[]) => {
         hash: string;
         ctx: Ctx;
