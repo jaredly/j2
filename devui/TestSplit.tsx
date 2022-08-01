@@ -93,9 +93,10 @@ export const testStatuses = (
     results.testResults.forEach((result) => {
         statuses.push({
             loc: result.loc,
-            type: result.success ? 'Success' : 'Error',
+            type: result.msg == null ? 'Success' : 'Error',
             prefix: {
-                text: result.success ? '✅' : '🚨',
+                text: result.msg == null ? '✅' : '🚨',
+                message: result.msg ?? undefined,
             },
         });
     });
@@ -123,6 +124,20 @@ export const TestSplit = ({
         return test.file.info;
     });
 
+    React.useEffect(() => {
+        const res = processFileR({
+            type: 'File',
+            comments: [],
+            toplevels: items.map((item) => item.contents.refmt),
+            loc: noloc,
+        });
+        const fmt = refmt(res);
+        fetch(`/elements/test/${name}`, {
+            method: 'POST',
+            body: fmt,
+        });
+    }, [items]);
+
     // OK so ... what needs to share?
     // global ctx
     // also ... ectx?
@@ -140,7 +155,17 @@ export const TestSplit = ({
                 <Editor
                     key={i}
                     text={text}
-                    onBlur={(text) => {}}
+                    onBlur={(text) => {
+                        const file = processFile(text, ctx);
+                        if (file.type === 'Success') {
+                            setItems(
+                                items
+                                    .slice(0, i)
+                                    .concat(file.info)
+                                    .concat(items.slice(i + 1)),
+                            );
+                        }
+                    }}
                     onChange={(text) => {}}
                     extraLocs={(v) => {
                         if (v.type !== 'File') {
@@ -148,6 +173,7 @@ export const TestSplit = ({
                         }
                         const file = processFileR(v, myctx);
                         const results = getTestResults(file);
+                        console.log(file, results);
                         // ok, so we have an AST
                         return testStatuses(file, results);
                     }}
@@ -156,9 +182,14 @@ export const TestSplit = ({
         })
         .concat([
             <Editor
-                key={'last'}
+                key={'last' + items.length}
                 text={'// add new item'}
-                onBlur={(text) => {}}
+                onBlur={(text) => {
+                    const file = processFile(text, ctx);
+                    if (file.type === 'Success') {
+                        setItems(items.concat(file.info));
+                    }
+                }}
                 onChange={(text) => {}}
                 extraLocs={(v) => {
                     if (v.type !== 'File') {

@@ -113,10 +113,11 @@ export const toJs = (
 export type ExecutionInfo = {
     terms: { [key: string]: any };
     exprs: { [key: number]: any };
+    errors: { [key: number]: Error };
 };
 export const executeFile = (file: Success<FileContents>) => {
     const ectx = newExecutionContext(file.ctx);
-    const results: ExecutionInfo = { terms: ectx.terms, exprs: [] };
+    const results: ExecutionInfo = { terms: ectx.terms, exprs: [], errors: {} };
     file.info.forEach((info, i) => {
         info.contents.irtops?.forEach((irtop) => {
             try {
@@ -128,6 +129,7 @@ export const executeFile = (file: Success<FileContents>) => {
                 console.log(`Failed to execute`);
                 console.log(err);
                 console.log(generate(irtop.js).code);
+                results.errors[i] = err as Error;
             }
         });
     });

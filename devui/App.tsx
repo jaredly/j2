@@ -101,7 +101,8 @@ export type TestValues = {
     info: ExecutionInfo;
     debugs: { [key: number]: boolean };
     testResults: Array<{
-        success: boolean;
+        // success: boolean;
+        msg: string | null;
         loc: Loc;
     }>;
     failed: boolean;
@@ -173,8 +174,11 @@ export const getTestResults = (file: SuccessTestResult): TestValues => {
             const top = info.contents.irtops[0];
             if (top.type && file.ctx.isBuiltinType(top.type!, 'bool')) {
                 values.testResults.push({
-                    success: values.info.exprs[i],
+                    // success: values.info.exprs[i],
                     loc: info.contents.top.loc,
+                    msg: values.info.exprs[i]
+                        ? null
+                        : values.info.errors[i]?.message ?? 'False',
                 });
                 if (!values.info.exprs[i]) {
                     values.debugs[i] = true;
@@ -430,7 +434,11 @@ export const App = () => {
                                 newFiles[name] = {
                                     file: emptyFileResult,
                                     values: {
-                                        info: { terms: {}, exprs: {} },
+                                        info: {
+                                            terms: {},
+                                            exprs: {},
+                                            errors: {},
+                                        },
                                         testResults: [],
                                         failed: false,
                                         debugs: {},

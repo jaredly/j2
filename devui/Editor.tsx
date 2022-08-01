@@ -102,6 +102,8 @@ export const Editor = ({
     }, [text]);
     const latest = React.useRef(text);
     latest.current = text;
+    const curExtraLocs = React.useRef(extraLocs);
+    curExtraLocs.current = extraLocs;
 
     const prevPos = React.useRef(0);
 
@@ -134,7 +136,12 @@ export const Editor = ({
                 );
                 prevPos.current = pos;
                 obs.disconnect();
-                const locs = highlightLocations(text, {}, typeFile, extraLocs);
+                const locs = highlightLocations(
+                    text,
+                    {},
+                    typeFile,
+                    curExtraLocs.current,
+                );
                 const html = treeToHtmlLines(markUpTree(text, locs));
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, pos);
@@ -162,7 +169,7 @@ export const Editor = ({
                     entry.text,
                     {},
                     typeFile,
-                    extraLocs,
+                    curExtraLocs.current,
                 );
                 const html = treeToHtmlLines(markUpTree(entry.text, locs));
                 setHtmlAndClean(ref.current!, html);
