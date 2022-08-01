@@ -1,0 +1,8 @@
+##[fixtures]##
+==[New fixture]==
+--[input]--
+let m = <T: task>(m: Task<[`Read((), string) | T]>) => 10
+m<[`Read(string, string)]>(`Return(()))
+
+--[output:expected]--
+// hello

@@ -314,7 +314,7 @@ export const TopEditor = ({
                 text={text}
                 onBlur={(text) => {
                     const file =
-                        cache[text].file ??
+                        cache[text]?.file ??
                         processFile(text, ctx, undefined, shared.current.track);
                     if (!cache[text]) {
                         const results =
@@ -337,13 +337,14 @@ export const TopEditor = ({
                             className="hello"
                             style={{
                                 position: 'absolute',
-                                top: 0,
-                                left: -10,
+                                top: -7,
+                                left: -12,
                                 cursor: 'pointer',
+                                fontSize: 30,
                             }}
                             onClick={() => setOpen(!open)}
                         >
-                            {open ? 'v' : '>'}
+                            ·
                         </Hoverr>
                         {open ? (
                             <div>
@@ -371,6 +372,8 @@ export const TopEditor = ({
                                                     </div>
                                                     <pre
                                                         style={{
+                                                            whiteSpace:
+                                                                'pre-wrap',
                                                             margin: 0,
                                                             padding: 0,
                                                             fontSize: '0.8em',
@@ -393,6 +396,8 @@ export const TopEditor = ({
                                                             margin: 0,
                                                             padding: 4,
                                                             border: '1px solid #550000',
+                                                            whiteSpace:
+                                                                'pre-wrap',
                                                         }}
                                                     >
                                                         {showValue(

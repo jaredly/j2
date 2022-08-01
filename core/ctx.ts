@@ -529,9 +529,12 @@ export const newContext = (): FullContext => {
                 ...ctx.values,
                 hashed: {
                     ...ctx.values.hashed,
-                    [hash]: exprs.map(({ name, expr }) => ({
+                    [hash]: exprs.map(({ name, expr, typ }) => ({
                         type: 'user',
-                        typ: rctx.getType(expr)!,
+                        typ:
+                            typ != null && typ.type !== 'TBlank'
+                                ? typ
+                                : rctx.getType(expr)!,
                         expr,
                     })),
                 },
