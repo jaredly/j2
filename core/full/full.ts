@@ -252,6 +252,7 @@ export const processFile = (
     text: string,
     baseCtx?: FullContext,
     debugs?: { [key: number]: boolean },
+    track?: NameTrack,
 ): Result<FileContents> => {
     let ast: p.File;
     try {
@@ -263,7 +264,7 @@ export const processFile = (
             err: (err as p.SyntaxError).location,
         };
     }
-    return processFileR(ast, baseCtx, debugs);
+    return processFileR(ast, baseCtx, debugs, track);
 };
 
 export const processTypeToplevel = (

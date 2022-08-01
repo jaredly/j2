@@ -514,6 +514,14 @@ export const newContext = (): FullContext => {
                 transformExpression(t.expr, locClearVisitor, null),
             );
             const hash = hashExprs(defns);
+            const rctx = this.toplevelConfig({
+                type: 'Expr',
+                hash,
+                items: exprs.map((expr) => ({
+                    name: expr.name,
+                    type: expr.typ ?? { type: 'TBlank', loc: noloc },
+                })),
+            });
             // console.log(hash, defns);
             // require('fs').writeFileSync(hash, JSON.stringify(defns));
             const ctx = { ...this[opaque] };
@@ -523,7 +531,7 @@ export const newContext = (): FullContext => {
                     ...ctx.values.hashed,
                     [hash]: exprs.map(({ name, expr }) => ({
                         type: 'user',
-                        typ: this.getType(expr)!,
+                        typ: rctx.getType(expr)!,
                         expr,
                     })),
                 },

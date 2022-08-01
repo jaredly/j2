@@ -1,4 +1,4 @@
-import { Button, Card, Input } from '@nextui-org/react';
+import { Button, Card, css, Input, styled } from '@nextui-org/react';
 import * as React from 'react';
 import { builtinContext, FullContext } from '../core/ctx';
 import {
@@ -6,6 +6,8 @@ import {
     processFile,
     processFileR,
     Result,
+    Success,
+    ToplevelInfo,
 } from '../core/full/full';
 import {
     aliasesFromString,
@@ -21,6 +23,8 @@ import { noloc } from '../core/consts';
 import { newPPCtx } from '../core/printer/to-pp';
 import { printToString } from '../core/printer/pp';
 import { NameTrack } from '../core/ir/to-js';
+import generate from '@babel/generator';
+import { typeToString } from './Highlight';
 
 /*
 
@@ -29,6 +33,16 @@ So what if ... we had a 'splitEditor'
 ok so, file.info doesn't have any aliases in it ...
 
 */
+
+const Hoverr = styled('div', {
+    opacity: 0.5,
+    transition: 'opacity 0.2s ease-in-out',
+});
+const Hovery = styled('div', {
+    '&:hover .hello': {
+        opacity: 1,
+    },
+});
 
 export const fmtItem = (
     aliases: { [key: string]: string },
@@ -41,19 +55,19 @@ export const fmtItem = (
         loc: noloc,
     };
 
-    const keys = Object.keys(aliases);
-    if (keys.length) {
-        ast.toplevels.push({
-            type: 'Aliases',
-            items: keys.sort().map((k) => ({
-                type: 'AliasItem',
-                name: k,
-                hash: `#[${aliases[k]}]`,
-                loc: noloc,
-            })),
-            loc: noloc,
-        });
-    }
+    // const keys = Object.keys(aliases);
+    // if (keys.length) {
+    //     ast.toplevels.push({
+    //         type: 'Aliases',
+    //         items: keys.sort().map((k) => ({
+    //             type: 'AliasItem',
+    //             name: k,
+    //             hash: `#[${aliases[k]}]`,
+    //             loc: noloc,
+    //         })),
+    //         loc: noloc,
+    //     });
+    // }
     ast.toplevels.push(item);
 
     if (ast.toplevels.length > 0) {
@@ -156,41 +170,20 @@ export const TestSplit = ({
         .map((item, i) => {
             const myctx = ctx;
             ctx = ctx.withToplevel(item.contents.top) as FullContext;
-            const text = fmtItem(item.aliases, item.contents.refmt);
             return (
-                <Editor
+                <TopEditor
                     key={i}
-                    text={text}
-                    onBlur={(text) => {
-                        const file = processFile(text, ctx);
-                        if (file.type === 'Success') {
-                            setItems(
-                                items
-                                    .slice(0, i)
-                                    .concat(file.info)
-                                    .concat(items.slice(i + 1)),
-                            );
-                        }
-                    }}
-                    onChange={(text) => {}}
-                    extraLocs={(v) => {
-                        if (v.type !== 'File') {
-                            return [];
-                        }
-                        const file = processFileR(
-                            v,
-                            myctx,
-                            undefined,
-                            shared.current.track,
+                    onChange={(info) => {
+                        setItems(
+                            items
+                                .slice(0, i)
+                                .concat(info)
+                                .concat(items.slice(i + 1)),
                         );
-                        const results = getTestResults(
-                            file,
-                            shared.current.terms,
-                        );
-                        console.log(file, results);
-                        // ok, so we have an AST
-                        return testStatuses(file, results);
                     }}
+                    shared={shared}
+                    ctx={myctx}
+                    item={item}
                 />
             );
         })
@@ -250,6 +243,130 @@ export const TestSplit = ({
                 </Card.Body>
             </Card>
         </div>
+    );
+};
+
+export const TopEditor = ({
+    item,
+    ctx,
+    shared,
+    onChange,
+}: {
+    item: ToplevelInfo<FileContents>;
+    ctx: FullContext;
+    shared: { current: { track: NameTrack; terms: { [key: string]: string } } };
+    onChange: (info: ToplevelInfo<FileContents>[]) => void;
+}) => {
+    const [text, setText] = React.useState(() =>
+        fmtItem(item.aliases, item.contents.refmt),
+    );
+    React.useEffect(() => {
+        setText(fmtItem(item.aliases, item.contents.refmt));
+    }, [item]);
+    const cache = React.useMemo(
+        () => ({} as { [key: string]: Result<FileContents> }),
+        [ctx],
+    );
+    if (!cache[text]) {
+        cache[text] = processFile(text, ctx, undefined, shared.current.track);
+    }
+    let file = cache[text];
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Hovery style={{ position: 'relative' }}>
+            <Editor
+                text={text}
+                onBlur={(text) => {
+                    const file =
+                        cache[text] ??
+                        processFile(text, ctx, undefined, shared.current.track);
+                    cache[text] = file;
+                    if (file.type === 'Success') {
+                        onChange(file.info);
+                    }
+                }}
+                onChange={(text) => {}}
+                extraLocs={(v, text) => {
+                    if (v.type !== 'File') {
+                        return [];
+                    }
+                    const file =
+                        cache[text]?.type === 'Success'
+                            ? (cache[text] as Success<FileContents>)
+                            : processFileR(
+                                  v,
+                                  ctx,
+                                  undefined,
+                                  shared.current.track,
+                              );
+                    cache[text] = file;
+                    const results = getTestResults(file, shared.current.terms);
+                    console.log(file, results);
+                    // ok, so we have an AST
+                    return testStatuses(file, results);
+                }}
+            />
+            {file.type === 'Success' && (
+                <div>
+                    <Hoverr
+                        className="hello"
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: -10,
+                            cursor: 'pointer',
+                        }}
+                        onClick={() => setOpen(!open)}
+                    >
+                        {open ? 'v' : '>'}
+                    </Hoverr>
+                    {open ? (
+                        <div>
+                            {file.info.map((item, i) => (
+                                <div key={i}>
+                                    {item.contents.irtops?.map((item, j) => (
+                                        <div key={j}>
+                                            {/* <strong>
+                                            {item.name ?? 'unnamed'}
+                                        </strong> */}
+                                            <div
+                                                style={{
+                                                    fontStyle: 'italic',
+                                                    opacity: 0.5,
+                                                }}
+                                            >
+                                                type:{' '}
+                                                {item.type
+                                                    ? typeToString(
+                                                          item.type,
+                                                          ctx,
+                                                      )
+                                                    : 'No type!'}
+                                            </div>
+                                            <pre
+                                                style={{
+                                                    margin: 0,
+                                                    padding: 0,
+                                                }}
+                                            >
+                                                {
+                                                    generate(
+                                                        item.js.body.length ===
+                                                            1
+                                                            ? item.js.body[0]
+                                                            : item.js,
+                                                    ).code
+                                                }
+                                            </pre>
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
+                </div>
+            )}
+        </Hovery>
     );
 };
 

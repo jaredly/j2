@@ -14,8 +14,8 @@ alias >#[hc1d03250b26806868f520136d8a763b0c0edff9b] int#[h942cd67cf31d350ec1f39b
 let mz: (n: int) => int = (n#[0]: int) => if n#[0] > 10 {
     n#[0];
 } else {
-    mz#[r0](n#[0] + 1) + 1;
+    mz#[r0](n#[0] + 20);
 }
-alias mz#[h4925544a29f7666b73bfe13a689a821731dbcf5b]
+alias mz#[h0e5d452a214b6a7d67ae536a7acd7c6da5a460fc]
 mz(23) == 23
-mz(10) == 12
+mz(10) == 30

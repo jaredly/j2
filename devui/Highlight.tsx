@@ -79,7 +79,8 @@ export const highlightLocations = (
     typeFile = false,
     extraLocs?: (
         v: p.File | p.TypeFile,
-        aliases: { [key: string]: string },
+        // aliases: { [key: string]: string },
+        text: string,
     ) => HL[],
 ): HL[] => {
     try {
@@ -91,7 +92,7 @@ export const highlightLocations = (
             });
             transformTypeFile(ast, highlightVisitor, locs);
             if (extraLocs) {
-                locs.push(...extraLocs(ast, aliases));
+                locs.push(...extraLocs(ast, text));
             }
         } else {
             const ast = p.parseFile(text);
@@ -100,7 +101,7 @@ export const highlightLocations = (
             });
             transformFile(ast, highlightVisitor, locs);
             if (extraLocs) {
-                locs.push(...extraLocs(ast, aliases));
+                locs.push(...extraLocs(ast, text));
             }
         }
         return locs;
@@ -141,10 +142,7 @@ export const Highlight = ({
     portal: HTMLDivElement;
     onClick?: () => void;
     typeFile?: boolean;
-    extraLocs?: (
-        v: p.File | p.TypeFile,
-        aliases: { [key: string]: string },
-    ) => HL[];
+    extraLocs?: (v: p.File | p.TypeFile, text: string) => HL[];
 }) => {
     // const [aliases, rest] = React.useMemo(() => splitAliases(text), [text]);
     // text = rest;

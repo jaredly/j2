@@ -17,7 +17,14 @@ export type Ctx = {
         hash: string;
         ctx: Ctx;
     };
-    withValues: (types: { name: string; expr: t.Expression; loc: t.Loc }[]) => {
+    withValues: (
+        types: {
+            name: string;
+            expr: t.Expression;
+            loc: t.Loc;
+            typ: t.Type | null;
+        }[],
+    ) => {
         hash: string;
         ctx: Ctx;
     };
