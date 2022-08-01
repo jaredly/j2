@@ -24,6 +24,9 @@ export function annotationVisitor(
                 ctx.toplevelConfig(typeToplevelT(node, ctx)) as FullContext,
             ];
         },
+        TypeAbstraction(node, ctx) {
+            return [null, ctx.withLocalTypes(node.items)];
+        },
         Lambda(node, ctx) {
             const locals: Locals = [];
             node.args.map((arg) => {

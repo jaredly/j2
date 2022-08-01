@@ -11,6 +11,7 @@ import {
     Ctx as TMCtx,
     expandEnumCases,
     payloadsEqual,
+    typeMatches,
     unifyPayloads,
 } from '../typing/typeMatches';
 import { recordAsTuple } from './records';
@@ -216,6 +217,7 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
+import { refsEqual } from '../refsEqual';
 export const ToJS = {
     Enum({ loc, tag, payload }: t.IEnum, ctx: JCtx): b.Expression {
         if (!payload) {
@@ -231,7 +233,7 @@ export const ToJS = {
     },
 };
 
-const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
+export const isValidEnumCase = (c: t.Type, ctx: TMCtx): boolean => {
     // We'll special case 'recur ref that's applied'
     if (
         c.type === 'TApply' &&
@@ -322,7 +324,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         changed = true;
                         return tdecorate(k, 'invalidEnum', ctx);
                     }
-                    for (let kase of expanded) {
+                    for (let kase of expanded.cases) {
                         if (
                             used[kase.tag] &&
                             !payloadsEqual(
@@ -405,16 +407,26 @@ export const enumTypeMatches = (
     if (!canEnums || !expEnums) {
         return false;
     }
-    const canMap = enumCaseMap(canEnums, ctx);
+    const canMap = enumCaseMap(canEnums.cases, ctx);
     if (!canMap) {
         return false;
     }
-    const expMap = enumCaseMap(expEnums, ctx);
+    const expMap = enumCaseMap(expEnums.cases, ctx);
     if (!expMap) {
         return false;
     }
 
-    for (let kase of canEnums) {
+    for (let bound of canEnums.bounded) {
+        if (
+            !expEnums.bounded.some((b) =>
+                refsEqual(bound.local.ref, b.local.ref),
+            )
+        ) {
+            return false;
+        }
+    }
+
+    for (let kase of canEnums.cases) {
         if (!expMap[kase.tag]) {
             if (expected.open) {
                 continue;
@@ -457,16 +469,16 @@ export const unifyEnums = (
     if (!canEnums || !expEnums) {
         return false;
     }
-    const canMap = enumCaseMap(canEnums, ctx);
+    const canMap = enumCaseMap(canEnums.cases, ctx);
     if (!canMap) {
         return false;
     }
-    const expMap = enumCaseMap(expEnums, ctx);
+    const expMap = enumCaseMap(expEnums.cases, ctx);
     if (!expMap) {
         return false;
     }
 
-    for (let kase of canEnums) {
+    for (let kase of canEnums.cases) {
         if (!expMap[kase.tag]) {
             expMap[kase.tag] = kase;
         } else {
@@ -485,7 +497,12 @@ export const unifyEnums = (
     return {
         ...candidate,
         open: candidate.open || expected.open,
-        cases: Object.values(expMap),
+        cases: [
+            ...Object.values(expMap),
+            // TODO: dedup?
+            ...canEnums.bounded.map((m) => m.local),
+            ...expEnums.bounded.map((m) => m.local),
+        ],
     };
 };
 

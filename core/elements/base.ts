@@ -641,6 +641,13 @@ export const ToJS = {
         }
         return b.identifier(`:unresovled:`);
     },
+    TypeAbstraction(
+        { loc, items, body }: t.ITypeAbstraction,
+        ctx: JCtx,
+    ): b.Expression {
+        ctx = { ...ctx, actx: ctx.actx.withLocalTypes(items) };
+        return ctx.ToJS.IExpression(body, ctx);
+    },
 };
 
 export const ToIR = {
@@ -656,10 +663,16 @@ export const ToIR = {
         return ctx.ToIR.Expression(target, ctx);
     },
     TypeAbstraction(
-        { items, body }: t.TypeAbstraction,
+        { items, body, loc }: t.TypeAbstraction,
         ctx: ICtx,
     ): t.IExpression {
-        return ctx.ToIR.Expression(body, ctx);
+        ctx = { ...ctx, actx: ctx.actx.withLocalTypes(items) };
+        return {
+            type: 'TypeAbstraction',
+            items,
+            body: ctx.ToIR.Expression(body, ctx),
+            loc,
+        };
     },
     DecoratedExpression(
         { loc, expr }: t.DecoratedExpression,

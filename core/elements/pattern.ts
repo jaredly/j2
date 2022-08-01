@@ -154,8 +154,8 @@ export const refineType = (
             if (!cases) {
                 return { ...type, cases: [] }; // all out of cases!
             }
-            const res: t.EnumCase[] = [];
-            for (let kase of cases) {
+            const res: (t.Type | t.EnumCase)[] = [];
+            for (let kase of cases.cases) {
                 if (kase.tag === pat.tag) {
                     if (!pat.payload) {
                         // return {
@@ -183,7 +183,10 @@ export const refineType = (
                     res.push(kase);
                 }
             }
-            return { ...type, cases: res };
+            return {
+                ...type,
+                cases: res.concat(cases.bounded.map((m) => m.local)),
+            };
         }
         // TODO: Records and such
     }
@@ -223,7 +226,7 @@ export const typeMatchesPattern = (
             if (!cases) {
                 return true;
             }
-            for (let kase of cases) {
+            for (let kase of cases.cases) {
                 if (kase.tag === pat.tag) {
                     if (!pat.payload) {
                         return true;
@@ -341,7 +344,7 @@ export const getLocals = (
             if (type.type !== 'TEnum') {
                 return;
             }
-            const cases = expandEnumCases(type, ctx) ?? [];
+            const cases = expandEnumCases(type, ctx)?.cases ?? [];
             for (let kase of cases) {
                 if (kase.tag === pat.tag) {
                     if (kase.payload && pat.payload) {
@@ -627,8 +630,12 @@ export const ToJS = {
                 if (!cases) {
                     return null;
                 }
-                const allBare = cases.every((kase) => !kase.payload);
-                const anyBare = cases.some((kase) => !kase.payload);
+                const allBare =
+                    cases.cases.every((kase) => !kase.payload) &&
+                    !cases.bounded.length;
+                const anyBare =
+                    cases.cases.some((kase) => !kase.payload) ||
+                    cases.bounded.length;
                 const targetCheck = allBare
                     ? target
                     : anyBare
@@ -643,7 +650,7 @@ export const ToJS = {
                       )
                     : b.memberExpression(target, b.identifier('tag'));
                 const one =
-                    cases.length === 1
+                    cases.cases.length === 1 && !cases.bounded.length
                         ? null
                         : b.binaryExpression(
                               '===',
@@ -653,7 +660,7 @@ export const ToJS = {
                 if (!p.payload) {
                     return one;
                 }
-                const myCase = cases.find((k) => k.tag === p.tag);
+                const myCase = cases.cases.find((k) => k.tag === p.tag);
                 if (!myCase) {
                     return b.logicalExpression(
                         '&&',

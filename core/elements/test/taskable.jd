@@ -1,5 +1,5 @@
-alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe]
-<A#[0]: task>(a#[1]: Task<@error:argWrongType(expected: :task) A#[0]>) => 10;
-alias error:resMismatch#[hb090f18487ae3bd77546a5c35ccf59b6adf3aa59]
-<A#[0]: [ * ], B#[1]: [ * ]>(a#[2]: A#[0], b#[3]: B#[1]):@error:resMismatch(inferrred: :B#[1]) A#[0] => b#[3];
+alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe]
+<A#[0]: task>(a#[1]: Task<A#[0]>) => 100;
 <A#[0]: [ * ], B#[1]: [ * ]>(a#[2]: A#[0], b#[3]: B#[1]):A#[0] => a#[2];
+<A#[0]: [ * ], B#[1]: [ * ]>(a#[2]: A#[0], b#[3]: B#[1]):A#[0] => a#[2];
+let again = <T#[0]: [ * ]>(v#[1]: T#[0]):[ `One | T#[0] ] => v#[1];

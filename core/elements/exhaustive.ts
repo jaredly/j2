@@ -15,15 +15,23 @@ export const patternIsExhaustive = (
                 return false;
             }
             const cases = expandEnumCases(typ, ctx);
-            if (!cases || cases.length !== 1 || cases[0].tag !== pat.tag) {
+            if (
+                !cases ||
+                cases.cases.length !== 1 ||
+                cases.cases[0].tag !== pat.tag
+            ) {
                 return false;
             }
-            if (!!pat.payload !== !!cases[0].payload) {
+            // Can't account for type variables
+            if (cases.bounded.length) {
+                return false;
+            }
+            if (!!pat.payload !== !!cases.cases[0].payload) {
                 return false;
             }
             return (
                 !pat.payload ||
-                patternIsExhaustive(pat.payload, cases[0].payload!, ctx)
+                patternIsExhaustive(pat.payload, cases.cases[0].payload!, ctx)
             );
         }
         case 'PBlank':

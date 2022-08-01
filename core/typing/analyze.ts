@@ -20,9 +20,6 @@ import { ToplevelConfig, TopTypeKind } from './to-tast';
 import { Ctx as TMCtx } from './typeMatches';
 
 export type Ctx = {
-    getTypeArgs(ref: t.RefKind): t.TVar[] | null;
-    getTopKind(idx: number): TopTypeKind | null;
-    resolveAnalyzeType(type: t.Type): t.Type | null;
     typeByName(name: string): t.Type | null;
     getDecorator(name: string): t.RefKind[];
     errorDecorators(): Id[];
@@ -316,6 +313,9 @@ export const localTrackingVisitor: Visitor<TMCtx & { switchType?: t.Type }> = {
             null,
             { ...ctx, switchType: ctx.getType(node.target) ?? undefined },
         ];
+    },
+    TypeAbstraction(node, ctx) {
+        return [null, ctx.withLocalTypes(node.items)];
     },
     Case(node, ctx) {
         if (!ctx.switchType) {

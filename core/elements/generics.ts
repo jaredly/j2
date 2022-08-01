@@ -34,6 +34,13 @@ export type TypeAbstraction = {
     loc: t.Loc;
 };
 
+export type ITypeAbstraction = {
+    type: 'TypeAbstraction';
+    items: Array<t.TVar>;
+    body: t.IExpression;
+    loc: t.Loc;
+};
+
 // export type Apply = {
 //     type: 'Apply';
 //     target: t.Expression;
@@ -93,6 +100,7 @@ export const ToAst = {
         ctx: TACtx,
     ): p.TypeAbstraction {
         items.forEach((arg) => ctx.recordSym(arg.sym, 'type'));
+        ctx = { ...ctx, actx: ctx.actx.withLocalTypes(items) };
         return {
             type: 'TypeAbstraction',
             args: {
@@ -130,6 +138,10 @@ export const ToPP = {
         );
     },
 };
+
+export const ToIR = {};
+
+export const ToJS = {};
 
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     TypeAbstraction(node, ctx) {

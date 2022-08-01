@@ -65,6 +65,7 @@ import {
     ILambda,
     IApply,
     ITemplateString,
+    ITypeAbstraction,
     IEnum,
     IRecord,
     IRecordKeyValue,
@@ -81,6 +82,9 @@ import {
     TAdd,
     TSub,
     TOr,
+    Ctx,
+    VisitorCtx,
+    Verify,
     AVCtx,
     ACtx,
 } from './typed-ast';
@@ -257,6 +261,14 @@ export type Visitor<Ctx> = {
         node: TypeAbstraction,
         ctx: Ctx,
     ) => null | TypeAbstraction;
+    ITypeAbstraction?: (
+        node: ITypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | ITypeAbstraction | [ITypeAbstraction | null, Ctx];
+    ITypeAbstractionPost?: (
+        node: ITypeAbstraction,
+        ctx: Ctx,
+    ) => null | ITypeAbstraction;
     TOps?: (node: TOps, ctx: Ctx) => null | false | TOps | [TOps | null, Ctx];
     TOpsPost?: (node: TOps, ctx: Ctx) => null | TOps;
     TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
@@ -364,6 +376,16 @@ export type Visitor<Ctx> = {
     IAssignPost?: (node: IAssign, ctx: Ctx) => null | IAssign;
     Ctx?: (node: Ctx, ctx: Ctx) => null | false | Ctx | [Ctx | null, Ctx];
     CtxPost?: (node: Ctx, ctx: Ctx) => null | Ctx;
+    VisitorCtx?: (
+        node: VisitorCtx,
+        ctx: Ctx,
+    ) => null | false | VisitorCtx | [VisitorCtx | null, Ctx];
+    VisitorCtxPost?: (node: VisitorCtx, ctx: Ctx) => null | VisitorCtx;
+    Verify?: (
+        node: Verify,
+        ctx: Ctx,
+    ) => null | false | Verify | [Verify | null, Ctx];
+    VerifyPost?: (node: Verify, ctx: Ctx) => null | Verify;
     TApply?: (
         node: TApply,
         ctx: Ctx,
@@ -635,6 +657,14 @@ export type Visitor<Ctx> = {
     ) => null | false | IExpression | [IExpression | null, Ctx];
     IExpressionPost_TemplateString?: (
         node: ITemplateString,
+        ctx: Ctx,
+    ) => null | IExpression;
+    IExpression_TypeAbstraction?: (
+        node: ITypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_TypeAbstraction?: (
+        node: ITypeAbstraction,
         ctx: Ctx,
     ) => null | IExpression;
     IExpression_Enum?: (
@@ -6725,6 +6755,82 @@ export const transformITemplateString = <Ctx>(
     return node;
 };
 
+export const transformITypeAbstraction = <Ctx>(
+    node: ITypeAbstraction,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ITypeAbstraction => {
+    if (!node) {
+        throw new Error('No ITypeAbstraction provided');
+    }
+
+    const transformed = visitor.ITypeAbstraction
+        ? visitor.ITypeAbstraction(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformTVar(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$body = transformIExpression(node.body, visitor, ctx);
+        changed1 = changed1 || updatedNode$body !== node.body;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                items: updatedNode$items,
+                body: updatedNode$body,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ITypeAbstractionPost) {
+        const transformed = visitor.ITypeAbstractionPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformIEnum = <Ctx>(
     node: IEnum,
     visitor: Visitor<Ctx>,
@@ -7612,6 +7718,12 @@ export const transformIStmt = <Ctx>(
             break;
         }
 
+        case 'TypeAbstraction': {
+            updatedNode = transformITypeAbstraction(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Enum': {
             updatedNode = transformIEnum(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -7884,6 +7996,16 @@ export const transformILambda = <Ctx>(
                 break;
             }
 
+            case 'TypeAbstraction': {
+                updatedNode$body = transformITypeAbstraction(
+                    node.body,
+                    visitor,
+                    ctx,
+                );
+                changed1 = changed1 || updatedNode$body !== node.body;
+                break;
+            }
+
             case 'Enum': {
                 updatedNode$body = transformIEnum(node.body, visitor, ctx);
                 changed1 = changed1 || updatedNode$body !== node.body;
@@ -8089,6 +8211,25 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
+        case 'TypeAbstraction': {
+            const transformed = visitor.IExpression_TypeAbstraction
+                ? visitor.IExpression_TypeAbstraction(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Enum': {
             const transformed = visitor.IExpression_Enum
                 ? visitor.IExpression_Enum(node, ctx)
@@ -8167,6 +8308,12 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
+        case 'TypeAbstraction': {
+            updatedNode = transformITypeAbstraction(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Enum': {
             updatedNode = transformIEnum(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -8236,6 +8383,16 @@ export const transformIExpression = <Ctx>(
         case 'TemplateString': {
             const transformed = visitor.IExpressionPost_TemplateString
                 ? visitor.IExpressionPost_TemplateString(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAbstraction': {
+            const transformed = visitor.IExpressionPost_TypeAbstraction
+                ? visitor.IExpressionPost_TypeAbstraction(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -8564,6 +8721,326 @@ export const transformCtx = <Ctx>(
     node = updatedNode;
     if (visitor.CtxPost) {
         const transformed = visitor.CtxPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformVisitorCtx = <Ctx>(
+    node: VisitorCtx,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): VisitorCtx => {
+    if (!node) {
+        throw new Error('No VisitorCtx provided');
+    }
+
+    const transformed = visitor.VisitorCtx
+        ? visitor.VisitorCtx(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$ctx = transformCtx(node.ctx, visitor, ctx);
+        changed1 = changed1 || updatedNode$ctx !== node.ctx;
+        if (changed1) {
+            updatedNode = { ...updatedNode, ctx: updatedNode$ctx };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.VisitorCtxPost) {
+        const transformed = visitor.VisitorCtxPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformVerify = <Ctx>(
+    node: Verify,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): Verify => {
+    if (!node) {
+        throw new Error('No Verify provided');
+    }
+
+    const transformed = visitor.Verify ? visitor.Verify(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$errors = node.errors;
+        {
+            let changed2 = false;
+            const arr1 = node.errors.map((updatedNode$errors$item1) => {
+                const result = transformLoc(
+                    updatedNode$errors$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$errors$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$errors = arr1;
+                changed1 = true;
+            }
+        }
+
+        let updatedNode$untypedExpression = node.untypedExpression;
+        {
+            let changed2 = false;
+            const arr1 = node.untypedExpression.map(
+                (updatedNode$untypedExpression$item1) => {
+                    const result = transformLoc(
+                        updatedNode$untypedExpression$item1,
+                        visitor,
+                        ctx,
+                    );
+                    changed2 =
+                        changed2 ||
+                        result !== updatedNode$untypedExpression$item1;
+                    return result;
+                },
+            );
+            if (changed2) {
+                updatedNode$untypedExpression = arr1;
+                changed1 = true;
+            }
+        }
+
+        let updatedNode$unresolved = node.unresolved;
+        {
+            let changed2 = false;
+
+            let updatedNode$unresolved$type = node.unresolved.type;
+            {
+                let changed3 = false;
+                const arr2 = node.unresolved.type.map(
+                    (updatedNode$unresolved$type$item2) => {
+                        const result = transformLoc(
+                            updatedNode$unresolved$type$item2,
+                            visitor,
+                            ctx,
+                        );
+                        changed3 =
+                            changed3 ||
+                            result !== updatedNode$unresolved$type$item2;
+                        return result;
+                    },
+                );
+                if (changed3) {
+                    updatedNode$unresolved$type = arr2;
+                    changed2 = true;
+                }
+            }
+
+            let updatedNode$unresolved$decorator = node.unresolved.decorator;
+            {
+                let changed3 = false;
+                const arr2 = node.unresolved.decorator.map(
+                    (updatedNode$unresolved$decorator$item2) => {
+                        const result = transformLoc(
+                            updatedNode$unresolved$decorator$item2,
+                            visitor,
+                            ctx,
+                        );
+                        changed3 =
+                            changed3 ||
+                            result !== updatedNode$unresolved$decorator$item2;
+                        return result;
+                    },
+                );
+                if (changed3) {
+                    updatedNode$unresolved$decorator = arr2;
+                    changed2 = true;
+                }
+            }
+
+            let updatedNode$unresolved$value = node.unresolved.value;
+            {
+                let changed3 = false;
+                const arr2 = node.unresolved.value.map(
+                    (updatedNode$unresolved$value$item2) => {
+                        const result = transformLoc(
+                            updatedNode$unresolved$value$item2,
+                            visitor,
+                            ctx,
+                        );
+                        changed3 =
+                            changed3 ||
+                            result !== updatedNode$unresolved$value$item2;
+                        return result;
+                    },
+                );
+                if (changed3) {
+                    updatedNode$unresolved$value = arr2;
+                    changed2 = true;
+                }
+            }
+
+            if (changed2) {
+                updatedNode$unresolved = {
+                    ...updatedNode$unresolved,
+                    type: updatedNode$unresolved$type,
+                    decorator: updatedNode$unresolved$decorator,
+                    value: updatedNode$unresolved$value,
+                };
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                errors: updatedNode$errors,
+                untypedExpression: updatedNode$untypedExpression,
+                unresolved: updatedNode$unresolved,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.VerifyPost) {
+        const transformed = visitor.VerifyPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+// not a type ACtx
+
+export const transformAVCtx = <Ctx>(
+    node: AVCtx,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): AVCtx => {
+    if (!node) {
+        throw new Error('No AVCtx provided');
+    }
+
+    const transformed = visitor.AVCtx ? visitor.AVCtx(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$switchType = undefined;
+        const updatedNode$switchType$current = node.switchType;
+        if (updatedNode$switchType$current != null) {
+            let updatedNode$switchType$1$ = null;
+            const updatedNode$switchType$1$$current =
+                updatedNode$switchType$current;
+            if (updatedNode$switchType$1$$current != null) {
+                let updatedNode$switchType$1$$1$ =
+                    updatedNode$switchType$1$$current;
+                {
+                    let changed2 = false;
+
+                    const updatedNode$switchType$1$$1$$s = transformSwitch(
+                        updatedNode$switchType$1$$current.s,
+                        visitor,
+                        ctx,
+                    );
+                    changed2 =
+                        changed2 ||
+                        updatedNode$switchType$1$$1$$s !==
+                            updatedNode$switchType$1$$current.s;
+
+                    const updatedNode$switchType$1$$1$$t = transformType(
+                        updatedNode$switchType$1$$current.t,
+                        visitor,
+                        ctx,
+                    );
+                    changed2 =
+                        changed2 ||
+                        updatedNode$switchType$1$$1$$t !==
+                            updatedNode$switchType$1$$current.t;
+                    if (changed2) {
+                        updatedNode$switchType$1$$1$ = {
+                            ...updatedNode$switchType$1$$1$,
+                            s: updatedNode$switchType$1$$1$$s,
+                            t: updatedNode$switchType$1$$1$$t,
+                        };
+                        changed1 = true;
+                    }
+                }
+
+                updatedNode$switchType$1$ = updatedNode$switchType$1$$1$;
+            }
+
+            updatedNode$switchType = updatedNode$switchType$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                switchType: updatedNode$switchType,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.AVCtxPost) {
+        const transformed = visitor.AVCtxPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }

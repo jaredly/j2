@@ -187,7 +187,11 @@ export const asSimple = (pat: t.Pattern): b.Expression | null => {
 
 export const allBare = (typ: t.TEnum, ctx: ACtx): boolean => {
     const cases = expandEnumCases(typ, ctx);
-    return cases?.every((kase) => !kase.payload) ?? false;
+    return (
+        cases != null &&
+        !cases.bounded.length &&
+        cases.cases.every((kase) => !kase.payload)
+    );
 };
 
 export const ToJS = {
@@ -319,9 +323,10 @@ export const ToJS = {
         }
         if (node.ttype.type === 'TEnum') {
             const cases = expandEnumCases(node.ttype, ctx.actx);
-            const allBare = cases?.every((kase) => !kase.payload) ?? false;
+            const allBare =
+                cases?.cases.every((kase) => !kase.payload) ?? false;
             if (!allBare) {
-                if (cases?.length === 1) {
+                if (cases?.cases.length === 1 && !cases.bounded.length) {
                     target = b.memberExpression(target, b.identifier('tag'));
                 } else {
                     target = b.conditionalExpression(

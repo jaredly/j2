@@ -25,7 +25,7 @@ export const isTaskable = (t: Type, ctx: Ctx): boolean => {
     const cases = expandEnumCases(t, ctx);
     return (
         cases != null &&
-        cases.every((kase) => {
+        cases.cases.every((kase) => {
             return (
                 kase.payload != null &&
                 kase.payload.type === 'TRecord' &&
@@ -35,6 +35,9 @@ export const isTaskable = (t: Type, ctx: Ctx): boolean => {
                 kase.payload.items[0].key === '0' &&
                 kase.payload.items[1].key === '1'
             );
+        }) &&
+        cases.bounded.every((bound) => {
+            return isTaskable(bound.bound, ctx);
         })
     );
 };
@@ -110,7 +113,12 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
         [
             {
                 type: 'TEnum',
-                cases: expanded.concat(extraInner ?? []),
+                cases: [
+                    ...expanded.cases,
+                    ...(extraInner?.cases ?? []),
+                    ...expanded.bounded.map((m) => m.local),
+                    ...(extraInner?.bounded.map((m) => m.local) ?? []),
+                ],
                 loc: loc,
                 open: false,
             },
@@ -119,7 +127,7 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
         ctx,
         loc,
     );
-    for (let one of expanded) {
+    for (let one of expanded.cases) {
         const two = asTwopul(one.payload);
         if (!two) {
             return null;
@@ -167,7 +175,26 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
     return {
         type: 'TEnum',
         open: false,
-        cases,
+        cases: [
+            ...cases,
+            ...(expanded.bounded.length
+                ? [
+                      taskType(
+                          [
+                              {
+                                  type: 'TEnum',
+                                  cases: expanded.bounded.map((m) => m.local),
+                                  open: false,
+                                  loc,
+                              },
+                              targs[1] ?? tunit,
+                          ],
+                          ctx,
+                          loc,
+                      ),
+                  ]
+                : []),
+        ],
         loc,
     };
 };
@@ -195,7 +222,7 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
     let result: null | Type = null;
     const effects: { [key: string]: { input: Type; output: Type } } = {};
     const subs: TApply[] = [];
-    for (let kase of cases) {
+    for (let kase of cases.cases) {
         if (!kase.payload) {
             return null;
         }

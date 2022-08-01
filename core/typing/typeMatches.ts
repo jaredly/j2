@@ -1,8 +1,8 @@
 import { refsEqual } from '../refsEqual';
 import { noloc } from '../consts';
-import { enumTypeMatches } from '../elements/enums';
+import { enumTypeMatches, isValidEnumCase } from '../elements/enums';
 import { recordMatches } from '../elements/records';
-import { tvarsMatches } from '../elements/type-vbls';
+import { TVar, tvarsMatches } from '../elements/type-vbls';
 import { Id } from '../ids';
 import {
     EnumCase,
@@ -30,6 +30,7 @@ import {
 } from './ops';
 import { expandTask, isTaskable, matchesTask } from './tasks';
 import { unifyTypes } from './unifyTypes';
+import { TopTypeKind } from './to-tast';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -55,6 +56,9 @@ export type Ctx = {
     withLocals: (locals: { sym: Sym; type: Type }[], better?: boolean) => Ctx;
     withLocalTypes: (locals: { sym: Sym; bound: Type | null }[]) => Ctx;
     typeForRecur: (idx: number) => Type | null;
+    getTypeArgs(ref: RefKind): TVar[] | null;
+    getTopKind(idx: number): TopTypeKind | null;
+    resolveAnalyzeType(type: Type): Type | null;
 };
 
 export const unifyPayloads = (
@@ -245,15 +249,26 @@ export const typeMatches = (
             // console.log('tref', candidate);
             // If this is a local ref, and it has a bound, then we can use the bound.
             if (candidate.ref.type === 'Local') {
-                // TOHHH.
-                // If we've finished our 'transform' path,
-                // now we need a mapping of syms to ... bounds
-                // instaed of using the list of scopes.
+                //     // TOHHH.
+                //     // If we've finished our 'transform' path,
+                //     // now we need a mapping of syms to ... bounds
+                //     // instaed of using the list of scopes.
+                const ref = candidate.ref;
                 const bound = ctx.getBound(candidate.ref.sym);
-                if (bound) {
-                    // console.log('got a bound', candidate, bound, expected);
-                    return typeMatches(bound, expected, ctx);
+                if (bound && isValidEnumCase(bound, ctx)) {
+                    if (expected.type === 'TEnum') {
+                        const got = expandEnumCases(expected, ctx);
+                        return (
+                            got?.bounded.some((b) =>
+                                refsEqual(b.local.ref, ref),
+                            ) ?? false
+                        );
+                    }
                 }
+                //     if (bound) {
+                //         // console.log('got a bound', candidate, bound, expected);
+                //         return typeMatches(bound, expected, ctx);
+                //     }
             }
             return false;
         // case 'TApply':
@@ -354,8 +369,9 @@ export const expandEnumCases = (
     type: TEnum,
     ctx: Ctx,
     path: string[] = [],
-): null | EnumCase[] => {
+): null | { cases: EnumCase[]; bounded: { local: TRef; bound: Type }[] } => {
     const cases: EnumCase[] = [];
+    const bounded: { local: TRef; bound: Type }[] = [];
     for (let kase of type.cases) {
         if (kase.type === 'EnumCase') {
             cases.push(kase);
@@ -369,20 +385,28 @@ export const expandEnumCases = (
                 path = path.concat([k]);
             }
             const res = ctx.resolveRefsAndApplies(kase, path);
-            if (res?.type === 'TEnum') {
+            if (res?.type === 'TRef' && res.ref.type === 'Local') {
+                const bound = ctx.getBound(res.ref.sym);
+                if (bound) {
+                    bounded.push({ bound, local: res });
+                } else {
+                    return null;
+                }
+            } else if (res?.type === 'TEnum') {
                 // console.log('ok next');
                 const expanded = expandEnumCases(res, ctx, path);
                 if (!expanded) {
                     return null;
                 }
-                cases.push(...expanded);
+                cases.push(...expanded.cases);
+                bounded.push(...expanded.bounded);
             } else {
                 return null;
             }
         }
     }
     // console.log('resolved', cases, path);
-    return cases;
+    return { cases, bounded };
 };
 
 export const getRef = (t: Type): TRef | null => {

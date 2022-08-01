@@ -1153,6 +1153,9 @@ export const ToJS = {
             case 'TemplateString':
                 return ctx.ToJS.TemplateString(node, ctx);
 
+            case 'TypeAbstraction':
+                return ctx.ToJS.TypeAbstraction(node, ctx);
+
             case 'Enum':
                 return ctx.ToJS.Enum(node, ctx);
 
