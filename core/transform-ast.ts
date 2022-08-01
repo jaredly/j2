@@ -20,6 +20,9 @@ import {
     DecType,
     DecExpr,
     Expression,
+    TypeAbstraction,
+    TBargs,
+    TBArg,
     Lambda,
     LArgs,
     LArg,
@@ -92,8 +95,6 @@ import {
     TArgs,
     TArg,
     TVars,
-    TBargs,
-    TBArg,
     TParens,
     TComma,
     TEnum,
@@ -501,6 +502,14 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TypeAppVbls | [TypeAppVbls | null, Ctx];
     TypeAppVblsPost?: (node: TypeAppVbls, ctx: Ctx) => null | TypeAppVbls;
+    TypeAbstraction?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | TypeAbstraction | [TypeAbstraction | null, Ctx];
+    TypeAbstractionPost?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | TypeAbstraction;
     If?: (node: If, ctx: Ctx) => null | false | If | [If | null, Ctx];
     IfPost?: (node: If, ctx: Ctx) => null | If;
     IfYes?: (
@@ -841,6 +850,14 @@ export type Visitor<Ctx> = {
         node: TypeAlias,
         ctx: Ctx,
     ) => null | TypeToplevel;
+    Expression_TypeAbstraction?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_TypeAbstraction?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | Expression;
     Expression_Lambda?: (
         node: Lambda,
         ctx: Ctx,
@@ -1391,6 +1408,14 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_TypeAppVbls?: (
         node: TypeAppVbls,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_TypeAbstraction?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeAbstraction?: (
+        node: TypeAbstraction,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_If?: (
@@ -2026,6 +2051,219 @@ export const transformDecType = <Ctx>(
     node = updatedNode;
     if (visitor.DecTypePost) {
         const transformed = visitor.DecTypePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformTBArg = <Ctx>(
+    node: TBArg,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TBArg => {
+    if (!node) {
+        throw new Error('No TBArg provided');
+    }
+
+    const transformed = visitor.TBArg ? visitor.TBArg(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$bound = null;
+        const updatedNode$bound$current = node.bound;
+        if (updatedNode$bound$current != null) {
+            const updatedNode$bound$1$ = transformType(
+                updatedNode$bound$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$bound$1$ !== updatedNode$bound$current;
+            updatedNode$bound = updatedNode$bound$1$;
+        }
+
+        let updatedNode$default_ = null;
+        const updatedNode$default_$current = node.default_;
+        if (updatedNode$default_$current != null) {
+            const updatedNode$default_$1$ = transformType(
+                updatedNode$default_$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 ||
+                updatedNode$default_$1$ !== updatedNode$default_$current;
+            updatedNode$default_ = updatedNode$default_$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                bound: updatedNode$bound,
+                default_: updatedNode$default_,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TBArgPost) {
+        const transformed = visitor.TBArgPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformTBargs = <Ctx>(
+    node: TBargs,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TBargs => {
+    if (!node) {
+        throw new Error('No TBargs provided');
+    }
+
+    const transformed = visitor.TBargs ? visitor.TBargs(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformTBArg(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TBargsPost) {
+        const transformed = visitor.TBargsPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformTypeAbstraction = <Ctx>(
+    node: TypeAbstraction,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TypeAbstraction => {
+    if (!node) {
+        throw new Error('No TypeAbstraction provided');
+    }
+
+    const transformed = visitor.TypeAbstraction
+        ? visitor.TypeAbstraction(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$args = transformTBargs(node.args, visitor, ctx);
+        changed1 = changed1 || updatedNode$args !== node.args;
+
+        const updatedNode$inner = transformExpression(node.inner, visitor, ctx);
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                args: updatedNode$args,
+                inner: updatedNode$inner,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TypeAbstractionPost) {
+        const transformed = visitor.TypeAbstractionPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -7110,6 +7348,25 @@ export const transformExpression = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
+        case 'TypeAbstraction': {
+            const transformed = visitor.Expression_TypeAbstraction
+                ? visitor.Expression_TypeAbstraction(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Lambda': {
             const transformed = visitor.Expression_Lambda
                 ? visitor.Expression_Lambda(node, ctx)
@@ -7133,6 +7390,12 @@ export const transformExpression = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
+        case 'TypeAbstraction': {
+            updatedNode = transformTypeAbstraction(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Lambda': {
             updatedNode = transformLambda(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -7149,6 +7412,16 @@ export const transformExpression = <Ctx>(
     }
 
     switch (updatedNode.type) {
+        case 'TypeAbstraction': {
+            const transformed = visitor.ExpressionPost_TypeAbstraction
+                ? visitor.ExpressionPost_TypeAbstraction(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
         case 'Lambda': {
             const transformed = visitor.ExpressionPost_Lambda
                 ? visitor.ExpressionPost_Lambda(updatedNode, ctx)
@@ -7827,158 +8100,6 @@ export const transformTLambda = <Ctx>(
     node = updatedNode;
     if (visitor.TLambdaPost) {
         const transformed = visitor.TLambdaPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformTBArg = <Ctx>(
-    node: TBArg,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): TBArg => {
-    if (!node) {
-        throw new Error('No TBArg provided');
-    }
-
-    const transformed = visitor.TBArg ? visitor.TBArg(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        let updatedNode$bound = null;
-        const updatedNode$bound$current = node.bound;
-        if (updatedNode$bound$current != null) {
-            const updatedNode$bound$1$ = transformType(
-                updatedNode$bound$current,
-                visitor,
-                ctx,
-            );
-            changed1 =
-                changed1 || updatedNode$bound$1$ !== updatedNode$bound$current;
-            updatedNode$bound = updatedNode$bound$1$;
-        }
-
-        let updatedNode$default_ = null;
-        const updatedNode$default_$current = node.default_;
-        if (updatedNode$default_$current != null) {
-            const updatedNode$default_$1$ = transformType(
-                updatedNode$default_$current,
-                visitor,
-                ctx,
-            );
-            changed1 =
-                changed1 ||
-                updatedNode$default_$1$ !== updatedNode$default_$current;
-            updatedNode$default_ = updatedNode$default_$1$;
-        }
-
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                bound: updatedNode$bound,
-                default_: updatedNode$default_,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.TBArgPost) {
-        const transformed = visitor.TBArgPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformTBargs = <Ctx>(
-    node: TBargs,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): TBargs => {
-    if (!node) {
-        throw new Error('No TBargs provided');
-    }
-
-    const transformed = visitor.TBargs ? visitor.TBargs(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        let updatedNode$items = node.items;
-        {
-            let changed2 = false;
-            const arr1 = node.items.map((updatedNode$items$item1) => {
-                const result = transformTBArg(
-                    updatedNode$items$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$items$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$items = arr1;
-                changed1 = true;
-            }
-        }
-
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                items: updatedNode$items,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.TBargsPost) {
-        const transformed = visitor.TBargsPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -12205,6 +12326,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'TypeAbstraction': {
+            const transformed = visitor.AllTaggedTypes_TypeAbstraction
+                ? visitor.AllTaggedTypes_TypeAbstraction(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'If': {
             const transformed = visitor.AllTaggedTypes_If
                 ? visitor.AllTaggedTypes_If(node, ctx)
@@ -13334,6 +13474,12 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'TypeAbstraction': {
+            updatedNode = transformTypeAbstraction(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'If': {
             updatedNode = transformIf(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -14002,6 +14148,16 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'TypeAppVbls': {
             const transformed = visitor.AllTaggedTypesPost_TypeAppVbls
                 ? visitor.AllTaggedTypesPost_TypeAppVbls(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAbstraction': {
+            const transformed = visitor.AllTaggedTypesPost_TypeAbstraction
+                ? visitor.AllTaggedTypesPost_TypeAbstraction(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

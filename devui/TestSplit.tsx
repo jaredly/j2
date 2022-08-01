@@ -25,6 +25,7 @@ import { printToString } from '../core/printer/pp';
 import { NameTrack } from '../core/ir/to-js';
 import generate from '@babel/generator';
 import { typeToString } from './Highlight';
+import { idToString, toId } from '../core/ids';
 
 /*
 
@@ -269,13 +270,24 @@ export const TopEditor = ({
         setText(fmtItem(item.aliases, item.contents.refmt));
     }, [item]);
     const cache = React.useMemo(
-        () => ({} as { [key: string]: Result<FileContents> }),
+        () =>
+            ({} as {
+                [key: string]: {
+                    file: Result<FileContents>;
+                    results: TestValues | null;
+                };
+            }),
         [ctx],
     );
     if (!cache[text]) {
-        cache[text] = processFile(text, ctx, undefined, shared.current.track);
+        const file = processFile(text, ctx, undefined, shared.current.track);
+        const results =
+            file.type === 'Success'
+                ? getTestResults(file, shared.current.terms)
+                : null;
+        cache[text] = { file, results };
     }
-    let file = cache[text];
+    let file = cache[text].file;
     const [open, setOpen] = React.useState(false);
 
     const extraLocs = React.useCallback(
@@ -283,12 +295,13 @@ export const TopEditor = ({
             if (v.type !== 'File') {
                 return [];
             }
-            const file =
-                cache[text]?.type === 'Success'
-                    ? (cache[text] as Success<FileContents>)
-                    : processFileR(v, ctx, undefined, shared.current.track);
-            cache[text] = file;
+            if (cache[text]?.file.type === 'Success') {
+                const { file, results } = cache[text];
+                return testStatuses(file, results!);
+            }
+            const file = processFileR(v, ctx, undefined, shared.current.track);
             const results = getTestResults(file, shared.current.terms);
+            cache[text] = { file, results };
             console.log(file, results);
             // ok, so we have an AST
             return testStatuses(file, results);
@@ -301,9 +314,15 @@ export const TopEditor = ({
                 text={text}
                 onBlur={(text) => {
                     const file =
-                        cache[text] ??
+                        cache[text].file ??
                         processFile(text, ctx, undefined, shared.current.track);
-                    cache[text] = file;
+                    if (!cache[text]) {
+                        const results =
+                            file.type === 'Success'
+                                ? getTestResults(file, shared.current.terms)
+                                : null;
+                        cache[text] = { file, results };
+                    }
                     if (file.type === 'Success') {
                         onChange(file.info);
                     }
@@ -328,9 +347,9 @@ export const TopEditor = ({
                         </Hoverr>
                         {open ? (
                             <div>
-                                {file.info.map((item, i) => (
+                                {file.info.map((info, i) => (
                                     <div key={i}>
-                                        {item.contents.irtops?.map(
+                                        {info.contents.irtops?.map(
                                             (item, j) => (
                                                 <div key={j}>
                                                     {/* <strong>
@@ -354,6 +373,8 @@ export const TopEditor = ({
                                                         style={{
                                                             margin: 0,
                                                             padding: 0,
+                                                            fontSize: '0.8em',
+                                                            color: '#ccc',
                                                         }}
                                                     >
                                                         {
@@ -366,6 +387,32 @@ export const TopEditor = ({
                                                                     : item.js,
                                                             ).code
                                                         }
+                                                    </pre>
+                                                    <pre
+                                                        style={{
+                                                            margin: 0,
+                                                            padding: 4,
+                                                            border: '1px solid #550000',
+                                                        }}
+                                                    >
+                                                        {showValue(
+                                                            item.id
+                                                                ? shared.current
+                                                                      .terms[
+                                                                      shared
+                                                                          .current
+                                                                          .track
+                                                                          .names[
+                                                                          idToString(
+                                                                              item.id!,
+                                                                          )
+                                                                      ]
+                                                                  ]
+                                                                : cache[text]
+                                                                      ?.results
+                                                                      ?.info
+                                                                      .exprs[i],
+                                                        )}
                                                     </pre>
                                                 </div>
                                             ),
@@ -417,4 +464,11 @@ export const BlurInput = ({
             }}
         />
     );
+};
+
+const showValue = (v: any) => {
+    if (typeof v === 'function') {
+        return `Function ${v.name}: ${v.toString()}`;
+    }
+    return JSON.stringify(v);
 };

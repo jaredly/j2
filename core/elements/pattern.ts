@@ -361,7 +361,10 @@ export const ToTast = {
     PBlank(pat: p.PBlank, ctx: TCtx): t.Pattern {
         return { type: 'PBlank', loc: pat.loc };
     },
-    PName({ type, name, hash, loc }: p.PName, ctx: TCtx): PName {
+    PName({ type, name, hash, loc }: p.PName, ctx: TCtx): PName | PBlank {
+        if (name === '_' && !hash) {
+            return { type: 'PBlank', loc };
+        }
         const sym = hash ? { name, id: +hash.slice(2, -1) } : ctx.sym(name);
         // locals.push({ sym, type: expected ?? ctx.newTypeVar() });
         return {

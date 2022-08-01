@@ -29,7 +29,17 @@ export type Colorable =
     | 'Error'
     | 'Success'
     | 'LetName'
-    | 'Hash';
+    | 'Hash'
+    | 'Color0'
+    | 'Color1'
+    | 'Color2'
+    | 'Color3'
+    | 'Color4'
+    | 'Color5'
+    | 'Color6'
+    | 'Color7'
+    | 'Color8'
+    | 'Color9';
 
 export const styles: {
     [key in Colorable]?: any; // React.CSSProperties;
@@ -54,12 +64,13 @@ export const colors: {
     [key in Colorable]?: string;
 } = {
     Hash: 'rgba(200,200,200, 0.3)',
-    LetName: '#00f000',
-    TagDecl: '#33ff4e',
-    TRef: 'green',
-    PName: 'green',
+    LetName: 'teal', // '#00c000',
+    TRef: 'teal', // '#00c000',
+    PName: 'teal', // '#00c000',
     String: '#afa',
     Enum: '#ff5c5c',
+    TagDecl: '#ff5c5c',
+    // '#33ff4e',
     PEnum: '#ff5c5c',
     TemplateString: '#afa',
     TemplatePair: '#afa',
@@ -73,9 +84,13 @@ export const colors: {
     TemplateWrap: 'yellow',
     Aliases: '#777',
     AliasItem: '#555',
-    // Error: 'red',
-    // Success: 'green',
 };
+
+// https://github.com/d3/d3-scale-chromatic/blob/main/src/categorical/Dark2.js
+const src = '1b9e77d95f027570b3e7298a66a61ee6ab02a6761d666666';
+for (let i = 0; i < src.length; i += 6) {
+    colors[`Color${(i / 6) | 0}` as Colorable] = `#${src.slice(i, i + 6)}`;
+}
 
 const n = (n: number): Loc['start'] => ({ ...noloc.start, offset: n });
 
@@ -279,6 +294,7 @@ const advance = (
         line,
     };
 };
+
 highlightVisitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
     ctx.push({ loc: node.loc, type: 'ToplevelLet' });
     const { start, end } = node.loc;
@@ -294,6 +310,24 @@ highlightVisitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
     });
     return null;
 };
+
+highlightVisitor.TypeAlias = (node: p.TypeAlias, ctx) => {
+    ctx.push({ loc: node.loc, type: 'TypeAlias' });
+    const { start, end } = node.loc;
+    node.items.forEach((item, i) => {
+        const off = i === 0 ? 5 : 4;
+        ctx.push({
+            loc: {
+                ...node.loc,
+                start: advance(start, off),
+                end: advance(start, off + item.name.length),
+            },
+            type: 'LetName',
+        });
+    });
+    return null;
+};
+
 highlightVisitor.Identifier = (node: p.Identifier, ctx) => {
     ctx.push({ loc: node.loc, type: 'Identifier' });
     if (node.hash != null) {
@@ -306,6 +340,17 @@ highlightVisitor.Identifier = (node: p.Identifier, ctx) => {
             },
             type: 'Hash',
         });
+        const num = +node.hash.slice(2, -1);
+        if (!isNaN(num) && num + '' === node.hash.slice(2, -1)) {
+            ctx.push({
+                loc: {
+                    ...node.loc,
+                    start,
+                    end: advance(start, node.text.length),
+                },
+                type: `Color${num % 10}` as Colorable,
+            });
+        }
     }
     return null;
 };
@@ -321,6 +366,17 @@ highlightVisitor.PName = (node: p.PName, ctx) => {
             },
             type: 'Hash',
         });
+        const num = +node.hash.slice(2, -1);
+        if (!isNaN(num) && num + '' === node.hash.slice(2, -1)) {
+            ctx.push({
+                loc: {
+                    ...node.loc,
+                    start,
+                    end: advance(start, node.name.length),
+                },
+                type: `Color${num % 10}` as Colorable,
+            });
+        }
     }
     return null;
 };

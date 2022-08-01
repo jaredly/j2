@@ -7,7 +7,7 @@ import {
 } from './elements/constants';
 import { DecoratedExpression } from './elements/decorators';
 import { Enum, IEnum } from './elements/enum-exprs';
-import { TypeApplication } from './elements/generics';
+import { TypeAbstraction, TypeApplication } from './elements/generics';
 import { Type } from './elements/type';
 import { Id, idToString } from './ids';
 import { IRecord, Record } from './elements/record-exprs';
@@ -32,7 +32,7 @@ export type {
     DecoratorArg,
     DecoratorDecl,
 } from './elements/decorators';
-export type { TypeApplication, TypeVariables } from './elements/generics';
+export type { TypeAbstraction, TypeApplication } from './elements/generics';
 export type { TApply, TVar, TVars } from './elements/type-vbls';
 export type {
     TAdd,
@@ -186,6 +186,7 @@ export type Expression =
     | Switch
     | Boolean
     | Await
+    | TypeAbstraction
     | TemplateString
     | TypeApplication
     | DecoratedExpression;

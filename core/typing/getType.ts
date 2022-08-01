@@ -111,6 +111,18 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 result: res,
             };
         }
+        case 'TypeAbstraction': {
+            let innerCtx = ctx.withLocalTypes(expr.items);
+            const inner = getType(expr.body, innerCtx);
+            return inner
+                ? {
+                      type: 'TVars',
+                      args: expr.items,
+                      inner,
+                      loc: expr.loc,
+                  }
+                : null;
+        }
         case 'TypeApplication': {
             const target = getType(expr.target, ctx);
             if (target?.type === 'TVars') {

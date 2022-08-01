@@ -21,8 +21,9 @@ and/or a nice error coalescing example.
 	Or at least, several things don't work. Why??
 - [x] WOW tail recusion is broken? or something???
 - [x] highlight hashes to reduce noise
-- [ ] colorize vbls by sym!
-- [ ] SHOW JS RESULT! Gotta have it.
+- [x] colorize vbls by sym!
+- [x] SHOW JS RESULT! Gotta have it.
+- [ ] ok folks I need to allow generic functions. for realsies.
 
 - [ ] it would be quite nice if I could infer the type variables for `withHandler`. Seems like it shouldn't be too hard, right?
 

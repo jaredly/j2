@@ -143,7 +143,8 @@ export const ToAst = {
         if (
             inner.type === 'BinOp' ||
             inner.type === 'WithUnary' ||
-            inner.type === 'Lambda'
+            inner.type === 'Lambda' ||
+            inner.type === 'TypeAbstraction'
         ) {
             inner = {
                 type: 'ParenedExpression',

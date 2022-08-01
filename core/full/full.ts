@@ -48,6 +48,7 @@ export type IrTop = {
     type: t.Type | null;
     ir: t.IBlock;
     js: b.BlockStatement;
+    id?: t.Id;
     name?: string;
 };
 
@@ -93,6 +94,7 @@ export const toJs = (
     ictx: ReturnType<typeof iCtx>,
     jctx: ReturnType<typeof jCtx>,
     ctx: FullContext,
+    id?: t.Id,
     name?: string,
 ): IrTop => {
     // Here's where we simplify! and then re-verify.
@@ -107,7 +109,7 @@ export const toJs = (
         ictx,
     );
     const js = jctx.ToJS.Block(ir, jctx);
-    return { ir, js, type: ctx.getType(t), name };
+    return { id, ir, js, type: ctx.getType(t), name };
 };
 
 export type ExecutionInfo = {
@@ -385,6 +387,7 @@ export const processToplevel = (
                           ictx,
                           jctx,
                           ctx,
+                          toId((top as t.ToplevelLet).hash!, i),
                           jctx.addGlobalName(
                               toId((top as t.ToplevelLet).hash!, i),
                               el.name,

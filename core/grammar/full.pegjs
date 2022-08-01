@@ -48,7 +48,7 @@ Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
 AliasItem = name:$AliasName hash:$HashRef
 AliasName = $NamespacedIdText / $binop
 
-Expression = Lambda / BinOp
+Expression = TypeAbstraction / Lambda / BinOp
 
 Identifier = text:$IdText hash:IdHash?
 
@@ -147,6 +147,8 @@ Star = pseudo:"*"
 
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
 TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
+
+TypeAbstraction = "<" _ args:TBargs _ ">" _ inner:Expression
 
 
 // ifs.ts

@@ -53,6 +53,7 @@ export type Ctx = {
         [sym: number]: { bound: Type | null; name: string };
     }): Ctx;
     withLocals: (locals: { sym: Sym; type: Type }[], better?: boolean) => Ctx;
+    withLocalTypes: (locals: { sym: Sym; bound: Type | null }[]) => Ctx;
     typeForRecur: (idx: number) => Type | null;
 };
 

@@ -14,6 +14,8 @@ import { makeApply } from './apply';
 export const grammar = `
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
 TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
+
+TypeAbstraction = "<" _ args:TBargs _ ">" _ inner:Expression
 `;
 
 // hello<T>(xyz)
@@ -25,9 +27,9 @@ export type TypeApplication = {
 };
 
 // <T> hello
-export type TypeVariables = {
-    type: 'TypeVariables';
-    items: Array<{ sym: t.Sym; bound: t.Type }>;
+export type TypeAbstraction = {
+    type: 'TypeAbstraction';
+    items: Array<t.TVar>;
     body: t.Expression;
     loc: t.Loc;
 };
@@ -52,6 +54,19 @@ export const ToTast = {
             loc: { ...suffix.loc, start: target.loc.start },
         };
     },
+    TypeAbstraction(
+        { args, loc, inner }: p.TypeAbstraction,
+        ctx: TCtx,
+    ): TypeAbstraction {
+        const targs = args.items.map((arg) => ctx.ToTast.TBArg(arg, ctx));
+        let innerCtx = ctx.withLocalTypes(targs);
+        return {
+            type: 'TypeAbstraction',
+            items: targs,
+            body: innerCtx.ToTast.Expression(inner, innerCtx),
+            loc,
+        };
+    },
 };
 
 export const ToAst = {
@@ -73,6 +88,21 @@ export const ToAst = {
             loc,
         );
     },
+    TypeAbstraction(
+        { items, body, loc }: TypeAbstraction,
+        ctx: TACtx,
+    ): p.TypeAbstraction {
+        return {
+            type: 'TypeAbstraction',
+            args: {
+                type: 'TBargs',
+                items: items.map((item) => ctx.ToAst.TBArg(item, ctx)),
+                loc,
+            },
+            inner: ctx.ToAst.Expression(body, ctx),
+            loc,
+        };
+    },
 };
 
 export const ToPP = {
@@ -82,6 +112,20 @@ export const ToPP = {
             suffix.loc,
             '<',
             '>',
+        );
+    },
+    TypeAbstraction({ args, inner, loc }: p.TypeAbstraction, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                pp.args(
+                    args.items.map((arg) => ctx.ToPP.TBArg(arg, ctx)),
+                    args.loc,
+                    '<',
+                    '>',
+                ),
+                ctx.ToPP.Expression(inner, ctx),
+            ],
+            loc,
         );
     },
 };

@@ -19,7 +19,7 @@ Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
 AliasItem = name:$AliasName hash:$HashRef
 AliasName = $NamespacedIdText / $binop
 
-Expression = Lambda / BinOp
+Expression = TypeAbstraction / Lambda / BinOp
 
 Identifier = text:$IdText hash:IdHash?
 
@@ -647,6 +647,12 @@ export const ToIR = {
         // on the other hand, maybe I can bake types at this point?
         // like, monomorphizing is going to happen before this.
         return ctx.ToIR.Expression(target, ctx);
+    },
+    TypeAbstraction(
+        { items, body }: t.TypeAbstraction,
+        ctx: ICtx,
+    ): t.IExpression {
+        return ctx.ToIR.Expression(body, ctx);
     },
     DecoratedExpression(
         { loc, expr }: t.DecoratedExpression,
