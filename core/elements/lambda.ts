@@ -197,7 +197,7 @@ export const ToIR = {
             },
             null,
         );
-        if (hasAwaits && false) {
+        if (hasAwaits) {
             return {
                 type: 'Lambda',
                 args: [],
@@ -278,7 +278,9 @@ export const ToJS = {
                     ctx.ToJS.Pattern(arg.pat, ctx) ?? b.identifier(`__${i}`),
             ) ?? [],
             body.type === 'Block'
-                ? ctx.ToJS.Block(body, ctx)
+                ? body.stmts.length === 1 && body.stmts[0].type === 'Return'
+                    ? ctx.ToJS.IExpression(body.stmts[0].expr, ctx)
+                    : ctx.ToJS.Block(body, ctx)
                 : ctx.ToJS.IExpression(body, ctx),
         );
     },

@@ -17,9 +17,12 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
-- [ ] on first load of the TestSplit, nothing works!
+- [x] on first load of the TestSplit, nothing works!
 	Or at least, several things don't work. Why??
-- [ ] WOW tail recusion is broken? or something???
+- [x] WOW tail recusion is broken? or something???
+- [x] highlight hashes to reduce noise
+- [ ] colorize vbls by sym!
+- [ ] SHOW JS RESULT! Gotta have it.
 
 - [ ] it would be quite nice if I could infer the type variables for `withHandler`. Seems like it shouldn't be too hard, right?
 
