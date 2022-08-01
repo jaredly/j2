@@ -204,6 +204,7 @@ export const Editor = ({
                 whiteSpace: 'pre-wrap',
                 minHeight: '1.5em',
                 minWidth: 50,
+                flexShrink: 0,
             }}
             onBlur={() => {
                 setEditing(false);

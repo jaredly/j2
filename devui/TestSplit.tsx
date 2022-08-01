@@ -242,6 +242,7 @@ export const TestSplit = ({
                         display: 'flex',
                         fontFamily: '$mono',
                         fontWeight: '$light',
+                        overflow: 'auto',
                     }}
                 >
                     {editors}

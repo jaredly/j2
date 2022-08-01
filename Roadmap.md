@@ -17,12 +17,14 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
+- [ ] it would be quite nice if I could infer the type variables for `withHandler`. Seems like it shouldn't be too hard, right?
+
 ### Moving forward with effect crushing
 
 - [ ] wow gotta make generic functions folks
 - [x] hoist awaits to a block-level, thanks!
 	- [x] make sure nested awaits still work
-- [ ] and then withHandler! yes please.
+- [x] and then withHandler! yes please.
 	- [x] figure out the type
 	- [x] make a third arg to Task for 'inner effects'
 	- [x] get switch case type refinement happening
@@ -45,7 +47,7 @@ NOW YES
 - [ ] I want things to be /much/ more introspectable, now that I'm actually doing complex computation.
 	- breakpoints? could be nice to be able to drop in a `debuggerfy()` anywhere. with a decorator? sure why not.
 	- also `log`? yeah, love it.
-- [ ] response time is suffering in the large editor. I think it's time to break up into separate "editors"?
+- [x] response time is suffering in the large editor. I think it's time to break up into separate "editors"?
 	- definitely, one per toplevel
 	- also, what about: @break and @log / @trace
 
