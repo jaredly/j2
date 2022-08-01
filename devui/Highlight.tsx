@@ -87,7 +87,7 @@ export const colors: {
 };
 
 // https://github.com/d3/d3-scale-chromatic/blob/main/src/categorical/Dark2.js
-const src = '1b9e77d95f027570b3e7298a66a61ee6ab02a6761d666666';
+const src = '1b9e77d95f027570b3e7298a66a61ee6ab02a6761d773366443388';
 for (let i = 0; i < src.length; i += 6) {
     colors[`Color${(i / 6) | 0}` as Colorable] = `#${src.slice(i, i + 6)}`;
 }
@@ -354,6 +354,61 @@ highlightVisitor.Identifier = (node: p.Identifier, ctx) => {
     }
     return null;
 };
+
+highlightVisitor.TRef = (node: p.TRef, ctx) => {
+    ctx.push({ loc: node.loc, type: 'Identifier' });
+    if (node.hash != null) {
+        const { start, end } = node.loc;
+        ctx.push({
+            loc: {
+                ...node.loc,
+                start: advance(start, node.text.length),
+                end,
+            },
+            type: 'Hash',
+        });
+        const num = +node.hash.slice(2, -1);
+        if (!isNaN(num) && num + '' === node.hash.slice(2, -1)) {
+            ctx.push({
+                loc: {
+                    ...node.loc,
+                    start,
+                    end: advance(start, node.text.length),
+                },
+                type: `Color${num % 10}` as Colorable,
+            });
+        }
+    }
+    return null;
+};
+
+highlightVisitor.TBArg = (node: p.TBArg, ctx) => {
+    ctx.push({ loc: node.loc, type: 'Identifier' });
+    if (node.hash != null) {
+        const { start, end } = node.loc;
+        ctx.push({
+            loc: {
+                ...node.loc,
+                start: advance(start, node.label.length),
+                end: advance(start, node.label.length + node.hash.length),
+            },
+            type: 'Hash',
+        });
+        const num = +node.hash.slice(2, -1);
+        if (!isNaN(num) && num + '' === node.hash.slice(2, -1)) {
+            ctx.push({
+                loc: {
+                    ...node.loc,
+                    start,
+                    end: advance(start, node.label.length),
+                },
+                type: `Color${num % 10}` as Colorable,
+            });
+        }
+    }
+    return null;
+};
+
 highlightVisitor.PName = (node: p.PName, ctx) => {
     ctx.push({ loc: node.loc, type: 'Identifier' });
     if (node.hash != null) {

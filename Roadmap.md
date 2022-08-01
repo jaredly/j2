@@ -24,8 +24,14 @@ and/or a nice error coalescing example.
 - [x] colorize vbls by sym!
 - [x] SHOW JS RESULT! Gotta have it.
 - [x] ok folks I need to allow generic functions. for realsies.
-- [ ] HMMM so enum type bounds, means that `expandEnumCases` needs to be able to indicate that we
+- [x] HMMM so enum type bounds, means that `expandEnumCases` needs to be able to indicate that we
 	have unresolved, but potentially fine parts of the deal.
+- [ ] preserve comments in my TestSplit dealio
+
+VERIFY TASK + GENERIC
+- [ ] need to make it impossible to apply a generic that would result in an invalid enum type.
+	- so ... when applying the arguments, calculate the resulting type, and see if anything comes up bad?
+		sounds reasonable.
 
 - [ ] it would be quite nice if I could infer the type variables for `withHandler`. Seems like it shouldn't be too hard, right?
 
