@@ -401,34 +401,34 @@ export const App = () => {
                 }}
             >
                 <Text>Fixtures</Text>
-                <Button
-                    style={{ flexShrink: 0 }}
-                    size="xs"
-                    onClick={() => {
-                        const newFixtures: Files['fixtures'] = {
-                            ...files.fixtures,
-                        };
-                        let num = 0;
-                        while (true) {
-                            const name = `test${num}.jd`;
-                            if (newFixtures[name] == null) {
-                                newFixtures[name] = {
-                                    name,
-                                    file: { builtins: [], fixtures: [] },
-                                };
-                                break;
-                            }
-                            num++;
-                        }
-                        setFiles({ ...files, fixtures: newFixtures });
-                    }}
-                >
-                    New Fixtuer
-                </Button>
                 <details
                     open={!!files.fixtures[hashName]}
                     style={{ backgroundColor: 'transparent' }}
                 >
+                    <Button
+                        style={{ flexShrink: 0 }}
+                        size="xs"
+                        onClick={() => {
+                            const newFixtures: Files['fixtures'] = {
+                                ...files.fixtures,
+                            };
+                            let num = 0;
+                            while (true) {
+                                const name = `test${num}.jd`;
+                                if (newFixtures[name] == null) {
+                                    newFixtures[name] = {
+                                        name,
+                                        file: { builtins: [], fixtures: [] },
+                                    };
+                                    break;
+                                }
+                                num++;
+                            }
+                            setFiles({ ...files, fixtures: newFixtures });
+                        }}
+                    >
+                        New Fixture
+                    </Button>
                     {Object.keys(files.fixtures)
                         .sort()
                         .map((fixture) => (
@@ -449,41 +449,41 @@ export const App = () => {
                 </details>
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 <Text>Tests</Text>
-                <Button
-                    style={{ flexShrink: 0 }}
-                    size="xs"
-                    onClick={() => {
-                        const newFiles = { ...files.test };
-                        let num = 0;
-                        while (true) {
-                            const name = `test${num}.jd`;
-                            if (newFiles[name] == null) {
-                                newFiles[name] = {
-                                    file: emptyFileResult,
-                                    values: {
-                                        info: {
-                                            terms: {},
-                                            exprs: {},
-                                            errors: {},
-                                        },
-                                        testResults: [],
-                                        failed: false,
-                                        debugs: {},
-                                    },
-                                };
-                                break;
-                            }
-                            num++;
-                        }
-                        setFiles({ ...files, test: newFiles });
-                    }}
-                >
-                    New Test
-                </Button>
                 <details
                     open={!!files.test[hashName?.slice('test:'.length) ?? '']}
                     style={{ backgroundColor: 'transparent' }}
                 >
+                    <Button
+                        style={{ flexShrink: 0 }}
+                        size="xs"
+                        onClick={() => {
+                            const newFiles = { ...files.test };
+                            let num = 0;
+                            while (true) {
+                                const name = `test${num}.jd`;
+                                if (newFiles[name] == null) {
+                                    newFiles[name] = {
+                                        file: emptyFileResult,
+                                        values: {
+                                            info: {
+                                                terms: {},
+                                                exprs: {},
+                                                errors: {},
+                                            },
+                                            testResults: [],
+                                            failed: false,
+                                            debugs: {},
+                                        },
+                                    };
+                                    break;
+                                }
+                                num++;
+                            }
+                            setFiles({ ...files, test: newFiles });
+                        }}
+                    >
+                        New Test
+                    </Button>
                     {Object.keys(files.test)
                         .sort()
                         .map((name) => (

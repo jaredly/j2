@@ -15,22 +15,22 @@ let alwaysRead: <Inner#[7]: task>(string, Task<[ Read | Inner#[7] ], string>) =>
     string,
 > = <Inner#[8]: task>(readResponse#[0]: string, task#[1]: Task<[ Read | Inner#[8] ], string>) => {
     switch task#[1] {
-      `Return(result#[2]) => `Return(result#[2])
-      `Read(_, k#[4]) => alwaysRead#[r0]<Inner#[8]>(readResponse#[0], k#[4](readResponse#[0]))
-      otherwise#[5] => withHandler<[ Inner#[8] ], string, [ Read ]>(
-        otherwise#[5],
-        (task#[6]) => alwaysRead#[r0]<Inner#[8]>(readResponse#[0], task#[6]),
-    )
+        `Return(result#[2]) => `Return(result#[2]);
+        `Read(_, k#[4]) => alwaysRead#[r0]<Inner#[8]>(readResponse#[0], k#[4](readResponse#[0]));
+        otherwise#[5] => withHandler<[ Inner#[8] ], string, [ Read ]>(
+            otherwise#[5],
+            (task#[6]) => alwaysRead#[r0]<Inner#[8]>(readResponse#[0], task#[6]),
+        );
     };
 }
-alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] Print#[h54ed15b99ee8e24a9deca9b4c3d180679bfcf096] alwaysRead#[h58e945fdbe98ae76178caab223ddb108d8afd23f] testIO#[h69ce4c33e9e9ba9af7129accb6794008258bb41c]
-testIO<string>("what", alwaysRead<[ Print ]>("who", helloFolks#[:unresolved:]())) == "done who"
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] Print#[h54ed15b99ee8e24a9deca9b4c3d180679bfcf096] alwaysRead#[h58e945fdbe98ae76178caab223ddb108d8afd23f] helloFolks#[h907740149dc7a326fac4ece47072406dde331098] testIO#[h69ce4c33e9e9ba9af7129accb6794008258bb41c]
+testIO<string>("what", alwaysRead<[ Print ]>("who", helloFolks())) == "done who"
 let collect: (string, Task<[ Print ], ()>) => string = (collected#[0], task#[1]) => switch task#[1] {
-  `Return() => collected#[0]
-  `Print(value#[2], k#[3]) => collect#[r0]("${collected#[0]}\n${value#[2]}", k#[3](()))
+    `Return() => collected#[0];
+    `Print(value#[2], k#[3]) => collect#[r0]("${collected#[0]}\n${value#[2]}", k#[3](()));
 }
 let inner = () => {
-    print(alwaysRead<Print>("who", helloFolks#[:unresolved:]())!)!;
+    print(alwaysRead<Print>("who", helloFolks())!)!;
 }
-alias collect#[hce5100d4828e88b73d486cd07381c43e7817954e]
-collect("Initial", inner#[:unresolved:]()) == "Initial\nHello folks\nGot who!\ndone who"
+alias collect#[hce5100d4828e88b73d486cd07381c43e7817954e] inner#[hf5e5c9d20e6576d78e1b24eb4d2c35863385baec]
+collect("Initial", inner()) == "Initial\nHello folks\nGot who!\ndone who"

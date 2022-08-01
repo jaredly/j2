@@ -1,0 +1,23 @@
+let what = 10
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+type Read = [ `Read((), string) ]
+type Write = [ `Write(string, ()) ]
+let print = (x#[0]: string) => `Write(x#[0], (()) => `Return())
+let read = `Read((), (v#[0]: string) => `Return(v#[0]))
+alias Read#[h39d4a8221a80e1486be57f401a27a7eb6b0afc3c] Task#[h67d00eba961cd5135110775d8654598dc22e7274] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe] withHandler#[h8c01e15c5414bbe2883805e74dc148e8b9811f04]
+let alwaysRead: <Inner#[7]: task, R#[8]>(string, Task<[ Read | Inner#[7] ], R#[8]>) => Task<
+    [ Inner#[7] ],
+    R#[8],
+> = <Inner#[8]: task, R#[9]>(readResponse#[0]: string, task#[1]: Task<[ Read | Inner#[8] ], R#[9]>) => {
+    switch task#[1] {
+        `Return(result#[2]) => `Return(result#[2]);
+        `Read(_, k#[4]) => alwaysRead#[r0]<Inner#[8], R#[9]>(
+            readResponse#[0],
+            k#[4](readResponse#[0]),
+        );
+        otherwise#[5] => withHandler<[ Inner#[8] ], R#[9], [ Read ]>(
+            otherwise#[5],
+            (task#[6]) => alwaysRead#[r0]<Inner#[8], R#[9]>(readResponse#[0], task#[6]),
+        );
+    };
+}

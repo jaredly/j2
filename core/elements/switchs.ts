@@ -114,25 +114,27 @@ export const ToPP = {
                     [
                         pp.text('switch ', tast.loc),
                         ctx.ToPP.Expression(tast.target, ctx),
-                        pp.text(' {', tast.loc),
+                        pp.text(' ', tast.loc),
                     ],
                     tast.loc,
                 ),
-                ...tast.cases.map((c) => {
-                    return pp.items(
-                        [
-                            pp.text('  ', c.loc),
-                            ctx.ToPP.Pattern(c.pat, ctx),
-                            pp.text(' => ', c.loc),
-                            ctx.ToPP.Expression(c.expr, ctx),
-                        ],
-                        c.loc,
-                    );
-                }),
-                pp.text('}', tast.loc),
+                pp.block(
+                    tast.cases.map((c) => {
+                        return pp.items(
+                            [
+                                ctx.ToPP.Pattern(c.pat, ctx),
+                                pp.text(' => ', c.loc),
+                                ctx.ToPP.Expression(c.expr, ctx),
+                            ],
+                            c.loc,
+                        );
+                    }),
+                    tast.loc,
+                ),
+                // pp.text('}', tast.loc),
             ],
             tast.loc,
-            'always',
+            'never',
         );
     },
 };

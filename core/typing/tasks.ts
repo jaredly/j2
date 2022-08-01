@@ -366,7 +366,7 @@ export type TaskArgs = {
 };
 
 export const makeTaskType = (
-    effects: TaskEffect[],
+    effects: (EnumCase | Type)[],
     result: Type,
     ctx: Ctx,
 ): Type => {
@@ -381,36 +381,7 @@ export const makeTaskType = (
             {
                 type: 'TEnum',
                 open: false,
-                cases: effects.map(
-                    ({ input, output, tag }): EnumCase | Type => ({
-                        type: 'EnumCase',
-                        decorators: [],
-                        loc: noloc,
-                        tag,
-                        payload: {
-                            type: 'TRecord',
-                            spreads: [],
-                            open: false,
-                            loc: noloc,
-                            items: [
-                                {
-                                    type: 'TRecordKeyValue',
-                                    key: '0',
-                                    value: input,
-                                    default_: null,
-                                    loc: noloc,
-                                },
-                                {
-                                    type: 'TRecordKeyValue',
-                                    key: '1',
-                                    value: output,
-                                    default_: null,
-                                    loc: noloc,
-                                },
-                            ],
-                        },
-                    }),
-                ),
+                cases: effects,
                 loc: noloc,
             },
             result,
@@ -419,8 +390,11 @@ export const makeTaskType = (
     };
 };
 
-export const collectEffects = (t: Expression, ctx: Ctx): TaskEffect[] => {
-    const collected: TaskEffect[] = [];
+export const collectEffects = (
+    t: Expression,
+    ctx: Ctx,
+): (EnumCase | Type)[] => {
+    const collected: (EnumCase | Type)[] = [];
     transformExpression(
         t,
         {
@@ -435,18 +409,11 @@ export const collectEffects = (t: Expression, ctx: Ctx): TaskEffect[] => {
                 const asTask = inferTaskType(res, ctx);
                 if (asTask) {
                     const [effects, result] = asTask.args;
-                    collected.push(
-                        ...(effects as TEnum).cases.map((kase) => {
-                            const [{ value: input }, { value: output }] = (
-                                (kase as EnumCase).payload! as TRecord
-                            ).items;
-                            return {
-                                tag: (kase as EnumCase).tag,
-                                input,
-                                output,
-                            };
-                        }),
-                    );
+                    if (effects.type === 'TEnum') {
+                        collected.push(...effects.cases);
+                    } else {
+                        collected.push(effects);
+                    }
                 }
                 return null;
             },
