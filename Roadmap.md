@@ -17,6 +17,10 @@ and/or a nice error coalescing example.
 
 ## Next little minute
 
+- [ ] on first load of the TestSplit, nothing works!
+	Or at least, several things don't work. Why??
+- [ ] WOW tail recusion is broken? or something???
+
 - [ ] it would be quite nice if I could infer the type variables for `withHandler`. Seems like it shouldn't be too hard, right?
 
 ### Moving forward with effect crushing
