@@ -25,7 +25,7 @@ export function annotationVisitor(
             ];
         },
         TypeAbstraction(node, ctx) {
-            return [null, ctx.withLocalTypes(node.items)];
+            return [null, ctx.withLocalTypes(node.items) as FullContext];
         },
         Lambda(node, ctx) {
             const locals: Locals = [];

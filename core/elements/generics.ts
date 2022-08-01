@@ -8,6 +8,7 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
+import { Ctx as TMCtx } from '../typing/typeMatches';
 import { noloc } from '../consts';
 import { makeApply } from './apply';
 
@@ -74,6 +75,24 @@ export const ToTast = {
             loc,
         };
     },
+};
+
+export const matchesBound = (
+    t: t.Type,
+    bound: t.Type | null,
+    ctx: TMCtx,
+    path?: string[],
+) => {
+    if (!bound) {
+        return true;
+    }
+    if (t.type === 'TRef' && t.ref.type === 'Local') {
+        const argbound = ctx.getBound(t.ref.sym);
+        if (argbound && typeMatches(argbound, bound, ctx, path)) {
+            return true;
+        }
+    }
+    return typeMatches(t, bound, ctx, path);
 };
 
 export const ToAst = {
@@ -171,12 +190,12 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         // Hmm ok what about,
         let changed = false;
         const args = node.args.map((arg, i) => {
-            const targ = targs[i];
+            const targ: t.TVar = targs[i];
             if (!targ) {
                 changed = true;
                 return tdecorate(arg, 'extraArg', { hit, ctx });
             }
-            if (targ.bound && !typeMatches(arg, targ.bound, ctx)) {
+            if (targ.bound && !matchesBound(arg, targ.bound, ctx)) {
                 changed = true;
                 return tdecorate(arg, 'argWrongType', { hit, ctx }, [
                     {
@@ -233,7 +252,8 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                 return tdecorate(arg, 'extraArg', { hit, ctx });
             }
             const { bound } = targs[i];
-            if (bound && !typeMatches(arg, bound, ctx)) {
+
+            if (bound && !matchesBound(arg, bound, ctx)) {
                 changed = true;
                 return tdecorate(arg, 'argWrongType', { hit, ctx }, [
                     {

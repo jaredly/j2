@@ -1,5 +1,6 @@
 import { tref } from '../consts';
 import { unifiedTypes } from '../elements/apply';
+import { matchesBound } from '../elements/generics';
 import { getLocals, Locals, typeForPattern } from '../elements/pattern';
 import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
 import { transformType } from '../transform-tast';
@@ -34,7 +35,7 @@ export const applyType = (
             failed = true;
         }
         symbols[targ.sym.id] = arg!;
-        if (targ.bound && !typeMatches(arg!, targ.bound, ctx, path)) {
+        if (targ.bound && !matchesBound(arg!, targ.bound, ctx, path)) {
             failed = true;
         }
     });
