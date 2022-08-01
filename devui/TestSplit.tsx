@@ -131,28 +131,46 @@ export const TestSplit = ({
     // as long as I'm not re-processing absolutely everything all the time.
 
     let ctx = builtinContext;
-    const editors = items.map((item, i) => {
-        const myctx = ctx;
-        ctx = ctx.withToplevel(item.contents.top) as FullContext;
-        const text = fmtItem(item.aliases, item.contents.refmt);
-        return (
+    const editors = items
+        .map((item, i) => {
+            const myctx = ctx;
+            ctx = ctx.withToplevel(item.contents.top) as FullContext;
+            const text = fmtItem(item.aliases, item.contents.refmt);
+            return (
+                <Editor
+                    key={i}
+                    text={text}
+                    onBlur={(text) => {}}
+                    onChange={(text) => {}}
+                    extraLocs={(v) => {
+                        if (v.type !== 'File') {
+                            return [];
+                        }
+                        const file = processFileR(v, myctx);
+                        const results = getTestResults(file);
+                        // ok, so we have an AST
+                        return testStatuses(file, results);
+                    }}
+                />
+            );
+        })
+        .concat([
             <Editor
-                key={i}
-                text={text}
+                key={'last'}
+                text={'// add new item'}
                 onBlur={(text) => {}}
                 onChange={(text) => {}}
                 extraLocs={(v) => {
                     if (v.type !== 'File') {
                         return [];
                     }
-                    const file = processFileR(v, myctx);
+                    const file = processFileR(v, ctx);
                     const results = getTestResults(file);
                     // ok, so we have an AST
                     return testStatuses(file, results);
                 }}
-            />
-        );
-    });
+            />,
+        ]);
 
     return (
         <div

@@ -567,8 +567,11 @@ export const App = () => {
                     key={hashName}
                     test={files.test[hashName.slice('test:'.length)]}
                     changeName={(name) => {
-                        const newTest = { ...files.test };
                         const old = hashName.slice('test:'.length);
+                        fetch(
+                            `/rename/elements/test/${old}:elements/test/${name}`,
+                        );
+                        const newTest = { ...files.test };
                         newTest[name] = newTest[old];
                         delete newTest[old];
                         setFiles({ ...files, test: newTest });
