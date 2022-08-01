@@ -5,7 +5,7 @@ import { transformExpression } from '../transform-tast';
 import { Loc, TApply, TEnum, Type, EnumCase, Expression } from '../typed-ast';
 import { initVerify, localTrackingVisitor, verifyVisitor } from './analyze';
 import { isUnit, getType } from './getType';
-import { Ctx, expandEnumCases } from './typeMatches';
+import { Ctx, expandEnumCases, LocalUnexpandable } from './typeMatches';
 import { unifyTypes } from './unifyTypes';
 import { Ctx as ACtx } from './analyze';
 
@@ -37,7 +37,7 @@ export const isTaskable = (t: Type, ctx: Ctx): boolean => {
             );
         }) &&
         cases.bounded.every((bound) => {
-            return isTaskable(bound.bound, ctx);
+            return bound.type === 'local' && isTaskable(bound.bound, ctx);
         })
     );
 };
@@ -109,6 +109,12 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
     if (!expanded) {
         return null;
     }
+    if (
+        expanded.bounded.some((s) => s.type === 'task') ||
+        extraInner?.bounded.some((s) => s.type === 'task')
+    ) {
+        return null;
+    }
     const innerTask = taskType(
         [
             {
@@ -116,8 +122,12 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
                 cases: [
                     ...expanded.cases,
                     ...(extraInner?.cases ?? []),
-                    ...expanded.bounded.map((m) => m.local),
-                    ...(extraInner?.bounded.map((m) => m.local) ?? []),
+                    ...expanded.bounded.map(
+                        (m) => (m as LocalUnexpandable).local,
+                    ),
+                    ...(extraInner?.bounded.map(
+                        (m) => (m as LocalUnexpandable).local,
+                    ) ?? []),
                 ],
                 loc: loc,
                 open: false,
@@ -183,7 +193,9 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
                           [
                               {
                                   type: 'TEnum',
-                                  cases: expanded.bounded.map((m) => m.local),
+                                  cases: expanded.bounded.map(
+                                      (m) => (m as LocalUnexpandable).local,
+                                  ),
                                   open: false,
                                   loc,
                               },

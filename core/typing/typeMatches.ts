@@ -365,9 +365,8 @@ export const typeMatches = (
     }
 };
 
-export type Unexpandable =
-    | { type: 'task'; inner: TApply }
-    | { type: 'local'; local: TRef; bound: Type };
+export type Unexpandable = { type: 'task'; inner: TApply } | LocalUnexpandable;
+export type LocalUnexpandable = { type: 'local'; local: TRef; bound: Type };
 
 // ok so recursion checking ... right
 // like, if we pass through the same 'recur' thing multiple times...
