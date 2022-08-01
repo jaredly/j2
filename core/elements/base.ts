@@ -431,6 +431,9 @@ export const ToPP = {
                                 : null,
                             pp.text(' = ', item.loc),
                             ctx.ToPP.Expression(item.expr, ctx),
+                            i === top.items.length - 1
+                                ? pp.text(';', top.loc)
+                                : null,
                         ],
                         item.loc,
                     ),
@@ -442,7 +445,11 @@ export const ToPP = {
         if (top.type === 'Aliases') {
             return ctx.ToPP.Aliases(top, ctx);
         }
-        return ctx.ToPP.Expression(top, ctx);
+        return pp.items(
+            [ctx.ToPP.Expression(top, ctx), pp.text(';', top.loc)],
+            top.loc,
+            'never',
+        );
     },
     Aliases(top: p.Aliases, ctx: PCtx): pp.PP {
         return pp.text(

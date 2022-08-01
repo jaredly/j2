@@ -61,10 +61,10 @@ export const resolveAnalyzeType = (
                 );
             }
         }
-        if (type.ref.type === 'Local') {
-            const bound = ctx.getBound(type.ref.sym);
-            return bound;
-        }
+        // if (type.ref.type === 'Local') {
+        //     const bound = ctx.getBound(type.ref.sym);
+        //     return bound;
+        // }
         if (type.ref.type === 'Recur') {
             const k = ':recur:' + type.ref.idx;
             if (path.includes(k)) {

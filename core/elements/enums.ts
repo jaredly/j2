@@ -233,7 +233,6 @@ export const ToJS = {
 
 const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
     // We'll special case 'recur ref that's applied'
-    // ctx.debugger();
     if (
         c.type === 'TApply' &&
         c.target.type === 'TRef' &&
@@ -264,6 +263,15 @@ const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
         case 'TRef':
             if (c.ref.type === 'Recur') {
                 return ctx.getTopKind(c.ref.idx) === 'enum';
+            }
+            if (c.ref.type === 'Local') {
+                const bound = ctx.getBound(c.ref.sym);
+                if (bound) {
+                    return isValidEnumCase(bound, ctx);
+                }
+            }
+            if (c.ref.type === 'Global') {
+                return ctx.isBuiltinType(c, 'task');
             }
             return false;
     }

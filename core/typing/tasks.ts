@@ -10,6 +10,15 @@ import { unifyTypes } from './unifyTypes';
 import { Ctx as ACtx } from './analyze';
 
 export const isTaskable = (t: Type, ctx: Ctx): boolean => {
+    if (ctx.isBuiltinType(t, 'task')) {
+        return true;
+    }
+    if (t.type === 'TRef' && t.ref.type === 'Local') {
+        const bound = ctx.getBound(t.ref.sym);
+        if (bound && ctx.isBuiltinType(bound, 'task')) {
+            return true;
+        }
+    }
     if (t.type !== 'TEnum' || t.open) {
         return false;
     }

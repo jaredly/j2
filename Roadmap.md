@@ -23,7 +23,9 @@ and/or a nice error coalescing example.
 - [x] highlight hashes to reduce noise
 - [x] colorize vbls by sym!
 - [x] SHOW JS RESULT! Gotta have it.
-- [ ] ok folks I need to allow generic functions. for realsies.
+- [x] ok folks I need to allow generic functions. for realsies.
+- [ ] HMMM so enum type bounds, means that `expandEnumCases` needs to be able to indicate that we
+	have unresolved, but potentially fine parts of the deal.
 
 - [ ] it would be quite nice if I could infer the type variables for `withHandler`. Seems like it shouldn't be too hard, right?
 

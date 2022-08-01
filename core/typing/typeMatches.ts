@@ -236,6 +236,12 @@ export const typeMatches = (
                 )
             );
         case 'TRef':
+            if (
+                expected.type === 'TRef' &&
+                trefsEqual(candidate.ref, expected.ref)
+            ) {
+                return true;
+            }
             // console.log('tref', candidate);
             // If this is a local ref, and it has a bound, then we can use the bound.
             if (candidate.ref.type === 'Local') {
@@ -249,10 +255,7 @@ export const typeMatches = (
                     return typeMatches(bound, expected, ctx);
                 }
             }
-            return (
-                expected.type === 'TRef' &&
-                trefsEqual(candidate.ref, expected.ref)
-            );
+            return false;
         // case 'TApply':
         //     // So TApply should get "worked out" by this point, right?
         //     // idk seems like it should.

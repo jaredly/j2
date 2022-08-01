@@ -92,6 +92,7 @@ export const ToAst = {
         { items, body, loc }: TypeAbstraction,
         ctx: TACtx,
     ): p.TypeAbstraction {
+        items.forEach((arg) => ctx.recordSym(arg.sym, 'type'));
         return {
             type: 'TypeAbstraction',
             args: {
@@ -131,6 +132,10 @@ export const ToPP = {
 };
 
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
+    TypeAbstraction(node, ctx) {
+        let innerCtx = ctx.ctx.withLocalTypes(node.items);
+        return [null, { ...ctx, ctx: innerCtx }];
+    },
     Expression_TypeApplication(node, { ctx, hit }) {
         const target = ctx.getType(node.target);
         if (!target) {

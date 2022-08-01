@@ -85,30 +85,22 @@ let hello = ():Task<[ `Print(string, ()) | `Read((), string) ]> => {
     );
 }
 // () => [ `Print("hello", (()) => [ `Read((), (string) => [ `Print(string, (()) => [ `Print("done", (()) => [ `Return() ]) ]) ]) ]) ]
-/* () => {
-  return {
-    tag: "Print",
-    payload: [`hello`, __0 => {
-      return {
-        tag: "Read",
-        payload: [null, v => {
-          return {
-            tag: "Print",
-            payload: [`Got ${v}`, __0 => {
-              return {
-                tag: "Print",
-                payload: [`done`, __0 => ({
-                  tag: "Return",
-                  payload: null
-                })]
-              };
-            }]
-          };
-        }]
-      };
-    }]
-  };
-} */
+/* () => ({
+  tag: "Print",
+  payload: [`hello`, __0 => ({
+    tag: "Read",
+    payload: [null, v => ({
+      tag: "Print",
+      payload: [`Got ${v}`, __0 => ({
+        tag: "Print",
+        payload: [`done`, __0 => ({
+          tag: "Return",
+          payload: null
+        })]
+      })]
+    })]
+  })]
+}) */
 
 ==[New fixture_]==
 --[input]--
@@ -157,9 +149,7 @@ let helloFolks = ():Task<[ `Read((), string) | `Print(string, ()) ], string> => 
     );
 }
 // () => Task<[ [ `Print(string, ()) ] | [ `Read((), string) ] ], string>
-/* () => {
-  return andThen($terms.print(`What is your name?`), res => $terms.read());
-} */
+/* () => andThen($terms.print(`What is your name?`), res => $terms.read()) */
 
 ==[awaittt]==
 --[input]--
@@ -199,18 +189,10 @@ let helloFolks = () => {
     print(read()!)!;
 }
 // () => Task<[ `Print(string, ()) | `Print(string, ()) | `Read((), string) ], ()>
-/* () => {
-  return andThen($terms.print(`What is your name?`), __0 => {
-    return andThen($terms.read(), tmp1000 => {
-      return andThen($terms.print(tmp1000), tmp1001 => {
-        return {
-          tag: "Return",
-          payload: tmp1001
-        };
-      });
-    });
-  });
-} */
+/* () => andThen($terms.print(`What is your name?`), __0 => andThen($terms.read(), tmp1000 => andThen($terms.print(tmp1000), tmp1001 => ({
+  tag: "Return",
+  payload: tmp1001
+})))) */
 
 ==[trying out withhandler - skip]==
 --[input]--
@@ -245,29 +227,27 @@ let alwaysRead: (value: string, task: Task<[ `Read((), string) | `Print(string, 
     };
 }
 // (string, Task<[ `Read((), string) | `Print(string, ()) ], string>) => [ `Return(string) | `Print(string, (arg: ()) => Task<[ `Print(string, ()) ], string>) ]
-/* (value, task) => {
-  return (() => {
-    if (task.tag === "Return") {
-      let {
-        payload: v
-      } = task;
-      return {
-        tag: "Return",
-        payload: v
-      };
-    } else if (task.tag === "Read") {
-      let {
-        payload: [v, k]
-      } = task;
-      return $terms.alwaysRead(value, k(value));
-    } else {
-      let otherwise = task;
-      {
-        return withHandler(otherwise, task => $terms.alwaysRead(value, task));
-      }
+/* (value, task) => (() => {
+  if (task.tag === "Return") {
+    let {
+      payload: v
+    } = task;
+    return {
+      tag: "Return",
+      payload: v
+    };
+  } else if (task.tag === "Read") {
+    let {
+      payload: [v, k]
+    } = task;
+    return $terms.alwaysRead(value, k(value));
+  } else {
+    let otherwise = task;
+    {
+      return withHandler(otherwise, task => $terms.alwaysRead(value, task));
     }
-  })();
-} */
+  }
+})() */
 
 ==[switch on a task]==
 --[input]--
@@ -289,25 +269,23 @@ let hello = (t#[0]: Task<[ `Read((), string) | `Print(string, ()) ], int>) => {
     };
 }
 // (Task<[ `Read((), string) | `Print(string, ()) ], int>) => int
-/* t => {
-  return (() => {
-    if (t.tag === "Return") {
-      let {
-        payload: v
-      } = t;
-      return v;
-    } else if (t.tag === "Read") {
-      let {
-        payload: [, k]
-      } = t;
-      return 100;
-    } else {
-      let {
-        payload: [hello, k]
-      } = t;
-      {
-        return 1000;
-      }
+/* t => (() => {
+  if (t.tag === "Return") {
+    let {
+      payload: v
+    } = t;
+    return v;
+  } else if (t.tag === "Read") {
+    let {
+      payload: [, k]
+    } = t;
+    return 100;
+  } else {
+    let {
+      payload: [hello, k]
+    } = t;
+    {
+      return 1000;
     }
-  })();
-} */
+  }
+})() */
