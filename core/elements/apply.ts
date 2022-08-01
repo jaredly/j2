@@ -36,8 +36,9 @@ export type IApply = {
 export const ToTast = {
     Apply(apply: p.Apply_inner, ctx: TCtx): t.Expression {
         let res = ctx.ToTast.Expression(apply.target, ctx);
-        while (apply.suffixes.length) {
-            const next = apply.suffixes.shift()!;
+        const suffixes = apply.suffixes.slice();
+        while (suffixes.length) {
+            const next = suffixes.shift()!;
             res = ctx.ToTast.Suffix(next, res, ctx);
         }
         return res;
