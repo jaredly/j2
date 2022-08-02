@@ -303,7 +303,8 @@ export const caseLocals = (switchType: t.Type, node: t.Case, ctx: TMCtx) => {
     return locals;
 };
 
-export const localTrackingVisitor: Visitor<TMCtx & { switchType?: t.Type }> = {
+export type LTCtx = TMCtx & { switchType?: t.Type };
+export const localTrackingVisitor: Visitor<LTCtx> = {
     Lambda(node, ctx) {
         const locals: t.Locals = [];
 

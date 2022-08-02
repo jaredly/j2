@@ -30,9 +30,11 @@ and/or a nice error coalescing example.
 - [x] lets hide all the IDs
 	- [x] but we need to still color based on sym, no joke
 - [x] and lets hide all error decorators. Just use them to underline stuff.
-- [ ] and then, let's do a bunch of nice hover tooltips!
-	- give me types (as well as highlighting the area of effect)
+- [x] and then, let's do a bunch of nice hover tooltips!
+	- [x] give me types (as well as highlighting the area of effect)
 	- also, if you like select some bunch of stuff, let's expand the selection to the nearest thing that makes sense (??)
+	- [ ] Get the error annotations up in the house! Print them out, for showre
+
 
 ## Next little minute
 

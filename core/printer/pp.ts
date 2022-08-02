@@ -24,7 +24,7 @@ export const args = (
     left = '(',
     right = ')',
     trailing = true,
-    rest?: PP,
+    mid = ',',
 ): PP => ({
     type: 'args',
     contents: contents.filter((m) => m != null) as Array<PP>,
@@ -32,7 +32,7 @@ export const args = (
     right,
     trailing,
     loc,
-    rest,
+    mid,
 });
 export const block = (
     contents: Array<PP | null>,
@@ -105,7 +105,6 @@ type Args = {
     right: string;
     trailing: boolean;
     loc: Loc;
-    rest?: PP;
     mid?: string;
 }; // surrounded by ()
 
@@ -149,7 +148,6 @@ export const crawl = (x: PP, fn: (p: PP) => PP): PP => {
             return {
                 ...x,
                 contents: x.contents.map((c) => crawl(c, fn)),
-                rest: x.rest && crawl(x.rest, fn),
             };
         case 'items':
             x = fn(x) as Items;
@@ -291,7 +289,7 @@ export const printToStringInner = (
                     (pp.contents[i - 1].type !== 'atom' ||
                         !(pp.contents[i - 1] as any).isComment)
                 ) {
-                    res += ', ';
+                    res += (pp.mid ?? ',') + ' ';
                     current.pos += 2;
                 }
                 const ctext = printToStringInner(
@@ -334,7 +332,7 @@ export const printToStringInner = (
                 (pp.contents[i].type !== 'atom' ||
                     !(pp.contents[i] as any).isComment)
             ) {
-                res += ',';
+                res += pp.mid ?? ',';
             }
         });
         current.indent -= 4;

@@ -179,6 +179,16 @@ export const TestSplit = ({
     // but I can re-run all the ectx & jctx madness on each keystroke, that's probably fine.
     // as long as I'm not re-processing absolutely everything all the time.
 
+    const hover = React.useMemo(() => {
+        const div = document.createElement('div');
+        document.body.appendChild(div);
+        return div;
+    }, []);
+
+    React.useEffect(() => {
+        return () => hover.remove();
+    }, []);
+
     let ctx = builtinContext;
     const editors = items
         .map((item, i) => {
@@ -201,6 +211,7 @@ export const TestSplit = ({
                     shared={shared}
                     ctx={myctx}
                     item={item}
+                    hover={hover}
                 />
             );
         })
@@ -268,6 +279,7 @@ export const TopEditor = ({
     ctx,
     shared,
     onChange,
+    hover,
 }: {
     item:
         | ToplevelInfo<FileContents>
@@ -275,6 +287,7 @@ export const TopEditor = ({
     ctx: FullContext;
     shared: { current: { track: NameTrack; terms: { [key: string]: string } } };
     onChange: (info: ToplevelInfo<FileContents>[]) => void;
+    hover: HTMLDivElement;
 }) => {
     const [text, setText] = React.useState(() =>
         item.type === 'Failed' ? item.text : fmtItem(item.contents.refmt),
@@ -333,7 +346,97 @@ export const TopEditor = ({
         [ctx],
     );
     return (
-        <Hovery style={{ position: 'relative' }}>
+        <Hovery
+            style={{ position: 'relative' }}
+            onMouseOver={(evt) => {
+                const loc = (evt.target as HTMLSpanElement).getAttribute(
+                    'data-span',
+                );
+                if (loc && file.type === 'Success') {
+                    const [startr, endr] = loc.split(':');
+                    const start = +startr;
+                    const end = +endr;
+                    const box = (
+                        evt.target as HTMLSpanElement
+                    ).getBoundingClientRect();
+                    const anns: ToplevelInfo<FileContents>['annotations'] = [];
+                    file.info.forEach((info) => {
+                        info.annotations.forEach((ann) => {
+                            if (
+                                ann.loc.start.offset <= start &&
+                                ann.loc.end.offset >= end
+                            ) {
+                                anns.push(ann);
+                            }
+                        });
+                    });
+                    anns.sort(
+                        (a, b) =>
+                            a.loc.end.offset -
+                            a.loc.start.offset -
+                            (b.loc.end.offset - b.loc.start.offset),
+                    );
+                    if (anns.length) {
+                        Object.assign(hover.style, {
+                            right: 'unset',
+                            bottom: 'unset',
+                            top: box.bottom + 8 + 'px',
+                            left: box.left + 8 + 'px',
+                            position: 'absolute',
+                            background: '#222',
+                            border: '1px solid currentColor',
+                            fontFamily:
+                                'Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono","Courier New", monospace',
+                            fontSize: '80%',
+                            padding: '4px 8px',
+                            whiteSpace: 'pre',
+                            pointerEvents: 'none',
+                            display: 'block',
+                            color: '#888',
+                        });
+                        // hover.innerHTML = `Hello my folks ${loc}`;
+                        hover.innerHTML = anns[0].text;
+                        const bb = hover.getBoundingClientRect();
+                        console.log(bb);
+                        if (bb.right > window.innerWidth - 8) {
+                            hover.style.left = 'unset';
+                            hover.style.right = '8px';
+                        }
+                        if (bb.bottom > window.innerHeight - 8) {
+                            hover.style.top = 'unset';
+                            hover.style.bottom = '8px';
+                        }
+                        const al = anns[0].loc;
+                        evt.currentTarget
+                            .querySelectorAll('[data-span]')
+                            .forEach((ell) => {
+                                const el = ell as HTMLElement;
+                                const [s, e] = el
+                                    .getAttribute('data-span')!
+                                    .split(':');
+                                if (
+                                    +s >= al.start.offset &&
+                                    +e <= al.end.offset
+                                ) {
+                                    el.style.backgroundColor =
+                                        'rgba(100,100,0,0.2)';
+                                } else {
+                                    el.style.backgroundColor = 'transparent';
+                                }
+                            });
+                    }
+                } else {
+                    hover.style.display = 'none';
+                    evt.currentTarget
+                        .querySelectorAll('[data-span]')
+                        .forEach((el) => {
+                            // el.style.textDecoration = 'none';
+                            (el as HTMLElement).style.backgroundColor =
+                                'transparent';
+                        });
+                }
+            }}
+        >
             <Editor
                 text={text}
                 onBlur={(text) => {

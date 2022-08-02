@@ -150,55 +150,51 @@ export const ToAst = {
 
 export const ToPP = {
     TEnum(t: p.TEnum, ctx: PCtx): pp.PP {
-        return pp.items(
-            [
-                pp.text('[' + (t.cases?.items.length ? ' ' : ''), noloc),
-                ...pp.interleave(
-                    t.cases?.items.map((c) => {
-                        if (c.type === 'Star') {
-                            return pp.text('*', noloc);
-                        }
-                        if (c.type === 'TagDecl') {
-                            return pp.items(
-                                [
-                                    ...c.decorators.map((d) =>
-                                        ctx.ToPP[d.type](d, ctx),
-                                    ),
-                                    pp.text(`\`${c.text}`, noloc),
-                                    c.payload
-                                        ? pp.args(
-                                              c.payload.items?.items.map(
-                                                  (item) =>
-                                                      ctx.ToPP.Type(item, ctx),
-                                              ) ?? [],
-                                              c.payload.loc,
-                                          )
-                                        : // pp.items(
-                                          //       [
-                                          //           pp.text('(', noloc),
-                                          //           ctx.ToPP[
-                                          //               c.payload.inner.type
-                                          //           ](
-                                          //               c.payload.inner ,
-                                          //               ctx,
-                                          //           ),
-                                          //           pp.text(')', noloc),
-                                          //       ],
-                                          //       c.loc,
-                                          //   )
-                                          null,
-                                ],
-                                c.loc,
-                            );
-                        } else {
-                            return ctx.ToPP.Type(c, ctx);
-                        }
-                    }) || [],
-                    ' | ',
-                ),
-                pp.text((t.cases?.items.length ? ' ' : '') + ']', noloc),
-            ],
+        return pp.args(
+            t.cases?.items.map((c) => {
+                if (c.type === 'Star') {
+                    return pp.text('*', noloc);
+                }
+                if (c.type === 'TagDecl') {
+                    return pp.items(
+                        [
+                            ...c.decorators.map((d) =>
+                                ctx.ToPP[d.type](d, ctx),
+                            ),
+                            pp.text(`\`${c.text}`, noloc),
+                            c.payload
+                                ? pp.args(
+                                      c.payload.items?.items.map((item) =>
+                                          ctx.ToPP.Type(item, ctx),
+                                      ) ?? [],
+                                      c.payload.loc,
+                                  )
+                                : // pp.items(
+                                  //       [
+                                  //           pp.text('(', noloc),
+                                  //           ctx.ToPP[
+                                  //               c.payload.inner.type
+                                  //           ](
+                                  //               c.payload.inner ,
+                                  //               ctx,
+                                  //           ),
+                                  //           pp.text(')', noloc),
+                                  //       ],
+                                  //       c.loc,
+                                  //   )
+                                  null,
+                        ],
+                        c.loc,
+                    );
+                } else {
+                    return ctx.ToPP.Type(c, ctx);
+                }
+            }) ?? [],
             t.loc,
+            '[',
+            ']',
+            false,
+            ' |',
         );
     },
 };

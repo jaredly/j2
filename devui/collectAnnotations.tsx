@@ -5,6 +5,8 @@ import { getType } from '../core/typing/getType';
 import { getLocals, Locals } from '../core/elements/pattern';
 import { typeToplevelT } from '../core/elements/base';
 import { typeToString } from './Highlight';
+import { localTrackingVisitor, LTCtx } from '../core/typing/analyze';
+import { maybeExpandTask } from '../core/typing/tasks';
 
 export const collectAnnotations = (tast: File, ctx: FullContext) => {
     const annotations: { loc: Loc; text: string }[] = [];
@@ -16,24 +18,9 @@ export const collectAnnotations = (tast: File, ctx: FullContext) => {
 
 export function annotationVisitor(
     annotations: { loc: Loc; text: string }[],
-): tt.Visitor<FullContext> {
+): tt.Visitor<FullContext & LTCtx> {
     return {
-        Toplevel(node, ctx) {
-            return [
-                null,
-                ctx.toplevelConfig(typeToplevelT(node, ctx)) as FullContext,
-            ];
-        },
-        TypeAbstraction(node, ctx) {
-            return [null, ctx.withLocalTypes(node.items) as FullContext];
-        },
-        Lambda(node, ctx) {
-            const locals: Locals = [];
-            node.args.map((arg) => {
-                getLocals(arg.pat, arg.typ, locals, ctx);
-            });
-            return [null, ctx.withLocals(locals) as FullContext];
-        },
+        ...(localTrackingVisitor as any as tt.Visitor<FullContext & LTCtx>),
         Expression: (node, ctx) => {
             const t = getType(node, ctx);
             if (t) {
@@ -47,7 +34,16 @@ export function annotationVisitor(
                     text: `[no type]`,
                 });
             }
-            return node;
+            return null;
+        },
+        Type(node, ctx) {
+            let t = ctx.resolveRefsAndApplies(node) ?? node;
+            t = maybeExpandTask(t, ctx) ?? t;
+            annotations.push({
+                loc: node.loc,
+                text: typeToString(t, ctx),
+            });
+            return null;
         },
         Ref(node, ctx) {
             let text =
