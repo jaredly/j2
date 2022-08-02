@@ -8,6 +8,7 @@ import { Ctx as ACtx } from './analyze';
 import { toId } from '../ids';
 
 export type Ctx = {
+    showIds: boolean;
     printRef: (
         ref: t.RefKind,
         loc: p.Loc,
@@ -83,6 +84,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
     return {
         actx: fctx,
         reverse,
+        showIds,
 
         withToplevel(top) {
             if (!top) {
@@ -173,7 +175,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             return {
                 type: 'Identifier',
                 text: name ?? 'unnamed',
-                hash: showIds || true ? `#[${hash}]` : null,
+                hash: showIds ? `#[${hash}]` : null,
                 loc,
             };
         },

@@ -488,7 +488,7 @@ export const ToPP = {
                     pp.atom(
                         // ctx.hideIds
                         //     ? identifier.text :
-                        identifier.text + (identifier.hash ?? ''),
+                        identifier.text, // + (identifier.hash ?? ''),
                         identifier.loc,
                     ),
                     pp.text(')', identifier.loc),
@@ -499,7 +499,7 @@ export const ToPP = {
         return pp.atom(
             // ctx.hideIds
             //     ? identifier.text :
-            identifier.text + (identifier.hash ?? ''),
+            identifier.text, // + (identifier.hash ?? ''),
             identifier.loc,
         );
     },

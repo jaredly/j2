@@ -700,7 +700,7 @@ function peg$parse(input, options) {
   return {
     type: "Stmts",
     loc: myLocation(),
-    items: [first, ...rest.map(element => element[4])]
+    items: [first, ...rest.map(element => element[5])]
   };
 };
   var peg$f60 = function(pat, expr) {
@@ -4952,7 +4952,7 @@ function peg$parse(input, options) {
   }
 
   function peg$parseStmts() {
-    var s0, s1, s2, s3, s4, s5, s6, s7, s8;
+    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9;
 
     s0 = peg$currPos;
     s1 = peg$parseStmt();
@@ -4970,18 +4970,19 @@ function peg$parse(input, options) {
       if (s5 === peg$FAILED) {
         s5 = null;
       }
+      s6 = peg$parse_nonnewline();
       if (input.charCodeAt(peg$currPos) === 10) {
-        s6 = peg$c14;
+        s7 = peg$c14;
         peg$currPos++;
       } else {
-        s6 = peg$FAILED;
+        s7 = peg$FAILED;
         if (peg$silentFails === 0) { peg$fail(peg$e16); }
       }
-      if (s6 !== peg$FAILED) {
-        s7 = peg$parse_();
-        s8 = peg$parseStmt();
-        if (s8 !== peg$FAILED) {
-          s4 = [s4, s5, s6, s7, s8];
+      if (s7 !== peg$FAILED) {
+        s8 = peg$parse_();
+        s9 = peg$parseStmt();
+        if (s9 !== peg$FAILED) {
+          s4 = [s4, s5, s6, s7, s8, s9];
           s3 = s4;
         } else {
           peg$currPos = s3;
@@ -5005,18 +5006,19 @@ function peg$parse(input, options) {
         if (s5 === peg$FAILED) {
           s5 = null;
         }
+        s6 = peg$parse_nonnewline();
         if (input.charCodeAt(peg$currPos) === 10) {
-          s6 = peg$c14;
+          s7 = peg$c14;
           peg$currPos++;
         } else {
-          s6 = peg$FAILED;
+          s7 = peg$FAILED;
           if (peg$silentFails === 0) { peg$fail(peg$e16); }
         }
-        if (s6 !== peg$FAILED) {
-          s7 = peg$parse_();
-          s8 = peg$parseStmt();
-          if (s8 !== peg$FAILED) {
-            s4 = [s4, s5, s6, s7, s8];
+        if (s7 !== peg$FAILED) {
+          s8 = peg$parse_();
+          s9 = peg$parseStmt();
+          if (s9 !== peg$FAILED) {
+            s4 = [s4, s5, s6, s7, s8, s9];
             s3 = s4;
           } else {
             peg$currPos = s3;

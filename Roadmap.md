@@ -17,8 +17,22 @@ and/or a nice error coalescing example.
 
 ## Eff paper discoveries
 
-- I really want to support `Task<What>`, not just `Task<[What]>`
-- auto-inference is letting me down somehow
+- [ ] I really want to support `Task<What>`, not just `Task<[What]>`
+	- inferTaskType I think is the spot
+- [ ] auto-inference is letting me down somehow
+	OH it's only running during the analyze dealio, and my generalized inference is *not* up to
+	the task of filling in
+
+## UXYZ
+
+- [x] underline errors again
+- [x] syntax errors should not delete your work
+- [ ] lets hide all the IDs
+	- [ ] but we need to still color based on sym, no joke
+- [ ] and lets hide all error decorators. Just use them to underline stuff.
+- [ ] and then, let's do a bunch of nice hover tooltips!
+	- give me types (as well as highlighting the area of effect)
+	- also, if you like select some bunch of stuff, let's expand the selection to the nearest thing that makes sense (??)
 
 ## Next little minute
 

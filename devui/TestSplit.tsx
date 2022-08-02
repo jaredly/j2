@@ -20,9 +20,10 @@ import { newPPCtx } from '../core/printer/to-pp';
 import { printToString } from '../core/printer/pp';
 import { NameTrack } from '../core/ir/to-js';
 import generate from '@babel/generator';
-import { typeToString } from './Highlight';
+import { Colorable, typeToString } from './Highlight';
 import { idToString, toId } from '../core/ids';
 import { Loc } from '../core/typed-ast';
+import { transformFile, transformToplevel } from '../core/transform-tast';
 
 /*
 
@@ -317,14 +318,17 @@ export const TopEditor = ({
             }
             if (cache[text]?.file.type === 'Success') {
                 const { file, results } = cache[text];
-                return testStatuses(file, results!);
+                return testStatuses(file, results!).concat(
+                    file.type === 'Success' ? extraHighlights(file) : [],
+                );
             }
             const file = processFileR(v, ctx, undefined, shared.current.track);
             const results = getTestResults(file, shared.current.terms);
             cache[text] = { file, results };
-            console.log(file, results);
+            console.log(file, results, '???? LCOS');
+
             // ok, so we have an AST
-            return testStatuses(file, results);
+            return testStatuses(file, results).concat(extraHighlights(file));
         },
         [ctx],
     );
@@ -450,6 +454,42 @@ export const TopEditor = ({
                 )}
         </Hovery>
     );
+};
+
+export const extraHighlights = (file: Success<FileContents>) => {
+    const hls: HL[] = [];
+    file.info.forEach((info) => {
+        transformToplevel(
+            info.contents.top,
+            {
+                // huh would be nice to have a loc
+                // Sym(node, ctx) {
+                // 	node.name
+                // },
+                Ref(node, ctx) {
+                    if (node.kind.type === 'Local') {
+                        hls.push({
+                            loc: node.loc,
+                            type: `Color${node.kind.sym % 10}` as Colorable,
+                            // type: 'Error',
+                        });
+                        console.log('AF', node.loc);
+                    }
+                    return null;
+                },
+                PName(node, ctx) {
+                    hls.push({
+                        loc: node.loc,
+                        type: `Color${node.sym.id % 10}` as Colorable,
+                        // type: 'Error',
+                    });
+                    return null;
+                },
+            },
+            null,
+        );
+    });
+    return hls;
 };
 
 export const BlurInput = ({

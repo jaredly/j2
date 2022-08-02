@@ -81,11 +81,12 @@ export const makeBinop = (
     left: p.Expression,
     right: p.Expression,
     loc: p.Loc,
+    showIds: boolean,
 ): p.Expression => {
     const opp: p.BinOpRight['op'] = {
         op: op.text,
         loc: op.loc,
-        hash: op.hash,
+        hash: showIds ? op.hash : null,
         type: 'binopWithHash',
     };
     let level = opLevel(op.text);
@@ -148,7 +149,7 @@ export const makeBinop = (
                         op: {
                             op: op.text,
                             loc: op.loc,
-                            hash: op.hash,
+                            hash: showIds ? op.hash : null,
                             type: 'binopWithHash',
                         },
                     },
@@ -172,7 +173,7 @@ export const makeBinop = (
                 op: {
                     op: op.text,
                     loc: op.loc,
-                    hash: op.hash,
+                    hash: showIds ? op.hash : null,
                     type: 'binopWithHash',
                 },
             },
@@ -185,6 +186,7 @@ export const makeApply = (
     inner: p.Expression,
     suffix: p.Suffix,
     loc: t.Loc,
+    showIds: boolean,
 ): p.Expression => {
     if (
         inner.type === 'Identifier' &&
@@ -198,6 +200,7 @@ export const makeApply = (
             suffix.args.items[0],
             suffix.args.items[1],
             loc,
+            showIds,
         );
     }
     if (inner.type === 'Apply') {
@@ -285,6 +288,7 @@ export const ToAst = {
                                 loc,
                             },
                             loc,
+                            ctx.showIds,
                         );
                     }
                 }
@@ -303,6 +307,7 @@ export const ToAst = {
                 loc,
             },
             loc,
+            ctx.showIds,
         );
     },
 };
