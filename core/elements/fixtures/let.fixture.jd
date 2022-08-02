@@ -36,7 +36,7 @@ let y = x + 10
 let x = 10
 // 10
 /* 10 */
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] x#[hfb3ab6073655e042df98cf160644857639baed08]
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] x#[ha932a38df3b1ef69210c1c0d72f7c1bc536fe777]
 let y = x + 10
 // 20
 /* $terms.x + 10 */

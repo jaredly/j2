@@ -519,10 +519,11 @@ export const newContext = (): FullContext => {
         },
 
         withValues(exprs) {
-            const defns = exprs.map((t) =>
+            const defns = exprs.map((t) => [
+                t.name,
                 transformExpression(t.expr, locClearVisitor, null),
-            );
-            const hash = hashExprs(defns);
+            ]);
+            const hash = hashObject(serial(defns));
             const rctx = this.toplevelConfig({
                 type: 'Expr',
                 hash,
@@ -709,9 +710,6 @@ export const hashType = (type: Type): string => {
     return hashObject(serial(type));
 };
 export const hashTypes = (t: Type[]): string => hashObject(t.map(hashType));
-export const hashExpr = (t: Expression) =>
-    hashObject(serial(transformExpression(t, locClearVisitor, null)));
-export const hashExprs = (t: Expression[]) => hashObject(serial(t));
 
 const ref = (kind: RefKind): Expression => ({ type: 'Ref', kind, loc: noloc });
 const tlam = (

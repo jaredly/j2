@@ -9,7 +9,7 @@ alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1
 let m = <T#[0]: task>(m#[1]: Task<[`Read((), string) | T#[0]]>) => 10
 // <T#[0]: task>(Task<[`Read((), string) | T#[0]]>) => 10
 /* m => 10 */
-alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] m#[ha2acb5d77665f78bfaf054936fed0f669042db69]
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] m#[hdbb6058cb643a8b774fb54954fd118cc288b5c6c]
 m<[`Read(string, string)]>(
     @error:argWrongType(
         expected: :Task<[`Read((), string) | [`Read(string, string)]]>,

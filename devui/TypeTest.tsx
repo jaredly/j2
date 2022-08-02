@@ -139,7 +139,8 @@ export const TypeTestView = ({
                                 //
                             }
                         }}
-                        onChange={(text) => setText(text)}
+                        // onChange={(text) => setText(text)}
+                        onChange={(text) => {}}
                     />
                 </Card.Body>
             </Card>

@@ -141,7 +141,7 @@ let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
     payload: v
   })]
 }) */
-alias andThen#[h350018996371f8a646e144d264506c10d2ebde8b] print#[h9cd486c4e02278d3ec4134bd776fae112435529b] read#[hf1cbfa159d4d6ec5581f4a6706b6ebd6816f8091]
+alias andThen#[h350018996371f8a646e144d264506c10d2ebde8b] print#[h63113b95561a5d4d1911853781042e6ba54df92c] read#[hea92485692e0593ccf7d20a1c0c459e71b77629a]
 let helloFolks = (): Task<[`Read((), string) | `Print(string, ())], string> => {
     andThen<[`Print(string, ())], [`Read((), string)], (), string>(
         print("What is your name?"),
@@ -183,7 +183,7 @@ let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
     payload: v
   })]
 }) */
-alias print#[h98844d56b6470b17502bda64e11ca3589410f204] read#[hf1cbfa159d4d6ec5581f4a6706b6ebd6816f8091]
+alias print#[he6c7e1c55ac010d20308e72d2fd9592e7ae96c4c] read#[hea92485692e0593ccf7d20a1c0c459e71b77629a]
 let helloFolks = () => {
     print("What is your name?")!;
     print(read()!)!;

@@ -168,6 +168,7 @@ export const TestSplit = ({
             true,
         );
         const fmt = refmt(res);
+        onChange({ file: res, values: getTestResults(res) });
         fetch(`/elements/test/${name}`, {
             method: 'POST',
             body: fmt,
