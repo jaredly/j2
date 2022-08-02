@@ -11,6 +11,7 @@ import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TMCtx } from '../typing/typeMatches';
 import { noloc } from '../consts';
 import { makeApply } from './apply';
+import { nodebug } from '../ctx';
 
 export const grammar = `
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
@@ -56,11 +57,38 @@ export const ToTast = {
         target: t.Expression,
         ctx: TCtx,
     ): t.Expression {
+        const args = suffix.vbls.items.map((vbl) => ctx.ToTast.Type(vbl, ctx));
+        if (target.type === 'Ref' && target.kind.type === 'Unresolved') {
+            const resolved = ctx.resolve(target.kind.text, null);
+            for (let res of resolved) {
+                const t = ctx.getType({
+                    type: 'Ref',
+                    kind: res,
+                    loc: target.loc,
+                });
+                if (t && t.type === 'TVars') {
+                    if (t.args.length === args.length) {
+                        if (
+                            t.args.every((arg, i) =>
+                                matchesBound(args[i], arg.bound, ctx),
+                            )
+                        ) {
+                            target = {
+                                type: 'Ref',
+                                kind: res,
+                                loc: target.loc,
+                            };
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return {
             type: 'TypeApplication',
             target,
             inferred: false,
-            args: suffix.vbls.items.map((vbl) => ctx.ToTast.Type(vbl, ctx)),
+            args: args,
             loc: { ...suffix.loc, start: target.loc.start },
         };
     },

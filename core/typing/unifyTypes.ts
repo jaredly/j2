@@ -25,6 +25,13 @@ export const unifyTypes = (one: Type, two: Type, ctx: Ctx): false | Type => {
         one = one.inner;
     }
 
+    if (one.type === 'TBlank') {
+        return two;
+    }
+    if (two.type === 'TBlank') {
+        return one;
+    }
+
     if (one.type === 'TEnum') {
         two = maybeExpandTask(two, ctx) ?? two;
         return unifyEnums(one, two, ctx);
@@ -45,13 +52,6 @@ export const unifyTypes = (one: Type, two: Type, ctx: Ctx): false | Type => {
         return two;
     }
     if (typeMatches(two, one, ctx)) {
-        return one;
-    }
-
-    if (one.type === 'TBlank') {
-        return two;
-    }
-    if (two.type === 'TBlank') {
         return one;
     }
 

@@ -94,7 +94,7 @@ if 1 > 0 {
 } else {
     `No(`SoMuchFail);
 }
-// [ `No([ `SoMuchFail | `MathFail ]) | `Yes(20) ]
+// [`No([`SoMuchFail | `MathFail]) | `Yes(20)]
 /* {
   if (1 > 0) {
     return {
@@ -124,12 +124,12 @@ if 1 > 0 {
 
 --[output:expected]--
 alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
-(m#[0]: [ `Hello(int) | `Bye ]) => if let `Hello(v#[1]) = m#[0] {
+(m#[0]: [`Hello(int) | `Bye]) => if let `Hello(v#[1]) = m#[0] {
     v#[1];
 } else {
     100;
 }
-// ([ `Hello(int) | `Bye ]) => int
+// ([`Hello(int) | `Bye]) => int
 /* m => {
   if ((typeof m === "string" ? m : m.tag) === "Hello") {
     let {

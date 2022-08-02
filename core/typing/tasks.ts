@@ -89,26 +89,41 @@ export const taskType = (args: Type[], ctx: Ctx, loc: Loc): Type => {
 };
 
 export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
-    let cases: TEnum['cases'] = [
-        {
+    let cases: TEnum['cases'] = [];
+    if (targs.length == 1 || targs[1].type !== 'TBlank') {
+        cases.push({
             type: 'EnumCase',
             decorators: [],
             loc,
             tag: 'Return',
             payload: targs.length > 1 ? targs[1] : tunit,
-        },
-    ];
+        });
+    }
     const extraInner =
         targs.length > 2 && targs[2].type === 'TEnum'
             ? expandEnumCases(targs[2], ctx)
             : null;
-    if (targs[0].type !== 'TEnum') {
+    const first = ctx.resolveRefsAndApplies(targs[0]) ?? targs[0];
+    let expanded: ReturnType<typeof expandEnumCases>;
+    if (first.type === 'TRef' && first.ref.type === 'Local') {
+        const bound = ctx.getBound(first.ref.sym);
+        if (!bound) {
+            return null;
+        }
+        expanded = {
+            cases: [],
+            bounded: [{ type: 'local', local: first, bound }],
+        };
+    } else if (first.type !== 'TEnum') {
         return null;
+    } else {
+        const result = expandEnumCases(first, ctx);
+        if (!result) {
+            return null;
+        }
+        expanded = result;
     }
-    const expanded = expandEnumCases(targs[0], ctx);
-    if (!expanded) {
-        return null;
-    }
+
     if (
         expanded.bounded.some((s) => s.type === 'task') ||
         extraInner?.bounded.some((s) => s.type === 'task')
@@ -224,12 +239,21 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
     ) {
         return t as TApply;
     }
-    if (res.type !== 'TEnum') {
+    let cases: ReturnType<typeof expandEnumCases>;
+    if (res.type === 'TRef' && res.ref.type === 'Local') {
+        const bound = ctx.getBound(res.ref.sym);
+        if (!bound) {
+            return null;
+        }
+        cases = { cases: [], bounded: [{ type: 'local', local: res, bound }] };
+    } else if (res.type !== 'TEnum') {
         return null;
-    }
-    const cases = expandEnumCases(res, ctx);
-    if (!cases) {
-        return null;
+    } else {
+        const expanded = expandEnumCases(res, ctx);
+        if (!expanded) {
+            return null;
+        }
+        cases = expanded;
     }
     let result: null | Type = null;
     const effects: { [key: string]: { input: Type; output: Type | null } } = {};
@@ -258,7 +282,12 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
             }
             let [input, fn] = items;
             fn = ctx.resolveRefsAndApplies(fn) ?? fn;
-            if (fn.type === 'TEnum' && fn.cases.length === 0 && !fn.open) {
+            if (
+                fn.type === 'TRecord' &&
+                fn.items.length === 0 &&
+                !fn.open &&
+                fn.spreads.length === 0
+            ) {
                 if (result == null) {
                     result = { type: 'TBlank', loc: fn.loc };
                 }

@@ -1,6 +1,10 @@
 import { refsEqual } from '../refsEqual';
 import { noloc } from '../consts';
-import { enumTypeMatches, isValidEnumCase } from '../elements/enums';
+import {
+    enumTypeMatches,
+    isValidEnumCase,
+    isWrappedEnum,
+} from '../elements/enums';
 import { recordMatches } from '../elements/records';
 import { TVar, tvarsMatches } from '../elements/type-vbls';
 import { Id } from '../ids';
@@ -243,6 +247,12 @@ export const typeMatches = (
             if (
                 expected.type === 'TRef' &&
                 trefsEqual(candidate.ref, expected.ref)
+            ) {
+                return true;
+            }
+            if (
+                expected.type === 'TEnum' &&
+                isWrappedEnum(candidate, expected, ctx)
             ) {
                 return true;
             }

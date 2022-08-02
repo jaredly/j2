@@ -31,7 +31,7 @@ export function annotationVisitor(
             } else {
                 annotations.push({
                     loc: node.loc,
-                    text: `[no type]`,
+                    text: `Failed to type check`,
                 });
             }
             return null;
@@ -60,20 +60,27 @@ export function annotationVisitor(
             });
             return null;
         },
-        // Ref(node, ctx) {
-        //     let text =
-        //         node.kind.type === 'Unresolved'
-        //             ? 'Unresolved'
-        //             : node.kind.type === 'Global'
-        //             ? refHash(node.kind)
-        //             : node.kind.type === 'Local'
-        //             ? `sym=${node.kind.sym}`
-        //             : `recur(${node.kind.idx})`;
-        //     annotations.push({
-        //         loc: node.loc,
-        //         text,
-        //     });
-        //     return null;
-        // },
+        Ref(node, ctx) {
+            //     let text =
+            //         node.kind.type === 'Unresolved'
+            //             ? 'Unresolved'
+            //             : node.kind.type === 'Global'
+            //             ? refHash(node.kind)
+            //             : node.kind.type === 'Local'
+            //             ? `sym=${node.kind.sym}`
+            //             : `recur(${node.kind.idx})`;
+            //     annotations.push({
+            //         loc: node.loc,
+            //         text,
+            //     });
+            //     return null;
+            if (node.kind.type === 'Unresolved') {
+                annotations.push({
+                    loc: node.loc,
+                    text: 'Unresolved',
+                });
+            }
+            return null;
+        },
     };
 }

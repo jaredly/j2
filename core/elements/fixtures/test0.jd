@@ -6,17 +6,18 @@ m<[`Read(string, string)]>(`Return(()))
 
 --[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe]
-let m = <T#[0]: task>(m#[1]: Task<[ `Read((), string) | T#[0] ]>) => 10
-// <T#[0]: task>(Task<[ `Read((), string) | T#[0] ]>) => 10
+let m = <T#[0]: task>(m#[1]: Task<[`Read((), string) | T#[0]]>) => 10
+// <T#[0]: task>(Task<[`Read((), string) | T#[0]]>) => 10
 /* m => 10 */
 alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] m#[ha2acb5d77665f78bfaf054936fed0f669042db69]
-m<[ `Read(string, string) ]>(
+m<[`Read(string, string)]>(
     @error:argWrongType(
-        expected: :Task<[ `Read((), string) | [ `Read(string, string) ] ]>,
-        got: :[ `Return() ],
-        task: :[ `Return() | `Read(
-            (),
-            (arg: string) => Task<[ `Read((), string) | `Read(string, string) ], ()>,
-        ) | `Read(string, (arg: string) => Task<[ `Read((), string) | `Read(string, string) ], ()>) ],
+        expected: :Task<[`Read((), string) | [`Read(string, string)]]>,
+        got: :[`Return()],
+        task: :[
+            `Return() |
+            `Read((), (arg: string) => Task<[`Read((), string) | `Read(string, string)], ()>) |
+            `Read(string, (arg: string) => Task<[`Read((), string) | `Read(string, string)], ()>)
+        ],
     ) `Return(),
 )

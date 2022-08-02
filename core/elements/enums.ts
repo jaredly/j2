@@ -395,6 +395,25 @@ export const enumCaseMap = (canEnums: EnumCase[], ctx: TMCtx) => {
     return canMap;
 };
 
+export const isWrappedEnum = (one: t.TRef, two: TEnum, ctx: TMCtx): boolean => {
+    if (two.open) {
+        return false;
+    }
+    if (two.cases.length === 1 && two.cases[0].type === 'TRef') {
+        return refsEqual(two.cases[0].ref, one.ref);
+    }
+    const cases = expandEnumCases(two, ctx);
+    if (
+        cases &&
+        cases.cases.length === 0 &&
+        cases.bounded.length === 1 &&
+        cases.bounded[0].type === 'local'
+    ) {
+        return refsEqual(cases.bounded[0].local.ref, one.ref);
+    }
+    return false;
+};
+
 export const enumTypeMatches = (
     candidate: TEnum,
     expected: t.Type,
@@ -404,6 +423,9 @@ export const enumTypeMatches = (
     // [ `What ] matches [ `What | `Who ]
     // So everything in candidate needs to match something
     // in expected. And there need to not be any collisions name-wise
+    if (expected.type === 'TRef' && isWrappedEnum(expected, candidate, ctx)) {
+        return true;
+    }
     if (expected.type !== 'TEnum') {
         return false;
     }

@@ -69,7 +69,7 @@ switch `What(10) {
 --[output:expected]--
 alias error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (
-    (m#[0]: [ `One | `Two(int) ]) => switch m#[0] {
+    (m#[0]: [`One | `Two(int)]) => switch m#[0] {
         `One => 1;
         `Two => 4;
         @error:patternMismatch() `Three => 2;
@@ -85,12 +85,12 @@ alias error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] int#[h94
 }
 
 --[output:expected]--
-(m#[0]: [ `One | `Two | `Three ]) => switch m#[0] {
+(m#[0]: [`One | `Two | `Three]) => switch m#[0] {
     `One => 1;
     `Two => 2;
     `Three => 3;
 }
-// ([ `One | `Two | `Three ]) => int
+// ([`One | `Two | `Three]) => int
 /* m => {
   switch (m) {
     case "One":
@@ -149,7 +149,7 @@ switch (1, 2) {
 
 --[output:expected]--
 alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
-(m#[0]: [ `One | `Two | `Three(int) ]) => switch m#[0] {
+(m#[0]: [`One | `Two | `Three(int)]) => switch m#[0] {
     `One => 1;
     `Two => 2;
     otherwise#[1] => {
@@ -157,7 +157,7 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
         v#[2];
     };
 }
-// ([ `One | `Two | `Three(int) ]) => int
+// ([`One | `Two | `Three(int)]) => int
 /* m => {
   switch (typeof m === "string" ? m : m.tag) {
     case "One":
@@ -191,14 +191,14 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 
 --[output:expected]--
 alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
-(m#[0]: [ `One | `Two([ `A | `B(int) ]) ]) => switch m#[0] {
+(m#[0]: [`One | `Two([`A | `B(int)])]) => switch m#[0] {
     `Two(`A) => 10;
     `Two(res#[1]) => {
         let `B(v#[2]) = res#[1];
         v#[2];
     };
 }
-// ([ `One | `Two([ `A | `B(int) ]) ]) => int
+// ([`One | `Two([`A | `B(int)])]) => int
 /* m => {
   if ((typeof m === "string" ? m : m.tag) === "Two" && (typeof m.payload === "string" ? m.payload : m.payload.tag) === "A") {
     "no-op pattern";
@@ -229,7 +229,7 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 
 --[output:expected]--
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
-(m#[0]: [ `Hi(int, [ `One | `Two(int) ]) ]) => switch m#[0] {
+(m#[0]: [`Hi(int, [`One | `Two(int)])]) => switch m#[0] {
     `Hi(v#[1], `One) => 10;
     `Hi(v#[2], `Two(2)) => 12 + v#[2];
     `Hi(v#[3], x#[4]) => {
@@ -237,7 +237,7 @@ alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39b
         v#[3] + n#[5];
     };
 }
-// ([ `Hi(int, [ `One | `Two(int) ]) ]) => int
+// ([`Hi(int, [`One | `Two(int)])]) => int
 /* m => {
   if ((typeof m.payload[1] === "string" ? m.payload[1] : m.payload[1].tag) === "One") {
     let {

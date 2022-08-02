@@ -33,7 +33,7 @@ and/or a nice error coalescing example.
 - [x] and then, let's do a bunch of nice hover tooltips!
 	- [x] give me types (as well as highlighting the area of effect)
 	- also, if you like select some bunch of stuff, let's expand the selection to the nearest thing that makes sense (??)
-	- [ ] Get the error annotations up in the house! Print them out, for showre
+	- [x] Get the error annotations up in the house! Print them out, for showre
 
 
 ## Next little minute

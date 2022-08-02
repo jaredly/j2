@@ -238,7 +238,13 @@ export const TestSplit = ({
                     if (v.type !== 'File') {
                         return [];
                     }
-                    const file = processFileR(v, ctx);
+                    const file = processFileR(
+                        v,
+                        ctx,
+                        undefined,
+                        undefined,
+                        true,
+                    );
                     const results = getTestResults(file);
                     // ok, so we have an AST
                     return testStatuses(file, results);
@@ -343,7 +349,13 @@ export const TopEditor = ({
                     file.type === 'Success' ? extraHighlights(file) : [],
                 );
             }
-            const file = processFileR(v, ctx, undefined, shared.current.track);
+            const file = processFileR(
+                v,
+                ctx,
+                undefined,
+                shared.current.track,
+                true,
+            );
             const results = getTestResults(file, shared.current.terms);
             cache[text] = { file, results };
             console.log(file, results, '???? LCOS');

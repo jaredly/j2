@@ -5,8 +5,8 @@ let print = (v: string): Task<[`Print(string, ())]> => `Print(v, (()) => `Return
 
 --[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
-let print = (v#[0]: string): Task<[ `Print(string, ()) ]> => `Print(v#[0], (()) => `Return())
-// (string) => [ `Print(string, (()) => [ `Return() ]) ]
+let print = (v#[0]: string): Task<[`Print(string, ())]> => `Print(v#[0], (()) => `Return())
+// (string) => [`Print(string, (()) => [`Return()])]
 /* v => ({
   tag: "Print",
   payload: [v, __0 => ({
@@ -22,7 +22,7 @@ let print = (v: string) => `Print(v, (()) => `Return())
 --[output:expected]--
 alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let print = (v#[0]: string) => `Print(v#[0], (()) => `Return())
-// (string) => [ `Print(string, (()) => [ `Return() ]) ]
+// (string) => [`Print(string, (()) => [`Return()])]
 /* v => ({
   tag: "Print",
   payload: [v, __0 => ({
@@ -37,8 +37,8 @@ let print = (v#[0]: string) => `Print(v#[0], (()) => `Return())
 
 --[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274]
-(v#[0]: Task<[ `One((), []) ]>): Task<[ `One((), []) | `Two((), []) ]> => v#[0]
-// (Task<[ `One((), []) ]>) => Task<[ `One((), []) ]>
+(v#[0]: Task<[`One((), [])]>): Task<[`One((), []) | `Two((), [])]> => v#[0]
+// (Task<[`One((), [])]>) => Task<[`One((), [])]>
 /* v => v */
 
 ==[New fixture]==
@@ -48,12 +48,12 @@ let print = (v: string): Task<[`Print(string, ())]> => `Print(v, () => `Return(1
 
 --[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] error:resMismatch#[hb090f18487ae3bd77546a5c35ccf59b6adf3aa59] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
-let print = (v#[0]: string): @error:resMismatch(inferrred: :[ `Pront(string, () => [ `Return() ]) ]) Task<
-    [ `Print(string, ()) ],
+let print = (v#[0]: string): @error:resMismatch(inferrred: :[`Pront(string, () => [`Return()])]) Task<
+    [`Print(string, ())],
 > => `Pront(v#[0], () => `Return())
-let print = (v#[0]: string): @error:resMismatch(
-    inferrred: :[ `Print(string, () => [ `Return(10) ]) ],
-) Task<[ `Print(string, ()) ]> => `Print(v#[0], () => `Return(10))
+let print = (v#[0]: string): @error:resMismatch(inferrred: :[`Print(string, () => [`Return(10)])]) Task<
+    [`Print(string, ())],
+> => `Print(v#[0], () => `Return(10))
 
 ==[multiple effects]==
 --[input]--
@@ -69,7 +69,7 @@ let hello = (): Task<[`Print(string, ()) | `Read((), string)]> => {
 
 --[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
-let hello = (): Task<[ `Print(string, ()) | `Read((), string) ]> => {
+let hello = (): Task<[`Print(string, ()) | `Read((), string)]> => {
     `Print(
         "hello",
         (()) => {
@@ -84,7 +84,7 @@ let hello = (): Task<[ `Print(string, ()) | `Read((), string) ]> => {
         },
     );
 }
-// () => [ `Print("hello", (()) => [ `Read((), (string) => [ `Print(string, (()) => [ `Print("done", (()) => [ `Return() ]) ]) ]) ]) ]
+// () => [`Print("hello", (()) => [`Read((), (string) => [`Print(string, (()) => [`Print("done", (()) => [`Return()])])])])]
 /* () => ({
   tag: "Print",
   payload: [`hello`, __0 => ({
@@ -120,11 +120,11 @@ let helloFolks = ():Task<[ `Read((), string) | `Print(string, ()) ], string> => 
 
 --[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
-let print = (value#[0]: string): Task<[ `Print(string, ()) ], ()> => `Print(
+let print = (value#[0]: string): Task<[`Print(string, ())], ()> => `Print(
     value#[0],
     (()) => `Return(),
 )
-// (string) => [ `Print(string, (()) => [ `Return() ]) ]
+// (string) => [`Print(string, (()) => [`Return()])]
 /* value => ({
   tag: "Print",
   payload: [value, __0 => ({
@@ -133,7 +133,7 @@ let print = (value#[0]: string): Task<[ `Print(string, ()) ], ()> => `Print(
   })]
 }) */
 let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
-// () => [ `Read((), (string) => [ `Return(string) ]) ]
+// () => [`Read((), (string) => [`Return(string)])]
 /* () => ({
   tag: "Read",
   payload: [null, v => ({
@@ -142,13 +142,13 @@ let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
   })]
 }) */
 alias andThen#[h350018996371f8a646e144d264506c10d2ebde8b] print#[h9cd486c4e02278d3ec4134bd776fae112435529b] read#[hf1cbfa159d4d6ec5581f4a6706b6ebd6816f8091]
-let helloFolks = (): Task<[ `Read((), string) | `Print(string, ()) ], string> => {
-    andThen<[ `Print(string, ()) ], [ `Read((), string) ], (), string>(
+let helloFolks = (): Task<[`Read((), string) | `Print(string, ())], string> => {
+    andThen<[`Print(string, ())], [`Read((), string)], (), string>(
         print("What is your name?"),
         (res#[0]: ()) => read(),
     );
 }
-// () => Task<[ [ `Print(string, ()) ] | [ `Read((), string) ] ], string>
+// () => Task<[[`Print(string, ())] | [`Read((), string)]], string>
 /* () => andThen($terms.print(`What is your name?`), res => $terms.read()) */
 
 ==[awaittt]==
@@ -166,7 +166,7 @@ let helloFolks = () => {
 --[output:expected]--
 alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let print = (value#[0]: string) => `Print(value#[0], (v#[1]: ()) => `Return())
-// (string) => [ `Print(string, (()) => [ `Return() ]) ]
+// (string) => [`Print(string, (()) => [`Return()])]
 /* value => ({
   tag: "Print",
   payload: [value, v => ({
@@ -175,7 +175,7 @@ let print = (value#[0]: string) => `Print(value#[0], (v#[1]: ()) => `Return())
   })]
 }) */
 let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
-// () => [ `Read((), (string) => [ `Return(string) ]) ]
+// () => [`Read((), (string) => [`Return(string)])]
 /* () => ({
   tag: "Read",
   payload: [null, v => ({
@@ -188,7 +188,7 @@ let helloFolks = () => {
     print("What is your name?")!;
     print(read()!)!;
 }
-// () => Task<[ `Print(string, ()) | `Print(string, ()) | `Read((), string) ], ()>
+// () => Task<[`Print(string, ()) | `Read((), string)], ()>
 /* () => andThen($terms.print(`What is your name?`), __0 => andThen($terms.read(), tmp1000 => andThen($terms.print(tmp1000), tmp1001 => ({
   tag: "Return",
   payload: tmp1001
@@ -210,23 +210,23 @@ withHandler<[`Print(string, ())], string, [`Read((), string)], string>(
 
 --[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] withHandler#[ha096a125d17e577335cba67a01ae6f08c8a8254b]
-let alwaysRead: (value: string, task: Task<[ `Read((), string) | `Print(string, ()) ], string>) => Task<
-    [ `Print(string, ()) ],
+let alwaysRead: (value: string, task: Task<[`Read((), string) | `Print(string, ())], string>) => Task<
+    [`Print(string, ())],
     string,
-> = (value#[0]: string, task#[1]: Task<[ `Read((), string) | `Print(string, ()) ], string>): Task<
-    [ `Print(string, ()) ],
+> = (value#[0]: string, task#[1]: Task<[`Read((), string) | `Print(string, ())], string>): Task<
+    [`Print(string, ())],
     string,
 > => {
     switch task#[1] {
         `Return(v#[2]) => `Return(v#[2]);
         `Read(v#[3], k#[4]) => alwaysRead#[r0](value#[0], k#[4](value#[0]));
-        otherwise#[5] => withHandler<[ `Print(string, ()) ], string, [ `Read((), string) ], string>(
+        otherwise#[5] => withHandler<[`Print(string, ())], string, [`Read((), string)], string>(
             otherwise#[5],
             (task#[6]) => alwaysRead#[r0](value#[0], task#[6]),
         );
     };
 }
-// (string, Task<[ `Read((), string) | `Print(string, ()) ], string>) => [ `Return(string) | `Print(string, (arg: ()) => Task<[ `Print(string, ()) ], string>) ]
+// (string, Task<[`Read((), string) | `Print(string, ())], string>) => [`Return(string) | `Print(string, (arg: ()) => Task<[`Print(string, ())], string>)]
 /* (value, task) => (() => {
   if (task.tag === "Return") {
     let {
@@ -261,14 +261,14 @@ let hello = (t: Task<[`Read((), string) | `Print(string, ())], int>) => {
 
 --[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
-let hello = (t#[0]: Task<[ `Read((), string) | `Print(string, ()) ], int>) => {
+let hello = (t#[0]: Task<[`Read((), string) | `Print(string, ())], int>) => {
     switch t#[0] {
         `Return(v#[1]) => v#[1];
         `Read((), k#[2]) => 100;
         `Print(hello#[3], k#[4]) => 1000;
     };
 }
-// (Task<[ `Read((), string) | `Print(string, ()) ], int>) => int
+// (Task<[`Read((), string) | `Print(string, ())], int>) => int
 /* t => (() => {
   if (t.tag === "Return") {
     let {
