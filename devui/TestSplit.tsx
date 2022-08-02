@@ -24,6 +24,8 @@ import { Colorable, typeToString } from './Highlight';
 import { idToString, toId } from '../core/ids';
 import { Loc } from '../core/typed-ast';
 import { transformFile, transformToplevel } from '../core/transform-tast';
+import { VError } from '../core/typing/analyze';
+import { printCtx } from '../core/typing/to-ast';
 
 /*
 
@@ -220,7 +222,13 @@ export const TestSplit = ({
                 key={'last' + items.length}
                 text={'// add new item'}
                 onBlur={(text) => {
-                    const file = processFile(text, ctx);
+                    const file = processFile(
+                        text,
+                        ctx,
+                        undefined,
+                        undefined,
+                        true,
+                    );
                     if (file.type === 'Success') {
                         setItems(items.concat(file.info));
                     }
@@ -348,6 +356,11 @@ export const TopEditor = ({
     return (
         <Hovery
             style={{ position: 'relative' }}
+            onMouseOut={(evt) => {
+                // if (evt.target === evt.currentTarget) {
+                resetHighlights(evt);
+                // }
+            }}
             onMouseOver={(evt) => {
                 const loc = (evt.target as HTMLSpanElement).getAttribute(
                     'data-span',
@@ -356,48 +369,58 @@ export const TopEditor = ({
                     const [startr, endr] = loc.split(':');
                     const start = +startr;
                     const end = +endr;
-                    const box = (
-                        evt.target as HTMLSpanElement
-                    ).getBoundingClientRect();
-                    const anns: ToplevelInfo<FileContents>['annotations'] = [];
-                    file.info.forEach((info) => {
-                        info.annotations.forEach((ann) => {
-                            if (
-                                ann.loc.start.offset <= start &&
-                                ann.loc.end.offset >= end
-                            ) {
-                                anns.push(ann);
+                    const { anns, errors } = sortedAnnotations(
+                        file,
+                        start,
+                        end,
+                    );
+                    if (anns.length || errors.length) {
+                        Object.assign(
+                            hover.style,
+                            hoverStyle(
+                                (
+                                    evt.target as HTMLSpanElement
+                                ).getBoundingClientRect(),
+                            ),
+                        );
+                        hover.innerHTML = '';
+                        if (anns.length) {
+                            const texts: { [key: string]: true } = {};
+                            for (let ann of anns) {
+                                if (
+                                    ann.loc.start.offset ===
+                                        anns[0].loc.start.offset &&
+                                    ann.loc.end.offset ===
+                                        anns[0].loc.end.offset
+                                ) {
+                                    if (texts[ann.text]) {
+                                        continue;
+                                    }
+                                    texts[ann.text] = true;
+                                    const node = document.createElement('div');
+                                    node.textContent = ann.text;
+                                    hover.append(node);
+                                }
+                            }
+                            // hover.textContent = anns[0].text;
+                        }
+                        console.log(errors);
+                        errors.forEach((error) => {
+                            const node = document.createElement('div');
+                            if (error.type === 'Dec') {
+                                const actx = printCtx(ctx);
+                                const p = newPPCtx(true);
+                                node.textContent = printToString(
+                                    p.ToPP.Decorator(
+                                        actx.ToAst.Decorator(error.dec, actx),
+                                        p,
+                                    ),
+                                    100,
+                                );
+                                hover.append(node);
                             }
                         });
-                    });
-                    anns.sort(
-                        (a, b) =>
-                            a.loc.end.offset -
-                            a.loc.start.offset -
-                            (b.loc.end.offset - b.loc.start.offset),
-                    );
-                    if (anns.length) {
-                        Object.assign(hover.style, {
-                            right: 'unset',
-                            bottom: 'unset',
-                            top: box.bottom + 8 + 'px',
-                            left: box.left + 8 + 'px',
-                            position: 'absolute',
-                            background: '#222',
-                            border: '1px solid currentColor',
-                            fontFamily:
-                                'Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono","Courier New", monospace',
-                            fontSize: '80%',
-                            padding: '4px 8px',
-                            whiteSpace: 'pre',
-                            pointerEvents: 'none',
-                            display: 'block',
-                            color: '#888',
-                        });
-                        // hover.innerHTML = `Hello my folks ${loc}`;
-                        hover.innerHTML = anns[0].text;
                         const bb = hover.getBoundingClientRect();
-                        console.log(bb);
                         if (bb.right > window.innerWidth - 8) {
                             hover.style.left = 'unset';
                             hover.style.right = '8px';
@@ -406,34 +429,12 @@ export const TopEditor = ({
                             hover.style.top = 'unset';
                             hover.style.bottom = '8px';
                         }
-                        const al = anns[0].loc;
-                        evt.currentTarget
-                            .querySelectorAll('[data-span]')
-                            .forEach((ell) => {
-                                const el = ell as HTMLElement;
-                                const [s, e] = el
-                                    .getAttribute('data-span')!
-                                    .split(':');
-                                if (
-                                    +s >= al.start.offset &&
-                                    +e <= al.end.offset
-                                ) {
-                                    el.style.backgroundColor =
-                                        'rgba(100,100,0,0.2)';
-                                } else {
-                                    el.style.backgroundColor = 'transparent';
-                                }
-                            });
+                        const loc = anns.length ? anns[0].loc : errors[0].loc;
+                        highlightForLoc(evt, loc);
                     }
                 } else {
                     hover.style.display = 'none';
-                    evt.currentTarget
-                        .querySelectorAll('[data-span]')
-                        .forEach((el) => {
-                            // el.style.textDecoration = 'none';
-                            (el as HTMLElement).style.backgroundColor =
-                                'transparent';
-                        });
+                    resetHighlights(evt);
                 }
             }}
         >
@@ -639,3 +640,78 @@ const showValue = (v: any) => {
     }
     return JSON.stringify(v);
 };
+
+function resetHighlights(evt: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    evt.currentTarget.querySelectorAll('[data-span]').forEach((el) => {
+        // el.style.textDecoration = 'none';
+        (el as HTMLElement).style.backgroundColor = 'transparent';
+    });
+}
+
+function highlightForLoc(
+    evt: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    al: Loc,
+) {
+    evt.currentTarget.querySelectorAll('[data-span]').forEach((ell) => {
+        const el = ell as HTMLElement;
+        const [s, e] = el.getAttribute('data-span')!.split(':');
+        if (+s >= al.start.offset && +e <= al.end.offset) {
+            el.style.backgroundColor = 'rgba(100,100,0,0.2)';
+        } else {
+            el.style.backgroundColor = 'transparent';
+        }
+    });
+}
+
+function sortedAnnotations(
+    file: Success<FileContents>,
+    start: number,
+    end: number,
+) {
+    const errors: VError[] = [];
+    const anns: ToplevelInfo<FileContents>['annotations'] = [];
+    file.info.forEach((info) => {
+        info.annotations.forEach((ann) => {
+            if (ann.loc.start.offset <= start && ann.loc.end.offset >= end) {
+                anns.push(ann);
+            }
+        });
+        info.verify.errors.forEach((err) => {
+            if (err.loc.start.offset <= start && err.loc.end.offset >= end) {
+                errors.push(err);
+            } else if (
+                err.loc.start.offset >= start &&
+                err.loc.end.offset <= end
+            ) {
+                errors.push(err);
+            }
+        });
+    });
+    anns.sort(
+        (a, b) =>
+            a.loc.end.offset -
+            a.loc.start.offset -
+            (b.loc.end.offset - b.loc.start.offset),
+    );
+    return { anns, errors };
+}
+
+function hoverStyle(box: DOMRect): Partial<HTMLElement['style']> {
+    return {
+        right: 'unset',
+        bottom: 'unset',
+        top: box.bottom + 8 + 'px',
+        left: box.left + 8 + 'px',
+        position: 'absolute',
+        background: '#222',
+        border: '1px solid #333',
+        fontFamily:
+            'Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono","Courier New", monospace',
+        fontSize: '80%',
+        padding: '4px 8px',
+        whiteSpace: 'pre',
+        pointerEvents: 'none',
+        display: 'block',
+        color: '#888',
+    };
+}

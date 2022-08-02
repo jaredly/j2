@@ -529,12 +529,16 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             if (ttype.type === 'TVars') {
                 return {
                     ...node,
-                    target: decorate(
-                        node.target,
-                        'needsTypeVariables',
-                        hit,
-                        ctx,
-                    ),
+                    target: {
+                        type: 'TypeApplication',
+                        loc: node.loc,
+                        target: node.target,
+                        inferred: true,
+                        args: ttype.args.map((t) => ({
+                            type: 'TBlank',
+                            loc: node.loc,
+                        })),
+                    },
                 };
             }
             return decorate(node, 'notAFunction', hit, ctx);

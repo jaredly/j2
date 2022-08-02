@@ -214,6 +214,7 @@ export const ToIR = {
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { refsEqual } from '../refsEqual';
+import { unifyTypes } from '../typing/unifyTypes';
 export const ToJS = {
     Enum({ loc, tag, payload }: t.IEnum, ctx: JCtx): b.Expression {
         if (!payload) {
@@ -511,18 +512,45 @@ export const unifyEnums = (
         }
     }
 
+    const others: t.Type[] = [];
+
+    canEnums.bounded.forEach((item) => {
+        const t = item.type === 'local' ? item.local : item.inner;
+        for (let i = 0; i < others.length; i++) {
+            const un = unifyTypes(t, others[i], ctx);
+            if (un !== false) {
+                others[i] = un;
+                return;
+            }
+        }
+        others.push(t);
+    });
+
+    expEnums.bounded.forEach((item) => {
+        const t = item.type === 'local' ? item.local : item.inner;
+        for (let i = 0; i < others.length; i++) {
+            const un = unifyTypes(t, others[i], ctx);
+            if (un !== false) {
+                others[i] = un;
+                return;
+            }
+        }
+        others.push(t);
+    });
+
     return {
         ...candidate,
         open: candidate.open || expected.open,
         cases: [
             ...Object.values(expMap),
             // TODO: dedup?
-            ...canEnums.bounded.map((m) =>
-                m.type === 'local' ? m.local : m.inner,
-            ),
-            ...expEnums.bounded.map((m) =>
-                m.type === 'local' ? m.local : m.inner,
-            ),
+            ...others,
+            // ...canEnums.bounded.map((m) =>
+            //     m.type === 'local' ? m.local : m.inner,
+            // ),
+            // ...expEnums.bounded.map((m) =>
+            //     m.type === 'local' ? m.local : m.inner,
+            // ),
         ],
     };
 };

@@ -1,5 +1,5 @@
 import { noloc } from '../consts';
-import { enumTypeMatches } from '../elements/enums';
+import { enumCaseMap, enumTypeMatches } from '../elements/enums';
 import { recordAsTuple, TRecord } from '../elements/records';
 import { transformExpression } from '../transform-tast';
 import { Loc, TApply, TEnum, Type, EnumCase, Expression } from '../typed-ast';
@@ -232,7 +232,7 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
         return null;
     }
     let result: null | Type = null;
-    const effects: { [key: string]: { input: Type; output: Type } } = {};
+    const effects: { [key: string]: { input: Type; output: Type | null } } = {};
     const subs: TApply[] = [];
     for (let kase of cases.cases) {
         if (!kase.payload) {
@@ -259,8 +259,24 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
             let [input, fn] = items;
             fn = ctx.resolveRefsAndApplies(fn) ?? fn;
             if (fn.type === 'TEnum' && fn.cases.length === 0 && !fn.open) {
+                if (result == null) {
+                    result = { type: 'TBlank', loc: fn.loc };
+                }
                 // no result
                 // continue
+                if (effects[kase.tag]) {
+                    if (effects[kase.tag].output) {
+                        return null;
+                    }
+                    const un = unifyTypes(effects[kase.tag].input, input, ctx);
+                    if (un === false) {
+                        return null;
+                    }
+                    effects[kase.tag] = { input: un, output: null };
+                } else {
+                    effects[kase.tag] = { input, output: null };
+                }
+                continue;
             }
             if (fn.type !== 'TLambda' || fn.args.length !== 1) {
                 return null;
@@ -280,8 +296,12 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
             result = ru;
             subs.push(sub);
             if (effects[kase.tag]) {
-                const iu = unifyTypes(effects[kase.tag].input, input, ctx);
-                const ou = unifyTypes(effects[kase.tag].output, output, ctx);
+                const current = effects[kase.tag];
+                if (!current.output) {
+                    return null;
+                }
+                const iu = unifyTypes(current.input, input, ctx);
+                const ou = unifyTypes(current.output, output, ctx);
                 if (!iu || !ou) {
                     return null;
                 }
@@ -327,7 +347,7 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
                                 {
                                     type: 'TRecordKeyValue',
                                     key: '1',
-                                    value: output,
+                                    value: output == null ? tnever : output,
                                     default_: null,
                                     loc: noloc,
                                 },
@@ -398,7 +418,9 @@ export const collectEffects = (
     t: Expression,
     ctx: Ctx,
 ): (EnumCase | Type)[] => {
-    const collected: (EnumCase | Type)[] = [];
+    const cases: EnumCase[] = [];
+    const others: Type[] = [];
+    // const collected: (EnumCase | Type)[] = [];
     transformExpression(
         t,
         {
@@ -414,9 +436,15 @@ export const collectEffects = (
                 if (asTask) {
                     const [effects, result] = asTask.args;
                     if (effects.type === 'TEnum') {
-                        collected.push(...effects.cases);
+                        effects.cases.forEach((kase) => {
+                            if (kase.type === 'EnumCase') {
+                                cases.push(kase);
+                            } else {
+                                others.push(kase);
+                            }
+                        });
                     } else {
-                        collected.push(effects);
+                        others.push(effects);
                     }
                 }
                 return null;
@@ -427,5 +455,9 @@ export const collectEffects = (
         },
         ctx,
     );
-    return collected;
+    const map = enumCaseMap(cases, ctx);
+    if (!map) {
+        return [...cases, ...others];
+    }
+    return [...Object.values(map), ...others];
 };

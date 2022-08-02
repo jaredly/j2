@@ -260,7 +260,7 @@ export const openSpan = (hl: HL, noPrefix = false) =>
             ? ` data-prefix="${escapeLine(hl.prefix.text)}"`
             : ''
     }${
-        hl.prefix?.message
+        !noPrefix && hl.prefix?.message
             ? ` data-message="${escapeLine(
                   hl.prefix.message,
               )}" title="${escapeLine(hl.prefix.message)}"`

@@ -36,6 +36,21 @@ export function annotationVisitor(
             }
             return null;
         },
+        ToplevelLet(node, ctx) {
+            node.elements.forEach((el) => {
+                const t =
+                    el.typ && el.typ.type !== 'TBlank'
+                        ? el.typ
+                        : ctx.getType(el.expr);
+                if (t) {
+                    annotations.push({
+                        loc: el.loc,
+                        text: typeToString(t, ctx),
+                    });
+                }
+            });
+            return null;
+        },
         Type(node, ctx) {
             let t = ctx.resolveRefsAndApplies(node) ?? node;
             t = maybeExpandTask(t, ctx) ?? t;
@@ -45,20 +60,20 @@ export function annotationVisitor(
             });
             return null;
         },
-        Ref(node, ctx) {
-            let text =
-                node.kind.type === 'Unresolved'
-                    ? 'Unresolved'
-                    : node.kind.type === 'Global'
-                    ? refHash(node.kind)
-                    : node.kind.type === 'Local'
-                    ? `sym=${node.kind.sym}`
-                    : `recur(${node.kind.idx})`;
-            annotations.push({
-                loc: node.loc,
-                text,
-            });
-            return null;
-        },
+        // Ref(node, ctx) {
+        //     let text =
+        //         node.kind.type === 'Unresolved'
+        //             ? 'Unresolved'
+        //             : node.kind.type === 'Global'
+        //             ? refHash(node.kind)
+        //             : node.kind.type === 'Local'
+        //             ? `sym=${node.kind.sym}`
+        //             : `recur(${node.kind.idx})`;
+        //     annotations.push({
+        //         loc: node.loc,
+        //         text,
+        //     });
+        //     return null;
+        // },
     };
 }
