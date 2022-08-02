@@ -15,6 +15,7 @@ import { Editor } from './Editor';
 import { HL } from './HL';
 import { refmt } from './refmt';
 import * as p from '../core/grammar/base.parser';
+import * as t from '../core/typed-ast';
 import { noloc } from '../core/consts';
 import { newPPCtx } from '../core/printer/to-pp';
 import { printToString } from '../core/printer/pp';
@@ -53,19 +54,6 @@ export const fmtItem = (item: p.Toplevel) => {
         loc: noloc,
     };
 
-    // const keys = Object.keys(aliases);
-    // if (keys.length) {
-    //     ast.toplevels.push({
-    //         type: 'Aliases',
-    //         items: keys.sort().map((k) => ({
-    //             type: 'AliasItem',
-    //             name: k,
-    //             hash: `#[${aliases[k]}]`,
-    //             loc: noloc,
-    //         })),
-    //         loc: noloc,
-    //     });
-    // }
     ast.toplevels.push(item);
 
     if (ast.toplevels.length > 0) {
@@ -116,6 +104,13 @@ export const testStatuses = (
 
     return statuses;
 };
+type TestItem =
+    | ToplevelInfo<FileContents>
+    | {
+          type: 'Failed';
+          text: string;
+          err: Loc;
+      };
 
 export const TestSplit = ({
     test,
@@ -130,12 +125,7 @@ export const TestSplit = ({
 }) => {
     // can I attribute comments to each of the infos?
     // also, how do I add / remove items?
-    const [items, setItems] = React.useState<
-        (
-            | ToplevelInfo<FileContents>
-            | { type: 'Failed'; text: string; err: Loc }
-        )[]
-    >(() => {
+    const [items, setItems] = React.useState<TestItem[]>(() => {
         if (test.file.type === 'Error') {
             return [
                 { type: 'Failed', text: test.file.text, err: test.file.err },
@@ -205,10 +195,13 @@ export const TestSplit = ({
                     key={i}
                     onChange={(info) => {
                         setItems(
-                            items
-                                .slice(0, i)
-                                .concat(info)
-                                .concat(items.slice(i + 1)),
+                            reconcileChanges(
+                                items,
+                                i,
+                                info,
+                                shared.current,
+                                myctx,
+                            ),
                         );
                     }}
                     shared={shared}
@@ -738,3 +731,68 @@ function hoverStyle(box: DOMRect): Partial<HTMLElement['style']> {
         color: '#888',
     };
 }
+
+export const topHash = (t: t.Toplevel) => {
+    if (t.type === 'ToplevelLet') {
+        return t.hash;
+    }
+    if (t.type === 'TypeAlias') {
+        return t.hash;
+    }
+};
+
+export const reconcileChanges = (
+    items: TestItem[],
+    i: number,
+    changed: ToplevelInfo<FileContents>[],
+    shared: { track: NameTrack; terms: { [key: string]: any } },
+    ctx: FullContext,
+) => {
+    // Soooo I could just cheat? and eval everything after this one
+    const old = items[i];
+    if (old.type === 'Failed') {
+        return items
+            .slice(0, i)
+            .concat(changed)
+            .concat(items.slice(i + 1));
+    }
+    const hash = topHash(old.contents.top);
+    if (!hash) {
+        return items
+            .slice(0, i)
+            .concat(changed)
+            .concat(items.slice(i + 1));
+    }
+    const hashes = [hash];
+    const res = items.slice(0, i).concat(changed);
+    changed.forEach((info) => {
+        ctx = ctx.withToplevel(info.contents.top) as FullContext;
+    });
+    for (let j = i + 1; j < items.length; j++) {
+        const at = items[j];
+        if (at.type === 'Failed' || !hashes.some((h) => at.uses[h])) {
+            res.push(at);
+            if (at.type === 'Info') {
+                ctx = ctx.withToplevel(at.contents.top) as FullContext;
+            }
+            continue;
+        }
+        const hash = topHash(at.contents.top);
+        if (hash) {
+            hashes.push(hash);
+        }
+        const text = fmtItem(at.contents.refmt);
+        const file = processFile(text, ctx, undefined, shared.track, true);
+        if (file.type === 'Success') {
+            getTestResults(file, shared.terms);
+            res.push(...file.info);
+            file.info.forEach((info) => {
+                ctx = ctx.withToplevel(info.contents.top) as FullContext;
+            });
+        } else {
+            ctx = ctx.withToplevel(at.contents.top) as FullContext;
+            res.push(at); // weird!
+        }
+    }
+    return res;
+};

@@ -27,7 +27,7 @@ let collect = <Inner: task>(task: Task<[Write | Inner], ()>): Task<Inner, string
     );
     otherwise => withHandler<Inner, (), Write, string>(otherwise, collect<Inner>);
 }
-alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] collect#[hdcf352d196b379fc15b78bac63e94c59a25d8e25] print#[h7f2c4f7e1b479be94892d7e98869816c0fc8683e]
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] collect#[h04939f8309036eb45e68bce2ae333d9ad461ea08] print#[h0bf3da31f0a083c41662067fd19fc1803ad2224c]
 {
     let `Return(v) = collect<[]>((() => {
         print("Hello")!;
@@ -35,7 +35,7 @@ alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] collect#[hdcf352d196b379fc1
     })());
     v == "Hello\nWorld\nend";
 }
-alias alwaysRead#[h9cd0f1dffaee1da3463a9c7da5ab4e10ee2cb3b3] read#[hb4960a73062670598fa2100bb3c961af8368de28]
+alias alwaysRead#[heba973b0eab33e70629e5cc8feb304b272fbeca0] read#[hea566557ba2857893f40b5f0de88970f4c8d65aa]
 {
     let `Return(v) = collect<[]>(
         alwaysRead<[Write], ()>("hi", (() => {
@@ -53,7 +53,7 @@ let reverse: (t: Task<Write, ()>) => Task<Write, ()> = (task: Task<Write, ()>) =
 }
 alias eq#[h160938f3c683c32e39a494546124c1d40bcde082]
 let expect = <T: eq>(`Return(m): Task<[], T>, e: T) => m == e
-alias expect#[h1f12eaef67c0292e9145431abf15b7bf90d1ceb6] reverse#[h13da32ef4105c9d6a78695c647de1fd3f507b58b]
+alias expect#[hb49636b085d78fd2e59ce1b12de1b33f97ef6781] reverse#[heb42d529bc630bc12db788d1e486d2c4430aa2da]
 expect<string>(
     collect<[]>(reverse((() => {
         print("A")!;
@@ -66,7 +66,7 @@ alias bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150]
 type Decide = [`Decide((), bool)]
 alias Decide#[hd53a584b44751c2fbfdf1a3826912162cf36c920]
 let decide: Task<Decide, bool> = `Decide((), (b: bool) => `Return(b))
-alias decide#[h108816cca299511520fd3d43f5ab7840105958ea]
+alias decide#[hc2f1b9d26916e171f4adf4b59d25d17d92f6b710]
 let choose = <T>(x: T, y: T) => {
     if decide! {
         x;
@@ -78,13 +78,13 @@ let pickTrue: <T>(Task<Decide, T>) => T = <T>(task: Task<Decide, T>): T => switc
     `Return(v) => v;
     `Decide(_, k) => pickTrue<T>(k(true));
 }
-alias -#[h4dd9308469e477a4a756b4b286de0625d5a98af9] choose#[h42dd33e9bb01737d406ba5c4241da56f1096c111] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias -#[h4dd9308469e477a4a756b4b286de0625d5a98af9] choose#[h335af7061844d1976be24c3da4fc9418beff2fff] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 let chooseDiff = () => {
     let x1 = choose<int>(15, 30)!;
     let x2 = choose<int>(5, 10)!;
     x1 - x2;
 }
-alias chooseDiff#[h0dd1475991c109145d9e76868cfecef5ddabd1c5] pickTrue#[h5ac610a9d6438244b3b00d7ea3f359988100373a]
+alias chooseDiff#[h23f48c1f7e795db8670cf988e9252db60f07f6e3] pickTrue#[ha98ae3dc29afe30db38aa16f95f91735f4df4259]
 pickTrue<int>(chooseDiff()) == 10
 alias >#[hc1d03250b26806868f520136d8a763b0c0edff9b]
 let pickMax: (Task<Decide, int>) => int = (task: Task<Decide, int>): int => {
@@ -101,11 +101,11 @@ let pickMax: (Task<Decide, int>) => int = (task: Task<Decide, int>): int => {
         };
     };
 }
-alias pickMax#[h90a1b556aa5dabde2290284e49839f47c9e408ef]
+alias pickMax#[h3c180a65e76a601ec9654898c3ad9d211be86c00]
 pickMax(chooseDiff()) == 25
 type Fail = [`Fail((), [])]
 let fail = `Fail((), ())
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] Fail#[h2b5445c7100f54327177f27fdbdafaf46e537c5e] fail#[h729036fc5f9ed540cc3ad62576eeed107866166b]
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] Fail#[h2b5445c7100f54327177f27fdbdafaf46e537c5e] fail#[h5a91bf5f657f5f2b83cb6bf73c6e43f12ac58a1c]
 let chooseInt: (int, int) => Task<[Decide | Fail], int> = (m: int, n: int): Task<[Decide | Fail], int> => {
     if m > n {
         fail!;
@@ -117,7 +117,7 @@ let chooseInt: (int, int) => Task<[Decide | Fail], int> = (m: int, n: int): Task
         };
     };
 }
-alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] chooseInt#[h51d8a99418bd42082d9a3915220cb16ea0e95898] isSquare#[hb6ce0e79bc7b4832f4b2b564eac779a40d12f007]
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] chooseInt#[hed7b152c5e2824592f714c9f403105a38309ce3e] isSquare#[hb6ce0e79bc7b4832f4b2b564eac779a40d12f007]
 let pythagorean = (m: int, n: int) => {
     let a = chooseInt(m, n - 1)!;
     let b = chooseInt(a + 1, n)!;
@@ -143,8 +143,8 @@ let backtrack: <T>(Task<[Decide | Fail], T>, () => T) => T = <T>(
         `Return(x) => x;
     };
 }
-alias backtrack#[h8864f73597b6dc6b53002132e677411e5db4e989] pythagorean#[hce71fb6dfb5bbec59351789b6279dd5deba69d29]
+alias backtrack#[ha1fc1194c7906a24cbff42cb98b3a9a3d3fcfd32] pythagorean#[hd773507392b39638360e818f65e640d01d2ed2bc]
 let backtrackPythag = (m: int, n: int) => backtrack<(int, int)>(pythagorean(m, n), () => (0, 0))
-alias backtrackPythag#[h61b3bf5e1d048138d818fdd8d2a8b22afdce742d]
+alias backtrackPythag#[h84482e389650e2ca4de777d948f4c9a7b9dba34f]
 backtrackPythag(4, 15)
 backtrackPythag(7, 10)

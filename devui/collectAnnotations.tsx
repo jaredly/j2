@@ -7,10 +7,11 @@ import { typeToplevelT } from '../core/elements/base';
 import { typeToString } from './Highlight';
 import { localTrackingVisitor, LTCtx } from '../core/typing/analyze';
 import { maybeExpandTask } from '../core/typing/tasks';
+import { extract } from '../core/ids';
 
 export const collectAnnotations = (tast: File, ctx: FullContext) => {
     const annotations: { loc: Loc; text: string }[] = [];
-    const visitor: tt.Visitor<FullContext> = annotationVisitor(annotations);
+    const visitor: tt.Visitor<FullContext> = annotationVisitor(annotations, {});
     tt.transformFile(tast, visitor, ctx);
     // console.log(annotations);
     return annotations;
@@ -18,6 +19,7 @@ export const collectAnnotations = (tast: File, ctx: FullContext) => {
 
 export function annotationVisitor(
     annotations: { loc: Loc; text: string }[],
+    uses: { [key: string]: true },
 ): tt.Visitor<FullContext & LTCtx> {
     return {
         ...(localTrackingVisitor as any as tt.Visitor<FullContext & LTCtx>),
@@ -60,7 +62,18 @@ export function annotationVisitor(
             });
             return null;
         },
+        TRef(node, ctx) {
+            if (node.ref.type === 'Global') {
+                const { hash } = extract(node.ref.id);
+                uses[hash] = true;
+            }
+            return null;
+        },
         Ref(node, ctx) {
+            if (node.kind.type === 'Global') {
+                const { hash } = extract(node.kind.id);
+                uses[hash] = true;
+            }
             //     let text =
             //         node.kind.type === 'Unresolved'
             //             ? 'Unresolved'

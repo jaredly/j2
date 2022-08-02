@@ -70,6 +70,7 @@ export type TypeContents = {
 export type ToplevelInfo<Contents> = {
     type: 'Info';
     aliases: { [key: string]: string };
+    uses: { [key: string]: true };
     contents: Contents;
     verify: Verify;
     annotations: { loc: t.Loc; text: string }[];
@@ -132,6 +133,7 @@ export const executeFile = (
             try {
                 const res = ectx.executeJs(irtop.js, irtop.name, `${i}-${j}`);
                 if (info.contents.irtops?.length === 1) {
+                    console.log('did an expr', res);
                     results.exprs[i] = res;
                 }
             } catch (err) {
@@ -307,7 +309,8 @@ export const processTypeToplevel = (
     const refmt = pctx.ToAst.TypeToplevel(type, pctx);
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
-    transformTypeToplevel(type, annotationVisitor(annotations), ctx);
+    const uses: { [key: string]: true } = {};
+    transformTypeToplevel(type, annotationVisitor(annotations, uses), ctx);
 
     return {
         i: {
@@ -318,6 +321,7 @@ export const processTypeToplevel = (
                 top: type,
                 refmt,
             },
+            uses,
             verify,
             annotations,
             aliases: newAliases(allAliases, pctx.backAliases),
@@ -423,9 +427,10 @@ export const processToplevel = (
                 : []
             : null;
 
+    const uses: { [key: string]: true } = {};
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
-    transformToplevel(top, annotationVisitor(annotations), ctx);
+    transformToplevel(top, annotationVisitor(annotations, uses), ctx);
 
     // Ok, so here we want any extra verification.
     // Because I want to be able to ... re-run with
@@ -449,6 +454,7 @@ export const processToplevel = (
                 refmt,
                 irtops,
             },
+            uses,
             verify,
             annotations,
             aliases: newAliases(allAliases, pctx.backAliases),
