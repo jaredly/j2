@@ -44,19 +44,33 @@ export const ToTast = {
         return res;
     },
     CallSuffix(suffix: p.CallSuffix, target: t.Expression, ctx: TCtx): Apply {
-        return {
-            type: 'Apply',
-            target,
-            args:
-                suffix.args?.items.map((arg) =>
-                    ctx.ToTast.Expression(arg, ctx),
-                ) ?? [],
-            loc: {
-                ...suffix.loc,
-                start: target.loc.start,
+        return maybeAutoType(
+            {
+                type: 'Apply',
+                target,
+                args:
+                    suffix.args?.items.map((arg) =>
+                        ctx.ToTast.Expression(arg, ctx),
+                    ) ?? [],
+                loc: {
+                    ...suffix.loc,
+                    start: target.loc.start,
+                },
             },
-        };
+            ctx,
+        );
     },
+};
+
+export const maybeAutoType = (node: t.Apply, ctx: TCtx): t.Apply => {
+    if (node.target.type === 'Ref' && node.target.kind.type === 'Unresolved') {
+        const resolved = ctx.resolve(node.target.kind.text, null);
+        const auto = chooseAutoTypable(node, node.target, resolved, ctx);
+        if (auto) {
+            return auto;
+        }
+    }
+    return node;
 };
 
 export const isOpText = (t: string) => !t.match(/^[a-zA-Z_$]/);
@@ -370,6 +384,61 @@ export const ToJS = {
     },
 };
 
+export const chooseAutoTypable = (
+    node: t.Apply,
+    target: t.Ref,
+    resolved: t.RefKind[],
+    ctx: Ctx,
+) => {
+    const argTypes = node.args.map((arg) => ctx.getType(arg));
+    if (argTypes.every(Boolean)) {
+        for (let option of resolved) {
+            const ttype = ctx.getType({
+                ...target,
+                kind: option,
+            });
+            if (
+                ttype?.type === 'TLambda' &&
+                ttype.args.length === argTypes.length
+            ) {
+                // Will return 'null' if any types don't match
+                const constraints = constraintsForApply(
+                    argTypes as t.Type[],
+                    ttype.args,
+                    ctx,
+                );
+                if (constraints) {
+                    Object.keys(constraints).forEach((key) => {
+                        ctx.addTypeConstraint(+key, constraints[+key]);
+                    });
+                    return {
+                        ...node,
+                        target: { ...target, kind: option },
+                    };
+                }
+            }
+            if (ttype?.type === 'TVars' && ttype.inner.type === 'TLambda') {
+                const typed = autoTypeApply(
+                    {
+                        ...node,
+                        target: { ...target, kind: option },
+                    },
+                    ttype.args,
+                    ttype.inner.args.map((t) => t.typ),
+                    argTypes as t.Type[],
+                    ctx,
+                );
+                if (typed) {
+                    Object.keys(typed.constraints).forEach((key) => {
+                        ctx.addTypeConstraint(+key, typed.constraints[+key]);
+                    });
+                    return typed.apply;
+                }
+            }
+        }
+    }
+};
+
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     ApplyPost(node, { ctx, hit }) {
         if (
@@ -378,63 +447,14 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         ) {
             const resolved = ctx.resolve(node.target.kind.text, null);
             if (resolved.length > 1) {
-                const argTypes = node.args.map((arg) => ctx.getType(arg));
-                if (argTypes.every(Boolean)) {
-                    for (let option of resolved) {
-                        const ttype = ctx.getType({
-                            ...node.target,
-                            kind: option,
-                        });
-                        if (
-                            ttype?.type === 'TLambda' &&
-                            ttype.args.length === argTypes.length
-                        ) {
-                            // Will return 'null' if any types don't match
-                            const constraints = constraintsForApply(
-                                argTypes as t.Type[],
-                                ttype.args,
-                                ctx,
-                            );
-                            if (constraints) {
-                                Object.keys(constraints).forEach((key) => {
-                                    ctx.addTypeConstraint(
-                                        +key,
-                                        constraints[+key],
-                                    );
-                                });
-                                return {
-                                    ...node,
-                                    target: { ...node.target, kind: option },
-                                };
-                            }
-                        }
-                        if (
-                            ttype?.type === 'TVars' &&
-                            ttype.inner.type === 'TLambda'
-                        ) {
-                            const typed = autoTypeApply(
-                                {
-                                    ...node,
-                                    target: { ...node.target, kind: option },
-                                },
-                                ttype.args,
-                                ttype.inner.args.map((t) => t.typ),
-                                argTypes as t.Type[],
-                                ctx,
-                            );
-                            if (typed) {
-                                Object.keys(typed.constraints).forEach(
-                                    (key) => {
-                                        ctx.addTypeConstraint(
-                                            +key,
-                                            typed.constraints[+key],
-                                        );
-                                    },
-                                );
-                                return typed.apply;
-                            }
-                        }
-                    }
+                const auto = chooseAutoTypable(
+                    node,
+                    node.target,
+                    resolved,
+                    ctx,
+                );
+                if (auto) {
+                    return auto;
                 }
             }
             // Check if there are multiples

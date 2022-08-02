@@ -5,6 +5,7 @@ import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
+import { maybeAutoType } from './apply';
 
 export const grammar = `
 BinOp = first:WithUnary rest_drop:BinOpRight* 
@@ -57,7 +58,7 @@ export const ToTast = {
         }));
 
         const tree = arrangeIntoLevels(first, rest);
-        return treeToExpr(tree);
+        return treeToExpr(tree, ctx);
     },
 };
 
@@ -164,22 +165,25 @@ type Op = {
 type Single = { type: 'single'; expr: t.Expression };
 type Tree = Op | Single;
 
-const treeToExpr = (tree: Tree): t.Expression => {
+const treeToExpr = (tree: Tree, ctx: TCtx): t.Expression => {
     if (tree.type === 'single') {
         return tree.expr;
     }
-    const left = treeToExpr(tree.left);
-    const right = treeToExpr(tree.right);
-    return {
-        type: 'Apply',
-        target: tree.op,
-        args: [left, right],
-        loc: {
-            start: left.loc.start,
-            end: right.loc.end,
-            idx: tree.op.loc.idx,
+    const left = treeToExpr(tree.left, ctx);
+    const right = treeToExpr(tree.right, ctx);
+    return maybeAutoType(
+        {
+            type: 'Apply',
+            target: tree.op,
+            args: [left, right],
+            loc: {
+                start: left.loc.start,
+                end: right.loc.end,
+                idx: tree.op.loc.idx,
+            },
         },
-    };
+        ctx,
+    );
 };
 
 const arrangeIntoLevels = (
