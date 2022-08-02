@@ -3,3 +3,4 @@
 - effects, after a fashion
 - enum coalescing
 - hash addressing
+- row polymorphism

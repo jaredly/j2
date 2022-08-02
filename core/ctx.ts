@@ -236,6 +236,15 @@ const resolve = (
             return [{ type: 'Recur', idx }];
         }
     }
+    if (!rawHash) {
+        for (let { values } of ctx.locals) {
+            for (let { sym, type } of values) {
+                if (sym.name === name) {
+                    return [{ type: 'Local', sym: sym.id }]; // , bound};
+                }
+            }
+        }
+    }
     // console.log(ctx.aliases, name, Object.hasOwn(ctx.aliases, name), rawHash);
     if (rawHash || Object.hasOwn(ctx.aliases, name)) {
         // console.log('ok', name);

@@ -151,7 +151,7 @@ let 1 = 1
 --[output:expected]--
 alias error:notExhaustive#[h8800c0a4e23ff598b839e081d716b8b28bf0b0e7]
 {
-    let @error:notExhaustive() 1 = 1;
+    let @error:notExhaustive(type: :1) 1 = 1;
 }
 
 ==[let enum]==

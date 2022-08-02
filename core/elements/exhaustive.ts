@@ -23,7 +23,6 @@ export const patternIsExhaustive = (
                 Object.keys(map).length !== 1 ||
                 map[pat.tag] == null
             ) {
-                console.log('hmmm', cases);
                 return false;
             }
             if (!!pat.payload !== !!map[pat.tag].payload) {

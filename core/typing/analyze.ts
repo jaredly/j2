@@ -198,8 +198,16 @@ export const analyzeTop = (ast: t.Toplevel, ctx: Ctx): t.Toplevel => {
 //     return transformFile(ast, analyzeVisitor(), { ctx, hit: {} });
 // };
 
+export type VError =
+    | { type: 'Dec'; dec: t.Decorator; loc: t.Loc }
+    | {
+          type: 'Blank';
+          loc: t.Loc;
+      }
+    | { type: 'TVbl'; loc: t.Loc };
+
 export type Verify = {
-    errors: t.Loc[];
+    errors: VError[];
     untypedExpression: t.Loc[];
     unresolved: {
         type: t.Loc[];
@@ -343,11 +351,11 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
             ];
         },
         TVbl(node, ctx) {
-            results.errors.push(node.loc);
+            results.errors.push({ type: 'TVbl', loc: node.loc });
             return null;
         },
         TBlank(node) {
-            results.errors.push(node.loc);
+            results.errors.push({ type: 'Blank', loc: node.loc });
             return null;
         },
         TRef(node) {
@@ -376,7 +384,11 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
                 const id = node.id.ref.id;
                 const isError = errorDecorators.some((x) => idsEqual(x, id));
                 if (isError) {
-                    results.errors.push(node.loc);
+                    results.errors.push({
+                        type: 'Dec',
+                        dec: node,
+                        loc: node.loc,
+                    });
                 }
             }
             return null;

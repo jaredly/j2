@@ -353,6 +353,7 @@ export const App = () => {
                     old.error('Failed to parse typetest', err);
                 }
             });
+            window.console = old;
             const testFiles = {} as Files['test'];
             testContents.forEach((contents, i) => {
                 const file = processFile(
@@ -362,6 +363,7 @@ export const App = () => {
                     undefined,
                     true,
                 );
+                // old.log('contents', i)
                 testFiles[test[i]] = {
                     file,
                     values:
@@ -373,8 +375,6 @@ export const App = () => {
                 typetest: typetestFiles,
                 test: testFiles,
             });
-
-            window.console = old;
         });
     }, [listing]);
 

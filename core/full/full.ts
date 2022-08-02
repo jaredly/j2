@@ -382,6 +382,18 @@ export const processToplevel = (
             top.hash = res.hash;
             config!.hash = res.hash;
         }
+    } else {
+        if (top.type === 'ToplevelExpression' && top.expr.type === 'Block') {
+            console.log(verify);
+            console.log(pctx.reverse);
+        }
+        if (top.type === 'ToplevelLet') {
+            console.log(
+                'yeah failed to verify, sorry',
+                verify,
+                top.elements.map((m) => m.name),
+            );
+        }
     }
 
     pctx.actx = ctx;

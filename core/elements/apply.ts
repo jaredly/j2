@@ -70,6 +70,26 @@ export const maybeAutoType = (node: t.Apply, ctx: TCtx): t.Apply => {
             return auto;
         }
     }
+    const ttype = ctx.getType(node.target);
+    if (ttype?.type === 'TVars' && ttype.inner.type === 'TLambda') {
+        const argTypes = node.args.map((arg) => ctx.getType(arg));
+        if (argTypes.every(Boolean)) {
+            const auto = autoTypeApply(
+                node,
+                ttype.args,
+                ttype.inner.args.map((t) => t.typ),
+                argTypes as t.Type[],
+                ctx,
+            );
+            if (auto) {
+                Object.keys(auto.constraints).forEach((key) => {
+                    ctx.addTypeConstraint(+key, auto.constraints[+key]);
+                });
+                return auto.apply;
+            }
+        }
+    }
+
     return node;
 };
 
