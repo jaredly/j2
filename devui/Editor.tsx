@@ -90,7 +90,7 @@ export const Editor = ({
             if (text.length) {
                 setHtmlAndClean(
                     ref.current!,
-                    treeToHtmlLines(markUpTree(text, locs)),
+                    treeToHtmlLines(markUpTree(text, locs), true),
                 );
             } else {
                 ref.current!.innerHTML = '';
@@ -274,8 +274,8 @@ export const openSpan = (hl: HL, noPrefix = false) =>
             : ''
     }>`;
 
-export const treeToHtmlLines = (tree: Tree) => {
-    return `<div>${treeToHtmlLinesInner(tree, [])}</div>`;
+export const treeToHtmlLines = (tree: Tree, noPrefix = false) => {
+    return `<div>${treeToHtmlLinesInner(tree, [], noPrefix)}</div>`;
 };
 
 export const escapeLine = (line: string) => {
@@ -285,9 +285,13 @@ export const escapeLine = (line: string) => {
         .replace(/>/g, '&gt;');
 };
 
-export const treeToHtmlLinesInner = (tree: Tree, path: HL[]): string => {
+export const treeToHtmlLinesInner = (
+    tree: Tree,
+    path: HL[],
+    noPrefix = false,
+): string => {
     // ohhh how do I deal with opening lines and closing ones
-    return `${openSpan(tree.hl)}${tree.children
+    return `${openSpan(tree.hl, noPrefix)}${tree.children
         .map((child, i) =>
             child.type === 'leaf'
                 ? `<span data-span="${child.span[0]}:${
@@ -300,7 +304,7 @@ export const treeToHtmlLinesInner = (tree: Tree, path: HL[]): string => {
                               '</div><div>' +
                               path.map((h) => openSpan(h, true)).join(''),
                       )}</span>`
-                : treeToHtmlLinesInner(child, path.concat([tree.hl])),
+                : treeToHtmlLinesInner(child, path.concat([tree.hl]), noPrefix),
         )
         .join('')}</span>`;
 };
