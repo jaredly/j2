@@ -11,11 +11,11 @@ let n = () => m() - 2
 alias n#[h1124a42396da453de6dbfa763de90f472a42f65e]
 n() == 48
 alias >#[hc1d03250b26806868f520136d8a763b0c0edff9b] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
-let mz: (n: int) => int = (n: int) => if n > 10 {
+let mz: (int) => int = (n: int): int => if n > 10 {
     n;
 } else {
     mz(n + 20);
 }
-alias mz#[hf2e3f564ccd55a2aaf81933c260385db2c4a89d3]
+alias mz#[hdce33543264d80ebc9b3f746280eedcda782c22e]
 mz(23) == 23
 mz(10) == 30
