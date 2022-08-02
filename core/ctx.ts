@@ -522,8 +522,6 @@ export const newContext = (): FullContext => {
                     type: expr.typ ?? { type: 'TBlank', loc: noloc },
                 })),
             });
-            // console.log(hash, defns);
-            // require('fs').writeFileSync(hash, JSON.stringify(defns));
             const ctx = { ...this[opaque] };
             ctx.values = {
                 ...ctx.values,

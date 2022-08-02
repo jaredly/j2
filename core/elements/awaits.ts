@@ -56,6 +56,7 @@ export const ToAst = {
                 loc,
             },
             loc,
+            ctx.showIds,
         );
     },
 };

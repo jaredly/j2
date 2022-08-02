@@ -145,7 +145,7 @@ export const Editor = ({
                     typeFile,
                     curExtraLocs.current,
                 );
-                const html = treeToHtmlLines(markUpTree(text, locs));
+                const html = treeToHtmlLines(markUpTree(text, locs), true);
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, pos);
                 obs.observe(ref.current!, options);
@@ -173,7 +173,10 @@ export const Editor = ({
                     typeFile,
                     curExtraLocs.current,
                 );
-                const html = treeToHtmlLines(markUpTree(entry.text, locs));
+                const html = treeToHtmlLines(
+                    markUpTree(entry.text, locs),
+                    true,
+                );
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, entry.pos);
                 onChange(entry.text);
