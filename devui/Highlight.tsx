@@ -60,8 +60,9 @@ export const styles: {
         fontWeight: 'bold',
     },
     Error: {
-        textDecoration: 'underline',
-        textDecorationColor: '#f00',
+        'text-decoration': 'underline',
+        'text-decoration-color': '#f00',
+        'text-decoration-style': 'wavy',
     },
 };
 

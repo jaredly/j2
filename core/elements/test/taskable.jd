@@ -5,7 +5,7 @@ let _ = <A#[0]: [ * ], B#[1]: [ * ]>(a#[2]: A#[0], b#[3]: B#[1]):A#[0] => a#[2]
 let again = <T#[0]: [ * ]>(v#[1]: T#[0]):[ `One | T#[0] ] => v#[1]
 alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let example = <T#[0]: task>(m#[1]: Task<[ T#[0] | `Read((), string) ], ()>) => switch m#[1] {
-  `Return => 10
-  `Read => 20
-  _ => 30
+    `Return => 10;
+    `Read => 20;
+    _ => 30;
 }
