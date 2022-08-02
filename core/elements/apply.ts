@@ -29,7 +29,7 @@ export type Apply = {
 export type IApply = {
     type: 'Apply';
     target: t.IExpression;
-    args: Array<t.IExpression>;
+    args: Array<{ expr: t.IExpression; type: t.Type }>;
     loc: t.Loc;
 };
 
@@ -371,16 +371,37 @@ export const ToIR = {
         return {
             type: 'Apply',
             loc,
-            args: args.map((arg) => ctx.ToIR.Expression(arg, ctx)),
+            args: args.map((arg) => ({
+                expr: ctx.ToIR.Expression(arg, ctx),
+                type: ctx.actx.getType(arg) ?? tnever,
+            })),
             target: ctx.ToIR.Expression(target, ctx),
         };
     },
 };
 
+const equable = (a: t.Type, ctx: Ctx) => {
+    switch (a.type) {
+        case 'Number':
+        case 'String':
+            return true;
+        case 'TRef':
+            if (
+                ctx.isBuiltinType(a, 'int') ||
+                ctx.isBuiltinType(a, 'float') ||
+                ctx.isBuiltinType(a, 'string') ||
+                ctx.isBuiltinType(a, 'bool')
+            ) {
+                return true;
+            }
+    }
+    return false;
+};
+
 import { Ctx as JCtx } from '../ir/to-js';
 import * as b from '@babel/types';
 import { findBuiltinName } from './base';
-import { expandTask } from '../typing/tasks';
+import { expandTask, tnever } from '../typing/tasks';
 export const ToJS = {
     Apply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
         if (
@@ -389,17 +410,35 @@ export const ToJS = {
             target.kind.type === 'Global'
         ) {
             const name = findBuiltinName(target.kind.id, ctx.actx);
+            if (name === '==' || name == '!=') {
+                if (
+                    !equable(args[0].type, ctx.actx) ||
+                    !equable(args[1].type, ctx.actx)
+                ) {
+                    const inner = b.callExpression(
+                        b.memberExpression(
+                            b.identifier('$builtins'),
+                            b.identifier('equal'),
+                        ),
+                        args.map((arg) => ctx.ToJS.IExpression(arg.expr, ctx)),
+                    );
+                    if (name === '!=') {
+                        return b.unaryExpression('!', inner);
+                    }
+                    return inner;
+                }
+            }
             if (name && !name.match(/^[a-zA-Z_0-0]/)) {
                 return b.binaryExpression(
-                    name as any,
-                    ctx.ToJS.IExpression(args[0], ctx),
-                    ctx.ToJS.IExpression(args[1], ctx),
+                    name === '==' ? '===' : (name as any),
+                    ctx.ToJS.IExpression(args[0].expr, ctx),
+                    ctx.ToJS.IExpression(args[1].expr, ctx),
                 );
             }
         }
         return b.callExpression(
             ctx.ToJS.IExpression(target, ctx),
-            args.map((arg) => ctx.ToJS.IExpression(arg, ctx)),
+            args.map((arg) => ctx.ToJS.IExpression(arg.expr, ctx)),
         );
     },
 };

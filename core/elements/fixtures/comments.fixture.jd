@@ -20,5 +20,5 @@ toString(
     // again
 )
 // string
-/* toString(1) */
+/* $builtins.toString(1) */
 //last

@@ -72,7 +72,7 @@ UnaryOpWithHash = op:UnaryOp hash:IdHash?
 UnaryOp = "-" / "!"
 
 binopWithHash = op:binop hash:IdHash?
-binop = $(!"//" [+*^/<>=|&-]+)
+binop = $(!"//" !"=>" [+*^/<>=|&!-]+)
 
 ParenedOp = "(" _ inner:binopWithHash _ ")"
 

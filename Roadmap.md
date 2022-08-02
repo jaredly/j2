@@ -24,6 +24,8 @@ and/or a nice error coalescing example.
 	- [x] fix the selection loss
 - [x] transitive test dependencies aren't updated until you focus them?
 - [ ] oh record access, why don't I have that yet
+- [ ] make deepEqual a thing. thanks.
+- [ ] namespace globals, to be sure
 
 ## Should I venture into arrays?
 

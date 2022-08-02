@@ -149,7 +149,7 @@ let helloFolks = (): Task<[`Read((), string) | `Print(string, ())], string> => {
     );
 }
 // () => Task<[[`Print(string, ())] | [`Read((), string)]], string>
-/* () => andThen($terms.print(`What is your name?`), res => $terms.read()) */
+/* () => $builtins.andThen($terms.print(`What is your name?`), res => $terms.read()) */
 
 ==[awaittt]==
 --[input]--
@@ -189,7 +189,7 @@ let helloFolks = () => {
     print(read()!)!;
 }
 // () => Task<[`Print(string, ()) | `Read((), string)], ()>
-/* () => andThen($terms.print(`What is your name?`), __0 => andThen($terms.read(), tmp1000 => andThen($terms.print(tmp1000), tmp1001 => ({
+/* () => $builtins.andThen($terms.print(`What is your name?`), __0 => $builtins.andThen($terms.read(), tmp1000 => $builtins.andThen($terms.print(tmp1000), tmp1001 => ({
   tag: "Return",
   payload: tmp1001
 })))) */
@@ -244,7 +244,7 @@ let alwaysRead: (value: string, task: Task<[`Read((), string) | `Print(string, (
   } else {
     let otherwise = task;
     {
-      return withHandler(otherwise, task => $terms.alwaysRead(value, task));
+      return $builtins.withHandler(otherwise, task => $terms.alwaysRead(value, task));
     }
   }
 })() */

@@ -1,16 +1,16 @@
 let one = {name: "Jerd", age: 2}
-alias one#[hf9a67a9a15b498be9295d0f639720b727c9aab06]
+alias one#[h0063550dacf1b1e803b5aff4a8220cf6b4d3d6b2]
 let x = {
     let {name} = one;
     name;
 }
 let ten = 10
-alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] x#[he9fc1ae4c20ca816bf460d396d04099cc21f6955]
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] x#[h73af94cb03869c7e40d097be723d5cd031869ab3]
 x == "Jerd"
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] ten#[hfb3ab6073655e042df98cf160644857639baed08]
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] ten#[hc6b7c238fb3eca022b6aef40d734754a3117e664]
 type Four = {name: string, age: int = 4 + ten}
-alias Four#[hf382e603eecce1a6e4b89d6f4478f37df2900abc]
+alias Four#[h29af5976f30bfcc4130e6c50098a0d64f980c37c]
 let getAge = ({age}: Four) => age
-alias getAge#[h5261c19b1f63738593e9bc9d7b0666aaad64dead]
+alias getAge#[ha6784d4a34ea932dda11889fd1781102301ccfa9]
 getAge(one) == 2
 getAge({name: "hello"}) == 14

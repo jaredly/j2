@@ -19,3 +19,7 @@ let mz: (n: int) => int = (n: int) => if n > 10 {
 alias mz#[hec30b196dcca6ff506cdb1dc7118d4774aebe7ac]
 mz(23) == 23
 mz(10) == 30
+`One == `One
+`Hi(10) == `Hi(10)
+alias !=#[hbeb29e10d9c290c0bc01338abc157fecd5dc995f]
+`Hi(10) != `Hi(20)

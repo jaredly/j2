@@ -6,6 +6,7 @@ import { Expression, Id } from '../typed-ast';
 import { iCtx } from './ir';
 import generate from '@babel/generator';
 import { idToString } from '../ids';
+import equal from 'fast-deep-equal';
 
 export type Ctx = {
     namespaced: boolean;
@@ -129,7 +130,14 @@ const testIO = <T>(read: string, task: IO<T>): T => {
 //     }
 // }
 
-const builtins = { andThen, withHandler, testIO };
+const builtins = {
+    andThen,
+    withHandler,
+    testIO,
+    equal,
+    isSquare: (v: number) => Math.sqrt(v) % 1 === 0,
+    toString: (v: any) => '' + v,
+};
 
 export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
     return {

@@ -12,8 +12,8 @@ toString(3.4)
 alias toString#[h99b01457a189d1392ca641b22a79c97b3eda324c]
 toString(1)
 // string
-/* toString(1) */
+/* $builtins.toString(1) */
 alias toString_h7#[h7a085b7af0cace37678c385e00d352db9204d70a]
 toString_h7(3.4)
 // string
-/* toString(3.4) */
+/* $builtins.toString(3.4) */

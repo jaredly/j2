@@ -113,13 +113,13 @@ ten(5)
 alias hello#[h4be83b97ef46480eb6f8573f2ab90ed7c5c8b1e5]
 hello("hello")
 // int
-/* hello(`hello`) */
+/* $builtins.hello(`hello`) */
 alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f]
 hello(@error:argWrongType(expected: :"hello", got: :"ho") "ho")
 alias ten#[hf4f51e4cf24724da57c43defaba9896829117c9f]
 ten(10)
 // int
-/* ten(10) */
+/* $builtins.ten(10) */
 ten(@error:argWrongType(expected: :10, got: :5) 5)
 
 ==[rank 2 my folks]==
@@ -130,7 +130,7 @@ wantsId(id)
 alias id#[hf5df74f88f6398e9901d80dd2392d8fffa98142d] wantsId#[h3b8037c287f715e3d39f600ea453673b4ab5768c]
 wantsId(id)
 // int
-/* wantsId(id) */
+/* $builtins.wantsId($builtins.id) */
 
 ==[string top]==
 --[input]--

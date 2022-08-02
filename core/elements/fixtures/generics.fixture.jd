@@ -19,7 +19,7 @@ hello<int>(10)
 alias hello#[hf6e269898d7d9d035467350db13cfa38ac824c31] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 hello<int>(10)
 // int
-/* hello(10) */
+/* $builtins.hello(10) */
 
 ==[decorate target]==
 --[input]--
@@ -29,7 +29,7 @@ hello<int>(10)
 alias decorate#[h5a7fc9170718190f9388084b28fb49f6cb4602fc] hello#[hf6e269898d7d9d035467350db13cfa38ac824c31]
 (@decorate() hello)(10)
 // 10
-/* hello(10) */
+/* $builtins.hello(10) */
 
 ==[multiple args]==
 --[input]--
@@ -40,10 +40,10 @@ multi<int, string>(10, "hello")
 alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] multi#[h088d53f5e3ddc6bf12a7e3054c4a52ebae49789d] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 multi<int, string>
 // (a: int, b: string) => int
-/* multi */
+/* $builtins.multi */
 multi<int, string>(10, "hello")
 // int
-/* multi(10, `hello`) */
+/* $builtins.multi(10, `hello`) */
 
 ==[bounded]==
 --[input]--
@@ -54,11 +54,11 @@ bounded<int>(10)
 alias bounded#[h6b72cf1b6234557dd3846b2452db4a5f991da15d]
 bounded<10>(10)
 // 10
-/* bounded(10) */
+/* $builtins.bounded(10) */
 alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 bounded<int>(10)
 // int
-/* bounded(10) */
+/* $builtins.bounded(10) */
 
 ==[bound fail]==
 --[input:shouldFail]--
@@ -104,7 +104,7 @@ takesArray(@error:argWrongType(expected: :Array<string, 10u>, got: :10) 10)
 alias anArray#[h37011200e8faacc0a381c6d95d6f90d45e6cbdf3]
 takesArray(anArray)
 // int
-/* takesArray(anArray) */
+/* $builtins.takesArray($builtins.anArray) */
 
 ==[chained]==
 --[input]--
@@ -232,7 +232,7 @@ boundedDefault<int>
 alias boundedDefault#[hf829343d5e24e95742cf66bed885a35f66c19a43] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 boundedDefault<int>
 // (a: int, b: 10u) => int
-/* boundedDefault */
+/* $builtins.boundedDefault */
 
 ==[generic arg works]==
 --[input]--
@@ -242,7 +242,7 @@ takesArray(anArray)
 alias anArray#[h37011200e8faacc0a381c6d95d6f90d45e6cbdf3] takesArray#[hf3cd697d8478f4e33cc628cbd7e9b42d4d13aace]
 takesArray(anArray)
 // int
-/* takesArray(anArray) */
+/* $builtins.takesArray($builtins.anArray) */
 
 ==[iadd apply]==
 --[input]--
@@ -252,4 +252,4 @@ iadd(10, 20)
 alias iadd#[h70384774f43136b4971f36930f8dd583892ac08d]
 iadd(10, 20)
 // 30
-/* iadd(10, 20) */
+/* $builtins.iadd(10, 20) */

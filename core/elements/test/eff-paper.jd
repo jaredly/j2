@@ -1,4 +1,3 @@
-let what = 10
 alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 type Read = [`Read((), string)]
 type Write = [`Write(string, ())]
@@ -146,5 +145,5 @@ let backtrack: <T>(Task<[Decide | Fail], T>, () => T) => T = <T>(
 alias backtrack#[ha1fc1194c7906a24cbff42cb98b3a9a3d3fcfd32] pythagorean#[hd773507392b39638360e818f65e640d01d2ed2bc]
 let backtrackPythag = (m: int, n: int) => backtrack<(int, int)>(pythagorean(m, n), () => (0, 0))
 alias backtrackPythag#[h84482e389650e2ca4de777d948f4c9a7b9dba34f]
-backtrackPythag(4, 15)
-backtrackPythag(7, 10)
+backtrackPythag(4, 15) == (5, 12)
+backtrackPythag(7, 10) == (0, 0)

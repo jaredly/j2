@@ -39,7 +39,7 @@ alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc]
 /* {
   let x = 10;
 
-  if (x == 5) {
+  if ($builtins.equal(x, 5)) {
     return 4;
   } else {
     return 2;
@@ -68,7 +68,7 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[ha4d3e814b6e823e77727307
   let x = 10;
   let y;
 
-  if (x == 5) {
+  if ($builtins.equal(x, 5)) {
     y = 4;
   } else {
     y = 2;

@@ -36,18 +36,18 @@ takeWhatOrWho(whatOrWho)
 alias takeWhat#[hcd85de6a1facbf2c1efb33da755b321680e36ac0]
 takeWhat(`What)
 // int
-/* takeWhat("What") */
+/* $builtins.takeWhat("What") */
 alias takeWhatOrWho#[hec17aa97b0206ca8dff97b9503182d31f5ee9cfa]
 takeWhatOrWho(`What)
 // int
-/* takeWhatOrWho("What") */
+/* $builtins.takeWhatOrWho("What") */
 takeWhatOrWho(`Who)
 // int
-/* takeWhatOrWho("Who") */
+/* $builtins.takeWhatOrWho("Who") */
 alias whatOrWho#[h75f1fc730ce550f6a810507b53f871dcb253bcc1]
 takeWhatOrWho(whatOrWho)
 // int
-/* takeWhatOrWho(whatOrWho) */
+/* $builtins.takeWhatOrWho($builtins.whatOrWho) */
 
 --[builtins]--
 //:value:takeWhat:(v: [`What]) => int
@@ -75,14 +75,14 @@ whatTen(`What(10))
 alias whatNum#[h7688dfb0e0b91d9137afcb7a0693cb57eb1c60c9]
 whatNum(`What(110))
 // int
-/* whatNum({
+/* $builtins.whatNum({
   tag: "What",
   payload: 110
 }) */
 alias whatTen#[h41fe87ae3122488bc9be5b65f06685bd4b38f914]
 whatTen(`What(10))
 // int
-/* whatTen({
+/* $builtins.whatTen({
   tag: "What",
   payload: 10
 }) */
