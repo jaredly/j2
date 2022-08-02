@@ -68,6 +68,7 @@ export type TypeContents = {
 };
 
 export type ToplevelInfo<Contents> = {
+    type: 'Info';
     aliases: { [key: string]: string };
     contents: Contents;
     verify: Verify;
@@ -300,6 +301,7 @@ export const processTypeToplevel = (
 
     return {
         i: {
+            type: 'Info',
             contents: {
                 type: 'Type',
                 orig: t,
@@ -415,6 +417,7 @@ export const processToplevel = (
 
     return {
         i: {
+            type: 'Info',
             contents: {
                 type: 'File',
                 top,

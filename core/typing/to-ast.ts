@@ -134,7 +134,10 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
         },
         printSym(sym) {
             if (showIds || true) {
-                return { label: sym.name, hash: `#[${sym.id}]` };
+                return {
+                    label: sym.name,
+                    hash: `#[${sym.id}]`,
+                };
             }
             const hash = '' + sym.id;
             if (!this.aliases[hash]) {
@@ -170,7 +173,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             return {
                 type: 'Identifier',
                 text: name ?? 'unnamed',
-                hash: `#[${hash}]`,
+                hash: showIds || true ? `#[${hash}]` : null,
                 loc,
             };
         },

@@ -86,7 +86,7 @@ export const Editor = ({
             curExtraLocs.current !== extraLocs
         ) {
             curExtraLocs.current = extraLocs;
-            const locs = highlightLocations(text, {}, typeFile, extraLocs);
+            const locs = highlightLocations(text, typeFile, extraLocs);
             if (text.length) {
                 setHtmlAndClean(
                     ref.current!,
@@ -142,7 +142,6 @@ export const Editor = ({
                 obs.disconnect();
                 const locs = highlightLocations(
                     text,
-                    {},
                     typeFile,
                     curExtraLocs.current,
                 );
@@ -171,7 +170,6 @@ export const Editor = ({
                 obs.disconnect();
                 const locs = highlightLocations(
                     entry.text,
-                    {},
                     typeFile,
                     curExtraLocs.current,
                 );

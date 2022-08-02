@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { parseTypeFile, SyntaxError } from '../core/grammar/base.parser';
 import { FullContext } from '../core/ctx';
 import { noloc } from '../core/consts';
-import { AllTaggedTypeNames, parseFile } from '../core/grammar/base.parser';
+import { parseFile } from '../core/grammar/base.parser';
 import { printToString } from '../core/printer/pp';
 import { newPPCtx } from '../core/printer/to-pp';
 import {
@@ -23,12 +23,14 @@ import {
 import { HL } from './HL';
 import { Tree } from './Tree';
 import { collectAnnotations } from './collectAnnotations';
+import { highlightVisitor } from './highlightVisitor';
 
 export type Colorable =
     | keyof Visitor<null>
     | 'Error'
     | 'Success'
     | 'LetName'
+    | 'AwaitBang'
     | 'Hash'
     | 'Color0'
     | 'Color1'
@@ -54,6 +56,9 @@ export const styles: {
         // 'text-overflow': 'ellipsis',
         // 'margin-bottom': '-7px',
     },
+    AwaitBang: {
+        fontWeight: 'bold',
+    },
     Error: {
         textDecoration: 'underline',
         textDecorationColor: '#f00',
@@ -67,6 +72,7 @@ export const colors: {
     LetName: 'teal', // '#00c000',
     TRef: 'teal', // '#00c000',
     PName: 'teal', // '#00c000',
+    AwaitBang: 'magenta',
     String: '#afa',
     Enum: '#ff5c5c',
     TagDecl: '#ff5c5c',
@@ -96,7 +102,6 @@ const n = (n: number): Loc['start'] => ({ ...noloc.start, offset: n });
 
 export const highlightLocations = (
     text: string,
-    aliases: { [key: string]: string },
     typeFile = false,
     extraLocs?: (
         v: p.File | p.TypeFile,
@@ -169,13 +174,7 @@ export const Highlight = ({
     // text = rest;
 
     const marked = React.useMemo(() => {
-        const locs = highlightLocations(
-            text,
-            {},
-            // aliasesFromString(aliases),
-            typeFile,
-            extraLocs,
-        );
+        const locs = highlightLocations(text, typeFile, extraLocs);
         return text.trim().length ? markUpTree(text, locs) : null;
     }, [text]);
 
@@ -275,165 +274,6 @@ export const Highlight = ({
                 : null}
         </div>
     );
-};
-
-const highlightVisitor: Visitor<Array<{ loc: Loc; type: Colorable }>> = {};
-AllTaggedTypeNames.forEach((name) => {
-    highlightVisitor[name] = (node: any, ctx): any => {
-        ctx.push({ loc: node.loc, type: name });
-        return null;
-    };
-});
-const advance = (
-    { offset, line, column }: Loc['start'],
-    v: number,
-): Loc['start'] => {
-    return {
-        offset: offset + v,
-        column: column + v,
-        line,
-    };
-};
-
-highlightVisitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
-    ctx.push({ loc: node.loc, type: 'ToplevelLet' });
-    const { start, end } = node.loc;
-    node.items.forEach((item) => {
-        ctx.push({
-            loc: {
-                ...node.loc,
-                start: advance(start, 4),
-                end: advance(start, 4 + item.name.length),
-            },
-            type: 'LetName',
-        });
-    });
-    return null;
-};
-
-highlightVisitor.TypeAlias = (node: p.TypeAlias, ctx) => {
-    ctx.push({ loc: node.loc, type: 'TypeAlias' });
-    const { start, end } = node.loc;
-    node.items.forEach((item, i) => {
-        const off = i === 0 ? 5 : 4;
-        ctx.push({
-            loc: {
-                ...node.loc,
-                start: advance(start, off),
-                end: advance(start, off + item.name.length),
-            },
-            type: 'LetName',
-        });
-    });
-    return null;
-};
-
-highlightVisitor.Identifier = (node: p.Identifier, ctx) => {
-    ctx.push({ loc: node.loc, type: 'Identifier' });
-    if (node.hash != null) {
-        const { start, end } = node.loc;
-        ctx.push({
-            loc: {
-                ...node.loc,
-                start: advance(start, node.text.length),
-                end,
-            },
-            type: 'Hash',
-        });
-        const num = +node.hash.slice(2, -1);
-        if (!isNaN(num) && num + '' === node.hash.slice(2, -1)) {
-            ctx.push({
-                loc: {
-                    ...node.loc,
-                    start,
-                    end: advance(start, node.text.length),
-                },
-                type: `Color${num % 10}` as Colorable,
-            });
-        }
-    }
-    return null;
-};
-
-highlightVisitor.TRef = (node: p.TRef, ctx) => {
-    ctx.push({ loc: node.loc, type: 'Identifier' });
-    if (node.hash != null) {
-        const { start, end } = node.loc;
-        ctx.push({
-            loc: {
-                ...node.loc,
-                start: advance(start, node.text.length),
-                end,
-            },
-            type: 'Hash',
-        });
-        const num = +node.hash.slice(2, -1);
-        if (!isNaN(num) && num + '' === node.hash.slice(2, -1)) {
-            ctx.push({
-                loc: {
-                    ...node.loc,
-                    start,
-                    end: advance(start, node.text.length),
-                },
-                type: `Color${num % 10}` as Colorable,
-            });
-        }
-    }
-    return null;
-};
-
-highlightVisitor.TBArg = (node: p.TBArg, ctx) => {
-    ctx.push({ loc: node.loc, type: 'Identifier' });
-    if (node.hash != null) {
-        const { start, end } = node.loc;
-        ctx.push({
-            loc: {
-                ...node.loc,
-                start: advance(start, node.label.length),
-                end: advance(start, node.label.length + node.hash.length),
-            },
-            type: 'Hash',
-        });
-        const num = +node.hash.slice(2, -1);
-        if (!isNaN(num) && num + '' === node.hash.slice(2, -1)) {
-            ctx.push({
-                loc: {
-                    ...node.loc,
-                    start,
-                    end: advance(start, node.label.length),
-                },
-                type: `Color${num % 10}` as Colorable,
-            });
-        }
-    }
-    return null;
-};
-
-highlightVisitor.PName = (node: p.PName, ctx) => {
-    ctx.push({ loc: node.loc, type: 'Identifier' });
-    if (node.hash != null) {
-        const { start, end } = node.loc;
-        ctx.push({
-            loc: {
-                ...node.loc,
-                start: advance(start, node.name.length),
-                end,
-            },
-            type: 'Hash',
-        });
-        const num = +node.hash.slice(2, -1);
-        if (!isNaN(num) && num + '' === node.hash.slice(2, -1)) {
-            ctx.push({
-                loc: {
-                    ...node.loc,
-                    start,
-                    end: advance(start, node.name.length),
-                },
-                type: `Color${num % 10}` as Colorable,
-            });
-        }
-    }
-    return null;
 };
 
 export const typeToString = (t: Type, ctx: FullContext) => {

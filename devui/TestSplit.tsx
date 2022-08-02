@@ -9,10 +9,6 @@ import {
     Success,
     ToplevelInfo,
 } from '../core/full/full';
-import {
-    aliasesFromString,
-    splitAliases,
-} from '../core/typing/__test__/fixture-utils';
 import { verifyHL } from '../core/typing/__test__/verifyHL';
 import { getTestResults, TestValues, TestWhat } from './App';
 import { Editor } from './Editor';
@@ -26,6 +22,7 @@ import { NameTrack } from '../core/ir/to-js';
 import generate from '@babel/generator';
 import { typeToString } from './Highlight';
 import { idToString, toId } from '../core/ids';
+import { Loc } from '../core/typed-ast';
 
 /*
 
@@ -133,9 +130,16 @@ export const TestSplit = ({
 }) => {
     // can I attribute comments to each of the infos?
     // also, how do I add / remove items?
-    const [items, setItems] = React.useState(() => {
+    const [items, setItems] = React.useState<
+        (
+            | ToplevelInfo<FileContents>
+            | { type: 'Failed'; text: string; err: Loc }
+        )[]
+    >(() => {
         if (test.file.type === 'Error') {
-            return [];
+            return [
+                { type: 'Failed', text: test.file.text, err: test.file.err },
+            ];
         }
         return test.file.info;
     });
@@ -150,7 +154,12 @@ export const TestSplit = ({
             {
                 type: 'File',
                 comments: [],
-                toplevels: items.map((item) => item.contents.refmt),
+                toplevels: items
+                    .filter((item) => item.type === 'Info')
+                    .map(
+                        (item) =>
+                            (item as ToplevelInfo<FileContents>).contents.refmt,
+                    ),
                 loc: noloc,
             },
             undefined,
@@ -175,7 +184,10 @@ export const TestSplit = ({
     const editors = items
         .map((item, i) => {
             const myctx = ctx;
-            ctx = ctx.withToplevel(item.contents.top) as FullContext;
+            ctx =
+                item.type === 'Info'
+                    ? (ctx.withToplevel(item.contents.top) as FullContext)
+                    : ctx;
             return (
                 <TopEditor
                     key={i}
@@ -258,16 +270,24 @@ export const TopEditor = ({
     shared,
     onChange,
 }: {
-    item: ToplevelInfo<FileContents>;
+    item:
+        | ToplevelInfo<FileContents>
+        | { type: 'Failed'; text: string; err: Loc };
     ctx: FullContext;
     shared: { current: { track: NameTrack; terms: { [key: string]: string } } };
     onChange: (info: ToplevelInfo<FileContents>[]) => void;
 }) => {
     const [text, setText] = React.useState(() =>
-        fmtItem(item.aliases, item.contents.refmt),
+        item.type === 'Failed'
+            ? item.text
+            : fmtItem(item.aliases, item.contents.refmt),
     );
     React.useEffect(() => {
-        setText(fmtItem(item.aliases, item.contents.refmt));
+        setText(
+            item.type === 'Failed'
+                ? item.text
+                : fmtItem(item.aliases, item.contents.refmt),
+        );
     }, [item]);
     const cache = React.useMemo(
         () =>
