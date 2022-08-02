@@ -476,7 +476,7 @@ export const ToAst = {
         return {
             type: 'PName',
             name: sym.name,
-            hash: null, // `#[${sym.id}]`,
+            hash: ctx.showIds ? `#[${sym.id}]` : null,
             loc,
         };
     },

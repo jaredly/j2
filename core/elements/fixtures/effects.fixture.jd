@@ -201,7 +201,7 @@ let alwaysRead: (value: string, task: Task<[`Read((), string) | `Print(string, (
     `Return(v) => `Return(v)
     `Read(v, k) => alwaysRead(value, k(value))
     otherwise => 
-withHandler<[`Print(string, ())], string, [`Read((), string)]>(
+withHandler<[`Print(string, ())], string, [`Read((), string)], string>(
       otherwise, 
       (task) => alwaysRead(value, task)
     )
@@ -209,7 +209,7 @@ withHandler<[`Print(string, ())], string, [`Read((), string)]>(
 }
 
 --[output:expected]--
-alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] withHandler#[h8c01e15c5414bbe2883805e74dc148e8b9811f04]
+alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] withHandler#[ha096a125d17e577335cba67a01ae6f08c8a8254b]
 let alwaysRead: (value: string, task: Task<[ `Read((), string) | `Print(string, ()) ], string>) => Task<
     [ `Print(string, ()) ],
     string,
@@ -218,12 +218,12 @@ let alwaysRead: (value: string, task: Task<[ `Read((), string) | `Print(string, 
     string,
 > => {
     switch task#[1] {
-      `Return(v#[2]) => `Return(v#[2])
-      `Read(v#[3], k#[4]) => alwaysRead#[r0](value#[0], k#[4](value#[0]))
-      otherwise#[5] => withHandler<[ `Print(string, ()) ], string, [ `Read((), string) ]>(
-        otherwise#[5],
-        (task#[6]) => alwaysRead#[r0](value#[0], task#[6]),
-    )
+        `Return(v#[2]) => `Return(v#[2]);
+        `Read(v#[3], k#[4]) => alwaysRead#[r0](value#[0], k#[4](value#[0]));
+        otherwise#[5] => withHandler<[ `Print(string, ()) ], string, [ `Read((), string) ], string>(
+            otherwise#[5],
+            (task#[6]) => alwaysRead#[r0](value#[0], task#[6]),
+        );
     };
 }
 // (string, Task<[ `Read((), string) | `Print(string, ()) ], string>) => [ `Return(string) | `Print(string, (arg: ()) => Task<[ `Print(string, ()) ], string>) ]
@@ -263,9 +263,9 @@ let hello = (t: Task<[`Read((), string) | `Print(string, ())], int>) => {
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let hello = (t#[0]: Task<[ `Read((), string) | `Print(string, ()) ], int>) => {
     switch t#[0] {
-      `Return(v#[1]) => v#[1]
-      `Read((), k#[2]) => 100
-      `Print(hello#[3], k#[4]) => 1000
+        `Return(v#[1]) => v#[1];
+        `Read((), k#[2]) => 100;
+        `Print(hello#[3], k#[4]) => 1000;
     };
 }
 // (Task<[ `Read((), string) | `Print(string, ()) ], int>) => int

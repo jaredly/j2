@@ -4,18 +4,18 @@ let z = 200
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] x#[h19e8a1069fb336adb77cbe305ba893672b0c3cd9] y#[h91d220ffc2bbace92ac656672cc1c8b80465c31e] z#[hbb819c88d268f5e5c521adfa51767a71f6ead8c9]
 x + y + z == 250
 let m = () => x + y
-alias m#[hedf0f913e5a3ac1e3bbf442a21646cf6e1f39d32]
+alias m#[h5191e2b12b7d15be50a9bf07cba0597385f8f9b2]
 m() == 50
 alias -#[h4dd9308469e477a4a756b4b286de0625d5a98af9]
 let n = () => m() - 2
-alias n#[h314332e95e9b39a2433234c5482479dc4a03f2ca]
+alias n#[h1124a42396da453de6dbfa763de90f472a42f65e]
 n() == 48
 alias >#[hc1d03250b26806868f520136d8a763b0c0edff9b] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
-let mz: (n: int) => int = (n#[0]: int) => if n#[0] > 10 {
-    n#[0];
+let mz: (n: int) => int = (n: int) => if n > 10 {
+    n;
 } else {
-    mz#[r0](n#[0] + 20);
+    mz(n + 20);
 }
-alias mz#[h0e5d452a214b6a7d67ae536a7acd7c6da5a460fc]
+alias mz#[hf2e3f564ccd55a2aaf81933c260385db2c4a89d3]
 mz(23) == 23
 mz(10) == 30

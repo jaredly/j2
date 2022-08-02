@@ -11,10 +11,10 @@ switch (1, 2) {
 --[output:expected]--
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280]
 switch (1, 2) {
-  (a#[0], b#[1]) => a#[0] + b#[1]
-  @error:patternMismatch() 1 => 1
-  @error:patternMismatch() "what" => 20
-  @error:patternMismatch() `Hello => 1
+    (a#[0], b#[1]) => a#[0] + b#[1];
+    @error:patternMismatch() 1 => 1;
+    @error:patternMismatch() "what" => 20;
+    @error:patternMismatch() `Hello => 1;
 }
 
 ==[invalid return]==
@@ -28,9 +28,9 @@ switch `What {
 --[output:expected]--
 alias error:caseMismatch#[h83cceed949f4c31221b67a1e36c66dbd1dbcf86f] error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 switch `What {
-  @error:patternMismatch() `Who => 1
-  @error:patternMismatch() `Yes => 2
-  `What => @error:caseMismatch(expected: :int) "hello"
+    @error:patternMismatch() `Who => 1;
+    @error:patternMismatch() `Yes => 2;
+    `What => @error:caseMismatch(expected: :int) "hello";
 }
 
 ==[enum pattern wrong]==
@@ -41,7 +41,7 @@ switch `What(10) {
 
 --[output:expected]--
 switch `What(10) {
-  `What(hello#[0]) => hello#[0]
+    `What(hello#[0]) => hello#[0];
 }
 // 10
 /* (() => {
@@ -70,9 +70,9 @@ switch `What(10) {
 alias error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (
     (m#[0]: [ `One | `Two(int) ]) => switch m#[0] {
-      `One => 1
-      `Two => 4
-      @error:patternMismatch() `Three => 2
+        `One => 1;
+        `Two => 4;
+        @error:patternMismatch() `Three => 2;
     },
 )(`One)
 
@@ -86,9 +86,9 @@ alias error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280] int#[h94
 
 --[output:expected]--
 (m#[0]: [ `One | `Two | `Three ]) => switch m#[0] {
-  `One => 1
-  `Two => 2
-  `Three => 3
+    `One => 1;
+    `Two => 2;
+    `Three => 3;
 }
 // ([ `One | `Two | `Three ]) => int
 /* m => {
@@ -120,8 +120,8 @@ switch (1, 2) {
 --[output:expected]--
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
 switch (1, 2) {
-  (1, _) => 1
-  (a#[0], b#[1]) => a#[0] + b#[1]
+    (1, _) => 1;
+    (a#[0], b#[1]) => a#[0] + b#[1];
 }
 // int
 /* (() => {
@@ -150,12 +150,12 @@ switch (1, 2) {
 --[output:expected]--
 alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (m#[0]: [ `One | `Two | `Three(int) ]) => switch m#[0] {
-  `One => 1
-  `Two => 2
-  otherwise#[1] => {
-    let `Three(v#[2]) = otherwise#[1];
-    v#[2];
-}
+    `One => 1;
+    `Two => 2;
+    otherwise#[1] => {
+        let `Three(v#[2]) = otherwise#[1];
+        v#[2];
+    };
 }
 // ([ `One | `Two | `Three(int) ]) => int
 /* m => {
@@ -192,11 +192,11 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 --[output:expected]--
 alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (m#[0]: [ `One | `Two([ `A | `B(int) ]) ]) => switch m#[0] {
-  `Two(`A) => 10
-  `Two(res#[1]) => {
-    let `B(v#[2]) = res#[1];
-    v#[2];
-}
+    `Two(`A) => 10;
+    `Two(res#[1]) => {
+        let `B(v#[2]) = res#[1];
+        v#[2];
+    };
 }
 // ([ `One | `Two([ `A | `B(int) ]) ]) => int
 /* m => {
@@ -230,12 +230,12 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 --[output:expected]--
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (m#[0]: [ `Hi(int, [ `One | `Two(int) ]) ]) => switch m#[0] {
-  `Hi(v#[1], `One) => 10
-  `Hi(v#[2], `Two(2)) => 12 + v#[2]
-  `Hi(v#[3], x#[4]) => {
-    let `Two(n#[5]) = x#[4];
-    v#[3] + n#[5];
-}
+    `Hi(v#[1], `One) => 10;
+    `Hi(v#[2], `Two(2)) => 12 + v#[2];
+    `Hi(v#[3], x#[4]) => {
+        let `Two(n#[5]) = x#[4];
+        v#[3] + n#[5];
+    };
 }
 // ([ `Hi(int, [ `One | `Two(int) ]) ]) => int
 /* m => {

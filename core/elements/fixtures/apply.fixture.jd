@@ -58,13 +58,13 @@ takeIntle(simple)
 
 --[output:expected]--
 alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] simple#[h65dbf0bf0a81f130770718771f42643e5fb6ac13] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takeOneArg#[h49c17c8d3d1c8610fb4d0b14b9cd3caa7248cfdd]
-takeOneArg(@error:argWrongType(expected: :(v: int) => string) simple)
+takeOneArg(@error:argWrongType(expected: :(v: int) => string, got: :() => string) simple)
 alias oneArg#[h6c7b76e2a1fd1d300d0aa0993809744ac47efe81]
 takeOneArg(oneArg)
 // string
 /* takeOneArg(oneArg) */
 alias takeIntle#[h99f1d88655e3e7bf225c2511cd77a0fa1b520d59]
-takeIntle(@error:argWrongType(expected: :() => int) simple)
+takeIntle(@error:argWrongType(expected: :() => int, got: :() => string) simple)
 
 --[builtins]--
 //:value:takeIntle:(simple: () => int) => string
@@ -75,8 +75,8 @@ takeIntle(@error:argWrongType(expected: :() => int) simple)
 oneArg(true)
 
 --[output:expected]--
-alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] oneArg#[h6c7b76e2a1fd1d300d0aa0993809744ac47efe81]
-oneArg(@error:argWrongType(expected: :int) true)
+alias bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] oneArg#[h6c7b76e2a1fd1d300d0aa0993809744ac47efe81]
+oneArg(@error:argWrongType(expected: :int, got: :bool) true)
 
 ==[wrong number of args]==
 --[input:shouldFail]--
@@ -132,7 +132,7 @@ takeIntArg(tenArg)
 --[output:expected]--
 alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takeIntArg#[hbbad4dcddf49fa76dadb8708898a93677da48de3] tenArg#[h28bcd0de96d1861d032f20f5229c3988e2b468dc]
 // At the first level we reverse variance
-takeIntArg(@error:argWrongType(expected: :(v: int) => string) tenArg)
+takeIntArg(@error:argWrongType(expected: :(v: int) => string, got: :(v: 10) => string) tenArg)
 
 ==[variance 3]==
 --[input]--
@@ -174,5 +174,10 @@ takeIntArgTaker(take10Arg)
 take10ArgTaker(takeIntArg)
 
 --[output:expected]--
-alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] take10ArgTaker#[hbaaa12ffbadf2f6368bb7391fbfb5469e9deddbe] takeIntArg#[hbbad4dcddf49fa76dadb8708898a93677da48de3]
-take10ArgTaker(@error:argWrongType(expected: :(fn: (v: 10) => string) => string) takeIntArg)
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] take10ArgTaker#[hbaaa12ffbadf2f6368bb7391fbfb5469e9deddbe] takeIntArg#[hbbad4dcddf49fa76dadb8708898a93677da48de3]
+take10ArgTaker(
+    @error:argWrongType(
+        expected: :(fn: (v: 10) => string) => string,
+        got: :(fn: (v: int) => string) => string,
+    ) takeIntArg,
+)

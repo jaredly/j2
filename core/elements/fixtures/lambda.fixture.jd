@@ -155,7 +155,7 @@ let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
     return 0;
   }
 } */
-alias longSum#[h827a3497e9d55c4a69922776df17cb98d96c26d1]
+alias longSum#[hc759317802abca8f5be289d4b3b2f7e97077eca5]
 longSum(0)
 // int
 /* $terms.longSum(0) */

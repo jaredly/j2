@@ -43,10 +43,7 @@ const Hovery = styled('div', {
     },
 });
 
-export const fmtItem = (
-    aliases: { [key: string]: string },
-    item: p.Toplevel,
-) => {
+export const fmtItem = (item: p.Toplevel) => {
     const ast: p.File = {
         type: 'File',
         comments: [],
@@ -164,8 +161,9 @@ export const TestSplit = ({
                 loc: noloc,
             },
             undefined,
-            // shared.current.track,
             shared.current.terms,
+            undefined,
+            true,
         );
         const fmt = refmt(res);
         fetch(`/elements/test/${name}`, {
@@ -279,15 +277,11 @@ export const TopEditor = ({
     onChange: (info: ToplevelInfo<FileContents>[]) => void;
 }) => {
     const [text, setText] = React.useState(() =>
-        item.type === 'Failed'
-            ? item.text
-            : fmtItem(item.aliases, item.contents.refmt),
+        item.type === 'Failed' ? item.text : fmtItem(item.contents.refmt),
     );
     React.useEffect(() => {
         setText(
-            item.type === 'Failed'
-                ? item.text
-                : fmtItem(item.aliases, item.contents.refmt),
+            item.type === 'Failed' ? item.text : fmtItem(item.contents.refmt),
         );
     }, [item]);
     const cache = React.useMemo(
@@ -301,7 +295,13 @@ export const TopEditor = ({
         [ctx],
     );
     if (!cache[text]) {
-        const file = processFile(text, ctx, undefined, shared.current.track);
+        const file = processFile(
+            text,
+            ctx,
+            undefined,
+            shared.current.track,
+            true,
+        );
         const results =
             file.type === 'Success'
                 ? getTestResults(file, shared.current.terms)
@@ -339,7 +339,13 @@ export const TopEditor = ({
                 onBlur={(text) => {
                     const file =
                         cache[text]?.file ??
-                        processFile(text, ctx, undefined, shared.current.track);
+                        processFile(
+                            text,
+                            ctx,
+                            undefined,
+                            shared.current.track,
+                            true,
+                        );
                     if (!cache[text]) {
                         const results =
                             file.type === 'Success'

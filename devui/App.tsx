@@ -355,7 +355,13 @@ export const App = () => {
             });
             const testFiles = {} as Files['test'];
             testContents.forEach((contents, i) => {
-                const file = processFile(contents);
+                const file = processFile(
+                    contents,
+                    undefined,
+                    undefined,
+                    undefined,
+                    true,
+                );
                 testFiles[test[i]] = {
                     file,
                     values:

@@ -60,7 +60,7 @@ takeWhat(whatOrWho)
 
 --[output:expected]--
 alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] takeWhat#[hc1ddb2c963e54ef87d12bad3be77c118e2fca6dd] whatOrWho#[h75f1fc730ce550f6a810507b53f871dcb253bcc1]
-takeWhat(@error:argWrongType(expected: :[ `What ]) whatOrWho)
+takeWhat(@error:argWrongType(expected: :[ `What ], got: :[ `What | `Who ]) whatOrWho)
 
 --[builtins]--
 //:value:takeWhat:(v: [ `What ]) => int

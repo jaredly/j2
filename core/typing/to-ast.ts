@@ -29,7 +29,7 @@ export type Ctx = {
     actx: ACtx;
 };
 
-export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
+export const printCtx = (fctx: FullContext, showIds: boolean = true): Ctx => {
     const backAliases: { [key: string]: string } = {};
     const aliases: { [key: string]: string } = {};
 
@@ -135,10 +135,10 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             }
         },
         printSym(sym) {
-            if (showIds || true) {
+            if (true) {
                 return {
                     label: sym.name,
-                    hash: `#[${sym.id}]`,
+                    hash: showIds ? `#[${sym.id}]` : '',
                 };
             }
             const hash = '' + sym.id;
@@ -156,12 +156,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
                     ? this.reverse.decorators[hash]
                     : this.reverse.types[hash];
 
-            if (
-                name &&
-                !showIds &&
-                ref.type !== 'Local' &&
-                ref.type !== 'Recur'
-            ) {
+            if (name && ref.type !== 'Local' && ref.type !== 'Recur') {
                 if (!this.aliases[hash]) {
                     add(name, ref);
                 }

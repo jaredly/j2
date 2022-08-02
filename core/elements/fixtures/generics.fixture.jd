@@ -23,7 +23,7 @@ hello<int>(10)
 
 ==[decorate target]==
 --[input]--
-(@decorate() hello)<10>(10)
+(@decorate() hello)(10)
 
 --[output:expected]--
 alias decorate#[h5a7fc9170718190f9388084b28fb49f6cb4602fc] hello#[hf6e269898d7d9d035467350db13cfa38ac824c31]
@@ -52,7 +52,7 @@ bounded<int>(10)
 
 --[output:expected]--
 alias bounded#[h6b72cf1b6234557dd3846b2452db4a5f991da15d]
-bounded(10)
+bounded<10>(10)
 // 10
 /* bounded(10) */
 alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
@@ -100,7 +100,7 @@ takesArray(anArray)
 
 --[output:expected]--
 alias Array#[h8de4ecae93abe8de85536031f6f8a05742a6ee53] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takesArray#[hf3cd697d8478f4e33cc628cbd7e9b42d4d13aace]
-takesArray(@error:argWrongType(expected: :Array<string, 10u>) 10)
+takesArray(@error:argWrongType(expected: :Array<string, 10u>, got: :10) 10)
 alias anArray#[h37011200e8faacc0a381c6d95d6f90d45e6cbdf3]
 takesArray(anArray)
 // int

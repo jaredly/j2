@@ -5,6 +5,6 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[h3040ed1f3de0b98f18bd2b6d
     let z = x + y;
     z + z + x * y;
 }
-let m = <T#[0], Z#[1]>(n: Z) => n
-alias error:needsTypeVariables#[hf5fb5541892dfc05b0afa3069bc28a0cddf64c70] m#[hfe0db33c4eb02d9b8c75450e3d811c7014a3cfa2]
-(@error:needsTypeVariables() m)(100)
+let m = <T, Z>(n: Z) => n
+alias m#[h0fc24d0bf615583827850f505f1fab7e1299e415]
+m(100)

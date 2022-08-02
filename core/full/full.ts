@@ -213,10 +213,11 @@ export const processFileR = (
     baseCtx: FullContext = builtinContext,
     debugs?: { [key: number]: boolean },
     track?: NameTrack,
+    noPrintError?: boolean,
 ): Success<FileContents> => {
     const info: ToplevelInfo<FileContents>[] = [];
     let ctx = baseCtx.clone();
-    let pctx = printCtx(ctx);
+    let pctx = printCtx(ctx, noPrintError ? false : true);
     let jctx = jCtx(ctx, true, track);
     let ictx = iCtx(ctx);
     const aliases: { [key: string]: string } = {};
@@ -241,7 +242,15 @@ export const processFileR = (
                       },
                   }
                 : ctx;
-        const res = processToplevel(t, maybeDebug, ictx, jctx, pctx, aliases);
+        const res = processToplevel(
+            t,
+            maybeDebug,
+            ictx,
+            jctx,
+            pctx,
+            aliases,
+            noPrintError,
+        );
         info.push(res.i);
         ctx = res.ctx;
         pctx = res.pctx;
@@ -256,6 +265,7 @@ export const processFile = (
     baseCtx?: FullContext,
     debugs?: { [key: number]: boolean },
     track?: NameTrack,
+    noPrintError?: boolean,
 ): Result<FileContents> => {
     let ast: p.File;
     try {
@@ -267,7 +277,7 @@ export const processFile = (
             err: (err as p.SyntaxError).location,
         };
     }
-    return processFileR(ast, baseCtx, debugs, track);
+    return processFileR(ast, baseCtx, debugs, track, noPrintError);
 };
 
 export const processTypeToplevel = (
@@ -327,6 +337,7 @@ export const processToplevel = (
     jctx: ReturnType<typeof jCtx>,
     pctx: PCtx,
     allAliases: Aliases,
+    noPrintError = false,
 ): { i: ToplevelInfo<FileContents>; ctx: FullContext; pctx: PCtx } => {
     ctx = ctx.toplevelConfig(null) as FullContext;
     ctx.resetSym();
@@ -377,7 +388,12 @@ export const processToplevel = (
     jctx.actx = ctx;
     ictx.actx = ctx;
 
-    const refmt = pctx.ToAst.Toplevel(top, pctx);
+    const refmt = pctx.ToAst.Toplevel(
+        noPrintError
+            ? transformToplevel(top, removeErrorDecorators(ctx), null)
+            : top,
+        pctx,
+    );
     const irtops =
         errorCount(verify) === 0
             ? top.type === 'ToplevelExpression'

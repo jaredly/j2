@@ -115,12 +115,12 @@ hello("hello")
 // int
 /* hello(`hello`) */
 alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f]
-hello(@error:argWrongType(expected: :"hello") "ho")
+hello(@error:argWrongType(expected: :"hello", got: :"ho") "ho")
 alias ten#[hf4f51e4cf24724da57c43defaba9896829117c9f]
 ten(10)
 // int
 /* ten(10) */
-ten(@error:argWrongType(expected: :10) 5)
+ten(@error:argWrongType(expected: :10, got: :5) 5)
 
 ==[rank 2 my folks]==
 --[input]--
