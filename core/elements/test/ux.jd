@@ -6,5 +6,3 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[h3040ed1f3de0b98f18bd2b6d
     z + z + x * y;
 }
 let m = <T, Z>(n: Z) => n
-alias m#[h0fc24d0bf615583827850f505f1fab7e1299e415]
-m(100)

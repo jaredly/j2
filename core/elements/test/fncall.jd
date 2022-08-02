@@ -1,7 +1,7 @@
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
-let x = (v#[0]: int) => v#[0] + 2
+let x = (v: int) => v + 2
 alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] x#[hfba5c1112bc2b009325724273bfa53172b190098]
 x(3) == 5
-let gx = <T#[0]>(v#[1]: T#[0], m#[2]: (n: T#[0]) => T#[0]) => m#[2](v#[1])
+let gx = <T>(v: T, m: (n: T) => T) => m(v)
 alias gx#[hcb7da04838de98b277700adb88d6d654fff4a94e]
-gx<int>(10, (x#[0]) => x#[0] + 2)
+gx<int>(10, (x) => x + 2)

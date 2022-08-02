@@ -91,12 +91,42 @@ export const typeToplevel = (
                     name: t.name,
                     type: t.typ
                         ? ctx.ToTast.Type(t.typ, ctx)
-                        : { type: 'TBlank', loc: t.loc },
+                        : inferTopType(t.expr, ctx),
                 };
             }),
         };
     }
     return null;
+};
+
+export const inferTopType = (expr: p.Expression, ctx: Ctx): t.Type => {
+    if (expr.type === 'TypeAbstraction') {
+        const args = expr.args.items.map((t) => ctx.ToTast.TBArg(t, ctx));
+        return {
+            type: 'TVars',
+            inner: inferTopType(expr.inner, ctx.withLocalTypes(args)),
+            args: args,
+            loc: expr.loc,
+        };
+    }
+    if (expr.type === 'Lambda') {
+        return {
+            type: 'TLambda',
+            args:
+                expr.args?.items.map((t) => ({
+                    label: '',
+                    typ: t.typ
+                        ? ctx.ToTast.Type(t.typ, ctx)
+                        : { type: 'TBlank', loc: t.loc },
+                    loc: t.loc,
+                })) ?? [],
+            result: expr.res
+                ? ctx.ToTast.Type(expr.res, ctx)
+                : { type: 'TBlank', loc: expr.loc },
+            loc: expr.loc,
+        };
+    }
+    return { type: 'TBlank', loc: expr.loc };
 };
 
 export const typeFileToTast = (

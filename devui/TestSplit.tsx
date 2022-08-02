@@ -468,18 +468,12 @@ export const extraHighlights = (file: Success<FileContents>) => {
         transformToplevel(
             info.contents.top,
             {
-                // huh would be nice to have a loc
-                // Sym(node, ctx) {
-                // 	node.name
-                // },
                 Ref(node, ctx) {
                     if (node.kind.type === 'Local') {
                         hls.push({
                             loc: node.loc,
                             type: `Color${node.kind.sym % 10}` as Colorable,
-                            // type: 'Error',
                         });
-                        console.log('AF', node.loc);
                     }
                     return null;
                 },
@@ -487,7 +481,6 @@ export const extraHighlights = (file: Success<FileContents>) => {
                     hls.push({
                         loc: node.loc,
                         type: `Color${node.sym.id % 10}` as Colorable,
-                        // type: 'Error',
                     });
                     return null;
                 },

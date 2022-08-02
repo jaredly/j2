@@ -1,10 +1,10 @@
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe]
-let _ = <A#[0]: task>(a#[1]: Task<A#[0]>) => 100
-let _ = <A#[0]: [ * ], B#[1]: [ * ]>(a#[2]: A#[0], b#[3]: B#[1]):A#[0] => a#[2]
-let _ = <A#[0]: [ * ], B#[1]: [ * ]>(a#[2]: A#[0], b#[3]: B#[1]):A#[0] => a#[2]
-let again = <T#[0]: [ * ]>(v#[1]: T#[0]):[ `One | T#[0] ] => v#[1]
+let _ = <A: task>(a: Task<A>) => 100
+let _ = <A: [ * ], B: [ * ]>(a: A, b: B):A => a
+let _ = <A: [ * ], B: [ * ]>(a: A, b: B):A => a
+let again = <T: [ * ]>(v: T):[ `One | T ] => v
 alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
-let example = <T#[0]: task>(m#[1]: Task<[ T#[0] | `Read((), string) ], ()>) => switch m#[1] {
+let example = <T: task>(m: Task<[ T | `Read((), string) ], ()>) => switch m {
     `Return => 10;
     `Read => 20;
     _ => 30;

@@ -19,7 +19,7 @@ export const verifyHL = (v: Verify) => {
             type: 'Error',
             prefix: {
                 text: '🖥',
-                message: `Untyped`,
+                message: `Unable to type expression`,
             },
         });
     });

@@ -165,7 +165,7 @@ export const ToPP = {
                 ),
                 res
                     ? pp.items(
-                          [pp.text(':', res.loc), ctx.ToPP.Type(res, ctx)],
+                          [pp.text(': ', res.loc), ctx.ToPP.Type(res, ctx)],
                           res.loc,
                       )
                     : null,
