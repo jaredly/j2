@@ -1,7 +1,7 @@
 alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let print = (value: string) => `Print(value, (()) => `Return())
 let read = `Read((), (result: string) => `Return(result))
-alias print#[h795e726bf4f5e172635cc0179d9ca57474b0b4d1] read#[h0865a78d56a525cf882ace5bae598f1e784994db]
+alias print#[h015d7d5dadd610dc99f13c36a29ac60c22f4b96c] read#[h2fac42ba0b6e30bfe018a86ad694abb731019b69]
 let helloFolks = () => {
     print("Hello folks")!;
     print("Got ${read!}!")!;
@@ -11,7 +11,7 @@ type Read = [`Read((), string)]
 type Print = [`Print(string, ())]
 alias Read#[h39d4a8221a80e1486be57f401a27a7eb6b0afc3c] Task#[h67d00eba961cd5135110775d8654598dc22e7274] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe] withHandler#[ha096a125d17e577335cba67a01ae6f08c8a8254b]
 let alwaysRead = <Inner: task>(readResponse: string, task: Task<[Read | Inner], string>): Task<
-    [Inner],
+    Inner,
     string,
 > => {
     switch task {
@@ -23,14 +23,14 @@ let alwaysRead = <Inner: task>(readResponse: string, task: Task<[Read | Inner], 
         );
     };
 }
-alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] Print#[h54ed15b99ee8e24a9deca9b4c3d180679bfcf096] alwaysRead#[hee81527002e89bed8859b388c25eaefd94086d1f] helloFolks#[h907740149dc7a326fac4ece47072406dde331098] testIO#[h69ce4c33e9e9ba9af7129accb6794008258bb41c]
-testIO<string>("what", alwaysRead<[Print]>("who", helloFolks())) == "done who"
+alias Print#[h54ed15b99ee8e24a9deca9b4c3d180679bfcf096]
 let collect: (string, Task<[Print], ()>) => string = (collected, task) => switch task {
     `Return() => collected;
     `Print(value, k) => collect("${collected}\n${value}", k(()));
 }
+alias alwaysRead#[hae5f61e2d17bd16b049c9619b32e2005a0f775d6] helloFolks#[hc85910b21b84b13ec0ae48d23727cb5c94877ccb]
 let inner = () => {
     print(alwaysRead<Print>("who", helloFolks())!)!;
 }
-alias collect#[hce5100d4828e88b73d486cd07381c43e7817954e] inner#[hc263c86145ec25159529ebaa5c36b662eb5cf5a5]
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] collect#[h9da840f68b145b90780861136b7387efb8ef8ac4] inner#[h8fb1e2e99ca023d0c865bf17bdd57f40f6cc473e]
 collect("Initial", inner()) == "Initial\nHello folks\nGot who!\ndone who"

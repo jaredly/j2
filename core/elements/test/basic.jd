@@ -8,10 +8,11 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921]
 alias -#[h4dd9308469e477a4a756b4b286de0625d5a98af9]
 2 == 2 + 1 - 1
 let hello = 10
-alias hello#[hfb3ab6073655e042df98cf160644857639baed08]
+alias hello#[h2f8038c5ad8b8a950e97aaa181bae53bfd68155c]
 hello == 10
+alias <#[hdbc007568231aaf9a594b03c391ad2c79a132c78]
 {
-    let (x, y) = if true {
+    let (x, y) = if 1 < 2 {
         (2, 3);
     } else {
         (3, 4);

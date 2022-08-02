@@ -88,7 +88,7 @@ export const Editor = ({
             const sel = document.getSelection()!;
             let pos: number | null = null;
             if (isAncestor(sel?.anchorNode, ref.current!)) {
-                // pos = getPos(ref.current!);
+                pos = getPos(ref.current!);
             }
 
             curExtraLocs.current = extraLocs;

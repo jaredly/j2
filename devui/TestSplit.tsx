@@ -231,7 +231,9 @@ export const TestSplit = ({
                         true,
                     );
                     if (file.type === 'Success') {
-                        setItems(items.concat(file.info));
+                        setTimeout(() => {
+                            setItems(items.concat(file.info));
+                        }, 10);
                     }
                 }}
                 onChange={(text) => {}}
@@ -304,6 +306,7 @@ export const TopEditor = ({
     onChange: (info: ToplevelInfo<FileContents>[]) => void;
     hover: HTMLDivElement;
 }) => {
+    const changed = React.useRef(false);
     const [text, setText] = React.useState(() =>
         item.type === 'Failed' ? item.text : fmtItem(item.contents.refmt),
     );
@@ -359,8 +362,6 @@ export const TopEditor = ({
             );
             const results = getTestResults(file, shared.current.terms);
             cache[text] = { file, results };
-            console.log(file, results, '???? LCOS');
-
             // ok, so we have an AST
             return testStatuses(file, results).concat(extraHighlights(file));
         },
@@ -368,7 +369,11 @@ export const TopEditor = ({
     );
     return (
         <Hovery
-            style={{ position: 'relative' }}
+            style={{
+                position: 'relative',
+                // Hmmm
+                // outline: changed.current ? '1px dashed magenta' : 'none',
+            }}
             onMouseOut={(evt) => {
                 // if (evt.target === evt.currentTarget) {
                 resetHighlights(evt);
@@ -415,9 +420,7 @@ export const TopEditor = ({
                                     hover.append(node);
                                 }
                             }
-                            // hover.textContent = anns[0].text;
                         }
-                        console.log(errors);
                         errors.forEach((error) => {
                             const node = document.createElement('div');
                             if (error.type === 'Dec') {
@@ -470,11 +473,17 @@ export const TopEditor = ({
                                 : null;
                         cache[text] = { file, results };
                     }
+                    changed.current = false;
                     if (file.type === 'Success') {
-                        onChange(file.info);
+                        setTimeout(() => {
+                            onChange(file.info);
+                        }, 10);
                     }
                 }}
-                onChange={(text) => setText(text)}
+                onChange={(text) => {
+                    changed.current = true;
+                    setText(text);
+                }}
                 extraLocs={extraLocs}
             />
             {file.type === 'Success' &&
@@ -547,6 +556,7 @@ export const TopEditor = ({
                                                                 'pre-wrap',
                                                         }}
                                                     >
+                                                        Evaluation result:{' '}
                                                         {showValue(
                                                             item.id
                                                                 ? shared.current
