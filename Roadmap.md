@@ -18,9 +18,14 @@ and/or a nice error coalescing example.
 ## Things to do before letting other people play with it
 
 - [x] make int + 2 + 3 match `int`
-- [ ] hmmm clicking off of a dealio and onto another currently jolts the whole thing (PERFF) such that you lose your place.
+- [x] hmmm clicking off of a dealio and onto another currently jolts the whole thing (PERFF) such that you lose your place.
 	- [ ] fix the perf
-	- [ ] fix the selection loss
+		- eh
+	- [x] fix the selection loss
+- [x] transitive test dependencies aren't updated until you focus them?
+- [ ] oh record access, why don't I have that yet
+
+## Should I venture into arrays?
 
 ## Eff paper discoveries
 

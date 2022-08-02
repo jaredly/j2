@@ -636,6 +636,13 @@ export const ToJS = {
         if (x.kind.type === 'Global') {
             const name = findBuiltinName(x.kind.id, ctx.actx);
             if (name) {
+                if (ctx.namespaced) {
+                    return b.memberExpression(
+                        b.identifier('$builtins'),
+                        b.identifier(name),
+                        false,
+                    );
+                }
                 return b.identifier(name);
             } else {
                 if (ctx.namespaced) {

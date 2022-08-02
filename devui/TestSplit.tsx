@@ -25,7 +25,7 @@ import { Colorable, typeToString } from './Highlight';
 import { idToString, toId } from '../core/ids';
 import { Loc } from '../core/typed-ast';
 import { transformFile, transformToplevel } from '../core/transform-tast';
-import { VError } from '../core/typing/analyze';
+import { errorCount, VError } from '../core/typing/analyze';
 import { printCtx } from '../core/typing/to-ast';
 
 /*
@@ -90,17 +90,16 @@ export const testStatuses = (
         statuses.push(...verifyHL(info.verify));
     });
 
-    results.info.exprs;
-    results.testResults.forEach((result) => {
-        statuses.push({
-            loc: result.loc,
-            type: result.msg == null ? 'Success' : 'Error',
-            prefix: {
-                text: result.msg == null ? '✅' : '🚨',
-                message: result.msg ?? undefined,
-            },
-        });
-    });
+    // results.testResults.forEach((result) => {
+    //     statuses.push({
+    //         loc: result.loc,
+    //         type: result.msg == null ? 'Success' : 'Error',
+    //         prefix: {
+    //             text: result.msg == null ? '✅' : '🚨',
+    //             message: result.msg ?? undefined,
+    //         },
+    //     });
+    // });
 
     return statuses;
 };
@@ -332,7 +331,7 @@ export const TopEditor = ({
                 : null;
         cache[text] = { file, results };
     }
-    let file = cache[text].file;
+    let { file, results } = cache[text];
     const [open, setOpen] = React.useState(false);
 
     const extraLocs = React.useCallback(
@@ -490,6 +489,16 @@ export const TopEditor = ({
                                 left: -12,
                                 cursor: 'pointer',
                                 fontSize: 30,
+                                opacity: results?.testResults.length
+                                    ? 1
+                                    : undefined,
+                                color: results?.testResults.some(
+                                    (m) => m.msg != null,
+                                )
+                                    ? 'red'
+                                    : results?.testResults.length
+                                    ? '#47ff47'
+                                    : 'white',
                             }}
                             onClick={() => setOpen(!open)}
                         >
@@ -770,7 +779,10 @@ export const reconcileChanges = (
     });
     for (let j = i + 1; j < items.length; j++) {
         const at = items[j];
-        if (at.type === 'Failed' || !hashes.some((h) => at.uses[h])) {
+        if (
+            at.type === 'Failed' ||
+            (!hashes.some((h) => at.uses[h]) && errorCount(at.verify) == 0)
+        ) {
             res.push(at);
             if (at.type === 'Info') {
                 ctx = ctx.withToplevel(at.contents.top) as FullContext;

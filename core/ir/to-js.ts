@@ -129,6 +129,8 @@ const testIO = <T>(read: string, task: IO<T>): T => {
 //     }
 // }
 
+const builtins = { andThen, withHandler, testIO };
+
 export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
     return {
         ctx,
@@ -142,13 +144,7 @@ export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
                 (hash ?? Math.random());
             let f;
             try {
-                f = new Function(
-                    '$terms',
-                    'testIO',
-                    'andThen',
-                    'withHandler',
-                    jsraw,
-                );
+                f = new Function('$terms', `$builtins`, jsraw);
             } catch (err) {
                 throw new Error(
                     `Syntax probably: ${(err as Error).message}\n` + jsraw,
@@ -159,7 +155,7 @@ export const newExecutionContext = (ctx: FullContext): ExecutionContext => {
             }
             let res;
             try {
-                res = f(this.terms, testIO, andThen, withHandler);
+                res = f(this.terms, builtins);
             } catch (err) {
                 // console.log(this.terms);
                 throw new Error(

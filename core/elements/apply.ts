@@ -527,18 +527,27 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         }
         if (ttype.type !== 'TLambda') {
             if (ttype.type === 'TVars') {
+                // return {
+                //     ...node,
+                //     target: {
+                //         type: 'TypeApplication',
+                //         loc: node.loc,
+                //         target: node.target,
+                //         inferred: true,
+                //         args: ttype.args.map((t) => ({
+                //             type: 'TBlank',
+                //             loc: node.loc,
+                //         })),
+                //     },
+                // };
                 return {
                     ...node,
-                    target: {
-                        type: 'TypeApplication',
-                        loc: node.loc,
-                        target: node.target,
-                        inferred: true,
-                        args: ttype.args.map((t) => ({
-                            type: 'TBlank',
-                            loc: node.loc,
-                        })),
-                    },
+                    target: decorate(
+                        node.target,
+                        'needsTypeVariables',
+                        hit,
+                        ctx,
+                    ),
                 };
             }
             return decorate(node, 'notAFunction', hit, ctx);
