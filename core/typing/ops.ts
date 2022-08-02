@@ -142,6 +142,31 @@ export const numOps = (
             mm[op === '+' ? 'upperLimit' : 'lowerLimit'] = false;
             continue;
         }
+        if (el.type === 'TOps') {
+            const inner = numOps(el, ctx);
+            if (!inner || (kind != null && inner.kind !== kind)) {
+                return false;
+            }
+            kind = inner.kind;
+            if (op === '+') {
+                num += inner.num;
+                if (!inner.mm.upperLimit) {
+                    mm.upperLimit = false;
+                }
+                if (!inner.mm.lowerLimit) {
+                    mm.lowerLimit = false;
+                }
+            } else {
+                num -= inner.num;
+                if (!inner.mm.upperLimit) {
+                    mm.lowerLimit = false;
+                }
+                if (!inner.mm.lowerLimit) {
+                    mm.upperLimit = false;
+                }
+            }
+            continue;
+        }
         return false;
     }
     return { num, mm, kind: kind! };

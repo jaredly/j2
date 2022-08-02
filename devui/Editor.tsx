@@ -85,6 +85,12 @@ export const Editor = ({
             getText(ref.current!) !== text ||
             curExtraLocs.current !== extraLocs
         ) {
+            const sel = document.getSelection()!;
+            let pos: number | null = null;
+            if (isAncestor(sel?.anchorNode, ref.current!)) {
+                // pos = getPos(ref.current!);
+            }
+
             curExtraLocs.current = extraLocs;
             const locs = highlightLocations(text, typeFile, extraLocs);
             if (text.length) {
@@ -102,6 +108,10 @@ export const Editor = ({
                     }
                     ref.current!.append(div);
                 });
+            }
+
+            if (pos != null) {
+                setPos(ref.current!, pos);
             }
         }
     }, [text, extraLocs]);

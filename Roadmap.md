@@ -15,9 +15,16 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+## Things to do before letting other people play with it
+
+- [x] make int + 2 + 3 match `int`
+- [ ] hmmm clicking off of a dealio and onto another currently jolts the whole thing (PERFF) such that you lose your place.
+	- [ ] fix the perf
+	- [ ] fix the selection loss
+
 ## Eff paper discoveries
 
-- [ ] I really want to support `Task<What>`, not just `Task<[What]>`
+- [x] I really want to support `Task<What>`, not just `Task<[What]>`
 	- inferTaskType I think is the spot
 - [x] auto-inference is letting me down somehow
 	OH it's only running during the analyze dealio, and my generalized inference is *not* up to
