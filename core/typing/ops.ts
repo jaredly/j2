@@ -1,6 +1,7 @@
 import { noloc } from '../consts';
 import { idsEqual } from '../ids';
 import { Number, String, TOps, TRef, Type } from '../typed-ast';
+import { collapseConstraints } from './analyze';
 import { Ctx } from './typeMatches';
 
 export const stringAddsMatch = (
@@ -116,7 +117,10 @@ export const numOps = (
     let kind: Number['kind'] | null = null;
 
     for (let i = 0; i < elements.length; i++) {
-        const { op, right: el } = elements[i];
+        let { op, right: el } = elements[i];
+        if (el.type === 'TVbl') {
+            el = collapseConstraints(ctx.currentConstraints(el.id), ctx);
+        }
         if (el.type === 'Number') {
             if (kind != null && el.kind !== kind) {
                 return false;

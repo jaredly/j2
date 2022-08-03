@@ -35,7 +35,12 @@ import {
 import { expandTask, isTaskable, matchesTask, maybeExpandTask } from './tasks';
 import { unifyTypes } from './unifyTypes';
 import { TopTypeKind } from './to-tast';
-import { addNewConstraint, Constraints, mergeConstraints } from './analyze';
+import {
+    addNewConstraint,
+    collapseConstraints,
+    Constraints,
+    mergeConstraints,
+} from './analyze';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -124,6 +129,13 @@ export const typeMatches = (
         candidate = candidate.inner;
     }
 
+    if (expected.type === 'TVbl' && candidate.type !== 'TVbl') {
+        expected = collapseConstraints(
+            ctx.currentConstraints(expected.id),
+            ctx,
+        );
+    }
+
     if (expected.type === 'TOps') {
         expected = collapseOps(expected, ctx);
     }
@@ -173,6 +185,11 @@ export const typeMatches = (
                     constraints[candidate.id] = current;
                     return true;
                 }
+                return false;
+            }
+            const { outer, inner } = ctx.currentConstraints(candidate.id);
+            if (outer) {
+                return typeMatches(outer, expected, ctx);
             }
             return false;
         case 'TRecord':
@@ -180,20 +197,34 @@ export const typeMatches = (
         case 'TEnum':
             return enumTypeMatches(candidate, expected, ctx, path, constraints);
         case 'TDecorated':
-            return typeMatches(candidate.inner, expected, ctx);
+            return typeMatches(
+                candidate.inner,
+                expected,
+                ctx,
+                path,
+                constraints,
+            );
         case 'TVars': {
             return tvarsMatches(candidate, expected, ctx);
         }
         case 'TLambda':
             return (
                 expected.type === 'TLambda' &&
-                typeMatches(candidate.result, expected.result, ctx) &&
+                typeMatches(
+                    candidate.result,
+                    expected.result,
+                    ctx,
+                    [],
+                    constraints,
+                ) &&
                 candidate.args.length === expected.args.length &&
                 candidate.args.every((arg, i) =>
                     typeMatches(
                         (expected as TLambda).args[i].typ,
                         arg.typ,
                         ctx,
+                        [],
+                        constraints,
                     ),
                 )
             );

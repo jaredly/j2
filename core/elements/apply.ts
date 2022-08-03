@@ -1,7 +1,7 @@
 import { Visitor } from '../transform-tast';
 import { Constraints, decorate, tdecorate } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
-import { typeMatches } from '../typing/typeMatches';
+import { ConstraintMap, typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -850,15 +850,21 @@ export const autoTypeApply = (
             // }
         }
 
+        const constraints: ConstraintMap = {};
         if (
             !typeMatches(
                 unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
                 arg.bound,
                 ctx,
+                [],
+                constraints,
             )
         ) {
             return null;
         }
+        Object.keys(constraints).forEach((k) => {
+            ctx.addTypeConstraint(+k, constraints[+k]);
+        });
     }
     return {
         apply: {

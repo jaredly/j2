@@ -15,6 +15,9 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+- [ ] OOOH what if there's an error that doesn't correspond to a printed range? 🤔
+	like on an inferred type???
+
 
 ## HMM mm so typeMatches, and constraints
 

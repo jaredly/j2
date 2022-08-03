@@ -2,3 +2,4 @@ let x = (v: int) => v + 2
 x(3) == 5
 let gx = <T>(v: T, m: (n: T) => T) => m(v)
 gx<int>(10, (x) => x + 2)
+(m) => x(m + 2)

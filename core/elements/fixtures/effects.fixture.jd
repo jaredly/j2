@@ -48,10 +48,10 @@ let print = (v: string): Task<[`Print(string, ())]> => `Print(v, () => `Return(1
 
 --[output:expected]--
 alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] error:resMismatch#[hb090f18487ae3bd77546a5c35ccf59b6adf3aa59] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
-let print = (v#[0]: string): @error:resMismatch(inferrred: :[`Pront(string, () => [`Return()])]) Task<
+let print = (v#[0]: string): @error:resMismatch(inferred: :[`Pront(string, () => [`Return()])]) Task<
     [`Print(string, ())],
 > => `Pront(v#[0], () => `Return())
-let print = (v#[0]: string): @error:resMismatch(inferrred: :[`Print(string, () => [`Return(10)])]) Task<
+let print = (v#[0]: string): @error:resMismatch(inferred: :[`Print(string, () => [`Return(10)])]) Task<
     [`Print(string, ())],
 > => `Print(v#[0], () => `Return(10))
 
