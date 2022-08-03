@@ -96,12 +96,15 @@ export const ToTast = {
         { args, loc, inner }: p.TypeAbstraction,
         ctx: TCtx,
     ): TypeAbstraction {
-        const targs = args.items.map((arg) => ctx.ToTast.TBArg(arg, ctx));
-        let innerCtx = ctx.withLocalTypes(targs);
+        const targs = args.items.map((arg) => {
+            const targ = ctx.ToTast.TBArg(arg, ctx);
+            ctx = ctx.withLocalTypes([targ]);
+            return targ;
+        });
         return {
             type: 'TypeAbstraction',
             items: targs,
-            body: innerCtx.ToTast.Expression(inner, innerCtx),
+            body: ctx.ToTast.Expression(inner, ctx),
             loc,
         };
     },
@@ -115,6 +118,12 @@ export const matchesBound = (
 ) => {
     if (!bound) {
         return true;
+    }
+    if (bound.type === 'TRef' && bound.ref.type === 'Local') {
+        const argbound = ctx.getBound(bound.ref.sym);
+        if (argbound) {
+            bound = argbound;
+        }
     }
     if (t.type === 'TRef' && t.ref.type === 'Local') {
         const argbound = ctx.getBound(t.ref.sym);
@@ -261,6 +270,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                     },
                 ]);
             }
+            ctx = ctx.withLocalTypes([{ sym: targ.sym, bound: arg }]);
             return arg;
         });
         node = changed ? { ...node, args } : node;

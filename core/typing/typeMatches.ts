@@ -41,6 +41,7 @@ import {
     Constraints,
     mergeConstraints,
 } from './analyze';
+import { isConst } from './getType';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -167,6 +168,13 @@ export const typeMatches = (
 
     if (candidate.type === 'TBlank' || expected.type === 'TBlank') {
         return false;
+    }
+
+    if (expected.type === 'TConst' && candidate.type !== 'TConst') {
+        return (
+            isConst(candidate, ctx) &&
+            typeMatches(candidate, expected.inner, ctx, path, constraints)
+        );
     }
 
     switch (candidate.type) {

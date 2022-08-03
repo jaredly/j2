@@ -766,7 +766,7 @@ testIO: <T>(read: string, task: Task<[\`Read((), string) | \`Print(string, ())],
 withHandler: <Effects: task, Result, HandledEffects: task, Result2>(task: Task<Effects, Result, HandledEffects>, handler: (input: Task<[Effects | HandledEffects], Result>) => Task<Effects, Result2>) => Task<Effects, Result2>
 isSquare: (int) => bool
 toInt: (string) => [\`Ok(int) | \`Err([\`InvalidInt])]
-get: <T, A: const uint, B: A - uint>(arr: Array<T, A>, idx: B) => T
+get: <T, A: const uint, B: A - 1u - uint>(arr: Array<T, A>, idx: B) => T
 `;
 
 const tvar = (sym: Sym, bound?: RefKind, default_?: Type): TVar => ({

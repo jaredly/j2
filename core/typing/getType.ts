@@ -89,6 +89,7 @@ export const applyType = (
         if (targ.bound && !matchesBound(arg!, targ.bound, ctx, path)) {
             failed = true;
         }
+        ctx = ctx.withLocalTypes([{ sym: targ.sym, bound: arg }]);
     });
     if (failed) {
         return null;

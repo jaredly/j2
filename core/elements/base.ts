@@ -101,7 +101,11 @@ export const typeToplevel = (
 
 export const inferTopType = (expr: p.Expression, ctx: Ctx): t.Type => {
     if (expr.type === 'TypeAbstraction') {
-        const args = expr.args.items.map((t) => ctx.ToTast.TBArg(t, ctx));
+        const args = expr.args.items.map((t) => {
+            const arg = ctx.ToTast.TBArg(t, ctx);
+            ctx = ctx.withLocalTypes([arg]);
+            return arg;
+        });
         return {
             type: 'TVars',
             inner: inferTopType(expr.inner, ctx.withLocalTypes(args)),

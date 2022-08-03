@@ -76,12 +76,15 @@ export const ToTast = {
     TVars({ args, inner, loc }: p.TVars, ctx: TCtx): t.TVars {
         // TODO later args can refer to previous ones in their `bound`
         // e.g <T, A: T>xyz
-        const targs = args.items.map((arg) => ctx.ToTast.TBArg(arg, ctx));
-        let innerCtx = ctx.withLocalTypes(targs);
+        const targs = args.items.map((arg) => {
+            const targ = ctx.ToTast.TBArg(arg, ctx);
+            ctx = ctx.withLocalTypes([targ]);
+            return targ;
+        });
         return {
             type: 'TVars',
             args: targs,
-            inner: innerCtx.ToTast.Type(inner, innerCtx),
+            inner: ctx.ToTast.Type(inner, ctx),
             loc,
         };
     },

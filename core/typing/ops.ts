@@ -118,8 +118,31 @@ export const numOps = (
 
     for (let i = 0; i < elements.length; i++) {
         let { op, right: el } = elements[i];
+        if (el.type === 'TRef') {
+            if (el.ref.type === 'Local') {
+                const bound = ctx.getBound(el.ref.sym);
+                if (bound) {
+                    el = bound;
+                }
+            }
+        }
         if (el.type === 'TVbl') {
             el = collapseConstraints(ctx.currentConstraints(el.id), ctx);
+        }
+        if (el.type === 'TRef') {
+            if (el.ref.type === 'Global') {
+                if (idsEqual(el.ref.id, int)) {
+                    kind = 'Int';
+                } else if (idsEqual(el.ref.id, uint)) {
+                    kind = 'UInt';
+                } else if (idsEqual(el.ref.id, float)) {
+                    kind = 'Float';
+                } else {
+                    return false;
+                }
+                mm[op === '+' ? 'upperLimit' : 'lowerLimit'] = false;
+                continue;
+            }
         }
         if (el.type === 'Number') {
             if (kind != null && el.kind !== kind) {
@@ -131,19 +154,6 @@ export const numOps = (
             } else {
                 num -= el.value;
             }
-            continue;
-        }
-        if (el.type === 'TRef' && el.ref.type === 'Global') {
-            if (idsEqual(el.ref.id, int)) {
-                kind = 'Int';
-            } else if (idsEqual(el.ref.id, uint)) {
-                kind = 'UInt';
-            } else if (idsEqual(el.ref.id, float)) {
-                kind = 'Float';
-            } else {
-                return false;
-            }
-            mm[op === '+' ? 'upperLimit' : 'lowerLimit'] = false;
             continue;
         }
         if (el.type === 'TOps') {

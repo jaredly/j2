@@ -1,0 +1,7 @@
+let constme = (a: const int) => a
+constme(20)
+(a: int) => constme(2)
+// Hmm so I would really like to be able to infer the type arguments for get here ...
+(a: Array<string, 5u>) => get<string, 5u, 4u>(a, 4u)
+let id = <T>(a: T) => a
+12->id
