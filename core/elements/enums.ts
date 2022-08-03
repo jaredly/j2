@@ -4,10 +4,11 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { addDecorator, Ctx, tdecorate } from '../typing/analyze';
+import { addDecorator, Constraints, Ctx, tdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
 import {
+    ConstraintMap,
     Ctx as TMCtx,
     expandEnumCases,
     payloadsEqual,
@@ -419,6 +420,7 @@ export const enumTypeMatches = (
     expected: t.Type,
     ctx: TMCtx,
     path?: string[],
+    constraints?: ConstraintMap,
 ) => {
     // [ `What ] matches [ `What | `Who ]
     // So everything in candidate needs to match something
@@ -458,7 +460,8 @@ export const enumTypeMatches = (
             if (
                 !expEnums.bounded.some(
                     (b) =>
-                        b.type === 'task' && typeMatches(inner, b.inner, ctx),
+                        b.type === 'task' &&
+                        typeMatches(inner, b.inner, ctx, [], constraints),
                 )
             ) {
                 return false;
@@ -475,7 +478,13 @@ export const enumTypeMatches = (
             return false;
         }
         if (
-            !payloadsEqual(kase.payload, expMap[kase.tag].payload, ctx, false)
+            !payloadsEqual(
+                kase.payload,
+                expMap[kase.tag].payload,
+                ctx,
+                false,
+                constraints,
+            )
         ) {
             // console.log(`Payload not equal ${kase.tag}`);
             // console.log(typeToString(kase.payload!, ctx as FullContext));

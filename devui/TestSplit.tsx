@@ -398,6 +398,7 @@ export const TopEditor = ({
         },
         [ctx],
     );
+    const tid = React.useRef(null as null | any);
     return (
         <Hovery
             style={{
@@ -406,11 +407,15 @@ export const TopEditor = ({
                 // outline: changed.current ? '1px dashed magenta' : 'none',
             }}
             onMouseOut={(evt) => {
+                clearTimeout(tid.current);
                 // if (evt.target === evt.currentTarget) {
-                resetHighlights(evt);
+                const target = evt.currentTarget;
+                tid.current = setTimeout(() => resetHighlights(target), 200);
+                // resetHighlights(target)
                 // }
             }}
             onMouseOver={(evt) => {
+                clearTimeout(tid.current);
                 const loc = (evt.target as HTMLSpanElement).getAttribute(
                     'data-span',
                 );
@@ -462,7 +467,7 @@ export const TopEditor = ({
                                         actx.ToAst.Decorator(error.dec, actx),
                                         p,
                                     ),
-                                    100,
+                                    200,
                                 );
                                 hover.append(node);
                             }
@@ -481,7 +486,12 @@ export const TopEditor = ({
                     }
                 } else {
                     hover.style.display = 'none';
-                    resetHighlights(evt);
+                    const target = evt.currentTarget;
+                    // resetHighlights(target),
+                    tid.current = setTimeout(
+                        () => resetHighlights(target),
+                        100,
+                    );
                 }
             }}
         >
@@ -705,8 +715,8 @@ const showValue = (v: any) => {
     return JSON.stringify(v);
 };
 
-function resetHighlights(evt: React.MouseEvent<HTMLDivElement, MouseEvent>) {
-    evt.currentTarget.querySelectorAll('[data-span]').forEach((el) => {
+function resetHighlights(target: HTMLElement) {
+    target.querySelectorAll('[data-span]').forEach((el) => {
         // el.style.textDecoration = 'none';
         (el as HTMLElement).style.backgroundColor = 'transparent';
     });

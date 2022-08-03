@@ -1,0 +1,17 @@
+(v) => (+#[:unresolved:])<_, 1>(v, 1)
+((v) => (+#[:unresolved:])<_, 1>(v, 1))(2)
+(v) => switch v {
+    `One => 1;
+}
+({age}) => (+#[:unresolved:])<_, 1>(age, 1)
+(v) => switch v {
+    {age} => age#[:unresolved:] + 1;
+}
+let wint = (v: int) => v + 1
+(v) => wint(v)
+let w10 = (v: 10) => v + 2
+(v) => wint(v) + w10(v)
+let wage = (v: {age: int}) => 10
+(v) => wage({age: v})
+let wname = (v: [`Age(int)]) => 10
+(v) => wname(`Age(v))

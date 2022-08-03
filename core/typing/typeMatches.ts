@@ -35,6 +35,7 @@ import {
 import { expandTask, isTaskable, matchesTask, maybeExpandTask } from './tasks';
 import { unifyTypes } from './unifyTypes';
 import { TopTypeKind } from './to-tast';
+import { Constraints, mergeConstraints } from './analyze';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -63,6 +64,7 @@ export type Ctx = {
     getTypeArgs(ref: RefKind): TVar[] | null;
     getTopKind(idx: number): TopTypeKind | null;
     resolveAnalyzeType(type: Type): Type | null;
+    currentConstraints: (id: number) => Constraints;
 };
 
 export const unifyPayloads = (
@@ -76,11 +78,14 @@ export const unifyPayloads = (
     return unifyTypes(one, two, ctx);
 };
 
+export type ConstraintMap = { [key: number]: Constraints };
+
 export const payloadsEqual = (
     one: undefined | Type,
     two: undefined | Type,
     ctx: Ctx,
     bidirectional: boolean,
+    constraints?: ConstraintMap,
 ) => {
     if ((one != null) != (two != null)) {
         return false;
@@ -90,8 +95,8 @@ export const payloadsEqual = (
     }
     // Need bidirectional equality in this case
     return (
-        typeMatches(one, two, ctx) &&
-        (!bidirectional || typeMatches(two, one, ctx))
+        typeMatches(one, two, ctx, [], constraints) &&
+        (!bidirectional || typeMatches(two, one, ctx, [], constraints))
     );
 };
 
@@ -100,6 +105,7 @@ export const typeMatches = (
     expected: Type,
     ctx: Ctx,
     path?: string[],
+    constraints?: { [key: number]: Constraints },
 ): boolean => {
     // Ok I need like a "resolve refs" function
     const c2 = ctx.resolveRefsAndApplies(candidate, path);
@@ -153,11 +159,31 @@ export const typeMatches = (
 
     switch (candidate.type) {
         case 'TVbl':
+            if (constraints) {
+                let current = mergeConstraints(
+                    ctx.currentConstraints(candidate.id),
+                    {
+                        outer: expected,
+                    },
+                    ctx,
+                );
+                if (!current) {
+                    return false;
+                }
+                const waiting = constraints[candidate.id];
+                current = waiting
+                    ? mergeConstraints(current, waiting, ctx)
+                    : current;
+                if (current) {
+                    constraints[candidate.id] = current;
+                    return true;
+                }
+            }
             return false;
         case 'TRecord':
-            return recordMatches(candidate, expected, ctx);
+            return recordMatches(candidate, expected, ctx, constraints);
         case 'TEnum':
-            return enumTypeMatches(candidate, expected, ctx, path);
+            return enumTypeMatches(candidate, expected, ctx, path, constraints);
         case 'TDecorated':
             return typeMatches(candidate.inner, expected, ctx);
         case 'TVars': {

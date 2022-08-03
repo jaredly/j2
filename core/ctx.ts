@@ -11,7 +11,7 @@ import { refsEqual } from './refsEqual';
 import { resolveAnalyzeType } from './resolveAnalyzeType';
 import { transformExpression, transformType, Visitor } from './transform-tast';
 import { Expression, GlobalRef, RefKind, Sym, TVars, Type } from './typed-ast';
-import { Ctx as ACtx } from './typing/analyze';
+import { Constraints, Ctx as ACtx, mergeConstraints } from './typing/analyze';
 import { getType } from './typing/getType';
 import { tnever, tunit } from './typing/tasks';
 import { makeToTast, ToplevelConfig } from './typing/to-tast';
@@ -63,7 +63,7 @@ type Internal = {
     // Used in the first traversal & resolving
     // After that, we use syms
     constraints: {
-        [key: number]: Type;
+        [key: number]: Constraints;
     };
     locals: {
         types: { sym: Sym; bound: Type | null }[];
@@ -496,24 +496,24 @@ export const newContext = (): FullContext => {
         addTypeConstraint(id, constraint) {
             if (!this[opaque].constraints[id]) {
                 this[opaque].constraints[id] = constraint;
-                return constraint;
+                return true;
             }
-            const mix = constrainTypes(
+            const mix = mergeConstraints(
                 this[opaque].constraints[id],
                 constraint,
                 this,
             );
-            if (!mix) {
-                return this[opaque].constraints[id];
+            if (mix) {
+                this[opaque].constraints[id] = mix;
+                return true;
             }
-            this[opaque].constraints[id] = mix;
-            return mix;
+            return false;
         },
 
         currentConstraints(id) {
             // console.log('get', id, this[opaque].constraints[id]);
             if (!this[opaque].constraints[id]) {
-                return { type: 'TBlank', loc: noloc };
+                return {};
             }
             return this[opaque].constraints[id];
         },

@@ -1,5 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { decorate, tdecorate } from '../typing/analyze';
+import { Constraints, decorate, tdecorate } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
 import { typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
@@ -107,9 +107,10 @@ export const maybeAutoType = (node: t.Apply, ctx: TCtx): t.Apply => {
                 ctx,
             );
             if (auto) {
-                Object.keys(auto.constraints).forEach((key) => {
-                    ctx.addTypeConstraint(+key, auto.constraints[+key]);
-                });
+                // STOPSHIP(infer)
+                // Object.keys(auto.constraints).forEach((key) => {
+                //     ctx.addTypeConstraint(+key, auto.constraints[+key]);
+                // });
                 return auto.apply;
             }
         }
@@ -360,12 +361,13 @@ export const ToAst = {
                                 typeMatches(target.args[i], targ, ctx.actx),
                         )
                     ) {
-                        Object.keys(auto.constraints).forEach((key) => {
-                            ctx.actx.addTypeConstraint(
-                                +key,
-                                auto.constraints[+key],
-                            );
-                        });
+                        // STOPSHIP(infer)
+                        // Object.keys(auto.constraints).forEach((key) => {
+                        //     ctx.actx.addTypeConstraint(
+                        //         +key,
+                        //         auto.constraints[+key],
+                        //     );
+                        // });
                         return makeApply(
                             ctx.ToAst.Expression(target.target, ctx),
                             {
@@ -537,9 +539,10 @@ export const chooseAutoTypable = (
                     ctx,
                 );
                 if (constraints) {
-                    Object.keys(constraints).forEach((key) => {
-                        ctx.addTypeConstraint(+key, constraints[+key]);
-                    });
+                    // STOPSHIP(infer)
+                    // Object.keys(constraints).forEach((key) => {
+                    //     ctx.addTypeConstraint(+key, constraints[+key]);
+                    // });
                     return {
                         ...node,
                         target: { ...target, kind: option },
@@ -558,9 +561,10 @@ export const chooseAutoTypable = (
                     ctx,
                 );
                 if (typed) {
-                    Object.keys(typed.constraints).forEach((key) => {
-                        ctx.addTypeConstraint(+key, typed.constraints[+key]);
-                    });
+                    // STOPSHIP(infer)
+                    // Object.keys(typed.constraints).forEach((key) => {
+                    //     ctx.addTypeConstraint(+key, typed.constraints[+key]);
+                    // });
                     return typed.apply;
                 }
             }
@@ -602,9 +606,10 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                     ctx,
                 );
                 if (auto) {
-                    Object.keys(auto.constraints).forEach((key) => {
-                        ctx.addTypeConstraint(+key, auto.constraints[+key]);
-                    });
+                    // STOPSHIP(infer)
+                    // Object.keys(auto.constraints).forEach((key) => {
+                    //     ctx.addTypeConstraint(+key, auto.constraints[+key]);
+                    // });
                     return auto.apply;
                 }
             }
@@ -622,18 +627,19 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             return null;
         }
         const argTypes = node.args.map((arg) => ctx.getType(arg));
-        if (ttype.type === 'TVbl') {
-            ttype = ctx.addTypeConstraint(ttype.id, {
-                type: 'TLambda',
-                args: argTypes.map((typ) => ({
-                    typ: typ ? typ : { type: 'TBlank', loc: node.loc },
-                    loc: typ?.loc ?? node.loc,
-                    label: null,
-                })),
-                loc: node.loc,
-                result: { type: 'TBlank', loc: node.loc },
-            });
-        }
+        // STOPSHIP(infer)
+        // if (ttype.type === 'TVbl') {
+        //     ttype = ctx.addTypeConstraint(ttype.id, {
+        //         type: 'TLambda',
+        //         args: argTypes.map((typ) => ({
+        //             typ: typ ? typ : { type: 'TBlank', loc: node.loc },
+        //             loc: typ?.loc ?? node.loc,
+        //             label: null,
+        //         })),
+        //         loc: node.loc,
+        //         result: { type: 'TBlank', loc: node.loc },
+        //     });
+        // }
         if (ttype.type !== 'TLambda') {
             if (ttype.type === 'TVars') {
                 // return {
@@ -671,12 +677,14 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             if (at == null) {
                 return arg;
             }
-            if (at.type === 'TVbl') {
-                at = ctx.addTypeConstraint(at.id, atype.args[i].typ);
-            }
+            // STOPSHIP(infer)
+            // if (at.type === 'TVbl') {
+            //     at = ctx.addTypeConstraint(at.id, atype.args[i].typ);
+            // }
+            const constraints: { [key: number]: Constraints } = {};
             const expected = atype.args[i].typ;
             // hmm so 'unconstrained' would be a thing.
-            if (!typeMatches(at, expected, ctx)) {
+            if (!typeMatches(at, expected, ctx, [], constraints)) {
                 changed = true;
                 const taskEnum =
                     expected.type === 'TApply' &&
@@ -720,6 +728,9 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         : []),
                 ]);
             }
+            Object.keys(constraints).forEach((k) => {
+                ctx.addTypeConstraint(+k, constraints[+k]);
+            });
             return arg;
         });
         // iffff target is resolved, we check the args
@@ -768,27 +779,28 @@ export const constraintsForApply = (
     args: t.TLambda['args'],
     ctx: Ctx,
 ) => {
-    let constraints: { [key: number]: t.Type } = {};
+    let constraints: { [key: number]: Constraints } = {};
     for (let i = 0; i < argTypes.length; i++) {
         const argType = argTypes[i];
         const arg = args[i];
-        if (
-            argType.type === 'TVbl' &&
-            ctx.currentConstraints(argType.id).type === 'TBlank'
-        ) {
-            if (constraints[argType.id] != null) {
-                const t = constrainTypes(constraints[argType.id], arg.typ, ctx);
-                if (t) {
-                    constraints[argType.id] = t;
-                    continue;
-                } else {
-                    return null;
-                }
-            } else {
-                constraints[argType.id] = arg.typ;
-                continue;
-            }
-        }
+        // STOPSHIP(infer)
+        // if (
+        //     argType.type === 'TVbl' &&
+        //     ctx.currentConstraints(argType.id).type === 'TBlank'
+        // ) {
+        //     if (constraints[argType.id] != null) {
+        //         const t = constrainTypes(constraints[argType.id], arg.typ, ctx);
+        //         if (t) {
+        //             constraints[argType.id] = t;
+        //             continue;
+        //         } else {
+        //             return null;
+        //         }
+        //     } else {
+        //         constraints[argType.id] = arg.typ;
+        //         continue;
+        //     }
+        // }
         if (!typeMatches(argType, arg.typ, ctx)) {
             return null;
         }
@@ -816,25 +828,26 @@ export const autoTypeApply = (
         const idxs = mapping[arg.sym.id];
         if (idxs.length === 1) {
             const argType = argTypes[idxs[0]];
-            if (
-                argType.type === 'TVbl' &&
-                ctx.currentConstraints(argType.id).type === 'TBlank'
-            ) {
-                if (constraints[argType.id] != null) {
-                    const t = constrainTypes(
-                        constraints[argType.id],
-                        arg.bound,
-                        ctx,
-                    );
-                    if (t) {
-                        constraints[argType.id] = t;
-                        continue;
-                    }
-                } else {
-                    constraints[argType.id] = arg.bound;
-                    continue;
-                }
-            }
+            // STOPSHIP(infer)
+            // if (
+            //     argType.type === 'TVbl' &&
+            //     ctx.currentConstraints(argType.id).type === 'TBlank'
+            // ) {
+            //     if (constraints[argType.id] != null) {
+            //         const t = constrainTypes(
+            //             constraints[argType.id],
+            //             arg.bound,
+            //             ctx,
+            //         );
+            //         if (t) {
+            //             constraints[argType.id] = t;
+            //             continue;
+            //         }
+            //     } else {
+            //         constraints[argType.id] = arg.bound;
+            //         continue;
+            //     }
+            // }
         }
 
         if (

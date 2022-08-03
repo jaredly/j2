@@ -596,23 +596,6 @@ export const ToAst = {
         }
     },
 
-    VError(node: t.VError, ctx: TACtx): p.VError {
-        switch (node.type) {
-            case 'Dec':
-                return ctx.ToAst.Dec(node, ctx);
-
-            case 'Blank':
-                return ctx.ToAst.Blank(node, ctx);
-
-            case 'TVbl':
-                return ctx.ToAst.TVbl(node, ctx);
-
-            default:
-                let _: never = node;
-                throw new Error('Nope');
-        }
-    },
-
     Pattern(node: t.Pattern, ctx: TACtx): p.Pattern {
         switch (node.type) {
             case 'PName':

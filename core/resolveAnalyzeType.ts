@@ -17,7 +17,8 @@ export const resolveAnalyzeType = (
     path: string[] = [],
 ): Type | null => {
     if (type.type === 'TVbl') {
-        return ctx.currentConstraints(type.id);
+        // return ctx.currentConstraints(type.id);
+        return null;
     }
     if (type.type === 'TDecorated') {
         return resolveAnalyzeType(type.inner, ctx, path);

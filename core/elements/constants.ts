@@ -56,12 +56,13 @@ export const Analyze: Visitor<VisitorCtx> = {
         const rest: TemplateString['rest'] = node.rest.map(
             ({ expr, suffix, loc }) => {
                 let expt = ctx.getType(expr);
-                if (expt?.type === 'TVbl') {
-                    expt = ctx.addTypeConstraint(
-                        expt.id,
-                        ctx.typeByName('string')!,
-                    );
-                }
+                // STOPSHIP(infer): being this back?
+                // OR rather, do the typeMatchesWithConstraints here.
+                // if (expt?.type === 'TVbl') {
+                //     expt = ctx.addTypeConstraint(expt.id, {
+                //         outer: ctx.typeByName('string')!,
+                //     });
+                // }
                 // HMMMM This might ... end up wrapping multiple times?
                 // like ... and the idxs we're doing to be having with noloc
                 // are not going to disambiguate. I think I need to think

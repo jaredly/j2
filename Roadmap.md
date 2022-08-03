@@ -15,6 +15,23 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+
+## HMM mm so typeMatches, and constraints
+
+If something wants to be constrained as `task`, but also something else ... what do we do?
+because it's a special-case. Maybe I need a type to indicate multiple constraints?
+`TAnd`? `a & b`.
+like `task & ['What(string, ())]`
+
+🤔 I think I need 'upper' and 'lower' bounds?
+- typeMatches(a, vbl) -> vbl has an 'upper' bound of a
+- typeMatches(vbl, b) -> vbl has a 'lower' bound of b
+- upper bounds get /unified/
+- lower bounds get /constrained/
+- at the end of the day, if there are both upper & lower bounds, you pick the upper bound, right?
+	after verifying that the upper bound 'matches' the lower bound.
+also, what if I reduce things down to only caring about ... simple, application?
+
 # Farther out
 
 What do I think about serialization?
@@ -32,6 +49,8 @@ Partying with the movies.roc example
 - [x] and a `->` syntax would be super nice. `a->b` is `b(a)`, `a->b(c)` is `b(a, c)`
 
 ok, I think I want to really get serious about type inference.
+- so typeMatches returns null or an array of constraints that need to be applied for the thing to match.
+	... seems like it wouldn't be .. too .. terrible?
 
 ```
 

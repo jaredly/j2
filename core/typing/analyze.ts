@@ -17,14 +17,25 @@ import {
 import * as t from '../typed-ast';
 import { analyzeVisitor } from './analyze.gen';
 import { ToplevelConfig, TopTypeKind } from './to-tast';
-import { Ctx as TMCtx } from './typeMatches';
+import { Ctx as TMCtx, typeMatches } from './typeMatches';
+import { constrainTypes, unifyTypes } from './unifyTypes';
+
+export type Constraints = {
+    // Type must match this types
+    // like, let {v} = ???
+    // `outer`s appear as `expected` in typeMatches
+    outer?: t.Type;
+    // Type must be matched by this type
+    // like, (v) => v(10)
+    // `inner`s appear as `candidate` in typeMatches
+    inner?: t.Type;
+};
 
 export type Ctx = {
     typeByName(name: string): t.Type | null;
     getDecorator(name: string): t.RefKind[];
     errorDecorators(): Id[];
-    currentConstraints: (id: number) => t.Type;
-    addTypeConstraint: (id: number, constraint: t.Type) => t.Type;
+    addTypeConstraint: (id: number, constraint: Constraints) => boolean;
 
     valueForSym: (sym: number) => null | { name: string; type: t.Type };
     typeForId: (id: Id) => GlobalType | null;
@@ -180,14 +191,51 @@ export const analyzeTypeTop = (
     return transformTypeToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
 };
 
+export const collapseConstraints = (
+    { outer, inner }: Constraints,
+    ctx: Ctx,
+): t.Type => {
+    if (!outer && !inner) {
+        return { type: 'TBlank', loc: noloc };
+    }
+    if (outer && inner && !typeMatches(inner, outer, ctx)) {
+        return { type: 'TBlank', loc: noloc };
+    }
+    return (inner || outer)!;
+};
+
+export const mergeConstraints = (
+    one: Constraints,
+    two: Constraints,
+    ctx: TMCtx,
+): Constraints | null => {
+    const outer =
+        one.outer && two.outer
+            ? constrainTypes(one.outer, two.outer, ctx)
+            : one.outer ?? two.outer;
+    const inner =
+        one.inner && two.inner
+            ? unifyTypes(one.inner, two.inner, ctx)
+            : one.inner ?? two.inner;
+    if (inner && outer && !typeMatches(inner, outer, ctx)) {
+        return null;
+    }
+    return {
+        inner: inner ? inner : undefined,
+        outer: outer ? outer : undefined,
+    };
+};
+
 export const analyzeTop = (ast: t.Toplevel, ctx: Ctx): t.Toplevel => {
     const top = transformToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
     return transformToplevel(
         top,
         {
             Type_TVbl(node) {
-                // console.log('Node ok');
-                return ctx.currentConstraints(node.id);
+                return collapseConstraints(
+                    ctx.currentConstraints(node.id),
+                    ctx,
+                );
             },
         },
         null,
