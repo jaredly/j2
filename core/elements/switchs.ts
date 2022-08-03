@@ -63,6 +63,7 @@ export const ToTast = {
     Switch(ast: p.Switch, ctx: TCtx): Switch {
         const target = ctx.ToTast.Expression(ast.target, ctx);
         const ttype = ctx.getType(target);
+        let res: t.Type | null = null;
         return {
             type: 'Switch',
             target,
@@ -80,13 +81,25 @@ export const ToTast = {
 
                 const locals: t.Locals = [];
                 getLocals(pat, typ, locals, ctx);
+                const lctx = ctx.withLocals(locals) as TCtx;
+                const expr = ctx.ToTast.Expression(c.expr, lctx);
+                const et = lctx.getType(expr);
+                if (et) {
+                    if (res) {
+                        const constraints: ConstraintMap = {};
+                        const un = unifyTypes(res, et, ctx, constraints);
+                        Object.keys(constraints).forEach((k) => {
+                            ctx.addTypeConstraint(+k, constraints[+k]);
+                        });
+                        res = un ? un : res;
+                    } else {
+                        res = et;
+                    }
+                }
                 return {
                     type: 'Case',
                     pat: pat,
-                    expr: ctx.ToTast.Expression(
-                        c.expr,
-                        ctx.withLocals(locals) as TCtx,
-                    ),
+                    expr: expr,
                     loc: c.loc,
                 };
             }),

@@ -9,7 +9,7 @@ import * as t from '../typed-ast';
 import { Expression, Loc } from '../typed-ast';
 import { decorate, VisitorCtx } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/to-ast';
-import { typeMatches } from '../typing/typeMatches';
+import { ConstraintMap, typeMatches } from '../typing/typeMatches';
 
 export const grammar = `
 Boolean "boolean" = v:("true" / "false") ![0-9a-zA-Z_]
@@ -56,20 +56,16 @@ export const Analyze: Visitor<VisitorCtx> = {
         const rest: TemplateString['rest'] = node.rest.map(
             ({ expr, suffix, loc }) => {
                 let expt = ctx.getType(expr);
-                // STOPSHIP(infer): being this back?
-                // OR rather, do the typeMatchesWithConstraints here.
-                // if (expt?.type === 'TVbl') {
-                //     expt = ctx.addTypeConstraint(expt.id, {
-                //         outer: ctx.typeByName('string')!,
-                //     });
-                // }
-                // HMMMM This might ... end up wrapping multiple times?
-                // like ... and the idxs we're doing to be having with noloc
-                // are not going to disambiguate. I think I need to think
-                // about this more.
+                const constraints: ConstraintMap = {};
                 if (
                     expt &&
-                    !typeMatches(expt, ctx.typeByName('string')!, ctx)
+                    !typeMatches(
+                        expt,
+                        ctx.typeByName('string')!,
+                        ctx,
+                        [],
+                        constraints,
+                    )
                 ) {
                     changed = true;
                     return {
@@ -78,6 +74,9 @@ export const Analyze: Visitor<VisitorCtx> = {
                         expr: decorate(expr, 'notAString', hit, ctx),
                     };
                 }
+                Object.keys(constraints).forEach((k) => {
+                    ctx.addTypeConstraint(+k, constraints[+k]);
+                });
                 return { suffix, loc, expr };
             },
         );
@@ -91,11 +90,28 @@ export const ToTast = {
             type: 'TemplateString',
             loc: ts.loc,
             first: ts.first,
-            rest: ts.rest.map(({ wrap: { expr }, suffix, loc }) => ({
-                expr: ctx.ToTast.Expression(expr, ctx),
-                suffix,
-                loc,
-            })),
+            rest: ts.rest.map(({ wrap: { expr }, suffix, loc }) => {
+                const constraints: ConstraintMap = {};
+                const texpr = ctx.ToTast.Expression(expr, ctx);
+                const type = ctx.getType(texpr);
+                if (type) {
+                    typeMatches(
+                        type,
+                        ctx.typeByName('string')!,
+                        ctx,
+                        [],
+                        constraints,
+                    );
+                    Object.keys(constraints).forEach((k) => {
+                        ctx.addTypeConstraint(+k, constraints[+k]);
+                    });
+                }
+                return {
+                    expr: texpr,
+                    suffix,
+                    loc,
+                };
+            }),
         };
     },
     Boolean(boolean: p.Boolean, ctx: Ctx): t.Boolean {

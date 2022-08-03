@@ -1,14 +1,20 @@
 import { unifyEnums } from '../elements/enums';
 import { unifyRecords } from '../elements/records';
 import { Type } from '../typed-ast';
+import { addNewConstraint, collapseConstraints } from './analyze';
 import { numOps, unifyOps } from './ops';
 import { maybeExpandTask } from './tasks';
-import { Ctx, typeMatches } from './typeMatches';
+import { ConstraintMap, Ctx, typeMatches } from './typeMatches';
 
 // For now, just take the greater of the two.
 // To do this right, we need to allow enums to unify. [`A] [`B] -> [`A | `B]
 
-export const unifyTypes = (one: Type, two: Type, ctx: Ctx): false | Type => {
+export const unifyTypes = (
+    one: Type,
+    two: Type,
+    ctx: Ctx,
+    constraints?: ConstraintMap,
+): false | Type => {
     const c2 = ctx.resolveRefsAndApplies(one)!;
     const e2 = ctx.resolveRefsAndApplies(two);
     if (c2 != null) {
@@ -53,6 +59,48 @@ export const unifyTypes = (one: Type, two: Type, ctx: Ctx): false | Type => {
     }
     if (typeMatches(two, one, ctx)) {
         return one;
+    }
+
+    // This ... isn't correct?
+    if (one.type === 'TVbl') {
+        if (constraints) {
+            const current = addNewConstraint(
+                one.id,
+                { outer: two },
+                constraints,
+                ctx,
+            );
+            if (current) {
+                constraints[one.id] = current;
+                return two;
+            }
+        } else {
+            const current = collapseConstraints(
+                ctx.currentConstraints(one.id),
+                ctx,
+            );
+            return unifyTypes(current, two, ctx);
+        }
+    }
+    if (two.type === 'TVbl') {
+        if (constraints) {
+            const current = addNewConstraint(
+                two.id,
+                { outer: one },
+                constraints,
+                ctx,
+            );
+            if (current) {
+                constraints[two.id] = current;
+                return one;
+            }
+        } else {
+            const current = collapseConstraints(
+                ctx.currentConstraints(two.id),
+                ctx,
+            );
+            return unifyTypes(one, current, ctx);
+        }
     }
 
     // So, there's a lot we could do here, with

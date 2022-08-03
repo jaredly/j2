@@ -159,6 +159,9 @@ export const typeMatches = (
 
     switch (candidate.type) {
         case 'TVbl':
+            if (expected.type === 'TVbl' && candidate.id === expected.id) {
+                return true;
+            }
             if (constraints) {
                 const current = addNewConstraint(
                     candidate.id,
@@ -170,9 +173,6 @@ export const typeMatches = (
                     constraints[candidate.id] = current;
                     return true;
                 }
-            }
-            if (expected.type === 'TVbl' && candidate.id === expected.id) {
-                return true;
             }
             return false;
         case 'TRecord':

@@ -14,7 +14,7 @@ let alwaysRead = <Inner: task>(readResponse: string, task: Task<[Read | Inner], 
     switch task {
         `Return(result) => `Return(result);
         `Read(_, k) => alwaysRead<Inner>(readResponse, k(readResponse));
-        otherwise => withHandler<[Inner], string, [Read], string>(
+        otherwise => withHandler<Inner, string, Read, string>(
             otherwise,
             (task) => alwaysRead<Inner>(readResponse, task),
         );
@@ -25,6 +25,6 @@ let collect: (string, Task<[Print], ()>) => string = (collected, task) => switch
     `Print(value, k) => collect("${collected}\n${value}", k(()));
 }
 let inner = () => {
-    print(alwaysRead<Print>("who", helloFolks())!)!;
+    print(alwaysRead#[:unresolved:]<Print>("who", helloFolks())!)!;
 }
-collect("Initial", inner()) == "Initial\nHello folks\nGot who!\ndone who"
+collect("Initial", inner#[:unresolved:]()) == "Initial\nHello folks\nGot who!\ndone who"
