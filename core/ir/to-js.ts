@@ -126,6 +126,13 @@ const builtins = {
     withHandler,
     testIO,
     equal,
+    toInt: (v: string) => {
+        const p = parseInt(v);
+        if (!isNaN(p) && p + '' === v) {
+            return { tag: 'Ok', payload: p };
+        }
+        return { tag: 'Err', payload: 'InvalidInt' };
+    },
     isSquare: (v: number) => Math.sqrt(v) % 1 === 0,
     toString: (v: any) => '' + v,
 };

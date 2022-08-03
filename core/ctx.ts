@@ -767,17 +767,13 @@ withHandler: <Effects: task, Result, HandledEffects: task, Result2>(task: Task<E
 isSquare: (int) => bool
 toInt: (string) => [\`Ok(int) | \`Err([\`InvalidInt])]
 `;
-// withHandler: <A: task, B: task>
-/*
 
-withHandler
-takes a thing
-hmmmmmm what if Task gets a third optional argument?
-
-Task<Effects, Result=(), InnerEffects=[]>
-
-
-*/
+const tvar = (sym: Sym, bound?: RefKind, default_?: Type): TVar => ({
+    sym,
+    bound: bound ? tref(bound) : null,
+    loc: noloc,
+    default_: default_ ?? null,
+});
 
 export const setupDefaults = (ctx: FullContext) => {
     const named: { [key: string]: RefKind } = {};
@@ -785,24 +781,13 @@ export const setupDefaults = (ctx: FullContext) => {
         named[name] = addBuiltinType(ctx, name, []);
     });
     addBuiltinType(ctx, 'Task', [
-        {
-            sym: { id: 0, name: 'Effects' },
-            bound: tref(named['task']),
-            loc: noloc,
-            default_: null,
-        },
-        {
-            sym: { id: 1, name: 'Result' },
-            bound: null,
-            loc: noloc,
-            default_: tunit,
-        },
-        {
-            sym: { id: 1, name: 'ExtraInner' },
-            bound: tref(named['task']),
-            loc: noloc,
-            default_: tnever,
-        },
+        tvar({ id: 0, name: 'Effects' }, named['task']),
+        tvar({ id: 1, name: 'Result' }, undefined, tunit),
+        tvar({ id: 1, name: 'ExtraInner' }, named['task'], tnever),
+    ]);
+    addBuiltinType(ctx, 'Array', [
+        tvar({ id: 0, name: 'Value' }),
+        tvar({ id: 1, name: 'Length' }, named['uint'], tref(named['uint'])),
     ]);
     Object.keys(errors).forEach((tag) => {
         addBuiltinDecorator(ctx, `error:` + tag, 0);
