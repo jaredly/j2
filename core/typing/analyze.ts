@@ -17,7 +17,7 @@ import {
 import * as t from '../typed-ast';
 import { analyzeVisitor } from './analyze.gen';
 import { ToplevelConfig, TopTypeKind } from './to-tast';
-import { Ctx as TMCtx, typeMatches } from './typeMatches';
+import { ConstraintMap, Ctx as TMCtx, typeMatches } from './typeMatches';
 import { constrainTypes, unifyTypes } from './unifyTypes';
 
 export type Constraints = {
@@ -202,6 +202,25 @@ export const collapseConstraints = (
         return { type: 'TBlank', loc: noloc };
     }
     return (inner || outer)!;
+};
+
+export const addNewConstraint = (
+    id: number,
+    newConstraint: Constraints,
+    constraints: ConstraintMap,
+    ctx: TMCtx,
+): Constraints | null => {
+    let current = mergeConstraints(
+        ctx.currentConstraints(id),
+        newConstraint,
+        ctx,
+    );
+    if (!current) {
+        return null;
+    }
+    const waiting = constraints[id];
+    current = waiting ? mergeConstraints(current, waiting, ctx) : current;
+    return current;
 };
 
 export const mergeConstraints = (

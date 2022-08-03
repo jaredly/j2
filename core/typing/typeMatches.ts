@@ -35,7 +35,7 @@ import {
 import { expandTask, isTaskable, matchesTask, maybeExpandTask } from './tasks';
 import { unifyTypes } from './unifyTypes';
 import { TopTypeKind } from './to-tast';
-import { Constraints, mergeConstraints } from './analyze';
+import { addNewConstraint, Constraints, mergeConstraints } from './analyze';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -160,20 +160,12 @@ export const typeMatches = (
     switch (candidate.type) {
         case 'TVbl':
             if (constraints) {
-                let current = mergeConstraints(
-                    ctx.currentConstraints(candidate.id),
-                    {
-                        outer: expected,
-                    },
+                const current = addNewConstraint(
+                    candidate.id,
+                    { outer: expected },
+                    constraints,
                     ctx,
                 );
-                if (!current) {
-                    return false;
-                }
-                const waiting = constraints[candidate.id];
-                current = waiting
-                    ? mergeConstraints(current, waiting, ctx)
-                    : current;
                 if (current) {
                     constraints[candidate.id] = current;
                     return true;

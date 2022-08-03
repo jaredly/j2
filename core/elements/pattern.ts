@@ -3,10 +3,14 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { Ctx as ACtx } from '../typing/analyze';
+import { addNewConstraint, Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { Ctx as TMCtx, expandEnumCases } from '../typing/typeMatches';
+import {
+    ConstraintMap,
+    Ctx as TMCtx,
+    expandEnumCases,
+} from '../typing/typeMatches';
 
 export const grammar = `
 Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PBlank / Number / String
@@ -204,7 +208,21 @@ export const typeMatchesPattern = (
     pat: Pattern,
     type: t.Type,
     ctx: TMCtx,
+    constraints?: ConstraintMap,
 ): boolean => {
+    if (constraints && type.type === 'TVbl') {
+        const pt = typeForPattern(pat);
+        const current = addNewConstraint(
+            type.id,
+            { outer: pt },
+            constraints,
+            ctx,
+        );
+        if (current) {
+            constraints[type.id] = current;
+            return true;
+        }
+    }
     switch (pat.type) {
         case 'Number': {
             if (type.type === 'Number') {
@@ -219,7 +237,7 @@ export const typeMatchesPattern = (
             return ctx.isBuiltinType(type, 'string');
         }
         case 'PDecorated': {
-            return typeMatchesPattern(pat.inner, type, ctx);
+            return typeMatchesPattern(pat.inner, type, ctx, constraints);
         }
         case 'PEnum': {
             type = maybeExpandTask(type, ctx) ?? type;
@@ -237,7 +255,12 @@ export const typeMatchesPattern = (
                     }
                     return (
                         kase.payload != null &&
-                        typeMatchesPattern(pat.payload, kase.payload, ctx)
+                        typeMatchesPattern(
+                            pat.payload,
+                            kase.payload,
+                            ctx,
+                            constraints,
+                        )
                     );
                 }
             }
@@ -255,7 +278,14 @@ export const typeMatchesPattern = (
                 if (!items[name]) {
                     return false;
                 }
-                if (!typeMatchesPattern(cpat, items[name].value, ctx)) {
+                if (
+                    !typeMatchesPattern(
+                        cpat,
+                        items[name].value,
+                        ctx,
+                        constraints,
+                    )
+                ) {
                     return false;
                 }
             }

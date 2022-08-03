@@ -1,7 +1,11 @@
 import { Visitor } from '../transform-tast';
 import { caseLocals, decorate, pdecorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
-import { expandEnumCases, typeMatches } from '../typing/typeMatches';
+import {
+    ConstraintMap,
+    expandEnumCases,
+    typeMatches,
+} from '../typing/typeMatches';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -58,12 +62,22 @@ export type ICase = {
 export const ToTast = {
     Switch(ast: p.Switch, ctx: TCtx): Switch {
         const target = ctx.ToTast.Expression(ast.target, ctx);
+        const ttype = ctx.getType(target);
         return {
             type: 'Switch',
             target,
             cases: ast.cases.map((c) => {
                 const pat = ctx.ToTast.Pattern(c.pat, ctx);
-                const typ = ctx.getType(target) ?? typeForPattern(pat, ctx);
+                const typ = ttype ?? typeForPattern(pat, ctx);
+
+                if (ttype) {
+                    const constraints: ConstraintMap = {};
+                    typeMatchesPattern(pat, ttype, ctx, constraints);
+                    Object.keys(constraints).forEach((k) => {
+                        ctx.addTypeConstraint(+k, constraints[+k]);
+                    });
+                }
+
                 const locals: t.Locals = [];
                 getLocals(pat, typ, locals, ctx);
                 return {
@@ -210,7 +224,7 @@ export const ToJS = {
             const withTypes = node.cases.map((kase) => {
                 const v = { kase, refined };
 
-                // const matches = typeMatchesPattern(kase.pat, refined, ctx);
+                // const matches = typeMatchesPattern(kase.pat, refined, ctx.actx);
                 const res = refineType(kase.pat, refined, ctx.actx);
                 if (res) {
                     refined = res;
@@ -369,7 +383,19 @@ export const Analyze: Visitor<AVCtx> = {
         // ctx.debugger();
 
         const cases = node.cases.map((c) => {
-            const matches = typeMatchesPattern(c.pat, refined, ctx);
+            // const matches = typeMatchesPattern(c.pat, refined, ctx);
+
+            const constraints: ConstraintMap = {};
+            const matches = typeMatchesPattern(
+                c.pat,
+                refined,
+                ctx,
+                constraints,
+            );
+            Object.keys(constraints).forEach((k) => {
+                ctx.addTypeConstraint(+k, constraints[+k]);
+            });
+
             const res = refineType(c.pat, refined, ctx);
             let bt = ctx
                 .withLocals(caseLocals(refined, c, ctx))
