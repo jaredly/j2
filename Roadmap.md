@@ -15,6 +15,49 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+# Farther out
+
+What do I think about serialization?
+anything `eq` can be ser/de'd right?
+
+OHH ok so .. is there a way to represent all of json, in-world?
+I might have to wrap it a ton, which I don't love.
+BUT on the other hand, I could specify some serialization bonanzas ...
+
+
+Partying with the movies.roc example
+- [x] need comments, yes definitely
+- [ ] I think I want to allow local type aliases? Can't see why not.
+- [ ] need array support!
+- [ ] and a `->` syntax would be super nice. `a->b` is `b(a)`, `a->b(c)` is `b(a, c)`
+
+ok, I think I want to really get serious about type inference.
+
+```
+
+@serde:tag("type")
+@serde:recordInline()
+type Something = [
+	`Person({name: string}) |
+	`Animal({age: int})
+]
+
+I THINK ... will I need to specify that, in order for serde to account for
+... specializations ... it will need to ..OH ok.
+So, the basic `toJSONString<T: eq>(a)` will just jsonify it.
+and `fromJSONString<T: eq>(a)` will un-jsonify it.
+
+but you can .... say ..... "macrofy me baby"
+let (ser, de) = $serde(: Something)
+
+and it'll do all the magic ... and you can view the result?
+like it'll be
+
+@macro:serde(: Something)
+thisistheresultofthemacro
+
+```
+
 ## Things to do before letting other people play with it
 
 - [x] make int + 2 + 3 match `int`

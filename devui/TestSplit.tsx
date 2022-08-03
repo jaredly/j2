@@ -27,6 +27,7 @@ import { Loc } from '../core/typed-ast';
 import { transformFile, transformToplevel } from '../core/transform-tast';
 import { errorCount, VError } from '../core/typing/analyze';
 import { printCtx } from '../core/typing/to-ast';
+import { injectComments } from '../core/elements/comments';
 
 /*
 
@@ -46,7 +47,7 @@ const Hovery = styled('div', {
     },
 });
 
-export const fmtItem = (item: p.Toplevel) => {
+export const fmtItem = (item: p.Toplevel, comments: [p.Loc, string][]) => {
     const ast: p.File = {
         type: 'File',
         comments: [],
@@ -66,7 +67,10 @@ export const fmtItem = (item: p.Toplevel) => {
 
     const pctx = newPPCtx();
     const pp = pctx.ToPP.File(ast, pctx);
-    return printToString(pp, 100).replace(/[ \t]+$/gm, '');
+    return printToString(injectComments(pp, comments), 100).replace(
+        /[ \t]+$/gm,
+        '',
+    );
 };
 
 export const testStatuses = (
@@ -300,11 +304,15 @@ export const TopEditor = ({
 }) => {
     const changed = React.useRef(false);
     const [text, setText] = React.useState(() =>
-        item.type === 'Failed' ? item.text : fmtItem(item.contents.refmt),
+        item.type === 'Failed'
+            ? item.text
+            : fmtItem(item.contents.refmt, item.comments),
     );
     React.useEffect(() => {
         setText(
-            item.type === 'Failed' ? item.text : fmtItem(item.contents.refmt),
+            item.type === 'Failed'
+                ? item.text
+                : fmtItem(item.contents.refmt, item.comments),
         );
     }, [item]);
     const cache = React.useMemo(
@@ -793,7 +801,7 @@ export const reconcileChanges = (
         if (hash) {
             hashes.push(hash);
         }
-        const text = fmtItem(at.contents.refmt);
+        const text = fmtItem(at.contents.refmt, at.comments);
         const file = processFile(text, ctx, undefined, shared.track, true);
         if (file.type === 'Success') {
             getTestResults(file, shared.terms);

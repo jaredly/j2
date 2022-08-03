@@ -74,6 +74,7 @@ export type ToplevelInfo<Contents> = {
     contents: Contents;
     verify: Verify;
     annotations: { loc: t.Loc; text: string }[];
+    comments: p.File['comments'];
 };
 
 export type Success<Contents> = {
@@ -133,7 +134,6 @@ export const executeFile = (
             try {
                 const res = ectx.executeJs(irtop.js, irtop.name, `${i}-${j}`);
                 if (info.contents.irtops?.length === 1) {
-                    console.log('did an expr', res);
                     results.exprs[i] = res;
                 }
             } catch (err) {
@@ -176,6 +176,7 @@ export const processTypeFileR = (
     let ctx = baseCtx.clone();
     let pctx = printCtx(ctx);
     const aliases: { [key: string]: string } = {};
+    let at = 0;
 
     ast.toplevels.forEach((t, i) => {
         if (t.type === 'Aliases') {
@@ -200,7 +201,19 @@ export const processTypeFileR = (
                       },
                   }
                 : ctx;
-        const res = processTypeToplevel(t, maybeDebug, pctx, aliases);
+        const res = processTypeToplevel(
+            t,
+            maybeDebug,
+            pctx,
+            aliases,
+            ast.comments.filter(
+                (c) =>
+                    c[0].start.offset >= at &&
+                    (i === ast.toplevels.length - 1 ||
+                        c[0].end.offset <= t.loc.end.offset),
+            ),
+        );
+        at = t.loc.end.offset;
         info.push(res.i);
         ctx = res.ctx;
         const config = typeToplevelT(res.i.contents.top, res.ctx);
@@ -224,6 +237,7 @@ export const processFileR = (
     let ictx = iCtx(ctx);
     const aliases: { [key: string]: string } = {};
     // TODO: load builtins?
+    let at = 0;
 
     ast.toplevels.forEach((t, i) => {
         if (t.type === 'Aliases') {
@@ -251,8 +265,15 @@ export const processFileR = (
             jctx,
             pctx,
             aliases,
+            ast.comments.filter(
+                (c) =>
+                    c[0].start.offset >= at &&
+                    (i === ast.toplevels.length - 1 ||
+                        c[0].end.offset <= t.loc.end.offset),
+            ),
             noPrintError,
         );
+        at = t.loc.end.offset;
         info.push(res.i);
         ctx = res.ctx;
         pctx = res.pctx;
@@ -287,6 +308,7 @@ export const processTypeToplevel = (
     ctx: FullContext,
     pctx: ReturnType<typeof printCtx>,
     allAliases: Aliases,
+    comments: p.File['comments'],
 ): { i: ToplevelInfo<TypeContents>; ctx: FullContext } => {
     ctx.resetSym();
     const config = typeToplevel(t, ctx);
@@ -324,6 +346,7 @@ export const processTypeToplevel = (
             uses,
             verify,
             annotations,
+            comments,
             aliases: newAliases(allAliases, pctx.backAliases),
         },
         ctx,
@@ -341,6 +364,7 @@ export const processToplevel = (
     jctx: ReturnType<typeof jCtx>,
     pctx: PCtx,
     allAliases: Aliases,
+    comments: p.File['comments'],
     noPrintError = false,
 ): { i: ToplevelInfo<FileContents>; ctx: FullContext; pctx: PCtx } => {
     ctx = ctx.toplevelConfig(null) as FullContext;
@@ -457,6 +481,7 @@ export const processToplevel = (
             uses,
             verify,
             annotations,
+            comments,
             aliases: newAliases(allAliases, pctx.backAliases),
         },
         ctx,

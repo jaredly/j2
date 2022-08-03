@@ -121,15 +121,6 @@ const testIO = <T>(read: string, task: IO<T>): T => {
     }
 };
 
-// const andThen = (a, b) => {
-//     switch (a.tag) {
-//         case 'Result':
-//             return b(a.payload)
-//         default:
-//             return {...}
-//     }
-// }
-
 const builtins = {
     andThen,
     withHandler,
