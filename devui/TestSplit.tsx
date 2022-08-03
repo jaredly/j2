@@ -94,8 +94,12 @@ export const testStatuses = (
         statuses.push(...verifyHL(info.verify));
         if (results.info.exprs[i] !== undefined) {
             const v = results.info.exprs[i];
+            const { end } = info.contents.top.loc;
             statuses.push({
-                loc: info.contents.top.loc,
+                loc: {
+                    ...info.contents.top.loc,
+                    end: { ...end, offset: end.offset + Infinity },
+                },
                 type: 'Success',
                 suffix: {
                     text:

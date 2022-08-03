@@ -79,6 +79,7 @@ export type ToplevelInfo<Contents> = {
 
 export type Success<Contents> = {
     type: 'Success';
+    // loc: t.Loc;
     info: ToplevelInfo<Contents>[];
     comments: p.File['comments'];
     ctx: FullContext;

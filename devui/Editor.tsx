@@ -267,23 +267,23 @@ export const openSpan = (hl: HL, noPrefix = false, noSuffix = false) =>
             : ''
     }${serializeStyles(styles[hl.type])}"${
         hl.prefix && !noPrefix
-            ? ` data-prefix="${escapeLine(hl.prefix.text)}"`
+            ? ` data-prefix="${escapeAttr(hl.prefix.text)}"`
             : ''
     }${
         !noPrefix && hl.prefix?.message
-            ? ` data-message="${escapeLine(
+            ? ` data-message="${escapeAttr(
                   hl.prefix.message,
-              )}" title="${escapeLine(hl.prefix.message)}"`
+              )}" title="${escapeAttr(hl.prefix.message)}"`
             : ''
     }${
         !noSuffix && hl.suffix
-            ? ` data-suffix="${escapeLine(hl.suffix.text)}"`
+            ? ` data-suffix="${escapeAttr(hl.suffix.text)}"`
             : ''
     }${
         !noSuffix && hl.suffix?.message
-            ? ` data-suffix-message="${escapeLine(
+            ? ` data-suffix-message="${escapeAttr(
                   hl.suffix.message,
-              )}" title="${escapeLine(hl.suffix.message)}"`
+              )}" title="${escapeAttr(hl.suffix.message)}"`
             : ''
     }${
         styles[hl.type]?.contentEditable == false
@@ -300,6 +300,10 @@ export const escapeLine = (line: string) => {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+};
+
+export const escapeAttr = (attr: string) => {
+    return escapeLine(attr).replace(/"/g, '&quot;');
 };
 
 export const treeToHtmlLinesInner = (
