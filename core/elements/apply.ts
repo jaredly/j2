@@ -108,9 +108,9 @@ export const maybeAutoType = (node: t.Apply, ctx: TCtx): t.Apply => {
             );
             if (auto) {
                 // STOPSHIP(infer)
-                // Object.keys(auto.constraints).forEach((key) => {
-                //     ctx.addTypeConstraint(+key, auto.constraints[+key]);
-                // });
+                Object.keys(auto.constraints).forEach((key) => {
+                    ctx.addTypeConstraint(+key, auto.constraints[+key]);
+                });
                 return auto.apply;
             }
         }
@@ -362,12 +362,12 @@ export const ToAst = {
                         )
                     ) {
                         // STOPSHIP(infer)
-                        // Object.keys(auto.constraints).forEach((key) => {
-                        //     ctx.actx.addTypeConstraint(
-                        //         +key,
-                        //         auto.constraints[+key],
-                        //     );
-                        // });
+                        Object.keys(auto.constraints).forEach((key) => {
+                            ctx.actx.addTypeConstraint(
+                                +key,
+                                auto.constraints[+key],
+                            );
+                        });
                         return makeApply(
                             ctx.ToAst.Expression(target.target, ctx),
                             {
@@ -539,10 +539,9 @@ export const chooseAutoTypable = (
                     ctx,
                 );
                 if (constraints) {
-                    // STOPSHIP(infer)
-                    // Object.keys(constraints).forEach((key) => {
-                    //     ctx.addTypeConstraint(+key, constraints[+key]);
-                    // });
+                    Object.keys(constraints).forEach((key) => {
+                        ctx.addTypeConstraint(+key, constraints[+key]);
+                    });
                     return {
                         ...node,
                         target: { ...target, kind: option },
@@ -562,9 +561,9 @@ export const chooseAutoTypable = (
                 );
                 if (typed) {
                     // STOPSHIP(infer)
-                    // Object.keys(typed.constraints).forEach((key) => {
-                    //     ctx.addTypeConstraint(+key, typed.constraints[+key]);
-                    // });
+                    Object.keys(typed.constraints).forEach((key) => {
+                        ctx.addTypeConstraint(+key, typed.constraints[+key]);
+                    });
                     return typed.apply;
                 }
             }
@@ -607,9 +606,9 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                 );
                 if (auto) {
                     // STOPSHIP(infer)
-                    // Object.keys(auto.constraints).forEach((key) => {
-                    //     ctx.addTypeConstraint(+key, auto.constraints[+key]);
-                    // });
+                    Object.keys(auto.constraints).forEach((key) => {
+                        ctx.addTypeConstraint(+key, auto.constraints[+key]);
+                    });
                     return auto.apply;
                 }
             }
@@ -691,8 +690,8 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                     ctx.isBuiltinType(expected.target, 'Task')
                         ? expandTask(expected.loc, expected.args, ctx)
                         : null;
-                ctx.debugger();
-                typeMatches(at, expected, ctx);
+                // ctx.debugger();
+                // typeMatches(at, expected, ctx);
 
                 return decorate(arg, 'argWrongType', hit, ctx, [
                     {
@@ -779,7 +778,7 @@ export const constraintsForApply = (
     args: t.TLambda['args'],
     ctx: Ctx,
 ) => {
-    let constraints: { [key: number]: Constraints } = {};
+    let constraints: ConstraintMap = {};
     for (let i = 0; i < argTypes.length; i++) {
         const argType = argTypes[i];
         const arg = args[i];
@@ -801,7 +800,7 @@ export const constraintsForApply = (
         //         continue;
         //     }
         // }
-        if (!typeMatches(argType, arg.typ, ctx)) {
+        if (!typeMatches(argType, arg.typ, ctx, [], constraints)) {
             return null;
         }
     }
@@ -814,12 +813,12 @@ export const autoTypeApply = (
     args: t.Type[],
     argTypes: t.Type[],
     ctx: Ctx,
-): null | { apply: t.Apply; constraints: { [key: number]: t.Type } } => {
+): null | { apply: t.Apply; constraints: ConstraintMap } => {
     const mapping = inferVarsFromArgs(vars, args);
     if (!mapping) {
         return null;
     }
-    let constraints: { [key: number]: t.Type } = {};
+    let constraints: ConstraintMap = {};
     for (let arg of vars) {
         if (!arg.bound) {
             continue;
@@ -850,7 +849,6 @@ export const autoTypeApply = (
             // }
         }
 
-        const constraints: ConstraintMap = {};
         if (
             !typeMatches(
                 unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
@@ -862,9 +860,6 @@ export const autoTypeApply = (
         ) {
             return null;
         }
-        Object.keys(constraints).forEach((k) => {
-            ctx.addTypeConstraint(+k, constraints[+k]);
-        });
     }
     return {
         apply: {

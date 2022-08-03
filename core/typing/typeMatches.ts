@@ -335,48 +335,6 @@ export const typeMatches = (
                 //     }
             }
             return false;
-        // case 'TApply':
-        //     // So TApply should get "worked out" by this point, right?
-        //     // idk seems like it should.
-        //     return (
-        //         expected.type === 'TApply' &&
-        //         typeMatches(candidate.target, expected.target, ctx) &&
-        //         candidate.args.length === expected.args.length &&
-        //         candidate.args.every((arg, i) =>
-        //             typeMatches(arg, (expected as TApply).args[i], ctx),
-        //         )
-        //     );
-        // case 'TVars':
-        //     // TODO: Come back to this
-        //     throw new Error('Not sure about this one');
-        // // return b.type === 'TVars' && typesEqual(a.inner, b.inner) && a.args.length === b.args.length && a.args.every((arg, i) => (
-        // // 	arg.id === (b as TVars).args[i].id
-        // // )
-        // case 'TSub': {
-        //     // TODO make this more flexible, maybe
-        //     const { elements } = candidate;
-        //     return (
-        //         expected.type === 'TSub' &&
-        //         expected.elements.length === elements.length &&
-        //         expected.elements.every((el, i) =>
-        //             typeMatches(elements[i], el, ctx),
-        //         )
-        //     );
-        // }
-        // case 'TAdd':
-        //     // TODO make this more flexible
-        //     // OH for example, if this can reduce down to a constant, do that.
-        //     // That can be a preprocess run
-        //     const { elements } = candidate;
-        //     return (
-        //         expected.type === 'TAdd' &&
-        //         expected.elements.length === elements.length &&
-        //         expected.elements.every((el, i) =>
-        //             typeMatches(elements[i], el, ctx),
-        //         )
-        //     );
-        // hmm if this is a number-kind of add ... it could get swallowed up into ... a full string
-        // ... or things rather more complicated.
         case 'Number':
             const ops = numOps(candidate, ctx);
             if (
@@ -391,39 +349,6 @@ export const typeMatches = (
             }
 
             return false;
-        // if (expected.type === 'Number') {
-        //     return (
-        //         expected.kind === candidate.kind &&
-        //         expected.value === candidate.value
-        //     );
-        // } else if (expected.type === 'TOps') {
-        //     const res = numOps(expected, ctx);
-        //     if (!res || res.kind !== candidate.kind) {
-        //         return false;
-        //     }
-        //     const { mm, num } = res;
-
-        //     console.log(candidate.value, mm, num);
-        //     if (candidate.value <= num && !mm.lowerLimit) {
-        //         return true;
-        //     }
-        //     if (candidate.value >= num && !mm.upperLimit) {
-        //         return true;
-        //     }
-        //     return candidate.value === num;
-        // } else {
-        //     if (
-        //         candidate.kind === 'Int' &&
-        //         candidate.value >= 0 &&
-        //         ctx.isBuiltinType(expected, 'uint')
-        //     ) {
-        //         return true;
-        //     }
-        //     return ctx.isBuiltinType(
-        //         expected,
-        //         candidate.kind.toLowerCase(),
-        //     );
-        // }
     }
 };
 
