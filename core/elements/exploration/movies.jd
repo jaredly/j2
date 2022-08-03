@@ -1,0 +1,158 @@
+
+
+
+
+// app "movies"
+//     packages { pf: "./platform.roc" }
+//     imports [
+//         Task.{ Task },
+//         Json,
+//         Stdout,
+//         Stderr,
+//         Http.{ HttpErr },
+//         File.{ FileWriteErr },
+//         Encode.{ EncodeErr },
+//     ]
+//     provides { main } to pf
+
+type Movie = {
+    title: str,
+    year: int,
+    starring: Array<string>,
+}
+
+let movieFromLine = (line: string) => {
+	switch line->split("!") {
+		[title, year, starring] =>
+			{title, year: year->toInt!, starring: starring->split(",")}
+		_ => fail(InvalidLine(line))!
+	}
+}
+
+let getMovies = (url: string) => {
+	let response = httpFetchText(url)!;
+	response->trim->split("\n")->mapTask(movieFromLine)!
+}
+
+let writeOutput = (movies: Array<Movie>) => {
+	writeFile("output.json", jsonify(movies))
+}
+
+let run = <R, Failures>(task: Task<[Failures(Failures) | Http | Net], R>):
+Task<[Run(Task<[], R>, [Ok(R) | Err([HttpFail | NetFail | EnvFail | Failures])])], [Ok(R) | Err([HttpFail | NetFail | EnvFail | Failures])]>
+ => {
+	Run(task, (r: [Ok(R) | Err([HttpFail | NetFail | EnvFail | Failures])]) => Return(r))
+}
+
+let run = <R, Failures>(task: Task<[Failures(Failures) | Http | Net], R>):
+Task<[Run(Task<[], R>, [Ok(R) | Err([HttpFail | NetFail | EnvFail | Failures])])], [Ok(R) | Err([HttpFail | NetFail | EnvFail | Failures])]>
+ => {
+	Run(task, (r: [Ok(R) | Err([HttpFail | NetFail | EnvFail | Failures])]) => Return(r))
+}
+
+let run = <Effects: Task, EffFail: [*], Failures: [*]>(task: Task<[Failure(Failures) | Effects], R>): Task<[Run(Task<[], R>, [Ok(R) | Err([EffFail | Failures])])], [Ok(R) | Err([EffFail | Failures])]>
+ => {
+	Run(task, (r: [Ok(R) | Err([EffFail | Failures])]) => Return(r))
+}
+
+// could we do a series of `run`s, for just the things we're using?
+/*
+ah, a series wouldn't do it.
+BUT
+
+Task<[Run(Task<[Http | Net | Env | Failure(Failures)], R>, [Ok(R) | Err([HttpFail | NetFail | EnvFail | Failures])])], ()>
+
+HttpTask<R> | NetTask<R> | EnvTask<R>
+
+HttpTask : Task<[Run(Task<Http, R>, Result<R, HttpFailures>)], ()>
+
+FailRun<F,R> : Task<[Run(Task<[Failure(F)], R>, Result<R, F>)], ()>
+
+ok that still doesn't answer how I would type `run`, though.
+
+erghhhh do I need another magic type?
+it would be something like
+Run<{effects, errors}>
+
+hrmmmmm is there a way to make my magic-types happen in-universe? it's like a macro. or template. or something
+
+
+*/
+
+
+let main = () => {
+	let task = () => {
+		let apiKey = Env:get("API_KEY")!;
+		let movies = getMovies("https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}")!;
+		writeOutput(movies)!;
+	}
+	// let run: [HttpTask<_> | NetTask<_> | EnvTask<_>] = Run(task, (x) => x)
+	switch run<[HttpTask | EnvTask | DiskTask], [HttpFail | EnvFail | DiskFail], [ToIntFail | InvalidLine]>(task)! {
+		Ok => print("Success")!
+		Err(KeyMissing) => print("You need API_KEY")!
+		Err(ToInt) => print("Not an integer")!
+		Err(InvalidLine(line)) => print("The line was bad ${line}")!
+		Err(Http) => print("Could not connect")
+		Err(Disk) print("Unable to write to disk")
+	}
+}
+
+/*
+
+I want to take a
+Task<[Http | Env | Write], R>
+and add a Result<R> -> R2
+turning it into a
+Task<[Http | Env | Write], R2>
+?
+???
+
+so like
+we have a function that can talk about parser errors
+handleParserErrors ???
+
+
+but like,
+at the bottom
+you have
+a thing that knows how to handle a task.
+that task should end in ()
+
+Task<[`Run(Task<[Http | Env | Write], R>, Ok(R))], ()>
+
+I think?
+I think.
+
+`Run(task, )
+
+*/
+
+let attempt ... Task<[], T>
+
+// let attempt: <T>(task: Task<[IO], T>) => [Ok(T) | ]
+
+main : Task {} [] [Net, Write [Disk], Env]
+main
+    task =
+        apiKey <- Env.varUtf8 "API_KEY" |> Task.await
+        url = Url.fromStr "http://localhost:4000/movies?apiKey=\(apiKey)"
+        movies <- getMovies url |> Task.await
+        writeOutput movies
+
+    result <- Task.attempt task
+
+    when result is
+        Ok {} -> Stdout.line "Success!"
+        Err KeyMissing -> Stderr.line "The API_KEY env var was missing."
+        Err (InvalidLine line) -> Stderr.line "The following line in the response was malformed:\n\(line)"
+        Err _ -> Stderr.line "Error!"
+
+# decode movie
+expect
+    movie = movieFromLine "title goes here|1234|first star,second star,third star"
+
+    movie == Ok {
+        title: "title goes here",
+        year: 1234,
+        starring: ["first star", "second star", "third star"]
+    }

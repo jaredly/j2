@@ -123,8 +123,8 @@ export const TestSplit = ({
 }: {
     name: string;
     test: TestWhat;
-    onChange: (v: TestWhat) => void;
-    changeName: (v: string) => void;
+    onChange: (v: TestWhat, text: string) => void;
+    changeName?: (v: string) => void;
 }) => {
     // can I attribute comments to each of the infos?
     // also, how do I add / remove items?
@@ -160,12 +160,12 @@ export const TestSplit = ({
             undefined,
             true,
         );
-        const fmt = refmt(res);
-        onChange({ file: res, values: getTestResults(res) });
-        fetch(`/elements/test/${name}`, {
-            method: 'POST',
-            body: fmt,
-        });
+        const texts = items.map((item) =>
+            item.type === 'Failed'
+                ? item.text
+                : fmtItem(item.contents.refmt, item.comments),
+        );
+        onChange({ file: res, values: getTestResults(res) }, texts.join('\n'));
     }, [items]);
 
     // OK so ... what needs to share?
@@ -261,9 +261,14 @@ export const TestSplit = ({
                 flex: 1,
             }}
         >
-            <div>
-                <BlurInput text={name} onChange={(name) => changeName(name)} />
-            </div>
+            {changeName ? (
+                <div>
+                    <BlurInput
+                        text={name}
+                        onChange={(name) => changeName(name)}
+                    />
+                </div>
+            ) : null}
             <Card
                 variant={'bordered'}
                 css={{
@@ -735,7 +740,7 @@ function hoverStyle(box: DOMRect): Partial<HTMLElement['style']> {
         bottom: 'unset',
         top: box.bottom + 8 + 'px',
         left: box.left + 8 + 'px',
-        position: 'absolute',
+        position: 'fixed',
         background: '#222',
         border: '1px solid #333',
         fontFamily:

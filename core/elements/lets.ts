@@ -427,6 +427,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
                             'resMismatch',
                             ctx.hit,
                             ctx.ctx,
+                            [dtype('inferred', t, el.expr.loc)],
                         ),
                     };
                 }

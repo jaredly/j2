@@ -316,7 +316,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
                     node = {
                         ...node,
                         res: tdecorate(node.res, 'resMismatch', ctx, [
-                            dtype('inferrred', res, node.res.loc),
+                            dtype('inferred', res, node.res.loc),
                         ]),
                     };
                 }

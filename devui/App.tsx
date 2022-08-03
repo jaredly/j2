@@ -618,10 +618,17 @@ export const App = () => {
                         setFiles({ ...files, test: newTest });
                         location.hash = `#test:${name}`;
                     }}
-                    onChange={(data) => {
+                    onChange={(data, text) => {
                         const newTest = { ...files.test };
                         newTest[hashName.slice('test:'.length)] = data;
                         setFiles({ ...files, test: newTest });
+                        fetch(
+                            `/elements/test/${hashName.slice('test:'.length)}`,
+                            {
+                                method: 'POST',
+                                body: text,
+                            },
+                        );
                     }}
                 />
             ) : (

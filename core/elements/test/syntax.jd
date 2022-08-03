@@ -1,0 +1,23 @@
+/** This showcases some common syntactic forms **/
+if let `Named(name) = `Named("Jerd") {
+    "Hello ${name}!";
+} else {
+    "Hello...";
+}
+let switcher = (m: [`One | `Two(int)]) => switch m {
+    `One => 1;
+    `Two(v) => v * 2;
+}
+// Click the dot to the left of any item to see the inferred type & generated javascript
+switcher(`Two(20)) == 40
+"Template ${"strings"} can be complex ${2->toString}"
+let lang = {name: "Jerd", age: 2}
+// All types are structural, so naming things is optional -- unless you want to make a recursive type, then you need to have a name.
+type Tree = <T>[`Node(Tree<T>, Tree<T>) | `Leaf(T)]
+// Type variables can have bounds!
+let somegen = <T: [*]>(v: [`Hi | T]) => if let `Hi = v {
+    10;
+} else {
+    20;
+}
+// See `effects` for some fancy async/await / algebraic effect goodness!
