@@ -14,15 +14,17 @@ import { constrainTypes, unifyTypes } from '../typing/unifyTypes';
 
 export const grammar = `
 Apply = target:Atom suffixes_drop:Suffix*
-Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix
+Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix / ArrowSuffix
 CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
+ArrowSuffix = _ "->" _ name:Identifier args:CallSuffix?
 `;
 
 export type Apply = {
     type: 'Apply';
     target: t.Expression;
     args: Array<t.Expression>;
+    arrow: boolean;
     loc: t.Loc;
 };
 
@@ -43,6 +45,28 @@ export const ToTast = {
         }
         return res;
     },
+    ArrowSuffix(suffix: p.ArrowSuffix, target: t.Expression, ctx: TCtx): Apply {
+        // const
+        const nt = ctx.ToTast.Identifier(suffix.name, ctx);
+        return maybeAutoType(
+            {
+                type: 'Apply',
+                target: nt,
+                args: [
+                    target,
+                    ...(suffix.args?.args?.items.map((arg) =>
+                        ctx.ToTast.Expression(arg, ctx),
+                    ) ?? []),
+                ],
+                loc: {
+                    ...suffix.loc,
+                    start: target.loc.start,
+                },
+                arrow: true,
+            },
+            ctx,
+        );
+    },
     CallSuffix(suffix: p.CallSuffix, target: t.Expression, ctx: TCtx): Apply {
         return maybeAutoType(
             {
@@ -56,6 +80,7 @@ export const ToTast = {
                     ...suffix.loc,
                     start: target.loc.start,
                 },
+                arrow: false,
             },
             ctx,
         );
@@ -221,7 +246,34 @@ export const makeApply = (
     suffix: p.Suffix,
     loc: t.Loc,
     showIds: boolean,
+    arrow = false,
 ): p.Expression => {
+    if (
+        arrow &&
+        suffix.type === 'CallSuffix' &&
+        suffix.args?.items.length &&
+        inner.type === 'Identifier'
+    ) {
+        const ninner = suffix.args.items[0];
+        suffix = {
+            type: 'ArrowSuffix',
+            args:
+                suffix.args.items.length > 1
+                    ? {
+                          type: 'CallSuffix',
+                          args: {
+                              type: 'CommaExpr',
+                              items: suffix.args.items.slice(1),
+                              loc: suffix.args.loc,
+                          },
+                          loc: suffix.args.loc,
+                      }
+                    : null,
+            loc: suffix.loc,
+            name: inner,
+        };
+        inner = ninner;
+    }
     if (
         inner.type === 'Identifier' &&
         isOpText(inner.text) &&
@@ -276,7 +328,7 @@ export const makeApply = (
 };
 
 export const ToAst = {
-    Apply({ target, args, loc }: Apply, ctx: TACtx): p.Expression {
+    Apply({ target, args, loc, arrow }: Apply, ctx: TACtx): p.Expression {
         if (target.type === 'TypeApplication' && target.inferred) {
             const ttype = ctx.actx.getType(target.target);
             const argTypes = args.map((arg) => ctx.actx.getType(arg));
@@ -286,7 +338,13 @@ export const ToAst = {
                 ttype.inner.type === 'TLambda'
             ) {
                 const auto = autoTypeApply(
-                    { type: 'Apply', loc, args, target: target.target },
+                    {
+                        type: 'Apply',
+                        loc,
+                        args,
+                        target: target.target,
+                        arrow: false,
+                    },
                     ttype.args,
                     ttype.inner.args.map((t) => t.typ),
                     argTypes as t.Type[],
@@ -323,6 +381,7 @@ export const ToAst = {
                             },
                             loc,
                             ctx.showIds,
+                            arrow,
                         );
                     }
                 }
@@ -342,6 +401,7 @@ export const ToAst = {
             },
             loc,
             ctx.showIds,
+            arrow,
         );
     },
 };
@@ -355,6 +415,16 @@ export const ToPP = {
             ],
             apply.loc,
             'never',
+        );
+    },
+    ArrowSuffix(suffix: p.ArrowSuffix, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                pp.text('->', suffix.loc),
+                ctx.ToPP.Identifier(suffix.name, ctx),
+                suffix.args ? ctx.ToPP.CallSuffix(suffix.args, ctx) : null,
+            ],
+            suffix.loc,
         );
     },
     CallSuffix(parens: p.CallSuffix, ctx: PCtx): pp.PP {

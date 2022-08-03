@@ -25,6 +25,9 @@ export const ToTast = {
             case 'AwaitSuffix':
                 return ctx.ToTast.AwaitSuffix(node, next, ctx);
 
+            case 'ArrowSuffix':
+                return ctx.ToTast.ArrowSuffix(node, next, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -593,6 +596,23 @@ export const ToAst = {
         }
     },
 
+    VError(node: t.VError, ctx: TACtx): p.VError {
+        switch (node.type) {
+            case 'Dec':
+                return ctx.ToAst.Dec(node, ctx);
+
+            case 'Blank':
+                return ctx.ToAst.Blank(node, ctx);
+
+            case 'TVbl':
+                return ctx.ToAst.TVbl(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
     Pattern(node: t.Pattern, ctx: TACtx): p.Pattern {
         switch (node.type) {
             case 'PName':
@@ -690,6 +710,9 @@ export const ToPP = {
 
             case 'AwaitSuffix':
                 return ctx.ToPP.AwaitSuffix(node, ctx);
+
+            case 'ArrowSuffix':
+                return ctx.ToPP.ArrowSuffix(node, ctx);
 
             default:
                 let _: never = node;

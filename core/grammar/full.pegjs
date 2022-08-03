@@ -25,9 +25,10 @@ UnresolvedHash = "#[" ":unresolved:" "]"
 // apply.ts
 
 Apply = target:Atom suffixes_drop:Suffix*
-Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix
+Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix / ArrowSuffix
 CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
+ArrowSuffix = _ "->" _ name:Identifier args:CallSuffix?
 
 
 // awaits.ts
@@ -58,7 +59,7 @@ Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpressi
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
-IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
+IdText "identifier" = ![0-9] [0-9a-zA-Z_]+
 AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 
@@ -72,7 +73,7 @@ UnaryOpWithHash = op:UnaryOp hash:IdHash?
 UnaryOp = "-" / "!"
 
 binopWithHash = op:binop hash:IdHash?
-binop = $(!"//" !"=>" [+*^/<>=|&!-]+)
+binop = $(!"//" !"=>" !"->" [+*^/<>=|&!-]+)
 
 ParenedOp = "(" _ inner:binopWithHash _ ")"
 

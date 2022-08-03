@@ -29,7 +29,7 @@ Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpressi
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
-IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
+IdText "identifier" = ![0-9] [0-9a-zA-Z_]+
 AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 `;

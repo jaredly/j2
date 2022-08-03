@@ -29,7 +29,7 @@ Partying with the movies.roc example
 - [x] need comments, yes definitely
 - [ ] I think I want to allow local type aliases? Can't see why not.
 - [ ] need array support!
-- [ ] and a `->` syntax would be super nice. `a->b` is `b(a)`, `a->b(c)` is `b(a, c)`
+- [x] and a `->` syntax would be super nice. `a->b` is `b(a)`, `a->b(c)` is `b(a, c)`
 
 ok, I think I want to really get serious about type inference.
 

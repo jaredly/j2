@@ -9,8 +9,11 @@ alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] x#[h73af94cb03869c7e40d097b
 x == "Jerd"
 alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] ten#[hc6b7c238fb3eca022b6aef40d734754a3117e664]
 type Four = {name: string, age: int = 4 + ten}
-alias Four#[h29af5976f30bfcc4130e6c50098a0d64f980c37c]
+alias Four#[h4bd18bfe6f0f4a1af3d9ab125ddb03e51aa178bc]
 let getAge = ({age}: Four) => age
-alias getAge#[ha6784d4a34ea932dda11889fd1781102301ccfa9]
+alias getAge#[haafbea4fe035b517740a8dbee4ece5f8ed9f6b86]
 getAge(one) == 2
 getAge({name: "hello"}) == 14
+let ageAnd = ({age}: Four, n: int) => age + n
+alias ageAnd#[h111def05c75ee6955189e6b44135dfb3a566aa41]
+one->ageAnd(4)
