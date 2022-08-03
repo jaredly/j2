@@ -507,6 +507,7 @@ export const newContext = (): FullContext => {
                 this[opaque].constraints[id] = mix;
                 return true;
             }
+            console.log('Failed to constraint', id, constraint);
             return false;
         },
 

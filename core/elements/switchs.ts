@@ -385,16 +385,16 @@ export const Analyze: Visitor<AVCtx> = {
         const cases = node.cases.map((c) => {
             // const matches = typeMatchesPattern(c.pat, refined, ctx);
 
-            const constraints: ConstraintMap = {};
+            // const constraints: ConstraintMap = {};
             const matches = typeMatchesPattern(
                 c.pat,
                 refined,
                 ctx,
-                constraints,
+                // constraints,
             );
-            Object.keys(constraints).forEach((k) => {
-                ctx.addTypeConstraint(+k, constraints[+k]);
-            });
+            // Object.keys(constraints).forEach((k) => {
+            //     ctx.addTypeConstraint(+k, constraints[+k]);
+            // });
 
             const res = refineType(c.pat, refined, ctx);
             let bt = ctx

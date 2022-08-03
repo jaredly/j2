@@ -171,6 +171,9 @@ export const typeMatches = (
                     return true;
                 }
             }
+            if (expected.type === 'TVbl' && candidate.id === expected.id) {
+                return true;
+            }
             return false;
         case 'TRecord':
             return recordMatches(candidate, expected, ctx, constraints);

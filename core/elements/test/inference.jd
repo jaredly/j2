@@ -1,9 +1,11 @@
 (v) => (+#[:unresolved:])<_, 1>(v, 1)
 ((v) => (+#[:unresolved:])<_, 1>(v, 1))(2)
+({age}) => (+#[:unresolved:])<_, 1>(age, 1)
 (v) => switch v {
     `One => 1;
+    `Two => 2;
+    `Three => 3;
 }
-({age}) => (+#[:unresolved:])<_, 1>(age, 1)
 let wint = (v: int) => v + 1
 (v) => wint(v)
 let w10 = (v: 10) => v + 2
@@ -13,5 +15,10 @@ let wage = (v: {age: int}) => 10
 let wname = (v: [`Age(int)]) => 10
 (v) => wname(`Age(v))
 (v) => switch v {
-    {age} => wint(age#[:unresolved:]);
+    {age} => wint(age);
+}
+(v) => switch v {
+    `One => 1;
+    `Hi(n) => wint(n);
+    `Ho({n}) => wint(n);
 }

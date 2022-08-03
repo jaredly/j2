@@ -3,7 +3,11 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { addNewConstraint, Ctx as ACtx } from '../typing/analyze';
+import {
+    addNewConstraint,
+    collapseConstraints,
+    Ctx as ACtx,
+} from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
 import {
@@ -105,8 +109,23 @@ can we bring this back?
 export const refineType = (
     pat: Pattern,
     type: t.Type,
-    ctx: TMCtx,
+    ctx: ACtx,
+    constraints?: ConstraintMap,
 ): t.Type | null => {
+    if (constraints && type.type === 'TVbl') {
+        // 🤔 waittt hmmmmm
+        // const pt = typeForPattern(pat, ctx);
+        // const current = addNewConstraint(
+        //     type.id,
+        //     { outer: pt },
+        //     constraints,
+        //     ctx,
+        // );
+        // if (current) {
+        //     constraints[type.id] = current;
+        //     return type;
+        // }
+    }
     switch (pat.type) {
         case 'PBlank':
         case 'PName':
@@ -132,7 +151,12 @@ export const refineType = (
                 if (!items[name]) {
                     return type;
                 }
-                const res = refineType(cpat, items[name].value, ctx);
+                const res = refineType(
+                    cpat,
+                    items[name].value,
+                    ctx,
+                    constraints,
+                );
                 if (res != null) {
                     remaining = true;
                     items[name] = { ...items[name], value: res };
@@ -147,7 +171,7 @@ export const refineType = (
                 : null;
         }
         case 'PDecorated': {
-            return refineType(pat.inner, type, ctx);
+            return refineType(pat.inner, type, ctx, constraints);
         }
         case 'PEnum': {
             type = maybeExpandTask(type, ctx) ?? type;
@@ -173,6 +197,7 @@ export const refineType = (
                             pat.payload,
                             kase.payload,
                             ctx,
+                            constraints,
                         );
                         if (inner == null) {
                             continue;
@@ -207,20 +232,24 @@ export const refineType = (
 export const typeMatchesPattern = (
     pat: Pattern,
     type: t.Type,
-    ctx: TMCtx,
+    ctx: ACtx,
     constraints?: ConstraintMap,
 ): boolean => {
-    if (constraints && type.type === 'TVbl') {
-        const pt = typeForPattern(pat);
-        const current = addNewConstraint(
-            type.id,
-            { outer: pt },
-            constraints,
-            ctx,
-        );
-        if (current) {
-            constraints[type.id] = current;
-            return true;
+    if (type.type === 'TVbl') {
+        if (constraints) {
+            const pt = typeForPattern(pat, ctx);
+            const current = addNewConstraint(
+                type.id,
+                { inner: pt },
+                constraints,
+                ctx,
+            );
+            if (current) {
+                constraints[type.id] = current;
+                return true;
+            }
+        } else {
+            type = collapseConstraints(ctx.currentConstraints(type.id), ctx);
         }
     }
     switch (pat.type) {
@@ -297,7 +326,7 @@ export const typeMatchesPattern = (
     }
 };
 
-export const typeForPattern = (pat: Pattern, ctx?: TCtx): t.Type => {
+export const typeForPattern = (pat: Pattern, ctx?: ACtx): t.Type => {
     switch (pat.type) {
         case 'Number':
         case 'String':
@@ -359,6 +388,12 @@ export const getLocals = (
             locals.push({ sym: pat.sym, type });
             return;
         case 'PRecord':
+            if (type.type === 'TVbl') {
+                type = collapseConstraints(
+                    ctx.currentConstraints(type.id),
+                    ctx,
+                );
+            }
             type = ctx.resolveRefsAndApplies(type) ?? type;
             if (type.type !== 'TRecord') {
                 return;
@@ -373,6 +408,12 @@ export const getLocals = (
             }
             return;
         case 'PEnum': {
+            if (type.type === 'TVbl') {
+                type = collapseConstraints(
+                    ctx.currentConstraints(type.id),
+                    ctx,
+                );
+            }
             type = ctx.resolveRefsAndApplies(type) ?? type;
             type = maybeExpandTask(type, ctx) ?? type;
             if (type.type !== 'TEnum') {

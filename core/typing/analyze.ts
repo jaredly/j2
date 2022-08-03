@@ -36,6 +36,7 @@ export type Ctx = {
     getDecorator(name: string): t.RefKind[];
     errorDecorators(): Id[];
     addTypeConstraint: (id: number, constraint: Constraints) => boolean;
+    newTypeVar: () => t.TVbl;
 
     valueForSym: (sym: number) => null | { name: string; type: t.Type };
     typeForId: (id: Id) => GlobalType | null;
@@ -193,7 +194,7 @@ export const analyzeTypeTop = (
 
 export const collapseConstraints = (
     { outer, inner }: Constraints,
-    ctx: Ctx,
+    ctx: TMCtx,
 ): t.Type => {
     if (!outer && !inner) {
         return { type: 'TBlank', loc: noloc };
@@ -211,8 +212,8 @@ export const addNewConstraint = (
     ctx: TMCtx,
 ): Constraints | null => {
     let current = mergeConstraints(
-        ctx.currentConstraints(id),
         newConstraint,
+        ctx.currentConstraints(id),
         ctx,
     );
     if (!current) {
