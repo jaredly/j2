@@ -90,10 +90,32 @@ export const testStatuses = (
         ];
     }
     const statuses: HL[] = [];
-    file.info.forEach((info) => {
+    file.info.forEach((info, i) => {
         statuses.push(...verifyHL(info.verify));
+        if (results.info.exprs[i] !== undefined) {
+            const v = results.info.exprs[i];
+            statuses.push({
+                loc: info.contents.top.loc,
+                type: 'Success',
+                suffix: {
+                    text:
+                        ' ' +
+                        (typeof v === 'function'
+                            ? info.contents.irtops
+                                  ?.map((m) =>
+                                      m.type
+                                          ? typeToString(m.type, builtinContext)
+                                          : 'no type',
+                                  )
+                                  .join(' : ') ?? 'not evaluated?'
+                            : JSON.stringify(v)),
+                },
+            });
+        }
     });
 
+    // Object.keys(results.info.exprs).forEach((expr) => {
+    // })
     // results.testResults.forEach((result) => {
     //     statuses.push({
     //         loc: result.loc,
