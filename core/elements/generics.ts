@@ -189,7 +189,32 @@ export const ToPP = {
     },
 };
 
-export const ToIR = {};
+import { Ctx as ICtx } from '../ir/ir';
+export const ToIR = {
+    TypeApplication(
+        { loc, target, args }: t.TypeApplication,
+        ctx: ICtx,
+    ): t.IExpression {
+        // ugh this is gonna mess me up, right?
+        // like, ... idk maybe I do need to keep this in IR,
+        // at least to be able to know what types things are?
+        // on the other hand, maybe I can bake types at this point?
+        // like, monomorphizing is going to happen before this.
+        return ctx.ToIR.Expression(target, ctx);
+    },
+    TypeAbstraction(
+        { items, body, loc }: t.TypeAbstraction,
+        ctx: ICtx,
+    ): t.IExpression {
+        ctx = { ...ctx, actx: ctx.actx.withLocalTypes(items) };
+        return {
+            type: 'TypeAbstraction',
+            items,
+            body: ctx.ToIR.Expression(body, ctx),
+            loc,
+        };
+    },
+};
 
 export const ToJS = {};
 

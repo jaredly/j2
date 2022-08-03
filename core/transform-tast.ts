@@ -82,8 +82,6 @@ import {
     TAdd,
     TSub,
     TOr,
-    AVCtx,
-    ACtx,
 } from './typed-ast';
 
 export type Visitor<Ctx> = {
@@ -371,8 +369,6 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IAssign | [IAssign | null, Ctx];
     IAssignPost?: (node: IAssign, ctx: Ctx) => null | IAssign;
-    Ctx?: (node: Ctx, ctx: Ctx) => null | false | Ctx | [Ctx | null, Ctx];
-    CtxPost?: (node: Ctx, ctx: Ctx) => null | Ctx;
     TApply?: (
         node: TApply,
         ctx: Ctx,
@@ -474,11 +470,6 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | ICase | [ICase | null, Ctx];
     ICasePost?: (node: ICase, ctx: Ctx) => null | ICase;
-    AVCtx?: (
-        node: AVCtx,
-        ctx: Ctx,
-    ) => null | false | AVCtx | [AVCtx | null, Ctx];
-    AVCtxPost?: (node: AVCtx, ctx: Ctx) => null | AVCtx;
     RefKind_Global?: (
         node: GlobalRef,
         ctx: Ctx,
@@ -6610,12 +6601,35 @@ export const transformIApply = <Ctx>(
         {
             let changed2 = false;
             const arr1 = node.args.map((updatedNode$args$item1) => {
-                const result = transformIExpression(
-                    updatedNode$args$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$args$item1;
+                let result = updatedNode$args$item1;
+                {
+                    let changed3 = false;
+
+                    const result$expr = transformIExpression(
+                        updatedNode$args$item1.expr,
+                        visitor,
+                        ctx,
+                    );
+                    changed3 =
+                        changed3 || result$expr !== updatedNode$args$item1.expr;
+
+                    const result$type = transformType(
+                        updatedNode$args$item1.type,
+                        visitor,
+                        ctx,
+                    );
+                    changed3 =
+                        changed3 || result$type !== updatedNode$args$item1.type;
+                    if (changed3) {
+                        result = {
+                            ...result,
+                            expr: result$expr,
+                            type: result$type,
+                        };
+                        changed2 = true;
+                    }
+                }
+
                 return result;
             });
             if (changed2) {
@@ -8671,43 +8685,6 @@ export const transformTOr = <Ctx>(
     node = updatedNode;
     if (visitor.TOrPost) {
         const transformed = visitor.TOrPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformCtx = <Ctx>(
-    node: Ctx,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): Ctx => {
-    if (!node) {
-        throw new Error('No Ctx provided');
-    }
-
-    const transformed = visitor.Ctx ? visitor.Ctx(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-    const updatedNode = node;
-
-    node = updatedNode;
-    if (visitor.CtxPost) {
-        const transformed = visitor.CtxPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
