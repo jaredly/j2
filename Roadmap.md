@@ -35,6 +35,26 @@ like `task & ['What(string, ())]`
 	after verifying that the upper bound 'matches' the lower bound.
 also, what if I reduce things down to only caring about ... simple, application?
 
+# Array folks
+
+- [x] the type?
+- [ ] the expression whatsit
+- [ ] type variable ... bound or default value, want to reference previous dealios
+- [ ] switchhhhhh
+	- if-let ... array patterns?
+	- spread? I can skip that for now
+
+
+
+whattt consts
+uint/int/float/string/bool/char
+is that it?
+huh maybe a single-item enum,
+where the contents are const...
+
+
+
+
 # Farther out
 
 What do I think about serialization?

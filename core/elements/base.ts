@@ -545,6 +545,7 @@ function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
         case 'TDecorated':
         case 'TVars':
         case 'TApply':
+        case 'TConst':
             return determineKind(t.inner, ctx);
         case 'TParens':
             if (t.items?.items.length === 1) {
@@ -578,6 +579,7 @@ function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
         case 'String':
         case 'TOps':
         case 'TBlank':
+        case 'TConst':
             return 'builtin';
         case 'TDecorated':
         case 'TVars':

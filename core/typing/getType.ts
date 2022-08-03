@@ -8,8 +8,45 @@ import { Expression, GlobalRef, Loc, TVars, Type } from '../typed-ast';
 import { collapseConstraints, ifLocals } from './analyze';
 import { collapseOps } from './ops';
 import { collectEffects, inferTaskType, makeTaskType } from './tasks';
-import { Ctx, typeMatches } from './typeMatches';
+import { Ctx, expandEnumCases, typeMatches } from './typeMatches';
 import { unifyTypes } from './unifyTypes';
+
+export const isConst = (type: Type, ctx: Ctx, path?: string[]): boolean => {
+    switch (type.type) {
+        case 'Number':
+        case 'String':
+            return true;
+        case 'TDecorated':
+            return isConst(type.inner, ctx);
+        case 'TRecord':
+            if (type.open) {
+                return false;
+            }
+            const items = allRecordItems(type, ctx, path);
+            return (
+                items != null &&
+                Object.values(items).every((item) =>
+                    isConst(item.value, ctx, path),
+                )
+            );
+        case 'TEnum':
+            if (type.open) {
+                return false;
+            }
+            const cases = expandEnumCases(type, ctx, path);
+            return (
+                cases != null &&
+                cases.bounded.length === 0 &&
+                cases.cases.every(
+                    (kase) => !kase.payload || isConst(kase.payload, ctx, path),
+                )
+            );
+        case 'TApply':
+        case 'TVbl':
+        default:
+            return false;
+    }
+};
 
 export const applyType = (
     args: Type[],

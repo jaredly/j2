@@ -238,8 +238,10 @@ TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Typ
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TBlank / TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
+TAtom = TConst / TBlank / TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
+
+TConst = "const" __ inner:TAtom
 
 TOps = left:TOpInner right_drop:TRight*
 TRight = _ top:$top _ right:TOpInner

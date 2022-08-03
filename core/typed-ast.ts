@@ -45,6 +45,7 @@ export type { TApply, TVar, TVars } from './elements/type-vbls';
 export type {
     TAdd,
     TBlank,
+    TConst,
     TDecorated,
     TLambda,
     TOps,

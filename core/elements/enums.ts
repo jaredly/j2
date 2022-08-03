@@ -254,6 +254,8 @@ export const isValidEnumCase = (c: t.Type, ctx: TMCtx): boolean => {
     }
     c = resolved;
     switch (c.type) {
+        case 'TConst':
+            return isValidEnumCase(c.inner, ctx);
         case 'Number':
         case 'String':
         case 'TOps':

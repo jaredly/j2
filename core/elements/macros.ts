@@ -51,6 +51,9 @@ export const ToTast = {
             case 'TApply':
                 return ctx.ToTast.TApply(node, ctx);
 
+            case 'TConst':
+                return ctx.ToTast.TConst(node, ctx);
+
             case 'TBlank':
                 return ctx.ToTast.TBlank(node, ctx);
 
@@ -324,6 +327,9 @@ export const ToTast = {
             case 'TApply':
                 return ctx.ToTast.TApply(node, ctx);
 
+            case 'TConst':
+                return ctx.ToTast.TConst(node, ctx);
+
             case 'TBlank':
                 return ctx.ToTast.TBlank(node, ctx);
 
@@ -385,14 +391,17 @@ export const ToAst = {
             case 'TVars':
                 return ctx.ToAst.TVars(node, ctx);
 
-            case 'TDecorated':
-                return ctx.ToAst.TDecorated(node, ctx);
+            case 'TConst':
+                return ctx.ToAst.TConst(node, ctx);
 
             case 'TApply':
                 return ctx.ToAst.TApply(node, ctx);
 
             case 'TRecord':
                 return ctx.ToAst.TRecord(node, ctx);
+
+            case 'TDecorated':
+                return ctx.ToAst.TDecorated(node, ctx);
 
             case 'TOps':
                 return ctx.ToAst.TOps(node, ctx);
@@ -522,14 +531,17 @@ export const ToAst = {
             case 'TVars':
                 return ctx.ToAst.TVars(node, ctx);
 
-            case 'TDecorated':
-                return ctx.ToAst.TDecorated(node, ctx);
+            case 'TConst':
+                return ctx.ToAst.TConst(node, ctx);
 
             case 'TApply':
                 return ctx.ToAst.TApply(node, ctx);
 
             case 'TRecord':
                 return ctx.ToAst.TRecord(node, ctx);
+
+            case 'TDecorated':
+                return ctx.ToAst.TDecorated(node, ctx);
 
             case 'TOps':
                 return ctx.ToAst.TOps(node, ctx);
@@ -719,6 +731,9 @@ export const ToPP = {
 
             case 'TApply':
                 return ctx.ToPP.TApply(node, ctx);
+
+            case 'TConst':
+                return ctx.ToPP.TConst(node, ctx);
 
             case 'TBlank':
                 return ctx.ToPP.TBlank(node, ctx);
@@ -992,6 +1007,9 @@ export const ToPP = {
 
             case 'TApply':
                 return ctx.ToPP.TApply(node, ctx);
+
+            case 'TConst':
+                return ctx.ToPP.TConst(node, ctx);
 
             case 'TBlank':
                 return ctx.ToPP.TBlank(node, ctx);

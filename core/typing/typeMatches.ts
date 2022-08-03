@@ -170,6 +170,22 @@ export const typeMatches = (
     }
 
     switch (candidate.type) {
+        case 'TConst':
+            return expected.type === 'TConst'
+                ? typeMatches(
+                      candidate.inner,
+                      expected.inner,
+                      ctx,
+                      path,
+                      constraints,
+                  )
+                : typeMatches(
+                      candidate.inner,
+                      expected,
+                      ctx,
+                      path,
+                      constraints,
+                  );
         case 'TVbl':
             if (expected.type === 'TVbl' && candidate.id === expected.id) {
                 return true;

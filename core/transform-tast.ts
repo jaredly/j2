@@ -34,10 +34,11 @@ import {
     EnumCase,
     TVars,
     TVar,
-    TDecorated,
+    TConst,
     TApply,
     TRecord,
     TRecordKeyValue,
+    TDecorated,
     TOps,
     Block,
     Stmt,
@@ -264,6 +265,11 @@ export type Visitor<Ctx> = {
         node: ITypeAbstraction,
         ctx: Ctx,
     ) => null | ITypeAbstraction;
+    TConst?: (
+        node: TConst,
+        ctx: Ctx,
+    ) => null | false | TConst | [TConst | null, Ctx];
+    TConstPost?: (node: TConst, ctx: Ctx) => null | TConst;
     TOps?: (node: TOps, ctx: Ctx) => null | false | TOps | [TOps | null, Ctx];
     TOpsPost?: (node: TOps, ctx: Ctx) => null | TOps;
     TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
@@ -705,11 +711,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
     TypePost_TVars?: (node: TVars, ctx: Ctx) => null | Type;
-    Type_TDecorated?: (
-        node: TDecorated,
+    Type_TConst?: (
+        node: TConst,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
-    TypePost_TDecorated?: (node: TDecorated, ctx: Ctx) => null | Type;
+    TypePost_TConst?: (node: TConst, ctx: Ctx) => null | Type;
     Type_TApply?: (
         node: TApply,
         ctx: Ctx,
@@ -720,6 +726,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
     TypePost_TRecord?: (node: TRecord, ctx: Ctx) => null | Type;
+    Type_TDecorated?: (
+        node: TDecorated,
+        ctx: Ctx,
+    ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TDecorated?: (node: TDecorated, ctx: Ctx) => null | Type;
     Type_TOps?: (
         node: TOps,
         ctx: Ctx,
@@ -2094,18 +2105,16 @@ export const transformTVars = <Ctx>(
     return node;
 };
 
-export const transformTDecorated = <Ctx>(
-    node: TDecorated,
+export const transformTConst = <Ctx>(
+    node: TConst,
     visitor: Visitor<Ctx>,
     ctx: Ctx,
-): TDecorated => {
+): TConst => {
     if (!node) {
-        throw new Error('No TDecorated provided');
+        throw new Error('No TConst provided');
     }
 
-    const transformed = visitor.TDecorated
-        ? visitor.TDecorated(node, ctx)
-        : null;
+    const transformed = visitor.TConst ? visitor.TConst(node, ctx) : null;
     if (transformed === false) {
         return node;
     }
@@ -2126,44 +2135,24 @@ export const transformTDecorated = <Ctx>(
     {
         let changed1 = false;
 
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
         const updatedNode$inner = transformType(node.inner, visitor, ctx);
         changed1 = changed1 || updatedNode$inner !== node.inner;
 
-        let updatedNode$decorators = node.decorators;
-        {
-            let changed2 = false;
-            const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
-                const result = transformDecorator(
-                    updatedNode$decorators$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$decorators$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$decorators = arr1;
-                changed1 = true;
-            }
-        }
-
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
         if (changed1) {
             updatedNode = {
                 ...updatedNode,
-                loc: updatedNode$loc,
                 inner: updatedNode$inner,
-                decorators: updatedNode$decorators,
+                loc: updatedNode$loc,
             };
             changed0 = true;
         }
     }
 
     node = updatedNode;
-    if (visitor.TDecoratedPost) {
-        const transformed = visitor.TDecoratedPost(node, ctx);
+    if (visitor.TConstPost) {
+        const transformed = visitor.TConstPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2399,6 +2388,83 @@ export const transformTRecord = <Ctx>(
     node = updatedNode;
     if (visitor.TRecordPost) {
         const transformed = visitor.TRecordPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformTDecorated = <Ctx>(
+    node: TDecorated,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TDecorated => {
+    if (!node) {
+        throw new Error('No TDecorated provided');
+    }
+
+    const transformed = visitor.TDecorated
+        ? visitor.TDecorated(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$inner = transformType(node.inner, visitor, ctx);
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+
+        let updatedNode$decorators = node.decorators;
+        {
+            let changed2 = false;
+            const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
+                const result = transformDecorator(
+                    updatedNode$decorators$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$decorators$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$decorators = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                inner: updatedNode$inner,
+                decorators: updatedNode$decorators,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TDecoratedPost) {
+        const transformed = visitor.TDecoratedPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2671,9 +2737,9 @@ export const transformType = <Ctx>(
             break;
         }
 
-        case 'TDecorated': {
-            const transformed = visitor.Type_TDecorated
-                ? visitor.Type_TDecorated(node, ctx)
+        case 'TConst': {
+            const transformed = visitor.Type_TConst
+                ? visitor.Type_TConst(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -2712,6 +2778,25 @@ export const transformType = <Ctx>(
         case 'TRecord': {
             const transformed = visitor.Type_TRecord
                 ? visitor.Type_TRecord(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'TDecorated': {
+            const transformed = visitor.Type_TDecorated
+                ? visitor.Type_TDecorated(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -2799,8 +2884,8 @@ export const transformType = <Ctx>(
             break;
         }
 
-        case 'TDecorated': {
-            updatedNode = transformTDecorated(node, visitor, ctx);
+        case 'TConst': {
+            updatedNode = transformTConst(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -2813,6 +2898,12 @@ export const transformType = <Ctx>(
 
         case 'TRecord': {
             updatedNode = transformTRecord(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'TDecorated': {
+            updatedNode = transformTDecorated(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -2907,9 +2998,9 @@ export const transformType = <Ctx>(
             break;
         }
 
-        case 'TDecorated': {
-            const transformed = visitor.TypePost_TDecorated
-                ? visitor.TypePost_TDecorated(updatedNode, ctx)
+        case 'TConst': {
+            const transformed = visitor.TypePost_TConst
+                ? visitor.TypePost_TConst(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -2930,6 +3021,16 @@ export const transformType = <Ctx>(
         case 'TRecord': {
             const transformed = visitor.TypePost_TRecord
                 ? visitor.TypePost_TRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TDecorated': {
+            const transformed = visitor.TypePost_TDecorated
+                ? visitor.TypePost_TDecorated(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

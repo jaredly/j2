@@ -90,6 +90,7 @@ import {
     TApply,
     TApply_inner,
     TAtom,
+    TConst,
     TBlank,
     TRef,
     TLambda,
@@ -746,6 +747,11 @@ export type Visitor<Ctx> = {
     TAtomPost?: (node: TAtom, ctx: Ctx) => null | TAtom;
     TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
     TRefPost?: (node: TRef, ctx: Ctx) => null | TRef;
+    TConst?: (
+        node: TConst,
+        ctx: Ctx,
+    ) => null | false | TConst | [TConst | null, Ctx];
+    TConstPost?: (node: TConst, ctx: Ctx) => null | TConst;
     TOps_inner?: (
         node: TOps_inner,
         ctx: Ctx,
@@ -1074,6 +1080,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TApply | [TApply | null, Ctx];
     TApplyPost_TApply?: (node: TApply_inner, ctx: Ctx) => null | TApply;
+    TAtom_TConst?: (
+        node: TConst,
+        ctx: Ctx,
+    ) => null | false | TAtom | [TAtom | null, Ctx];
+    TAtomPost_TConst?: (node: TConst, ctx: Ctx) => null | TAtom;
     TAtom_TBlank?: (
         node: TBlank,
         ctx: Ctx,
@@ -1699,6 +1710,14 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_TRef?: (node: TRef, ctx: Ctx) => null | AllTaggedTypes;
+    AllTaggedTypes_TConst?: (
+        node: TConst,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TConst?: (
+        node: TConst,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_TOps?: (
         node: TOps_inner,
         ctx: Ctx,
@@ -7942,6 +7961,61 @@ export const transformDecorator = <Ctx>(
     return node;
 };
 
+export const transformTConst = <Ctx>(
+    node: TConst,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TConst => {
+    if (!node) {
+        throw new Error('No TConst provided');
+    }
+
+    const transformed = visitor.TConst ? visitor.TConst(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$inner = transformTAtom(node.inner, visitor, ctx);
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                inner: updatedNode$inner,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TConstPost) {
+        const transformed = visitor.TConstPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformTBlank = <Ctx>(
     node: TBlank,
     visitor: Visitor<Ctx>,
@@ -9146,6 +9220,12 @@ export const transformEnumCase = <Ctx>(
             break;
         }
 
+        case 'TConst': {
+            updatedNode = transformTConst(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TBlank': {
             updatedNode = transformTBlank(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -9405,6 +9485,25 @@ export const transformTAtom = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
+        case 'TConst': {
+            const transformed = visitor.TAtom_TConst
+                ? visitor.TAtom_TConst(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TBlank': {
             const transformed = visitor.TAtom_TBlank
                 ? visitor.TAtom_TBlank(node, ctx)
@@ -9580,6 +9679,12 @@ export const transformTAtom = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
+        case 'TConst': {
+            updatedNode = transformTConst(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TBlank': {
             updatedNode = transformTBlank(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -9638,6 +9743,16 @@ export const transformTAtom = <Ctx>(
     }
 
     switch (updatedNode.type) {
+        case 'TConst': {
+            const transformed = visitor.TAtomPost_TConst
+                ? visitor.TAtomPost_TConst(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
         case 'TBlank': {
             const transformed = visitor.TAtomPost_TBlank
                 ? visitor.TAtomPost_TBlank(updatedNode, ctx)
@@ -13212,6 +13327,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'TConst': {
+            const transformed = visitor.AllTaggedTypes_TConst
+                ? visitor.AllTaggedTypes_TConst(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TOps': {
             const transformed = visitor.AllTaggedTypes_TOps
                 ? visitor.AllTaggedTypes_TOps(node, ctx)
@@ -13855,6 +13989,12 @@ export const transformAllTaggedTypes = <Ctx>(
 
         case 'TRef': {
             updatedNode = transformTRef(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'TConst': {
+            updatedNode = transformTConst(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -14699,6 +14839,16 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'TRef': {
             const transformed = visitor.AllTaggedTypesPost_TRef
                 ? visitor.AllTaggedTypesPost_TRef(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TConst': {
+            const transformed = visitor.AllTaggedTypesPost_TConst
+                ? visitor.AllTaggedTypesPost_TConst(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
