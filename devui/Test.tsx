@@ -42,9 +42,10 @@ export const testStatuses = (
     results.testResults.forEach((result) => {
         statuses.push({
             loc: result.loc,
-            type: result.success ? 'Success' : 'Error',
+            type: result.msg == null ? 'Success' : 'Error',
             prefix: {
-                text: result.success ? '✅' : '🚨',
+                text: result.msg == null ? '✅' : '🚨',
+                message: result.msg ?? undefined,
             },
         });
     });

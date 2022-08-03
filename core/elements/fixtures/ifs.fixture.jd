@@ -26,7 +26,7 @@ if x == 5 { 4 } else { 2 }
 }
 
 --[output:expected]--
-alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc]
 {
     let x#[0] = 10;
     if x#[0] == 5 {
@@ -39,7 +39,7 @@ alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
 /* {
   let x = 10;
 
-  if (x == 5) {
+  if ($builtins.equal(x, 5)) {
     return 4;
   } else {
     return 2;
@@ -53,7 +53,7 @@ let y = if x == 5 { 4 } else { 2 };
 y * 2}
 
 --[output:expected]--
-alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[ha4d3e814b6e823e777273070f4e78f59487993dc]
 {
     let x#[0] = 10;
     let y#[1] = if x#[0] == 5 {
@@ -68,7 +68,7 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[h0e26cba9974393f0886bf43
   let x = 10;
   let y;
 
-  if (x == 5) {
+  if ($builtins.equal(x, 5)) {
     y = 4;
   } else {
     y = 2;
@@ -94,7 +94,7 @@ if 1 > 0 {
 } else {
     `No(`SoMuchFail);
 }
-// [ `No([ `SoMuchFail | `MathFail ]) | `Yes(20) ]
+// [`No([`SoMuchFail | `MathFail]) | `Yes(20)]
 /* {
   if (1 > 0) {
     return {
@@ -124,12 +124,12 @@ if 1 > 0 {
 
 --[output:expected]--
 alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
-(m#[0]: [ `Hello(int) | `Bye ]) => if let `Hello(v#[1]) = m#[0] {
+(m#[0]: [`Hello(int) | `Bye]) => if let `Hello(v#[1]) = m#[0] {
     v#[1];
 } else {
     100;
 }
-// ([ `Hello(int) | `Bye ]) => int
+// ([`Hello(int) | `Bye]) => int
 /* m => {
   if ((typeof m === "string" ? m : m.tag) === "Hello") {
     let {

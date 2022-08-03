@@ -31,6 +31,7 @@ import {
 } from './Icons';
 import { refmt } from './refmt';
 import { TestView } from './Test';
+import { TestSplit } from './TestSplit';
 import { TypeTestView } from './TypeTest';
 
 export const usePromise = <T,>(
@@ -88,7 +89,7 @@ export type Files = {
 
 export type TypeWhat = {
     file: TypeTestResult;
-    values: Array<{ success: boolean; loc: Loc; idx: number }>;
+    values: Array<{ message: string | null; loc: Loc; idx: number }>;
 };
 
 export type TestWhat = {
@@ -100,7 +101,8 @@ export type TestValues = {
     info: ExecutionInfo;
     debugs: { [key: number]: boolean };
     testResults: Array<{
-        success: boolean;
+        // success: boolean;
+        msg: string | null;
         loc: Loc;
     }>;
     failed: boolean;
@@ -109,8 +111,9 @@ export type TestValues = {
 export const typeResults = (
     file: SuccessTypeResult,
     debug?: boolean,
-): Array<{ success: boolean; loc: Loc; idx: number }> => {
-    const results: Array<{ success: boolean; loc: Loc; idx: number }> = [];
+): Array<{ loc: Loc; idx: number; message: string | null }> => {
+    const results: Array<{ loc: Loc; idx: number; message: string | null }> =
+        [];
     const { info, ctx } = file;
 
     info.forEach((info, i) => {
@@ -129,7 +132,8 @@ export const typeResults = (
                         ctx,
                     );
                     results.push({
-                        success: err == null,
+                        // success: err == null,
+                        message: err,
                         loc: d.loc,
                         idx: i,
                     });
@@ -155,9 +159,12 @@ export const typeResults = (
     return results;
 };
 
-export const getTestResults = (file: SuccessTestResult): TestValues => {
+export const getTestResults = (
+    file: SuccessTestResult,
+    shared?: { [key: string]: any },
+): TestValues => {
     const values: TestValues = {
-        info: executeFile(file),
+        info: executeFile(file, shared),
         testResults: [],
         failed: false,
         debugs: {},
@@ -170,8 +177,11 @@ export const getTestResults = (file: SuccessTestResult): TestValues => {
             const top = info.contents.irtops[0];
             if (top.type && file.ctx.isBuiltinType(top.type!, 'bool')) {
                 values.testResults.push({
-                    success: values.info.exprs[i],
+                    // success: values.info.exprs[i],
                     loc: info.contents.top.loc,
+                    msg: values.info.exprs[i]
+                        ? null
+                        : values.info.errors[i]?.message ?? 'False',
                 });
                 if (!values.info.exprs[i]) {
                     values.debugs[i] = true;
@@ -343,9 +353,17 @@ export const App = () => {
                     old.error('Failed to parse typetest', err);
                 }
             });
+            window.console = old;
             const testFiles = {} as Files['test'];
             testContents.forEach((contents, i) => {
-                const file = processFile(contents);
+                const file = processFile(
+                    contents,
+                    undefined,
+                    undefined,
+                    undefined,
+                    true,
+                );
+                // old.log('contents', i)
                 testFiles[test[i]] = {
                     file,
                     values:
@@ -357,8 +375,6 @@ export const App = () => {
                 typetest: typetestFiles,
                 test: testFiles,
             });
-
-            window.console = old;
         });
     }, [listing]);
 
@@ -371,7 +387,6 @@ export const App = () => {
     const hashPin =
         hashParts.length === 3 && hashParts[2] === 'pin' && hashParts[1];
 
-    console.log(files.fixtures[hashName]);
     return (
         <div
             style={{
@@ -396,6 +411,30 @@ export const App = () => {
                     open={!!files.fixtures[hashName]}
                     style={{ backgroundColor: 'transparent' }}
                 >
+                    <Button
+                        style={{ flexShrink: 0 }}
+                        size="xs"
+                        onClick={() => {
+                            const newFixtures: Files['fixtures'] = {
+                                ...files.fixtures,
+                            };
+                            let num = 0;
+                            while (true) {
+                                const name = `test${num}.jd`;
+                                if (newFixtures[name] == null) {
+                                    newFixtures[name] = {
+                                        name,
+                                        file: { builtins: [], fixtures: [] },
+                                    };
+                                    break;
+                                }
+                                num++;
+                            }
+                            setFiles({ ...files, fixtures: newFixtures });
+                        }}
+                    >
+                        New Fixture
+                    </Button>
                     {Object.keys(files.fixtures)
                         .sort()
                         .map((fixture) => (
@@ -416,37 +455,41 @@ export const App = () => {
                 </details>
                 <Divider css={{ marginBottom: 24, marginTop: 24 }} />
                 <Text>Tests</Text>
-                <Button
-                    style={{ flexShrink: 0 }}
-                    size="xs"
-                    onClick={() => {
-                        const newFiles = { ...files.test };
-                        let num = 0;
-                        while (true) {
-                            const name = `test${num}.jd`;
-                            if (newFiles[name] == null) {
-                                newFiles[name] = {
-                                    file: emptyFileResult,
-                                    values: {
-                                        info: { terms: {}, exprs: {} },
-                                        testResults: [],
-                                        failed: false,
-                                        debugs: {},
-                                    },
-                                };
-                                break;
-                            }
-                            num++;
-                        }
-                        setFiles({ ...files, test: newFiles });
-                    }}
-                >
-                    New Test
-                </Button>
                 <details
                     open={!!files.test[hashName?.slice('test:'.length) ?? '']}
                     style={{ backgroundColor: 'transparent' }}
                 >
+                    <Button
+                        style={{ flexShrink: 0 }}
+                        size="xs"
+                        onClick={() => {
+                            const newFiles = { ...files.test };
+                            let num = 0;
+                            while (true) {
+                                const name = `test${num}.jd`;
+                                if (newFiles[name] == null) {
+                                    newFiles[name] = {
+                                        file: emptyFileResult,
+                                        values: {
+                                            info: {
+                                                terms: {},
+                                                exprs: {},
+                                                errors: {},
+                                            },
+                                            testResults: [],
+                                            failed: false,
+                                            debugs: {},
+                                        },
+                                    };
+                                    break;
+                                }
+                                num++;
+                            }
+                            setFiles({ ...files, test: newFiles });
+                        }}
+                    >
+                        New Test
+                    </Button>
                     {Object.keys(files.test)
                         .sort()
                         .map((name) => (
@@ -559,14 +602,33 @@ export const App = () => {
                 />
             ) : hashName?.startsWith('test:') &&
               files.test[hashName.slice('test:'.length)] ? (
-                <TestView
-                    name={hashName}
+                <TestSplit
+                    // TestView
+                    name={hashName.slice('test:'.length)}
                     key={hashName}
                     test={files.test[hashName.slice('test:'.length)]}
-                    onChange={(data) => {
+                    changeName={(name) => {
+                        const old = hashName.slice('test:'.length);
+                        fetch(
+                            `/rename/elements/test/${old}:elements/test/${name}`,
+                        );
+                        const newTest = { ...files.test };
+                        newTest[name] = newTest[old];
+                        delete newTest[old];
+                        setFiles({ ...files, test: newTest });
+                        location.hash = `#test:${name}`;
+                    }}
+                    onChange={(data, text) => {
                         const newTest = { ...files.test };
                         newTest[hashName.slice('test:'.length)] = data;
                         setFiles({ ...files, test: newTest });
+                        fetch(
+                            `/elements/test/${hashName.slice('test:'.length)}`,
+                            {
+                                method: 'POST',
+                                body: text,
+                            },
+                        );
                     }}
                 />
             ) : (
@@ -582,6 +644,6 @@ const isFailedTypeTest = (t: TypeWhat) => {
     }
     return (
         // t.file.info.some((top) => errorCount(top.verify) > 0) ||
-        t.values.some((t) => !t.success)
+        t.values.some((t) => t.message != null)
     );
 };

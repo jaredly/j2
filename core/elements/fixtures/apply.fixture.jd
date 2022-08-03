@@ -18,11 +18,11 @@ toString(3.4)
 alias toString#[h99b01457a189d1392ca641b22a79c97b3eda324c]
 toString(1)
 // string
-/* toString(1) */
+/* $builtins.toString(1) */
 alias toString_h7#[h7a085b7af0cace37678c385e00d352db9204d70a]
 toString_h7(3.4)
 // string
-/* toString(3.4) */
+/* $builtins.toString(3.4) */
 
 ==[multiple args]==
 --[input]--
@@ -32,7 +32,7 @@ twoArgs(1, "hello")
 alias twoArgs#[h0f02217a611769b7c4ee218488bbd1fc16cbeeb5]
 twoArgs(1, "hello")
 // string
-/* twoArgs(1, `hello`) */
+/* $builtins.twoArgs(1, `hello`) */
 
 --[builtins]--
 //:value:twoArgs:(one: int, two: string) => string
@@ -45,7 +45,7 @@ takeSimple(simple)
 alias simple#[h65dbf0bf0a81f130770718771f42643e5fb6ac13] takeSimple#[hdc45749f4e265c12ceb62ea6db4d02a0386622c5]
 takeSimple(simple)
 // string
-/* takeSimple(simple) */
+/* $builtins.takeSimple($builtins.simple) */
 
 --[builtins]--
 //:value:takeSimple:(simple: () => string) => string
@@ -58,13 +58,13 @@ takeIntle(simple)
 
 --[output:expected]--
 alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] simple#[h65dbf0bf0a81f130770718771f42643e5fb6ac13] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takeOneArg#[h49c17c8d3d1c8610fb4d0b14b9cd3caa7248cfdd]
-takeOneArg(@error:argWrongType(expected: :(v: int) => string) simple)
+takeOneArg(@error:argWrongType(expected: :(v: int) => string, got: :() => string) simple)
 alias oneArg#[h6c7b76e2a1fd1d300d0aa0993809744ac47efe81]
 takeOneArg(oneArg)
 // string
-/* takeOneArg(oneArg) */
+/* $builtins.takeOneArg($builtins.oneArg) */
 alias takeIntle#[h99f1d88655e3e7bf225c2511cd77a0fa1b520d59]
-takeIntle(@error:argWrongType(expected: :() => int) simple)
+takeIntle(@error:argWrongType(expected: :() => int, got: :() => string) simple)
 
 --[builtins]--
 //:value:takeIntle:(simple: () => int) => string
@@ -75,8 +75,8 @@ takeIntle(@error:argWrongType(expected: :() => int) simple)
 oneArg(true)
 
 --[output:expected]--
-alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] oneArg#[h6c7b76e2a1fd1d300d0aa0993809744ac47efe81]
-oneArg(@error:argWrongType(expected: :int) true)
+alias bool#[h62d1b70cb3ae567d8df7d48fe634fd37fd0f5150] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] oneArg#[h6c7b76e2a1fd1d300d0aa0993809744ac47efe81]
+oneArg(@error:argWrongType(expected: :int, got: :bool) true)
 
 ==[wrong number of args]==
 --[input:shouldFail]--
@@ -118,11 +118,11 @@ take10Arg(tenArg)
 alias intArg#[h67789f568964fa53a2df27ab843b718d0f9252f0] takeIntArg#[hbbad4dcddf49fa76dadb8708898a93677da48de3]
 takeIntArg(intArg)
 // string
-/* takeIntArg(intArg) */
+/* $builtins.takeIntArg($builtins.intArg) */
 alias take10Arg#[h35f7ae1b4d73863baeacd76e318976ba557137da] tenArg#[h28bcd0de96d1861d032f20f5229c3988e2b468dc]
 take10Arg(tenArg)
 // string
-/* take10Arg(tenArg) */
+/* $builtins.take10Arg($builtins.tenArg) */
 
 ==[variance 2]==
 --[input:shouldFail]--
@@ -132,7 +132,7 @@ takeIntArg(tenArg)
 --[output:expected]--
 alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] takeIntArg#[hbbad4dcddf49fa76dadb8708898a93677da48de3] tenArg#[h28bcd0de96d1861d032f20f5229c3988e2b468dc]
 // At the first level we reverse variance
-takeIntArg(@error:argWrongType(expected: :(v: int) => string) tenArg)
+takeIntArg(@error:argWrongType(expected: :(v: int) => string, got: :(v: 10) => string) tenArg)
 
 ==[variance 3]==
 --[input]--
@@ -142,7 +142,7 @@ take10Arg(intArg)
 alias intArg#[h67789f568964fa53a2df27ab843b718d0f9252f0] take10Arg#[h35f7ae1b4d73863baeacd76e318976ba557137da]
 take10Arg(intArg)
 // string
-/* take10Arg(intArg) */
+/* $builtins.take10Arg($builtins.intArg) */
 
 ==[level 2]==
 --[input]--
@@ -153,11 +153,11 @@ take10ArgTaker(take10Arg)
 alias takeIntArg#[hbbad4dcddf49fa76dadb8708898a93677da48de3] takeIntArgTaker#[h614d6f0fc25f7afa2b36bae14edc03f26a27f6f3]
 takeIntArgTaker(takeIntArg)
 // string
-/* takeIntArgTaker(takeIntArg) */
+/* $builtins.takeIntArgTaker($builtins.takeIntArg) */
 alias take10Arg#[h35f7ae1b4d73863baeacd76e318976ba557137da] take10ArgTaker#[hbaaa12ffbadf2f6368bb7391fbfb5469e9deddbe]
 take10ArgTaker(take10Arg)
 // string
-/* take10ArgTaker(take10Arg) */
+/* $builtins.take10ArgTaker($builtins.take10Arg) */
 
 ==[level 2 good]==
 --[input]--
@@ -167,12 +167,17 @@ takeIntArgTaker(take10Arg)
 alias take10Arg#[h35f7ae1b4d73863baeacd76e318976ba557137da] takeIntArgTaker#[h614d6f0fc25f7afa2b36bae14edc03f26a27f6f3]
 takeIntArgTaker(take10Arg)
 // string
-/* takeIntArgTaker(take10Arg) */
+/* $builtins.takeIntArgTaker($builtins.take10Arg) */
 
 ==[level 2 bad]==
 --[input:shouldFail]--
 take10ArgTaker(takeIntArg)
 
 --[output:expected]--
-alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] take10ArgTaker#[hbaaa12ffbadf2f6368bb7391fbfb5469e9deddbe] takeIntArg#[hbbad4dcddf49fa76dadb8708898a93677da48de3]
-take10ArgTaker(@error:argWrongType(expected: :(fn: (v: 10) => string) => string) takeIntArg)
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] take10ArgTaker#[hbaaa12ffbadf2f6368bb7391fbfb5469e9deddbe] takeIntArg#[hbbad4dcddf49fa76dadb8708898a93677da48de3]
+take10ArgTaker(
+    @error:argWrongType(
+        expected: :(fn: (v: 10) => string) => string,
+        got: :(fn: (v: int) => string) => string,
+    ) takeIntArg,
+)

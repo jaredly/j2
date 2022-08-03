@@ -20,6 +20,9 @@ import {
     DecType,
     DecExpr,
     Expression,
+    TypeAbstraction,
+    TBargs,
+    TBArg,
     Lambda,
     LArgs,
     LArg,
@@ -82,6 +85,7 @@ import {
     TypeApplicationSuffix,
     TypeAppVbls,
     AwaitSuffix,
+    ArrowSuffix,
     BinOpRight,
     TApply,
     TApply_inner,
@@ -92,8 +96,6 @@ import {
     TArgs,
     TArg,
     TVars,
-    TBargs,
-    TBArg,
     TParens,
     TComma,
     TEnum,
@@ -173,6 +175,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | CommaExpr | [CommaExpr | null, Ctx];
     CommaExprPost?: (node: CommaExpr, ctx: Ctx) => null | CommaExpr;
+    ArrowSuffix?: (
+        node: ArrowSuffix,
+        ctx: Ctx,
+    ) => null | false | ArrowSuffix | [ArrowSuffix | null, Ctx];
+    ArrowSuffixPost?: (node: ArrowSuffix, ctx: Ctx) => null | ArrowSuffix;
     AwaitSuffix?: (
         node: AwaitSuffix,
         ctx: Ctx,
@@ -501,6 +508,14 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | TypeAppVbls | [TypeAppVbls | null, Ctx];
     TypeAppVblsPost?: (node: TypeAppVbls, ctx: Ctx) => null | TypeAppVbls;
+    TypeAbstraction?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | TypeAbstraction | [TypeAbstraction | null, Ctx];
+    TypeAbstractionPost?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | TypeAbstraction;
     If?: (node: If, ctx: Ctx) => null | false | If | [If | null, Ctx];
     IfPost?: (node: If, ctx: Ctx) => null | If;
     IfYes?: (
@@ -813,6 +828,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Suffix | [Suffix | null, Ctx];
     SuffixPost_AwaitSuffix?: (node: AwaitSuffix, ctx: Ctx) => null | Suffix;
+    Suffix_ArrowSuffix?: (
+        node: ArrowSuffix,
+        ctx: Ctx,
+    ) => null | false | Suffix | [Suffix | null, Ctx];
+    SuffixPost_ArrowSuffix?: (node: ArrowSuffix, ctx: Ctx) => null | Suffix;
     Toplevel_Aliases?: (
         node: Aliases,
         ctx: Ctx,
@@ -841,6 +861,14 @@ export type Visitor<Ctx> = {
         node: TypeAlias,
         ctx: Ctx,
     ) => null | TypeToplevel;
+    Expression_TypeAbstraction?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_TypeAbstraction?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | Expression;
     Expression_Lambda?: (
         node: Lambda,
         ctx: Ctx,
@@ -1138,6 +1166,14 @@ export type Visitor<Ctx> = {
         node: CommaExpr,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
+    AllTaggedTypes_ArrowSuffix?: (
+        node: ArrowSuffix,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_ArrowSuffix?: (
+        node: ArrowSuffix,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
     AllTaggedTypes_AwaitSuffix?: (
         node: AwaitSuffix,
         ctx: Ctx,
@@ -1391,6 +1427,14 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_TypeAppVbls?: (
         node: TypeAppVbls,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_TypeAbstraction?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_TypeAbstraction?: (
+        node: TypeAbstraction,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_If?: (
@@ -2026,6 +2070,219 @@ export const transformDecType = <Ctx>(
     node = updatedNode;
     if (visitor.DecTypePost) {
         const transformed = visitor.DecTypePost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformTBArg = <Ctx>(
+    node: TBArg,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TBArg => {
+    if (!node) {
+        throw new Error('No TBArg provided');
+    }
+
+    const transformed = visitor.TBArg ? visitor.TBArg(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$bound = null;
+        const updatedNode$bound$current = node.bound;
+        if (updatedNode$bound$current != null) {
+            const updatedNode$bound$1$ = transformType(
+                updatedNode$bound$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$bound$1$ !== updatedNode$bound$current;
+            updatedNode$bound = updatedNode$bound$1$;
+        }
+
+        let updatedNode$default_ = null;
+        const updatedNode$default_$current = node.default_;
+        if (updatedNode$default_$current != null) {
+            const updatedNode$default_$1$ = transformType(
+                updatedNode$default_$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 ||
+                updatedNode$default_$1$ !== updatedNode$default_$current;
+            updatedNode$default_ = updatedNode$default_$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                bound: updatedNode$bound,
+                default_: updatedNode$default_,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TBArgPost) {
+        const transformed = visitor.TBArgPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformTBargs = <Ctx>(
+    node: TBargs,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TBargs => {
+    if (!node) {
+        throw new Error('No TBargs provided');
+    }
+
+    const transformed = visitor.TBargs ? visitor.TBargs(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformTBArg(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TBargsPost) {
+        const transformed = visitor.TBargsPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformTypeAbstraction = <Ctx>(
+    node: TypeAbstraction,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TypeAbstraction => {
+    if (!node) {
+        throw new Error('No TypeAbstraction provided');
+    }
+
+    const transformed = visitor.TypeAbstraction
+        ? visitor.TypeAbstraction(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$args = transformTBargs(node.args, visitor, ctx);
+        changed1 = changed1 || updatedNode$args !== node.args;
+
+        const updatedNode$inner = transformExpression(node.inner, visitor, ctx);
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                args: updatedNode$args,
+                inner: updatedNode$inner,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TypeAbstractionPost) {
+        const transformed = visitor.TypeAbstractionPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -6212,6 +6469,78 @@ export const transformAwaitSuffix = <Ctx>(
     return node;
 };
 
+export const transformArrowSuffix = <Ctx>(
+    node: ArrowSuffix,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ArrowSuffix => {
+    if (!node) {
+        throw new Error('No ArrowSuffix provided');
+    }
+
+    const transformed = visitor.ArrowSuffix
+        ? visitor.ArrowSuffix(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$name = transformIdentifier(node.name, visitor, ctx);
+        changed1 = changed1 || updatedNode$name !== node.name;
+
+        let updatedNode$args = null;
+        const updatedNode$args$current = node.args;
+        if (updatedNode$args$current != null) {
+            const updatedNode$args$1$ = transformCallSuffix(
+                updatedNode$args$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$args$1$ !== updatedNode$args$current;
+            updatedNode$args = updatedNode$args$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                name: updatedNode$name,
+                args: updatedNode$args,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ArrowSuffixPost) {
+        const transformed = visitor.ArrowSuffixPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformSuffix = <Ctx>(
     node: Suffix,
     visitor: Visitor<Ctx>,
@@ -6295,6 +6624,25 @@ export const transformSuffix = <Ctx>(
             }
             break;
         }
+
+        case 'ArrowSuffix': {
+            const transformed = visitor.Suffix_ArrowSuffix
+                ? visitor.Suffix_ArrowSuffix(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -6312,10 +6660,16 @@ export const transformSuffix = <Ctx>(
             break;
         }
 
+        case 'AwaitSuffix': {
+            updatedNode = transformAwaitSuffix(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformAwaitSuffix(node, visitor, ctx);
+            const updatedNode$0node = transformArrowSuffix(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -6345,6 +6699,16 @@ export const transformSuffix = <Ctx>(
         case 'AwaitSuffix': {
             const transformed = visitor.SuffixPost_AwaitSuffix
                 ? visitor.SuffixPost_AwaitSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ArrowSuffix': {
+            const transformed = visitor.SuffixPost_ArrowSuffix
+                ? visitor.SuffixPost_ArrowSuffix(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -7110,6 +7474,25 @@ export const transformExpression = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
+        case 'TypeAbstraction': {
+            const transformed = visitor.Expression_TypeAbstraction
+                ? visitor.Expression_TypeAbstraction(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Lambda': {
             const transformed = visitor.Expression_Lambda
                 ? visitor.Expression_Lambda(node, ctx)
@@ -7133,6 +7516,12 @@ export const transformExpression = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
+        case 'TypeAbstraction': {
+            updatedNode = transformTypeAbstraction(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Lambda': {
             updatedNode = transformLambda(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -7149,6 +7538,16 @@ export const transformExpression = <Ctx>(
     }
 
     switch (updatedNode.type) {
+        case 'TypeAbstraction': {
+            const transformed = visitor.ExpressionPost_TypeAbstraction
+                ? visitor.ExpressionPost_TypeAbstraction(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
         case 'Lambda': {
             const transformed = visitor.ExpressionPost_Lambda
                 ? visitor.ExpressionPost_Lambda(updatedNode, ctx)
@@ -7827,158 +8226,6 @@ export const transformTLambda = <Ctx>(
     node = updatedNode;
     if (visitor.TLambdaPost) {
         const transformed = visitor.TLambdaPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformTBArg = <Ctx>(
-    node: TBArg,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): TBArg => {
-    if (!node) {
-        throw new Error('No TBArg provided');
-    }
-
-    const transformed = visitor.TBArg ? visitor.TBArg(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        let updatedNode$bound = null;
-        const updatedNode$bound$current = node.bound;
-        if (updatedNode$bound$current != null) {
-            const updatedNode$bound$1$ = transformType(
-                updatedNode$bound$current,
-                visitor,
-                ctx,
-            );
-            changed1 =
-                changed1 || updatedNode$bound$1$ !== updatedNode$bound$current;
-            updatedNode$bound = updatedNode$bound$1$;
-        }
-
-        let updatedNode$default_ = null;
-        const updatedNode$default_$current = node.default_;
-        if (updatedNode$default_$current != null) {
-            const updatedNode$default_$1$ = transformType(
-                updatedNode$default_$current,
-                visitor,
-                ctx,
-            );
-            changed1 =
-                changed1 ||
-                updatedNode$default_$1$ !== updatedNode$default_$current;
-            updatedNode$default_ = updatedNode$default_$1$;
-        }
-
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                bound: updatedNode$bound,
-                default_: updatedNode$default_,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.TBArgPost) {
-        const transformed = visitor.TBArgPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformTBargs = <Ctx>(
-    node: TBargs,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): TBargs => {
-    if (!node) {
-        throw new Error('No TBargs provided');
-    }
-
-    const transformed = visitor.TBargs ? visitor.TBargs(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
-        let updatedNode$items = node.items;
-        {
-            let changed2 = false;
-            const arr1 = node.items.map((updatedNode$items$item1) => {
-                const result = transformTBArg(
-                    updatedNode$items$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$items$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$items = arr1;
-                changed1 = true;
-            }
-        }
-
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                loc: updatedNode$loc,
-                items: updatedNode$items,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.TBargsPost) {
-        const transformed = visitor.TBargsPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -11578,6 +11825,25 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'ArrowSuffix': {
+            const transformed = visitor.AllTaggedTypes_ArrowSuffix
+                ? visitor.AllTaggedTypes_ArrowSuffix(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'AwaitSuffix': {
             const transformed = visitor.AllTaggedTypes_AwaitSuffix
                 ? visitor.AllTaggedTypes_AwaitSuffix(node, ctx)
@@ -12189,6 +12455,25 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'TypeAppVbls': {
             const transformed = visitor.AllTaggedTypes_TypeAppVbls
                 ? visitor.AllTaggedTypes_TypeAppVbls(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'TypeAbstraction': {
+            const transformed = visitor.AllTaggedTypes_TypeAbstraction
+                ? visitor.AllTaggedTypes_TypeAbstraction(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -13132,6 +13417,12 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'ArrowSuffix': {
+            updatedNode = transformArrowSuffix(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'AwaitSuffix': {
             updatedNode = transformAwaitSuffix(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -13330,6 +13621,12 @@ export const transformAllTaggedTypes = <Ctx>(
 
         case 'TypeAppVbls': {
             updatedNode = transformTypeAppVbls(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'TypeAbstraction': {
+            updatedNode = transformTypeAbstraction(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -13670,6 +13967,16 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'ArrowSuffix': {
+            const transformed = visitor.AllTaggedTypesPost_ArrowSuffix
+                ? visitor.AllTaggedTypesPost_ArrowSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
         case 'AwaitSuffix': {
             const transformed = visitor.AllTaggedTypesPost_AwaitSuffix
                 ? visitor.AllTaggedTypesPost_AwaitSuffix(updatedNode, ctx)
@@ -14002,6 +14309,16 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'TypeAppVbls': {
             const transformed = visitor.AllTaggedTypesPost_TypeAppVbls
                 ? visitor.AllTaggedTypesPost_TypeAppVbls(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAbstraction': {
+            const transformed = visitor.AllTaggedTypesPost_TypeAbstraction
+                ? visitor.AllTaggedTypesPost_TypeAbstraction(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

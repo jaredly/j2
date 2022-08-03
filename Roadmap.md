@@ -15,14 +15,142 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+# Farther out
+
+What do I think about serialization?
+anything `eq` can be ser/de'd right?
+
+OHH ok so .. is there a way to represent all of json, in-world?
+I might have to wrap it a ton, which I don't love.
+BUT on the other hand, I could specify some serialization bonanzas ...
+
+
+Partying with the movies.roc example
+- [x] need comments, yes definitely
+- [ ] I think I want to allow local type aliases? Can't see why not.
+- [ ] need array support!
+- [x] and a `->` syntax would be super nice. `a->b` is `b(a)`, `a->b(c)` is `b(a, c)`
+
+ok, I think I want to really get serious about type inference.
+
+```
+
+@serde:tag("type")
+@serde:recordInline()
+type Something = [
+	`Person({name: string}) |
+	`Animal({age: int})
+]
+
+I THINK ... will I need to specify that, in order for serde to account for
+... specializations ... it will need to ..OH ok.
+So, the basic `toJSONString<T: eq>(a)` will just jsonify it.
+and `fromJSONString<T: eq>(a)` will un-jsonify it.
+
+but you can .... say ..... "macrofy me baby"
+let (ser, de) = $serde(: Something)
+
+and it'll do all the magic ... and you can view the result?
+like it'll be
+
+@macro:serde(: Something)
+thisistheresultofthemacro
+
+```
+
+## Things to do before letting other people play with it
+
+- [x] make int + 2 + 3 match `int`
+- [x] hmmm clicking off of a dealio and onto another currently jolts the whole thing (PERFF) such that you lose your place.
+	- [ ] fix the perf
+		- eh
+	- [x] fix the selection loss
+- [x] transitive test dependencies aren't updated until you focus them?
+- [ ] oh record access, why don't I have that yet
+- [ ] make deepEqual a thing. thanks.
+- [ ] namespace globals, to be sure
+
+## Should I venture into arrays?
+
+## Eff paper discoveries
+
+- [x] I really want to support `Task<What>`, not just `Task<[What]>`
+	- inferTaskType I think is the spot
+- [x] auto-inference is letting me down somehow
+	OH it's only running during the analyze dealio, and my generalized inference is *not* up to
+	the task of filling in
+
+## UXYZ
+
+- [x] underline errors again
+- [x] syntax errors should not delete your work
+- [x] lets hide all the IDs
+	- [x] but we need to still color based on sym, no joke
+- [x] and lets hide all error decorators. Just use them to underline stuff.
+- [x] and then, let's do a bunch of nice hover tooltips!
+	- [x] give me types (as well as highlighting the area of effect)
+	- also, if you like select some bunch of stuff, let's expand the selection to the nearest thing that makes sense (??)
+	- [x] Get the error annotations up in the house! Print them out, for showre
+
+
 ## Next little minute
+
+- [x] on first load of the TestSplit, nothing works!
+	Or at least, several things don't work. Why??
+- [x] WOW tail recusion is broken? or something???
+- [x] highlight hashes to reduce noise
+- [x] colorize vbls by sym!
+- [x] SHOW JS RESULT! Gotta have it.
+- [x] ok folks I need to allow generic functions. for realsies.
+- [x] HMMM so enum type bounds, means that `expandEnumCases` needs to be able to indicate that we
+	have unresolved, but potentially fine parts of the deal.
+- [ ] preserve comments in my TestSplit dealio
+- [ ] ohhh now we get into equalllll gotta gen an equalityier
+	- well not quite! I can dodge again.
+- [ ] bUT what about, making an accessor syntax, and allowing it to drill through enums?
+	- 🤔 but oh actually 'Return(v) <- how to access v?
+	- maybe I'll make a `.payload` and allow you to access an enum's payload that way?
+
+VERIFY TASK + GENERIC
+- [ ] need to make it impossible to apply a generic that would result in an invalid enum type.
+	- so ... when applying the arguments, calculate the resulting type, and see if anything comes up bad?
+		sounds reasonable.
+
+- [ ] it would be quite nice if I could infer the type variables for `withHandler`. Seems like it shouldn't be too hard, right?
 
 ### Moving forward with effect crushing
 
 - [ ] wow gotta make generic functions folks
 - [x] hoist awaits to a block-level, thanks!
 	- [x] make sure nested awaits still work
-- [ ] and then withHandler! yes please.
+- [x] and then withHandler! yes please.
+	- [x] figure out the type
+	- [x] make a third arg to Task for 'inner effects'
+	- [x] get switch case type refinement happening
+		- ooooof. how do I .. capture the fact that ... the parent ...
+			ugh I'll maybe just stick the whole switch onto the dealio.
+			don't love it.
+	- [x] see if it can all come together???
+
+NOW YES
+
+- [-] switch -> if-let simplifyer
+	- lol ok this is causing some problems!
+	<!-- - [ ] if-let needs to refine the types my good folks! no two ways about it.
+		which meeeans, we need a way to set locals in the `else` side of the if-let...
+		probably by pulling another fast one and putting the whole if on the context.
+		and makeing an `IfElse` node, that we can visitor it up on. -->
+	- ugh I'll just do the switch->iflet transition at the to-ir boundary. cleaner.
+- [x] do switch->if-let at the to-ir border. a little riskier, but I think it's fine
+- [x] get withHandler working!
+- [ ] I want things to be /much/ more introspectable, now that I'm actually doing complex computation.
+	- breakpoints? could be nice to be able to drop in a `debuggerfy()` anywhere. with a decorator? sure why not.
+	- also `log`? yeah, love it.
+- [x] response time is suffering in the large editor. I think it's time to break up into separate "editors"?
+	- definitely, one per toplevel
+	- also, what about: @break and @log / @trace
+
+
 - [ ] then we can actually start into some of those eff paper examples!
 	That would be charming.
 

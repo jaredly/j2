@@ -13,13 +13,13 @@ true
 false
 // bool
 /* false */
-alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc]
 1 == 1
 // bool
-/* 1 == 1 */
+/* 1 === 1 */
 1 == 2
 // bool
-/* 1 == 2 */
+/* 1 === 2 */
 
 ==[numbers]==
 --[input]--
@@ -51,7 +51,7 @@ alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
 alias toString#[h99b01457a189d1392ca641b22a79c97b3eda324c]
 "hello ${toString(123)}"
 // string
-/* `hello ${toString(123)}` */
+/* `hello ${$builtins.toString(123)}` */
 
 ==[right next to each other]==
 --[input]--

@@ -76,7 +76,7 @@ export const ToTast = {
     TVars({ args, inner, loc }: p.TVars, ctx: TCtx): t.TVars {
         // TODO later args can refer to previous ones in their `bound`
         // e.g <T, A: T>xyz
-        const targs = args.items.map((arg) => ctx.ToTast[arg.type](arg, ctx));
+        const targs = args.items.map((arg) => ctx.ToTast.TBArg(arg, ctx));
         let innerCtx = ctx.withLocalTypes(targs);
         return {
             type: 'TVars',
@@ -131,22 +131,21 @@ export const ToAst = {
             args: {
                 type: 'TBargs',
                 loc: type.loc,
-                items: type.args.map(
-                    ({ sym, bound, default_, loc }): p.TBArg => ({
-                        type: 'TBArg',
-                        ...ctx.printSym(sym),
-                        // label: sym.name,
-                        // hash: `#[${sym.id}]`,
-                        default_: default_
-                            ? ctx.ToAst.Type(default_, ctx)
-                            : null,
-                        bound: bound ? ctx.ToAst.Type(bound, ctx) : null,
-                        loc,
-                    }),
-                ),
+                items: type.args.map((arg) => ctx.ToAst.TBArg(arg, ctx)),
             },
             inner: ctx.ToAst.Type(type.inner, ctx),
             loc: type.loc,
+        };
+    },
+    TBArg({ sym, bound, default_, loc }: t.TVar, ctx: TACtx): p.TBArg {
+        return {
+            type: 'TBArg',
+            ...ctx.printSym(sym),
+            // label: sym.name,
+            // hash: `#[${sym.id}]`,
+            default_: default_ ? ctx.ToAst.Type(default_, ctx) : null,
+            bound: bound ? ctx.ToAst.Type(bound, ctx) : null,
+            loc,
         };
     },
 };
@@ -156,38 +155,33 @@ export const ToPP = {
         return pp.items(
             [
                 pp.args(
-                    args.items.map(({ label, hash, bound, default_, loc }) =>
-                        pp.items(
-                            [
-                                pp.atom(label, loc),
-                                pp.atom(hash, loc),
-                                bound
-                                    ? pp.items(
-                                          [
-                                              pp.atom(': ', loc),
-                                              ctx.ToPP.Type(bound, ctx),
-                                          ],
-                                          loc,
-                                      )
-                                    : null,
-                                default_
-                                    ? pp.items(
-                                          [
-                                              pp.atom(' = ', loc),
-                                              ctx.ToPP.Type(default_, ctx),
-                                          ],
-                                          loc,
-                                      )
-                                    : null,
-                            ],
-                            loc,
-                        ),
-                    ),
+                    args.items.map((arg) => ctx.ToPP.TBArg(arg, ctx)),
                     loc,
                     '<',
                     '>',
                 ),
                 ctx.ToPP.Type(inner, ctx),
+            ],
+            loc,
+        );
+    },
+    TBArg({ label, hash, bound, default_, loc }: p.TBArg, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                pp.atom(label, loc),
+                pp.atom(hash, loc),
+                bound
+                    ? pp.items(
+                          [pp.atom(': ', loc), ctx.ToPP.Type(bound, ctx)],
+                          loc,
+                      )
+                    : null,
+                default_
+                    ? pp.items(
+                          [pp.atom(' = ', loc), ctx.ToPP.Type(default_, ctx)],
+                          loc,
+                      )
+                    : null,
             ],
             loc,
         );

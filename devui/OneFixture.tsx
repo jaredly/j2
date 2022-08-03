@@ -264,6 +264,39 @@ export function OneFixture({
                         }}
                     />
                     <Card.Divider css={{ marginBlock: '$6' }} />
+                    {changed && newOutput.file.type === 'Success' ? (
+                        <>
+                            {/* <Aliases
+                                aliases={parseAliases(
+                                    newOutput.result.newOutput,
+                                )}
+                            /> */}
+                            {changed !== 'aliases' ? (
+                                <Highlight
+                                    portal={portal}
+                                    text={newOutput.text}
+                                    // TODO: pass in annotations
+                                    // info={{
+                                    //     tast: newOutput.result.checked,
+                                    //     ctx: newOutput.result.ctx,
+                                    // }}
+                                    extraLocs={(ast) => {
+                                        if (ast.type !== 'File') {
+                                            return [];
+                                        }
+
+                                        const file = processFileR(
+                                            ast,
+                                            loadedCtx,
+                                        );
+                                        const results = getTestResults(file);
+                                        return testStatuses(file, results);
+                                    }}
+                                />
+                            ) : null}
+                            <Card.Divider css={{ marginBlock: '$6' }} />
+                        </>
+                    ) : null}
                     <div style={{ position: 'relative' }}>
                         {numErrors != 0 && newOutput.file.type === 'Success' ? (
                             <TopRight
@@ -311,39 +344,6 @@ export function OneFixture({
                             </Text>
                         )}
                     </div>
-                    {changed && newOutput.file.type === 'Success' ? (
-                        <>
-                            <Card.Divider css={{ marginBlock: '$6' }} />
-                            {/* <Aliases
-                                aliases={parseAliases(
-                                    newOutput.result.newOutput,
-                                )}
-                            /> */}
-                            {changed !== 'aliases' ? (
-                                <Highlight
-                                    portal={portal}
-                                    text={newOutput.text}
-                                    // TODO: pass in annotations
-                                    // info={{
-                                    //     tast: newOutput.result.checked,
-                                    //     ctx: newOutput.result.ctx,
-                                    // }}
-                                    extraLocs={(ast) => {
-                                        if (ast.type !== 'File') {
-                                            return [];
-                                        }
-
-                                        const file = processFileR(
-                                            ast,
-                                            loadedCtx,
-                                        );
-                                        const results = getTestResults(file);
-                                        return testStatuses(file, results);
-                                    }}
-                                />
-                            ) : null}
-                        </>
-                    ) : null}
                 </Card.Body>
             </Card>
         </div>

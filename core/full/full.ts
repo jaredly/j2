@@ -3,6 +3,9 @@
 // orwait, maybe all I need is to be able to record the hash of a toplevel?
 // So, after analyze, we record the hash. then that is used from here on out.
 
+import generate from '@babel/generator';
+import * as b from '@babel/types';
+import { annotationVisitor } from '../../devui/collectAnnotations';
 import { builtinContext, FullContext } from '../ctx';
 import {
     removeErrorDecorators,
@@ -10,15 +13,12 @@ import {
     typeToplevelT,
 } from '../elements/base';
 import * as p from '../grammar/base.parser';
-import * as trat from '../transform-ast';
 import { fixComments } from '../grammar/fixComments';
+import { toId } from '../ids';
 import { iCtx } from '../ir/ir';
-import { jCtx, newExecutionContext } from '../ir/to-js';
-import {
-    transformToplevel,
-    transformType,
-    transformTypeToplevel,
-} from '../transform-tast';
+import { jCtx, NameTrack, newExecutionContext } from '../ir/to-js';
+import * as trat from '../transform-ast';
+import { transformToplevel, transformTypeToplevel } from '../transform-tast';
 import * as t from '../typed-ast';
 import {
     analyzeTop,
@@ -29,11 +29,7 @@ import {
     verifyVisitor,
 } from '../typing/analyze';
 import { printCtx } from '../typing/to-ast';
-import * as b from '@babel/types';
-import { annotationVisitor } from '../../devui/collectAnnotations';
-import { toId } from '../ids';
 import { simplify } from './simplify';
-import generate from '@babel/generator';
 
 export type TestResult = Result<FileContents>;
 export type SuccessTestResult = Success<FileContents>;
@@ -52,6 +48,7 @@ export type IrTop = {
     type: t.Type | null;
     ir: t.IBlock;
     js: b.BlockStatement;
+    id?: t.Id;
     name?: string;
 };
 
@@ -71,10 +68,13 @@ export type TypeContents = {
 };
 
 export type ToplevelInfo<Contents> = {
+    type: 'Info';
     aliases: { [key: string]: string };
+    uses: { [key: string]: true };
     contents: Contents;
     verify: Verify;
     annotations: { loc: t.Loc; text: string }[];
+    comments: p.File['comments'];
 };
 
 export type Success<Contents> = {
@@ -97,6 +97,7 @@ export const toJs = (
     ictx: ReturnType<typeof iCtx>,
     jctx: ReturnType<typeof jCtx>,
     ctx: FullContext,
+    id?: t.Id,
     name?: string,
 ): IrTop => {
     // Here's where we simplify! and then re-verify.
@@ -111,20 +112,27 @@ export const toJs = (
         ictx,
     );
     const js = jctx.ToJS.Block(ir, jctx);
-    return { ir, js, type: ctx.getType(t), name };
+    return { id, ir, js, type: ctx.getType(t), name };
 };
 
 export type ExecutionInfo = {
     terms: { [key: string]: any };
     exprs: { [key: number]: any };
+    errors: { [key: number]: Error };
 };
-export const executeFile = (file: Success<FileContents>) => {
+export const executeFile = (
+    file: Success<FileContents>,
+    shared?: { [key: string]: any },
+) => {
     const ectx = newExecutionContext(file.ctx);
-    const results: ExecutionInfo = { terms: ectx.terms, exprs: [] };
+    if (shared) {
+        ectx.terms = shared;
+    }
+    const results: ExecutionInfo = { terms: ectx.terms, exprs: [], errors: {} };
     file.info.forEach((info, i) => {
-        info.contents.irtops?.forEach((irtop) => {
+        info.contents.irtops?.forEach((irtop, j) => {
             try {
-                const res = ectx.executeJs(irtop.js, irtop.name);
+                const res = ectx.executeJs(irtop.js, irtop.name, `${i}-${j}`);
                 if (info.contents.irtops?.length === 1) {
                     results.exprs[i] = res;
                 }
@@ -132,6 +140,7 @@ export const executeFile = (file: Success<FileContents>) => {
                 console.log(`Failed to execute`);
                 console.log(err);
                 console.log(generate(irtop.js).code);
+                results.errors[i] = err as Error;
             }
         });
     });
@@ -167,6 +176,7 @@ export const processTypeFileR = (
     let ctx = baseCtx.clone();
     let pctx = printCtx(ctx);
     const aliases: { [key: string]: string } = {};
+    let at = 0;
 
     ast.toplevels.forEach((t, i) => {
         if (t.type === 'Aliases') {
@@ -191,7 +201,19 @@ export const processTypeFileR = (
                       },
                   }
                 : ctx;
-        const res = processTypeToplevel(t, maybeDebug, pctx, aliases);
+        const res = processTypeToplevel(
+            t,
+            maybeDebug,
+            pctx,
+            aliases,
+            ast.comments.filter(
+                (c) =>
+                    c[0].start.offset >= at &&
+                    (i === ast.toplevels.length - 1 ||
+                        c[0].end.offset <= t.loc.end.offset),
+            ),
+        );
+        at = t.loc.end.offset;
         info.push(res.i);
         ctx = res.ctx;
         const config = typeToplevelT(res.i.contents.top, res.ctx);
@@ -205,14 +227,17 @@ export const processFileR = (
     ast: p.File,
     baseCtx: FullContext = builtinContext,
     debugs?: { [key: number]: boolean },
+    track?: NameTrack,
+    noPrintError?: boolean,
 ): Success<FileContents> => {
     const info: ToplevelInfo<FileContents>[] = [];
     let ctx = baseCtx.clone();
-    let pctx = printCtx(ctx);
-    let jctx = jCtx(ctx);
+    let pctx = printCtx(ctx, noPrintError ? false : true);
+    let jctx = jCtx(ctx, true, track);
     let ictx = iCtx(ctx);
     const aliases: { [key: string]: string } = {};
     // TODO: load builtins?
+    let at = 0;
 
     ast.toplevels.forEach((t, i) => {
         if (t.type === 'Aliases') {
@@ -233,7 +258,22 @@ export const processFileR = (
                       },
                   }
                 : ctx;
-        const res = processToplevel(t, maybeDebug, ictx, jctx, pctx, aliases);
+        const res = processToplevel(
+            t,
+            maybeDebug,
+            ictx,
+            jctx,
+            pctx,
+            aliases,
+            ast.comments.filter(
+                (c) =>
+                    c[0].start.offset >= at &&
+                    (i === ast.toplevels.length - 1 ||
+                        c[0].end.offset <= t.loc.end.offset),
+            ),
+            noPrintError,
+        );
+        at = t.loc.end.offset;
         info.push(res.i);
         ctx = res.ctx;
         pctx = res.pctx;
@@ -247,6 +287,8 @@ export const processFile = (
     text: string,
     baseCtx?: FullContext,
     debugs?: { [key: number]: boolean },
+    track?: NameTrack,
+    noPrintError?: boolean,
 ): Result<FileContents> => {
     let ast: p.File;
     try {
@@ -258,7 +300,7 @@ export const processFile = (
             err: (err as p.SyntaxError).location,
         };
     }
-    return processFileR(ast, baseCtx, debugs);
+    return processFileR(ast, baseCtx, debugs, track, noPrintError);
 };
 
 export const processTypeToplevel = (
@@ -266,6 +308,7 @@ export const processTypeToplevel = (
     ctx: FullContext,
     pctx: ReturnType<typeof printCtx>,
     allAliases: Aliases,
+    comments: p.File['comments'],
 ): { i: ToplevelInfo<TypeContents>; ctx: FullContext } => {
     ctx.resetSym();
     const config = typeToplevel(t, ctx);
@@ -288,18 +331,22 @@ export const processTypeToplevel = (
     const refmt = pctx.ToAst.TypeToplevel(type, pctx);
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
-    transformTypeToplevel(type, annotationVisitor(annotations), ctx);
+    const uses: { [key: string]: true } = {};
+    transformTypeToplevel(type, annotationVisitor(annotations, uses), ctx);
 
     return {
         i: {
+            type: 'Info',
             contents: {
                 type: 'Type',
                 orig: t,
                 top: type,
                 refmt,
             },
+            uses,
             verify,
             annotations,
+            comments,
             aliases: newAliases(allAliases, pctx.backAliases),
         },
         ctx,
@@ -317,7 +364,10 @@ export const processToplevel = (
     jctx: ReturnType<typeof jCtx>,
     pctx: PCtx,
     allAliases: Aliases,
+    comments: p.File['comments'],
+    noPrintError = false,
 ): { i: ToplevelInfo<FileContents>; ctx: FullContext; pctx: PCtx } => {
+    ctx = ctx.toplevelConfig(null) as FullContext;
     ctx.resetSym();
     const config = typeToplevel(t, ctx);
     ctx.resetSym();
@@ -360,13 +410,26 @@ export const processToplevel = (
             top.hash = res.hash;
             config!.hash = res.hash;
         }
+    } else {
+        if (top.type === 'ToplevelLet') {
+            console.log(
+                'yeah failed to verify, sorry',
+                verify,
+                top.elements.map((m) => m.name),
+            );
+        }
     }
 
     pctx.actx = ctx;
     jctx.actx = ctx;
     ictx.actx = ctx;
 
-    const refmt = pctx.ToAst.Toplevel(top, pctx);
+    const refmt = pctx.ToAst.Toplevel(
+        noPrintError
+            ? transformToplevel(top, removeErrorDecorators(ctx), null)
+            : top,
+        pctx,
+    );
     const irtops =
         errorCount(verify) === 0
             ? top.type === 'ToplevelExpression'
@@ -378,6 +441,7 @@ export const processToplevel = (
                           ictx,
                           jctx,
                           ctx,
+                          toId((top as t.ToplevelLet).hash!, i),
                           jctx.addGlobalName(
                               toId((top as t.ToplevelLet).hash!, i),
                               el.name,
@@ -387,9 +451,10 @@ export const processToplevel = (
                 : []
             : null;
 
+    const uses: { [key: string]: true } = {};
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
-    transformToplevel(top, annotationVisitor(annotations), ctx);
+    transformToplevel(top, annotationVisitor(annotations, uses), ctx);
 
     // Ok, so here we want any extra verification.
     // Because I want to be able to ... re-run with
@@ -405,6 +470,7 @@ export const processToplevel = (
 
     return {
         i: {
+            type: 'Info',
             contents: {
                 type: 'File',
                 top,
@@ -412,8 +478,10 @@ export const processToplevel = (
                 refmt,
                 irtops,
             },
+            uses,
             verify,
             annotations,
+            comments,
             aliases: newAliases(allAliases, pctx.backAliases),
         },
         ctx,

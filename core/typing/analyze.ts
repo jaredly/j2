@@ -20,9 +20,6 @@ import { ToplevelConfig, TopTypeKind } from './to-tast';
 import { Ctx as TMCtx } from './typeMatches';
 
 export type Ctx = {
-    getTypeArgs(ref: t.RefKind): t.TVar[] | null;
-    getTopKind(idx: number): TopTypeKind | null;
-    resolveAnalyzeType(type: t.Type): t.Type | null;
     typeByName(name: string): t.Type | null;
     getDecorator(name: string): t.RefKind[];
     errorDecorators(): Id[];
@@ -201,8 +198,16 @@ export const analyzeTop = (ast: t.Toplevel, ctx: Ctx): t.Toplevel => {
 //     return transformFile(ast, analyzeVisitor(), { ctx, hit: {} });
 // };
 
+export type VError =
+    | { type: 'Dec'; dec: t.Decorator; loc: t.Loc }
+    | {
+          type: 'Blank';
+          loc: t.Loc;
+      }
+    | { type: 'TVbl'; loc: t.Loc };
+
 export type Verify = {
-    errors: t.Loc[];
+    errors: VError[];
     untypedExpression: t.Loc[];
     unresolved: {
         type: t.Loc[];
@@ -298,7 +303,8 @@ export const caseLocals = (switchType: t.Type, node: t.Case, ctx: TMCtx) => {
     return locals;
 };
 
-export const localTrackingVisitor: Visitor<TMCtx & { switchType?: t.Type }> = {
+export type LTCtx = TMCtx & { switchType?: t.Type };
+export const localTrackingVisitor: Visitor<LTCtx> = {
     Lambda(node, ctx) {
         const locals: t.Locals = [];
 
@@ -312,10 +318,14 @@ export const localTrackingVisitor: Visitor<TMCtx & { switchType?: t.Type }> = {
         return [null, ctx.withLocals(ifLocals(node, ctx as Ctx)) as Ctx];
     },
     Switch(node, ctx) {
-        return [
-            null,
-            { ...ctx, switchType: ctx.getType(node.target) ?? undefined },
-        ];
+        const res = ctx.getType(node.target);
+        if (!res) {
+            console.error(`Unable to get type for switch!`);
+        }
+        return [null, { ...ctx, switchType: res ?? undefined }];
+    },
+    TypeAbstraction(node, ctx) {
+        return [null, ctx.withLocalTypes(node.items)];
     },
     Case(node, ctx) {
         if (!ctx.switchType) {
@@ -342,11 +352,11 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
             ];
         },
         TVbl(node, ctx) {
-            results.errors.push(node.loc);
+            results.errors.push({ type: 'TVbl', loc: node.loc });
             return null;
         },
         TBlank(node) {
-            results.errors.push(node.loc);
+            results.errors.push({ type: 'Blank', loc: node.loc });
             return null;
         },
         TRef(node) {
@@ -375,7 +385,11 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
                 const id = node.id.ref.id;
                 const isError = errorDecorators.some((x) => idsEqual(x, id));
                 if (isError) {
-                    results.errors.push(node.loc);
+                    results.errors.push({
+                        type: 'Dec',
+                        dec: node,
+                        loc: node.loc,
+                    });
                 }
             }
             return null;

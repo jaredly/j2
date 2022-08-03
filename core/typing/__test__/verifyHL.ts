@@ -1,15 +1,21 @@
 import { HL } from '../../../devui/HL';
+import { refHash } from '../../typed-ast';
 import { Verify } from '../analyze';
 
 export const verifyHL = (v: Verify) => {
     const statuses: HL[] = [];
-    v.errors.forEach((loc) => {
+    v.errors.forEach((err) => {
         statuses.push({
-            loc: loc,
+            loc: err.loc,
             type: 'Error',
             prefix: {
                 text: '🙁',
-                message: `Error?`,
+                message:
+                    err.type === 'Blank'
+                        ? 'Blank'
+                        : err.type === 'TVbl'
+                        ? 'Type variable, unresolved'
+                        : refHash(err.dec.id.ref),
             },
         });
     });
@@ -19,7 +25,7 @@ export const verifyHL = (v: Verify) => {
             type: 'Error',
             prefix: {
                 text: '🖥',
-                message: `Untyped`,
+                message: `Unable to type expression`,
             },
         });
     });

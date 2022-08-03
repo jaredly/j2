@@ -1,0 +1,11 @@
+alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe]
+let _ = <A: task>(a: Task<A>) => 100
+let _ = <A: [ * ], B: [ * ]>(a: A, b: B):A => a
+let _ = <A: [ * ], B: [ * ]>(a: A, b: B):A => a
+let again = <T: [ * ]>(v: T):[ `One | T ] => v
+alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+let example = <T: task>(m: Task<[ T | `Read((), string) ], ()>) => switch m {
+    `Return => 10;
+    `Read => 20;
+    _ => 30;
+}

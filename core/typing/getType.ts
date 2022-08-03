@@ -1,5 +1,6 @@
 import { tref } from '../consts';
 import { unifiedTypes } from '../elements/apply';
+import { matchesBound } from '../elements/generics';
 import { getLocals, Locals, typeForPattern } from '../elements/pattern';
 import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
 import { transformType } from '../transform-tast';
@@ -24,18 +25,31 @@ export const applyType = (
     const symbols: { [num: number]: Type } = {};
     // So, I'm kindof allowing them to apply more?
     if (args.length < minArgs) {
-        console.log('len');
         return null;
     }
     let failed = false;
+
+    const replacers: Type[] = [];
 
     target.args.forEach((targ, i) => {
         const arg = i < args.length ? args[i] : targ.default_;
         if (arg == null) {
             failed = true;
+            return;
         }
-        symbols[targ.sym.id] = arg!;
-        if (targ.bound && !typeMatches(arg!, targ.bound, ctx, path)) {
+        symbols[targ.sym.id] = arg;
+        replacers.push(arg);
+        transformType(
+            arg,
+            {
+                TRef(node) {
+                    replacers.push(node);
+                    return null;
+                },
+            },
+            null,
+        );
+        if (targ.bound && !matchesBound(arg!, targ.bound, ctx, path)) {
             failed = true;
         }
     });
@@ -49,6 +63,10 @@ export const applyType = (
         target.inner,
         {
             Type_TRef(node, ctx) {
+                // Already applied
+                if (replacers.includes(node)) {
+                    return false;
+                }
                 if (node.ref.type === 'Local' && symbols[node.ref.sym]) {
                     return symbols[node.ref.sym];
                 }
@@ -111,6 +129,18 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 })),
                 result: res,
             };
+        }
+        case 'TypeAbstraction': {
+            let innerCtx = ctx.withLocalTypes(expr.items);
+            const inner = getType(expr.body, innerCtx);
+            return inner
+                ? {
+                      type: 'TVars',
+                      args: expr.items,
+                      inner,
+                      loc: expr.loc,
+                  }
+                : null;
         }
         case 'TypeApplication': {
             const target = getType(expr.target, ctx);

@@ -19,7 +19,7 @@ Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
 AliasItem = name:$AliasName hash:$HashRef
 AliasName = $NamespacedIdText / $binop
 
-Expression = Lambda / BinOp
+Expression = TypeAbstraction / Lambda / BinOp
 
 Identifier = text:$IdText hash:IdHash?
 
@@ -29,7 +29,7 @@ Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpressi
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
-IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
+IdText "identifier" = ![0-9] [0-9a-zA-Z_]+
 AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 `;
@@ -91,12 +91,42 @@ export const typeToplevel = (
                     name: t.name,
                     type: t.typ
                         ? ctx.ToTast.Type(t.typ, ctx)
-                        : { type: 'TBlank', loc: t.loc },
+                        : inferTopType(t.expr, ctx),
                 };
             }),
         };
     }
     return null;
+};
+
+export const inferTopType = (expr: p.Expression, ctx: Ctx): t.Type => {
+    if (expr.type === 'TypeAbstraction') {
+        const args = expr.args.items.map((t) => ctx.ToTast.TBArg(t, ctx));
+        return {
+            type: 'TVars',
+            inner: inferTopType(expr.inner, ctx.withLocalTypes(args)),
+            args: args,
+            loc: expr.loc,
+        };
+    }
+    if (expr.type === 'Lambda') {
+        return {
+            type: 'TLambda',
+            args:
+                expr.args?.items.map((t) => ({
+                    label: '',
+                    typ: t.typ
+                        ? ctx.ToTast.Type(t.typ, ctx)
+                        : { type: 'TBlank', loc: t.loc },
+                    loc: t.loc,
+                })) ?? [],
+            result: expr.res
+                ? ctx.ToTast.Type(expr.res, ctx)
+                : { type: 'TBlank', loc: expr.loc },
+            loc: expr.loc,
+        };
+    }
+    return { type: 'TBlank', loc: expr.loc };
 };
 
 export const typeFileToTast = (
@@ -253,12 +283,18 @@ export const ToTast = {
     ToplevelLet(top: p.ToplevelLet, ctx: Ctx): t.ToplevelLet {
         return {
             type: 'ToplevelLet',
-            elements: top.items.map((item) => ({
-                expr: ctx.ToTast.Expression(item.expr, ctx),
-                name: item.name,
-                loc: item.loc,
-                typ: item.typ ? ctx.ToTast.Type(item.typ, ctx) : null,
-            })),
+            elements: top.items.map((item) => {
+                const typ = item.typ ? ctx.ToTast.Type(item.typ, ctx) : null;
+                return {
+                    expr:
+                        typ?.type === 'TLambda' && item.expr.type === 'Lambda'
+                            ? ctx.ToTast.Lambda(item.expr, ctx, typ)
+                            : ctx.ToTast.Expression(item.expr, ctx),
+                    name: item.name,
+                    loc: item.loc,
+                    typ,
+                };
+            }),
             loc: top.loc,
         };
     },
@@ -425,6 +461,9 @@ export const ToPP = {
                                 : null,
                             pp.text(' = ', item.loc),
                             ctx.ToPP.Expression(item.expr, ctx),
+                            // i === top.items.length - 1
+                            //     ? pp.text(';', top.loc)
+                            //     : null,
                         ],
                         item.loc,
                     ),
@@ -436,7 +475,14 @@ export const ToPP = {
         if (top.type === 'Aliases') {
             return ctx.ToPP.Aliases(top, ctx);
         }
-        return ctx.ToPP.Expression(top, ctx);
+        return pp.items(
+            [
+                ctx.ToPP.Expression(top, ctx),
+                // pp.text(';', top.loc)
+            ],
+            top.loc,
+            'never',
+        );
     },
     Aliases(top: p.Aliases, ctx: PCtx): pp.PP {
         return pp.text(
@@ -470,8 +516,6 @@ export const ToPP = {
                 [
                     pp.text('(', identifier.loc),
                     pp.atom(
-                        // ctx.hideIds
-                        //     ? identifier.text :
                         identifier.text + (identifier.hash ?? ''),
                         identifier.loc,
                     ),
@@ -592,6 +636,13 @@ export const ToJS = {
         if (x.kind.type === 'Global') {
             const name = findBuiltinName(x.kind.id, ctx.actx);
             if (name) {
+                if (ctx.namespaced) {
+                    return b.memberExpression(
+                        b.identifier('$builtins'),
+                        b.identifier(name),
+                        false,
+                    );
+                }
                 return b.identifier(name);
             } else {
                 if (ctx.namespaced) {
@@ -628,20 +679,16 @@ export const ToJS = {
         }
         return b.identifier(`:unresovled:`);
     },
+    TypeAbstraction(
+        { loc, items, body }: t.ITypeAbstraction,
+        ctx: JCtx,
+    ): b.Expression {
+        ctx = { ...ctx, actx: ctx.actx.withLocalTypes(items) };
+        return ctx.ToJS.IExpression(body, ctx);
+    },
 };
 
 export const ToIR = {
-    TypeApplication(
-        { loc, target, args }: t.TypeApplication,
-        ctx: ICtx,
-    ): t.IExpression {
-        // ugh this is gonna mess me up, right?
-        // like, ... idk maybe I do need to keep this in IR,
-        // at least to be able to know what types things are?
-        // on the other hand, maybe I can bake types at this point?
-        // like, monomorphizing is going to happen before this.
-        return ctx.ToIR.Expression(target, ctx);
-    },
     DecoratedExpression(
         { loc, expr }: t.DecoratedExpression,
         ctx: ICtx,

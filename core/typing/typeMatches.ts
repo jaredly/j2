@@ -1,8 +1,12 @@
 import { refsEqual } from '../refsEqual';
 import { noloc } from '../consts';
-import { enumTypeMatches } from '../elements/enums';
+import {
+    enumTypeMatches,
+    isValidEnumCase,
+    isWrappedEnum,
+} from '../elements/enums';
 import { recordMatches } from '../elements/records';
-import { tvarsMatches } from '../elements/type-vbls';
+import { TVar, tvarsMatches } from '../elements/type-vbls';
 import { Id } from '../ids';
 import {
     EnumCase,
@@ -28,8 +32,9 @@ import {
     stringAddsMatch,
     stringOps,
 } from './ops';
-import { isTaskable, matchesTask } from './tasks';
+import { expandTask, isTaskable, matchesTask, maybeExpandTask } from './tasks';
 import { unifyTypes } from './unifyTypes';
+import { TopTypeKind } from './to-tast';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -53,7 +58,11 @@ export type Ctx = {
         [sym: number]: { bound: Type | null; name: string };
     }): Ctx;
     withLocals: (locals: { sym: Sym; type: Type }[], better?: boolean) => Ctx;
+    withLocalTypes: (locals: { sym: Sym; bound: Type | null }[]) => Ctx;
     typeForRecur: (idx: number) => Type | null;
+    getTypeArgs(ref: RefKind): TVar[] | null;
+    getTopKind(idx: number): TopTypeKind | null;
+    resolveAnalyzeType(type: Type): Type | null;
 };
 
 export const unifyPayloads = (
@@ -124,7 +133,14 @@ export const typeMatches = (
         candidate.type === 'TEnum' &&
         ctx.isBuiltinType(expected.target, 'Task')
     ) {
-        return matchesTask(candidate, expected.loc, expected.args, ctx);
+        expected = expandTask(expected.loc, expected.args, ctx) ?? expected;
+    }
+    if (
+        candidate.type === 'TApply' &&
+        expected.type === 'TEnum' &&
+        ctx.isBuiltinType(candidate.target, 'Task')
+    ) {
+        candidate = expandTask(candidate.loc, candidate.args, ctx) ?? candidate;
     }
 
     if (ctx.isBuiltinType(expected, 'eq')) {
@@ -228,23 +244,45 @@ export const typeMatches = (
                 )
             );
         case 'TRef':
+            if (
+                expected.type === 'TRef' &&
+                trefsEqual(candidate.ref, expected.ref)
+            ) {
+                return true;
+            }
+            if (
+                expected.type === 'TEnum' &&
+                isWrappedEnum(candidate, expected, ctx)
+            ) {
+                return true;
+            }
             // console.log('tref', candidate);
             // If this is a local ref, and it has a bound, then we can use the bound.
             if (candidate.ref.type === 'Local') {
-                // TOHHH.
-                // If we've finished our 'transform' path,
-                // now we need a mapping of syms to ... bounds
-                // instaed of using the list of scopes.
+                //     // TOHHH.
+                //     // If we've finished our 'transform' path,
+                //     // now we need a mapping of syms to ... bounds
+                //     // instaed of using the list of scopes.
+                const ref = candidate.ref;
                 const bound = ctx.getBound(candidate.ref.sym);
-                if (bound) {
-                    // console.log('got a bound', candidate, bound, expected);
-                    return typeMatches(bound, expected, ctx);
+                if (bound && isValidEnumCase(bound, ctx)) {
+                    if (expected.type === 'TEnum') {
+                        const got = expandEnumCases(expected, ctx);
+                        return (
+                            got?.bounded.some(
+                                (b) =>
+                                    b.type === 'local' &&
+                                    refsEqual(b.local.ref, ref),
+                            ) ?? false
+                        );
+                    }
                 }
+                //     if (bound) {
+                //         // console.log('got a bound', candidate, bound, expected);
+                //         return typeMatches(bound, expected, ctx);
+                //     }
             }
-            return (
-                expected.type === 'TRef' &&
-                trefsEqual(candidate.ref, expected.ref)
-            );
+            return false;
         // case 'TApply':
         //     // So TApply should get "worked out" by this point, right?
         //     // idk seems like it should.
@@ -337,41 +375,86 @@ export const typeMatches = (
     }
 };
 
+export type Unexpandable = { type: 'task'; inner: TApply } | LocalUnexpandable;
+export type LocalUnexpandable = { type: 'local'; local: TRef; bound: Type };
+
 // ok so recursion checking ... right
 // like, if we pass through the same 'recur' thing multiple times...
 export const expandEnumCases = (
     type: TEnum,
     ctx: Ctx,
     path: string[] = [],
-): null | EnumCase[] => {
+): null | { cases: EnumCase[]; bounded: Unexpandable[] } => {
     const cases: EnumCase[] = [];
+    const bounded: Unexpandable[] = [];
     for (let kase of type.cases) {
         if (kase.type === 'EnumCase') {
             cases.push(kase);
         } else {
+            let inner = path;
             const r = getRef(kase);
             if (r) {
                 const k = refHash(r.ref);
                 if (path.includes(k)) {
                     return null;
                 }
-                path = path.concat([k]);
+                inner = path.concat([k]);
             }
-            const res = ctx.resolveRefsAndApplies(kase, path);
-            if (res?.type === 'TEnum') {
+            const res = ctx.resolveRefsAndApplies(kase, inner);
+            if (res?.type === 'TRef' && res.ref.type === 'Local') {
+                const bound = ctx.getBound(res.ref.sym);
+                if (bound) {
+                    bounded.push({ type: 'local', bound, local: res });
+                } else {
+                    return null;
+                }
+            } else if (res?.type === 'TEnum') {
                 // console.log('ok next');
-                const expanded = expandEnumCases(res, ctx, path);
+                const expanded = expandEnumCases(res, ctx, inner);
                 if (!expanded) {
                     return null;
                 }
-                cases.push(...expanded);
+                cases.push(...expanded.cases);
+                bounded.push(...expanded.bounded);
             } else {
+                if (
+                    kase.type === 'TApply' &&
+                    ctx.isBuiltinType(kase.target, 'Task')
+                ) {
+                    const task = expandTask(kase.loc, kase.args, ctx);
+                    if (task) {
+                        task.cases.forEach((item) => {
+                            if (item.type === 'EnumCase') {
+                                cases.push(item);
+                            } else {
+                                // STOPSHIP: I think `bounded` needs to become `misc`?
+                                // like ... things we're not going to expand just now?
+                                // hmm maybe it'll only be `Task<xyz>` .. so maybe
+                                // we also want a `Tasks`? or something.
+                                // or maybeeee bounded needs a flag that's like "this
+                                // one is wrapped in a task"? that might be it.
+                                // bounded.push()
+                                if (item.type === 'TApply') {
+                                    bounded.push({
+                                        type: 'task',
+                                        inner: item as TApply,
+                                    });
+                                } else {
+                                    throw new Error(
+                                        `Got ${item.type}, expected a task`,
+                                    );
+                                }
+                            }
+                        });
+                        continue;
+                    }
+                }
                 return null;
             }
         }
     }
     // console.log('resolved', cases, path);
-    return cases;
+    return { cases, bounded };
 };
 
 export const getRef = (t: Type): TRef | null => {

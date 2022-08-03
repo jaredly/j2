@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { parseTypeFile, SyntaxError } from '../core/grammar/base.parser';
 import { FullContext } from '../core/ctx';
 import { noloc } from '../core/consts';
-import { AllTaggedTypeNames, parseFile } from '../core/grammar/base.parser';
+import { parseFile } from '../core/grammar/base.parser';
 import { printToString } from '../core/printer/pp';
 import { newPPCtx } from '../core/printer/to-pp';
 import {
@@ -23,8 +23,25 @@ import {
 import { HL } from './HL';
 import { Tree } from './Tree';
 import { collectAnnotations } from './collectAnnotations';
+import { highlightVisitor } from './highlightVisitor';
 
-export type Colorable = keyof Visitor<null> | 'Error' | 'Success' | 'LetName';
+export type Colorable =
+    | keyof Visitor<null>
+    | 'Error'
+    | 'Success'
+    | 'LetName'
+    | 'AwaitBang'
+    | 'Hash'
+    | 'Color0'
+    | 'Color1'
+    | 'Color2'
+    | 'Color3'
+    | 'Color4'
+    | 'Color5'
+    | 'Color6'
+    | 'Color7'
+    | 'Color8'
+    | 'Color9';
 
 export const styles: {
     [key in Colorable]?: any; // React.CSSProperties;
@@ -39,21 +56,28 @@ export const styles: {
         // 'text-overflow': 'ellipsis',
         // 'margin-bottom': '-7px',
     },
+    AwaitBang: {
+        fontWeight: 'bold',
+    },
     Error: {
-        textDecoration: 'underline',
-        textDecorationColor: '#f00',
+        'text-decoration': 'underline',
+        'text-decoration-color': '#f00',
+        'text-decoration-style': 'wavy',
     },
 };
 
 export const colors: {
     [key in Colorable]?: string;
 } = {
-    LetName: '#00f000',
-    TagDecl: '#33ff4e',
-    TRef: 'green',
-    PName: 'green',
+    Hash: 'rgba(200,200,200, 0.3)',
+    LetName: 'teal', // '#00c000',
+    TRef: 'teal', // '#00c000',
+    PName: 'teal', // '#00c000',
+    AwaitBang: 'magenta',
     String: '#afa',
     Enum: '#ff5c5c',
+    TagDecl: '#ff5c5c',
+    // '#33ff4e',
     PEnum: '#ff5c5c',
     TemplateString: '#afa',
     TemplatePair: '#afa',
@@ -67,19 +91,23 @@ export const colors: {
     TemplateWrap: 'yellow',
     Aliases: '#777',
     AliasItem: '#555',
-    // Error: 'red',
-    // Success: 'green',
 };
+
+// https://github.com/d3/d3-scale-chromatic/blob/main/src/categorical/Dark2.js
+const src = '1b9e77d95f027570b3e7298a66a61ee6ab02a6761d773366443388';
+for (let i = 0; i < src.length; i += 6) {
+    colors[`Color${(i / 6) | 0}` as Colorable] = `#${src.slice(i, i + 6)}`;
+}
 
 const n = (n: number): Loc['start'] => ({ ...noloc.start, offset: n });
 
 export const highlightLocations = (
     text: string,
-    aliases: { [key: string]: string },
     typeFile = false,
     extraLocs?: (
         v: p.File | p.TypeFile,
-        aliases: { [key: string]: string },
+        // aliases: { [key: string]: string },
+        text: string,
     ) => HL[],
 ): HL[] => {
     try {
@@ -91,7 +119,7 @@ export const highlightLocations = (
             });
             transformTypeFile(ast, highlightVisitor, locs);
             if (extraLocs) {
-                locs.push(...extraLocs(ast, aliases));
+                locs.push(...extraLocs(ast, text));
             }
         } else {
             const ast = p.parseFile(text);
@@ -100,7 +128,7 @@ export const highlightLocations = (
             });
             transformFile(ast, highlightVisitor, locs);
             if (extraLocs) {
-                locs.push(...extraLocs(ast, aliases));
+                locs.push(...extraLocs(ast, text));
             }
         }
         return locs;
@@ -141,22 +169,13 @@ export const Highlight = ({
     portal: HTMLDivElement;
     onClick?: () => void;
     typeFile?: boolean;
-    extraLocs?: (
-        v: p.File | p.TypeFile,
-        aliases: { [key: string]: string },
-    ) => HL[];
+    extraLocs?: (v: p.File | p.TypeFile, text: string) => HL[];
 }) => {
     // const [aliases, rest] = React.useMemo(() => splitAliases(text), [text]);
     // text = rest;
 
     const marked = React.useMemo(() => {
-        const locs = highlightLocations(
-            text,
-            {},
-            // aliasesFromString(aliases),
-            typeFile,
-            extraLocs,
-        );
+        const locs = highlightLocations(text, typeFile, extraLocs);
         return text.trim().length ? markUpTree(text, locs) : null;
     }, [text]);
 
@@ -256,39 +275,6 @@ export const Highlight = ({
                 : null}
         </div>
     );
-};
-
-const highlightVisitor: Visitor<Array<{ loc: Loc; type: Colorable }>> = {};
-AllTaggedTypeNames.forEach((name) => {
-    highlightVisitor[name] = (node: any, ctx): any => {
-        ctx.push({ loc: node.loc, type: name });
-        return null;
-    };
-});
-const advance = (
-    { offset, line, column }: Loc['start'],
-    v: number,
-): Loc['start'] => {
-    return {
-        offset: offset + v,
-        column: column + v,
-        line,
-    };
-};
-highlightVisitor.ToplevelLet = (node: p.ToplevelLet, ctx) => {
-    ctx.push({ loc: node.loc, type: 'ToplevelLet' });
-    const { start, end } = node.loc;
-    node.items.forEach((item) => {
-        ctx.push({
-            loc: {
-                ...node.loc,
-                start: advance(start, 4),
-                end: advance(start, 4 + item.name.length),
-            },
-            type: 'LetName',
-        });
-    });
-    return null;
 };
 
 export const typeToString = (t: Type, ctx: FullContext) => {

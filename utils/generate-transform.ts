@@ -84,9 +84,20 @@ imports.forEach((imp) => {
     });
 });
 
+const ignore = [
+    'Locals',
+    'Ctx',
+    'VisitorCtx',
+    'VError',
+    'Verify',
+    'LTCtx',
+    'AVCtx',
+    'ACtx',
+];
+
 const ctx: Ctx = {
     types: {},
-    visitorTypes: visitorNames.filter((n) => n !== 'Locals'),
+    visitorTypes: visitorNames.filter((n) => !ignore.includes(n)),
     transformers: {},
     transformerStatus: {},
 };

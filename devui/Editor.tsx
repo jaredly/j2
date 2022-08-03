@@ -1,10 +1,8 @@
 import * as React from 'react';
-import { FullContext } from '../core/ctx';
-import { Visitor } from '../core/transform-ast';
-import { Colorable, colors, highlightLocations, styles } from './Highlight';
+import * as p from '../core/grammar/base.parser';
+import { colors, highlightLocations, styles } from './Highlight';
 import { HL } from './HL';
 import { markUpTree, Tree } from './markUpTree';
-import * as p from '../core/grammar/base.parser';
 
 export const isAncestor = (child: Node | null, parent: Node) => {
     while (child) {
@@ -74,20 +72,31 @@ export const Editor = ({
     onBlur: (text: string) => void;
     onChange: (v: string) => void;
     typeFile?: boolean;
-    extraLocs?: (v: p.File | p.TypeFile) => HL[];
+    extraLocs?: (v: p.File | p.TypeFile, text: string) => HL[];
 }) => {
     const ref = React.useRef(null as null | HTMLDivElement);
     const [editing, setEditing] = React.useState(false);
 
     const history = React.useRef(initial(text));
+    const curExtraLocs = React.useRef(extraLocs);
 
     React.useEffect(() => {
-        if (getText(ref.current!) !== text) {
-            const locs = highlightLocations(text, {}, typeFile, extraLocs);
+        if (
+            getText(ref.current!) !== text ||
+            curExtraLocs.current !== extraLocs
+        ) {
+            const sel = document.getSelection()!;
+            let pos: number | null = null;
+            if (isAncestor(sel?.anchorNode, ref.current!)) {
+                pos = getPos(ref.current!);
+            }
+
+            curExtraLocs.current = extraLocs;
+            const locs = highlightLocations(text, typeFile, extraLocs);
             if (text.length) {
                 setHtmlAndClean(
                     ref.current!,
-                    treeToHtmlLines(markUpTree(text, locs)),
+                    treeToHtmlLines(markUpTree(text, locs), true),
                 );
             } else {
                 ref.current!.innerHTML = '';
@@ -100,10 +109,15 @@ export const Editor = ({
                     ref.current!.append(div);
                 });
             }
+
+            if (pos != null) {
+                setPos(ref.current!, pos);
+            }
         }
-    }, [text]);
+    }, [text, extraLocs]);
     const latest = React.useRef(text);
     latest.current = text;
+    // curExtraLocs.current = extraLocs;
 
     const prevPos = React.useRef(0);
 
@@ -136,8 +150,12 @@ export const Editor = ({
                 );
                 prevPos.current = pos;
                 obs.disconnect();
-                const locs = highlightLocations(text, {}, typeFile, extraLocs);
-                const html = treeToHtmlLines(markUpTree(text, locs));
+                const locs = highlightLocations(
+                    text,
+                    typeFile,
+                    curExtraLocs.current,
+                );
+                const html = treeToHtmlLines(markUpTree(text, locs), true);
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, pos);
                 obs.observe(ref.current!, options);
@@ -162,11 +180,13 @@ export const Editor = ({
                 obs.disconnect();
                 const locs = highlightLocations(
                     entry.text,
-                    {},
                     typeFile,
-                    extraLocs,
+                    curExtraLocs.current,
                 );
-                const html = treeToHtmlLines(markUpTree(entry.text, locs));
+                const html = treeToHtmlLines(
+                    markUpTree(entry.text, locs),
+                    true,
+                );
                 setHtmlAndClean(ref.current!, html);
                 setPos(ref.current!, entry.pos);
                 onChange(entry.text);
@@ -199,6 +219,7 @@ export const Editor = ({
                 whiteSpace: 'pre-wrap',
                 minHeight: '1.5em',
                 minWidth: 50,
+                flexShrink: 0,
             }}
             onBlur={() => {
                 setEditing(false);
@@ -266,8 +287,8 @@ export const openSpan = (hl: HL, noPrefix = false) =>
             : ''
     }>`;
 
-export const treeToHtmlLines = (tree: Tree) => {
-    return `<div>${treeToHtmlLinesInner(tree, [])}</div>`;
+export const treeToHtmlLines = (tree: Tree, noPrefix = false) => {
+    return `<div>${treeToHtmlLinesInner(tree, [], noPrefix)}</div>`;
 };
 
 export const escapeLine = (line: string) => {
@@ -277,9 +298,13 @@ export const escapeLine = (line: string) => {
         .replace(/>/g, '&gt;');
 };
 
-export const treeToHtmlLinesInner = (tree: Tree, path: HL[]): string => {
+export const treeToHtmlLinesInner = (
+    tree: Tree,
+    path: HL[],
+    noPrefix = false,
+): string => {
     // ohhh how do I deal with opening lines and closing ones
-    return `${openSpan(tree.hl)}${tree.children
+    return `${openSpan(tree.hl, noPrefix)}${tree.children
         .map((child, i) =>
             child.type === 'leaf'
                 ? `<span data-span="${child.span[0]}:${
@@ -292,7 +317,7 @@ export const treeToHtmlLinesInner = (tree: Tree, path: HL[]): string => {
                               '</div><div>' +
                               path.map((h) => openSpan(h, true)).join(''),
                       )}</span>`
-                : treeToHtmlLinesInner(child, path.concat([tree.hl])),
+                : treeToHtmlLinesInner(child, path.concat([tree.hl]), noPrefix),
         )
         .join('')}</span>`;
 };

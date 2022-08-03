@@ -14,54 +14,118 @@ import { constrainTypes, unifyTypes } from '../typing/unifyTypes';
 
 export const grammar = `
 Apply = target:Atom suffixes_drop:Suffix*
-Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix
+Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix / ArrowSuffix
 CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
+ArrowSuffix = _ "->" _ name:Identifier args:CallSuffix?
 `;
 
 export type Apply = {
     type: 'Apply';
     target: t.Expression;
     args: Array<t.Expression>;
+    arrow: boolean;
     loc: t.Loc;
 };
 
 export type IApply = {
     type: 'Apply';
     target: t.IExpression;
-    args: Array<t.IExpression>;
+    args: Array<{ expr: t.IExpression; type: t.Type }>;
     loc: t.Loc;
 };
 
 export const ToTast = {
     Apply(apply: p.Apply_inner, ctx: TCtx): t.Expression {
         let res = ctx.ToTast.Expression(apply.target, ctx);
-        while (apply.suffixes.length) {
-            const next = apply.suffixes.shift()!;
+        const suffixes = apply.suffixes.slice();
+        while (suffixes.length) {
+            const next = suffixes.shift()!;
             res = ctx.ToTast.Suffix(next, res, ctx);
         }
         return res;
     },
-    CallSuffix(suffix: p.CallSuffix, target: t.Expression, ctx: TCtx): Apply {
-        return {
-            type: 'Apply',
-            target,
-            args:
-                suffix.args?.items.map((arg) =>
-                    ctx.ToTast.Expression(arg, ctx),
-                ) ?? [],
-            loc: {
-                ...suffix.loc,
-                start: target.loc.start,
+    ArrowSuffix(suffix: p.ArrowSuffix, target: t.Expression, ctx: TCtx): Apply {
+        // const
+        const nt = ctx.ToTast.Identifier(suffix.name, ctx);
+        return maybeAutoType(
+            {
+                type: 'Apply',
+                target: nt,
+                args: [
+                    target,
+                    ...(suffix.args?.args?.items.map((arg) =>
+                        ctx.ToTast.Expression(arg, ctx),
+                    ) ?? []),
+                ],
+                loc: {
+                    ...suffix.loc,
+                    start: target.loc.start,
+                },
+                arrow: true,
             },
-        };
+            ctx,
+        );
     },
+    CallSuffix(suffix: p.CallSuffix, target: t.Expression, ctx: TCtx): Apply {
+        return maybeAutoType(
+            {
+                type: 'Apply',
+                target,
+                args:
+                    suffix.args?.items.map((arg) =>
+                        ctx.ToTast.Expression(arg, ctx),
+                    ) ?? [],
+                loc: {
+                    ...suffix.loc,
+                    start: target.loc.start,
+                },
+                arrow: false,
+            },
+            ctx,
+        );
+    },
+};
+
+export const maybeAutoType = (node: t.Apply, ctx: TCtx): t.Apply => {
+    if (node.target.type === 'Ref' && node.target.kind.type === 'Unresolved') {
+        const resolved = ctx.resolve(node.target.kind.text, null);
+        const auto = chooseAutoTypable(node, node.target, resolved, ctx);
+        if (auto) {
+            return auto;
+        }
+    }
+    const ttype = ctx.getType(node.target);
+    if (ttype?.type === 'TVars' && ttype.inner.type === 'TLambda') {
+        const argTypes = node.args.map((arg) => ctx.getType(arg));
+        if (argTypes.every(Boolean)) {
+            const auto = autoTypeApply(
+                node,
+                ttype.args,
+                ttype.inner.args.map((t) => t.typ),
+                argTypes as t.Type[],
+                ctx,
+            );
+            if (auto) {
+                Object.keys(auto.constraints).forEach((key) => {
+                    ctx.addTypeConstraint(+key, auto.constraints[+key]);
+                });
+                return auto.apply;
+            }
+        }
+    }
+
+    return node;
 };
 
 export const isOpText = (t: string) => !t.match(/^[a-zA-Z_$]/);
 
 export const maybeParenedBinop = (v: p.Expression): p.WithUnary => {
-    if (v.type === 'BinOp' || v.type === 'Lambda') {
+    if (
+        v.type === 'BinOp' ||
+        v.type === 'Lambda' ||
+        v.type === 'TypeAbstraction'
+    ) {
         return {
             type: 'ParenedExpression',
             loc: v.loc,
@@ -76,11 +140,12 @@ export const makeBinop = (
     left: p.Expression,
     right: p.Expression,
     loc: p.Loc,
+    showIds: boolean,
 ): p.Expression => {
     const opp: p.BinOpRight['op'] = {
         op: op.text,
         loc: op.loc,
-        hash: op.hash,
+        hash: showIds ? op.hash : null,
         type: 'binopWithHash',
     };
     let level = opLevel(op.text);
@@ -143,7 +208,7 @@ export const makeBinop = (
                         op: {
                             op: op.text,
                             loc: op.loc,
-                            hash: op.hash,
+                            hash: showIds ? op.hash : null,
                             type: 'binopWithHash',
                         },
                     },
@@ -167,7 +232,7 @@ export const makeBinop = (
                 op: {
                     op: op.text,
                     loc: op.loc,
-                    hash: op.hash,
+                    hash: showIds ? op.hash : null,
                     type: 'binopWithHash',
                 },
             },
@@ -180,7 +245,35 @@ export const makeApply = (
     inner: p.Expression,
     suffix: p.Suffix,
     loc: t.Loc,
+    showIds: boolean,
+    arrow = false,
 ): p.Expression => {
+    if (
+        arrow &&
+        suffix.type === 'CallSuffix' &&
+        suffix.args?.items.length &&
+        inner.type === 'Identifier'
+    ) {
+        const ninner = suffix.args.items[0];
+        suffix = {
+            type: 'ArrowSuffix',
+            args:
+                suffix.args.items.length > 1
+                    ? {
+                          type: 'CallSuffix',
+                          args: {
+                              type: 'CommaExpr',
+                              items: suffix.args.items.slice(1),
+                              loc: suffix.args.loc,
+                          },
+                          loc: suffix.args.loc,
+                      }
+                    : null,
+            loc: suffix.loc,
+            name: inner,
+        };
+        inner = ninner;
+    }
     if (
         inner.type === 'Identifier' &&
         isOpText(inner.text) &&
@@ -193,6 +286,7 @@ export const makeApply = (
             suffix.args.items[0],
             suffix.args.items[1],
             loc,
+            showIds,
         );
     }
     if (inner.type === 'Apply') {
@@ -217,7 +311,8 @@ export const makeApply = (
     if (
         inner.type === 'BinOp' ||
         inner.type === 'WithUnary' ||
-        inner.type === 'Lambda'
+        inner.type === 'Lambda' ||
+        inner.type === 'TypeAbstraction'
     ) {
         inner = {
             type: 'ParenedExpression',
@@ -233,8 +328,8 @@ export const makeApply = (
 };
 
 export const ToAst = {
-    Apply({ target, args, loc }: Apply, ctx: TACtx): p.Expression {
-        if (target.type === 'TypeApplication') {
+    Apply({ target, args, loc, arrow }: Apply, ctx: TACtx): p.Expression {
+        if (target.type === 'TypeApplication' && target.inferred) {
             const ttype = ctx.actx.getType(target.target);
             const argTypes = args.map((arg) => ctx.actx.getType(arg));
             if (
@@ -243,7 +338,13 @@ export const ToAst = {
                 ttype.inner.type === 'TLambda'
             ) {
                 const auto = autoTypeApply(
-                    { type: 'Apply', loc, args, target: target.target },
+                    {
+                        type: 'Apply',
+                        loc,
+                        args,
+                        target: target.target,
+                        arrow: false,
+                    },
                     ttype.args,
                     ttype.inner.args.map((t) => t.typ),
                     argTypes as t.Type[],
@@ -279,6 +380,8 @@ export const ToAst = {
                                 loc,
                             },
                             loc,
+                            ctx.showIds,
+                            arrow,
                         );
                     }
                 }
@@ -297,6 +400,8 @@ export const ToAst = {
                 loc,
             },
             loc,
+            ctx.showIds,
+            arrow,
         );
     },
 };
@@ -310,6 +415,16 @@ export const ToPP = {
             ],
             apply.loc,
             'never',
+        );
+    },
+    ArrowSuffix(suffix: p.ArrowSuffix, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                pp.text('->', suffix.loc),
+                ctx.ToPP.Identifier(suffix.name, ctx),
+                suffix.args ? ctx.ToPP.CallSuffix(suffix.args, ctx) : null,
+            ],
+            suffix.loc,
         );
     },
     CallSuffix(parens: p.CallSuffix, ctx: PCtx): pp.PP {
@@ -326,16 +441,37 @@ export const ToIR = {
         return {
             type: 'Apply',
             loc,
-            args: args.map((arg) => ctx.ToIR.Expression(arg, ctx)),
+            args: args.map((arg) => ({
+                expr: ctx.ToIR.Expression(arg, ctx),
+                type: ctx.actx.getType(arg) ?? tnever,
+            })),
             target: ctx.ToIR.Expression(target, ctx),
         };
     },
 };
 
+const equable = (a: t.Type, ctx: Ctx) => {
+    switch (a.type) {
+        case 'Number':
+        case 'String':
+            return true;
+        case 'TRef':
+            if (
+                ctx.isBuiltinType(a, 'int') ||
+                ctx.isBuiltinType(a, 'float') ||
+                ctx.isBuiltinType(a, 'string') ||
+                ctx.isBuiltinType(a, 'bool')
+            ) {
+                return true;
+            }
+    }
+    return false;
+};
+
 import { Ctx as JCtx } from '../ir/to-js';
 import * as b from '@babel/types';
 import { findBuiltinName } from './base';
-import { expandTask } from '../typing/tasks';
+import { expandTask, tnever } from '../typing/tasks';
 export const ToJS = {
     Apply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
         if (
@@ -344,19 +480,92 @@ export const ToJS = {
             target.kind.type === 'Global'
         ) {
             const name = findBuiltinName(target.kind.id, ctx.actx);
+            if (name === '==' || name == '!=') {
+                if (
+                    !equable(args[0].type, ctx.actx) ||
+                    !equable(args[1].type, ctx.actx)
+                ) {
+                    const inner = b.callExpression(
+                        b.memberExpression(
+                            b.identifier('$builtins'),
+                            b.identifier('equal'),
+                        ),
+                        args.map((arg) => ctx.ToJS.IExpression(arg.expr, ctx)),
+                    );
+                    if (name === '!=') {
+                        return b.unaryExpression('!', inner);
+                    }
+                    return inner;
+                }
+            }
             if (name && !name.match(/^[a-zA-Z_0-0]/)) {
                 return b.binaryExpression(
-                    name as any,
-                    ctx.ToJS.IExpression(args[0], ctx),
-                    ctx.ToJS.IExpression(args[1], ctx),
+                    name === '==' ? '===' : (name as any),
+                    ctx.ToJS.IExpression(args[0].expr, ctx),
+                    ctx.ToJS.IExpression(args[1].expr, ctx),
                 );
             }
         }
         return b.callExpression(
             ctx.ToJS.IExpression(target, ctx),
-            args.map((arg) => ctx.ToJS.IExpression(arg, ctx)),
+            args.map((arg) => ctx.ToJS.IExpression(arg.expr, ctx)),
         );
     },
+};
+
+export const chooseAutoTypable = (
+    node: t.Apply,
+    target: t.Ref,
+    resolved: t.RefKind[],
+    ctx: Ctx,
+) => {
+    const argTypes = node.args.map((arg) => ctx.getType(arg));
+    if (argTypes.every(Boolean)) {
+        for (let option of resolved) {
+            const ttype = ctx.getType({
+                ...target,
+                kind: option,
+            });
+            if (
+                ttype?.type === 'TLambda' &&
+                ttype.args.length === argTypes.length
+            ) {
+                // Will return 'null' if any types don't match
+                const constraints = constraintsForApply(
+                    argTypes as t.Type[],
+                    ttype.args,
+                    ctx,
+                );
+                if (constraints) {
+                    Object.keys(constraints).forEach((key) => {
+                        ctx.addTypeConstraint(+key, constraints[+key]);
+                    });
+                    return {
+                        ...node,
+                        target: { ...target, kind: option },
+                    };
+                }
+            }
+            if (ttype?.type === 'TVars' && ttype.inner.type === 'TLambda') {
+                const typed = autoTypeApply(
+                    {
+                        ...node,
+                        target: { ...target, kind: option },
+                    },
+                    ttype.args,
+                    ttype.inner.args.map((t) => t.typ),
+                    argTypes as t.Type[],
+                    ctx,
+                );
+                if (typed) {
+                    Object.keys(typed.constraints).forEach((key) => {
+                        ctx.addTypeConstraint(+key, typed.constraints[+key]);
+                    });
+                    return typed.apply;
+                }
+            }
+        }
+    }
 };
 
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
@@ -367,63 +576,14 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         ) {
             const resolved = ctx.resolve(node.target.kind.text, null);
             if (resolved.length > 1) {
-                const argTypes = node.args.map((arg) => ctx.getType(arg));
-                if (argTypes.every(Boolean)) {
-                    for (let option of resolved) {
-                        const ttype = ctx.getType({
-                            ...node.target,
-                            kind: option,
-                        });
-                        if (
-                            ttype?.type === 'TLambda' &&
-                            ttype.args.length === argTypes.length
-                        ) {
-                            // Will return 'null' if any types don't match
-                            const constraints = constraintsForApply(
-                                argTypes as t.Type[],
-                                ttype.args,
-                                ctx,
-                            );
-                            if (constraints) {
-                                Object.keys(constraints).forEach((key) => {
-                                    ctx.addTypeConstraint(
-                                        +key,
-                                        constraints[+key],
-                                    );
-                                });
-                                return {
-                                    ...node,
-                                    target: { ...node.target, kind: option },
-                                };
-                            }
-                        }
-                        if (
-                            ttype?.type === 'TVars' &&
-                            ttype.inner.type === 'TLambda'
-                        ) {
-                            const typed = autoTypeApply(
-                                {
-                                    ...node,
-                                    target: { ...node.target, kind: option },
-                                },
-                                ttype.args,
-                                ttype.inner.args.map((t) => t.typ),
-                                argTypes as t.Type[],
-                                ctx,
-                            );
-                            if (typed) {
-                                Object.keys(typed.constraints).forEach(
-                                    (key) => {
-                                        ctx.addTypeConstraint(
-                                            +key,
-                                            typed.constraints[+key],
-                                        );
-                                    },
-                                );
-                                return typed.apply;
-                            }
-                        }
-                    }
+                const auto = chooseAutoTypable(
+                    node,
+                    node.target,
+                    resolved,
+                    ctx,
+                );
+                if (auto) {
+                    return auto;
                 }
             }
             // Check if there are multiples
@@ -476,6 +636,19 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         }
         if (ttype.type !== 'TLambda') {
             if (ttype.type === 'TVars') {
+                // return {
+                //     ...node,
+                //     target: {
+                //         type: 'TypeApplication',
+                //         loc: node.loc,
+                //         target: node.target,
+                //         inferred: true,
+                //         args: ttype.args.map((t) => ({
+                //             type: 'TBlank',
+                //             loc: node.loc,
+                //         })),
+                //     },
+                // };
                 return {
                     ...node,
                     target: decorate(
@@ -523,6 +696,15 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         },
                         loc: noloc,
                     } as t.Decorator['args'][0],
+                    {
+                        label: 'got',
+                        arg: {
+                            type: 'DType',
+                            loc: noloc,
+                            typ: at,
+                        },
+                        loc: noloc,
+                    } as t.Decorator['args'][0],
                     ...(taskEnum
                         ? [
                               {
@@ -536,15 +718,6 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                               } as t.Decorator['args'][0],
                           ]
                         : []),
-                    {
-                        label: 'got',
-                        arg: {
-                            type: 'DType',
-                            loc: noloc,
-                            typ: at,
-                        },
-                        loc: noloc,
-                    } as t.Decorator['args'][0],
                 ]);
             }
             return arg;
@@ -680,6 +853,7 @@ export const autoTypeApply = (
             target: {
                 type: 'TypeApplication',
                 target: node.target,
+                inferred: true,
                 args: vars.map((arg) =>
                     unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
                 ),

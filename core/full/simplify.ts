@@ -2,7 +2,12 @@ import { FullContext } from '../ctx';
 import { noloc } from '../consts';
 import { transformExpression, transformStmt, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { errorCount, initVerify, verifyVisitor } from '../typing/analyze';
+import {
+    errorCount,
+    initVerify,
+    localTrackingVisitor,
+    verifyVisitor,
+} from '../typing/analyze';
 import { analyzeVisitor } from '../typing/analyze.gen';
 import { typeMatches } from '../typing/typeMatches';
 import * as b from '@babel/types';
@@ -11,9 +16,12 @@ import { awaitExpr } from '../elements/awaits';
 import { printCtx } from '../typing/to-ast';
 import { newPPCtx } from '../printer/to-pp';
 import { printToString } from '../printer/pp';
+import { asSimple } from '../elements/switchs';
+import { patternIsExhaustive } from '../elements/exhaustive';
+import { getLocals } from '../elements/pattern';
 // import { reduceAwaits } from '../elements/awaits';
 
-type SCtx = FullContext & { tmpSym: number };
+type SCtx = FullContext & { tmpSym: number; switchType?: t.Type };
 
 const makeSuper = (
     vtype: t.Type,
@@ -68,7 +76,72 @@ const makeSuper = (
     // ])
 };
 
+const switchToIfLets: Visitor<SCtx> = {
+    ...(localTrackingVisitor as any as Visitor<SCtx>),
+    Expression_Switch(node, ctx) {
+        // So we could techincally allow shenanigans if only the very last
+        // case is complex. but whatever
+        // ctx.debugger();
+        const t = ctx.getType(node.target);
+        if (
+            node.cases.length > 1 &&
+            node.cases.every(
+                (k) =>
+                    asSimple(k.pat) ||
+                    (t && patternIsExhaustive(k.pat, t, ctx)),
+            )
+        ) {
+            return null;
+        }
+        const cases = node.cases.slice();
+        const last = cases.pop()!;
+        let inner: t.If | t.Block = {
+            type: 'Block',
+            stmts: [
+                {
+                    type: 'Let',
+                    expr: node.target,
+                    pat: last.pat,
+                    loc: last.loc,
+                },
+                last.expr,
+            ],
+            loc: last.loc,
+        };
+        while (cases.length) {
+            const next = cases.pop()!;
+            inner = {
+                type: 'If',
+                loc: next.loc,
+                yes: {
+                    type: 'IfYes',
+                    conds: [
+                        {
+                            type: 'Let',
+                            expr: node.target,
+                            pat: next.pat,
+                            loc: next.loc,
+                        },
+                    ],
+                    block:
+                        next.expr.type === 'Block'
+                            ? next.expr
+                            : {
+                                  type: 'Block',
+                                  stmts: [next.expr],
+                                  loc: next.loc,
+                              },
+                    loc: next.loc,
+                },
+                no: inner,
+            };
+        }
+        return inner;
+    },
+};
+
 const superify: Visitor<SCtx> = {
+    ...(localTrackingVisitor as any as Visitor<SCtx>),
     Apply(node, ctx) {
         let changed = false;
         const t = ctx.getType(node.target);
@@ -101,14 +174,21 @@ const superify: Visitor<SCtx> = {
 };
 
 const reduceAwaitVisitor: Visitor<SCtx> = {
+    ...(localTrackingVisitor as any as Visitor<SCtx>),
     Lambda(node, ctx) {
+        const locals: t.Locals = [];
+
+        node.args.forEach((arg) => getLocals(arg.pat, arg.typ, locals, ctx));
+        ctx = ctx.withLocals(locals) as SCtx;
+
         const changed = awaitExpr(node.body, ctx);
         // do your thing
-        return changed ? { ...node, body: changed.expr } : null;
+        return [changed ? { ...node, body: changed.expr } : null, ctx];
     },
 };
 
 const liftStmts: Visitor<SCtx> = {
+    ...(localTrackingVisitor as any as Visitor<SCtx>),
     Block(node, ctx) {
         const stmts: t.Stmt[] = [];
         let changed = false;
@@ -167,6 +247,9 @@ const liftStmts: Visitor<SCtx> = {
                         Block(node, ctx) {
                             return false;
                         },
+                        Switch(node, ctx) {
+                            return false;
+                        },
                         Expression(node, path) {
                             return [null, path.concat([node.type])];
                         },
@@ -179,7 +262,12 @@ const liftStmts: Visitor<SCtx> = {
     },
 };
 
-const visitors: Visitor<SCtx>[] = [liftStmts, superify, reduceAwaitVisitor];
+const visitors: Visitor<SCtx>[] = [
+    liftStmts,
+    superify,
+    reduceAwaitVisitor,
+    // switchToIfLets,
+];
 
 export const debugExpr = (expr: t.Expression, ctx: FullContext) => {
     const pctx = printCtx(ctx);
@@ -189,7 +277,7 @@ export const debugExpr = (expr: t.Expression, ctx: FullContext) => {
 };
 
 export const simplify = (expr: t.Expression, ctx: FullContext) => {
-    visitors.forEach((visitor) => {
+    visitors.forEach((visitor, i) => {
         const changed = transformExpression(
             transformExpression(expr, visitor, { ...ctx, tmpSym: 1000 }),
             analyzeVisitor(),
@@ -201,7 +289,7 @@ export const simplify = (expr: t.Expression, ctx: FullContext) => {
             console.error(`Visitor produced errors`);
             console.log(v);
             console.log(debugExpr(changed, ctx));
-            // return;
+            return;
         }
         expr = changed;
     });

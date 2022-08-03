@@ -326,6 +326,7 @@ export const ToPP = {
                         pp.atom(name, typ.loc),
                         pp.atom(' = ', typ.loc),
                         ctx.ToPP.Type(typ, ctx),
+                        // i === items.length - 1 ? pp.atom(';', loc) : null,
                     ],
                     loc,
                 ),

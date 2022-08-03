@@ -13,7 +13,7 @@ import { Ctx as ICtx } from '../ir/ir';
 
 export const grammar = `
 Lambda = "(" _ args:LArgs? _ ")" _ res:(":" _ Type)? _ "=>" _ body:Expression
-LArgs = first:LArg rest:(_ "," _ LArg)*
+LArgs = first:LArg rest:(_ "," _ LArg)* _ ","? _
 LArg = pat:Pattern typ:(_ ":" _ Type)?
 `;
 
@@ -65,13 +65,19 @@ local variables and stuff.
 */
 
 export const ToTast = {
-    Lambda({ args, res, body, loc }: p.Lambda, ctx: TCtx): t.Lambda {
+    Lambda(
+        { args, res, body, loc }: p.Lambda,
+        ctx: TCtx,
+        expectedType?: t.TLambda,
+    ): t.Lambda {
         const locals: Locals = [];
         const targs: Lambda['args'] =
-            args?.items.map((arg) => {
+            args?.items.map((arg, i) => {
                 const pat = ctx.ToTast.Pattern(arg.pat, ctx);
                 const typ = arg.typ
                     ? ctx.ToTast.Type(arg.typ, ctx)
+                    : expectedType && expectedType.args.length > i
+                    ? expectedType.args[i].typ
                     : typeForPattern(pat, ctx);
                 getLocals(pat, typ, locals, ctx);
                 if (!arg.typ) {
@@ -159,7 +165,7 @@ export const ToPP = {
                 ),
                 res
                     ? pp.items(
-                          [pp.text(':', res.loc), ctx.ToPP.Type(res, ctx)],
+                          [pp.text(': ', res.loc), ctx.ToPP.Type(res, ctx)],
                           res.loc,
                       )
                     : null,
@@ -191,7 +197,7 @@ export const ToIR = {
             },
             null,
         );
-        if (hasAwaits && false) {
+        if (hasAwaits) {
             return {
                 type: 'Lambda',
                 args: [],
@@ -272,7 +278,9 @@ export const ToJS = {
                     ctx.ToJS.Pattern(arg.pat, ctx) ?? b.identifier(`__${i}`),
             ) ?? [],
             body.type === 'Block'
-                ? ctx.ToJS.Block(body, ctx)
+                ? body.stmts.length === 1 && body.stmts[0].type === 'Return'
+                    ? ctx.ToJS.IExpression(body.stmts[0].expr, ctx)
+                    : ctx.ToJS.Block(body, ctx)
                 : ctx.ToJS.IExpression(body, ctx),
         );
     },
@@ -308,7 +316,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
                     node = {
                         ...node,
                         res: tdecorate(node.res, 'resMismatch', ctx, [
-                            dtype('inferrred', res, node.res.loc),
+                            dtype('inferred', res, node.res.loc),
                         ]),
                     };
                 }

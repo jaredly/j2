@@ -56,6 +56,7 @@ export const ToAst = {
                 loc,
             },
             loc,
+            ctx.showIds,
         );
     },
 };
@@ -384,6 +385,7 @@ export const awaitBlock = (expr: t.Block, ctx: Ctx): AwaitChunk | null => {
                                 kind: ctx.getBuiltinRef('andThen')!,
                                 loc: noloc,
                             },
+                            inferred: false,
                             args: [
                                 effects,
                                 inner.effects,
@@ -392,6 +394,7 @@ export const awaitBlock = (expr: t.Block, ctx: Ctx): AwaitChunk | null => {
                             ],
                             loc: noloc,
                         },
+                        arrow: false,
                         loc: noloc,
                         args: [
                             expr,

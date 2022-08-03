@@ -29,7 +29,7 @@ alias onesit#[ha1ea686a0f954591e6817d1e38eba3d7dcf85068] twosit#[h8819c3a2c310a6
 alias decorated#[h216be29e211ffb2bbb1ff40ab9718fad53bb9687] oneArg#[h6c7b76e2a1fd1d300d0aa0993809744ac47efe81]
 (@decorated() oneArg)(10)
 // string
-/* oneArg(10) */
+/* $builtins.oneArg(10) */
 
 ==[unresolved]==
 --[input:shouldFail]--

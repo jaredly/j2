@@ -25,9 +25,10 @@ UnresolvedHash = "#[" ":unresolved:" "]"
 // apply.ts
 
 Apply = target:Atom suffixes_drop:Suffix*
-Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix
+Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix / ArrowSuffix
 CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
+ArrowSuffix = _ "->" _ name:Identifier args:CallSuffix?
 
 
 // awaits.ts
@@ -48,7 +49,7 @@ Aliases = "alias" __nonnewline first:AliasItem rest:(__nonnewline AliasItem)*
 AliasItem = name:$AliasName hash:$HashRef
 AliasName = $NamespacedIdText / $binop
 
-Expression = Lambda / BinOp
+Expression = TypeAbstraction / Lambda / BinOp
 
 Identifier = text:$IdText hash:IdHash?
 
@@ -58,7 +59,7 @@ Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpressi
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
-IdText "identifier" = ![0-9] [0-9a-z-A-Z_]+
+IdText "identifier" = ![0-9] [0-9a-zA-Z_]+
 AttrText "attribute" = $([0-9a-z-A-Z_]+)
 
 
@@ -72,7 +73,7 @@ UnaryOpWithHash = op:UnaryOp hash:IdHash?
 UnaryOp = "-" / "!"
 
 binopWithHash = op:binop hash:IdHash?
-binop = $(!"//" [+*^/<>=|&-]+)
+binop = $(!"//" !"=>" !"->" [+*^/<>=|&!-]+)
 
 ParenedOp = "(" _ inner:binopWithHash _ ")"
 
@@ -148,6 +149,8 @@ Star = pseudo:"*"
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
 TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
 
+TypeAbstraction = "<" _ args:TBargs _ ">" _ inner:Expression
+
 
 // ifs.ts
 
@@ -161,14 +164,14 @@ Else = Block / If
 // lambda.ts
 
 Lambda = "(" _ args:LArgs? _ ")" _ res:(":" _ Type)? _ "=>" _ body:Expression
-LArgs = first:LArg rest:(_ "," _ LArg)*
+LArgs = first:LArg rest:(_ "," _ LArg)* _ ","? _
 LArg = pat:Pattern typ:(_ ":" _ Type)?
 
 
 // lets.ts
 
 Block = "{" _ stmts:Stmts? _ "}"
-Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)* _ ';'?
+Stmts = first:Stmt rest:( _nonnewline ';'? _nonnewline '\n' _ Stmt)* _ ';'?
 Stmt = Let / Expression
 Let = "let" _ pat:Pattern _ "=" _ expr:Expression
 

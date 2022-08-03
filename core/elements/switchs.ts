@@ -1,5 +1,5 @@
 import { Visitor } from '../transform-tast';
-import { decorate, pdecorate } from '../typing/analyze';
+import { caseLocals, decorate, pdecorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
 import { expandEnumCases, typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
@@ -12,7 +12,12 @@ import { Ctx as TMCtx } from '../typing/typeMatches';
 import { Ctx as ICtx } from '../ir/ir';
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
+import {
+    getLocals,
+    refineType,
+    typeForPattern,
+    typeMatchesPattern,
+} from './pattern';
 import { iife } from './lets';
 import { unifyTypes } from '../typing/unifyTypes';
 import { dtype } from './ifs';
@@ -109,25 +114,27 @@ export const ToPP = {
                     [
                         pp.text('switch ', tast.loc),
                         ctx.ToPP.Expression(tast.target, ctx),
-                        pp.text(' {', tast.loc),
+                        pp.text(' ', tast.loc),
                     ],
                     tast.loc,
                 ),
-                ...tast.cases.map((c) => {
-                    return pp.items(
-                        [
-                            pp.text('  ', c.loc),
-                            ctx.ToPP.Pattern(c.pat, ctx),
-                            pp.text(' => ', c.loc),
-                            ctx.ToPP.Expression(c.expr, ctx),
-                        ],
-                        c.loc,
-                    );
-                }),
-                pp.text('}', tast.loc),
+                pp.block(
+                    tast.cases.map((c) => {
+                        return pp.items(
+                            [
+                                ctx.ToPP.Pattern(c.pat, ctx),
+                                pp.text(' => ', c.loc),
+                                ctx.ToPP.Expression(c.expr, ctx),
+                            ],
+                            c.loc,
+                        );
+                    }),
+                    tast.loc,
+                ),
+                // pp.text('}', tast.loc),
             ],
             tast.loc,
-            'always',
+            'never',
         );
     },
 };
@@ -164,7 +171,7 @@ export const ToIR = {
     },
 };
 
-const asSimple = (pat: t.Pattern): b.Expression | null => {
+export const asSimple = (pat: t.Pattern): b.Expression | null => {
     if (pat.type === 'Number') {
         return b.numericLiteral(pat.value);
     }
@@ -182,11 +189,95 @@ const asSimple = (pat: t.Pattern): b.Expression | null => {
 
 export const allBare = (typ: t.TEnum, ctx: ACtx): boolean => {
     const cases = expandEnumCases(typ, ctx);
-    return cases?.every((kase) => !kase.payload) ?? false;
+    return (
+        cases != null &&
+        !cases.bounded.length &&
+        cases.cases.every((kase) => !kase.payload)
+    );
 };
 
 export const ToJS = {
     Switch(node: ISwitch, ctx: JCtx): b.Statement {
+        if (
+            node.cases.length === 1 ||
+            !node.cases.every(
+                (k) =>
+                    asSimple(k.pat) ||
+                    patternIsExhaustive(k.pat, node.ttype, ctx.actx),
+            )
+        ) {
+            let refined = node.ttype;
+            const withTypes = node.cases.map((kase) => {
+                const v = { kase, refined };
+
+                // const matches = typeMatchesPattern(kase.pat, refined, ctx);
+                const res = refineType(kase.pat, refined, ctx.actx);
+                if (res) {
+                    refined = res;
+                } else {
+                    refined = { type: 'TBlank', loc: node.loc };
+                }
+
+                return v;
+            });
+            const { kase: last, refined: lt } = withTypes.pop()!;
+            let inner: b.Statement = ctx.ToJS.Block(
+                {
+                    type: 'Block',
+                    loc: last.loc,
+                    stmts: [
+                        {
+                            type: 'Let',
+                            expr: node.target,
+                            pat: last.pat,
+                            loc: last.loc,
+                            typ: lt,
+                        },
+                        last.expr,
+                    ],
+                },
+                ctx,
+            );
+
+            while (withTypes.length) {
+                const { kase: next, refined } = withTypes.pop()!;
+                const [cond, yes] = ctx.ToJS.IfYes(
+                    {
+                        type: 'IfYes',
+                        conds: [
+                            {
+                                type: 'Let',
+                                expr: node.target,
+                                pat: next.pat,
+                                loc: next.loc,
+                                typ: refined,
+                            },
+                        ],
+                        block:
+                            next.expr.type === 'Block'
+                                ? next.expr
+                                : {
+                                      type: 'Block',
+                                      stmts: [next.expr],
+                                      loc: next.loc,
+                                  },
+                        loc: next.loc,
+                    },
+                    ctx,
+                );
+                if (!cond) {
+                    console.log('Ran out of conditions?', next, refined);
+                }
+
+                inner = b.ifStatement(
+                    cond ?? b.booleanLiteral(true),
+                    yes,
+                    inner,
+                );
+            }
+            return inner;
+        }
+
         let cases: b.SwitchCase[] = [];
         for (let kase of node.cases) {
             if (patternIsExhaustive(kase.pat, node.ttype, ctx.actx)) {
@@ -237,9 +328,10 @@ export const ToJS = {
         }
         if (node.ttype.type === 'TEnum') {
             const cases = expandEnumCases(node.ttype, ctx.actx);
-            const allBare = cases?.every((kase) => !kase.payload) ?? false;
+            const allBare =
+                cases?.cases.every((kase) => !kase.payload) ?? false;
             if (!allBare) {
-                if (cases?.length === 1) {
+                if (cases?.cases.length === 1 && !cases.bounded.length) {
                     target = b.memberExpression(target, b.identifier('tag'));
                 } else {
                     target = b.conditionalExpression(
@@ -261,7 +353,7 @@ export const ToJS = {
 export type AVCtx = {
     ctx: ACtx;
     hit: {};
-    switchType?: t.Type | null;
+    switchType?: { s: t.Switch; t: t.Type } | null;
 };
 
 export const Analyze: Visitor<AVCtx> = {
@@ -272,9 +364,21 @@ export const Analyze: Visitor<AVCtx> = {
         }
         let body: null | t.Type = null;
         let changed = false;
+
+        let refined = target;
+        // ctx.debugger();
+
         const cases = node.cases.map((c) => {
-            const matches = typeMatchesPattern(c.pat, target, ctx);
-            let bt = ctx.getType(c.expr);
+            const matches = typeMatchesPattern(c.pat, refined, ctx);
+            const res = refineType(c.pat, refined, ctx);
+            let bt = ctx
+                .withLocals(caseLocals(refined, c, ctx))
+                .getType(c.expr);
+            if (res) {
+                refined = res;
+            } else {
+                refined = { type: 'TBlank', loc: node.loc };
+            }
             if (body && bt) {
                 let un = unifyTypes(body, bt, ctx);
                 if (un == false) {
@@ -300,9 +404,25 @@ export const Analyze: Visitor<AVCtx> = {
             }
             return c;
         });
+        if (changed) {
+            node = { ...node, cases };
+        }
+        if (
+            refined.type !== 'TBlank' &&
+            !(
+                refined.type === 'TEnum' &&
+                !refined.cases.length &&
+                !refined.open
+            )
+        ) {
+            node = {
+                ...node,
+                target: decorate(node.target, 'notExhaustive', hit, ctx),
+            };
+        }
         return [
-            changed ? { ...node, cases } : null,
-            { ctx, hit, switchType: target },
+            changed ? node : null,
+            { ctx, hit, switchType: { t: target, s: node } },
         ];
     },
     Case(node, ctx) {
@@ -311,7 +431,22 @@ export const Analyze: Visitor<AVCtx> = {
             return null;
         }
 
-        const typ = ctx.switchType;
+        let { s, t: typ } = ctx.switchType;
+        const idx = s.cases.indexOf(node);
+        if (idx === -1) {
+            console.error(
+                `Unable to refine type! This will result in overly-cautious type errors`,
+            );
+        } else {
+            for (let i = 0; i < idx; i++) {
+                const refined = refineType(s.cases[i].pat, typ, ctx.ctx);
+                if (refined) {
+                    typ = refined;
+                } else {
+                    typ = { type: 'TBlank', loc: node.loc };
+                }
+            }
+        }
         const locals: t.Locals = [];
         getLocals(node.pat, typ, locals, ctx.ctx);
 

@@ -19,7 +19,9 @@
         "nojest": "./utils/esrun.js core/typing/__test__/analyze.nojest.ts",
         "fixn": "env FIX=1 pnpm nojest",
         "fix": "env FIX=1 jest",
-        "cov": "jest --coverage"
+        "cov": "jest --coverage",
+        "sandbox": "vite sandbox --port 2034 --config sandbox/config.js",
+        "sandbox-build": "vite build sandbox --config sandbox/config.js"
     },
     "keywords": [],
     "author": "",

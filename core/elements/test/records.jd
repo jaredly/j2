@@ -1,17 +1,19 @@
 let one = {name: "Jerd", age: 2}
-alias one#[hf9a67a9a15b498be9295d0f639720b727c9aab06]
+alias one#[h0063550dacf1b1e803b5aff4a8220cf6b4d3d6b2]
 let x = {
-    let {name#[0]} = one;
-    name#[0];
+    let {name} = one;
+    name;
 }
 let ten = 10
-alias ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb] x#[he9fc1ae4c20ca816bf460d396d04099cc21f6955]
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] x#[h73af94cb03869c7e40d097be723d5cd031869ab3]
 x == "Jerd"
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] ten#[hfb3ab6073655e042df98cf160644857639baed08]
-// Ok, so creating & patterning is ok. How about default valuing?
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] ten#[hc6b7c238fb3eca022b6aef40d734754a3117e664]
 type Four = {name: string, age: int = 4 + ten}
-alias Four#[ha5a2f9855ea623b0940fe28d7fe351dcea038758]
-let getAge = ({age#[0]}: Four) => age#[0]
-alias getAge#[h225998de6cc3266610deae43fb2c6f7da580073d]
+alias Four#[h4bd18bfe6f0f4a1af3d9ab125ddb03e51aa178bc]
+let getAge = ({age}: Four) => age
+alias getAge#[haafbea4fe035b517740a8dbee4ece5f8ed9f6b86]
 getAge(one) == 2
 getAge({name: "hello"}) == 14
+let ageAnd = ({age}: Four, n: int) => age + n
+alias ageAnd#[h111def05c75ee6955189e6b44135dfb3a566aa41]
+one->ageAnd(4)

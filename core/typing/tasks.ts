@@ -1,22 +1,31 @@
 import { noloc } from '../consts';
-import { enumTypeMatches } from '../elements/enums';
+import { enumCaseMap, enumTypeMatches } from '../elements/enums';
 import { recordAsTuple, TRecord } from '../elements/records';
 import { transformExpression } from '../transform-tast';
 import { Loc, TApply, TEnum, Type, EnumCase, Expression } from '../typed-ast';
 import { initVerify, localTrackingVisitor, verifyVisitor } from './analyze';
 import { isUnit, getType } from './getType';
-import { Ctx, expandEnumCases } from './typeMatches';
+import { Ctx, expandEnumCases, LocalUnexpandable } from './typeMatches';
 import { unifyTypes } from './unifyTypes';
 import { Ctx as ACtx } from './analyze';
 
 export const isTaskable = (t: Type, ctx: Ctx): boolean => {
+    if (ctx.isBuiltinType(t, 'task')) {
+        return true;
+    }
+    if (t.type === 'TRef' && t.ref.type === 'Local') {
+        const bound = ctx.getBound(t.ref.sym);
+        if (bound && ctx.isBuiltinType(bound, 'task')) {
+            return true;
+        }
+    }
     if (t.type !== 'TEnum' || t.open) {
         return false;
     }
     const cases = expandEnumCases(t, ctx);
     return (
         cases != null &&
-        cases.every((kase) => {
+        cases.cases.every((kase) => {
             return (
                 kase.payload != null &&
                 kase.payload.type === 'TRecord' &&
@@ -26,6 +35,9 @@ export const isTaskable = (t: Type, ctx: Ctx): boolean => {
                 kase.payload.items[0].key === '0' &&
                 kase.payload.items[1].key === '1'
             );
+        }) &&
+        cases.bounded.every((bound) => {
+            return bound.type === 'local' && isTaskable(bound.bound, ctx);
         })
     );
 };
@@ -77,28 +89,84 @@ export const taskType = (args: Type[], ctx: Ctx, loc: Loc): Type => {
 };
 
 export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
-    let cases: TEnum['cases'] = [
-        {
+    let cases: TEnum['cases'] = [];
+    if (targs.length == 1 || targs[1].type !== 'TBlank') {
+        cases.push({
             type: 'EnumCase',
             decorators: [],
             loc,
             tag: 'Return',
             payload: targs.length > 1 ? targs[1] : tunit,
-        },
-    ];
-    if (targs[0].type !== 'TEnum') {
+        });
+    }
+    const extraInner =
+        targs.length > 2 && targs[2].type === 'TEnum'
+            ? expandEnumCases(targs[2], ctx)
+            : null;
+    const first = ctx.resolveRefsAndApplies(targs[0]) ?? targs[0];
+    let expanded: ReturnType<typeof expandEnumCases>;
+    if (first.type === 'TRef' && first.ref.type === 'Local') {
+        const bound = ctx.getBound(first.ref.sym);
+        if (!bound) {
+            return null;
+        }
+        expanded = {
+            cases: [],
+            bounded: [{ type: 'local', local: first, bound }],
+        };
+    } else if (first.type !== 'TEnum') {
+        return null;
+    } else {
+        const result = expandEnumCases(first, ctx);
+        if (!result) {
+            return null;
+        }
+        expanded = result;
+    }
+
+    if (
+        expanded.bounded.some((s) => s.type === 'task') ||
+        extraInner?.bounded.some((s) => s.type === 'task')
+    ) {
         return null;
     }
-    const expanded = expandEnumCases(targs[0], ctx);
-    if (!expanded) {
-        return null;
-    }
-    for (let one of expanded) {
+    const innerTask = taskType(
+        [
+            {
+                type: 'TEnum',
+                cases: [
+                    ...expanded.cases,
+                    ...(extraInner?.cases ?? []),
+                    ...expanded.bounded.map(
+                        (m) => (m as LocalUnexpandable).local,
+                    ),
+                    ...(extraInner?.bounded.map(
+                        (m) => (m as LocalUnexpandable).local,
+                    ) ?? []),
+                ],
+                loc: loc,
+                open: false,
+            },
+            targs.length > 1 ? targs[1] : tunit,
+        ],
+        ctx,
+        loc,
+    );
+    for (let one of expanded.cases) {
         const two = asTwopul(one.payload);
         if (!two) {
             return null;
         }
         const [value, karg] = two;
+        const k: Type =
+            karg.type === 'TEnum' && !karg.open && !karg.cases.length
+                ? tunit
+                : {
+                      type: 'TLambda',
+                      loc: one.loc,
+                      args: [{ label: 'arg', typ: karg, loc: karg.loc }],
+                      result: innerTask,
+                  };
         cases.push({
             type: 'EnumCase',
             decorators: [],
@@ -119,27 +187,7 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
                     },
                     {
                         key: '1',
-                        value:
-                            karg.type === 'TEnum' &&
-                            !karg.open &&
-                            !karg.cases.length
-                                ? tunit
-                                : {
-                                      type: 'TLambda',
-                                      loc: one.loc,
-                                      args:
-                                          // isUnit(karg)
-                                          //     ? []
-                                          // :
-                                          [
-                                              {
-                                                  label: 'arg',
-                                                  typ: karg,
-                                                  loc: karg.loc,
-                                              },
-                                          ],
-                                      result: taskType(targs, ctx, loc),
-                                  },
+                        value: k,
                         type: 'TRecordKeyValue',
                         default_: null,
                         loc: value.loc,
@@ -152,7 +200,28 @@ export const expandTask = (loc: Loc, targs: Type[], ctx: Ctx): TEnum | null => {
     return {
         type: 'TEnum',
         open: false,
-        cases,
+        cases: [
+            ...cases,
+            ...(expanded.bounded.length
+                ? [
+                      taskType(
+                          [
+                              {
+                                  type: 'TEnum',
+                                  cases: expanded.bounded.map(
+                                      (m) => (m as LocalUnexpandable).local,
+                                  ),
+                                  open: false,
+                                  loc,
+                              },
+                              targs[1] ?? tunit,
+                          ],
+                          ctx,
+                          loc,
+                      ),
+                  ]
+                : []),
+        ],
         loc,
     };
 };
@@ -170,17 +239,26 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
     ) {
         return t as TApply;
     }
-    if (res.type !== 'TEnum') {
+    let cases: ReturnType<typeof expandEnumCases>;
+    if (res.type === 'TRef' && res.ref.type === 'Local') {
+        const bound = ctx.getBound(res.ref.sym);
+        if (!bound) {
+            return null;
+        }
+        cases = { cases: [], bounded: [{ type: 'local', local: res, bound }] };
+    } else if (res.type !== 'TEnum') {
         return null;
-    }
-    const cases = expandEnumCases(res, ctx);
-    if (!cases) {
-        return null;
+    } else {
+        const expanded = expandEnumCases(res, ctx);
+        if (!expanded) {
+            return null;
+        }
+        cases = expanded;
     }
     let result: null | Type = null;
-    const effects: { [key: string]: { input: Type; output: Type } } = {};
+    const effects: { [key: string]: { input: Type; output: Type | null } } = {};
     const subs: TApply[] = [];
-    for (let kase of cases) {
+    for (let kase of cases.cases) {
         if (!kase.payload) {
             return null;
         }
@@ -204,6 +282,31 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
             }
             let [input, fn] = items;
             fn = ctx.resolveRefsAndApplies(fn) ?? fn;
+            if (
+                fn.type === 'TRecord' &&
+                fn.items.length === 0 &&
+                !fn.open &&
+                fn.spreads.length === 0
+            ) {
+                if (result == null) {
+                    result = { type: 'TBlank', loc: fn.loc };
+                }
+                // no result
+                // continue
+                if (effects[kase.tag]) {
+                    if (effects[kase.tag].output) {
+                        return null;
+                    }
+                    const un = unifyTypes(effects[kase.tag].input, input, ctx);
+                    if (un === false) {
+                        return null;
+                    }
+                    effects[kase.tag] = { input: un, output: null };
+                } else {
+                    effects[kase.tag] = { input, output: null };
+                }
+                continue;
+            }
             if (fn.type !== 'TLambda' || fn.args.length !== 1) {
                 return null;
             }
@@ -222,8 +325,12 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
             result = ru;
             subs.push(sub);
             if (effects[kase.tag]) {
-                const iu = unifyTypes(effects[kase.tag].input, input, ctx);
-                const ou = unifyTypes(effects[kase.tag].output, output, ctx);
+                const current = effects[kase.tag];
+                if (!current.output) {
+                    return null;
+                }
+                const iu = unifyTypes(current.input, input, ctx);
+                const ou = unifyTypes(current.output, output, ctx);
                 if (!iu || !ou) {
                     return null;
                 }
@@ -269,7 +376,7 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
                                 {
                                     type: 'TRecordKeyValue',
                                     key: '1',
-                                    value: output,
+                                    value: output == null ? tnever : output,
                                     default_: null,
                                     loc: noloc,
                                 },
@@ -283,6 +390,13 @@ export const inferTaskType = (t: Type, ctx: Ctx): TApply | null => {
         ],
         loc: noloc,
     };
+};
+
+export const maybeExpandTask = (t: Type, ctx: Ctx): Type | null => {
+    if (t.type === 'TApply' && ctx.isBuiltinType(t.target, 'Task')) {
+        return expandTask(t.loc, t.args, ctx);
+    }
+    return t;
 };
 
 export const matchesTask = (
@@ -305,7 +419,7 @@ export type TaskArgs = {
 };
 
 export const makeTaskType = (
-    effects: TaskEffect[],
+    effects: (EnumCase | Type)[],
     result: Type,
     ctx: Ctx,
 ): Type => {
@@ -320,36 +434,7 @@ export const makeTaskType = (
             {
                 type: 'TEnum',
                 open: false,
-                cases: effects.map(
-                    ({ input, output, tag }): EnumCase | Type => ({
-                        type: 'EnumCase',
-                        decorators: [],
-                        loc: noloc,
-                        tag,
-                        payload: {
-                            type: 'TRecord',
-                            spreads: [],
-                            open: false,
-                            loc: noloc,
-                            items: [
-                                {
-                                    type: 'TRecordKeyValue',
-                                    key: '0',
-                                    value: input,
-                                    default_: null,
-                                    loc: noloc,
-                                },
-                                {
-                                    type: 'TRecordKeyValue',
-                                    key: '1',
-                                    value: output,
-                                    default_: null,
-                                    loc: noloc,
-                                },
-                            ],
-                        },
-                    }),
-                ),
+                cases: effects,
                 loc: noloc,
             },
             result,
@@ -358,8 +443,13 @@ export const makeTaskType = (
     };
 };
 
-export const collectEffects = (t: Expression, ctx: Ctx): TaskEffect[] => {
-    const collected: TaskEffect[] = [];
+export const collectEffects = (
+    t: Expression,
+    ctx: Ctx,
+): (EnumCase | Type)[] => {
+    const cases: EnumCase[] = [];
+    const others: Type[] = [];
+    // const collected: (EnumCase | Type)[] = [];
     transformExpression(
         t,
         {
@@ -374,18 +464,17 @@ export const collectEffects = (t: Expression, ctx: Ctx): TaskEffect[] => {
                 const asTask = inferTaskType(res, ctx);
                 if (asTask) {
                     const [effects, result] = asTask.args;
-                    collected.push(
-                        ...(effects as TEnum).cases.map((kase) => {
-                            const [{ value: input }, { value: output }] = (
-                                (kase as EnumCase).payload! as TRecord
-                            ).items;
-                            return {
-                                tag: (kase as EnumCase).tag,
-                                input,
-                                output,
-                            };
-                        }),
-                    );
+                    if (effects.type === 'TEnum') {
+                        effects.cases.forEach((kase) => {
+                            if (kase.type === 'EnumCase') {
+                                cases.push(kase);
+                            } else {
+                                others.push(kase);
+                            }
+                        });
+                    } else {
+                        others.push(effects);
+                    }
                 }
                 return null;
             },
@@ -395,5 +484,9 @@ export const collectEffects = (t: Expression, ctx: Ctx): TaskEffect[] => {
         },
         ctx,
     );
-    return collected;
+    const map = enumCaseMap(cases, ctx);
+    if (!map) {
+        return [...cases, ...others];
+    }
+    return [...Object.values(map), ...others];
 };

@@ -52,6 +52,7 @@ import {
     Case,
     Boolean,
     Await,
+    TypeAbstraction,
     TemplateString,
     TypeApplication,
     DecoratedExpression,
@@ -64,6 +65,7 @@ import {
     ILambda,
     IApply,
     ITemplateString,
+    ITypeAbstraction,
     IEnum,
     IRecord,
     IRecordKeyValue,
@@ -77,12 +79,9 @@ import {
     ISwitch,
     ICase,
     DecoratorDecl,
-    TypeVariables,
     TAdd,
     TSub,
     TOr,
-    AVCtx,
-    ACtx,
 } from './typed-ast';
 
 export type Visitor<Ctx> = {
@@ -249,11 +248,22 @@ export type Visitor<Ctx> = {
         node: TypeApplication,
         ctx: Ctx,
     ) => null | TypeApplication;
-    TypeVariables?: (
-        node: TypeVariables,
+    TypeAbstraction?: (
+        node: TypeAbstraction,
         ctx: Ctx,
-    ) => null | false | TypeVariables | [TypeVariables | null, Ctx];
-    TypeVariablesPost?: (node: TypeVariables, ctx: Ctx) => null | TypeVariables;
+    ) => null | false | TypeAbstraction | [TypeAbstraction | null, Ctx];
+    TypeAbstractionPost?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | TypeAbstraction;
+    ITypeAbstraction?: (
+        node: ITypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | ITypeAbstraction | [ITypeAbstraction | null, Ctx];
+    ITypeAbstractionPost?: (
+        node: ITypeAbstraction,
+        ctx: Ctx,
+    ) => null | ITypeAbstraction;
     TOps?: (node: TOps, ctx: Ctx) => null | false | TOps | [TOps | null, Ctx];
     TOpsPost?: (node: TOps, ctx: Ctx) => null | TOps;
     TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
@@ -359,8 +369,6 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IAssign | [IAssign | null, Ctx];
     IAssignPost?: (node: IAssign, ctx: Ctx) => null | IAssign;
-    Ctx?: (node: Ctx, ctx: Ctx) => null | false | Ctx | [Ctx | null, Ctx];
-    CtxPost?: (node: Ctx, ctx: Ctx) => null | Ctx;
     TApply?: (
         node: TApply,
         ctx: Ctx,
@@ -462,11 +470,6 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | ICase | [ICase | null, Ctx];
     ICasePost?: (node: ICase, ctx: Ctx) => null | ICase;
-    AVCtx?: (
-        node: AVCtx,
-        ctx: Ctx,
-    ) => null | false | AVCtx | [AVCtx | null, Ctx];
-    AVCtxPost?: (node: AVCtx, ctx: Ctx) => null | AVCtx;
     RefKind_Global?: (
         node: GlobalRef,
         ctx: Ctx,
@@ -569,6 +572,14 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Expression | [Expression | null, Ctx];
     ExpressionPost_Await?: (node: Await, ctx: Ctx) => null | Expression;
+    Expression_TypeAbstraction?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_TypeAbstraction?: (
+        node: TypeAbstraction,
+        ctx: Ctx,
+    ) => null | Expression;
     Expression_TemplateString?: (
         node: TemplateString,
         ctx: Ctx,
@@ -624,6 +635,14 @@ export type Visitor<Ctx> = {
     ) => null | false | IExpression | [IExpression | null, Ctx];
     IExpressionPost_TemplateString?: (
         node: ITemplateString,
+        ctx: Ctx,
+    ) => null | IExpression;
+    IExpression_TypeAbstraction?: (
+        node: ITypeAbstraction,
+        ctx: Ctx,
+    ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_TypeAbstraction?: (
+        node: ITypeAbstraction,
         ctx: Ctx,
     ) => null | IExpression;
     IExpression_Enum?: (
@@ -4849,6 +4868,82 @@ export const transformAwait = <Ctx>(
     return node;
 };
 
+export const transformTypeAbstraction = <Ctx>(
+    node: TypeAbstraction,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TypeAbstraction => {
+    if (!node) {
+        throw new Error('No TypeAbstraction provided');
+    }
+
+    const transformed = visitor.TypeAbstraction
+        ? visitor.TypeAbstraction(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformTVar(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$body = transformExpression(node.body, visitor, ctx);
+        changed1 = changed1 || updatedNode$body !== node.body;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                items: updatedNode$items,
+                body: updatedNode$body,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TypeAbstractionPost) {
+        const transformed = visitor.TypeAbstractionPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformTemplateString = <Ctx>(
     node: TemplateString,
     visitor: Visitor<Ctx>,
@@ -5338,6 +5433,25 @@ export const transformExpression = <Ctx>(
             break;
         }
 
+        case 'TypeAbstraction': {
+            const transformed = visitor.Expression_TypeAbstraction
+                ? visitor.Expression_TypeAbstraction(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TemplateString': {
             const transformed = visitor.Expression_TemplateString
                 ? visitor.Expression_TemplateString(node, ctx)
@@ -5461,6 +5575,12 @@ export const transformExpression = <Ctx>(
 
         case 'Await': {
             updatedNode = transformAwait(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'TypeAbstraction': {
+            updatedNode = transformTypeAbstraction(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -5594,6 +5714,16 @@ export const transformExpression = <Ctx>(
         case 'Await': {
             const transformed = visitor.ExpressionPost_Await
                 ? visitor.ExpressionPost_Await(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAbstraction': {
+            const transformed = visitor.ExpressionPost_TypeAbstraction
+                ? visitor.ExpressionPost_TypeAbstraction(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -6471,12 +6601,35 @@ export const transformIApply = <Ctx>(
         {
             let changed2 = false;
             const arr1 = node.args.map((updatedNode$args$item1) => {
-                const result = transformIExpression(
-                    updatedNode$args$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$args$item1;
+                let result = updatedNode$args$item1;
+                {
+                    let changed3 = false;
+
+                    const result$expr = transformIExpression(
+                        updatedNode$args$item1.expr,
+                        visitor,
+                        ctx,
+                    );
+                    changed3 =
+                        changed3 || result$expr !== updatedNode$args$item1.expr;
+
+                    const result$type = transformType(
+                        updatedNode$args$item1.type,
+                        visitor,
+                        ctx,
+                    );
+                    changed3 =
+                        changed3 || result$type !== updatedNode$args$item1.type;
+                    if (changed3) {
+                        result = {
+                            ...result,
+                            expr: result$expr,
+                            type: result$type,
+                        };
+                        changed2 = true;
+                    }
+                }
+
                 return result;
             });
             if (changed2) {
@@ -6596,6 +6749,82 @@ export const transformITemplateString = <Ctx>(
     node = updatedNode;
     if (visitor.ITemplateStringPost) {
         const transformed = visitor.ITemplateStringPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformITypeAbstraction = <Ctx>(
+    node: ITypeAbstraction,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ITypeAbstraction => {
+    if (!node) {
+        throw new Error('No ITypeAbstraction provided');
+    }
+
+    const transformed = visitor.ITypeAbstraction
+        ? visitor.ITypeAbstraction(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformTVar(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$body = transformIExpression(node.body, visitor, ctx);
+        changed1 = changed1 || updatedNode$body !== node.body;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                items: updatedNode$items,
+                body: updatedNode$body,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ITypeAbstractionPost) {
+        const transformed = visitor.ITypeAbstractionPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -7490,6 +7719,12 @@ export const transformIStmt = <Ctx>(
             break;
         }
 
+        case 'TypeAbstraction': {
+            updatedNode = transformITypeAbstraction(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Enum': {
             updatedNode = transformIEnum(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -7762,6 +7997,16 @@ export const transformILambda = <Ctx>(
                 break;
             }
 
+            case 'TypeAbstraction': {
+                updatedNode$body = transformITypeAbstraction(
+                    node.body,
+                    visitor,
+                    ctx,
+                );
+                changed1 = changed1 || updatedNode$body !== node.body;
+                break;
+            }
+
             case 'Enum': {
                 updatedNode$body = transformIEnum(node.body, visitor, ctx);
                 changed1 = changed1 || updatedNode$body !== node.body;
@@ -7967,6 +8212,25 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
+        case 'TypeAbstraction': {
+            const transformed = visitor.IExpression_TypeAbstraction
+                ? visitor.IExpression_TypeAbstraction(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Enum': {
             const transformed = visitor.IExpression_Enum
                 ? visitor.IExpression_Enum(node, ctx)
@@ -8045,6 +8309,12 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
+        case 'TypeAbstraction': {
+            updatedNode = transformITypeAbstraction(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Enum': {
             updatedNode = transformIEnum(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -8114,6 +8384,16 @@ export const transformIExpression = <Ctx>(
         case 'TemplateString': {
             const transformed = visitor.IExpressionPost_TemplateString
                 ? visitor.IExpressionPost_TemplateString(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TypeAbstraction': {
+            const transformed = visitor.IExpressionPost_TypeAbstraction
+                ? visitor.IExpressionPost_TypeAbstraction(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -8195,106 +8475,6 @@ export const transformDecoratorDecl = <Ctx>(
     node = updatedNode;
     if (visitor.DecoratorDeclPost) {
         const transformed = visitor.DecoratorDeclPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformTypeVariables = <Ctx>(
-    node: TypeVariables,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): TypeVariables => {
-    if (!node) {
-        throw new Error('No TypeVariables provided');
-    }
-
-    const transformed = visitor.TypeVariables
-        ? visitor.TypeVariables(node, ctx)
-        : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        let updatedNode$items = node.items;
-        {
-            let changed2 = false;
-            const arr1 = node.items.map((updatedNode$items$item1) => {
-                let result = updatedNode$items$item1;
-                {
-                    let changed3 = false;
-
-                    const result$sym = transformSym(
-                        updatedNode$items$item1.sym,
-                        visitor,
-                        ctx,
-                    );
-                    changed3 =
-                        changed3 || result$sym !== updatedNode$items$item1.sym;
-
-                    const result$bound = transformType(
-                        updatedNode$items$item1.bound,
-                        visitor,
-                        ctx,
-                    );
-                    changed3 =
-                        changed3 ||
-                        result$bound !== updatedNode$items$item1.bound;
-                    if (changed3) {
-                        result = {
-                            ...result,
-                            sym: result$sym,
-                            bound: result$bound,
-                        };
-                        changed2 = true;
-                    }
-                }
-
-                return result;
-            });
-            if (changed2) {
-                updatedNode$items = arr1;
-                changed1 = true;
-            }
-        }
-
-        const updatedNode$body = transformExpression(node.body, visitor, ctx);
-        changed1 = changed1 || updatedNode$body !== node.body;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                items: updatedNode$items,
-                body: updatedNode$body,
-                loc: updatedNode$loc,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.TypeVariablesPost) {
-        const transformed = visitor.TypeVariablesPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -8505,117 +8685,6 @@ export const transformTOr = <Ctx>(
     node = updatedNode;
     if (visitor.TOrPost) {
         const transformed = visitor.TOrPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-export const transformCtx = <Ctx>(
-    node: Ctx,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): Ctx => {
-    if (!node) {
-        throw new Error('No Ctx provided');
-    }
-
-    const transformed = visitor.Ctx ? visitor.Ctx(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-    const updatedNode = node;
-
-    node = updatedNode;
-    if (visitor.CtxPost) {
-        const transformed = visitor.CtxPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
-
-// not a type ACtx
-
-export const transformAVCtx = <Ctx>(
-    node: AVCtx,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): AVCtx => {
-    if (!node) {
-        throw new Error('No AVCtx provided');
-    }
-
-    const transformed = visitor.AVCtx ? visitor.AVCtx(node, ctx) : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        let updatedNode$switchType = undefined;
-        const updatedNode$switchType$current = node.switchType;
-        if (updatedNode$switchType$current != null) {
-            let updatedNode$switchType$1$ = null;
-            const updatedNode$switchType$1$$current =
-                updatedNode$switchType$current;
-            if (updatedNode$switchType$1$$current != null) {
-                const updatedNode$switchType$1$$1$ = transformType(
-                    updatedNode$switchType$1$$current,
-                    visitor,
-                    ctx,
-                );
-                changed1 =
-                    changed1 ||
-                    updatedNode$switchType$1$$1$ !==
-                        updatedNode$switchType$1$$current;
-                updatedNode$switchType$1$ = updatedNode$switchType$1$$1$;
-            }
-
-            updatedNode$switchType = updatedNode$switchType$1$;
-        }
-
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                switchType: updatedNode$switchType,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.AVCtxPost) {
-        const transformed = visitor.AVCtxPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }

@@ -11,6 +11,7 @@ import {
     Ctx as TMCtx,
     expandEnumCases,
     payloadsEqual,
+    typeMatches,
     unifyPayloads,
 } from '../typing/typeMatches';
 import { recordAsTuple } from './records';
@@ -149,55 +150,51 @@ export const ToAst = {
 
 export const ToPP = {
     TEnum(t: p.TEnum, ctx: PCtx): pp.PP {
-        return pp.items(
-            [
-                pp.text('[' + (t.cases?.items.length ? ' ' : ''), noloc),
-                ...pp.interleave(
-                    t.cases?.items.map((c) => {
-                        if (c.type === 'Star') {
-                            return pp.text('*', noloc);
-                        }
-                        if (c.type === 'TagDecl') {
-                            return pp.items(
-                                [
-                                    ...c.decorators.map((d) =>
-                                        ctx.ToPP[d.type](d, ctx),
-                                    ),
-                                    pp.text(`\`${c.text}`, noloc),
-                                    c.payload
-                                        ? pp.args(
-                                              c.payload.items?.items.map(
-                                                  (item) =>
-                                                      ctx.ToPP.Type(item, ctx),
-                                              ) ?? [],
-                                              c.payload.loc,
-                                          )
-                                        : // pp.items(
-                                          //       [
-                                          //           pp.text('(', noloc),
-                                          //           ctx.ToPP[
-                                          //               c.payload.inner.type
-                                          //           ](
-                                          //               c.payload.inner ,
-                                          //               ctx,
-                                          //           ),
-                                          //           pp.text(')', noloc),
-                                          //       ],
-                                          //       c.loc,
-                                          //   )
-                                          null,
-                                ],
-                                c.loc,
-                            );
-                        } else {
-                            return ctx.ToPP.Type(c, ctx);
-                        }
-                    }) || [],
-                    ' | ',
-                ),
-                pp.text((t.cases?.items.length ? ' ' : '') + ']', noloc),
-            ],
+        return pp.args(
+            t.cases?.items.map((c) => {
+                if (c.type === 'Star') {
+                    return pp.text('*', noloc);
+                }
+                if (c.type === 'TagDecl') {
+                    return pp.items(
+                        [
+                            ...c.decorators.map((d) =>
+                                ctx.ToPP[d.type](d, ctx),
+                            ),
+                            pp.text(`\`${c.text}`, noloc),
+                            c.payload
+                                ? pp.args(
+                                      c.payload.items?.items.map((item) =>
+                                          ctx.ToPP.Type(item, ctx),
+                                      ) ?? [],
+                                      c.payload.loc,
+                                  )
+                                : // pp.items(
+                                  //       [
+                                  //           pp.text('(', noloc),
+                                  //           ctx.ToPP[
+                                  //               c.payload.inner.type
+                                  //           ](
+                                  //               c.payload.inner ,
+                                  //               ctx,
+                                  //           ),
+                                  //           pp.text(')', noloc),
+                                  //       ],
+                                  //       c.loc,
+                                  //   )
+                                  null,
+                        ],
+                        c.loc,
+                    );
+                } else {
+                    return ctx.ToPP.Type(c, ctx);
+                }
+            }) ?? [],
             t.loc,
+            '[',
+            ']',
+            false,
+            ' |',
         );
     },
 };
@@ -216,6 +213,8 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
+import { refsEqual } from '../refsEqual';
+import { unifyTypes } from '../typing/unifyTypes';
 export const ToJS = {
     Enum({ loc, tag, payload }: t.IEnum, ctx: JCtx): b.Expression {
         if (!payload) {
@@ -231,15 +230,22 @@ export const ToJS = {
     },
 };
 
-const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
+export const isValidEnumCase = (c: t.Type, ctx: TMCtx): boolean => {
     // We'll special case 'recur ref that's applied'
-    // ctx.debugger();
     if (
         c.type === 'TApply' &&
         c.target.type === 'TRef' &&
         c.target.ref.type === 'Recur'
     ) {
         return ctx.getTopKind(c.target.ref.idx) === 'enum';
+    }
+    if (
+        c.type === 'TApply' &&
+        c.target.type === 'TRef' &&
+        c.target.ref.type === 'Global' &&
+        ctx.isBuiltinType(c.target, 'Task')
+    ) {
+        return true;
     }
     const resolved = ctx.resolveAnalyzeType(c);
     if (!resolved) {
@@ -264,6 +270,15 @@ const isValidEnumCase = (c: t.Type, ctx: Ctx): boolean => {
         case 'TRef':
             if (c.ref.type === 'Recur') {
                 return ctx.getTopKind(c.ref.idx) === 'enum';
+            }
+            if (c.ref.type === 'Local') {
+                const bound = ctx.getBound(c.ref.sym);
+                if (bound) {
+                    return isValidEnumCase(bound, ctx);
+                }
+            }
+            if (c.ref.type === 'Global') {
+                return ctx.isBuiltinType(c, 'task');
             }
             return false;
     }
@@ -314,7 +329,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         changed = true;
                         return tdecorate(k, 'invalidEnum', ctx);
                     }
-                    for (let kase of expanded) {
+                    for (let kase of expanded.cases) {
                         if (
                             used[kase.tag] &&
                             !payloadsEqual(
@@ -380,6 +395,25 @@ export const enumCaseMap = (canEnums: EnumCase[], ctx: TMCtx) => {
     return canMap;
 };
 
+export const isWrappedEnum = (one: t.TRef, two: TEnum, ctx: TMCtx): boolean => {
+    if (two.open) {
+        return false;
+    }
+    if (two.cases.length === 1 && two.cases[0].type === 'TRef') {
+        return refsEqual(two.cases[0].ref, one.ref);
+    }
+    const cases = expandEnumCases(two, ctx);
+    if (
+        cases &&
+        cases.cases.length === 0 &&
+        cases.bounded.length === 1 &&
+        cases.bounded[0].type === 'local'
+    ) {
+        return refsEqual(cases.bounded[0].local.ref, one.ref);
+    }
+    return false;
+};
+
 export const enumTypeMatches = (
     candidate: TEnum,
     expected: t.Type,
@@ -389,6 +423,9 @@ export const enumTypeMatches = (
     // [ `What ] matches [ `What | `Who ]
     // So everything in candidate needs to match something
     // in expected. And there need to not be any collisions name-wise
+    if (expected.type === 'TRef' && isWrappedEnum(expected, candidate, ctx)) {
+        return true;
+    }
     if (expected.type !== 'TEnum') {
         return false;
     }
@@ -397,16 +434,39 @@ export const enumTypeMatches = (
     if (!canEnums || !expEnums) {
         return false;
     }
-    const canMap = enumCaseMap(canEnums, ctx);
+    const canMap = enumCaseMap(canEnums.cases, ctx);
     if (!canMap) {
         return false;
     }
-    const expMap = enumCaseMap(expEnums, ctx);
+    const expMap = enumCaseMap(expEnums.cases, ctx);
     if (!expMap) {
         return false;
     }
 
-    for (let kase of canEnums) {
+    for (let bound of canEnums.bounded) {
+        if (bound.type === 'local') {
+            const ref = bound.local.ref;
+            if (
+                !expEnums.bounded.some(
+                    (b) => b.type === 'local' && refsEqual(ref, b.local.ref),
+                )
+            ) {
+                return false;
+            }
+        } else {
+            const inner = bound.inner;
+            if (
+                !expEnums.bounded.some(
+                    (b) =>
+                        b.type === 'task' && typeMatches(inner, b.inner, ctx),
+                )
+            ) {
+                return false;
+            }
+        }
+    }
+
+    for (let kase of canEnums.cases) {
         if (!expMap[kase.tag]) {
             if (expected.open) {
                 continue;
@@ -449,16 +509,16 @@ export const unifyEnums = (
     if (!canEnums || !expEnums) {
         return false;
     }
-    const canMap = enumCaseMap(canEnums, ctx);
+    const canMap = enumCaseMap(canEnums.cases, ctx);
     if (!canMap) {
         return false;
     }
-    const expMap = enumCaseMap(expEnums, ctx);
+    const expMap = enumCaseMap(expEnums.cases, ctx);
     if (!expMap) {
         return false;
     }
 
-    for (let kase of canEnums) {
+    for (let kase of canEnums.cases) {
         if (!expMap[kase.tag]) {
             expMap[kase.tag] = kase;
         } else {
@@ -474,10 +534,46 @@ export const unifyEnums = (
         }
     }
 
+    const others: t.Type[] = [];
+
+    canEnums.bounded.forEach((item) => {
+        const t = item.type === 'local' ? item.local : item.inner;
+        for (let i = 0; i < others.length; i++) {
+            const un = unifyTypes(t, others[i], ctx);
+            if (un !== false) {
+                others[i] = un;
+                return;
+            }
+        }
+        others.push(t);
+    });
+
+    expEnums.bounded.forEach((item) => {
+        const t = item.type === 'local' ? item.local : item.inner;
+        for (let i = 0; i < others.length; i++) {
+            const un = unifyTypes(t, others[i], ctx);
+            if (un !== false) {
+                others[i] = un;
+                return;
+            }
+        }
+        others.push(t);
+    });
+
     return {
         ...candidate,
         open: candidate.open || expected.open,
-        cases: Object.values(expMap),
+        cases: [
+            ...Object.values(expMap),
+            // TODO: dedup?
+            ...others,
+            // ...canEnums.bounded.map((m) =>
+            //     m.type === 'local' ? m.local : m.inner,
+            // ),
+            // ...expEnums.bounded.map((m) =>
+            //     m.type === 'local' ? m.local : m.inner,
+            // ),
+        ],
     };
 };
 

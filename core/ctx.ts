@@ -13,6 +13,7 @@ import { transformExpression, transformType, Visitor } from './transform-tast';
 import { Expression, GlobalRef, RefKind, Sym, TVars, Type } from './typed-ast';
 import { Ctx as ACtx } from './typing/analyze';
 import { getType } from './typing/getType';
+import { tnever, tunit } from './typing/tasks';
 import { makeToTast, ToplevelConfig } from './typing/to-tast';
 import { Ctx as TCtx } from './typing/typeMatches';
 import { constrainTypes } from './typing/unifyTypes';
@@ -233,6 +234,15 @@ const resolve = (
         const idx = ctx.toplevel.items.findIndex((v) => v.name === name);
         if (idx !== -1) {
             return [{ type: 'Recur', idx }];
+        }
+    }
+    if (!rawHash) {
+        for (let { values } of ctx.locals) {
+            for (let { sym, type } of values) {
+                if (sym.name === name) {
+                    return [{ type: 'Local', sym: sym.id }]; // , bound};
+                }
+            }
         }
     }
     // console.log(ctx.aliases, name, Object.hasOwn(ctx.aliases, name), rawHash);
@@ -509,20 +519,30 @@ export const newContext = (): FullContext => {
         },
 
         withValues(exprs) {
-            const defns = exprs.map((t) =>
+            const defns = exprs.map((t) => [
+                t.name,
                 transformExpression(t.expr, locClearVisitor, null),
-            );
-            const hash = hashExprs(defns);
-            // console.log(hash, defns);
-            // require('fs').writeFileSync(hash, JSON.stringify(defns));
+            ]);
+            const hash = hashObject(serial(defns));
+            const rctx = this.toplevelConfig({
+                type: 'Expr',
+                hash,
+                items: exprs.map((expr) => ({
+                    name: expr.name,
+                    type: expr.typ ?? { type: 'TBlank', loc: noloc },
+                })),
+            });
             const ctx = { ...this[opaque] };
             ctx.values = {
                 ...ctx.values,
                 hashed: {
                     ...ctx.values.hashed,
-                    [hash]: exprs.map(({ name, expr }) => ({
+                    [hash]: exprs.map(({ name, expr, typ }) => ({
                         type: 'user',
-                        typ: this.getType(expr)!,
+                        typ:
+                            typ != null && typ.type !== 'TBlank'
+                                ? typ
+                                : rctx.getType(expr)!,
                         expr,
                     })),
                 },
@@ -543,6 +563,16 @@ export const newContext = (): FullContext => {
                 ctx.toplevel.hash = hash;
             }
             return { hash, ctx: { ...this, [opaque]: ctx } };
+        },
+
+        withToplevel(t) {
+            if (t.type === 'TypeAlias') {
+                return this.withTypes(t.elements).ctx;
+            }
+            if (t.type === 'ToplevelLet') {
+                return this.withValues(t.elements).ctx;
+            }
+            return this;
         },
 
         withTypes(types) {
@@ -680,9 +710,6 @@ export const hashType = (type: Type): string => {
     return hashObject(serial(type));
 };
 export const hashTypes = (t: Type[]): string => hashObject(t.map(hashType));
-export const hashExpr = (t: Expression) =>
-    hashObject(serial(transformExpression(t, locClearVisitor, null)));
-export const hashExprs = (t: Expression[]) => hashObject(serial(t));
 
 const ref = (kind: RefKind): Expression => ({ type: 'Ref', kind, loc: noloc });
 const tlam = (
@@ -703,25 +730,6 @@ const tvars = (
     inner,
     loc: noloc,
 });
-// const tapply = (args: Array<Type>, target: Type): TApply => ({
-//     type: 'TApply',
-//     args,
-//     loc: noloc,
-//     target,
-// });
-
-const prelude = `
-enum Result<Ok, Failure> {
-	Ok<Ok>{v: Ok}<Ok>,
-	Failure<Failure>{v: Failure}<Failure>, // lol
-	// maybe we'll allow it as shorthand?
-	// Failure{v: Failure} gets turned into that, because it can tell
-	// that we're using some locally defined types
-}
-
-struct Ok<Ok>{v: Ok}
-struct Failure<Failure>{v: Failure}
-`;
 
 const builtinTypes = `
 int
@@ -751,11 +759,23 @@ toString: (value: bool) => string
 -: (a: float, b: float) => float
 -: (a: int, b: int) => int
 ==: <T: eq>(a: T, b: T) => bool
+!=: <T: eq>(a: T, b: T) => bool
 andThen: <A: task, B: task, R, R2>(a: Task<A, R>, b: (res: R) => Task<B, R2>) => Task<[A | B], R2>
 testIO: <T>(read: string, task: Task<[\`Read((), string) | \`Print(string, ())], T>) => T
-withStore: <T, R, Other: task>(task: Task<[Other | \`Set(T, ()), | \`Get((), T)], R>, initial: T) => Task<Other, R>
+withHandler: <Effects: task, Result, HandledEffects: task, Result2>(task: Task<Effects, Result, HandledEffects>, handler: (input: Task<[Effects | HandledEffects], Result>) => Task<Effects, Result2>) => Task<Effects, Result2>
+isSquare: (int) => bool
 `;
 // withHandler: <A: task, B: task>
+/*
+
+withHandler
+takes a thing
+hmmmmmm what if Task gets a third optional argument?
+
+Task<Effects, Result=(), InnerEffects=[]>
+
+
+*/
 
 export const setupDefaults = (ctx: FullContext) => {
     const named: { [key: string]: RefKind } = {};
@@ -770,16 +790,16 @@ export const setupDefaults = (ctx: FullContext) => {
             default_: null,
         },
         {
-            sym: { id: 0, name: 'Effects' },
+            sym: { id: 1, name: 'Result' },
             bound: null,
             loc: noloc,
-            default_: {
-                type: 'TRecord',
-                items: [],
-                loc: noloc,
-                spreads: [],
-                open: false,
-            },
+            default_: tunit,
+        },
+        {
+            sym: { id: 1, name: 'ExtraInner' },
+            bound: tref(named['task']),
+            loc: noloc,
+            default_: tnever,
         },
     ]);
     Object.keys(errors).forEach((tag) => {
@@ -791,6 +811,7 @@ export const setupDefaults = (ctx: FullContext) => {
         .split('\n')
         .filter((line) => line.trim())
         .forEach((line) => {
+            ctx.resetSym();
             const [name, ...rest] = line.split(':');
             const type = rest.join(':');
             try {
@@ -805,6 +826,7 @@ export const setupDefaults = (ctx: FullContext) => {
                 console.log(type);
             }
         });
+    ctx.resetSym();
 };
 
 export const fullContext = () => {

@@ -25,6 +25,9 @@ export const ToTast = {
             case 'AwaitSuffix':
                 return ctx.ToTast.AwaitSuffix(node, next, ctx);
 
+            case 'ArrowSuffix':
+                return ctx.ToTast.ArrowSuffix(node, next, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -83,6 +86,9 @@ export const ToTast = {
 
     Expression(node: p.Expression, ctx: TCtx): t.Expression {
         switch (node.type) {
+            case 'TypeAbstraction':
+                return ctx.ToTast.TypeAbstraction(node, ctx);
+
             case 'Lambda':
                 return ctx.ToTast.Lambda(node, ctx);
 
@@ -96,9 +102,6 @@ export const ToTast = {
                 return ctx.ToTast.DecoratedExpression(node, ctx);
 
             case 'Apply':
-                if (!ctx.ToTast.Apply) {
-                    console.log(Object.keys(ctx.ToTast))
-                }
                 return ctx.ToTast.Apply(node, ctx);
 
             case 'If':
@@ -159,6 +162,9 @@ export const ToTast = {
             case 'Let':
                 return ctx.ToTast.Let(node, ctx);
 
+            case 'TypeAbstraction':
+                return ctx.ToTast.TypeAbstraction(node, ctx);
+
             case 'Lambda':
                 return ctx.ToTast.Lambda(node, ctx);
 
@@ -217,6 +223,9 @@ export const ToTast = {
         switch (node.type) {
             case 'Let':
                 return ctx.ToTast.Let(node, ctx);
+
+            case 'TypeAbstraction':
+                return ctx.ToTast.TypeAbstraction(node, ctx);
 
             case 'Lambda':
                 return ctx.ToTast.Lambda(node, ctx);
@@ -455,6 +464,9 @@ export const ToAst = {
             case 'Await':
                 return ctx.ToAst.Await(node, ctx);
 
+            case 'TypeAbstraction':
+                return ctx.ToAst.TypeAbstraction(node, ctx);
+
             case 'TemplateString':
                 return ctx.ToAst.TemplateString(node, ctx);
 
@@ -566,6 +578,9 @@ export const ToAst = {
             case 'Await':
                 return ctx.ToAst.Await(node, ctx);
 
+            case 'TypeAbstraction':
+                return ctx.ToAst.TypeAbstraction(node, ctx);
+
             case 'TemplateString':
                 return ctx.ToAst.TemplateString(node, ctx);
 
@@ -574,6 +589,23 @@ export const ToAst = {
 
             case 'DecoratedExpression':
                 return ctx.ToAst.DecoratedExpression(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    VError(node: t.VError, ctx: TACtx): p.VError {
+        switch (node.type) {
+            case 'Dec':
+                return ctx.ToAst.Dec(node, ctx);
+
+            case 'Blank':
+                return ctx.ToAst.Blank(node, ctx);
+
+            case 'TVbl':
+                return ctx.ToAst.TVbl(node, ctx);
 
             default:
                 let _: never = node;
@@ -648,6 +680,9 @@ export const ToAst = {
             case 'Await':
                 return ctx.ToAst.Await(node, ctx);
 
+            case 'TypeAbstraction':
+                return ctx.ToAst.TypeAbstraction(node, ctx);
+
             case 'TemplateString':
                 return ctx.ToAst.TemplateString(node, ctx);
 
@@ -675,6 +710,9 @@ export const ToPP = {
 
             case 'AwaitSuffix':
                 return ctx.ToPP.AwaitSuffix(node, ctx);
+
+            case 'ArrowSuffix':
+                return ctx.ToPP.ArrowSuffix(node, ctx);
 
             default:
                 let _: never = node;
@@ -734,6 +772,9 @@ export const ToPP = {
 
     Expression(node: p.Expression, ctx: PCtx): pp.PP {
         switch (node.type) {
+            case 'TypeAbstraction':
+                return ctx.ToPP.TypeAbstraction(node, ctx);
+
             case 'Lambda':
                 return ctx.ToPP.Lambda(node, ctx);
 
@@ -807,6 +848,9 @@ export const ToPP = {
             case 'Let':
                 return ctx.ToPP.Let(node, ctx);
 
+            case 'TypeAbstraction':
+                return ctx.ToPP.TypeAbstraction(node, ctx);
+
             case 'Lambda':
                 return ctx.ToPP.Lambda(node, ctx);
 
@@ -865,6 +909,9 @@ export const ToPP = {
         switch (node.type) {
             case 'Let':
                 return ctx.ToPP.Let(node, ctx);
+
+            case 'TypeAbstraction':
+                return ctx.ToPP.TypeAbstraction(node, ctx);
 
             case 'Lambda':
                 return ctx.ToPP.Lambda(node, ctx);
@@ -1033,6 +1080,9 @@ export const ToIR = {
             case 'Await':
                 return ctx.ToIR.Await(node, ctx);
 
+            case 'TypeAbstraction':
+                return ctx.ToIR.TypeAbstraction(node, ctx);
+
             case 'TemplateString':
                 return ctx.ToIR.TemplateString(node, ctx);
 
@@ -1086,6 +1136,9 @@ export const ToIR = {
             case 'Await':
                 return ctx.ToIR.Await(node, ctx);
 
+            case 'TypeAbstraction':
+                return ctx.ToIR.TypeAbstraction(node, ctx);
+
             case 'TemplateString':
                 return ctx.ToIR.TemplateString(node, ctx);
 
@@ -1122,6 +1175,9 @@ export const ToJS = {
 
             case 'TemplateString':
                 return ctx.ToJS.TemplateString(node, ctx);
+
+            case 'TypeAbstraction':
+                return ctx.ToJS.TypeAbstraction(node, ctx);
 
             case 'Enum':
                 return ctx.ToJS.Enum(node, ctx);

@@ -1,5 +1,12 @@
 import path from 'path';
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import {
+    existsSync,
+    fstat,
+    readdirSync,
+    readFileSync,
+    unlinkSync,
+    writeFileSync,
+} from 'fs';
 import { createServer, request } from 'http';
 import { createServer as vite } from 'vite';
 
@@ -14,6 +21,23 @@ import { createServer as vite } from 'vite';
     await server.listen();
 
     createServer((req, res) => {
+        if (req.url?.startsWith('/rename/') && !req.url.includes('..')) {
+            const rest = req.url.slice('/rename/'.length);
+            let [one, two] = rest.split(':');
+            one = path.join('./core/', one);
+            two = path.join('./core/', two);
+            if (
+                existsSync(one) &&
+                existsSync(path.dirname(two)) &&
+                !existsSync(two)
+            ) {
+                writeFileSync(two, readFileSync(one));
+                unlinkSync(one);
+                return res.writeHead(204).end();
+            } else {
+                return res.writeHead(404).end(`${one} or ${two} not valid`);
+            }
+        }
         // OK so now we do the:
         // "read this if you can"
         if (req.url?.startsWith('/elements/')) {

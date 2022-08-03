@@ -1,5 +1,6 @@
 import { Ctx } from '../typing/analyze';
 import { expandEnumCases } from '../typing/typeMatches';
+import { enumCaseMap } from './enums';
 import { Pattern } from './pattern';
 import { allRecordItems } from './records';
 import { Type } from './type';
@@ -15,15 +16,21 @@ export const patternIsExhaustive = (
                 return false;
             }
             const cases = expandEnumCases(typ, ctx);
-            if (!cases || cases.length !== 1 || cases[0].tag !== pat.tag) {
+            const map = cases ? enumCaseMap(cases.cases, ctx) || {} : {};
+            if (
+                // Can't account for type variables
+                cases?.bounded.length ||
+                Object.keys(map).length !== 1 ||
+                map[pat.tag] == null
+            ) {
                 return false;
             }
-            if (!!pat.payload !== !!cases[0].payload) {
+            if (!!pat.payload !== !!map[pat.tag].payload) {
                 return false;
             }
             return (
                 !pat.payload ||
-                patternIsExhaustive(pat.payload, cases[0].payload!, ctx)
+                patternIsExhaustive(pat.payload, map[pat.tag].payload!, ctx)
             );
         }
         case 'PBlank':

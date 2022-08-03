@@ -2,6 +2,7 @@ import { unifyEnums } from '../elements/enums';
 import { unifyRecords } from '../elements/records';
 import { Type } from '../typed-ast';
 import { numOps, unifyOps } from './ops';
+import { maybeExpandTask } from './tasks';
 import { Ctx, typeMatches } from './typeMatches';
 
 // For now, just take the greater of the two.
@@ -24,8 +25,20 @@ export const unifyTypes = (one: Type, two: Type, ctx: Ctx): false | Type => {
         one = one.inner;
     }
 
+    if (one.type === 'TBlank') {
+        return two;
+    }
+    if (two.type === 'TBlank') {
+        return one;
+    }
+
     if (one.type === 'TEnum') {
+        two = maybeExpandTask(two, ctx) ?? two;
         return unifyEnums(one, two, ctx);
+    }
+    if (two.type === 'TEnum') {
+        one = maybeExpandTask(one, ctx) ?? one;
+        return unifyEnums(two, one, ctx);
     }
     if (one.type === 'TRecord') {
         return unifyRecords(one, two, ctx);
@@ -39,13 +52,6 @@ export const unifyTypes = (one: Type, two: Type, ctx: Ctx): false | Type => {
         return two;
     }
     if (typeMatches(two, one, ctx)) {
-        return one;
-    }
-
-    if (one.type === 'TBlank') {
-        return two;
-    }
-    if (two.type === 'TBlank') {
         return one;
     }
 

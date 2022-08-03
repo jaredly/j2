@@ -98,6 +98,105 @@ can we bring this back?
 //     }
 // };
 
+export const refineType = (
+    pat: Pattern,
+    type: t.Type,
+    ctx: TMCtx,
+): t.Type | null => {
+    switch (pat.type) {
+        case 'PBlank':
+        case 'PName':
+            return null;
+        case 'PRecord': {
+            if (type.type !== 'TRecord') {
+                return type;
+            }
+            const items = allRecordItems(type, ctx);
+            if (!items) {
+                return type;
+            }
+            // let res: t.RecordKeyValue = [];
+            // const byName: {[key: string]: Pattern} = {}
+            // pat.items.forEach(({name, pat}) => byName[name] = pat)
+            // for (let [name, value] of Object.entries(items)) {
+            //     if (byName[name]) {
+            //     }
+            // }
+            let remaining = false;
+
+            for (let { name, pat: cpat } of pat.items) {
+                if (!items[name]) {
+                    return type;
+                }
+                const res = refineType(cpat, items[name].value, ctx);
+                if (res != null) {
+                    remaining = true;
+                    items[name] = { ...items[name], value: res };
+                }
+            }
+            return remaining
+                ? {
+                      ...type,
+                      spreads: [],
+                      items: Object.values(items),
+                  }
+                : null;
+        }
+        case 'PDecorated': {
+            return refineType(pat.inner, type, ctx);
+        }
+        case 'PEnum': {
+            type = maybeExpandTask(type, ctx) ?? type;
+            if (type.type !== 'TEnum') {
+                return type;
+            }
+            const cases = expandEnumCases(type, ctx);
+            if (!cases) {
+                return { ...type, cases: [] }; // all out of cases!
+            }
+            const res: (t.Type | t.EnumCase)[] = [];
+            for (let kase of cases.cases) {
+                if (kase.tag === pat.tag) {
+                    if (!pat.payload) {
+                        // return {
+                        //     ...type,
+                        //     cases: cases.filter(k => k.tag !== pat.tag)
+                        // };
+                        continue;
+                    }
+                    if (kase.payload) {
+                        const inner = refineType(
+                            pat.payload,
+                            kase.payload,
+                            ctx,
+                        );
+                        if (inner == null) {
+                            continue;
+                        }
+                        res.push({ ...kase, payload: inner });
+                    }
+                    // return (
+                    //     kase.payload != null &&
+                    //     typeMatchesPattern(pat.payload, kase.payload, ctx)
+                    // );
+                } else {
+                    res.push(kase);
+                }
+            }
+            return {
+                ...type,
+                cases: res.concat(
+                    cases.bounded.map((m) =>
+                        m.type === 'local' ? m.local : m.inner,
+                    ),
+                ),
+            };
+        }
+        // TODO: Records and such
+    }
+    return type;
+};
+
 /**
  * Checks to see if the type of an arg or let is appropriate.
  */
@@ -123,6 +222,7 @@ export const typeMatchesPattern = (
             return typeMatchesPattern(pat.inner, type, ctx);
         }
         case 'PEnum': {
+            type = maybeExpandTask(type, ctx) ?? type;
             if (type.type !== 'TEnum') {
                 return false;
             }
@@ -130,7 +230,7 @@ export const typeMatchesPattern = (
             if (!cases) {
                 return true;
             }
-            for (let kase of cases) {
+            for (let kase of cases.cases) {
                 if (kase.tag === pat.tag) {
                     if (!pat.payload) {
                         return true;
@@ -141,7 +241,7 @@ export const typeMatchesPattern = (
                     );
                 }
             }
-            return true;
+            return false;
         }
         case 'PRecord': {
             if (type.type !== 'TRecord') {
@@ -244,10 +344,11 @@ export const getLocals = (
             return;
         case 'PEnum': {
             type = ctx.resolveRefsAndApplies(type) ?? type;
+            type = maybeExpandTask(type, ctx) ?? type;
             if (type.type !== 'TEnum') {
                 return;
             }
-            const cases = expandEnumCases(type, ctx) ?? [];
+            const cases = expandEnumCases(type, ctx)?.cases ?? [];
             for (let kase of cases) {
                 if (kase.tag === pat.tag) {
                     if (kase.payload && pat.payload) {
@@ -267,7 +368,10 @@ export const ToTast = {
     PBlank(pat: p.PBlank, ctx: TCtx): t.Pattern {
         return { type: 'PBlank', loc: pat.loc };
     },
-    PName({ type, name, hash, loc }: p.PName, ctx: TCtx): PName {
+    PName({ type, name, hash, loc }: p.PName, ctx: TCtx): PName | PBlank {
+        if (name === '_' && !hash) {
+            return { type: 'PBlank', loc };
+        }
         const sym = hash ? { name, id: +hash.slice(2, -1) } : ctx.sym(name);
         // locals.push({ sym, type: expected ?? ctx.newTypeVar() });
         return {
@@ -372,7 +476,7 @@ export const ToAst = {
         return {
             type: 'PName',
             name: sym.name,
-            hash: `#[${sym.id}]`,
+            hash: ctx.showIds ? `#[${sym.id}]` : null,
             loc,
         };
     },
@@ -499,6 +603,7 @@ import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { allRecordItems } from './records';
 import { and } from './ifs';
+import { maybeExpandTask } from '../typing/tasks';
 export const ToJS = {
     PatternCond(
         p: Pattern,
@@ -506,6 +611,7 @@ export const ToJS = {
         type: t.Type,
         ctx: JCtx,
     ): b.Expression | null {
+        // ctx.actx.debugger();
         switch (p.type) {
             case 'PBlank':
                 return null;
@@ -518,17 +624,22 @@ export const ToJS = {
                         ? b.numericLiteral(p.value)
                         : b.stringLiteral(p.text),
                 );
-            case 'PEnum':
-                if (type.type !== 'TEnum') {
+            case 'PEnum': {
+                const etype = maybeExpandTask(type, ctx.actx) ?? type;
+                if (etype.type !== 'TEnum') {
                     // TODO: make this an error
                     return null;
                 }
-                const cases = expandEnumCases(type, ctx.actx);
+                const cases = expandEnumCases(etype, ctx.actx);
                 if (!cases) {
                     return null;
                 }
-                const allBare = cases.every((kase) => !kase.payload);
-                const anyBare = cases.some((kase) => !kase.payload);
+                const allBare =
+                    cases.cases.every((kase) => !kase.payload) &&
+                    !cases.bounded.length;
+                const anyBare =
+                    cases.cases.some((kase) => !kase.payload) ||
+                    cases.bounded.length;
                 const targetCheck = allBare
                     ? target
                     : anyBare
@@ -541,9 +652,9 @@ export const ToJS = {
                           target,
                           b.memberExpression(target, b.identifier('tag')),
                       )
-                    : b.memberExpression(target, b.identifier('payload'));
+                    : b.memberExpression(target, b.identifier('tag'));
                 const one =
-                    cases.length === 1
+                    cases.cases.length === 1 && !cases.bounded.length
                         ? null
                         : b.binaryExpression(
                               '===',
@@ -553,15 +664,24 @@ export const ToJS = {
                 if (!p.payload) {
                     return one;
                 }
+                const myCase = cases.cases.find((k) => k.tag === p.tag);
+                if (!myCase) {
+                    return b.logicalExpression(
+                        '&&',
+                        one || b.booleanLiteral(false),
+                        b.identifier('invalid case ' + p.tag),
+                    );
+                }
                 const inner = ctx.ToJS.PatternCond(
                     p.payload,
-                    b.memberExpression(target, b.identifier('payload'), true),
-                    type,
+                    b.memberExpression(target, b.identifier('payload')),
+                    myCase.payload ?? { type: 'TBlank', loc: p.loc },
                     ctx,
                 );
                 return inner && one
                     ? b.logicalExpression('&&', one, inner)
                     : one ?? inner;
+            }
             case 'PName':
                 return null;
             case 'PDecorated':

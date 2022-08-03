@@ -1,0 +1,25 @@
+let x = 30
+let y = 20
+let z = 200
+alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] x#[h5269b5314eb17677e43323597dd76917522bde5c] y#[hac7b75adb381a65078ad1b95ececb1298909f21f] z#[h1a1720322dc509851afefa32172d5b1380e7ecc1]
+x + y + z == 250
+let m = () => x + y
+alias m#[h4aec8e18fcdfb3e9f0a6a72a3c58bac9854d9be6]
+m() == 50
+alias -#[h4dd9308469e477a4a756b4b286de0625d5a98af9]
+let n = () => m() - 2
+alias n#[he3309bc85cd288bb2f5146b02343641ec8683b12]
+n() == 48
+alias >#[hc1d03250b26806868f520136d8a763b0c0edff9b] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+let mz: (n: int) => int = (n: int) => if n > 10 {
+    n;
+} else {
+    mz(n + 20);
+}
+alias mz#[hec30b196dcca6ff506cdb1dc7118d4774aebe7ac]
+mz(23) == 23
+mz(10) == 30
+`One == `One
+`Hi(10) == `Hi(10)
+alias !=#[hbeb29e10d9c290c0bc01338abc157fecd5dc995f]
+`Hi(10) != `Hi(20)

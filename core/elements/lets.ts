@@ -11,7 +11,7 @@ import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
 
 export const grammar = `
 Block = "{" _ stmts:Stmts? _ "}"
-Stmts = first:Stmt rest:( _nonnewline ';'? '\n' _ Stmt)* _ ';'?
+Stmts = first:Stmt rest:( _nonnewline ';'? _nonnewline '\n' _ Stmt)* _ ';'?
 Stmt = Let / Expression
 Let = "let" _ pat:Pattern _ "=" _ expr:Expression
 
@@ -70,7 +70,7 @@ export const ToTast = {
                     const res = ctx.ToTast.Stmt(stmt, ctx);
                     if (res.type === 'Let') {
                         const locals: t.Locals = [];
-                        ctx.debugger();
+                        // ctx.debugger();
                         const typ =
                             ctx.getType(res.expr) ??
                             typeForPattern(res.pat, ctx);
@@ -293,7 +293,7 @@ import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { typeToplevelT } from './base';
 import { patternIsExhaustive } from './exhaustive';
-import { IIf } from './ifs';
+import { dtype, IIf } from './ifs';
 import { ISwitch } from './switchs';
 import { typeMatches } from '../typing/typeMatches';
 export const ToJS = {
@@ -385,7 +385,9 @@ const checkLet = (node: t.Let, ctx: { ctx: ACtx; hit: {} }) => {
     if (t && !patternIsExhaustive(node.pat, t, ctx.ctx)) {
         return {
             ...node,
-            pat: pdecorate(node.pat, 'notExhaustive', ctx),
+            pat: pdecorate(node.pat, 'notExhaustive', ctx, [
+                dtype('type', t, node.pat.loc),
+            ]),
         };
     }
     return null;
@@ -425,6 +427,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
                             'resMismatch',
                             ctx.hit,
                             ctx.ctx,
+                            [dtype('inferred', t, el.expr.loc)],
                         ),
                     };
                 }

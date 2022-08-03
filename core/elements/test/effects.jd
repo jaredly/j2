@@ -1,17 +1,36 @@
 alias string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
-let print = (value#[0]: string) => `Print(value#[0], (()) => `Return())
-let read = `Read((), (v#[0]: string) => `Return(v#[0]))
-alias print#[h795e726bf4f5e172635cc0179d9ca57474b0b4d1] read#[hb4960a73062670598fa2100bb3c961af8368de28]
+let print = (value: string) => `Print(value, (()) => `Return())
+let read = `Read((), (result: string) => `Return(result))
+alias print#[h015d7d5dadd610dc99f13c36a29ac60c22f4b96c] read#[h2fac42ba0b6e30bfe018a86ad694abb731019b69]
 let helloFolks = () => {
     print("Hello folks")!;
     print("Got ${read!}!")!;
     "done ${read!}";
 }
-alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] ==#[h0e26cba9974393f0886bf43a5876c4132b1e69bb]
-// testIO<string>("test", helloFolks()) == "done test"
-2 == 2 * 1
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
-3 == 2 + 1
-alias Task#[h36ea667ef0c00c6fcbfe2206360b8ce768e10926]
-// Hmm some
-let fail: Task<[ `Failure([ `Bad | `News(string) ], []) ]> = `Failure(`Bad, ())
+type Read = [`Read((), string)]
+type Print = [`Print(string, ())]
+alias Read#[h39d4a8221a80e1486be57f401a27a7eb6b0afc3c] Task#[h67d00eba961cd5135110775d8654598dc22e7274] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe] withHandler#[ha096a125d17e577335cba67a01ae6f08c8a8254b]
+let alwaysRead = <Inner: task>(readResponse: string, task: Task<[Read | Inner], string>): Task<
+    Inner,
+    string,
+> => {
+    switch task {
+        `Return(result) => `Return(result);
+        `Read(_, k) => alwaysRead<Inner>(readResponse, k(readResponse));
+        otherwise => withHandler<[Inner], string, [Read], string>(
+            otherwise,
+            (task) => alwaysRead<Inner>(readResponse, task),
+        );
+    };
+}
+alias Print#[h54ed15b99ee8e24a9deca9b4c3d180679bfcf096]
+let collect: (string, Task<[Print], ()>) => string = (collected, task) => switch task {
+    `Return() => collected;
+    `Print(value, k) => collect("${collected}\n${value}", k(()));
+}
+alias alwaysRead#[hae5f61e2d17bd16b049c9619b32e2005a0f775d6] helloFolks#[hc85910b21b84b13ec0ae48d23727cb5c94877ccb]
+let inner = () => {
+    print(alwaysRead<Print>("who", helloFolks())!)!;
+}
+alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] collect#[h9da840f68b145b90780861136b7387efb8ef8ac4] inner#[h8fb1e2e99ca023d0c865bf17bdd57f40f6cc473e]
+collect("Initial", inner()) == "Initial\nHello folks\nGot who!\ndone who"

@@ -8,6 +8,7 @@ import { Ctx as ACtx } from './analyze';
 import { toId } from '../ids';
 
 export type Ctx = {
+    showIds: boolean;
     printRef: (
         ref: t.RefKind,
         loc: p.Loc,
@@ -28,7 +29,7 @@ export type Ctx = {
     actx: ACtx;
 };
 
-export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
+export const printCtx = (fctx: FullContext, showIds: boolean = true): Ctx => {
     const backAliases: { [key: string]: string } = {};
     const aliases: { [key: string]: string } = {};
 
@@ -83,6 +84,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
     return {
         actx: fctx,
         reverse,
+        showIds,
 
         withToplevel(top) {
             if (!top) {
@@ -133,8 +135,11 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             }
         },
         printSym(sym) {
-            if (showIds || true) {
-                return { label: sym.name, hash: `#[${sym.id}]` };
+            if (true) {
+                return {
+                    label: sym.name,
+                    hash: showIds ? `#[${sym.id}]` : '',
+                };
             }
             const hash = '' + sym.id;
             if (!this.aliases[hash]) {
@@ -151,12 +156,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
                     ? this.reverse.decorators[hash]
                     : this.reverse.types[hash];
 
-            if (
-                name &&
-                !showIds &&
-                ref.type !== 'Local' &&
-                ref.type !== 'Recur'
-            ) {
+            if (name && ref.type !== 'Local' && ref.type !== 'Recur') {
                 if (!this.aliases[hash]) {
                     add(name, ref);
                 }
@@ -170,7 +170,7 @@ export const printCtx = (fctx: FullContext, showIds: boolean = false): Ctx => {
             return {
                 type: 'Identifier',
                 text: name ?? 'unnamed',
-                hash: `#[${hash}]`,
+                hash: showIds ? `#[${hash}]` : null,
                 loc,
             };
         },

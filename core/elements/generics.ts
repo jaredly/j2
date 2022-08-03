@@ -8,12 +8,16 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
+import { Ctx as TMCtx } from '../typing/typeMatches';
 import { noloc } from '../consts';
 import { makeApply } from './apply';
+import { nodebug } from '../ctx';
 
 export const grammar = `
 TypeApplicationSuffix = "<" _ vbls:TypeAppVbls ">"
 TypeAppVbls = first:Type rest:( _ "," _ Type)* _ ","? _
+
+TypeAbstraction = "<" _ args:TBargs _ ">" _ inner:Expression
 `;
 
 // hello<T>(xyz)
@@ -21,14 +25,22 @@ export type TypeApplication = {
     type: 'TypeApplication';
     target: t.Expression;
     args: Array<t.Type>;
+    inferred: boolean;
     loc: t.Loc;
 };
 
 // <T> hello
-export type TypeVariables = {
-    type: 'TypeVariables';
-    items: Array<{ sym: t.Sym; bound: t.Type }>;
+export type TypeAbstraction = {
+    type: 'TypeAbstraction';
+    items: Array<t.TVar>;
     body: t.Expression;
+    loc: t.Loc;
+};
+
+export type ITypeAbstraction = {
+    type: 'TypeAbstraction';
+    items: Array<t.TVar>;
+    body: t.IExpression;
     loc: t.Loc;
 };
 
@@ -45,13 +57,72 @@ export const ToTast = {
         target: t.Expression,
         ctx: TCtx,
     ): t.Expression {
+        const args = suffix.vbls.items.map((vbl) => ctx.ToTast.Type(vbl, ctx));
+        if (target.type === 'Ref' && target.kind.type === 'Unresolved') {
+            const resolved = ctx.resolve(target.kind.text, null);
+            for (let res of resolved) {
+                const t = ctx.getType({
+                    type: 'Ref',
+                    kind: res,
+                    loc: target.loc,
+                });
+                if (t && t.type === 'TVars') {
+                    if (t.args.length === args.length) {
+                        if (
+                            t.args.every((arg, i) =>
+                                matchesBound(args[i], arg.bound, ctx),
+                            )
+                        ) {
+                            target = {
+                                type: 'Ref',
+                                kind: res,
+                                loc: target.loc,
+                            };
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return {
             type: 'TypeApplication',
             target,
-            args: suffix.vbls.items.map((vbl) => ctx.ToTast.Type(vbl, ctx)),
+            inferred: false,
+            args: args,
             loc: { ...suffix.loc, start: target.loc.start },
         };
     },
+    TypeAbstraction(
+        { args, loc, inner }: p.TypeAbstraction,
+        ctx: TCtx,
+    ): TypeAbstraction {
+        const targs = args.items.map((arg) => ctx.ToTast.TBArg(arg, ctx));
+        let innerCtx = ctx.withLocalTypes(targs);
+        return {
+            type: 'TypeAbstraction',
+            items: targs,
+            body: innerCtx.ToTast.Expression(inner, innerCtx),
+            loc,
+        };
+    },
+};
+
+export const matchesBound = (
+    t: t.Type,
+    bound: t.Type | null,
+    ctx: TMCtx,
+    path?: string[],
+) => {
+    if (!bound) {
+        return true;
+    }
+    if (t.type === 'TRef' && t.ref.type === 'Local') {
+        const argbound = ctx.getBound(t.ref.sym);
+        if (argbound && typeMatches(argbound, bound, ctx, path)) {
+            return true;
+        }
+    }
+    return typeMatches(t, bound, ctx, path);
 };
 
 export const ToAst = {
@@ -71,7 +142,25 @@ export const ToAst = {
                 loc,
             },
             loc,
+            ctx.showIds,
         );
+    },
+    TypeAbstraction(
+        { items, body, loc }: TypeAbstraction,
+        ctx: TACtx,
+    ): p.TypeAbstraction {
+        items.forEach((arg) => ctx.recordSym(arg.sym, 'type'));
+        ctx = { ...ctx, actx: ctx.actx.withLocalTypes(items) };
+        return {
+            type: 'TypeAbstraction',
+            args: {
+                type: 'TBargs',
+                items: items.map((item) => ctx.ToAst.TBArg(item, ctx)),
+                loc,
+            },
+            inner: ctx.ToAst.Expression(body, ctx),
+            loc,
+        };
     },
 };
 
@@ -84,9 +173,56 @@ export const ToPP = {
             '>',
         );
     },
+    TypeAbstraction({ args, inner, loc }: p.TypeAbstraction, ctx: PCtx): pp.PP {
+        return pp.items(
+            [
+                pp.args(
+                    args.items.map((arg) => ctx.ToPP.TBArg(arg, ctx)),
+                    args.loc,
+                    '<',
+                    '>',
+                ),
+                ctx.ToPP.Expression(inner, ctx),
+            ],
+            loc,
+        );
+    },
 };
 
+import { Ctx as ICtx } from '../ir/ir';
+export const ToIR = {
+    TypeApplication(
+        { loc, target, args }: t.TypeApplication,
+        ctx: ICtx,
+    ): t.IExpression {
+        // ugh this is gonna mess me up, right?
+        // like, ... idk maybe I do need to keep this in IR,
+        // at least to be able to know what types things are?
+        // on the other hand, maybe I can bake types at this point?
+        // like, monomorphizing is going to happen before this.
+        return ctx.ToIR.Expression(target, ctx);
+    },
+    TypeAbstraction(
+        { items, body, loc }: t.TypeAbstraction,
+        ctx: ICtx,
+    ): t.IExpression {
+        ctx = { ...ctx, actx: ctx.actx.withLocalTypes(items) };
+        return {
+            type: 'TypeAbstraction',
+            items,
+            body: ctx.ToIR.Expression(body, ctx),
+            loc,
+        };
+    },
+};
+
+export const ToJS = {};
+
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
+    TypeAbstraction(node, ctx) {
+        let innerCtx = ctx.ctx.withLocalTypes(node.items);
+        return [null, { ...ctx, ctx: innerCtx }];
+    },
     Expression_TypeApplication(node, { ctx, hit }) {
         const target = ctx.getType(node.target);
         if (!target) {
@@ -110,12 +246,12 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         // Hmm ok what about,
         let changed = false;
         const args = node.args.map((arg, i) => {
-            const targ = targs[i];
+            const targ: t.TVar = targs[i];
             if (!targ) {
                 changed = true;
                 return tdecorate(arg, 'extraArg', { hit, ctx });
             }
-            if (targ.bound && !typeMatches(arg, targ.bound, ctx)) {
+            if (targ.bound && !matchesBound(arg, targ.bound, ctx)) {
                 changed = true;
                 return tdecorate(arg, 'argWrongType', { hit, ctx }, [
                     {
@@ -172,7 +308,8 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                 return tdecorate(arg, 'extraArg', { hit, ctx });
             }
             const { bound } = targs[i];
-            if (bound && !typeMatches(arg, bound, ctx)) {
+
+            if (bound && !matchesBound(arg, bound, ctx)) {
                 changed = true;
                 return tdecorate(arg, 'argWrongType', { hit, ctx }, [
                     {
