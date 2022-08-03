@@ -38,6 +38,12 @@ export function annotationVisitor(
             }
             return null;
         },
+        // Hmmm highlighting pnames is maybe going to be a pain
+        // because the type might be variable?
+        // PName(node, ctx) {
+        //     const t = getType()
+        //     return null
+        // },
         ToplevelLet(node, ctx) {
             node.elements.forEach((el) => {
                 const t =

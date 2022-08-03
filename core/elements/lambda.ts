@@ -1,7 +1,7 @@
 import { transformExpression, Visitor } from '../transform-tast';
 import { decorate, tdecorate } from '../typing/analyze';
 import { Ctx as ACtx } from '../typing/analyze';
-import { typeMatches } from '../typing/typeMatches';
+import { ConstraintMap, typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -98,6 +98,17 @@ export const ToTast = {
         const tbody = ctx.ToTast.Expression(body, ctx);
         const tres =
             res && res.type !== 'TBlank' ? ctx.ToTast.Type(res, ctx) : null;
+        if (tres && tres.type !== 'TBlank') {
+            const bt = ctx.getType(tbody);
+            if (bt) {
+                const constraints: ConstraintMap = {};
+                if (typeMatches(bt, tres, ctx, [], constraints)) {
+                    Object.keys(constraints).forEach((k) => {
+                        ctx.addTypeConstraint(+k, constraints[+k]);
+                    });
+                }
+            }
+        }
         return {
             type: 'Lambda',
             args: targs,
@@ -311,7 +322,8 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
                 if (effects.length) {
                     res = makeTaskType(effects, res, ctx.ctx);
                 }
-                if (!typeMatches(res, node.res, ctx.ctx)) {
+                const constraints: ConstraintMap = {};
+                if (!typeMatches(res, node.res, ctx.ctx, [], constraints)) {
                     changed = true;
                     node = {
                         ...node,
@@ -319,6 +331,10 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
                             dtype('inferred', res, node.res.loc),
                         ]),
                     };
+                } else {
+                    Object.keys(constraints).forEach((k) => {
+                        ctx.ctx.addTypeConstraint(+k, constraints[+k]);
+                    });
                 }
             }
         }

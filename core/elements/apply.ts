@@ -1,5 +1,10 @@
 import { Visitor } from '../transform-tast';
-import { Constraints, decorate, tdecorate } from '../typing/analyze';
+import {
+    collapseConstraints,
+    Constraints,
+    decorate,
+    tdecorate,
+} from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
 import { ConstraintMap, typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
@@ -113,6 +118,34 @@ export const maybeAutoType = (node: t.Apply, ctx: TCtx): t.Apply => {
                 });
                 return auto.apply;
             }
+        }
+    }
+
+    const inner = ctx.getType(node.target);
+    if (inner) {
+        const argTypes = node.args.map((arg) => ctx.getType(arg));
+        if (argTypes.every(Boolean)) {
+            const constraints: ConstraintMap = {};
+            const res = ctx.newTypeVar();
+            typeMatches(
+                inner,
+                {
+                    type: 'TLambda',
+                    args: argTypes.map((t) => ({
+                        typ: t!,
+                        label: '',
+                        loc: t!.loc,
+                    })),
+                    loc: node.loc,
+                    result: res,
+                },
+                ctx,
+                [],
+                constraints,
+            );
+            Object.keys(constraints).forEach((key) => {
+                ctx.addTypeConstraint(+key, constraints[+key]);
+            });
         }
     }
 
@@ -639,6 +672,9 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
         //         result: { type: 'TBlank', loc: node.loc },
         //     });
         // }
+        if (ttype.type === 'TVbl') {
+            ttype = collapseConstraints(ctx.currentConstraints(ttype.id), ctx);
+        }
         if (ttype.type !== 'TLambda') {
             if (ttype.type === 'TVars') {
                 // return {

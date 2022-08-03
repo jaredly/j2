@@ -5,7 +5,7 @@ import { getLocals, Locals, typeForPattern } from '../elements/pattern';
 import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
 import { transformType } from '../transform-tast';
 import { Expression, GlobalRef, Loc, TVars, Type } from '../typed-ast';
-import { ifLocals } from './analyze';
+import { collapseConstraints, ifLocals } from './analyze';
 import { collapseOps } from './ops';
 import { collectEffects, inferTaskType, makeTaskType } from './tasks';
 import { Ctx, typeMatches } from './typeMatches';
@@ -168,7 +168,11 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                     return ctx.localType(expr.kind.sym);
             }
         case 'Apply':
-            const typ = getType(expr.target, ctx);
+            let typ = getType(expr.target, ctx);
+            if (typ?.type === 'TVbl') {
+                const current = ctx.currentConstraints(typ.id);
+                typ = collapseConstraints(current, ctx);
+            }
             if (typ?.type !== 'TLambda') {
                 return null;
             }

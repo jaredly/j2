@@ -23,3 +23,6 @@ let wname = (v: [`Age(int)]) => 10
     `Ho({n}) => wint(n);
 }
 (v) => "Hi ${v}"
+(a): int => a(10)
+({a}): int => a
+(`A(a)): int => a

@@ -765,6 +765,7 @@ andThen: <A: task, B: task, R, R2>(a: Task<A, R>, b: (res: R) => Task<B, R2>) =>
 testIO: <T>(read: string, task: Task<[\`Read((), string) | \`Print(string, ())], T>) => T
 withHandler: <Effects: task, Result, HandledEffects: task, Result2>(task: Task<Effects, Result, HandledEffects>, handler: (input: Task<[Effects | HandledEffects], Result>) => Task<Effects, Result2>) => Task<Effects, Result2>
 isSquare: (int) => bool
+toInt: (string) => [\`Ok(int) | \`Err([\`InvalidInt])]
 `;
 // withHandler: <A: task, B: task>
 /*

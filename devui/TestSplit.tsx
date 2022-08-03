@@ -410,7 +410,7 @@ export const TopEditor = ({
                 clearTimeout(tid.current);
                 // if (evt.target === evt.currentTarget) {
                 const target = evt.currentTarget;
-                tid.current = setTimeout(() => resetHighlights(target), 200);
+                tid.current = setTimeout(() => resetHighlights(target), 100);
                 // resetHighlights(target)
                 // }
             }}
@@ -467,7 +467,7 @@ export const TopEditor = ({
                                         actx.ToAst.Decorator(error.dec, actx),
                                         p,
                                     ),
-                                    200,
+                                    100,
                                 );
                                 hover.append(node);
                             }
