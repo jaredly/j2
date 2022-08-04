@@ -147,6 +147,7 @@ export const constrainTypes = (
     one: Type,
     two: Type,
     ctx: Ctx,
+    constraints?: ConstraintMap,
 ): false | Type => {
     const c2 = ctx.resolveRefsAndApplies(one)!;
     const e2 = ctx.resolveRefsAndApplies(two);
@@ -171,6 +172,48 @@ export const constrainTypes = (
     // if (one.type === 'TRecord') {
     //     return unifyRecords(one, two, ctx);
     // }
+
+    // This ... isn't correct?
+    if (one.type === 'TVbl') {
+        if (constraints) {
+            const current = addNewConstraint(
+                one.id,
+                { inner: two },
+                constraints,
+                ctx,
+            );
+            if (current) {
+                constraints[one.id] = current;
+                return two;
+            }
+        } else {
+            const current = collapseConstraints(
+                ctx.currentConstraints(one.id),
+                ctx,
+            );
+            return unifyTypes(current, two, ctx);
+        }
+    }
+    if (two.type === 'TVbl') {
+        if (constraints) {
+            const current = addNewConstraint(
+                two.id,
+                { inner: one },
+                constraints,
+                ctx,
+            );
+            if (current) {
+                constraints[two.id] = current;
+                return one;
+            }
+        } else {
+            const current = collapseConstraints(
+                ctx.currentConstraints(two.id),
+                ctx,
+            );
+            return unifyTypes(one, current, ctx);
+        }
+    }
 
     if (one.type === 'TBlank') {
         return two;

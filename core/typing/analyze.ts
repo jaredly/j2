@@ -215,12 +215,15 @@ export const addNewConstraint = (
         newConstraint,
         ctx.currentConstraints(id),
         ctx,
+        constraints,
     );
     if (!current) {
         return null;
     }
     const waiting = constraints[id];
-    current = waiting ? mergeConstraints(current, waiting, ctx) : current;
+    current = waiting
+        ? mergeConstraints(current, waiting, ctx, constraints)
+        : current;
     return current;
 };
 
@@ -228,14 +231,15 @@ export const mergeConstraints = (
     one: Constraints,
     two: Constraints,
     ctx: TMCtx,
+    constraints?: ConstraintMap,
 ): Constraints | null => {
     const outer =
         one.outer && two.outer
-            ? constrainTypes(one.outer, two.outer, ctx)
+            ? constrainTypes(one.outer, two.outer, ctx, constraints)
             : one.outer ?? two.outer;
     const inner =
         one.inner && two.inner
-            ? unifyTypes(one.inner, two.inner, ctx)
+            ? unifyTypes(one.inner, two.inner, ctx, constraints)
             : one.inner ?? two.inner;
     if (inner && outer && !typeMatches(inner, outer, ctx)) {
         return null;

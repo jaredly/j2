@@ -872,16 +872,8 @@ export const autoTypeApply = (
     passedInArgs: t.Type[],
     ctx: Ctx,
 ): null | { apply: t.Apply; constraints: ConstraintMap } => {
-    if (1 == 2) {
+    if (window.NEWVERSION && 1 == 1) {
         const symbols: { [num: number]: t.Type } = {};
-        const vbls = vars.map((v) => {
-            let vbl = ctx.newTypeVar();
-            if (v.bound) {
-                ctx.addTypeConstraint(vbl.id, { outer: v.bound });
-            }
-            symbols[v.sym.id] = vbl;
-            return vbl;
-        });
 
         const visitor: Visitor<null> = {
             Type_TRef(node, ctx) {
@@ -893,11 +885,24 @@ export const autoTypeApply = (
             },
         };
 
+        const vbls = vars.map((v) => {
+            let vbl = ctx.newTypeVar();
+            if (v.bound) {
+                ctx.addTypeConstraint(vbl.id, {
+                    outer: transformType(v.bound, visitor, null),
+                });
+            }
+            symbols[v.sym.id] = vbl;
+            return vbl;
+        });
+
+        // ughhhhh hm ok so,
+        // <A, B: A>(a: A, b: B) =>
+        // in this case, we've got some transitive constraint dependencies....
         const constraints: ConstraintMap = {};
         const ok = args.every((arg, i) => {
             const tt = transformType(arg, visitor, null);
-            // return typeMatches(passedInArgs[i], tt, ctx, [], constraints);
-            return true;
+            return typeMatches(passedInArgs[i], tt, ctx, [], constraints);
         });
         if (!ok) {
             return null;
@@ -909,7 +914,11 @@ export const autoTypeApply = (
                     type: 'TypeApplication',
                     target: node.target,
                     inferred: true,
-                    args: vbls,
+                    args: vbls.map(
+                        (v) =>
+                            collapseConstraints(constraints[v.id] ?? {}, ctx),
+                        // collapseConstraints(ctx.currentConstraints(v.id), ctx),
+                    ),
                     loc: node.target.loc,
                 },
             },
