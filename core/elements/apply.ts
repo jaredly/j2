@@ -396,6 +396,12 @@ export const ToAst = {
                 );
                 if (auto) {
                     const targs = (auto.apply.target as t.TypeApplication).args;
+                    Object.keys(auto.constraints).forEach((key) => {
+                        ctx.actx.addTypeConstraint(
+                            +key,
+                            auto.constraints[+key],
+                        );
+                    });
                     if (
                         targs.length === target.args.length &&
                         targs.every(
@@ -405,12 +411,6 @@ export const ToAst = {
                         )
                     ) {
                         // STOPSHIP(infer)
-                        Object.keys(auto.constraints).forEach((key) => {
-                            ctx.actx.addTypeConstraint(
-                                +key,
-                                auto.constraints[+key],
-                            );
-                        });
                         return makeApply(
                             ctx.ToAst.Expression(target.target, ctx),
                             {

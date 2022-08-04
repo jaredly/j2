@@ -226,7 +226,9 @@ export const typeMatches = (
                 return false;
             }
             const { outer, inner } = ctx.currentConstraints(candidate.id);
-            if (outer) {
+            if (inner) {
+                return typeMatches(inner, expected, ctx);
+            } else if (outer) {
                 return typeMatches(outer, expected, ctx);
             }
             return false;
