@@ -110,6 +110,15 @@ export const ToIR = {
 };
 
 export const ToJS = {
+    IArrayItem(node: t.IArrayItem, ctx: JCtx): b.Expression | b.SpreadElement {
+        switch (node.type) {
+            case 'SpreadExpr':
+                return ctx.ToJS.SpreadExpr(node, ctx);
+            default:
+                return ctx.ToJS.IExpression(node, ctx);
+        }
+    },
+
     ArrayExpr({ type, items, loc }: IArrayExpr, ctx: JCtx): b.ArrayExpression {
         return b.arrayExpression(
             items.map((item) => ctx.ToJS.IArrayItem(item, ctx)),

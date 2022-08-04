@@ -10,3 +10,8 @@ let id = <T>(a: T) => a
 [`Ok, `Good, `Folks(10)]
 [() => `Ok, () => `Good]
 [1, 2, ...[]]
+[1, 2]->geti(2u)
+{
+    let [a, b] = [2, 4];
+    a + b;
+}

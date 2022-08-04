@@ -73,7 +73,9 @@ export const ToTast = {
                         // ctx.debugger();
                         const typ =
                             ctx.getType(res.expr) ??
-                            typeForPattern(res.pat, ctx);
+                            typeForPattern(res.pat, ctx, (loc) =>
+                                ctx.newTypeVar(loc),
+                            );
                         getLocals(res.pat, typ, locals, ctx);
                         ctx = ctx.withLocals(locals) as TCtx;
                     }
@@ -104,7 +106,7 @@ export const ToAst = {
                               const locals: t.Locals = [];
                               const typ =
                                   ctx.actx.getType(stmt.expr) ??
-                                  typeForPattern(stmt.pat);
+                                  typeForPattern(stmt.pat, ctx.actx);
                               getLocals(stmt.pat, typ, locals, ctx.actx);
                               ctx = {
                                   ...ctx,
@@ -400,7 +402,8 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             if (stmt.type === 'Let') {
                 const locals: t.Locals = [];
                 const typ =
-                    ctx.ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
+                    ctx.ctx.getType(stmt.expr) ??
+                    typeForPattern(stmt.pat, ctx.ctx);
                 getLocals(stmt.pat, typ, locals, ctx.ctx);
                 ctx = { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx };
                 const res = checkLet(stmt, ctx);

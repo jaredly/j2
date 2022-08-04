@@ -17,11 +17,17 @@ import {
 } from '../typing/typeMatches';
 
 export const grammar = `
-Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PBlank / Number / String
+Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PArray / PBlank / Number / String
 PBlank = pseudo:"_"
 PName = name:$IdText hash:($JustSym)?
 PTuple = "(" _  items:PTupleItems? _ ")"
 PTupleItems = first:Pattern rest:(_ "," _ Pattern)*
+
+PArray = "[" _  items:PArrayItems? _ "]"
+PArrayItems = first:PArrayItem rest:(_ "," _ PArrayItem)*
+PArrayItem = Pattern / PSpread
+PSpread = "..." _ inner:Pattern
+
 PRecord = "{" _ fields:PRecordFields? _ ","? _ "}"
 PRecordFields = first:PRecordField rest:(_ "," _ PRecordField)*
 PRecordField = name:$IdText pat:PRecordValue?
@@ -40,11 +46,17 @@ export type PName = {
     loc: t.Loc;
 };
 
-// export type PTuple = {
-//     type: 'PTuple';
-//     items: Pattern[];
-//     loc: t.Loc;
-// };
+export type PArray = {
+    type: 'PArray';
+    items: PArrayItem[];
+    loc: t.Loc;
+};
+export type PArrayItem = Pattern | PSpread;
+export type PSpread = {
+    type: 'PSpread';
+    inner: Pattern;
+    loc: t.Loc;
+};
 
 export type PRecord = {
     type: 'PRecord';
@@ -64,6 +76,7 @@ export type Pattern =
     | PRecord
     | PBlank
     | PEnum
+    | PArray
     | t.Number
     | t.String
     | PDecorated;
@@ -237,7 +250,7 @@ export const typeMatchesPattern = (
 ): boolean => {
     if (type.type === 'TVbl') {
         if (constraints) {
-            const pt = typeForPattern(pat, ctx);
+            const pt = typeForPattern(pat, ctx, (loc) => ctx.newTypeVar(loc));
             const current = addNewConstraint(
                 type.id,
                 { inner: pt },
@@ -295,6 +308,59 @@ export const typeMatchesPattern = (
             }
             return false;
         }
+        case 'PArray': {
+            const t = arrayType(type, ctx);
+            if (!t) {
+                return false;
+            }
+
+            // hmmmmm : how do I make sure this ... has the proper length, in the presense of spreads?
+            // Basically, we need to keep track of the /minimum/ array length, and the /maximum/ for a given parray.
+            // we could claim that spreads always have to be variable ..
+            // seems fine to me?
+            let hasSpreads = false;
+            let count = 0;
+
+            // let el: t.Type = {type: 'TBlank', loc: pat.loc};
+            // let size : t.Type= {type: 'Number', value: 0, kind: 'UInt', loc: pat.loc};
+            for (let item of pat.items) {
+                if (item.type === 'PSpread') {
+                    let it = item.inner;
+                    while (it.type === 'PDecorated') {
+                        it = it.inner;
+                    }
+                    if (it.type !== 'PBlank' && it.type !== 'PName') {
+                        return false;
+                    }
+                    hasSpreads = true;
+                } else {
+                    const inner = typeMatchesPattern(item, t[0], ctx);
+                    if (!inner) {
+                        return false;
+                    }
+                    count += 1;
+                }
+            }
+            if (
+                t[1].type !== 'TRef' &&
+                t[1].type !== 'Number' &&
+                t[1].type !== 'TOps'
+            ) {
+                return false;
+            }
+            const ops = numOps(t[1], ctx);
+            return (
+                ops &&
+                eopsMatch(
+                    {
+                        kind: 'UInt',
+                        num: count,
+                        mm: { lowerLimit: true, upperLimit: false },
+                    },
+                    ops,
+                )
+            );
+        }
         case 'PRecord': {
             if (type.type !== 'TRecord') {
                 return false;
@@ -326,7 +392,11 @@ export const typeMatchesPattern = (
     }
 };
 
-export const typeForPattern = (pat: Pattern, ctx?: ACtx): t.Type => {
+export const typeForPattern = (
+    pat: Pattern,
+    ctx: TMCtx,
+    newTypeVar?: (l: t.Loc) => t.TVbl,
+): t.Type => {
     switch (pat.type) {
         case 'Number':
         case 'String':
@@ -342,25 +412,93 @@ export const typeForPattern = (pat: Pattern, ctx?: ACtx): t.Type => {
                         tag: pat.tag,
                         loc: pat.loc,
                         payload: pat.payload
-                            ? typeForPattern(pat.payload, ctx)
+                            ? typeForPattern(pat.payload, ctx, newTypeVar)
                             : undefined,
                         decorators: [],
                     },
                 ],
             };
+        case 'PArray': {
+            let el: t.Type = { type: 'TBlank', loc: pat.loc };
+            let size: t.Type = {
+                type: 'Number',
+                value: 0,
+                kind: 'UInt',
+                loc: pat.loc,
+            };
+            pat.items.forEach((item) => {
+                if (item.type === 'PSpread') {
+                    const inner = typeForPattern(item.inner, ctx, newTypeVar);
+                    const t = arrayType(inner, ctx);
+                    if (!t) {
+                        return;
+                    }
+                    const un = unifyTypes(el, t[0], ctx);
+                    if (!un) {
+                        return;
+                    }
+                    el = un;
+                    size = collapseOps(
+                        {
+                            type: 'TOps',
+                            loc: pat.loc,
+                            left: el,
+                            right: [{ top: '+', right: t[1] }],
+                        },
+                        ctx,
+                    );
+                } else {
+                    const inner = typeForPattern(item, ctx, newTypeVar);
+                    const un = unifyTypes(el, inner, ctx);
+                    if (!un) {
+                        return;
+                    }
+                    el = un;
+                    size = collapseOps(
+                        {
+                            type: 'TOps',
+                            loc: pat.loc,
+                            left: el,
+                            right: [
+                                {
+                                    top: '+',
+                                    right: {
+                                        type: 'Number',
+                                        value: 1,
+                                        kind: 'UInt',
+                                        loc: pat.loc,
+                                    },
+                                },
+                            ],
+                        },
+                        ctx,
+                    );
+                }
+            });
+            return {
+                type: 'TApply',
+                loc: pat.loc,
+                args: [el, size],
+                target: {
+                    type: 'TRef',
+                    ref: ctx.getBuiltinRef('Array')!,
+                    loc: pat.loc,
+                },
+            };
+        }
         case 'PName':
-            return ctx
-                ? ctx.newTypeVar(pat.loc)
+            return newTypeVar
+                ? newTypeVar(pat.loc)
                 : { type: 'TBlank', loc: pat.loc };
         case 'PDecorated':
-            return typeForPattern(pat.inner, ctx);
+            return typeForPattern(pat.inner, ctx, newTypeVar);
         case 'PRecord':
             return {
                 type: 'TRecord',
                 items: pat.items.map(({ name, pat }) => ({
                     type: 'TRecordKeyValue',
                     key: name,
-                    value: typeForPattern(pat, ctx),
+                    value: typeForPattern(pat, ctx, newTypeVar),
                     loc: pat.loc,
                     default_: null,
                 })),
@@ -389,6 +527,16 @@ export const getLocals = (
         case 'PName':
             locals.push({ sym: pat.sym, type });
             return;
+        case 'PArray':
+            const t = arrayType(type, ctx);
+            if (!t) {
+                return;
+            }
+            return pat.items.forEach((item) =>
+                item.type === 'PSpread'
+                    ? getLocals(item.inner, type, locals, ctx)
+                    : getLocals(item, t[0], locals, ctx),
+            );
         case 'PRecord':
             if (type.type === 'TVbl') {
                 type = collapseConstraints(
@@ -450,6 +598,22 @@ export const ToTast = {
         return {
             type: 'PName',
             sym,
+            loc,
+        };
+    },
+    PArray({ items, loc }: p.PArray, ctx: TCtx): PArray {
+        return {
+            type: 'PArray',
+            items:
+                items?.items.map((item) => ctx.ToTast.PArrayItem(item, ctx)) ??
+                [],
+            loc,
+        };
+    },
+    PSpread({ inner, loc }: p.PSpread, ctx: TCtx): PSpread {
+        return {
+            type: 'PSpread',
+            inner: ctx.ToTast.Pattern(inner, ctx),
             loc,
         };
     },
@@ -553,6 +717,24 @@ export const ToAst = {
             loc,
         };
     },
+    PArray({ type, items, loc }: PArray, ctx: TACtx): p.PArray {
+        return {
+            type: 'PArray',
+            items: {
+                type: 'PArrayItems',
+                items: items.map((item) => ctx.ToAst.PArrayItem(item, ctx)),
+                loc,
+            },
+            loc,
+        };
+    },
+    PSpread({ inner, loc }: PSpread, ctx: TACtx): p.PSpread {
+        return {
+            type: 'PSpread',
+            inner: ctx.ToAst.Pattern(inner, ctx),
+            loc,
+        };
+    },
     PRecord({ type, items, loc }: PRecord, ctx: TACtx): p.Pattern {
         if (items.every((item, i) => item.name === i.toString())) {
             return {
@@ -601,7 +783,7 @@ export const ToAst = {
 };
 
 export const ToPP = {
-    PBlank({ type, loc }: PBlank, ctx: PCtx): pp.PP {
+    PBlank({ type, loc }: p.PBlank, ctx: PCtx): pp.PP {
         return pp.atom('_', loc);
     },
     PName({ type, name, hash, loc }: p.PName, ctx: PCtx): pp.PP {
@@ -632,6 +814,20 @@ export const ToPP = {
                 ctx.ToPP.Pattern(pat.inner, ctx),
             ],
             pat.loc,
+        );
+    },
+    PArray({ items, loc }: p.PArray, ctx: PCtx): pp.PP {
+        return pp.args(
+            items?.items?.map((item) => ctx.ToPP.PArrayItem(item, ctx)) ?? [],
+            loc,
+            '[',
+            ']',
+        );
+    },
+    PSpread({ inner, loc }: p.PSpread, ctx: PCtx): pp.PP {
+        return pp.items(
+            [pp.text('...', loc), ctx.ToPP.Pattern(inner, ctx)],
+            loc,
         );
     },
     PRecord({ type, fields, loc }: p.PRecord, ctx: PCtx): pp.PP {
@@ -678,7 +874,14 @@ import { Ctx as JCtx } from '../ir/to-js';
 import { allRecordItems } from './records';
 import { and } from './ifs';
 import { maybeExpandTask } from '../typing/tasks';
+import { collapseOps, eopsMatch, numOps } from '../typing/ops';
+import { arrayType } from '../typing/getType';
+import { unifyTypes } from '../typing/unifyTypes';
 export const ToJS = {
+    /**
+     * An expression that evaluates to "true"
+     * if the expression matches.
+     */
     PatternCond(
         p: Pattern,
         target: b.Expression,
@@ -760,6 +963,17 @@ export const ToJS = {
                 return null;
             case 'PDecorated':
                 return ctx.ToJS.PatternCond(p.inner, target, type, ctx);
+            case 'PArray':
+                // const items = p.items.map((item) => {
+                //     if (item.type === 'PSpread') {
+                //         const inner = ctx.ToJS.PatternCond(item.inner, ctx);
+                //         return inner ? b.restElement(inner) : null;
+                //     }
+
+                //     return ctx.ToJS.PatternCond(item, ctx);
+                // });
+                // return items.some(Boolean) ? b.arrayPattern(items) : null;
+                return b.booleanLiteral(false);
             case 'PRecord':
                 if (type.type !== 'TRecord' || p.items.length === 0) {
                     return null;
@@ -820,6 +1034,16 @@ export const ToJS = {
                         : null;
                 }
                 return null;
+            case 'PArray':
+                const items = p.items.map((item) => {
+                    if (item.type === 'PSpread') {
+                        const inner = ctx.ToJS.Pattern(item.inner, ctx);
+                        return inner ? b.restElement(inner) : null;
+                    }
+
+                    return ctx.ToJS.Pattern(item, ctx);
+                });
+                return items.some(Boolean) ? b.arrayPattern(items) : null;
             case 'PName':
                 return b.identifier(p.sym.name);
             case 'PDecorated':

@@ -446,7 +446,7 @@ export type LetPair = {
   expr: Expression;
 };
 
-export type Pattern = PDecorated | PEnum | PName | PTuple | PRecord | PBlank | Number | String;
+export type Pattern = PDecorated | PEnum | PName | PTuple | PRecord | PArray | PBlank | Number | String;
 
 export type PBlank = {
   type: "PBlank";
@@ -471,6 +471,26 @@ export type PTupleItems = {
   type: "PTupleItems";
   loc: Loc;
   items: Pattern[];
+};
+
+export type PArray = {
+  type: "PArray";
+  loc: Loc;
+  items: PArrayItems | null;
+};
+
+export type PArrayItems = {
+  type: "PArrayItems";
+  loc: Loc;
+  items: PArrayItem[];
+};
+
+export type PArrayItem = Pattern | PSpread;
+
+export type PSpread = {
+  type: "PSpread";
+  loc: Loc;
+  inner: Pattern;
 };
 
 export type PRecord = {
@@ -712,9 +732,9 @@ export type TBlank = {
   pseudo: string;
 };
 
-export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | ArrowSuffix | ArrayExpr | ArrayItems | AwaitSuffix | Aliases | AliasItem | Identifier | ParenedExpression | BinOp_inner | BinOpRight | WithUnary_inner | UnaryOpWithHash | binopWithHash | ParenedOp | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | EnumPayload | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeAbstraction | If | IfYes | IfConds | Lambda | LArgs | LArg | Block | Stmts | Let | ToplevelLet | LetPair | PBlank | PName | PTuple | PTupleItems | PRecord | PRecordFields | PRecordField | PHash | PDecorated | PEnum | Record | RecordItems | SpreadExpr | RecordKeyValue | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | Switch | Case | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TConst | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair | TBlank;
+export type AllTaggedTypes = File | TypeFile | Apply_inner | CallSuffix | CommaExpr | ArrowSuffix | ArrayExpr | ArrayItems | AwaitSuffix | Aliases | AliasItem | Identifier | ParenedExpression | BinOp_inner | BinOpRight | WithUnary_inner | UnaryOpWithHash | binopWithHash | ParenedOp | Boolean | Number | String | TemplateString | TemplatePair | TemplateWrap | DecoratedExpression_inner | Decorator | DecoratorId | DecoratorArgs | LabeledDecoratorArg | DecType | DecExpr | Enum | EnumPayload | TEnum | EnumCases | TagDecl | TagPayload | Star | TypeApplicationSuffix | TypeAppVbls | TypeAbstraction | If | IfYes | IfConds | Lambda | LArgs | LArg | Block | Stmts | Let | ToplevelLet | LetPair | PBlank | PName | PTuple | PTupleItems | PArray | PArrayItems | PSpread | PRecord | PRecordFields | PRecordField | PHash | PDecorated | PEnum | Record | RecordItems | SpreadExpr | RecordKeyValue | TRecord | TRecordItems | TRecordSpread | TRecordKeyValue | Switch | Case | TApply_inner | TComma | TVars | TBargs | TBArg | TDecorated | TRef | TConst | TOps_inner | TRight | TParens | TArg | TArgs | TLambda | TypeAlias | TypePair | TBlank;
 
-export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "ArrowSuffix", "ArrayExpr", "ArrayItems", "AwaitSuffix", "Aliases", "AliasItem", "Identifier", "ParenedExpression", "BinOp", "BinOpRight", "WithUnary", "UnaryOpWithHash", "binopWithHash", "ParenedOp", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "EnumPayload", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeAbstraction", "If", "IfYes", "IfConds", "Lambda", "LArgs", "LArg", "Block", "Stmts", "Let", "ToplevelLet", "LetPair", "PBlank", "PName", "PTuple", "PTupleItems", "PRecord", "PRecordFields", "PRecordField", "PHash", "PDecorated", "PEnum", "Record", "RecordItems", "SpreadExpr", "RecordKeyValue", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "Switch", "Case", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TConst", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair", "TBlank"];
+export const AllTaggedTypeNames: AllTaggedTypes["type"][] = ["File", "TypeFile", "Apply", "CallSuffix", "CommaExpr", "ArrowSuffix", "ArrayExpr", "ArrayItems", "AwaitSuffix", "Aliases", "AliasItem", "Identifier", "ParenedExpression", "BinOp", "BinOpRight", "WithUnary", "UnaryOpWithHash", "binopWithHash", "ParenedOp", "Boolean", "Number", "String", "TemplateString", "TemplatePair", "TemplateWrap", "DecoratedExpression", "Decorator", "DecoratorId", "DecoratorArgs", "LabeledDecoratorArg", "DecType", "DecExpr", "Enum", "EnumPayload", "TEnum", "EnumCases", "TagDecl", "TagPayload", "Star", "TypeApplicationSuffix", "TypeAppVbls", "TypeAbstraction", "If", "IfYes", "IfConds", "Lambda", "LArgs", "LArg", "Block", "Stmts", "Let", "ToplevelLet", "LetPair", "PBlank", "PName", "PTuple", "PTupleItems", "PArray", "PArrayItems", "PSpread", "PRecord", "PRecordFields", "PRecordField", "PHash", "PDecorated", "PEnum", "Record", "RecordItems", "SpreadExpr", "RecordKeyValue", "TRecord", "TRecordItems", "TRecordSpread", "TRecordKeyValue", "Switch", "Case", "TApply", "TComma", "TVars", "TBargs", "TBArg", "TDecorated", "TRef", "TConst", "TOps", "TRight", "TParens", "TArg", "TArgs", "TLambda", "TypeAlias", "TypePair", "TBlank"];
 
 // @ts-ignore
 export const parseFile = (input: string): File => parse(input, {startRule: 'File'});

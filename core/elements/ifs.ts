@@ -66,7 +66,7 @@ export const ToTast = {
                     const c = ctx.ToTast.IfCond(cond, ctx);
                     if (c.type === 'Let') {
                         const typ =
-                            ctx.getType(c.expr) ?? typeForPattern(c.pat);
+                            ctx.getType(c.expr) ?? typeForPattern(c.pat, ctx);
                         getLocals(c.pat, typ, locals, ctx);
                     }
                     return c;
@@ -106,7 +106,7 @@ export const ToAst = {
                         if (cond.type === 'Let') {
                             const typ =
                                 ctx.actx.getType(cond.expr) ??
-                                typeForPattern(cond.pat);
+                                typeForPattern(cond.pat, ctx.actx);
                             getLocals(cond.pat, typ, locals, ctx.actx);
                         }
                         return ctx.ToAst.IfCond(cond, ctx);
@@ -184,7 +184,7 @@ export const ToIR = {
                     if (cond.type === 'Let') {
                         const typ =
                             ctx.actx.getType(cond.expr) ??
-                            typeForPattern(cond.pat);
+                            typeForPattern(cond.pat, ctx.actx);
                         getLocals(cond.pat, typ, locals, ctx.actx);
                     }
                     const c = ctx.ToIR.IfCond(cond, ctx);
@@ -279,7 +279,8 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             if (cond.type === 'Let') {
                 getLocals(
                     cond.pat,
-                    ctx.ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
+                    ctx.ctx.getType(cond.expr) ??
+                        typeForPattern(cond.pat, ctx.ctx),
                     locals,
                     ctx.ctx,
                 );
@@ -304,7 +305,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             } else {
                 getLocals(
                     cond.pat,
-                    ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
+                    ctx.getType(cond.expr) ?? typeForPattern(cond.pat, ctx),
                     locals,
                     ctx,
                 );

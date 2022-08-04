@@ -67,11 +67,14 @@ export type {
 export type { ILambda, LArg, Lambda } from './elements/lambda';
 export type {
     Locals,
+    PArray,
+    PArrayItem,
     PBlank,
     PDecorated,
     PEnum,
     PName,
     PRecord,
+    PSpread,
     Pattern,
 } from './elements/pattern';
 export type {

@@ -65,7 +65,7 @@ const extraPass: { [key: string]: string } = {
 const jsTypes: { [key: string]: false | string } = {
     IStmt: false, // 'Statement',
     IExpression: 'Expression',
-    IArrayItem: 'Expression',
+    IArrayItem: false,
 };
 
 const IStart = /^I[A-Z]/;

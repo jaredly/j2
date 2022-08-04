@@ -1,4 +1,6 @@
 import { Ctx } from '../typing/analyze';
+import { arrayType } from '../typing/getType';
+import { numOps } from '../typing/ops';
 import { expandEnumCases } from '../typing/typeMatches';
 import { enumCaseMap } from './enums';
 import { Pattern } from './pattern';
@@ -32,6 +34,25 @@ export const patternIsExhaustive = (
                 !pat.payload ||
                 patternIsExhaustive(pat.payload, map[pat.tag].payload!, ctx)
             );
+        }
+        case 'PArray': {
+            const t = arrayType(typ, ctx);
+            if (!t) {
+                return false;
+            }
+            if (pat.items.some((p) => p.type === 'PSpread')) {
+                return true;
+            }
+            // HACK HACK HACK
+            if (
+                t[1].type !== 'TRef' &&
+                t[1].type !== 'Number' &&
+                t[1].type !== 'TOps'
+            ) {
+                return false;
+            }
+            const ops = numOps(t[1], ctx);
+            return ops && ops.num <= pat.items.length && ops.mm.upperLimit;
         }
         case 'PBlank':
         case 'PName':

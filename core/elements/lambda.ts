@@ -78,7 +78,7 @@ export const ToTast = {
                     ? ctx.ToTast.Type(arg.typ, ctx)
                     : expectedType && expectedType.args.length > i
                     ? expectedType.args[i].typ
-                    : typeForPattern(pat, ctx);
+                    : typeForPattern(pat, ctx, (loc) => ctx.newTypeVar(loc));
                 getLocals(pat, typ, locals, ctx);
                 // STOPSHIP(infer)
                 // if (!arg.typ) {

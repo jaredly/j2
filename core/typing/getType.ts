@@ -281,7 +281,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 if (stmt.type === 'Let') {
                     const locals: Locals = [];
                     const typ =
-                        ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
+                        ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat, ctx);
                     getLocals(stmt.pat, typ, locals, ctx);
                     ctx = ctx.withLocals(locals);
                 }
@@ -311,7 +311,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             }
             const types = expr.cases
                 .map((c) => {
-                    const typ = ttype ?? typeForPattern(c.pat);
+                    const typ = ttype ?? typeForPattern(c.pat, ctx);
                     const locals: Locals = [];
                     getLocals(c.pat, typ, locals, ctx);
                     return getType(c.expr, ctx.withLocals(locals));

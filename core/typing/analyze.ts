@@ -359,7 +359,7 @@ export const blockLocals = (node: t.Block, ctx: TMCtx) => {
     const locals: t.Locals = [];
     node.stmts.forEach((stmt) => {
         if (stmt.type === 'Let') {
-            const typ = ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
+            const typ = ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat, ctx);
             getLocals(stmt.pat, typ, locals, ctx);
         }
     });
@@ -368,7 +368,7 @@ export const blockLocals = (node: t.Block, ctx: TMCtx) => {
 
 export const letLocals = (node: t.Let, ctx: TMCtx) => {
     const locals: t.Locals = [];
-    const typ = ctx.getType(node.expr) ?? typeForPattern(node.pat);
+    const typ = ctx.getType(node.expr) ?? typeForPattern(node.pat, ctx);
     getLocals(node.pat, typ, locals, ctx);
     return locals;
 };
@@ -379,7 +379,7 @@ export const ifLocals = (node: t.IfYes, ctx: TMCtx) => {
         if (cond.type === 'Let') {
             getLocals(
                 cond.pat,
-                ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
+                ctx.getType(cond.expr) ?? typeForPattern(cond.pat, ctx),
                 locals,
                 ctx,
             );

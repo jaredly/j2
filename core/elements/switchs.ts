@@ -115,7 +115,8 @@ export const ToAst = {
             target: ctx.ToAst.Expression(tast.target, ctx),
             cases: tast.cases.map((c) => {
                 const typ =
-                    ctx.actx.getType(tast.target) ?? typeForPattern(c.pat);
+                    ctx.actx.getType(tast.target) ??
+                    typeForPattern(c.pat, ctx.actx);
                 const locals: t.Locals = [];
                 getLocals(c.pat, typ, locals, ctx.actx);
                 return {
@@ -180,7 +181,8 @@ export const ToIR = {
             },
             cases: tast.cases.map((c) => {
                 const typ =
-                    ctx.actx.getType(tast.target) ?? typeForPattern(c.pat);
+                    ctx.actx.getType(tast.target) ??
+                    typeForPattern(c.pat, ctx.actx);
                 const locals: t.Locals = [];
                 getLocals(c.pat, typ, locals, ctx.actx);
                 return {

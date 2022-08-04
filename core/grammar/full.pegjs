@@ -188,11 +188,17 @@ LetPair = name:$IdText typ:(_ ":" _ Type)? _ "=" _ expr:Expression
 
 // pattern.ts
 
-Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PBlank / Number / String
+Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PArray / PBlank / Number / String
 PBlank = pseudo:"_"
 PName = name:$IdText hash:($JustSym)?
 PTuple = "(" _  items:PTupleItems? _ ")"
 PTupleItems = first:Pattern rest:(_ "," _ Pattern)*
+
+PArray = "[" _  items:PArrayItems? _ "]"
+PArrayItems = first:PArrayItem rest:(_ "," _ PArrayItem)*
+PArrayItem = Pattern / PSpread
+PSpread = "..." _ inner:Pattern
+
 PRecord = "{" _ fields:PRecordFields? _ ","? _ "}"
 PRecordFields = first:PRecordField rest:(_ "," _ PRecordField)*
 PRecordField = name:$IdText pat:PRecordValue?
