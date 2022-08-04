@@ -1,4 +1,4 @@
-import { Visitor } from '../transform-tast';
+import { transformType, Visitor } from '../transform-tast';
 import {
     collapseConstraints,
     Constraints,
@@ -507,6 +507,7 @@ import { Ctx as JCtx } from '../ir/to-js';
 import * as b from '@babel/types';
 import { findBuiltinName } from './base';
 import { expandTask, tnever } from '../typing/tasks';
+import { applyType } from '../typing/getType';
 export const ToJS = {
     Apply({ target, args, loc }: t.IApply, ctx: JCtx): b.Expression {
         if (
@@ -777,6 +778,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
 export const inferVarsFromArgs = (
     vars: t.TVar[],
     args: t.Type[],
+    ctx: Ctx,
 ): null | { [key: number]: number[] } => {
     const mapping: { [sym: number]: false | number[] } = {};
     vars.forEach((v) => {
@@ -843,14 +845,79 @@ export const constraintsForApply = (
     return constraints;
 };
 
+/*
+
+We have a lambda type
+<_, _, _> (with bounds)
+we have arg types, which reference the type vbls
+and we have the types of the args actually passed in.
+
+SO
+
+a vbl for each vbl (with bounds added as constraints, potentially)
+and then `applyType` to fill in the type vbls into the expected arg types.
+And then do `typeMatches`, collecting constraints on the new vbls.
+
+and there you go! I think?
+
+*/
+
 export const autoTypeApply = (
     node: t.Apply,
+    // <A: int, B, C>
     vars: t.TVar[],
+    // (a: A, b: B) =>
     args: t.Type[],
-    argTypes: t.Type[],
+    // the args that were passed in
+    passedInArgs: t.Type[],
     ctx: Ctx,
 ): null | { apply: t.Apply; constraints: ConstraintMap } => {
-    const mapping = inferVarsFromArgs(vars, args);
+    if (1 == 2) {
+        const symbols: { [num: number]: t.Type } = {};
+        const vbls = vars.map((v) => {
+            let vbl = ctx.newTypeVar();
+            if (v.bound) {
+                ctx.addTypeConstraint(vbl.id, { outer: v.bound });
+            }
+            symbols[v.sym.id] = vbl;
+            return vbl;
+        });
+
+        const visitor: Visitor<null> = {
+            Type_TRef(node, ctx) {
+                // Already applied
+                if (node.ref.type === 'Local' && symbols[node.ref.sym]) {
+                    return symbols[node.ref.sym];
+                }
+                return null;
+            },
+        };
+
+        const constraints: ConstraintMap = {};
+        const ok = args.every((arg, i) => {
+            const tt = transformType(arg, visitor, null);
+            // return typeMatches(passedInArgs[i], tt, ctx, [], constraints);
+            return true;
+        });
+        if (!ok) {
+            return null;
+        }
+        return {
+            apply: {
+                ...node,
+                target: {
+                    type: 'TypeApplication',
+                    target: node.target,
+                    inferred: true,
+                    args: vbls,
+                    loc: node.target.loc,
+                },
+            },
+            constraints,
+        };
+    }
+
+    const mapping = inferVarsFromArgs(vars, args, ctx);
     if (!mapping) {
         return null;
     }
@@ -859,35 +926,13 @@ export const autoTypeApply = (
         if (!arg.bound) {
             continue;
         }
-
         const idxs = mapping[arg.sym.id];
         if (idxs.length === 1) {
-            const argType = argTypes[idxs[0]];
-            // STOPSHIP(infer)
-            // if (
-            //     argType.type === 'TVbl' &&
-            //     ctx.currentConstraints(argType.id).type === 'TBlank'
-            // ) {
-            //     if (constraints[argType.id] != null) {
-            //         const t = constrainTypes(
-            //             constraints[argType.id],
-            //             arg.bound,
-            //             ctx,
-            //         );
-            //         if (t) {
-            //             constraints[argType.id] = t;
-            //             continue;
-            //         }
-            //     } else {
-            //         constraints[argType.id] = arg.bound;
-            //         continue;
-            //     }
-            // }
+            const argType = passedInArgs[idxs[0]];
         }
-
         if (
             !typeMatches(
-                unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
+                unifiedTypes(passedInArgs, mapping[arg.sym.id], ctx),
                 arg.bound,
                 ctx,
                 [],
@@ -905,7 +950,7 @@ export const autoTypeApply = (
                 target: node.target,
                 inferred: true,
                 args: vars.map((arg) =>
-                    unifiedTypes(argTypes, mapping[arg.sym.id], ctx),
+                    unifiedTypes(passedInArgs, mapping[arg.sym.id], ctx),
                 ),
                 loc: node.target.loc,
             },

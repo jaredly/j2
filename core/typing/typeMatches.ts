@@ -131,10 +131,24 @@ export const typeMatches = (
     }
 
     if (expected.type === 'TVbl' && candidate.type !== 'TVbl') {
-        expected = collapseConstraints(
-            ctx.currentConstraints(expected.id),
-            ctx,
-        );
+        if (constraints) {
+            const current = addNewConstraint(
+                expected.id,
+                { outer: candidate },
+                constraints,
+                ctx,
+            );
+            if (current) {
+                constraints[expected.id] = current;
+                return true;
+            }
+            return false;
+        } else {
+            expected = collapseConstraints(
+                ctx.currentConstraints(expected.id),
+                ctx,
+            );
+        }
     }
 
     if (expected.type === 'TOps') {

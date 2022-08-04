@@ -102,7 +102,6 @@ export const numOps = (
     }
     let num = 0;
     const mm = { upperLimit: true, lowerLimit: true };
-    // let ismax = false;
     const elements = [
         {
             op: '+',
@@ -366,60 +365,3 @@ export const stringOps = (
     }
     return true;
 };
-
-// export const isBuiltinType = (t: Type, name: string, ctx: FullContext) =>
-//     t.type === 'TRef' &&
-//     t.ref.type === 'Global' &&
-//     refsEqual(t.ref, ctx.types.names[name]);
-
-// export const reduceConstant = (t: Type): Type => {
-//     if (t.type === 'TAdd') {
-//         if (t.elements[0].type === 'String') {
-//             let v = '';
-//             for (let el of t.elements) {
-//                 if (el.type !== 'String') {
-//                     return t;
-//                 }
-//                 v += el.text;
-//             }
-//             return { ...t, type: 'String', text: v };
-//         }
-//         if (t.elements[0].type === 'Number') {
-//             let v = 0;
-//             let k = t.elements[0].kind;
-//             for (let el of t.elements) {
-//                 if (el.type !== 'Number' || el.kind !== k) {
-//                     return t;
-//                 }
-//                 v += el.value;
-//             }
-//             return { ...t, type: 'Number', kind: k, value: v };
-//         }
-//     }
-//     if (t.type === 'TSub') {
-//         if (t.elements[0].type === 'Number') {
-//             let v = t.elements[0].value;
-//             let k = t.elements[0].kind;
-//             for (let i = 1; i < t.elements.length; i++) {
-//                 const el = t.elements[i];
-//                 if (el.type !== 'Number' || el.kind !== k) {
-//                     return t;
-//                 }
-//                 v -= el.value;
-//             }
-//             return { ...t, type: 'Number', kind: k, value: v };
-//         }
-//     }
-//     return t;
-// };
-
-// export const resolveRefs = (
-//     t: Type,
-//     ctx: FullContext,
-// ): Type => {
-//     while (t.type === 'TRef' && t.ref.type === 'Global') {
-//         const resolved = ctx.typeForId(t.ref.id)
-//         if (resolved)
-//     }
-//     return t
-// }
