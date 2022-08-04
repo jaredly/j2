@@ -351,14 +351,11 @@ export const typeMatchesPattern = (
             const ops = numOps(t[1], ctx);
             return (
                 ops &&
-                eopsMatch(
-                    {
-                        kind: 'UInt',
-                        num: count,
-                        mm: { lowerLimit: true, upperLimit: false },
-                    },
-                    ops,
-                )
+                eopsMatch(ops, {
+                    kind: 'UInt',
+                    num: count,
+                    mm: { lowerLimit: true, upperLimit: !hasSpreads },
+                })
             );
         }
         case 'PRecord': {

@@ -398,18 +398,7 @@ export const Analyze: Visitor<AVCtx> = {
         // ctx.debugger();
 
         const cases = node.cases.map((c) => {
-            // const matches = typeMatchesPattern(c.pat, refined, ctx);
-
-            // const constraints: ConstraintMap = {};
-            const matches = typeMatchesPattern(
-                c.pat,
-                refined,
-                ctx,
-                // constraints,
-            );
-            // Object.keys(constraints).forEach((k) => {
-            //     ctx.addTypeConstraint(+k, constraints[+k]);
-            // });
+            const matches = typeMatchesPattern(c.pat, refined, ctx);
 
             const res = refineType(c.pat, refined, ctx);
             let bt = ctx
@@ -450,12 +439,14 @@ export const Analyze: Visitor<AVCtx> = {
         }
         if (
             refined.type !== 'TBlank' &&
+            refined.type !== 'TVbl' &&
             !(
                 refined.type === 'TEnum' &&
                 !refined.cases.length &&
                 !refined.open
             )
         ) {
+            changed = true;
             node = {
                 ...node,
                 target: decorate(node.target, 'notExhaustive', hit, ctx),
