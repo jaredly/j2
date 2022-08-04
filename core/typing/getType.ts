@@ -1,7 +1,8 @@
 import { tref } from '../consts';
 import { unifiedTypes } from '../elements/apply';
 import { matchesBound } from '../elements/generics';
-import { getLocals, Locals, typeForPattern } from '../elements/pattern';
+import { getLocals, Locals } from '../elements/pattern';
+import { typeForPattern } from '../elements/patterns/typeForPattern';
 import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
 import { transformType } from '../transform-tast';
 import { Expression, GlobalRef, Loc, TVars, Type } from '../typed-ast';

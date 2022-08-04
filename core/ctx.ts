@@ -2,7 +2,7 @@ import hashObject from 'object-hash';
 import { Ctx } from '.';
 import { noloc, tref } from './consts';
 import { DecoratorDecl } from './elements/decorators';
-import { typeForPattern } from './elements/pattern';
+import { typeForPattern } from './elements/patterns/typeForPattern';
 import { TVar } from './elements/type-vbls';
 import { errors } from './errors';
 import { Loc, parseType } from './grammar/base.parser';
@@ -769,6 +769,7 @@ isSquare: (int) => bool
 toInt: (string) => [\`Ok(int) | \`Err([\`InvalidInt])]
 get: <T, A: const uint, B: A - 1u - uint>(arr: Array<T, A>, idx: B) => T
 geti: <T>(arr: Array<T, uint>, idx: uint) => [\`Ok(T) | \`Err([\`IndexOutOfBounds])]
+split: (string, string) => Array<string, uint>
 `;
 
 const tvar = (sym: Sym, bound?: RefKind, default_?: Type): TVar => ({

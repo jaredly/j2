@@ -15,7 +15,8 @@ import { Ctx as JCtx } from '../ir/to-js';
 import { iife } from './lets';
 import { unifyTypes } from '../typing/unifyTypes';
 import { isUnit } from '../typing/getType';
-import { getLocals, typeForPattern } from './pattern';
+import { getLocals } from './pattern';
+import { typeForPattern } from './patterns/typeForPattern';
 
 export const grammar = `
 If = "if" __ yes:IfYes no:(_ "else" _ Else)?

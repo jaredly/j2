@@ -3,18 +3,10 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import {
-    addNewConstraint,
-    collapseConstraints,
-    Ctx as ACtx,
-} from '../typing/analyze';
+import { collapseConstraints, Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import {
-    ConstraintMap,
-    Ctx as TMCtx,
-    expandEnumCases,
-} from '../typing/typeMatches';
+import { Ctx as TMCtx, expandEnumCases } from '../typing/typeMatches';
 
 export const grammar = `
 Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PArray / PBlank / Number / String
@@ -89,429 +81,6 @@ export type PDecorated = {
 export type PBlank = { type: 'PBlank'; loc: t.Loc };
 
 export type Locals = { sym: t.Sym; type: t.Type }[];
-
-// export type PPath =
-//     | { type: 'Tuple'; idx: number }
-//     | {
-//           type: 'Enum';
-//           tag: string;
-//       };
-
-/*
-
-can we bring this back?
-
-// the arg is a vbl, right?
-// orr can we do like a `type from pattern`?
-// hmm maybe I can do that.
-((a, b)) => a + b
-
-*/
-
-// export const typeFromPattern = (pat: Pattern, ctx: TCtx): t.Type => {
-//     switch (pat.type) {
-//         case 'PName':
-//             return ctx.symType(pat.sym);
-//         // case 'PTuple':
-//         //     return {
-//         //         type: 'T'
-//         //     }
-//     }
-// };
-
-export const refineType = (
-    pat: Pattern,
-    type: t.Type,
-    ctx: ACtx,
-    constraints?: ConstraintMap,
-): t.Type | null => {
-    if (constraints && type.type === 'TVbl') {
-        // 🤔 waittt hmmmmm
-        // const pt = typeForPattern(pat, ctx);
-        // const current = addNewConstraint(
-        //     type.id,
-        //     { outer: pt },
-        //     constraints,
-        //     ctx,
-        // );
-        // if (current) {
-        //     constraints[type.id] = current;
-        //     return type;
-        // }
-    }
-    switch (pat.type) {
-        case 'PBlank':
-        case 'PName':
-            return null;
-        case 'PArray':
-            if (patternIsExhaustive(pat, type, ctx)) {
-                return null;
-            }
-            return type;
-        case 'PRecord': {
-            if (type.type !== 'TRecord') {
-                return type;
-            }
-            const items = allRecordItems(type, ctx);
-            if (!items) {
-                return type;
-            }
-            // let res: t.RecordKeyValue = [];
-            // const byName: {[key: string]: Pattern} = {}
-            // pat.items.forEach(({name, pat}) => byName[name] = pat)
-            // for (let [name, value] of Object.entries(items)) {
-            //     if (byName[name]) {
-            //     }
-            // }
-            let remaining = false;
-
-            for (let { name, pat: cpat } of pat.items) {
-                if (!items[name]) {
-                    return type;
-                }
-                const res = refineType(
-                    cpat,
-                    items[name].value,
-                    ctx,
-                    constraints,
-                );
-                if (res != null) {
-                    remaining = true;
-                    items[name] = { ...items[name], value: res };
-                }
-            }
-            return remaining
-                ? {
-                      ...type,
-                      spreads: [],
-                      items: Object.values(items),
-                  }
-                : null;
-        }
-        case 'PDecorated': {
-            return refineType(pat.inner, type, ctx, constraints);
-        }
-        case 'PEnum': {
-            type = maybeExpandTask(type, ctx) ?? type;
-            if (type.type !== 'TEnum') {
-                return type;
-            }
-            const cases = expandEnumCases(type, ctx);
-            if (!cases) {
-                return { ...type, cases: [] }; // all out of cases!
-            }
-            const res: (t.Type | t.EnumCase)[] = [];
-            for (let kase of cases.cases) {
-                if (kase.tag === pat.tag) {
-                    if (!pat.payload) {
-                        // return {
-                        //     ...type,
-                        //     cases: cases.filter(k => k.tag !== pat.tag)
-                        // };
-                        continue;
-                    }
-                    if (kase.payload) {
-                        const inner = refineType(
-                            pat.payload,
-                            kase.payload,
-                            ctx,
-                            constraints,
-                        );
-                        if (inner == null) {
-                            continue;
-                        }
-                        res.push({ ...kase, payload: inner });
-                    }
-                    // return (
-                    //     kase.payload != null &&
-                    //     typeMatchesPattern(pat.payload, kase.payload, ctx)
-                    // );
-                } else {
-                    res.push(kase);
-                }
-            }
-            return {
-                ...type,
-                cases: res.concat(
-                    cases.bounded.map((m) =>
-                        m.type === 'local' ? m.local : m.inner,
-                    ),
-                ),
-            };
-        }
-        // TODO: Records and such
-    }
-    return type;
-};
-
-/**
- * Checks to see if the type of an arg or let is appropriate.
- */
-export const typeMatchesPattern = (
-    pat: Pattern,
-    type: t.Type,
-    ctx: ACtx,
-    constraints?: ConstraintMap,
-): boolean => {
-    if (type.type === 'TVbl') {
-        if (constraints) {
-            const pt = typeForPattern(pat, ctx, (loc) => ctx.newTypeVar(loc));
-            const current = addNewConstraint(
-                type.id,
-                { inner: pt },
-                constraints,
-                ctx,
-            );
-            if (current) {
-                constraints[type.id] = current;
-                return true;
-            }
-        } else {
-            type = collapseConstraints(ctx.currentConstraints(type.id), ctx);
-        }
-    }
-    switch (pat.type) {
-        case 'Number': {
-            if (type.type === 'Number') {
-                return type.kind === pat.kind && type.value === pat.value;
-            }
-            return ctx.isBuiltinType(type, pat.kind.toLowerCase());
-        }
-        case 'String': {
-            if (type.type === 'String') {
-                return type.text === pat.text;
-            }
-            return ctx.isBuiltinType(type, 'string');
-        }
-        case 'PDecorated': {
-            return typeMatchesPattern(pat.inner, type, ctx, constraints);
-        }
-        case 'PEnum': {
-            type = maybeExpandTask(type, ctx) ?? type;
-            if (type.type !== 'TEnum') {
-                return false;
-            }
-            const cases = expandEnumCases(type, ctx);
-            if (!cases) {
-                return true;
-            }
-            for (let kase of cases.cases) {
-                if (kase.tag === pat.tag) {
-                    if (!pat.payload) {
-                        return true;
-                    }
-                    return (
-                        kase.payload != null &&
-                        typeMatchesPattern(
-                            pat.payload,
-                            kase.payload,
-                            ctx,
-                            constraints,
-                        )
-                    );
-                }
-            }
-            return false;
-        }
-        case 'PArray': {
-            const t = arrayType(type, ctx);
-            if (!t) {
-                return false;
-            }
-
-            // hmmmmm : how do I make sure this ... has the proper length, in the presense of spreads?
-            // Basically, we need to keep track of the /minimum/ array length, and the /maximum/ for a given parray.
-            // we could claim that spreads always have to be variable ..
-            // seems fine to me?
-            let hasSpreads = false;
-            let count = 0;
-
-            // let el: t.Type = {type: 'TBlank', loc: pat.loc};
-            // let size : t.Type= {type: 'Number', value: 0, kind: 'UInt', loc: pat.loc};
-            for (let item of pat.items) {
-                if (item.type === 'PSpread') {
-                    let it = item.inner;
-                    while (it.type === 'PDecorated') {
-                        it = it.inner;
-                    }
-                    if (it.type !== 'PBlank' && it.type !== 'PName') {
-                        return false;
-                    }
-                    hasSpreads = true;
-                } else {
-                    const inner = typeMatchesPattern(item, t[0], ctx);
-                    if (!inner) {
-                        return false;
-                    }
-                    count += 1;
-                }
-            }
-            if (
-                t[1].type !== 'TRef' &&
-                t[1].type !== 'Number' &&
-                t[1].type !== 'TOps'
-            ) {
-                return false;
-            }
-            const ops = numOps(t[1], ctx);
-            return (
-                ops &&
-                eopsMatch(ops, {
-                    kind: 'UInt',
-                    num: count,
-                    mm: { lowerLimit: true, upperLimit: !hasSpreads },
-                })
-            );
-        }
-        case 'PRecord': {
-            if (type.type !== 'TRecord') {
-                return false;
-            }
-            const items = allRecordItems(type, ctx);
-            if (!items) {
-                return false;
-            }
-            for (let { name, pat: cpat } of pat.items) {
-                if (!items[name]) {
-                    return false;
-                }
-                if (
-                    !typeMatchesPattern(
-                        cpat,
-                        items[name].value,
-                        ctx,
-                        constraints,
-                    )
-                ) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        case 'PName':
-        case 'PBlank':
-            return true;
-    }
-};
-
-export const typeForPattern = (
-    pat: Pattern,
-    ctx: TMCtx,
-    newTypeVar?: (l: t.Loc) => t.TVbl,
-): t.Type => {
-    switch (pat.type) {
-        case 'Number':
-        case 'String':
-            return pat;
-        case 'PEnum':
-            return {
-                type: 'TEnum',
-                open: false,
-                loc: pat.loc,
-                cases: [
-                    {
-                        type: 'EnumCase',
-                        tag: pat.tag,
-                        loc: pat.loc,
-                        payload: pat.payload
-                            ? typeForPattern(pat.payload, ctx, newTypeVar)
-                            : undefined,
-                        decorators: [],
-                    },
-                ],
-            };
-        case 'PArray': {
-            let el: t.Type = { type: 'TBlank', loc: pat.loc };
-            let size: t.Type = {
-                type: 'Number',
-                value: 0,
-                kind: 'UInt',
-                loc: pat.loc,
-            };
-            pat.items.forEach((item) => {
-                if (item.type === 'PSpread') {
-                    const inner = typeForPattern(item.inner, ctx, newTypeVar);
-                    const t = arrayType(inner, ctx);
-                    if (!t) {
-                        return;
-                    }
-                    const un = unifyTypes(el, t[0], ctx);
-                    if (!un) {
-                        return;
-                    }
-                    el = un;
-                    size = collapseOps(
-                        {
-                            type: 'TOps',
-                            loc: pat.loc,
-                            left: el,
-                            right: [{ top: '+', right: t[1] }],
-                        },
-                        ctx,
-                    );
-                } else {
-                    const inner = typeForPattern(item, ctx, newTypeVar);
-                    const un = unifyTypes(el, inner, ctx);
-                    if (!un) {
-                        return;
-                    }
-                    el = un;
-                    size = collapseOps(
-                        {
-                            type: 'TOps',
-                            loc: pat.loc,
-                            left: el,
-                            right: [
-                                {
-                                    top: '+',
-                                    right: {
-                                        type: 'Number',
-                                        value: 1,
-                                        kind: 'UInt',
-                                        loc: pat.loc,
-                                    },
-                                },
-                            ],
-                        },
-                        ctx,
-                    );
-                }
-            });
-            return {
-                type: 'TApply',
-                loc: pat.loc,
-                args: [el, size],
-                target: {
-                    type: 'TRef',
-                    ref: ctx.getBuiltinRef('Array')!,
-                    loc: pat.loc,
-                },
-            };
-        }
-        case 'PName':
-            return newTypeVar
-                ? newTypeVar(pat.loc)
-                : { type: 'TBlank', loc: pat.loc };
-        case 'PDecorated':
-            return typeForPattern(pat.inner, ctx, newTypeVar);
-        case 'PRecord':
-            return {
-                type: 'TRecord',
-                items: pat.items.map(({ name, pat }) => ({
-                    type: 'TRecordKeyValue',
-                    key: name,
-                    value: typeForPattern(pat, ctx, newTypeVar),
-                    loc: pat.loc,
-                    default_: null,
-                })),
-                loc: pat.loc,
-                open: pat.items.length > 0,
-                spreads: [],
-            };
-        case 'PBlank':
-            return { type: 'TBlank', loc: pat.loc };
-    }
-};
 
 export const getLocals = (
     pat: Pattern,
@@ -878,10 +447,8 @@ import { Ctx as JCtx } from '../ir/to-js';
 import { allRecordItems } from './records';
 import { and } from './ifs';
 import { maybeExpandTask } from '../typing/tasks';
-import { collapseOps, eopsMatch, numOps } from '../typing/ops';
 import { arrayType } from '../typing/getType';
-import { unifyTypes } from '../typing/unifyTypes';
-import { patternIsExhaustive } from './exhaustive';
+import { collapseOps } from '../typing/ops';
 export const ToJS = {
     /**
      * An expression that evaluates to "true"
@@ -969,16 +536,79 @@ export const ToJS = {
             case 'PDecorated':
                 return ctx.ToJS.PatternCond(p.inner, target, type, ctx);
             case 'PArray':
-                // const items = p.items.map((item) => {
-                //     if (item.type === 'PSpread') {
-                //         const inner = ctx.ToJS.PatternCond(item.inner, ctx);
-                //         return inner ? b.restElement(inner) : null;
-                //     }
-
-                //     return ctx.ToJS.PatternCond(item, ctx);
-                // });
+                const t = arrayType(type, ctx.actx);
+                if (!t) {
+                    return b.booleanLiteral(false);
+                }
+                let count = 0;
+                const fulls = p.items.filter(
+                    (item) => item.type !== 'PSpread',
+                ).length;
+                const items = p.items.map((item, i) => {
+                    if (item.type === 'PSpread') {
+                        const inner = ctx.ToJS.PatternCond(
+                            item.inner,
+                            b.callExpression(
+                                b.memberExpression(
+                                    target,
+                                    b.identifier('slice'),
+                                ),
+                                [
+                                    b.numericLiteral(count),
+                                    b.numericLiteral(t.length),
+                                ],
+                            ),
+                            {
+                                type: 'TApply',
+                                loc: p.loc,
+                                args: [
+                                    t[0],
+                                    collapseOps(
+                                        {
+                                            left: t[1],
+                                            loc: p.loc,
+                                            type: 'TOps',
+                                            right: [
+                                                {
+                                                    top: '-',
+                                                    right: {
+                                                        type: 'Number',
+                                                        loc: p.loc,
+                                                        value: fulls,
+                                                        kind: 'UInt',
+                                                    },
+                                                },
+                                            ],
+                                        },
+                                        ctx.actx,
+                                    ),
+                                ],
+                                target: {
+                                    type: 'TRef',
+                                    ref: ctx.actx.getBuiltinRef('Array')!,
+                                    loc: p.loc,
+                                },
+                            },
+                            ctx,
+                        );
+                        return inner;
+                    }
+                    return ctx.ToJS.PatternCond(
+                        item,
+                        b.memberExpression(target, b.numericLiteral(i), true),
+                        t[0],
+                        ctx,
+                    );
+                });
                 // return items.some(Boolean) ? b.arrayPattern(items) : null;
-                return b.booleanLiteral(false);
+                return and([
+                    b.binaryExpression(
+                        '>=',
+                        b.memberExpression(target, b.identifier('length')),
+                        b.numericLiteral(fulls),
+                    ),
+                    ...(items.filter(Boolean) as b.Expression[]),
+                ]);
             case 'PRecord':
                 if (type.type !== 'TRecord' || p.items.length === 0) {
                     return null;

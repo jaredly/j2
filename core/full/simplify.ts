@@ -248,6 +248,9 @@ const liftStmts: Visitor<SCtx> = {
                             return false;
                         },
                         Switch(node, ctx) {
+                            // if (!isSimple(node.target)) {
+                            //     return { ...node, target: lift(node.target) };
+                            // }
                             return false;
                         },
                         Expression(node, path) {
@@ -260,6 +263,19 @@ const liftStmts: Visitor<SCtx> = {
         }
         return changed ? { ...node, stmts } : null;
     },
+};
+
+export const isSimple = (t: t.Expression): boolean => {
+    switch (t.type) {
+        case 'TemplateString':
+            return t.rest.length === 0;
+        case 'Number':
+        case 'Ref':
+            return true;
+        case 'DecoratedExpression':
+            return isSimple(t.expr);
+    }
+    return false;
 };
 
 const visitors: Visitor<SCtx>[] = [

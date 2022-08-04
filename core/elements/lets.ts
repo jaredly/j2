@@ -7,7 +7,9 @@ import * as t from '../typed-ast';
 import { Ctx as ACtx, decorate, pdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
+import { getLocals } from './pattern';
+import { typeForPattern } from './patterns/typeForPattern';
+import { typeMatchesPattern } from './patterns/typeMatchesPattern';
 
 export const grammar = `
 Block = "{" _ stmts:Stmts? _ "}"

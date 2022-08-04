@@ -268,12 +268,9 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import {
-    getLocals,
-    Locals,
-    typeForPattern,
-    typeMatchesPattern,
-} from './pattern';
+import { getLocals, Locals } from './pattern';
+import { typeForPattern } from './patterns/typeForPattern';
+import { typeMatchesPattern } from './patterns/typeMatchesPattern';
 import { dtype } from './ifs';
 import { collectEffects, makeTaskType } from '../typing/tasks';
 

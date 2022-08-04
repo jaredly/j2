@@ -25,6 +25,6 @@ let collect: (string, Task<[Print], ()>) => string = (collected, task) => switch
     `Print(value, k) => collect("${collected}\n${value}", k(()));
 }
 let inner = () => {
-    print(alwaysRead#[:unresolved:]<Print>("who", helloFolks())!)!;
+    print(alwaysRead<Print>("who", helloFolks())!)!;
 }
-collect("Initial", inner#[:unresolved:]()) == "Initial\nHello folks\nGot who!\ndone who"
+collect("Initial", inner()) == "Initial\nHello folks\nGot who!\ndone who"

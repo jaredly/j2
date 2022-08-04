@@ -16,12 +16,10 @@ import { Ctx as TMCtx } from '../typing/typeMatches';
 import { Ctx as ICtx } from '../ir/ir';
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import {
-    getLocals,
-    refineType,
-    typeForPattern,
-    typeMatchesPattern,
-} from './pattern';
+import { getLocals } from './pattern';
+import { typeForPattern } from './patterns/typeForPattern';
+import { typeMatchesPattern } from './patterns/typeMatchesPattern';
+import { refineType } from './patterns/refineType';
 import { iife } from './lets';
 import { unifyTypes } from '../typing/unifyTypes';
 import { dtype } from './ifs';

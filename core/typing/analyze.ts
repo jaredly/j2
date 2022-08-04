@@ -5,7 +5,8 @@
 import { FullContext, GlobalType, GlobalValue } from '../ctx';
 import { noloc } from '../consts';
 import { typeToplevelT } from '../elements/base';
-import { getLocals, typeForPattern } from '../elements/pattern';
+import { getLocals } from '../elements/pattern';
+import { typeForPattern } from '../elements/patterns/typeForPattern';
 import { ErrorTag } from '../errors';
 import { Id, idsEqual } from '../ids';
 import {
