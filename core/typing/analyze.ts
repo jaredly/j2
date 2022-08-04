@@ -395,19 +395,36 @@ export const caseLocals = (switchType: t.Type, node: t.Case, ctx: TMCtx) => {
     return locals;
 };
 
-export type LTCtx = TMCtx & { switchType?: t.Type };
+const tee = (locals: t.Locals, collector?: t.Locals) => {
+    if (collector) {
+        collector.push(...locals);
+    }
+    return locals;
+};
+
+export type LTCtx = TMCtx & { switchType?: t.Type; allLocals?: t.Locals };
 export const localTrackingVisitor: Visitor<LTCtx> = {
     Lambda(node, ctx) {
         const locals: t.Locals = [];
 
         node.args.forEach((arg) => getLocals(arg.pat, arg.typ, locals, ctx));
-        return [null, ctx.withLocals(locals) as Ctx];
+        return [null, ctx.withLocals(tee(locals, ctx.allLocals)) as Ctx];
     },
     Block(node, ctx) {
-        return [null, ctx.withLocals(blockLocals(node, ctx as Ctx)) as Ctx];
+        return [
+            null,
+            ctx.withLocals(
+                tee(blockLocals(node, ctx as Ctx), ctx.allLocals),
+            ) as Ctx,
+        ];
     },
     IfYes(node, ctx) {
-        return [null, ctx.withLocals(ifLocals(node, ctx as Ctx)) as Ctx];
+        return [
+            null,
+            ctx.withLocals(
+                tee(ifLocals(node, ctx as Ctx), ctx.allLocals),
+            ) as Ctx,
+        ];
     },
     Switch(node, ctx) {
         const res = ctx.getType(node.target);
@@ -427,7 +444,12 @@ export const localTrackingVisitor: Visitor<LTCtx> = {
 
         return [
             null,
-            ctx.withLocals(caseLocals(ctx.switchType, node, ctx as Ctx)) as Ctx,
+            ctx.withLocals(
+                tee(
+                    caseLocals(ctx.switchType, node, ctx as Ctx),
+                    ctx.allLocals,
+                ),
+            ) as Ctx,
         ];
     },
 };

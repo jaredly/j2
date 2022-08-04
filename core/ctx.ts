@@ -454,10 +454,11 @@ export const newContext = (): FullContext => {
             return resolveDecorator(this[opaque], name, rawHash);
         },
         ToTast: makeToTast(),
-        sym(name) {
+        sym(name, loc) {
             return {
                 name,
                 id: this[opaque].symid++,
+                loc,
             };
         },
 
@@ -783,13 +784,17 @@ export const setupDefaults = (ctx: FullContext) => {
         named[name] = addBuiltinType(ctx, name, []);
     });
     addBuiltinType(ctx, 'Task', [
-        tvar({ id: 0, name: 'Effects' }, named['task']),
-        tvar({ id: 1, name: 'Result' }, undefined, tunit),
-        tvar({ id: 1, name: 'ExtraInner' }, named['task'], tnever),
+        tvar({ id: 0, name: 'Effects', loc: noloc }, named['task']),
+        tvar({ id: 1, name: 'Result', loc: noloc }, undefined, tunit),
+        tvar({ id: 1, name: 'ExtraInner', loc: noloc }, named['task'], tnever),
     ]);
     addBuiltinType(ctx, 'Array', [
-        tvar({ id: 0, name: 'Value' }),
-        tvar({ id: 1, name: 'Length' }, named['uint'], tref(named['uint'])),
+        tvar({ id: 0, name: 'Value', loc: noloc }),
+        tvar(
+            { id: 1, name: 'Length', loc: noloc },
+            named['uint'],
+            tref(named['uint']),
+        ),
     ]);
     Object.keys(errors).forEach((tag) => {
         addBuiltinDecorator(ctx, `error:` + tag, 0);

@@ -438,6 +438,36 @@ const rec chooseInt: (int, int) ={DecideOrFail}> int = (m: int, n: int): int ={D
     }
 }
 
+
+let fail2: Task<[Fail], (int, int)> = `Fail((), ())
+let pythagorean = (m: int, n: int) => {
+    let a = chooseInt(m, n - 1)!;
+    let b = chooseInt(a + 1, n)!;
+    let a2 = a * a;
+    let b2 = b * b;
+    if isSquare(a2 + b2) {
+		(a, b)
+    } else {
+        fail2!
+    }
+}
+let backtrack: <T>(Task<[Decide|Fail], T>, () => T) => T = <T>(
+    task: Task<[Decide|Fail], T>,
+    orElse: () => T,
+): T => {
+    handle! fn {
+        `Decide(_, k) => {
+            backtrack<T>(k(true), () => backtrack<T>(() => k(false), orElse))
+        },
+        `Fail(_, _) => {
+            orElse()
+        },
+        `Return(x) => x
+    }
+}
+
+
+
 const pythagorean = (m: int, n: int) ={DecideOrFail}> {
     const a = chooseInt(m, n - 1);
     const b = chooseInt(a + 1, n);
@@ -499,6 +529,31 @@ backtrackPythagReverse(4, 15) == "9:12"
 10
 
 // #2.4 State
+
+type Get = <T>[`Get((), T)]
+type Set = <T>[`Set(T, ())]
+type Store = <T>[Get<T>, Set<T>]
+
+let withInitialValue: <V, Res>(V, Task<[Store<V>], Res>) => Res = <Res,>(value: V, task: Task<[Store<V>], Res>): Res => {
+    switch task {
+		`Get(_, k) => withInitialValue<V, Res>(value, k(value))
+		`Set(value, k) => withInitialValue<V, Res>(value, k(()))
+        `Return(x) => x
+    }
+}
+
+let get = <T>() => `Get((), (v: T) => `Return(v))
+let set = <T>(v: T) => `Set(v, (()) => `Return())
+
+const getAndSet = () => {
+    const x = get<int>()!;
+	set(x + 4)!;
+	"${toString(x}:${toString(get<int>()!)}"
+}
+
+withInitialValue<int, string>(10, getAndSet) == "10:14"
+
+
 
 effect Store {
     get: () => int,

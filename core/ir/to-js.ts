@@ -123,6 +123,12 @@ const testIO = <T>(read: string, task: IO<T>): T => {
 
 const builtins = {
     get: <T>(v: Array<T>, n: number): T => v[n],
+    geti: <T>(v: Array<T>, n: number) => {
+        if (n < v.length) {
+            return { tag: 'Ok', payload: v[n] };
+        }
+        return { tag: 'Err', payload: 'IndexOutOfBounds' };
+    },
     andThen,
     withHandler,
     testIO,

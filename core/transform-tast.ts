@@ -1134,7 +1134,18 @@ export const transformSym = <Ctx>(
     }
 
     let changed0 = false;
-    const updatedNode = node;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
 
     node = updatedNode;
     if (visitor.SymPost) {

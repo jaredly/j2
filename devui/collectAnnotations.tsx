@@ -11,9 +11,18 @@ import { extract } from '../core/ids';
 
 export const collectAnnotations = (tast: File, ctx: FullContext) => {
     const annotations: { loc: Loc; text: string }[] = [];
-    const visitor: tt.Visitor<FullContext> = annotationVisitor(annotations, {});
-    tt.transformFile(tast, visitor, ctx);
-    // console.log(annotations);
+    const visitor: tt.Visitor<FullContext & LTCtx> = annotationVisitor(
+        annotations,
+        {},
+    );
+    const allLocals: Locals = [];
+    tt.transformFile(tast, visitor, { ...ctx, allLocals });
+    allLocals.forEach((local) => {
+        // const type = getType(local.type, ctx);
+        const text = typeToString(local.type, ctx);
+        annotations.push({ loc: local.sym.loc, text });
+    });
+    console.log('alllocals', allLocals);
     return annotations;
 };
 

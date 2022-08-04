@@ -64,8 +64,8 @@ export const ToTast = {
     },
     TBArg({ label, hash, bound, default_, loc }: p.TBArg, ctx: TCtx): TVar {
         const sym = hash
-            ? { name: label, id: +hash.slice(2, -1) }
-            : ctx.sym(label);
+            ? { name: label, id: +hash.slice(2, -1), loc }
+            : ctx.sym(label, loc);
         return {
             sym,
             bound: bound ? ctx.ToTast.Type(bound, ctx) : null,

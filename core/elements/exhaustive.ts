@@ -40,6 +40,15 @@ export const patternIsExhaustive = (
             if (!t) {
                 return false;
             }
+            if (
+                pat.items.some(
+                    (item) =>
+                        item.type !== 'PSpread' &&
+                        !patternIsExhaustive(item, t[0], ctx),
+                )
+            ) {
+                return false;
+            }
             if (pat.items.some((p) => p.type === 'PSpread')) {
                 return true;
             }

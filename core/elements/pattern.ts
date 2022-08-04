@@ -143,6 +143,11 @@ export const refineType = (
         case 'PBlank':
         case 'PName':
             return null;
+        case 'PArray':
+            if (patternIsExhaustive(pat, type, ctx)) {
+                return null;
+            }
+            return type;
         case 'PRecord': {
             if (type.type !== 'TRecord') {
                 return type;
@@ -590,7 +595,9 @@ export const ToTast = {
         if (name === '_' && !hash) {
             return { type: 'PBlank', loc };
         }
-        const sym = hash ? { name, id: +hash.slice(2, -1) } : ctx.sym(name);
+        const sym = hash
+            ? { name, id: +hash.slice(2, -1), loc }
+            : ctx.sym(name, loc);
         // locals.push({ sym, type: expected ?? ctx.newTypeVar() });
         return {
             type: 'PName',
@@ -874,6 +881,7 @@ import { maybeExpandTask } from '../typing/tasks';
 import { collapseOps, eopsMatch, numOps } from '../typing/ops';
 import { arrayType } from '../typing/getType';
 import { unifyTypes } from '../typing/unifyTypes';
+import { patternIsExhaustive } from './exhaustive';
 export const ToJS = {
     /**
      * An expression that evaluates to "true"

@@ -199,11 +199,11 @@ const liftStmts: Visitor<SCtx> = {
                 type: 'Let',
                 pat: {
                     type: 'PName',
-                    sym: { id: sym, name: `${prefix}${sym}` },
-                    loc: noloc,
+                    sym: { id: sym, name: `${prefix}${sym}`, loc: stmt.loc },
+                    loc: stmt.loc,
                 },
                 expr: stmt,
-                loc: noloc,
+                loc: stmt.loc,
             });
             return { type: 'Ref', kind: { type: 'Local', sym }, loc: stmt.loc };
         };

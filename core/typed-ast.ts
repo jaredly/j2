@@ -225,7 +225,7 @@ export type IExpression =
     | IEnum
     | IRecord;
 
-export type Sym = { id: number; name: string };
+export type Sym = { id: number; name: string; loc: Loc };
 
 // export type
 /*
