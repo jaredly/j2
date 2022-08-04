@@ -134,7 +134,7 @@ export const typeMatches = (
         if (constraints) {
             const current = addNewConstraint(
                 expected.id,
-                { outer: candidate },
+                { inner: candidate },
                 constraints,
                 ctx,
             );

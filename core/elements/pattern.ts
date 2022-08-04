@@ -593,6 +593,7 @@ export const ToAst = {
     TVbl({ id, loc }: t.TVbl, ctx: TACtx): p.Type {
         // TODO: I think we just get the current unity of the constraints?
         // throw new Error(`Unresolved type variables cant be represented?`);
+        debugger;
         return { type: 'String', text: 'tvbl:' + id, loc };
     },
 };

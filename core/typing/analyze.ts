@@ -241,7 +241,7 @@ export const mergeConstraints = (
         one.inner && two.inner
             ? unifyTypes(one.inner, two.inner, ctx, constraints)
             : one.inner ?? two.inner;
-    if (inner && outer && !typeMatches(inner, outer, ctx)) {
+    if (inner && outer && !typeMatches(inner, outer, ctx, [], constraints)) {
         return null;
     }
     return {

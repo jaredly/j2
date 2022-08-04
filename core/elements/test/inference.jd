@@ -26,12 +26,9 @@ let wname = (v: [`Age(int)]) => 10
 (a): int => a(10)
 ({a}): int => a
 (`A(a)): int => a
-
 let ok = <T>(a: T) => a
 ok(10)
-
 let ok = <T>(a: [`Hi(T)]) => 1
 ok(`Hi(10))
-
 let mk = <A, B: int>(a: [`Hi(A, B)]) => a
 mk(`Hi("hi", 2))

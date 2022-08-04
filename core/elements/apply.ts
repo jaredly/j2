@@ -1,5 +1,6 @@
 import { transformType, Visitor } from '../transform-tast';
 import {
+    addNewConstraint,
     collapseConstraints,
     Constraints,
     decorate,
@@ -872,7 +873,13 @@ export const autoTypeApply = (
     passedInArgs: t.Type[],
     ctx: Ctx,
 ): null | { apply: t.Apply; constraints: ConstraintMap } => {
-    if (window.NEWVERSION && 1 == 1) {
+    // Simple version
+    const mapping = inferVarsFromArgs(vars, args, ctx);
+
+    if (!mapping) {
+        if (true) {
+            return null;
+        }
         const symbols: { [num: number]: t.Type } = {};
 
         const visitor: Visitor<null> = {
@@ -885,12 +892,21 @@ export const autoTypeApply = (
             },
         };
 
+        const constraints: ConstraintMap = {};
         const vbls = vars.map((v) => {
             let vbl = ctx.newTypeVar();
             if (v.bound) {
-                ctx.addTypeConstraint(vbl.id, {
-                    outer: transformType(v.bound, visitor, null),
-                });
+                const nc = addNewConstraint(
+                    vbl.id,
+                    {
+                        outer: transformType(v.bound, visitor, null),
+                    },
+                    constraints,
+                    ctx,
+                );
+                if (nc) {
+                    constraints[vbl.id] = nc;
+                }
             }
             symbols[v.sym.id] = vbl;
             return vbl;
@@ -899,7 +915,6 @@ export const autoTypeApply = (
         // ughhhhh hm ok so,
         // <A, B: A>(a: A, b: B) =>
         // in this case, we've got some transitive constraint dependencies....
-        const constraints: ConstraintMap = {};
         const ok = args.every((arg, i) => {
             const tt = transformType(arg, visitor, null);
             return typeMatches(passedInArgs[i], tt, ctx, [], constraints);
@@ -914,11 +929,12 @@ export const autoTypeApply = (
                     type: 'TypeApplication',
                     target: node.target,
                     inferred: true,
-                    args: vbls.map(
-                        (v) =>
-                            collapseConstraints(constraints[v.id] ?? {}, ctx),
-                        // collapseConstraints(ctx.currentConstraints(v.id), ctx),
-                    ),
+                    args: vbls,
+                    // .map(
+                    //     (v) =>
+                    //         collapseConstraints(constraints[v.id] ?? {}, ctx),
+                    //     // collapseConstraints(ctx.currentConstraints(v.id), ctx),
+                    // ),
                     loc: node.target.loc,
                 },
             },
@@ -926,10 +942,6 @@ export const autoTypeApply = (
         };
     }
 
-    const mapping = inferVarsFromArgs(vars, args, ctx);
-    if (!mapping) {
-        return null;
-    }
     let constraints: ConstraintMap = {};
     for (let arg of vars) {
         if (!arg.bound) {
