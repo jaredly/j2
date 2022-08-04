@@ -19,6 +19,7 @@ import { analyzeVisitor } from './analyze.gen';
 import { ToplevelConfig, TopTypeKind } from './to-tast';
 import { ConstraintMap, Ctx as TMCtx, typeMatches } from './typeMatches';
 import { constrainTypes, unifyTypes } from './unifyTypes';
+import { dtype } from '../elements/ifs';
 
 export type Constraints = {
     // Type must match this types
@@ -36,7 +37,7 @@ export type Ctx = {
     getDecorator(name: string): t.RefKind[];
     errorDecorators(): Id[];
     addTypeConstraint: (id: number, constraint: Constraints) => boolean;
-    newTypeVar: () => t.TVbl;
+    newTypeVar: (loc: t.Loc) => t.TVbl;
 
     valueForSym: (sym: number) => null | { name: string; type: t.Type };
     typeForId: (id: Id) => GlobalType | null;
@@ -251,18 +252,37 @@ export const mergeConstraints = (
 };
 
 export const analyzeTop = (ast: t.Toplevel, ctx: Ctx): t.Toplevel => {
-    const top = transformToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
+    const hit = {};
+    const top = transformToplevel(ast, analyzeVisitor(), { ctx, hit });
     return transformToplevel(
         top,
         {
+            ...localTrackingVisitor,
             Type_TVbl(node) {
-                return collapseConstraints(
-                    ctx.currentConstraints(node.id),
-                    ctx,
-                );
+                const { inner, outer } = ctx.currentConstraints(node.id);
+                if (outer && inner) {
+                    // So actually, if we've gotten this far, then the
+                    // constraints are valid.
+                    // if (typeMatches(inner, outer, ctx)) {
+                    // }
+                    // return tdecorate(
+                    //     { type: 'TBlank', loc: node.loc },
+                    //     'cannotReconcile',
+                    //     { ctx, hit },
+                    //     [
+                    //         dtype('inner', inner, node.loc),
+                    //         dtype('outer', outer, node.loc),
+                    //     ],
+                    // );
+                    return { ...inner, loc: node.loc };
+                }
+                return {
+                    ...(inner || outer || { type: 'TBlank', loc: node.loc }),
+                    loc: node.loc,
+                };
             },
         },
-        null,
+        ctx,
     );
 };
 

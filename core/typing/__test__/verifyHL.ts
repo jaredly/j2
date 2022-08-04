@@ -1,12 +1,17 @@
 import { HL } from '../../../devui/HL';
-import { refHash } from '../../typed-ast';
+import { Loc, refHash } from '../../typed-ast';
 import { Verify } from '../analyze';
 
 export const verifyHL = (v: Verify) => {
     const statuses: HL[] = [];
+    const loc0: Loc = {
+        idx: 0,
+        start: { column: 0, line: 0, offset: 0 },
+        end: { column: 50, line: 0, offset: 50 },
+    };
     v.errors.forEach((err) => {
         statuses.push({
-            loc: err.loc,
+            loc: err.loc.end.offset === -1 ? loc0 : err.loc,
             type: 'Error',
             prefix: {
                 text: '🙁',

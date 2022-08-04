@@ -349,7 +349,9 @@ export const typeForPattern = (pat: Pattern, ctx?: ACtx): t.Type => {
                 ],
             };
         case 'PName':
-            return ctx ? ctx.newTypeVar() : { type: 'TBlank', loc: pat.loc };
+            return ctx
+                ? ctx.newTypeVar(pat.loc)
+                : { type: 'TBlank', loc: pat.loc };
         case 'PDecorated':
             return typeForPattern(pat.inner, ctx);
         case 'PRecord':

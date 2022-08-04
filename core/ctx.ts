@@ -473,12 +473,12 @@ export const newContext = (): FullContext => {
             };
         },
 
-        newTypeVar() {
+        newTypeVar(loc) {
             const id = this[opaque].symid++;
             return {
                 type: 'TVbl',
                 id,
-                loc: noloc,
+                loc,
             };
         },
 

@@ -125,29 +125,38 @@ export const maybeAutoType = (node: t.Apply, ctx: TCtx): t.Apply => {
     const inner = ctx.getType(node.target);
     if (inner) {
         const argTypes = node.args.map((arg) => ctx.getType(arg));
-        if (argTypes.every(Boolean)) {
-            const constraints: ConstraintMap = {};
-            const res = ctx.newTypeVar();
-            typeMatches(
-                inner,
-                {
-                    type: 'TLambda',
-                    args: argTypes.map((t) => ({
-                        typ: t!,
-                        label: '',
-                        loc: t!.loc,
-                    })),
-                    loc: node.loc,
-                    result: res,
-                },
-                ctx,
-                [],
-                constraints,
-            );
-            Object.keys(constraints).forEach((key) => {
-                ctx.addTypeConstraint(+key, constraints[+key]);
+        const constraints: ConstraintMap = {};
+        if (inner.type === 'TLambda') {
+            inner.args.forEach((arg, i) => {
+                const at = argTypes[i];
+                if (at) {
+                    typeMatches(at, arg.typ, ctx, [], constraints);
+                }
             });
+        } else {
+            if (argTypes.every(Boolean)) {
+                const res = ctx.newTypeVar(node.loc);
+                typeMatches(
+                    inner,
+                    {
+                        type: 'TLambda',
+                        args: argTypes.map((t) => ({
+                            typ: t!,
+                            label: '',
+                            loc: t!.loc,
+                        })),
+                        loc: node.loc,
+                        result: res,
+                    },
+                    ctx,
+                    [],
+                    constraints,
+                );
+            }
         }
+        Object.keys(constraints).forEach((key) => {
+            ctx.addTypeConstraint(+key, constraints[+key]);
+        });
     }
 
     return node;
@@ -782,9 +791,32 @@ export const inferVarsFromArgs = (
     ctx: Ctx,
 ): null | { [key: number]: number[] } => {
     const mapping: { [sym: number]: false | number[] } = {};
-    vars.forEach((v) => {
+    for (let v of vars) {
         mapping[v.sym.id] = false;
-    });
+        // if the bound includes
+        if (v.bound) {
+            let hasOthers = false;
+            transformType(
+                v.bound,
+                {
+                    TRef(node, ctx) {
+                        if (node.ref.type === 'Local') {
+                            const sym = node.ref.sym;
+                            if (vars.find((o) => o.sym.id === sym)) {
+                                hasOthers = true;
+                            }
+                        }
+
+                        return null;
+                    },
+                },
+                null,
+            );
+            if (hasOthers) {
+                return null;
+            }
+        }
+    }
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         if (arg.type === 'TRef' && arg.ref.type === 'Local') {
@@ -877,9 +909,9 @@ export const autoTypeApply = (
     const mapping = inferVarsFromArgs(vars, args, ctx);
 
     if (!mapping) {
-        if (true) {
-            return null;
-        }
+        // if (true) {
+        //     return null;
+        // }
         const symbols: { [num: number]: t.Type } = {};
 
         const visitor: Visitor<null> = {
@@ -894,7 +926,7 @@ export const autoTypeApply = (
 
         const constraints: ConstraintMap = {};
         const vbls = vars.map((v) => {
-            let vbl = ctx.newTypeVar();
+            let vbl = ctx.newTypeVar(v.loc);
             if (v.bound) {
                 const nc = addNewConstraint(
                     vbl.id,

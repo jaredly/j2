@@ -39,10 +39,24 @@ also, what if I reduce things down to only caring about ... simple, application?
 
 - [x] the type?
 - [ ] the expression whatsit
-- [ ] type variable ... bound or default value, want to reference previous dealios
+- [x] type variable ... bound or default value, want to reference previous dealios
+- [ ] inferrrrr the type arguments of `get<>`
+	- sooooo idk about these ...
+		yeah ok, so unless the bound
 - [ ] switchhhhhh
 	- if-let ... array patterns?
 	- spread? I can skip that for now
+
+
+
+## Fancy Inference
+
+```
+let mkk = <A, B: A>(a: A, b: B) => a
+mkk(1, 2)
+```
+Why is it not supressing the <> in the reprint?
+
 
 
 
