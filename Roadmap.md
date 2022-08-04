@@ -40,7 +40,7 @@ also, what if I reduce things down to only caring about ... simple, application?
 - [x] the type?
 - [ ] the expression whatsit
 - [x] type variable ... bound or default value, want to reference previous dealios
-- [ ] inferrrrr the type arguments of `get<>`
+- [x] inferrrrr the type arguments of `get<>`
 	- sooooo idk about these ...
 		yeah ok, so unless the bound
 - [ ] switchhhhhh

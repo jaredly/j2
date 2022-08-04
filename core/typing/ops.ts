@@ -1,8 +1,8 @@
 import { noloc } from '../consts';
 import { idsEqual } from '../ids';
 import { Number, String, TOps, TRef, Type } from '../typed-ast';
-import { collapseConstraints } from './analyze';
-import { Ctx } from './typeMatches';
+import { collapseConstraints, mergeConstraints } from './analyze';
+import { ConstraintMap, Ctx } from './typeMatches';
 
 export const stringAddsMatch = (
     candidate: (string | true)[],
@@ -68,6 +68,7 @@ export const numOps = (
     expected: TOps | Number | TRef,
     // kind: Number['kind'],
     ctx: Ctx,
+    constraints?: ConstraintMap,
 ): EOps | false => {
     if (expected.type === 'Number') {
         return {
@@ -126,7 +127,16 @@ export const numOps = (
             }
         }
         if (el.type === 'TVbl') {
-            el = collapseConstraints(ctx.currentConstraints(el.id), ctx);
+            const current = constraints
+                ? mergeConstraints(
+                      constraints[el.id] ?? {},
+                      ctx.currentConstraints(el.id),
+                      ctx,
+                  )
+                : ctx.currentConstraints(el.id);
+            if (current) {
+                el = collapseConstraints(current, ctx);
+            }
         }
         if (el.type === 'TRef') {
             if (el.ref.type === 'Global') {

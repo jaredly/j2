@@ -32,3 +32,6 @@ let ok = <T>(a: [`Hi(T)]) => 1
 ok(`Hi(10))
 let mk = <A, B: int>(a: [`Hi(A, B)]) => a
 mk(`Hi("hi", 2))
+let mkk = <A, B: A>(a: A, b: B) => a
+(v: int) => mkk(v, 2)
+mkk(1, 2)

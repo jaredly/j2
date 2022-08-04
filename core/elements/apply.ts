@@ -966,7 +966,10 @@ export const autoTypeApply = (
         // in this case, we've got some transitive constraint dependencies....
         const ok = args.every((arg, i) => {
             const tt = transformType(arg, visitor, null);
-            return typeMatches(passedInArgs[i], tt, ctx, [], constraints);
+            return (
+                passedInArgs[i] &&
+                typeMatches(passedInArgs[i], tt, ctx, [], constraints)
+            );
         });
         if (!ok) {
             return null;

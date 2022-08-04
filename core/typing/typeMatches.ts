@@ -193,21 +193,13 @@ export const typeMatches = (
 
     switch (candidate.type) {
         case 'TConst':
-            return expected.type === 'TConst'
-                ? typeMatches(
-                      candidate.inner,
-                      expected.inner,
-                      ctx,
-                      path,
-                      constraints,
-                  )
-                : typeMatches(
-                      candidate.inner,
-                      expected,
-                      ctx,
-                      path,
-                      constraints,
-                  );
+            return typeMatches(
+                candidate.inner,
+                expected.type === 'TConst' ? expected.inner : expected,
+                ctx,
+                path,
+                constraints,
+            );
         case 'TVbl':
             if (expected.type === 'TVbl' && candidate.id === expected.id) {
                 return true;
@@ -279,13 +271,13 @@ export const typeMatches = (
                     return exadds ? stringAddsMatch(adds, exadds) : false;
                 }
             }
-            const ops = numOps(candidate, ctx);
+            const ops = numOps(candidate, ctx, constraints);
             if (
                 expected.type === 'TOps' ||
                 expected.type === 'Number' ||
                 expected.type === 'TRef'
             ) {
-                const eops = numOps(expected, ctx);
+                const eops = numOps(expected, ctx, constraints);
                 if (ops && eops) {
                     return eopsMatch(ops, eops);
                 }
@@ -294,7 +286,13 @@ export const typeMatches = (
             return (
                 expected.type === 'TOps' &&
                 candidate.right.length === expected.right.length &&
-                typeMatches(candidate.left, expected.left, ctx) &&
+                typeMatches(
+                    candidate.left,
+                    expected.left,
+                    ctx,
+                    path,
+                    constraints,
+                ) &&
                 candidate.right.every(
                     (arg, i) =>
                         arg.top === (expected as TOps).right[i].top &&
@@ -302,6 +300,8 @@ export const typeMatches = (
                             arg.right,
                             (expected as TOps).right[i].right,
                             ctx,
+                            path,
+                            constraints,
                         ),
                 )
             );
@@ -329,10 +329,22 @@ export const typeMatches = (
         case 'TApply':
             return (
                 expected.type === 'TApply' &&
-                typeMatches(candidate.target, expected.target, ctx) &&
+                typeMatches(
+                    candidate.target,
+                    expected.target,
+                    ctx,
+                    path,
+                    constraints,
+                ) &&
                 candidate.args.length === expected.args.length &&
                 candidate.args.every((arg, i) =>
-                    typeMatches(arg, (expected as TApply).args[i], ctx),
+                    typeMatches(
+                        arg,
+                        (expected as TApply).args[i],
+                        ctx,
+                        path,
+                        constraints,
+                    ),
                 )
             );
         case 'TRef':
@@ -376,13 +388,13 @@ export const typeMatches = (
             }
             return false;
         case 'Number':
-            const ops = numOps(candidate, ctx);
+            const ops = numOps(candidate, ctx, constraints);
             if (
                 expected.type === 'TOps' ||
                 expected.type === 'Number' ||
                 expected.type === 'TRef'
             ) {
-                const eops = numOps(expected, ctx);
+                const eops = numOps(expected, ctx, constraints);
                 if (ops && eops) {
                     return eopsMatch(ops, eops);
                 }

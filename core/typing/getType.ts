@@ -12,6 +12,9 @@ import { Ctx, expandEnumCases, typeMatches } from './typeMatches';
 import { unifyTypes } from './unifyTypes';
 
 export const isConst = (type: Type, ctx: Ctx, path?: string[]): boolean => {
+    if (type.type === 'TVbl') {
+        type = collapseConstraints(ctx.currentConstraints(type.id), ctx);
+    }
     switch (type.type) {
         case 'Number':
         case 'String':

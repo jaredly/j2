@@ -6526,6 +6526,19 @@ export const transformArrowSuffix = <Ctx>(
         const updatedNode$name = transformIdentifier(node.name, visitor, ctx);
         changed1 = changed1 || updatedNode$name !== node.name;
 
+        let updatedNode$types = null;
+        const updatedNode$types$current = node.types;
+        if (updatedNode$types$current != null) {
+            const updatedNode$types$1$ = transformTypeApplicationSuffix(
+                updatedNode$types$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$types$1$ !== updatedNode$types$current;
+            updatedNode$types = updatedNode$types$1$;
+        }
+
         let updatedNode$args = null;
         const updatedNode$args$current = node.args;
         if (updatedNode$args$current != null) {
@@ -6544,6 +6557,7 @@ export const transformArrowSuffix = <Ctx>(
                 ...updatedNode,
                 loc: updatedNode$loc,
                 name: updatedNode$name,
+                types: updatedNode$types,
                 args: updatedNode$args,
             };
             changed0 = true;
