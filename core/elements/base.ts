@@ -25,7 +25,7 @@ Identifier = text:$IdText hash:IdHash?
 
 IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
 
-Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
+Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block / ArrayExpr
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 

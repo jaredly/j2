@@ -75,6 +75,7 @@ export const colors: {
     PName: 'teal', // '#00c000',
     AwaitBang: 'magenta',
     String: '#afa',
+    ArrowSuffix: '#bf8529',
     Enum: '#ff5c5c',
     TagDecl: '#ff5c5c',
     // '#33ff4e',

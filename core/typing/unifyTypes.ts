@@ -103,6 +103,35 @@ export const unifyTypes = (
         }
     }
 
+    if (
+        one.type === 'TLambda' &&
+        two.type === 'TLambda' &&
+        one.args.length === two.args.length
+    ) {
+        const res = unifyTypes(one.result, two.result, ctx, constraints);
+        if (!res) {
+            return false;
+        }
+        const oargs = one.args;
+        const targs = two.args;
+        const args = one.args.map((arg, i) =>
+            constrainTypes(arg.typ, targs[i].typ, ctx, constraints),
+        );
+        if (!args.every(Boolean)) {
+            return false;
+        }
+        return {
+            ...one,
+            args: args.map((t, i) => ({
+                label:
+                    oargs[i].label === targs[i].label ? oargs[i].label : null,
+                typ: t as Type,
+                loc: oargs[i].loc,
+            })),
+            result: res,
+        };
+    }
+
     // So, there's a lot we could do here, with
     // unifying ops. But I'm going to bail for now.
     if (

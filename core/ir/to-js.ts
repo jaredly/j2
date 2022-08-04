@@ -122,6 +122,7 @@ const testIO = <T>(read: string, task: IO<T>): T => {
 };
 
 const builtins = {
+    get: <T>(v: Array<T>, n: number): T => v[n],
     andThen,
     withHandler,
     testIO,

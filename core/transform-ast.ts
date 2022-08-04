@@ -78,8 +78,11 @@ import {
     Record,
     RecordItems,
     RecordItem,
-    RecordSpread,
+    SpreadExpr,
     RecordKeyValue,
+    ArrayExpr,
+    ArrayItems,
+    ArrayItem,
     Suffix,
     CallSuffix,
     TypeApplicationSuffix,
@@ -181,6 +184,21 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | ArrowSuffix | [ArrowSuffix | null, Ctx];
     ArrowSuffixPost?: (node: ArrowSuffix, ctx: Ctx) => null | ArrowSuffix;
+    ArrayExpr?: (
+        node: ArrayExpr,
+        ctx: Ctx,
+    ) => null | false | ArrayExpr | [ArrayExpr | null, Ctx];
+    ArrayExprPost?: (node: ArrayExpr, ctx: Ctx) => null | ArrayExpr;
+    ArrayItems?: (
+        node: ArrayItems,
+        ctx: Ctx,
+    ) => null | false | ArrayItems | [ArrayItems | null, Ctx];
+    ArrayItemsPost?: (node: ArrayItems, ctx: Ctx) => null | ArrayItems;
+    ArrayItem?: (
+        node: ArrayItem,
+        ctx: Ctx,
+    ) => null | false | ArrayItem | [ArrayItem | null, Ctx];
+    ArrayItemPost?: (node: ArrayItem, ctx: Ctx) => null | ArrayItem;
     AwaitSuffix?: (
         node: AwaitSuffix,
         ctx: Ctx,
@@ -655,11 +673,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | RecordItem | [RecordItem | null, Ctx];
     RecordItemPost?: (node: RecordItem, ctx: Ctx) => null | RecordItem;
-    RecordSpread?: (
-        node: RecordSpread,
+    SpreadExpr?: (
+        node: SpreadExpr,
         ctx: Ctx,
-    ) => null | false | RecordSpread | [RecordSpread | null, Ctx];
-    RecordSpreadPost?: (node: RecordSpread, ctx: Ctx) => null | RecordSpread;
+    ) => null | false | SpreadExpr | [SpreadExpr | null, Ctx];
+    SpreadExprPost?: (node: SpreadExpr, ctx: Ctx) => null | SpreadExpr;
     RecordKeyValue?: (
         node: RecordKeyValue,
         ctx: Ctx,
@@ -839,6 +857,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Suffix | [Suffix | null, Ctx];
     SuffixPost_ArrowSuffix?: (node: ArrowSuffix, ctx: Ctx) => null | Suffix;
+    ArrayItem_SpreadExpr?: (
+        node: SpreadExpr,
+        ctx: Ctx,
+    ) => null | false | ArrayItem | [ArrayItem | null, Ctx];
+    ArrayItemPost_SpreadExpr?: (node: SpreadExpr, ctx: Ctx) => null | ArrayItem;
     Toplevel_Aliases?: (
         node: Aliases,
         ctx: Ctx,
@@ -935,6 +958,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Atom | [Atom | null, Ctx];
     AtomPost_Block?: (node: Block, ctx: Ctx) => null | Atom;
+    Atom_ArrayExpr?: (
+        node: ArrayExpr,
+        ctx: Ctx,
+    ) => null | false | Atom | [Atom | null, Ctx];
+    AtomPost_ArrayExpr?: (node: ArrayExpr, ctx: Ctx) => null | Atom;
     BinOp_BinOp?: (
         node: BinOp_inner,
         ctx: Ctx,
@@ -1038,12 +1066,12 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | PRecordValue | [PRecordValue | null, Ctx];
     PRecordValuePost_PHash?: (node: PHash, ctx: Ctx) => null | PRecordValue;
-    RecordItem_RecordSpread?: (
-        node: RecordSpread,
+    RecordItem_SpreadExpr?: (
+        node: SpreadExpr,
         ctx: Ctx,
     ) => null | false | RecordItem | [RecordItem | null, Ctx];
-    RecordItemPost_RecordSpread?: (
-        node: RecordSpread,
+    RecordItemPost_SpreadExpr?: (
+        node: SpreadExpr,
         ctx: Ctx,
     ) => null | RecordItem;
     RecordItem_RecordKeyValue?: (
@@ -1183,6 +1211,22 @@ export type Visitor<Ctx> = {
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
     AllTaggedTypesPost_ArrowSuffix?: (
         node: ArrowSuffix,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_ArrayExpr?: (
+        node: ArrayExpr,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_ArrayExpr?: (
+        node: ArrayExpr,
+        ctx: Ctx,
+    ) => null | AllTaggedTypes;
+    AllTaggedTypes_ArrayItems?: (
+        node: ArrayItems,
+        ctx: Ctx,
+    ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
+    AllTaggedTypesPost_ArrayItems?: (
+        node: ArrayItems,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_AwaitSuffix?: (
@@ -1602,12 +1646,12 @@ export type Visitor<Ctx> = {
         node: RecordItems,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
-    AllTaggedTypes_RecordSpread?: (
-        node: RecordSpread,
+    AllTaggedTypes_SpreadExpr?: (
+        node: SpreadExpr,
         ctx: Ctx,
     ) => null | false | AllTaggedTypes | [AllTaggedTypes | null, Ctx];
-    AllTaggedTypesPost_RecordSpread?: (
-        node: RecordSpread,
+    AllTaggedTypesPost_SpreadExpr?: (
+        node: SpreadExpr,
         ctx: Ctx,
     ) => null | AllTaggedTypes;
     AllTaggedTypes_RecordKeyValue?: (
@@ -5434,17 +5478,17 @@ export const transformEnum = <Ctx>(
     return node;
 };
 
-export const transformRecordSpread = <Ctx>(
-    node: RecordSpread,
+export const transformSpreadExpr = <Ctx>(
+    node: SpreadExpr,
     visitor: Visitor<Ctx>,
     ctx: Ctx,
-): RecordSpread => {
+): SpreadExpr => {
     if (!node) {
-        throw new Error('No RecordSpread provided');
+        throw new Error('No SpreadExpr provided');
     }
 
-    const transformed = visitor.RecordSpread
-        ? visitor.RecordSpread(node, ctx)
+    const transformed = visitor.SpreadExpr
+        ? visitor.SpreadExpr(node, ctx)
         : null;
     if (transformed === false) {
         return node;
@@ -5482,8 +5526,8 @@ export const transformRecordSpread = <Ctx>(
     }
 
     node = updatedNode;
-    if (visitor.RecordSpreadPost) {
-        const transformed = visitor.RecordSpreadPost(node, ctx);
+    if (visitor.SpreadExprPost) {
+        const transformed = visitor.SpreadExprPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -5577,9 +5621,9 @@ export const transformRecordItem = <Ctx>(
     let changed0 = false;
 
     switch (node.type) {
-        case 'RecordSpread': {
-            const transformed = visitor.RecordItem_RecordSpread
-                ? visitor.RecordItem_RecordSpread(node, ctx)
+        case 'SpreadExpr': {
+            const transformed = visitor.RecordItem_SpreadExpr
+                ? visitor.RecordItem_SpreadExpr(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -5619,8 +5663,8 @@ export const transformRecordItem = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
-        case 'RecordSpread': {
-            updatedNode = transformRecordSpread(node, visitor, ctx);
+        case 'SpreadExpr': {
+            updatedNode = transformSpreadExpr(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -5639,9 +5683,9 @@ export const transformRecordItem = <Ctx>(
     }
 
     switch (updatedNode.type) {
-        case 'RecordSpread': {
-            const transformed = visitor.RecordItemPost_RecordSpread
-                ? visitor.RecordItemPost_RecordSpread(updatedNode, ctx)
+        case 'SpreadExpr': {
+            const transformed = visitor.RecordItemPost_SpreadExpr
+                ? visitor.RecordItemPost_SpreadExpr(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -5802,6 +5846,232 @@ export const transformRecord = <Ctx>(
     node = updatedNode;
     if (visitor.RecordPost) {
         const transformed = visitor.RecordPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformArrayItem = <Ctx>(
+    node: ArrayItem,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ArrayItem => {
+    if (!node) {
+        throw new Error('No ArrayItem provided');
+    }
+
+    const transformed = visitor.ArrayItem ? visitor.ArrayItem(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'SpreadExpr': {
+            const transformed = visitor.ArrayItem_SpreadExpr
+                ? visitor.ArrayItem_SpreadExpr(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'SpreadExpr': {
+            updatedNode = transformSpreadExpr(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformExpression(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'SpreadExpr': {
+            const transformed = visitor.ArrayItemPost_SpreadExpr
+                ? visitor.ArrayItemPost_SpreadExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ArrayItemPost) {
+        const transformed = visitor.ArrayItemPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformArrayItems = <Ctx>(
+    node: ArrayItems,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ArrayItems => {
+    if (!node) {
+        throw new Error('No ArrayItems provided');
+    }
+
+    const transformed = visitor.ArrayItems
+        ? visitor.ArrayItems(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformArrayItem(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ArrayItemsPost) {
+        const transformed = visitor.ArrayItemsPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformArrayExpr = <Ctx>(
+    node: ArrayExpr,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ArrayExpr => {
+    if (!node) {
+        throw new Error('No ArrayExpr provided');
+    }
+
+    const transformed = visitor.ArrayExpr ? visitor.ArrayExpr(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        let updatedNode$items = null;
+        const updatedNode$items$current = node.items;
+        if (updatedNode$items$current != null) {
+            const updatedNode$items$1$ = transformArrayItems(
+                updatedNode$items$current,
+                visitor,
+                ctx,
+            );
+            changed1 =
+                changed1 || updatedNode$items$1$ !== updatedNode$items$current;
+            updatedNode$items = updatedNode$items$1$;
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                items: updatedNode$items,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ArrayExprPost) {
+        const transformed = visitor.ArrayExprPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -6044,6 +6314,25 @@ export const transformAtom = <Ctx>(
             }
             break;
         }
+
+        case 'ArrayExpr': {
+            const transformed = visitor.Atom_ArrayExpr
+                ? visitor.Atom_ArrayExpr(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
     }
 
     let updatedNode = node;
@@ -6109,10 +6398,16 @@ export const transformAtom = <Ctx>(
             break;
         }
 
+        case 'Block': {
+            updatedNode = transformBlock(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformBlock(node, visitor, ctx);
+            const updatedNode$0node = transformArrayExpr(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -6222,6 +6517,16 @@ export const transformAtom = <Ctx>(
         case 'Block': {
             const transformed = visitor.AtomPost_Block
                 ? visitor.AtomPost_Block(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ArrayExpr': {
+            const transformed = visitor.AtomPost_ArrayExpr
+                ? visitor.AtomPost_ArrayExpr(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -11973,6 +12278,44 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'ArrayExpr': {
+            const transformed = visitor.AllTaggedTypes_ArrayExpr
+                ? visitor.AllTaggedTypes_ArrayExpr(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'ArrayItems': {
+            const transformed = visitor.AllTaggedTypes_ArrayItems
+                ? visitor.AllTaggedTypes_ArrayItems(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'AwaitSuffix': {
             const transformed = visitor.AllTaggedTypes_AwaitSuffix
                 ? visitor.AllTaggedTypes_AwaitSuffix(node, ctx)
@@ -13056,9 +13399,9 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'RecordSpread': {
-            const transformed = visitor.AllTaggedTypes_RecordSpread
-                ? visitor.AllTaggedTypes_RecordSpread(node, ctx)
+        case 'SpreadExpr': {
+            const transformed = visitor.AllTaggedTypes_SpreadExpr
+                ? visitor.AllTaggedTypes_SpreadExpr(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -13571,6 +13914,18 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
+        case 'ArrayExpr': {
+            updatedNode = transformArrayExpr(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'ArrayItems': {
+            updatedNode = transformArrayItems(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'AwaitSuffix': {
             updatedNode = transformAwaitSuffix(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -13917,8 +14272,8 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'RecordSpread': {
-            updatedNode = transformRecordSpread(node, visitor, ctx);
+        case 'SpreadExpr': {
+            updatedNode = transformSpreadExpr(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -14124,6 +14479,26 @@ export const transformAllTaggedTypes = <Ctx>(
         case 'ArrowSuffix': {
             const transformed = visitor.AllTaggedTypesPost_ArrowSuffix
                 ? visitor.AllTaggedTypesPost_ArrowSuffix(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ArrayExpr': {
+            const transformed = visitor.AllTaggedTypesPost_ArrayExpr
+                ? visitor.AllTaggedTypesPost_ArrayExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ArrayItems': {
+            const transformed = visitor.AllTaggedTypesPost_ArrayItems
+                ? visitor.AllTaggedTypesPost_ArrayItems(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -14710,9 +15085,9 @@ export const transformAllTaggedTypes = <Ctx>(
             break;
         }
 
-        case 'RecordSpread': {
-            const transformed = visitor.AllTaggedTypesPost_RecordSpread
-                ? visitor.AllTaggedTypesPost_RecordSpread(updatedNode, ctx)
+        case 'SpreadExpr': {
+            const transformed = visitor.AllTaggedTypesPost_SpreadExpr
+                ? visitor.AllTaggedTypesPost_SpreadExpr(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

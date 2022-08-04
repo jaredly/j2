@@ -39,6 +39,8 @@ also, what if I reduce things down to only caring about ... simple, application?
 
 - [x] the type?
 - [ ] the expression whatsit
+	- so, spreads, right?
+	- hopefully this will be moderatly contained? as a change?
 - [x] type variable ... bound or default value, want to reference previous dealios
 - [x] inferrrrr the type arguments of `get<>`
 	- sooooo idk about these ...

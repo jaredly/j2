@@ -86,9 +86,18 @@ export type {
 } from './elements/lets';
 import { If } from './elements/ifs';
 import { Switch } from './elements/switchs';
+import { ArrayExpr, IArrayExpr } from './elements/array';
 export type { IIf, IIfYes, If, IfCond, IfYes } from './elements/ifs';
 export type { AVCtx, Case, ICase, ISwitch, Switch } from './elements/switchs';
 export type { Await } from './elements/awaits';
+export type {
+    ArrayExpr,
+    ArrayItem,
+    IArrayExpr,
+    IArrayItem,
+    ISpreadExpr,
+    SpreadExpr,
+} from './elements/array';
 
 export type GlobalRef = {
     type: 'Global';
@@ -198,6 +207,7 @@ export type Expression =
     | TypeAbstraction
     | TemplateString
     | TypeApplication
+    | ArrayExpr
     | DecoratedExpression;
 
 export type IExpression =
@@ -207,6 +217,7 @@ export type IExpression =
     | Boolean
     | IApply
     | ITemplateString
+    | IArrayExpr
     | ITypeAbstraction
     | IEnum
     | IRecord;

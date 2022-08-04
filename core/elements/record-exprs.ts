@@ -11,8 +11,8 @@ import { allRecordItems } from './records';
 export const grammar = `
 Record = "{" _ items:RecordItems? _ "}"
 RecordItems = first:RecordItem rest:(_ "," _ RecordItem)* _ ","?
-RecordItem = RecordSpread / RecordKeyValue
-RecordSpread = "..." _ inner:Expression
+RecordItem = SpreadExpr / RecordKeyValue
+SpreadExpr = "..." _ inner:Expression
 RecordKeyValue = key:$AttrText _ ":" _ value:Expression
 `;
 
@@ -49,7 +49,7 @@ export const ToTast = {
         const spreads: Record['spreads'] = [];
         const items: Record['items'] = [];
         ast.items?.items.forEach((item) => {
-            if (item.type === 'RecordSpread') {
+            if (item.type === 'SpreadExpr') {
                 spreads.push(ctx.ToTast.Expression(item.inner, ctx));
             } else if (item.type === 'RecordKeyValue') {
                 items.push({
@@ -116,7 +116,7 @@ export const ToAst = {
                 items: [
                     ...record.spreads.map(
                         (spread): p.RecordItem => ({
-                            type: 'RecordSpread',
+                            type: 'SpreadExpr',
                             inner: ctx.ToAst.Expression(spread, ctx),
                             loc: spread.loc,
                         }),
@@ -152,7 +152,7 @@ export const ToPP = {
                             ],
                             item.loc,
                         );
-                    case 'RecordSpread':
+                    case 'SpreadExpr':
                         return pp.items(
                             [
                                 pp.text('...', item.loc),

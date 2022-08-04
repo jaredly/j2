@@ -34,6 +34,71 @@ export const ToTast = {
         }
     },
 
+    ArrayItem(node: p.ArrayItem, ctx: TCtx): t.ArrayItem {
+        switch (node.type) {
+            case 'TypeAbstraction':
+                return ctx.ToTast.TypeAbstraction(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToTast.Lambda(node, ctx);
+
+            case 'BinOp':
+                return ctx.ToTast.BinOp(node, ctx);
+
+            case 'WithUnary':
+                return ctx.ToTast.WithUnary(node, ctx);
+
+            case 'DecoratedExpression':
+                return ctx.ToTast.DecoratedExpression(node, ctx);
+
+            case 'Apply':
+                return ctx.ToTast.Apply(node, ctx);
+
+            case 'If':
+                return ctx.ToTast.If(node, ctx);
+
+            case 'Switch':
+                return ctx.ToTast.Switch(node, ctx);
+
+            case 'Number':
+                return ctx.ToTast.Number(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToTast.Boolean(node, ctx);
+
+            case 'Identifier':
+                return ctx.ToTast.Identifier(node, ctx);
+
+            case 'ParenedOp':
+                return ctx.ToTast.ParenedOp(node, ctx);
+
+            case 'ParenedExpression':
+                return ctx.ToTast.ParenedExpression(node, ctx);
+
+            case 'TemplateString':
+                return ctx.ToTast.TemplateString(node, ctx);
+
+            case 'Enum':
+                return ctx.ToTast.Enum(node, ctx);
+
+            case 'Record':
+                return ctx.ToTast.Record(node, ctx);
+
+            case 'Block':
+                return ctx.ToTast.Block(node, ctx);
+
+            case 'ArrayExpr':
+                return ctx.ToTast.ArrayExpr(node, ctx);
+
+            case 'SpreadExpr':
+                return ctx.ToTast.SpreadExpr(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
     TypeToplevel(node: p.TypeToplevel, ctx: TCtx): t.TypeToplevel {
         switch (node.type) {
             case 'Aliases':
@@ -140,6 +205,9 @@ export const ToTast = {
             case 'Block':
                 return ctx.ToTast.Block(node, ctx);
 
+            case 'ArrayExpr':
+                return ctx.ToTast.ArrayExpr(node, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -216,6 +284,9 @@ export const ToTast = {
             case 'Block':
                 return ctx.ToTast.Block(node, ctx);
 
+            case 'ArrayExpr':
+                return ctx.ToTast.ArrayExpr(node, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -277,6 +348,9 @@ export const ToTast = {
 
             case 'Block':
                 return ctx.ToTast.Block(node, ctx);
+
+            case 'ArrayExpr':
+                return ctx.ToTast.ArrayExpr(node, ctx);
 
             default:
                 let _: never = node;
@@ -482,6 +556,9 @@ export const ToAst = {
             case 'TypeApplication':
                 return ctx.ToAst.TypeApplication(node, ctx);
 
+            case 'ArrayExpr':
+                return ctx.ToAst.ArrayExpr(node, ctx);
+
             case 'DecoratedExpression':
                 return ctx.ToAst.DecoratedExpression(node, ctx);
 
@@ -599,6 +676,9 @@ export const ToAst = {
             case 'TypeApplication':
                 return ctx.ToAst.TypeApplication(node, ctx);
 
+            case 'ArrayExpr':
+                return ctx.ToAst.ArrayExpr(node, ctx);
+
             case 'DecoratedExpression':
                 return ctx.ToAst.DecoratedExpression(node, ctx);
 
@@ -684,8 +764,70 @@ export const ToAst = {
             case 'TypeApplication':
                 return ctx.ToAst.TypeApplication(node, ctx);
 
+            case 'ArrayExpr':
+                return ctx.ToAst.ArrayExpr(node, ctx);
+
             case 'DecoratedExpression':
                 return ctx.ToAst.DecoratedExpression(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    ArrayItem(node: t.ArrayItem, ctx: TACtx): p.ArrayItem {
+        switch (node.type) {
+            case 'If':
+                return ctx.ToAst.If(node, ctx);
+
+            case 'Ref':
+                return ctx.ToAst.Ref(node, ctx);
+
+            case 'Enum':
+                return ctx.ToAst.Enum(node, ctx);
+
+            case 'Block':
+                return ctx.ToAst.Block(node, ctx);
+
+            case 'Apply':
+                return ctx.ToAst.Apply(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToAst.Lambda(node, ctx);
+
+            case 'Record':
+                return ctx.ToAst.Record(node, ctx);
+
+            case 'Number':
+                return ctx.ToAst.Number(node, ctx);
+
+            case 'Switch':
+                return ctx.ToAst.Switch(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToAst.Boolean(node, ctx);
+
+            case 'Await':
+                return ctx.ToAst.Await(node, ctx);
+
+            case 'TypeAbstraction':
+                return ctx.ToAst.TypeAbstraction(node, ctx);
+
+            case 'TemplateString':
+                return ctx.ToAst.TemplateString(node, ctx);
+
+            case 'TypeApplication':
+                return ctx.ToAst.TypeApplication(node, ctx);
+
+            case 'ArrayExpr':
+                return ctx.ToAst.ArrayExpr(node, ctx);
+
+            case 'DecoratedExpression':
+                return ctx.ToAst.DecoratedExpression(node, ctx);
+
+            case 'SpreadExpr':
+                return ctx.ToAst.SpreadExpr(node, ctx);
 
             default:
                 let _: never = node;
@@ -708,6 +850,71 @@ export const ToPP = {
 
             case 'ArrowSuffix':
                 return ctx.ToPP.ArrowSuffix(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    ArrayItem(node: p.ArrayItem, ctx: PCtx): pp.PP {
+        switch (node.type) {
+            case 'TypeAbstraction':
+                return ctx.ToPP.TypeAbstraction(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToPP.Lambda(node, ctx);
+
+            case 'BinOp':
+                return ctx.ToPP.BinOp(node, ctx);
+
+            case 'WithUnary':
+                return ctx.ToPP.WithUnary(node, ctx);
+
+            case 'DecoratedExpression':
+                return ctx.ToPP.DecoratedExpression(node, ctx);
+
+            case 'Apply':
+                return ctx.ToPP.Apply(node, ctx);
+
+            case 'If':
+                return ctx.ToPP.If(node, ctx);
+
+            case 'Switch':
+                return ctx.ToPP.Switch(node, ctx);
+
+            case 'Number':
+                return ctx.ToPP.Number(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToPP.Boolean(node, ctx);
+
+            case 'Identifier':
+                return ctx.ToPP.Identifier(node, ctx);
+
+            case 'ParenedOp':
+                return ctx.ToPP.ParenedOp(node, ctx);
+
+            case 'ParenedExpression':
+                return ctx.ToPP.ParenedExpression(node, ctx);
+
+            case 'TemplateString':
+                return ctx.ToPP.TemplateString(node, ctx);
+
+            case 'Enum':
+                return ctx.ToPP.Enum(node, ctx);
+
+            case 'Record':
+                return ctx.ToPP.Record(node, ctx);
+
+            case 'Block':
+                return ctx.ToPP.Block(node, ctx);
+
+            case 'ArrayExpr':
+                return ctx.ToPP.ArrayExpr(node, ctx);
+
+            case 'SpreadExpr':
+                return ctx.ToPP.SpreadExpr(node, ctx);
 
             default:
                 let _: never = node;
@@ -821,6 +1028,9 @@ export const ToPP = {
             case 'Block':
                 return ctx.ToPP.Block(node, ctx);
 
+            case 'ArrayExpr':
+                return ctx.ToPP.ArrayExpr(node, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -897,6 +1107,9 @@ export const ToPP = {
             case 'Block':
                 return ctx.ToPP.Block(node, ctx);
 
+            case 'ArrayExpr':
+                return ctx.ToPP.ArrayExpr(node, ctx);
+
             default:
                 let _: never = node;
                 throw new Error('Nope');
@@ -958,6 +1171,9 @@ export const ToPP = {
 
             case 'Block':
                 return ctx.ToPP.Block(node, ctx);
+
+            case 'ArrayExpr':
+                return ctx.ToPP.ArrayExpr(node, ctx);
 
             default:
                 let _: never = node;
@@ -1090,6 +1306,9 @@ export const ToIR = {
             case 'TypeApplication':
                 return ctx.ToIR.TypeApplication(node, ctx);
 
+            case 'ArrayExpr':
+                return ctx.ToIR.ArrayExpr(node, ctx);
+
             case 'DecoratedExpression':
                 return ctx.ToIR.DecoratedExpression(node, ctx);
 
@@ -1146,8 +1365,70 @@ export const ToIR = {
             case 'TypeApplication':
                 return ctx.ToIR.TypeApplication(node, ctx);
 
+            case 'ArrayExpr':
+                return ctx.ToIR.ArrayExpr(node, ctx);
+
             case 'DecoratedExpression':
                 return ctx.ToIR.DecoratedExpression(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    ArrayItem(node: t.ArrayItem, ctx: ICtx): t.IArrayItem {
+        switch (node.type) {
+            case 'If':
+                return ctx.ToIR.If(node, ctx);
+
+            case 'Ref':
+                return ctx.ToIR.Ref(node, ctx);
+
+            case 'Enum':
+                return ctx.ToIR.Enum(node, ctx);
+
+            case 'Block':
+                return ctx.ToIR.Block(node, ctx);
+
+            case 'Apply':
+                return ctx.ToIR.Apply(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToIR.Lambda(node, ctx);
+
+            case 'Record':
+                return ctx.ToIR.Record(node, ctx);
+
+            case 'Number':
+                return ctx.ToIR.Number(node, ctx);
+
+            case 'Switch':
+                return ctx.ToIR.Switch(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToIR.Boolean(node, ctx);
+
+            case 'Await':
+                return ctx.ToIR.Await(node, ctx);
+
+            case 'TypeAbstraction':
+                return ctx.ToIR.TypeAbstraction(node, ctx);
+
+            case 'TemplateString':
+                return ctx.ToIR.TemplateString(node, ctx);
+
+            case 'TypeApplication':
+                return ctx.ToIR.TypeApplication(node, ctx);
+
+            case 'ArrayExpr':
+                return ctx.ToIR.ArrayExpr(node, ctx);
+
+            case 'DecoratedExpression':
+                return ctx.ToIR.DecoratedExpression(node, ctx);
+
+            case 'SpreadExpr':
+                return ctx.ToIR.SpreadExpr(node, ctx);
 
             default:
                 let _: never = node;
@@ -1176,6 +1457,50 @@ export const ToJS = {
 
             case 'TemplateString':
                 return ctx.ToJS.TemplateString(node, ctx);
+
+            case 'ArrayExpr':
+                return ctx.ToJS.ArrayExpr(node, ctx);
+
+            case 'TypeAbstraction':
+                return ctx.ToJS.TypeAbstraction(node, ctx);
+
+            case 'Enum':
+                return ctx.ToJS.Enum(node, ctx);
+
+            case 'Record':
+                return ctx.ToJS.Record(node, ctx);
+
+            default:
+                let _: never = node;
+                throw new Error('Nope');
+        }
+    },
+
+    IArrayItem(node: t.IArrayItem, ctx: JCtx): b.Expression | b.SpreadElement {
+        switch (node.type) {
+            case 'SpreadExpr':
+                return ctx.ToJS.SpreadExpr(node, ctx);
+
+            case 'Ref':
+                return ctx.ToJS.Ref(node, ctx);
+
+            case 'Number':
+                return ctx.ToJS.Number(node, ctx);
+
+            case 'Lambda':
+                return ctx.ToJS.Lambda(node, ctx);
+
+            case 'Boolean':
+                return ctx.ToJS.Boolean(node, ctx);
+
+            case 'Apply':
+                return ctx.ToJS.Apply(node, ctx);
+
+            case 'TemplateString':
+                return ctx.ToJS.TemplateString(node, ctx);
+
+            case 'ArrayExpr':
+                return ctx.ToJS.ArrayExpr(node, ctx);
 
             case 'TypeAbstraction':
                 return ctx.ToJS.TypeAbstraction(node, ctx);

@@ -1,5 +1,6 @@
 
 import { Analyze as apply } from '../elements/apply';
+import { Analyze as array } from '../elements/array';
 import { Analyze as awaits } from '../elements/awaits';
 import { Analyze as binops } from '../elements/binops';
 import { Analyze as constants } from '../elements/constants';
@@ -21,6 +22,7 @@ import {Visitor} from '../transform-tast';
 export const analyzeVisitor = (): Visitor<{ctx: Ctx, hit: {}}> => {
 	return {
 		...apply,
+		...array,
 		...awaits,
 		...binops,
 		...constants,

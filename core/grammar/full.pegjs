@@ -31,6 +31,13 @@ CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
 ArrowSuffix = _ "->" _ name:Identifier types:TypeApplicationSuffix? args:CallSuffix?
 
 
+// array.ts
+
+ArrayExpr = "[" _ items:ArrayItems? _ "]"
+ArrayItems = first:ArrayItem rest:( _ "," _ ArrayItem)* _ ","? _
+ArrayItem = Expression / SpreadExpr
+
+
 // awaits.ts
 
 AwaitSuffix = pseudo:"!"
@@ -55,7 +62,7 @@ Identifier = text:$IdText hash:IdHash?
 
 IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
 
-Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
+Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block / ArrayExpr
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -202,8 +209,8 @@ PEnum = "\`" text:$IdText payload:PTuple?
 
 Record = "{" _ items:RecordItems? _ "}"
 RecordItems = first:RecordItem rest:(_ "," _ RecordItem)* _ ","?
-RecordItem = RecordSpread / RecordKeyValue
-RecordSpread = "..." _ inner:Expression
+RecordItem = SpreadExpr / RecordKeyValue
+SpreadExpr = "..." _ inner:Expression
 RecordKeyValue = key:$AttrText _ ":" _ value:Expression
 
 

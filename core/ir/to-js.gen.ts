@@ -1,5 +1,6 @@
 
 import { ToJS as apply } from '../elements/apply';
+import { ToJS as array } from '../elements/array';
 import { ToJS as base } from '../elements/base';
 import { ToJS as constants } from '../elements/constants';
 import { ToJS as enums } from '../elements/enums';
@@ -12,11 +13,12 @@ import { ToJS as pattern } from '../elements/pattern';
 import { ToJS as records } from '../elements/records';
 import { ToJS as switchs } from '../elements/switchs';
 
-export type ToJS = typeof apply & typeof base & typeof constants & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof records & typeof switchs;
+export type ToJS = typeof apply & typeof array & typeof base & typeof constants & typeof enums & typeof generics & typeof ifs & typeof lambda & typeof lets & typeof macros & typeof pattern & typeof records & typeof switchs;
 
 export const makeToJS = (): ToJS => {
 	return {
 		...apply,
+		...array,
 		...base,
 		...constants,
 		...enums,

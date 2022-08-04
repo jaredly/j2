@@ -35,3 +35,7 @@ mk(`Hi("hi", 2))
 let mkk = <A, B: A>(a: A, b: B) => a
 (v: int) => mkk(v, 2)
 mkk(1, 2)
+(v: Array<string, 5u>) => v->get<string, 5u, 3u>(3u)
+(v: Array<string, 5u>) => v->get(4u)
+let ok2 = <A, B: const uint>(b: Array<A>, c: B) => b
+(v: Array<string>) => ok2(v, 3u)
