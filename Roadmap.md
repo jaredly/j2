@@ -51,6 +51,7 @@ also, what if I reduce things down to only caring about ... simple, application?
 
 ## Fancy Inference
 
+- [x] fix the bug!
 ```
 let mkk = <A, B: A>(a: A, b: B) => a
 mkk(1, 2)

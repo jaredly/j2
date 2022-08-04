@@ -134,8 +134,8 @@ export const asApply = (t: p.Type): p.TApply =>
         : t;
 
 export const ToTast = {
-    TBlank({ type, loc }: p.TBlank, ctx: TCtx): t.TBlank {
-        return { type, loc };
+    TBlank({ type, loc }: p.TBlank, ctx: TCtx): t.Type {
+        return ctx.newTypeVar(loc);
     },
     TConst({ type, inner, loc }: p.TConst, ctx: TCtx): TConst {
         return {

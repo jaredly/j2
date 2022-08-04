@@ -67,6 +67,7 @@ export type ArrowSuffix = {
   type: "ArrowSuffix";
   loc: Loc;
   name: Identifier;
+  types: TypeApplicationSuffix | null;
   args: CallSuffix | null;
 };
 

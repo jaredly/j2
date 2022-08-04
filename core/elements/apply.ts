@@ -23,7 +23,7 @@ Apply = target:Atom suffixes_drop:Suffix*
 Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix / ArrowSuffix
 CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
-ArrowSuffix = _ "->" _ name:Identifier args:CallSuffix?
+ArrowSuffix = _ "->" _ name:Identifier types:TypeApplicationSuffix? args:CallSuffix?
 `;
 
 export type Apply = {
@@ -53,7 +53,10 @@ export const ToTast = {
     },
     ArrowSuffix(suffix: p.ArrowSuffix, target: t.Expression, ctx: TCtx): Apply {
         // const
-        const nt = ctx.ToTast.Identifier(suffix.name, ctx);
+        let nt: t.Expression = ctx.ToTast.Identifier(suffix.name, ctx);
+        if (suffix.types) {
+            nt = ctx.ToTast.TypeApplicationSuffix(suffix.types, nt, ctx);
+        }
         return maybeAutoType(
             {
                 type: 'Apply',
@@ -296,11 +299,19 @@ export const makeApply = (
         arrow &&
         suffix.type === 'CallSuffix' &&
         suffix.args?.items.length &&
-        inner.type === 'Identifier'
+        (inner.type === 'Identifier' ||
+            (inner.type === 'Apply' &&
+                inner.suffixes.length === 1 &&
+                inner.suffixes[0].type === 'TypeApplicationSuffix' &&
+                inner.target.type === 'Identifier'))
     ) {
         const ninner = suffix.args.items[0];
         suffix = {
             type: 'ArrowSuffix',
+            types:
+                inner.type === 'Apply'
+                    ? (inner.suffixes[0] as p.TypeApplicationSuffix)
+                    : null,
             args:
                 suffix.args.items.length > 1
                     ? {
@@ -314,7 +325,10 @@ export const makeApply = (
                       }
                     : null,
             loc: suffix.loc,
-            name: inner,
+            name:
+                inner.type === 'Identifier'
+                    ? inner
+                    : (inner.target as p.Identifier),
         };
         inner = ninner;
     }
@@ -467,6 +481,9 @@ export const ToPP = {
             [
                 pp.text('->', suffix.loc),
                 ctx.ToPP.Identifier(suffix.name, ctx),
+                suffix.types
+                    ? ctx.ToPP.TypeApplicationSuffix(suffix.types, ctx)
+                    : null,
                 suffix.args ? ctx.ToPP.CallSuffix(suffix.args, ctx) : null,
             ],
             suffix.loc,

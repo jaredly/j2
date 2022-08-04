@@ -376,11 +376,12 @@ function peg$parse(input, options) {
     items: [first, ...rest.map(element => element[3])]
   };
 };
-  var peg$f13 = function(name, args) {
+  var peg$f13 = function(name, types, args) {
   return {
     type: "ArrowSuffix",
     loc: myLocation(),
     name,
+    types,
     args
   };
 };
@@ -1922,7 +1923,7 @@ function peg$parse(input, options) {
   }
 
   function peg$parseArrowSuffix() {
-    var s0, s1, s2, s3, s4, s5;
+    var s0, s1, s2, s3, s4, s5, s6;
 
     s0 = peg$currPos;
     s1 = peg$parse_();
@@ -1937,12 +1938,16 @@ function peg$parse(input, options) {
       s3 = peg$parse_();
       s4 = peg$parseIdentifier();
       if (s4 !== peg$FAILED) {
-        s5 = peg$parseCallSuffix();
+        s5 = peg$parseTypeApplicationSuffix();
         if (s5 === peg$FAILED) {
           s5 = null;
         }
+        s6 = peg$parseCallSuffix();
+        if (s6 === peg$FAILED) {
+          s6 = null;
+        }
         peg$savedPos = s0;
-        s0 = peg$f13(s4, s5);
+        s0 = peg$f13(s4, s5, s6);
       } else {
         peg$currPos = s0;
         s0 = peg$FAILED;

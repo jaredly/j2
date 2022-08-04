@@ -28,7 +28,7 @@ Apply = target:Atom suffixes_drop:Suffix*
 Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix / ArrowSuffix
 CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
-ArrowSuffix = _ "->" _ name:Identifier args:CallSuffix?
+ArrowSuffix = _ "->" _ name:Identifier types:TypeApplicationSuffix? args:CallSuffix?
 
 
 // awaits.ts
