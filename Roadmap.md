@@ -19,6 +19,7 @@ and/or a nice error coalescing example.
 	like on an inferred type???
 
 
+- [ ] make a simplify that pulls switch targets that are complex.
 - [ ] process `await`s that aren't in `Block`s (the case example)
 - [x] put the annotation for functions at the end of the last line ...
 - [x] figure out the `failed to find bound` dealios

@@ -170,10 +170,14 @@ export const ToIR = {
         return iife(ctx.ToIR.SwitchSt(tast, ctx), ctx);
     },
     SwitchSt(tast: Switch, ctx: ICtx): ISwitch {
+        const ttype = ctx.actx.getType(tast.target);
+        if (!ttype) {
+            debugger;
+        }
         return {
             type: 'Switch',
             target: ctx.ToIR.Expression(tast.target, ctx),
-            ttype: ctx.actx.getType(tast.target) ?? {
+            ttype: ttype ?? {
                 type: 'TBlank',
                 loc: tast.loc,
             },

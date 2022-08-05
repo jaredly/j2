@@ -16,7 +16,9 @@ const oneLine = (tree: Tree, noPrefix = false): string => {
     return `${openSpan(tree.hl, noPrefix)}${tree.children
         .map((child, i) =>
             child.type === 'leaf'
-                ? `<span data-span="${child.span[0]}:${child.span[1]}" style="padding: 2px 0">${child.text}</span>`
+                ? `<span data-span="${child.span[0]}:${
+                      child.span[1]
+                  }" style="padding: 2px 0">${escapeLine(child.text)}</span>`
                 : oneLine(child, noPrefix),
         )
         .join('')}</span>`;

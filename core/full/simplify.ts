@@ -3,6 +3,7 @@ import { noloc } from '../consts';
 import { transformExpression, transformStmt, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
 import {
+    blockLocals,
     errorCount,
     initVerify,
     localTrackingVisitor,
@@ -194,18 +195,7 @@ const liftStmts: Visitor<SCtx> = {
         let changed = false;
         const lift = (stmt: t.Expression, prefix = 'tmp'): t.Expression => {
             changed = true;
-            const sym = ctx.tmpSym++;
-            stmts.push({
-                type: 'Let',
-                pat: {
-                    type: 'PName',
-                    sym: { id: sym, name: `${prefix}${sym}`, loc: stmt.loc },
-                    loc: stmt.loc,
-                },
-                expr: stmt,
-                loc: stmt.loc,
-            });
-            return { type: 'Ref', kind: { type: 'Local', sym }, loc: stmt.loc };
+            return liftExpression(ctx, stmts, prefix, stmt);
         };
         for (let stmt of node.stmts) {
             stmts.push(
@@ -261,7 +251,68 @@ const liftStmts: Visitor<SCtx> = {
                 ),
             );
         }
-        return changed ? { ...node, stmts } : null;
+        return [
+            changed ? { ...node, stmts } : null,
+            ctx.withLocals(blockLocals({ ...node, stmts }, ctx)) as SCtx,
+        ];
+    },
+};
+
+const liftSwitchTargets: Visitor<SCtx> = {
+    ...(localTrackingVisitor as any as Visitor<SCtx>),
+    Block(node, ctx) {
+        const stmts: t.Stmt[] = [];
+        let changed = false;
+        const lift = (stmt: t.Expression, prefix = 'tmp'): t.Expression => {
+            changed = true;
+            return liftExpression(ctx, stmts, prefix, stmt);
+        };
+        for (let stmt of node.stmts) {
+            stmts.push(
+                transformStmt(
+                    stmt,
+                    {
+                        Lambda(node, ctx) {
+                            return false;
+                        },
+                        Block(node, ctx) {
+                            return false;
+                        },
+                        Case(node, ctx) {
+                            return false;
+                        },
+                        IfYes(node, ctx) {
+                            let changed = false;
+                            const conds = node.conds.map((cond) => {
+                                if (
+                                    cond.type === 'Let' &&
+                                    !isSimple(cond.expr)
+                                ) {
+                                    changed = true;
+                                    return { ...cond, expr: lift(cond.expr) };
+                                }
+                                return cond;
+                            });
+                            return changed ? { ...node, conds } : null;
+                        },
+                        Switch(node, ctx) {
+                            if (!isSimple(node.target)) {
+                                return { ...node, target: lift(node.target) };
+                            }
+                            return false;
+                        },
+                        Expression(node, path) {
+                            return [null, path.concat([node.type])];
+                        },
+                    },
+                    [] as string[],
+                ),
+            );
+        }
+        return [
+            changed ? { ...node, stmts } : null,
+            ctx.withLocals(blockLocals({ ...node, stmts }, ctx)) as SCtx,
+        ];
     },
 };
 
@@ -278,10 +329,11 @@ export const isSimple = (t: t.Expression): boolean => {
     return false;
 };
 
-const visitors: Visitor<SCtx>[] = [
-    liftStmts,
-    superify,
-    reduceAwaitVisitor,
+const visitors: (Visitor<SCtx> & { name: string })[] = [
+    { ...liftSwitchTargets, name: 'liftSwitchTargets' },
+    { ...liftStmts, name: 'liftStmts' },
+    { ...superify, name: 'superify' },
+    { ...reduceAwaitVisitor, name: 'reduceAwaitVisitor' },
     // switchToIfLets,
 ];
 
@@ -294,6 +346,7 @@ export const debugExpr = (expr: t.Expression, ctx: FullContext) => {
 
 export const simplify = (expr: t.Expression, ctx: FullContext) => {
     visitors.forEach((visitor, i) => {
+        // console.log(`Running ${visitor.name}`);
         const changed = transformExpression(
             transformExpression(expr, visitor, { ...ctx, tmpSym: 1000 }),
             analyzeVisitor(),
@@ -302,12 +355,34 @@ export const simplify = (expr: t.Expression, ctx: FullContext) => {
         const v = initVerify();
         transformExpression(changed, verifyVisitor(v, ctx), ctx);
         if (errorCount(v)) {
-            console.error(`Visitor produced errors`);
+            console.error(`Visitor ${visitor.name} produced errors`);
             console.log(v);
             console.log(debugExpr(changed, ctx));
             return;
+        } else {
+            // console.log(debugExpr(changed, ctx));
         }
         expr = changed;
     });
     return expr;
 };
+
+function liftExpression(
+    ctx: SCtx,
+    stmts: t.Stmt[],
+    prefix: string,
+    stmt: t.Expression,
+): t.Expression {
+    const sym = ctx.tmpSym++;
+    stmts.push({
+        type: 'Let',
+        pat: {
+            type: 'PName',
+            sym: { id: sym, name: `${prefix}${sym}`, loc: stmt.loc },
+            loc: stmt.loc,
+        },
+        expr: stmt,
+        loc: stmt.loc,
+    });
+    return { type: 'Ref', kind: { type: 'Local', sym }, loc: stmt.loc };
+}

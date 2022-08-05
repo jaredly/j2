@@ -556,9 +556,6 @@ export const TopEditor = ({
                                         {info.contents.irtops?.map(
                                             (item, j) => (
                                                 <div key={j}>
-                                                    {/* <strong>
-                                            {item.name ?? 'unnamed'}
-                                        </strong> */}
                                                     <div
                                                         style={{
                                                             fontStyle: 'italic',

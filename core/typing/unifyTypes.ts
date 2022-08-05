@@ -1,11 +1,16 @@
-import { unifyEnums } from '../elements/enums';
+import { enumCaseMap, TEnum, unifyEnums } from '../elements/enums';
 import { unifyRecords } from '../elements/records';
 import { refsEqual } from '../refsEqual';
 import { Type } from '../typed-ast';
 import { addNewConstraint, collapseConstraints } from './analyze';
 import { numOps, unifyOps } from './ops';
 import { maybeExpandTask } from './tasks';
-import { ConstraintMap, Ctx, typeMatches } from './typeMatches';
+import {
+    ConstraintMap,
+    Ctx,
+    expandEnumCases,
+    typeMatches,
+} from './typeMatches';
 
 // For now, just take the greater of the two.
 // To do this right, we need to allow enums to unify. [`A] [`B] -> [`A | `B]
@@ -185,6 +190,30 @@ export const unifyTypes = (
     }
 
     return false;
+};
+
+export const maybeCondenseEnum = (type: Type, ctx: Ctx): Type => {
+    if (type.type === 'TEnum') {
+        return condenseEnum(type, ctx);
+    }
+    return type;
+};
+
+export const condenseEnum = (type: TEnum, ctx: Ctx): TEnum => {
+    const cases = expandEnumCases(type, ctx);
+    if (!cases) {
+        return type;
+    }
+    const cmap = enumCaseMap(cases.cases, ctx);
+    return {
+        ...type,
+        cases: [
+            ...Object.values(cmap),
+            ...cases.bounded.map((bound) =>
+                bound.type === 'local' ? bound.local : bound.inner,
+            ),
+        ],
+    };
 };
 
 export const constrainTypes = (

@@ -223,18 +223,21 @@ export const and = (conds: b.Expression[]) => {
 
 export const ToJS = {
     IfYes(node: IIfYes, ctx: JCtx): [b.Expression | null, b.Statement] {
-        const locals: t.Locals = [];
         const conds = node.conds
             .map((cond) => ctx.ToJS.IfCond(cond, ctx))
             .filter(Boolean) as b.Expression[];
         const lets: t.ILet[] = node.conds.filter(
             (b) => b.type === 'Let',
         ) as t.ILet[];
+        const locals: t.Locals = [];
         lets.forEach((ilet) => {
             getLocals(ilet.pat, ilet.typ, locals, ctx.actx);
         });
         const yes = ctx.ToJS.Block(
-            { ...node.block, stmts: [...lets, ...node.block.stmts] },
+            {
+                ...node.block,
+                stmts: [...(locals.length ? lets : []), ...node.block.stmts],
+            },
             { ...ctx, actx: ctx.actx.withLocals(locals) as ACtx },
         );
         if (!conds.length) {

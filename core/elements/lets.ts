@@ -4,7 +4,7 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { transformIBlock, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { Ctx as ACtx, decorate, pdecorate } from '../typing/analyze';
+import { Ctx as ACtx, decorate, letLocals, pdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
 import { getLocals } from './pattern';
@@ -186,6 +186,13 @@ export const ToIR = {
             type: 'Block',
             stmts: node.stmts
                 .map((stmt, i): t.IStmt[] => {
+                    if (stmt.type === 'Let') {
+                        const locals = letLocals(stmt, ctx.actx);
+                        ctx = {
+                            ...ctx,
+                            actx: ctx.actx.withLocals(locals) as ACtx,
+                        };
+                    }
                     if (i < node.stmts.length - 1 || stmt.type === 'Let') {
                         return flatLet(ctx.ToIR.Stmt(stmt, ctx));
                     }

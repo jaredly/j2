@@ -19,7 +19,11 @@ import { noloc } from '../consts';
 import { makeApply } from './apply';
 import { inferTaskType, tnever, tunit } from '../typing/tasks';
 import { getType } from '../typing/getType';
-import { unifyTypes } from '../typing/unifyTypes';
+import {
+    condenseEnum,
+    maybeCondenseEnum,
+    unifyTypes,
+} from '../typing/unifyTypes';
 
 export const grammar = `
 AwaitSuffix = pseudo:"!"
@@ -155,12 +159,15 @@ export const awaitSwitch = (expr: t.Switch, ctx: Ctx): AwaitChunk | null => {
             }),
         },
         result,
-        effects: {
-            type: 'TEnum',
-            cases: effects,
-            loc: expr.loc,
-            open: false,
-        },
+        effects: condenseEnum(
+            {
+                type: 'TEnum',
+                cases: effects,
+                loc: expr.loc,
+                open: false,
+            },
+            ctx,
+        ),
     };
 };
 
@@ -190,12 +197,15 @@ export const awaitIf = (expr: t.If, ctx: Ctx): AwaitChunk | null => {
                     no: no.expr as t.If['no'],
                 },
                 result,
-                effects: {
-                    type: 'TEnum',
-                    loc: expr.loc,
-                    cases: [yes.effects, no.effects],
-                    open: false,
-                },
+                effects: condenseEnum(
+                    {
+                        type: 'TEnum',
+                        loc: expr.loc,
+                        cases: [yes.effects, no.effects],
+                        open: false,
+                    },
+                    ctx,
+                ),
             };
         }
         return {
@@ -370,12 +380,15 @@ export const awaitBlock = (expr: t.Block, ctx: Ctx): AwaitChunk | null => {
         // Current inner is B & R2
         inner = {
             result: inner.result,
-            effects: {
-                type: 'TEnum',
-                cases: [effects, inner.effects],
-                open: false,
-                loc: noloc,
-            },
+            effects: condenseEnum(
+                {
+                    type: 'TEnum',
+                    cases: [effects, inner.effects],
+                    open: false,
+                    loc: noloc,
+                },
+                ctx,
+            ),
             expr: {
                 type: 'Block',
                 stmts: [
@@ -392,7 +405,7 @@ export const awaitBlock = (expr: t.Block, ctx: Ctx): AwaitChunk | null => {
                             inferred: false,
                             args: [
                                 effects,
-                                inner.effects,
+                                maybeCondenseEnum(inner.effects, ctx),
                                 result,
                                 inner.result,
                             ],
