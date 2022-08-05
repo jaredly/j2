@@ -41,12 +41,13 @@ export type GlobalValue =
     | { type: 'builtin'; typ: Type }
     | { type: 'user'; typ: Type; expr: Expression };
 
+export type GlobalUserType = { type: 'user'; typ: Type };
 export type GlobalType =
     | {
           type: 'builtin';
           args: TVar[];
       }
-    | { type: 'user'; typ: Type };
+    | GlobalUserType;
 
 export const opaque = Symbol('opaque');
 

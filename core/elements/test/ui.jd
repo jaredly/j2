@@ -1,16 +1,20 @@
-type attrs = <State>{
+type attrs = <Effects: task>{
     style: {display: string = "", flex: uint = 1u, padding: string = ""} = (),
-    onClick: () => Task<[`SetState(State, ())], ()> = () => `Return(),
+    onClick: () => Task<Effects, ()> = () => `Return(),
 }
-type Node = <State>[`Div(attrs<State>, Array<Node<State>>) | `Text(string)]
+type Node = <Effects: task>[`Node(string, attrs<Effects>, Array<Node<Effects>>) | `Text(string)]
 let setState = <State>(v: State) => `SetState(v, (()) => `Return())
-(state: int): Node<int> => {
-    `Div(
+let getHttp = (url: string) => `HttpFetch(url, (v: string) => `Return(v))
+let counter = (state: int) => {
+    `Node(
+        "div",
         {style: {display: "flex", flex: 1u}},
         [
-            `Div({onClick: () => setState(state - 1)}, [`Text("-")]),
+            `Node("button", {onClick: () => setState(state - 1)}, [`Text("-")]),
             `Text("Counter ${toString(state)}"),
-            `Div({onClick: () => setState(state + 1)}, [`Text("+")]),
+            `Node("button", {onClick: () => setState(state + 1)}, [`Text("+")]),
         ],
     );
 }
+let render = <State>(app: (current: State) => Node<[`SetState(State, ())]>) => `Render(app, ())
+render(counter)
