@@ -46,6 +46,9 @@ export type Colorable =
 export const styles: {
     [key in Colorable]?: any; // React.CSSProperties;
 } = {
+    // Top: {
+    //     padding: '3px',
+    // },
     AliasItem: {
         color: '#555',
         // 'max-width': '200px',

@@ -1,8 +1,9 @@
 import * as React from 'react';
 import * as p from '../core/grammar/base.parser';
-import { colors, highlightLocations, styles } from './Highlight';
+import { highlightLocations } from './Highlight';
 import { HL } from './HL';
-import { markUpTree, Tree } from './markUpTree';
+import { markUpTree } from './markUpTree';
+import { treeToHtmlLines } from './treeToHtmlLines';
 
 export const isAncestor = (child: Node | null, parent: Node) => {
     while (child) {
@@ -246,88 +247,6 @@ export const Editor = ({
             ref={(node) => (ref.current = node)}
         ></div>
     );
-};
-
-const serializeStyles = (styles?: React.CSSProperties) => {
-    if (!styles) {
-        return '';
-    }
-    let items: string[] = [];
-    Object.keys(styles).forEach((k) => {
-        items.push(`${k}:${(styles as any)[k]}`);
-    });
-    return '; ' + items.join('; ');
-};
-
-export const openSpan = (hl: HL, noPrefix = false, noSuffix = false) =>
-    `<span class="${hl.type}" style="color: ${colors[hl.type] ?? '#aaa'}${
-        hl.underline
-            ? '; text-decoration: underline; text-decoration-style: wavy; text-decoration-color: ' +
-              hl.underline
-            : ''
-    }${serializeStyles(styles[hl.type])}"${
-        hl.prefix && !noPrefix
-            ? ` data-prefix="${escapeAttr(hl.prefix.text)}"`
-            : ''
-    }${
-        !noPrefix && hl.prefix?.message
-            ? ` data-message="${escapeAttr(
-                  hl.prefix.message,
-              )}" title="${escapeAttr(hl.prefix.message)}"`
-            : ''
-    }${
-        !noSuffix && hl.suffix
-            ? ` data-suffix="${escapeAttr(hl.suffix.text)}"`
-            : ''
-    }${
-        !noSuffix && hl.suffix?.message
-            ? ` data-suffix-message="${escapeAttr(
-                  hl.suffix.message,
-              )}" title="${escapeAttr(hl.suffix.message)}"`
-            : ''
-    }${
-        styles[hl.type]?.contentEditable == false
-            ? ' contentEditable="false"'
-            : ''
-    }>`;
-
-export const treeToHtmlLines = (tree: Tree, noPrefix = false) => {
-    return `<div>${treeToHtmlLinesInner(tree, [], noPrefix)}</div>`;
-};
-
-export const escapeLine = (line: string) => {
-    return line
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-};
-
-export const escapeAttr = (attr: string) => {
-    return escapeLine(attr).replace(/"/g, '&quot;');
-};
-
-export const treeToHtmlLinesInner = (
-    tree: Tree,
-    path: HL[],
-    noPrefix = false,
-): string => {
-    // ohhh how do I deal with opening lines and closing ones
-    return `${openSpan(tree.hl, noPrefix)}${tree.children
-        .map((child, i) =>
-            child.type === 'leaf'
-                ? `<span data-span="${child.span[0]}:${
-                      child.span[1]
-                  }">${child.text
-                      .split('\n')
-                      .map(escapeLine)
-                      .join(
-                          path.map(() => '</span>').join('') +
-                              '</div><div>' +
-                              path.map((h) => openSpan(h, true, true)).join(''),
-                      )}</span>`
-                : treeToHtmlLinesInner(child, path.concat([tree.hl]), noPrefix),
-        )
-        .join('')}</span>`;
 };
 
 const getPos = (target: HTMLElement) => {

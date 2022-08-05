@@ -438,6 +438,9 @@ export const localTrackingVisitor: Visitor<LTCtx> = {
         }
         return [null, { ...ctx, switchType: res ?? undefined }];
     },
+    TVars(node, ctx) {
+        return [null, ctx.withLocalTypes(node.args)];
+    },
     TypeAbstraction(node, ctx) {
         return [null, ctx.withLocalTypes(node.items)];
     },

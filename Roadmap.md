@@ -15,9 +15,22 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
-- [ ] OOOH what if there's an error that doesn't correspond to a printed range? 🤔
+- [x] OOOH what if there's an error that doesn't correspond to a printed range? 🤔
 	like on an inferred type???
 
+
+- [ ] process `await`s that aren't in `Block`s (the case example)
+- [x] put the annotation for functions at the end of the last line ...
+- [x] figure out the `failed to find bound` dealios
+- [ ] see if I can get stuff to work a lot fasterr
+
+What's next??
+- consider something other than ` for the Enum marker?
+	it's a little bit annoying to type.
+- make a cli harness for my movies example?
+	> and maybe do a "generate typescript harness function signatures" thing?
+- can I try to do some glsl stuff?
+	or maybe, take a look at coverage?
 
 ## HMM mm so typeMatches, and constraints
 
@@ -45,7 +58,7 @@ also, what if I reduce things down to only caring about ... simple, application?
 - [x] inferrrrr the type arguments of `get<>`
 	- sooooo idk about these ...
 		yeah ok, so unless the bound
-- [ ] switchhhhhh
+- [x] switchhhhhh
 	- if-let ... array patterns?
 	- spread? I can skip that for now
 

@@ -14,8 +14,10 @@ let movieFromLine = (line: string) => {
         };
     };
 }
-movieFromLine("hello!100!folks,and,such")
-movieFromLine("hello")
+movieFromLine("hello!100!folks,and,such") == `Return(
+    {title: "hello", year: 100, starring: ["folks", "and", "such"]},
+)
+movieFromLine("hello") == `Failure(`InvalidLine("hello"), ())
 let mapTask: <T, Effects: task, R>(values: Array<T>, fn: (v: T) => Task<Effects, R>) => Task<
     Effects,
     Array<R>,
@@ -61,7 +63,8 @@ type Effects = [
 type MyErrors = [`InvalidInt | `InvalidLine(string)]
 type EffErrors = [`KeyMissing | `FetchError(string) | `WriteError(string)]
 let main = () => {
-    switch run<Effects, MyErrors, EffErrors, ()>(task())! {
+    let res = run<Effects, MyErrors, EffErrors, ()>(task())!;
+    switch res {
         `Ok() => print("Ok")!;
         `Err(`InvalidLine) => print("Movie parsing error")!;
         `Err(`InvalidInt) => print("Movie parsing error")!;

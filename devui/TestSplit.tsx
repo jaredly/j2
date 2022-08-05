@@ -106,11 +106,7 @@ export const testStatuses = (
                         ' ' +
                         (typeof v === 'function'
                             ? info.contents.irtops
-                                  ?.map((m) =>
-                                      m.type
-                                          ? typeToString(m.type, builtinContext)
-                                          : 'no type',
-                                  )
+                                  ?.map((m) => m.tstring)
                                   .join(' : ') ?? 'not evaluated?'
                             : JSON.stringify(v)),
                 },
@@ -587,6 +583,10 @@ export const TopEditor = ({
                                                             color: '#ccc',
                                                         }}
                                                     >
+                                                        {pptostring(
+                                                            item.simple,
+                                                        )}
+                                                        {'\n'}
                                                         {
                                                             generate(
                                                                 item.js.body
@@ -667,6 +667,11 @@ export const extraHighlights = (file: Success<FileContents>) => {
         );
     });
     return hls;
+};
+
+const pptostring = (ast: p.Expression) => {
+    const ctx = newPPCtx();
+    return printToString(ctx.ToPP.Expression(ast, ctx), 100);
 };
 
 export const BlurInput = ({

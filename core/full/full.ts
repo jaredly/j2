@@ -17,6 +17,8 @@ import { fixComments } from '../grammar/fixComments';
 import { toId } from '../ids';
 import { iCtx } from '../ir/ir';
 import { jCtx, NameTrack, newExecutionContext } from '../ir/to-js';
+import { printToString } from '../printer/pp';
+import { newPPCtx } from '../printer/to-pp';
 import * as trat from '../transform-ast';
 import { transformToplevel, transformTypeToplevel } from '../transform-tast';
 import * as t from '../typed-ast';
@@ -47,8 +49,10 @@ export const emptyFileResult: TestResult = {
 
 export type IrTop = {
     type: t.Type | null;
+    tstring: string;
     ir: t.IBlock;
     js: b.BlockStatement;
+    simple: p.Expression;
     id?: t.Id;
     name?: string;
 };
@@ -98,6 +102,7 @@ export const toJs = (
     t: t.Expression,
     ictx: ReturnType<typeof iCtx>,
     jctx: ReturnType<typeof jCtx>,
+    pctx: ReturnType<typeof printCtx>,
     ctx: FullContext,
     id?: t.Id,
     name?: string,
@@ -105,16 +110,20 @@ export const toJs = (
     // Here's where we simplify! and then re-verify.
     // and ... return something invalid if we messed up.
 
+    const simple = simplify(t, ctx);
+    const sast = pctx.ToAst.Expression(simple, pctx);
     const ir = ictx.ToIR.BlockSt(
         {
             type: 'Block',
-            stmts: [simplify(t, ctx)],
+            stmts: [simple],
             loc: t.loc,
         },
         ictx,
     );
     const js = jctx.ToJS.Block(ir, jctx);
-    return { id, ir, js, type: ctx.getType(t), name };
+    const type = ctx.getType(t);
+    const tstring = type ? typeToString(type, ctx) : '[no type]';
+    return { id, ir, js, type, tstring, simple: sast, name };
 };
 
 export type ExecutionInfo = {
@@ -441,16 +450,24 @@ export const processToplevel = (
             : top,
         pctx,
     );
+
+    if (errorCount(verify)) {
+        console.warn(`VERIFICATION FAILED`);
+        const pp = newPPCtx();
+        console.log(printToString(pp.ToPP.Toplevel(refmt, pp), 100));
+    }
+
     const irtops =
         errorCount(verify) === 0
             ? top.type === 'ToplevelExpression'
-                ? [toJs(top.expr, ictx, jctx, ctx)]
+                ? [toJs(top.expr, ictx, jctx, pctx, ctx)]
                 : top.type === 'ToplevelLet'
                 ? top.elements.map((el, i) =>
                       toJs(
                           el.expr,
                           ictx,
                           jctx,
+                          pctx,
                           ctx,
                           toId((top as t.ToplevelLet).hash!, i),
                           jctx.addGlobalName(

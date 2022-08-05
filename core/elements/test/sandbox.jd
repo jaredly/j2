@@ -15,11 +15,4 @@ let ok = (v: int) => {
         };
     } - 230;
 }
-let ok = (v: int) => {
-    if true {
-        maybe(true)!;
-    } else {
-        fail(`NotOne)!;
-    } - 23;
-}
 let m = (): [`One | `Two([`Hi]) | `Two([`Ho])] => `One
