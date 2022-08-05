@@ -770,6 +770,8 @@ toInt: (string) => [\`Ok(int) | \`Err([\`InvalidInt])]
 get: <T, A: const uint, B: A - 1u - uint>(arr: Array<T, A>, idx: B) => T
 geti: <T>(arr: Array<T, uint>, idx: uint) => [\`Ok(T) | \`Err([\`IndexOutOfBounds])]
 split: (string, string) => Array<string, uint>
+trim: (string) => string
+jsonify: (eq) => string
 `;
 
 const tvar = (sym: Sym, bound?: RefKind, default_?: Type): TVar => ({

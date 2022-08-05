@@ -29,7 +29,7 @@ import {
     verifyVisitor,
 } from '../typing/analyze';
 import { printCtx } from '../typing/to-ast';
-import { typeToString } from '../typing/__test__/utils';
+import { typeToString } from '../typing/__test__/typeToString';
 import { simplify } from './simplify';
 
 export type TestResult = Result<FileContents>;
@@ -334,16 +334,16 @@ export const processTypeToplevel = (
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
     const uses: { [key: string]: true } = {};
-    const allLocals: t.Locals = [];
+    // const allLocals: t.Locals = [];
     transformTypeToplevel(type, annotationVisitor(annotations, uses), {
         ...ctx,
-        allLocals,
+        allLocals: annotations,
     });
-    allLocals.forEach((local) => {
-        // const type = getType(local.type, ctx);
-        const text = typeToString(local.type, ctx);
-        annotations.push({ loc: local.sym.loc, text });
-    });
+    // allLocals.forEach((local) => {
+    //     // const type = getType(local.type, ctx);
+    //     const text = typeToString(local.type, ctx);
+    //     annotations.push({ loc: local.sym.loc, text });
+    // });
 
     return {
         i: {
@@ -465,16 +465,16 @@ export const processToplevel = (
     const uses: { [key: string]: true } = {};
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
-    const allLocals: t.Locals = [];
+    // const allLocals: t.Locals = [];
     transformToplevel(top, annotationVisitor(annotations, uses), {
         ...ctx,
-        allLocals,
+        allLocals: annotations,
     });
-    allLocals.forEach((local) => {
-        // const type = getType(local.type, ctx);
-        const text = typeToString(local.type, ctx);
-        annotations.push({ loc: local.sym.loc, text });
-    });
+    // allLocals.forEach((local) => {
+    //     // const type = getType(local.type, ctx);
+    //     const text = typeToString(local.type, ctx);
+    //     annotations.push({ loc: local.sym.loc, text });
+    // });
 
     // Ok, so here we want any extra verification.
     // Because I want to be able to ... re-run with

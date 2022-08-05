@@ -1,0 +1,25 @@
+let fail = <T: [*]>(f: T) => `Failure(f, ())
+let ask = <T>() => `Ask((), (v: T) => `Return(v))
+let maybe = (m: bool) => if m {
+    ask<int>()!;
+} else {
+    fail(`Bad)!;
+}
+let ok = (v: int) => {
+    switch (v, 3) {
+        (1, _) => {
+            maybe(true)!;
+        };
+        _ => {
+            fail(`NotOne)!;
+        };
+    } - 230;
+}
+let ok = (v: int) => {
+    if true {
+        maybe(true)!;
+    } else {
+        fail(`NotOne)!;
+    } - 23;
+}
+let m = (): [`One | `Two([`Hi]) | `Two([`Ho])] => `One

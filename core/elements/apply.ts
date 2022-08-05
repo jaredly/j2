@@ -755,7 +755,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                         ? expandTask(expected.loc, expected.args, ctx)
                         : null;
                 // ctx.debugger();
-                // typeMatches(at, expected, ctx);
+                typeMatches(at, expected, ctx);
 
                 return decorate(arg, 'argWrongType', hit, ctx, [
                     {

@@ -110,6 +110,7 @@ export const unifyTypes = (
         one.target.type === 'TRef' &&
         two.target.type === 'TRef' &&
         refsEqual(one.target.ref, two.target.ref) &&
+        // TODO: expandArgs here too
         one.args.length === two.args.length
     ) {
         const targs = two.args;

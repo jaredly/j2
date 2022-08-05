@@ -5,7 +5,7 @@ import { getType } from '../core/typing/getType';
 import { getLocals, Locals } from '../core/elements/pattern';
 import { typeToplevelT } from '../core/elements/base';
 import { typeToString } from './Highlight';
-import { localTrackingVisitor, LTCtx } from '../core/typing/analyze';
+import { AllLocals, localTrackingVisitor, LTCtx } from '../core/typing/analyze';
 import { maybeExpandTask } from '../core/typing/tasks';
 import { extract } from '../core/ids';
 
@@ -15,14 +15,14 @@ export const collectAnnotations = (tast: File, ctx: FullContext) => {
         annotations,
         {},
     );
-    const allLocals: Locals = [];
-    tt.transformFile(tast, visitor, { ...ctx, allLocals });
-    allLocals.forEach((local) => {
-        // const type = getType(local.type, ctx);
-        const text = typeToString(local.type, ctx);
-        annotations.push({ loc: local.sym.loc, text });
-    });
-    console.log('alllocals', allLocals);
+    // const allLocals: AllLocals = [];
+    tt.transformFile(tast, visitor, { ...ctx, allLocals: annotations });
+    // allLocals.forEach((local) => {
+    //     // const type = getType(local.type, ctx);
+    //     const text = typeToString(local.type, ctx);
+    //     annotations.push({ loc: local.sym.loc, text });
+    // });
+    // console.log('alllocals', allLocals);
     return annotations;
 };
 

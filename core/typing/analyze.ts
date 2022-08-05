@@ -21,6 +21,7 @@ import { ToplevelConfig, TopTypeKind } from './to-tast';
 import { ConstraintMap, Ctx as TMCtx, typeMatches } from './typeMatches';
 import { constrainTypes, unifyTypes } from './unifyTypes';
 import { dtype } from '../elements/ifs';
+import { typeToString } from './__test__/typeToString';
 
 export type Constraints = {
     // Type must match this types
@@ -396,35 +397,38 @@ export const caseLocals = (switchType: t.Type, node: t.Case, ctx: TMCtx) => {
     return locals;
 };
 
-const tee = (locals: t.Locals, collector?: t.Locals) => {
-    if (collector) {
-        collector.push(...locals);
+export type AllLocals = { loc: t.Loc; text: string }[];
+
+const tee = (locals: t.Locals, ctx: TMCtx & { allLocals?: AllLocals }) => {
+    if (ctx.allLocals) {
+        ctx.allLocals.push(
+            ...locals.map(({ sym, type }) => ({
+                loc: sym.loc,
+                text: typeToString(type, ctx as FullContext),
+            })),
+        );
     }
     return locals;
 };
 
-export type LTCtx = TMCtx & { switchType?: t.Type; allLocals?: t.Locals };
+export type LTCtx = TMCtx & { switchType?: t.Type; allLocals?: AllLocals };
 export const localTrackingVisitor: Visitor<LTCtx> = {
     Lambda(node, ctx) {
         const locals: t.Locals = [];
 
         node.args.forEach((arg) => getLocals(arg.pat, arg.typ, locals, ctx));
-        return [null, ctx.withLocals(tee(locals, ctx.allLocals)) as Ctx];
+        return [null, ctx.withLocals(tee(locals, ctx)) as Ctx];
     },
     Block(node, ctx) {
         return [
             null,
-            ctx.withLocals(
-                tee(blockLocals(node, ctx as Ctx), ctx.allLocals),
-            ) as Ctx,
+            ctx.withLocals(tee(blockLocals(node, ctx as Ctx), ctx)) as Ctx,
         ];
     },
     IfYes(node, ctx) {
         return [
             null,
-            ctx.withLocals(
-                tee(ifLocals(node, ctx as Ctx), ctx.allLocals),
-            ) as Ctx,
+            ctx.withLocals(tee(ifLocals(node, ctx as Ctx), ctx)) as Ctx,
         ];
     },
     Switch(node, ctx) {
@@ -446,10 +450,7 @@ export const localTrackingVisitor: Visitor<LTCtx> = {
         return [
             null,
             ctx.withLocals(
-                tee(
-                    caseLocals(ctx.switchType, node, ctx as Ctx),
-                    ctx.allLocals,
-                ),
+                tee(caseLocals(ctx.switchType, node, ctx as Ctx), ctx),
             ) as Ctx,
         ];
     },

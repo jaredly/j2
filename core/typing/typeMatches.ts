@@ -326,7 +326,12 @@ export const typeMatches = (
                     return ctx.isBuiltinType(expected, 'string');
             }
         // Ooh if this is an alias, I need to resolve it?
-        case 'TApply':
+        case 'TApply': {
+            if (expected.type !== 'TApply') {
+                return false;
+            }
+            const cargs = expandArgs(candidate.args, candidate.target, ctx);
+            const eargs = expandArgs(expected.args, expected.target, ctx);
             return (
                 expected.type === 'TApply' &&
                 typeMatches(
@@ -336,17 +341,12 @@ export const typeMatches = (
                     path,
                     constraints,
                 ) &&
-                candidate.args.length === expected.args.length &&
-                candidate.args.every((arg, i) =>
-                    typeMatches(
-                        arg,
-                        (expected as TApply).args[i],
-                        ctx,
-                        path,
-                        constraints,
-                    ),
+                cargs.length === eargs.length &&
+                cargs.every((arg, i) =>
+                    typeMatches(arg, eargs[i], ctx, path, constraints),
                 )
             );
+        }
         case 'TRef':
             if (
                 expected.type === 'TRef' &&
@@ -496,4 +496,23 @@ export const getRef = (t: Type): TRef | null => {
             return getRef(t.inner);
     }
     return null;
+};
+
+export const expandArgs = (args: Type[], inner: Type, ctx: Ctx): Type[] => {
+    if (inner.type !== 'TRef' || inner.ref.type !== 'Global') {
+        return args;
+    }
+    const targs = ctx.getTypeArgs(inner.ref);
+    if (targs && targs.length > args.length) {
+        const res = args.slice();
+        for (let i = args.length; i < targs.length; i++) {
+            if (targs[i].default_) {
+                res.push(targs[i].default_!);
+            } else {
+                return args;
+            }
+        }
+        return res;
+    }
+    return args;
 };
