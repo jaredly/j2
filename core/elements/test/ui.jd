@@ -1,0 +1,16 @@
+type attrs = <State>{
+    style: {display: string = "", flex: uint = 1u, padding: string = ""} = (),
+    onClick: () => Task<[`SetState(State, ())], ()> = () => `Return(),
+}
+type Node = <State>[`Div(attrs<State>, Array<Node<State>>) | `Text(string)]
+let setState = <State>(v: State) => `SetState(v, (()) => `Return())
+(state: int): Node<int> => {
+    `Div(
+        {style: {display: "flex", flex: 1u}},
+        [
+            `Div({onClick: () => setState(state - 1)}, [`Text("-")]),
+            `Text("Counter ${toString(state)}"),
+            `Div({onClick: () => setState(state + 1)}, [`Text("+")]),
+        ],
+    );
+}

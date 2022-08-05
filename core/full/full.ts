@@ -455,6 +455,7 @@ export const processToplevel = (
         console.warn(`VERIFICATION FAILED`);
         const pp = newPPCtx();
         console.log(printToString(pp.ToPP.Toplevel(refmt, pp), 100));
+        console.log(verify);
     }
 
     const irtops =
