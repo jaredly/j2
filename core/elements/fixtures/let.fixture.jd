@@ -9,7 +9,7 @@ x + y
  { 1 }
 
 --[output:expected]--
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+alias +#[ha4988418f56e61331093c326ac7375b5502cfc31]
 {
     let x#[0] = 10;
     let y#[1] = 20;
@@ -36,7 +36,7 @@ let y = x + 10
 let x = 10
 // 10
 /* 10 */
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] x#[ha932a38df3b1ef69210c1c0d72f7c1bc536fe777]
+alias +#[ha4988418f56e61331093c326ac7375b5502cfc31] x#[ha932a38df3b1ef69210c1c0d72f7c1bc536fe777]
 let y = x + 10
 // 20
 /* $terms.x + 10 */
@@ -123,7 +123,7 @@ b + 2
 }
 
 --[output:expected]--
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+alias +#[ha4988418f56e61331093c326ac7375b5502cfc31]
 {
     let {x: {a: b#[0]}} = {x: {a: 10}};
     b#[0] + 2;
@@ -162,7 +162,7 @@ alias error:notExhaustive#[h8800c0a4e23ff598b839e081d716b8b28bf0b0e7]
 } == 20
 
 --[output:expected]--
-alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc]
+alias ==#[h475fd8571dc8dae615de7da67a2995ba45d1593b]
 {
     let `One(a#[0]) = `One(20);
     a#[0];

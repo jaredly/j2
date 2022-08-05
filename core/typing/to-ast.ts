@@ -157,12 +157,12 @@ export const printCtx = (fctx: FullContext, showIds: boolean = true): Ctx => {
                     : this.reverse.types[hash];
 
             if (name && ref.type !== 'Local' && ref.type !== 'Recur') {
-                // if (!this.aliases[hash]) {
-                //     add(name, ref);
-                // }
+                if (!this.aliases[hash]) {
+                    add(name, ref);
+                }
                 return {
                     type: 'Identifier',
-                    text: name, // this.aliases[hash],
+                    text: this.aliases[hash],
                     hash: null,
                     loc,
                 };

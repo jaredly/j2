@@ -63,8 +63,7 @@ type Effects = [
 type MyErrors = [`InvalidInt | `InvalidLine(string)]
 type EffErrors = [`KeyMissing | `FetchError(string) | `WriteError(string)]
 let main = () => {
-    let res = run<Effects, MyErrors, EffErrors, ()>(task())!;
-    switch res {
+    switch run<Effects, MyErrors, EffErrors, ()>(task())! {
         `Ok() => print("Ok")!;
         `Err(`InvalidLine) => print("Movie parsing error")!;
         `Err(`InvalidInt) => print("Movie parsing error")!;
@@ -74,3 +73,14 @@ let main = () => {
         `Err(x) => print("Failed? ${jsonify(x)}")!;
     };
 }
+type MovieResult = {
+    genre_ids: Array<uint>,
+    id: uint,
+    original_language: string,
+    original_title: string,
+    overview: string,
+    popularity: float,
+    title: string,
+    vote_average: float,
+}
+type MovieResults = {page: uint, results: Array<MovieResult>}

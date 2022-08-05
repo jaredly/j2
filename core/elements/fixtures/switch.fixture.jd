@@ -9,7 +9,7 @@ switch (1, 2) {
 }
 
 --[output:expected]--
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280]
+alias +#[ha4988418f56e61331093c326ac7375b5502cfc31] error:patternMismatch#[h1bb5af1fd93cc04570b46a227234b3c89fbdd280]
 switch (1, 2) {
     (a#[0], b#[1]) => a#[0] + b#[1];
     @error:patternMismatch() 1 => 1;
@@ -118,7 +118,7 @@ switch (1, 2) {
 }
 
 --[output:expected]--
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+alias +#[ha4988418f56e61331093c326ac7375b5502cfc31]
 switch (1, 2) {
     (1, _) => 1;
     (a#[0], b#[1]) => a#[0] + b#[1];
@@ -126,7 +126,6 @@ switch (1, 2) {
 // int
 /* (() => {
   if ([1, 2][0] === 1) {
-    let [,,] = [1, 2];
     return 1;
   } else {
     let [a, b] = [1, 2];
@@ -190,31 +189,14 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 }
 
 --[output:expected]--
-alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
-(m#[0]: [`One | `Two([`A | `B(int)])]) => switch m#[0] {
+alias error:notExhaustive#[h8800c0a4e23ff598b839e081d716b8b28bf0b0e7] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+(m#[0]: [`One | `Two([`A | `B(int)])]) => switch @error:notExhaustive() m#[0] {
     `Two(`A) => 10;
     `Two(res#[1]) => {
         let `B(v#[2]) = res#[1];
         v#[2];
     };
 }
-// ([`One | `Two([`A | `B(int)])]) => int
-/* m => {
-  if ((typeof m === "string" ? m : m.tag) === "Two" && (typeof m.payload === "string" ? m.payload : m.payload.tag) === "A") {
-    "no-op pattern";
-    return 10;
-  } else {
-    let {
-      payload: res
-    } = m;
-    {
-      let {
-        payload: v
-      } = res;
-      return v;
-    }
-  }
-} */
 
 ==[Nested Record Refinement]==
 --[input]--
@@ -228,7 +210,7 @@ alias int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 }
 
 --[output:expected]--
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias +#[ha4988418f56e61331093c326ac7375b5502cfc31] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (m#[0]: [`Hi(int, [`One | `Two(int)])]) => switch m#[0] {
     `Hi(v#[1], `One) => 10;
     `Hi(v#[2], `Two(2)) => 12 + v#[2];

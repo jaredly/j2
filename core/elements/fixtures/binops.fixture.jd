@@ -4,7 +4,7 @@
 2 + 3 * 4
 
 --[output:expected]--
-alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[ha4988418f56e61331093c326ac7375b5502cfc31]
 2 + 3 * 4
 // 2 + int
 /* 2 + 3 * 4 */
@@ -16,7 +16,7 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[h3040ed1f3de0b98f18bd2b6d
 1 * 2 + 3 * 4 + 5 * 6
 
 --[output:expected]--
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+alias +#[ha4988418f56e61331093c326ac7375b5502cfc31]
 2 + 3 + 4
 // 9
 /* 2 + 3 + 4 */
@@ -33,7 +33,7 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921]
 1 * (2 + 3) * (3 + 4)
 
 --[output:expected]--
-alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c]
+alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[ha4988418f56e61331093c326ac7375b5502cfc31]
 1 * (2 + 3) * (3 + 4)
 // int
 /* 1 * (2 + 3) * (3 + 4) */
@@ -43,7 +43,7 @@ alias *#[hc964b8e32721e8a2764054a069ab98c885f00921] +#[h3040ed1f3de0b98f18bd2b6d
 2 == 3
 
 --[output:expected]--
-alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc]
+alias ==#[h475fd8571dc8dae615de7da67a2995ba45d1593b]
 2 == 3
 // bool
 /* 2 === 3 */
@@ -53,7 +53,7 @@ alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc]
 (==)<() => 10>(what, what)
 
 --[output:expected]--
-alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] eq#[h160938f3c683c32e39a494546124c1d40bcde082] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] what#[hccdcdca735d9735a232ada1f6ca8b7ecd4038531]
+alias ==#[h475fd8571dc8dae615de7da67a2995ba45d1593b] eq#[h160938f3c683c32e39a494546124c1d40bcde082] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] what#[hccdcdca735d9735a232ada1f6ca8b7ecd4038531]
 (==)<@error:argWrongType(expected: :eq) () => 10>(what, what)
 
 --[builtins]--
@@ -64,7 +64,7 @@ alias ==#[ha4d3e814b6e823e777273070f4e78f59487993dc] eq#[h160938f3c683c32e39a494
 (x: int) => x + 2 + 3 + x - 3
 
 --[output:expected]--
-alias +#[h3040ed1f3de0b98f18bd2b6daeb0e695cd0b608c] -#[h4dd9308469e477a4a756b4b286de0625d5a98af9] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
+alias +#[ha4988418f56e61331093c326ac7375b5502cfc31] -#[h4dd9308469e477a4a756b4b286de0625d5a98af9] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f]
 (x#[0]: int) => x#[0] + 2 + 3 + x#[0] - 3
 // (int) => int
 /* x => x + 2 + 3 + x - 3 */

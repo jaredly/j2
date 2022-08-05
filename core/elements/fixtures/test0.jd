@@ -5,11 +5,11 @@ let m = <T: task>(m: Task<[`Read((), string) | T]>) => 10
 m<[`Read(string, string)]>(`Return(()))
 
 --[output:expected]--
-alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe]
+alias Task#[h02d306973a63fe0a96506957cebf956e63e4dfbd] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] task#[h1d6249a7982fd223e2fe4bc614e77aba75d5fabe]
 let m = <T#[0]: task>(m#[1]: Task<[`Read((), string) | T#[0]]>) => 10
 // <T#[0]: task>(Task<[`Read((), string) | T#[0]]>) => 10
 /* m => 10 */
-alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] m#[hdbb6058cb643a8b774fb54954fd118cc288b5c6c]
+alias error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] m#[ha7dadf3d27de43302072c8d92e9a0c06165cde84]
 m<[`Read(string, string)]>(
     @error:argWrongType(
         expected: :Task<[`Read((), string) | [`Read(string, string)]]>,

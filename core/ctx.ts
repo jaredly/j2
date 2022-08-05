@@ -772,6 +772,7 @@ geti: <T>(arr: Array<T, uint>, idx: uint) => [\`Ok(T) | \`Err([\`IndexOutOfBound
 split: (string, string) => Array<string, uint>
 trim: (string) => string
 jsonify: (eq) => string
+jsonparse: <T: eq>(string) => [\`Ok(T) | \`Err([\`InvalidJson])]
 `;
 
 const tvar = (sym: Sym, bound?: RefKind, default_?: Type): TVar => ({
