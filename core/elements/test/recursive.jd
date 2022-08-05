@@ -1,4 +1,4 @@
-let longSum: (v: int) => int = (v: int) => if v > 0 {
+let longSum = (v: int): int => if v > 0 {
     longSum(v - 1) + 1;
 } else {
     0;

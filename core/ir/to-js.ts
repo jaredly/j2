@@ -129,6 +129,7 @@ const builtins = {
         }
         return { tag: 'Err', payload: 'IndexOutOfBounds' };
     },
+    split: (a: string, b: string) => a.split(b),
     andThen,
     withHandler,
     testIO,

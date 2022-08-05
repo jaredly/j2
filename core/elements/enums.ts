@@ -287,6 +287,17 @@ export const isValidEnumCase = (c: t.Type, ctx: TMCtx): boolean => {
     }
 };
 
+export const payloadsUnify = (
+    one: t.Type | undefined,
+    two: t.Type | undefined,
+    ctx: Ctx,
+) => {
+    if (!one || !two) {
+        return !one === !two;
+    }
+    return unifyTypes(one, two, ctx) != false;
+};
+
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     TEnum(node, ctx): null | t.TEnum {
         let changed = false;
@@ -295,12 +306,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             if (k.type === 'EnumCase') {
                 if (
                     used[k.tag] &&
-                    !payloadsEqual(
-                        used[k.tag].payload,
-                        k.payload,
-                        ctx.ctx,
-                        true,
-                    )
+                    !payloadsUnify(used[k.tag].payload, k.payload, ctx.ctx)
                 ) {
                     // console.log('found it?', k.tag, k.loc.idx, ctx.hit);
                     changed = true;
@@ -335,11 +341,10 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                     for (let kase of expanded.cases) {
                         if (
                             used[kase.tag] &&
-                            !payloadsEqual(
+                            !payloadsUnify(
                                 kase.payload,
                                 used[kase.tag].payload,
                                 ctx.ctx,
-                                true,
                             )
                         ) {
                             changed = true;
@@ -402,8 +407,11 @@ export const isWrappedEnum = (one: t.TRef, two: TEnum, ctx: TMCtx): boolean => {
     if (two.open) {
         return false;
     }
-    if (two.cases.length === 1 && two.cases[0].type === 'TRef') {
-        return refsEqual(two.cases[0].ref, one.ref);
+    if (
+        two.cases.length >= 1 &&
+        two.cases.every((k) => k.type === 'TRef' && refsEqual(k.ref, one.ref))
+    ) {
+        return true;
     }
     const cases = expandEnumCases(two, ctx);
     if (

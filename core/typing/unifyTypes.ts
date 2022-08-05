@@ -1,5 +1,6 @@
 import { unifyEnums } from '../elements/enums';
 import { unifyRecords } from '../elements/records';
+import { refsEqual } from '../refsEqual';
 import { Type } from '../typed-ast';
 import { addNewConstraint, collapseConstraints } from './analyze';
 import { numOps, unifyOps } from './ops';
@@ -101,6 +102,19 @@ export const unifyTypes = (
             );
             return unifyTypes(one, current, ctx);
         }
+    }
+
+    if (
+        one.type === 'TApply' &&
+        two.type === 'TApply' &&
+        one.target.type === 'TRef' &&
+        two.target.type === 'TRef' &&
+        refsEqual(one.target.ref, two.target.ref) &&
+        one.args.length === two.args.length
+    ) {
+        const targs = two.args;
+        const res = one.args.map((arg, i) => unifyTypes(arg, targs[i], ctx));
+        return res.every(Boolean) ? { ...one, args: res as Type[] } : false;
     }
 
     if (

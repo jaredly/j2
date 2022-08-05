@@ -10,6 +10,10 @@ export const verifyHL = (v: Verify) => {
         end: { column: 50, line: 0, offset: 50 },
     };
     v.errors.forEach((err) => {
+        if (err.loc.end.offset === -1) {
+            debugger;
+            console.error(err);
+        }
         statuses.push({
             loc: err.loc.end.offset === -1 ? loc0 : err.loc,
             type: 'Error',

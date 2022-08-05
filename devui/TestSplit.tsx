@@ -249,7 +249,7 @@ export const TestSplit = ({
                         text,
                         ctx,
                         undefined,
-                        undefined,
+                        shared.current.track,
                         true,
                     );
                     if (file.type === 'Success') {
@@ -267,10 +267,10 @@ export const TestSplit = ({
                         v,
                         ctx,
                         undefined,
-                        undefined,
+                        shared.current.track,
                         true,
                     );
-                    const results = getTestResults(file);
+                    const results = getTestResults(file, shared.current.terms);
                     // ok, so we have an AST
                     return testStatuses(file, results);
                 }}
