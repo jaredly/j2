@@ -24,22 +24,13 @@ export const verifyHL = (v: Verify) => {
         if (err.type === 'Dec') {
             if (
                 v.expected.find(
-                    (e) => locWithin(e.loc, err.loc) && err.name === e.text,
+                    (expected) =>
+                        err.name === expected.text &&
+                        locWithin(expected.loc, err.loc),
                 )
             ) {
                 return;
             }
-            // console.log(
-            //     v.expected
-            //         .map(
-            //             ({ loc: { start, end }, text }) =>
-            //                 `${start.offset}-${end.offset} ${text}`,
-            //         )
-            //         .join(', '),
-            //     '::',
-            //     err.loc.start.offset + '-' + err.loc.end.offset,
-            //     err.name,
-            // );
         }
         statuses.push({
             loc: err.loc.end.offset === -1 ? loc0 : err.loc,

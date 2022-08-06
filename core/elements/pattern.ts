@@ -460,6 +460,7 @@ export const ToJS = {
         type: t.Type,
         ctx: JCtx,
     ): b.Expression | null {
+        type = ctx.actx.resolveAnalyzeType(type) ?? type;
         // ctx.actx.debugger();
         switch (p.type) {
             case 'PBlank':
@@ -613,6 +614,7 @@ export const ToJS = {
                 if (type.type !== 'TRecord' || p.items.length === 0) {
                     return null;
                 }
+                const trec = type;
                 if (p.items.every((item, i) => item.name === i.toString())) {
                     const hello = p.items
                         .map((item, i) => {
@@ -623,7 +625,7 @@ export const ToJS = {
                                     b.numericLiteral(i),
                                     true,
                                 ),
-                                type.items[i].value,
+                                trec.items[i].value,
                                 ctx,
                             );
                         })
@@ -641,7 +643,7 @@ export const ToJS = {
                                     target,
                                     b.identifier(item.name),
                                 ),
-                                type.items[i].value,
+                                trec.items[i].value,
                                 ctx,
                             );
                         })

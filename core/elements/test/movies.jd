@@ -49,7 +49,7 @@ let run = <Effects: task, Fails: [*], Errors: [*], R>(task: Task<[Effects | `Fai
     task,
     (v: [`Ok(R) | `Err([Errors | Fails])]) => `Return(v),
 )
-let task = () => {
+let movieTask = () => {
     let apiKey = getEnv("API_KEY")!;
     let movies = getMovies("https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}")!;
     writeOutput(movies)!;
@@ -63,7 +63,7 @@ type Effects = [
 type MyErrors = [`InvalidInt | `InvalidLine(string)]
 type EffErrors = [`KeyMissing | `FetchError(string) | `WriteError(string)]
 let main = () => {
-    switch run<Effects, MyErrors, EffErrors, ()>(task())! {
+    switch run<Effects, MyErrors, EffErrors, ()>(movieTask())! {
         `Ok() => print("Ok")!;
         `Err(`InvalidLine) => print("Movie parsing error")!;
         `Err(`InvalidInt) => print("Movie parsing error")!;

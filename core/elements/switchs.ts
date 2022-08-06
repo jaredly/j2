@@ -390,10 +390,11 @@ export type AVCtx = {
 
 export const Analyze: Visitor<AVCtx> = {
     Switch(node, { ctx, hit }) {
-        const target = ctx.getType(node.target);
+        let target = ctx.getType(node.target);
         if (!target) {
             return null;
         }
+        target = ctx.resolveAnalyzeType(target) ?? target;
         let body: null | t.Type = null;
         let changed = false;
 

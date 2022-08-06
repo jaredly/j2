@@ -177,7 +177,6 @@ export const getTestResults = (
             const top = info.contents.irtops[0];
             if (top.type && file.ctx.isBuiltinType(top.type!, 'bool')) {
                 values.testResults.push({
-                    // success: values.info.exprs[i],
                     loc: info.contents.top.loc,
                     msg: values.info.exprs[i]
                         ? null

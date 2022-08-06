@@ -68,7 +68,7 @@ export const vdomWidget = (type: t.Type, value: any, baseCtx: FullContext) => {
     const tt = maybeExpandTask(applied, ctx) ?? applied;
     // const failures: Failures = [];
     console.log('vdomwidget');
-    debugger;
+    // debugger;
     // if (!typeMatches(type, tt, ctx, [], constraints, failures)) {
 
     // Need to be able to typeMatches on two recursive types
