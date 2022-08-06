@@ -31,15 +31,15 @@ let collect = <Inner: task>(task: Task<[Write | Inner], ()>): Task<Inner, string
     otherwise => withHandler<Inner, (), Write, string>(otherwise, collect<Inner>);
 }
 {
-    let `Return(v) = collect<[]>((() => {
+    let `Return(v) = collect#[:unresolved:]<[]>((() => {
         print("Hello")!;
         print("World")!;
     })());
     v == "Hello\nWorld\nend";
 }
 {
-    let `Return(v) = collect<[]>(
-        alwaysRead<[Write], ()>("hi", (() => {
+    let `Return(v) = collect#[:unresolved:]<[]>(
+        alwaysRead#[:unresolved:]<[Write], ()>("hi", (() => {
             print("${read!} and ${read!}")!;
         })()),
     );
@@ -54,7 +54,7 @@ let reverse: (t: Task<Write, ()>) => Task<Write, ()> = (task: Task<Write, ()>) =
 }
 let expect = <T: eq>(`Return(m): Task<[], T>, e: T) => m == e
 expect<string>(
-    collect<[]>(reverse((() => {
+    collect#[:unresolved:]<[]>(reverse((() => {
         print("A")!;
         print("B")!;
         print("C")!;

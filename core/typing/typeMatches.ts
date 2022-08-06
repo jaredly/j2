@@ -158,7 +158,10 @@ export const typeMatches = (
     const cl = hasLoop(path.candidate, ctx);
     const el = hasLoop(path.expected, ctx);
     if (cl != null && el != null) {
-        return cl === el;
+        return (
+            cl === el ||
+            addf(diffs, candidate, expected, ctx, `loop ${cl} : ${el}`)
+        );
     }
 
     // Ok I need like a "resolve refs" function
@@ -190,7 +193,13 @@ export const typeMatches = (
                 constraints[expected.id] = current;
                 return true;
             }
-            return false;
+            return addf(
+                diffs,
+                candidate,
+                expected,
+                ctx,
+                `unable to co-constrain`,
+            );
         } else {
             expected = collapseConstraints(
                 ctx.currentConstraints(expected.id),
@@ -235,7 +244,7 @@ export const typeMatches = (
     }
 
     if (candidate.type === 'TBlank' || expected.type === 'TBlank') {
-        return false;
+        return addf(diffs, candidate, expected, ctx, 'blank');
     }
 
     if (expected.type === 'TConst' && candidate.type !== 'TConst') {
@@ -278,7 +287,13 @@ export const typeMatches = (
                     constraints[candidate.id] = current;
                     return true;
                 }
-                return false;
+                return addf(
+                    diffs,
+                    candidate,
+                    expected,
+                    ctx,
+                    `unable to constrain`,
+                );
             }
             const { outer, inner } = ctx.currentConstraints(candidate.id);
             if (inner) {
@@ -342,7 +357,13 @@ export const typeMatches = (
                     constraints,
                     diffs,
                 ) ||
-                    addf(diffs, candidate, expected, ctx, 'lambda result')) &&
+                    addf(
+                        diffs,
+                        candidate.result,
+                        expected.result,
+                        ctx,
+                        'lambda result',
+                    )) &&
                 candidate.args.length === expected.args.length &&
                 candidate.args.every(
                     (arg, i) =>
@@ -356,8 +377,8 @@ export const typeMatches = (
                         ) ||
                         addf(
                             diffs,
-                            candidate,
-                            expected,
+                            (expected as TLambda).args[i].typ,
+                            arg.typ,
                             ctx,
                             `lambda arg ${i}`,
                         ),
@@ -439,17 +460,32 @@ export const typeMatches = (
             const eargs = expandArgs(expected.args, expected.target, ctx);
             return (
                 expected.type === 'TApply' &&
-                typeMatches(
+                (typeMatches(
                     candidate.target,
                     expected.target,
                     ctx,
                     path,
                     constraints,
                     diffs,
-                ) &&
+                ) ||
+                    addf(
+                        diffs,
+                        candidate.target,
+                        expected.target,
+                        ctx,
+                        'apply inner',
+                    )) &&
                 cargs.length === eargs.length &&
-                cargs.every((arg, i) =>
-                    typeMatches(arg, eargs[i], ctx, path, constraints, diffs),
+                cargs.every(
+                    (arg, i) =>
+                        typeMatches(
+                            arg,
+                            eargs[i],
+                            ctx,
+                            path,
+                            constraints,
+                            diffs,
+                        ) || addf(diffs, arg, eargs[i], ctx, `apply arg ${i}`),
                 )
             );
         }
@@ -677,11 +713,19 @@ const hasLoop = (path: TMPathItem[], ctx: Ctx) => {
         const item = path[i];
         if (typeof item === 'string') {
             if (items[item]) {
-                return i - items[item][0].idx;
+                for (let one of items[item]) {
+                    if (typeof one.item === 'string') {
+                        return i - items[item][0].idx;
+                    }
+                }
+                items[item].push({ item, idx: i });
+            } else {
+                // if (items[item]) {
+                // }
+                items[item] = [{ item, idx: i }];
             }
-            items[item] = [{ item, idx: i }];
         } else {
-            if (items[item.hash] && items[item.hash].length) {
+            if (items[item.hash]) {
                 for (let one of items[item.hash]) {
                     let oitem = one.item as TMPathApply;
                     if (
@@ -697,8 +741,6 @@ const hasLoop = (path: TMPathItem[], ctx: Ctx) => {
             } else {
                 items[item.hash] = [{ item, idx: i }];
             }
-            // erggg
-            // itemssss
         }
     }
 };
@@ -725,6 +767,7 @@ function updatePaths(path: TMPaths, candidate: Type, expected: Type) {
             ...path,
             candidate: [
                 ...path.candidate,
+                // typeHash(candidate),
                 {
                     type: 'apply',
                     hash: idToString(candidate.target.ref.id),
@@ -742,6 +785,7 @@ function updatePaths(path: TMPaths, candidate: Type, expected: Type) {
             ...path,
             expected: [
                 ...path.expected,
+                // typeHash(expected),
                 {
                     type: 'apply',
                     hash: idToString(expected.target.ref.id),

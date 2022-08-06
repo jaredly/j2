@@ -267,6 +267,7 @@ export const TopEditor = ({
                                     <ShowInfo
                                         i={i}
                                         key={i}
+                                        ctx={(file as Success<any>).ctx}
                                         info={info}
                                         shared={shared}
                                         cache={cache}
@@ -287,6 +288,7 @@ export function ShowInfo({
     shared,
     cache,
     text,
+    ctx,
 }: {
     i: number;
     info: ToplevelInfo<FileContents>;
@@ -298,6 +300,7 @@ export function ShowInfo({
         };
     };
     text: string;
+    ctx: FullContext;
 }): JSX.Element {
     return (
         <div>
@@ -356,9 +359,7 @@ export function ShowInfo({
                                     : cache[text]?.results?.info.exprs[i],
                             )}
                         </pre>
-                        {item.type
-                            ? vdomWidget(item.type, value, builtinContext)
-                            : null}
+                        {item.type ? vdomWidget(item.type, value, ctx) : null}
                     </div>
                 );
             })}

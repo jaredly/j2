@@ -26,7 +26,7 @@ let counter: (v: int) => Node<st<int>> = (state: int) => {
             node(
                 "button",
                 {
-                    onClick: () => setState(state - 4),
+                    onClick: () => setState(state - 1),
                     style: {backgroundColor: "black", margin: "4px"},
                 },
                 [`Text("-")],
@@ -34,14 +34,17 @@ let counter: (v: int) => Node<st<int>> = (state: int) => {
             node("span", {style: {margin: "6px"}}, [`Text("A Counter ${toString(state)}")]),
             node(
                 "button",
-                {onClick: () => {
-                    if confirm("what")! {
-                        setState(state + 10)!;
-                    } else {
-                        ();
-                    };
-                }},
-                [`Text("ok")],
+                {
+                    onClick: () => {
+                        if confirm("Advance by 10?")! {
+                            setState(state + 10)!;
+                        } else {
+                            ();
+                        };
+                    },
+                    style: {backgroundColor: "black"},
+                },
+                [`Text("advance")],
             ),
             node<st<int>>(
                 "button",
@@ -58,4 +61,4 @@ let render = <State>(app: (current: State) => Node<st<State>>, initial: State) =
     (app, initial),
     (),
 )
-render(counter#[:unresolved:], 1 * 1)
+render(counter, 1 * 1)

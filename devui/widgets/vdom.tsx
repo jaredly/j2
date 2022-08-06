@@ -34,7 +34,7 @@ const loadTypes = (text: string, ctx: FullContext) => {
 };
 
 const allTypes = `
-type attrs_ = <Effects: task>{
+type attrs = <Effects: task>{
     style: {
         display: string = "",
         flex: uint = 1u,
@@ -44,8 +44,8 @@ type attrs_ = <Effects: task>{
     } = (),
     onClick: () => Task<Effects, ()> = () => \`Return(),
 }
-type Node_ = <Effects: task>[\`Node(string, attrs_<Effects>, Array<Node_<Effects>>) | \`Text(string)]
-type Render = <State>Task<[\`Render(((state: State) => Node_<[\`SetState(State, ()) | \`Confirm((), bool)]>, State), [])], ()>
+type Node = <Effects: task>[\`Node(string, attrs<Effects>, Array<Node<Effects>>) | \`Text(string)]
+type Render = <State>Task<[\`Render(((state: State) => Node<[\`SetState(State, ()) | \`Confirm((), bool)]>, State), [])], ()>
 `;
 
 type Render<State> =
@@ -65,7 +65,11 @@ type Task<State, T> =
       }
     | {
           tag: 'SetState';
-          payload: [State, (arg: any) => Task<State, T>];
+          payload: [State, (arg: null) => Task<State, T>];
+      }
+    | {
+          tag: 'Confirm';
+          payload: [string, (arg: boolean) => Task<State, T>];
       };
 
 type Attrs<State> = {
@@ -90,10 +94,20 @@ const handleTask = <State,>(
     switch (task.tag) {
         case 'Return':
             return;
+        case 'Confirm':
+            handleTask(
+                task.payload[1](confirm(task.payload[0])),
+                state,
+                setState,
+            );
+            return;
         case 'SetState':
             console.log(task.payload[0]);
             setState(task.payload[0]);
-            task.payload[1](null);
+            handleTask(task.payload[1](null), state, setState);
+            return;
+        default:
+            console.error(task);
     }
 };
 
@@ -191,11 +205,12 @@ export const vdomWidget = (type: t.Type, value: any, baseCtx: FullContext) => {
         // debugger;
         const diffs: TDiffs = [];
         if (!typeMatches(type, tt, ctx, undefined, constraints, diffs)) {
-            console.log('didnt match either', diffs.length);
-            console.log(typeToString(type, ctx));
-            console.log(typeToString(tt, ctx));
+            console.log('Return type not vdom:');
+            console.log('Item type:', typeToString(type, ctx));
+            console.log('Vdom expected:', typeToString(tt, ctx));
             diffs.forEach(({ cstring, estring, text, candidate }) => {
-                console.log({ cstring, estring, text, loc: candidate.loc });
+                console.log(`${text}:\n${cstring}\n${estring}`);
+                // console.log({ cstring, estring, text, loc: candidate.loc });
             });
             return;
         }
