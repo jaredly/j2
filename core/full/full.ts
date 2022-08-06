@@ -26,10 +26,9 @@ import {
     analyzeTop,
     analyzeTypeTop,
     errorCount,
-    initVerify,
     Verify,
-    verifyVisitor,
 } from '../typing/analyze';
+import { initVerify, verifyVisitor } from '../typing/verify';
 import { printCtx } from '../typing/to-ast';
 import { typeToString } from '../typing/__test__/typeToString';
 import { simplify } from './simplify';
@@ -452,7 +451,7 @@ export const processToplevel = (
     );
 
     if (errorCount(verify)) {
-        console.warn(`VERIFICATION FAILED`);
+        console.log(`%cVERIFICATION FAILED`, 'color:orange');
         const pp = newPPCtx();
         console.log(printToString(pp.ToPP.Toplevel(refmt, pp), 100));
         console.log(verify);

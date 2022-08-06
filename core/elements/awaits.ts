@@ -1,11 +1,10 @@
 import { Visitor } from '../transform-tast';
+import { decorate, tdecorate } from '../typing/analyze';
 import {
     caseLocals,
-    decorate,
     ifLocals,
     letLocals,
-    tdecorate,
-} from '../typing/analyze';
+} from '../typing/localTrackingVisitor';
 import { Ctx } from '../typing/analyze';
 import { typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';

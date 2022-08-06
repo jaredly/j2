@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'fs';
 import { processFile } from '../../full/full';
 import { ExecutionContext, newExecutionContext } from '../../ir/to-js';
-import { initVerify } from '../analyze';
+import { initVerify } from '../verify';
 
 // @ts-ignore
 global.window = global;

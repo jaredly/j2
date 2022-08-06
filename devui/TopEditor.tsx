@@ -1,6 +1,6 @@
 import generate from '@babel/generator';
 import * as React from 'react';
-import { FullContext } from '../core/ctx';
+import { builtinContext, FullContext } from '../core/ctx';
 import {
     FileContents,
     processFile,
@@ -304,7 +304,7 @@ export function ShowInfo({
             {info.contents.irtops?.map((item, j) => {
                 const value = cache[text]?.results?.info.exprs[i];
                 if (item.type) {
-                    vdomWidget(item.type, value);
+                    vdomWidget(item.type, value, builtinContext);
                 }
                 return (
                     <div key={j}>

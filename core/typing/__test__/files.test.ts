@@ -3,7 +3,7 @@ import { addBuiltinDecorator, builtinContext } from '../../ctx';
 import { processTypeFile } from '../../full/full';
 import { idToString } from '../../ids';
 import * as t from '../../typed-ast';
-import { initVerify } from '../analyze';
+import { initVerify } from '../verify';
 import { assertions, typeAssertById, typeTestCtx } from './utils';
 
 const base = __dirname + '/../../elements/typetest/';

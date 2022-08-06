@@ -2,6 +2,13 @@ import { HL } from '../../../devui/HL';
 import { Loc, refHash } from '../../typed-ast';
 import { Verify } from '../analyze';
 
+export const locWithin = (outer: Loc, inner: Loc) => {
+    return (
+        outer.start.offset <= inner.start.offset &&
+        outer.end.offset >= inner.end.offset
+    );
+};
+
 export const verifyHL = (v: Verify) => {
     const statuses: HL[] = [];
     const loc0: Loc = {
@@ -13,6 +20,26 @@ export const verifyHL = (v: Verify) => {
         if (err.loc.end.offset === -1) {
             debugger;
             console.error(err);
+        }
+        if (err.type === 'Dec') {
+            if (
+                v.expected.find(
+                    (e) => locWithin(e.loc, err.loc) && err.name === e.text,
+                )
+            ) {
+                return;
+            }
+            // console.log(
+            //     v.expected
+            //         .map(
+            //             ({ loc: { start, end }, text }) =>
+            //                 `${start.offset}-${end.offset} ${text}`,
+            //         )
+            //         .join(', '),
+            //     '::',
+            //     err.loc.start.offset + '-' + err.loc.end.offset,
+            //     err.name,
+            // );
         }
         statuses.push({
             loc: err.loc.end.offset === -1 ? loc0 : err.loc,

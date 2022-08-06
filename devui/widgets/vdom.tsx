@@ -1,13 +1,12 @@
 import { noloc } from '../../core/consts';
-import { builtinContext, FullContext, GlobalUserType } from '../../core/ctx';
+import { FullContext } from '../../core/ctx';
 import { processTypeFile } from '../../core/full/full';
-import { parseTypeFile } from '../../core/grammar/base.parser';
 import { extract, Id, toId } from '../../core/ids';
-import * as t from '../../core/typed-ast';
 import { collapseConstraints } from '../../core/typing/analyze';
 import { applyType } from '../../core/typing/getType';
 import { maybeExpandTask } from '../../core/typing/tasks';
 import { ConstraintMap, typeMatches } from '../../core/typing/typeMatches';
+import * as t from '../../core/typed-ast';
 
 const loadTypes = (text: string, ctx: FullContext) => {
     const named: { [key: string]: Id } = {};

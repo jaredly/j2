@@ -113,6 +113,7 @@ export const typeMatches = (
     path?: string[],
     constraints?: { [key: number]: Constraints },
 ): boolean => {
+    path = [];
     // Ok I need like a "resolve refs" function
     const c2 = ctx.resolveRefsAndApplies(candidate, path);
     const e2 = ctx.resolveRefsAndApplies(expected, path);

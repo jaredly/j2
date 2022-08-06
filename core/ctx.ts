@@ -6,7 +6,7 @@ import { typeForPattern } from './elements/patterns/typeForPattern';
 import { TVar } from './elements/type-vbls';
 import { errors } from './errors';
 import { Loc, parseType } from './grammar/base.parser';
-import { extract, Id, toId } from './ids';
+import { extract, Id, idToString, toId } from './ids';
 import { refsEqual } from './refsEqual';
 import { resolveAnalyzeType } from './resolveAnalyzeType';
 import { transformExpression, transformType, Visitor } from './transform-tast';
@@ -695,12 +695,12 @@ export const newContext = (): FullContext => {
         //     return result;
         // },
         errorDecorators() {
-            const result: Id[] = [];
+            const result: { [idHash: string]: string } = {};
             Object.keys(this[opaque].decorators.names).forEach((name) => {
                 if (name.startsWith('error:')) {
-                    result.push(
-                        ...this[opaque].decorators.names[name].map((r) => r.id),
-                    );
+                    this[opaque].decorators.names[name].forEach((r) => {
+                        result[idToString(r.id)] = name.slice('error:'.length);
+                    });
                 }
             });
             return result;
@@ -805,6 +805,7 @@ export const setupDefaults = (ctx: FullContext) => {
         addBuiltinDecorator(ctx, `error:` + tag, 0);
     });
     addBuiltinDecorator(ctx, `test:type`, 0);
+    addBuiltinDecorator(ctx, 'expect', 0);
 
     builtinValues
         .split('\n')

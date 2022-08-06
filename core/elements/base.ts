@@ -208,8 +208,9 @@ export const removeErrorDecorators = (ctx: Ctx): Visitor<null> => {
             (t) =>
                 !(
                     t.id.ref.type === 'Global' &&
-                    errorDecs.some((i) =>
-                        idsEqual(i, (t.id.ref as t.GlobalRef).id),
+                    Object.keys(errorDecs).some(
+                        (idHash) =>
+                            idHash === idToString((t.id.ref as t.GlobalRef).id),
                     )
                 ),
         );
@@ -634,7 +635,7 @@ export const findBuiltinName = (id: t.Id, ctx: ACtx): string | null => {
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { FullContext, nodebug } from '../ctx';
-import { idsEqual } from '../ids';
+import { idsEqual, idToString } from '../ids';
 import { transformToplevel, Visitor } from '../transform-tast';
 
 export const ToJS = {

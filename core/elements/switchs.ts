@@ -1,5 +1,6 @@
 import { Visitor } from '../transform-tast';
-import { caseLocals, decorate, pdecorate } from '../typing/analyze';
+import { decorate, pdecorate } from '../typing/analyze';
+import { caseLocals } from '../typing/localTrackingVisitor';
 import { Ctx as ACtx } from '../typing/analyze';
 import {
     ConstraintMap,

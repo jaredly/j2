@@ -131,6 +131,14 @@ export const matchesBound = (
             return true;
         }
     }
+    if (
+        bound.type === 'TEnum' &&
+        bound.cases.length === 0 &&
+        bound.open &&
+        t.type === 'TEnum'
+    ) {
+        return true;
+    }
     return typeMatches(t, bound, ctx, path);
 };
 

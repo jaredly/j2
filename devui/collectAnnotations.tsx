@@ -1,13 +1,14 @@
 import { FullContext } from '../core/ctx';
-import * as tt from '../core/transform-tast';
-import { File, Loc, refHash } from '../core/typed-ast';
-import { getType } from '../core/typing/getType';
-import { getLocals, Locals } from '../core/elements/pattern';
-import { typeToplevelT } from '../core/elements/base';
-import { typeToString } from './Highlight';
-import { AllLocals, localTrackingVisitor, LTCtx } from '../core/typing/analyze';
-import { maybeExpandTask } from '../core/typing/tasks';
 import { extract } from '../core/ids';
+import * as tt from '../core/transform-tast';
+import { File, Loc } from '../core/typed-ast';
+import {
+    localTrackingVisitor,
+    LTCtx,
+} from '../core/typing/localTrackingVisitor';
+import { getType } from '../core/typing/getType';
+import { maybeExpandTask } from '../core/typing/tasks';
+import { typeToString } from './Highlight';
 
 export const collectAnnotations = (tast: File, ctx: FullContext) => {
     const annotations: { loc: Loc; text: string }[] = [];

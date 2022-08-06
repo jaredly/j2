@@ -2,13 +2,12 @@ import { FullContext } from '../ctx';
 import { noloc } from '../consts';
 import { transformExpression, transformStmt, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
+import { errorCount } from '../typing/analyze';
+import { initVerify, verifyVisitor } from '../typing/verify';
 import {
     blockLocals,
-    errorCount,
-    initVerify,
     localTrackingVisitor,
-    verifyVisitor,
-} from '../typing/analyze';
+} from '../typing/localTrackingVisitor';
 import { analyzeVisitor } from '../typing/analyze.gen';
 import { typeMatches } from '../typing/typeMatches';
 import * as b from '@babel/types';
