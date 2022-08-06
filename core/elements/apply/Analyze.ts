@@ -1,17 +1,13 @@
 import { Visitor } from '../../transform-tast';
-import { collapseConstraints, decorate } from '../../typing/analyze';
-import { Ctx } from '../../typing/analyze';
 import * as t from '../../typed-ast';
-import { autoTypeApply } from './autoTypeApply';
+import { collapseConstraints, Ctx, decorate } from '../../typing/analyze';
 import { chooseAutoTypable } from './apply';
+import { autoTypeApply } from './autoTypeApply';
 
-import { transformType } from '../../transform-tast';
-import { Constraints, tdecorate } from '../../typing/analyze';
-import { ConstraintMap, TDiffs, typeMatches } from '../../typing/typeMatches';
-import * as p from '../../grammar/base.parser';
 import { noloc } from '../../consts';
-import { constrainTypes, unifyTypes } from '../../typing/unifyTypes';
+import { Constraints } from '../../typing/analyze';
 import { expandTask } from '../../typing/tasks';
+import { TDiffs, typeMatches } from '../../typing/typeMatches';
 
 export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     ApplyPost(node, { ctx, hit }) {

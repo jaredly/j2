@@ -6,7 +6,7 @@ import * as t from '../typed-ast';
 import { Ctx as ACtx, decorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { allRecordItems } from './records';
+import { allRecordItems } from './records/allRecordItems';
 
 export const grammar = `
 Record = "{" _ items:RecordItems? _ "}"

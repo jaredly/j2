@@ -50,7 +50,7 @@ let counter: (v: int) => Node<st<int>> = (state: int) => {
                 },
                 [`Text("advance")],
             ),
-            node<st<int>>(
+            node(
                 "button",
                 {
                     onClick: () => setState(state + 1),

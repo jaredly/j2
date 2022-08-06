@@ -4,8 +4,9 @@ import {
     collapseConstraints,
     Ctx as ACtx,
 } from '../../typing/analyze';
-import { ConstraintMap, expandEnumCases } from '../../typing/typeMatches';
-import { allRecordItems } from '../records';
+import { ConstraintMap } from '../../typing/typeMatches';
+import { expandEnumCases } from '../../typing/expandEnumCases';
+import { allRecordItems } from '../records/allRecordItems';
 import { maybeExpandTask } from '../../typing/tasks';
 import { eopsMatch, numOps } from '../../typing/ops';
 import { arrayType } from '../../typing/getType';

@@ -1,7 +1,8 @@
 import * as t from '../../typed-ast';
 import { Ctx as ACtx } from '../../typing/analyze';
-import { ConstraintMap, expandEnumCases } from '../../typing/typeMatches';
-import { allRecordItems } from '../records';
+import { ConstraintMap } from '../../typing/typeMatches';
+import { expandEnumCases } from '../../typing/expandEnumCases';
+import { allRecordItems } from '../records/allRecordItems';
 import { maybeExpandTask } from '../../typing/tasks';
 import { patternIsExhaustive } from '../exhaustive';
 import { Pattern } from '../pattern';

@@ -1,16 +1,13 @@
-import { enumCaseMap, TEnum, unifyEnums } from '../elements/enums';
-import { unifyRecords } from '../elements/records';
+import { enumCaseMap, TEnum } from '../elements/enums/enums';
+import { unifyEnums } from '../elements/enums/unifyEnums';
+import { unifyRecords } from '../elements/records/unifyRecords';
 import { refsEqual } from '../refsEqual';
 import { Type } from '../typed-ast';
 import { addNewConstraint, collapseConstraints } from './analyze';
 import { numOps, unifyOps } from './ops';
 import { maybeExpandTask } from './tasks';
-import {
-    ConstraintMap,
-    Ctx,
-    expandEnumCases,
-    typeMatches,
-} from './typeMatches';
+import { ConstraintMap, Ctx, typeMatches } from './typeMatches';
+import { expandEnumCases } from './expandEnumCases';
 
 // For now, just take the greater of the two.
 // To do this right, we need to allow enums to unify. [`A] [`B] -> [`A | `B]

@@ -1,24 +1,20 @@
-import { noloc } from '../consts';
-import * as p from '../grammar/base.parser';
-import * as pp from '../printer/pp';
-import { Ctx as PCtx } from '../printer/to-pp';
-import { Visitor } from '../transform-tast';
-import * as t from '../typed-ast';
-import { addDecorator, Constraints, Ctx, tdecorate } from '../typing/analyze';
-import { Ctx as TACtx } from '../typing/to-ast';
-import { Ctx as TCtx } from '../typing/to-tast';
+import { noloc } from '../../consts';
+import * as p from '../../grammar/base.parser';
+import * as pp from '../../printer/pp';
+import { Ctx as PCtx } from '../../printer/to-pp';
+import { Visitor } from '../../transform-tast';
+import * as t from '../../typed-ast';
 import {
-    addf,
-    ConstraintMap,
-    Ctx as TMCtx,
-    expandEnumCases,
-    payloadsEqual,
-    TDiffs,
-    TMPaths,
-    typeMatches,
-    unifyPayloads,
-} from '../typing/typeMatches';
-import { recordAsTuple } from './records';
+    addDecorator,
+    Constraints,
+    Ctx,
+    tdecorate,
+} from '../../typing/analyze';
+import { Ctx as TACtx } from '../../typing/to-ast';
+import { Ctx as TCtx } from '../../typing/to-tast';
+import { Ctx as TMCtx, unifyPayloads } from '../../typing/typeMatches';
+import { expandEnumCases } from '../../typing/expandEnumCases';
+import { recordAsTuple } from '../records/records';
 
 // type State:Effect = <T>[ `Get | `Set(T) ]
 // type State:Full = <T, Final>[ State:Effect<T> | `Final(Final)]
@@ -203,7 +199,7 @@ export const ToPP = {
     },
 };
 
-import { Ctx as ICtx } from '../ir/ir';
+import { Ctx as ICtx } from '../../ir/ir';
 export const ToIR = {
     Enum({ loc, tag, payload }: t.Enum, ctx: ICtx): t.IEnum {
         return {
@@ -216,10 +212,10 @@ export const ToIR = {
 };
 
 import * as b from '@babel/types';
-import { Ctx as JCtx } from '../ir/to-js';
-import { refsEqual } from '../refsEqual';
-import { unifyTypes } from '../typing/unifyTypes';
-import { inferTaskType, tunit } from '../typing/tasks';
+import { Ctx as JCtx } from '../../ir/to-js';
+import { refsEqual } from '../../refsEqual';
+import { unifyTypes } from '../../typing/unifyTypes';
+import { isValidEnumCase } from './isValidEnumCase';
 export const ToJS = {
     Enum({ loc, tag, payload }: t.IEnum, ctx: JCtx): b.Expression {
         if (!payload) {
@@ -233,62 +229,6 @@ export const ToJS = {
             ),
         ]);
     },
-};
-
-export const isValidEnumCase = (c: t.Type, ctx: TMCtx): boolean => {
-    // We'll special case 'recur ref that's applied'
-    if (
-        c.type === 'TApply' &&
-        c.target.type === 'TRef' &&
-        c.target.ref.type === 'Recur'
-    ) {
-        return ctx.getTopKind(c.target.ref.idx) === 'enum';
-    }
-    if (
-        c.type === 'TApply' &&
-        c.target.type === 'TRef' &&
-        c.target.ref.type === 'Global' &&
-        ctx.isBuiltinType(c.target, 'Task')
-    ) {
-        return true;
-    }
-    const resolved = ctx.resolveAnalyzeType(c);
-    if (!resolved) {
-        return false;
-    }
-    c = resolved;
-    switch (c.type) {
-        case 'TConst':
-            return isValidEnumCase(c.inner, ctx);
-        case 'Number':
-        case 'String':
-        case 'TOps':
-        case 'TLambda':
-        case 'TVbl':
-        case 'TVars':
-        // These are taken care of by resolveAnalyzeType
-        case 'TDecorated':
-        case 'TApply':
-        case 'TRecord':
-            return false;
-        case 'TBlank':
-        case 'TEnum':
-            return true;
-        case 'TRef':
-            if (c.ref.type === 'Recur') {
-                return ctx.getTopKind(c.ref.idx) === 'enum';
-            }
-            if (c.ref.type === 'Local') {
-                const bound = ctx.getBound(c.ref.sym);
-                if (bound) {
-                    return isValidEnumCase(bound, ctx);
-                }
-            }
-            if (c.ref.type === 'Global') {
-                return ctx.isBuiltinType(c, 'task');
-            }
-            return false;
-    }
 };
 
 export const payloadsUnify = (
@@ -427,214 +367,6 @@ export const isWrappedEnum = (one: t.TRef, two: TEnum, ctx: TMCtx): boolean => {
         return refsEqual(cases.bounded[0].local.ref, one.ref);
     }
     return false;
-};
-
-export const enumTypeMatches = (
-    candidate: TEnum,
-    expected: t.Type,
-    ctx: TMCtx,
-    path: TMPaths,
-    constraints?: ConstraintMap,
-    diffs?: TDiffs,
-) => {
-    // [ `What ] matches [ `What | `Who ]
-    // So everything in candidate needs to match something
-    // in expected. And there need to not be any collisions name-wise
-    if (expected.type === 'TRef' && isWrappedEnum(expected, candidate, ctx)) {
-        return true;
-    }
-    if (
-        expected.type === 'TApply' &&
-        ctx.isBuiltinType(expected.target, 'Task')
-    ) {
-        let [a1, a2 = tunit] = expected.args;
-        const inferred = inferTaskType(candidate, ctx);
-        if (!inferred || !a1 || !a2) {
-            return false;
-        }
-        return (
-            typeMatches(inferred.args[0], a1, ctx, path, constraints, diffs) &&
-            typeMatches(inferred.args[1], a2, ctx, path, constraints, diffs)
-        );
-    }
-    if (expected.type !== 'TEnum') {
-        return false;
-    }
-    const canEnums = expandEnumCases(candidate, ctx);
-    const expEnums = expandEnumCases(expected, ctx);
-    if (!canEnums || !expEnums) {
-        return false;
-    }
-    const canMap = enumCaseMap(canEnums.cases, ctx);
-    if (!canMap) {
-        return false;
-    }
-    const expMap = enumCaseMap(expEnums.cases, ctx);
-    if (!expMap) {
-        return false;
-    }
-
-    for (let bound of canEnums.bounded) {
-        if (bound.type === 'local') {
-            const ref = bound.local.ref;
-            if (
-                !expEnums.bounded.some(
-                    (b) => b.type === 'local' && refsEqual(ref, b.local.ref),
-                )
-            ) {
-                return false;
-            }
-        } else {
-            const inner = bound.inner;
-            if (
-                !expEnums.bounded.some(
-                    (b) =>
-                        b.type === 'task' &&
-                        typeMatches(
-                            inner,
-                            b.inner,
-                            ctx,
-                            path,
-                            constraints,
-                            diffs,
-                        ),
-                )
-            ) {
-                return false;
-            }
-        }
-    }
-
-    for (let kase of canEnums.cases) {
-        if (!expMap[kase.tag]) {
-            if (expected.open) {
-                continue;
-            }
-            // console.log('no extra', kase.tag, expected.open, candidate.open);
-            // return false;
-            return addf(
-                diffs,
-                candidate,
-                expected,
-                ctx,
-                `extra payload ${kase.tag}`,
-            );
-        }
-        if (
-            !payloadsEqual(
-                kase.payload,
-                expMap[kase.tag].payload,
-                ctx,
-                false,
-                constraints,
-                path,
-                diffs,
-            )
-        ) {
-            // console.log(`Payload not equal ${kase.tag}`);
-            // console.log(typeToString(kase.payload!, ctx as FullContext));
-            // console.log(
-            //     typeToString(expMap[kase.tag].payload!, ctx as FullContext),
-            // );
-            // console.log(kase.payload, expMap[kase.tag].payload);
-            return addf(
-                diffs,
-                candidate,
-                expected,
-                ctx,
-                `payload ${kase.tag} mismatch`,
-            );
-        }
-    }
-    if (candidate.open && !expected.open) {
-        return false;
-    }
-
-    return true;
-};
-
-export const unifyEnums = (
-    candidate: TEnum,
-    expected: t.Type,
-    ctx: TMCtx,
-): false | t.Type => {
-    // [ `What ] matches [ `What | `Who ]
-    // So everything in candidate needs to match something
-    // in expected. And there need to not be any collisions name-wise
-    if (expected.type !== 'TEnum') {
-        return false;
-    }
-    const canEnums = expandEnumCases(candidate, ctx);
-    const expEnums = expandEnumCases(expected, ctx);
-    if (!canEnums || !expEnums) {
-        return false;
-    }
-    const canMap = enumCaseMap(canEnums.cases, ctx);
-    if (!canMap) {
-        return false;
-    }
-    const expMap = enumCaseMap(expEnums.cases, ctx);
-    if (!expMap) {
-        return false;
-    }
-
-    for (let kase of canEnums.cases) {
-        if (!expMap[kase.tag]) {
-            expMap[kase.tag] = kase;
-        } else {
-            const unified = unifyPayloads(
-                kase.payload,
-                expMap[kase.tag].payload,
-                ctx,
-            );
-            if (unified === false) {
-                return false;
-            }
-            expMap[kase.tag] = { ...kase, payload: unified ?? undefined };
-        }
-    }
-
-    const others: t.Type[] = [];
-
-    canEnums.bounded.forEach((item) => {
-        const t = item.type === 'local' ? item.local : item.inner;
-        for (let i = 0; i < others.length; i++) {
-            const un = unifyTypes(t, others[i], ctx);
-            if (un !== false) {
-                others[i] = un;
-                return;
-            }
-        }
-        others.push(t);
-    });
-
-    expEnums.bounded.forEach((item) => {
-        const t = item.type === 'local' ? item.local : item.inner;
-        for (let i = 0; i < others.length; i++) {
-            const un = unifyTypes(t, others[i], ctx);
-            if (un !== false) {
-                others[i] = un;
-                return;
-            }
-        }
-        others.push(t);
-    });
-
-    return {
-        ...candidate,
-        open: candidate.open || expected.open,
-        cases: [
-            ...Object.values(expMap),
-            // TODO: dedup?
-            ...others,
-            // ...canEnums.bounded.map((m) =>
-            //     m.type === 'local' ? m.local : m.inner,
-            // ),
-            // ...expEnums.bounded.map((m) =>
-            //     m.type === 'local' ? m.local : m.inner,
-            // ),
-        ],
-    };
 };
 
 function enumPayload(payload: t.Type, ctx: TACtx, loc: t.Loc): p.TOps[] {

@@ -3,14 +3,14 @@ import { ToIR as array } from '../elements/array';
 import { ToIR as awaits } from '../elements/awaits';
 import { ToIR as base } from '../elements/base';
 import { ToIR as constants } from '../elements/constants';
-import { ToIR as enums } from '../elements/enums';
+import { ToIR as enums } from '../elements/enums/enums';
 import { ToIR as generics } from '../elements/generics/generics';
 import { ToIR as ifs } from '../elements/ifs';
 import { ToIR as lambda } from '../elements/lambda';
 import { ToIR as lets } from '../elements/lets';
 import { ToIR as macros } from '../elements/macros';
 import { ToIR as pattern } from '../elements/pattern';
-import { ToIR as records } from '../elements/records';
+import { ToIR as records } from '../elements/records/records';
 import { ToIR as switchs } from '../elements/switchs';
 
 export type ToIR = typeof apply &

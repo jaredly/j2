@@ -3,19 +3,16 @@ import { unifiedTypes } from '../elements/apply/apply';
 import { matchesBound } from '../elements/generics/generics';
 import { getLocals, Locals } from '../elements/pattern';
 import { typeForPattern } from '../elements/patterns/typeForPattern';
-import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
+import { TRecord, TRecordKeyValue } from '../elements/records/records';
+import { allRecordItems } from '../elements/records/allRecordItems';
 import { transformType } from '../transform-tast';
 import { Expression, GlobalRef, Loc, TVars, Type } from '../typed-ast';
 import { collapseConstraints } from './analyze';
 import { ifLocals } from './localTrackingVisitor';
 import { collapseOps } from './ops';
 import { collectEffects, inferTaskType, makeTaskType } from './tasks';
-import {
-    ConstraintMap,
-    Ctx,
-    expandEnumCases,
-    typeMatches,
-} from './typeMatches';
+import { ConstraintMap, Ctx, typeMatches } from './typeMatches';
+import { expandEnumCases } from './expandEnumCases';
 import { unifyTypes } from './unifyTypes';
 
 export const isConst = (type: Type, ctx: Ctx, path?: string[]): boolean => {

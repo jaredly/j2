@@ -1,22 +1,18 @@
 import { refsEqual } from '../refsEqual';
 import { noloc } from '../consts';
-import {
-    enumTypeMatches,
-    isValidEnumCase,
-    isWrappedEnum,
-} from '../elements/enums';
-import { recordMatches } from '../elements/records';
-import { TVar, tvarsMatches } from '../elements/type-vbls';
+import { isWrappedEnum } from '../elements/enums/enums';
+import { isValidEnumCase } from '../elements/enums/isValidEnumCase';
+import { enumTypeMatches } from '../elements/enums/enumTypeMatches';
+import { recordMatches } from '../elements/records/recordMatches';
+import { TVar } from '../elements/type-vbls';
+import { tvarsMatches } from '../elements/tvarsMatches';
 import { Id, idToString } from '../ids';
 import {
-    EnumCase,
     Expression,
     GlobalRef,
     refHash,
     RefKind,
     Sym,
-    TApply,
-    TEnum,
     TLambda,
     TOps,
     TRef,
@@ -44,6 +40,7 @@ import {
 import { isConst } from './getType';
 import { typeToString } from './__test__/typeToString';
 import { FullContext } from '../ctx';
+import { expandEnumCases } from './expandEnumCases';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -567,86 +564,6 @@ export const typeMatches = (
 
             return false;
     }
-};
-
-export type Unexpandable = { type: 'task'; inner: TApply } | LocalUnexpandable;
-export type LocalUnexpandable = { type: 'local'; local: TRef; bound: Type };
-
-// ok so recursion checking ... right
-// like, if we pass through the same 'recur' thing multiple times...
-export const expandEnumCases = (
-    type: TEnum,
-    ctx: Ctx,
-    path: string[] = [],
-): null | { cases: EnumCase[]; bounded: Unexpandable[] } => {
-    const cases: EnumCase[] = [];
-    const bounded: Unexpandable[] = [];
-    for (let kase of type.cases) {
-        if (kase.type === 'EnumCase') {
-            cases.push(kase);
-        } else {
-            let inner = path;
-            const r = getRef(kase);
-            if (r) {
-                const k = refHash(r.ref);
-                if (path.includes(k)) {
-                    return null;
-                }
-                inner = path.concat([k]);
-            }
-            const res = ctx.resolveRefsAndApplies(kase, inner);
-            if (res?.type === 'TRef' && res.ref.type === 'Local') {
-                const bound = ctx.getBound(res.ref.sym);
-                if (bound) {
-                    bounded.push({ type: 'local', bound, local: res });
-                } else {
-                    return null;
-                }
-            } else if (res?.type === 'TEnum') {
-                const expanded = expandEnumCases(res, ctx, inner);
-                if (!expanded) {
-                    return null;
-                }
-                cases.push(...expanded.cases);
-                bounded.push(...expanded.bounded);
-            } else {
-                if (
-                    kase.type === 'TApply' &&
-                    ctx.isBuiltinType(kase.target, 'Task')
-                ) {
-                    const task = expandTask(kase.loc, kase.args, ctx);
-                    if (task) {
-                        task.cases.forEach((item) => {
-                            if (item.type === 'EnumCase') {
-                                cases.push(item);
-                            } else {
-                                // STOPSHIP: I think `bounded` needs to become `misc`?
-                                // like ... things we're not going to expand just now?
-                                // hmm maybe it'll only be `Task<xyz>` .. so maybe
-                                // we also want a `Tasks`? or something.
-                                // or maybeeee bounded needs a flag that's like "this
-                                // one is wrapped in a task"? that might be it.
-                                // bounded.push()
-                                if (item.type === 'TApply') {
-                                    bounded.push({
-                                        type: 'task',
-                                        inner: item as TApply,
-                                    });
-                                } else {
-                                    throw new Error(
-                                        `Got ${item.type}, expected a task`,
-                                    );
-                                }
-                            }
-                        });
-                        continue;
-                    }
-                }
-                return null;
-            }
-        }
-    }
-    return { cases, bounded };
 };
 
 export const getRef = (t: Type): TRef | null => {

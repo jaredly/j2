@@ -6,7 +6,8 @@ import * as t from '../typed-ast';
 import { collapseConstraints, Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { Ctx as TMCtx, expandEnumCases } from '../typing/typeMatches';
+import { Ctx as TMCtx } from '../typing/typeMatches';
+import { expandEnumCases } from '../typing/expandEnumCases';
 
 export const grammar = `
 Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PArray / PBlank / Number / String
@@ -444,7 +445,7 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { allRecordItems } from './records';
+import { allRecordItems } from './records/allRecordItems';
 import { and } from './ifs';
 import { maybeExpandTask } from '../typing/tasks';
 import { arrayType } from '../typing/getType';

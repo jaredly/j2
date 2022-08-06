@@ -55,9 +55,9 @@ export type {
     TVbl,
     Type,
 } from './elements/type';
-export type { EnumCase, TEnum } from './elements/enums';
+export type { EnumCase, TEnum } from './elements/enums/enums';
 export type { Enum, IEnum } from './elements/enum-exprs';
-export type { TRecord, TRecordKeyValue } from './elements/records';
+export type { TRecord, TRecordKeyValue } from './elements/records/records';
 export type {
     IRecord,
     IRecordKeyValue,

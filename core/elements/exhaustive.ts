@@ -1,10 +1,10 @@
 import { Ctx } from '../typing/analyze';
 import { arrayType } from '../typing/getType';
 import { numOps } from '../typing/ops';
-import { expandEnumCases } from '../typing/typeMatches';
-import { enumCaseMap } from './enums';
+import { expandEnumCases } from '../typing/expandEnumCases';
+import { enumCaseMap } from './enums/enums';
 import { Pattern } from './pattern';
-import { allRecordItems } from './records';
+import { allRecordItems } from './records/allRecordItems';
 import { Type } from './type';
 
 export const patternIsExhaustive = (

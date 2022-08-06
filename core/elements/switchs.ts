@@ -2,11 +2,8 @@ import { Visitor } from '../transform-tast';
 import { decorate, pdecorate } from '../typing/analyze';
 import { caseLocals } from '../typing/localTrackingVisitor';
 import { Ctx as ACtx } from '../typing/analyze';
-import {
-    ConstraintMap,
-    expandEnumCases,
-    typeMatches,
-} from '../typing/typeMatches';
+import { ConstraintMap, typeMatches } from '../typing/typeMatches';
+import { expandEnumCases } from '../typing/expandEnumCases';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';

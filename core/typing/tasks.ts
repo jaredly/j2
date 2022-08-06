@@ -1,12 +1,14 @@
 import { noloc } from '../consts';
-import { enumCaseMap, enumTypeMatches } from '../elements/enums';
-import { recordAsTuple, TRecord } from '../elements/records';
+import { enumCaseMap } from '../elements/enums/enums';
+import { enumTypeMatches } from '../elements/enums/enumTypeMatches';
+import { recordAsTuple, TRecord } from '../elements/records/records';
 import { transformExpression } from '../transform-tast';
 import { Loc, TApply, TEnum, Type, EnumCase, Expression } from '../typed-ast';
 import { initVerify, verifyVisitor } from './verify';
 import { localTrackingVisitor } from './localTrackingVisitor';
 import { isUnit, getType } from './getType';
-import { Ctx, expandEnumCases, LocalUnexpandable } from './typeMatches';
+import { Ctx } from './typeMatches';
+import { expandEnumCases, LocalUnexpandable } from './expandEnumCases';
 import { unifyTypes } from './unifyTypes';
 import { collapseConstraints, Ctx as ACtx } from './analyze';
 
