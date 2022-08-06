@@ -7,7 +7,7 @@ import {
 } from '../elements/enums';
 import { recordMatches } from '../elements/records';
 import { TVar, tvarsMatches } from '../elements/type-vbls';
-import { Id } from '../ids';
+import { Id, idToString } from '../ids';
 import {
     EnumCase,
     Expression,
@@ -107,7 +107,8 @@ export const payloadsEqual = (
     );
 };
 
-export type TMPaths = { candidate: string[]; expected: string[] };
+export type TMPathItem = string;
+export type TMPaths = { candidate: TMPathItem[]; expected: TMPathItem[] };
 
 export const typeMatches = (
     candidate: Type,
@@ -116,6 +117,13 @@ export const typeMatches = (
     path: TMPaths = { candidate: [], expected: [] },
     constraints?: { [key: number]: Constraints },
 ): boolean => {
+    path = updatePaths(path, candidate, expected);
+    const cl = hasLoop(path.candidate);
+    const el = hasLoop(path.expected);
+    if (cl != null && el != null) {
+        return cl === el;
+    }
+
     // Ok I need like a "resolve refs" function
     const c2 = ctx.resolveRefsAndApplies(candidate);
     const e2 = ctx.resolveRefsAndApplies(expected);
@@ -441,7 +449,6 @@ export const expandEnumCases = (
                     return null;
                 }
             } else if (res?.type === 'TEnum') {
-                // console.log('ok next');
                 const expanded = expandEnumCases(res, ctx, inner);
                 if (!expanded) {
                     return null;
@@ -485,7 +492,6 @@ export const expandEnumCases = (
             }
         }
     }
-    // console.log('resolved', cases, path);
     return { cases, bounded };
 };
 
@@ -519,3 +525,100 @@ export const expandArgs = (args: Type[], inner: Type, ctx: Ctx): Type[] => {
     }
     return args;
 };
+
+export const typeHash = (t: Type): string => {
+    switch (t.type) {
+        case 'TApply':
+            return `${typeHash(t.target)}<${t.args.map(typeHash).join(',')}>`;
+        case 'TDecorated':
+            return typeHash(t.inner);
+        case 'TRef':
+            return refHash(t.ref);
+        case 'TRecord':
+            return `{${t.items
+                .map((f) => `${f.key}:${typeHash(f.value)}`)
+                .join(',')}}`;
+        case 'String':
+            return JSON.stringify(t.text);
+        case 'Number':
+            return t.kind + ':' + JSON.stringify(t.value);
+        case 'TBlank':
+            return '_';
+        case 'TConst':
+            return 'const ' + typeHash(t.inner);
+        case 'TVbl':
+            return 'vbl' + t.id;
+        case 'TVars':
+            return `<|${t.args
+                .map((arg) => (arg.bound ? typeHash(arg.bound) : ''))
+                .join(',')}|>${typeHash(t.inner)}`;
+        case 'TEnum':
+            return `[${t.cases
+                .map((kase) =>
+                    kase.type === 'EnumCase'
+                        ? `\`${kase.tag}(${
+                              kase.payload ? typeHash(kase.payload) : ''
+                          })`
+                        : typeHash(kase),
+                )
+                .join('|')}]`;
+        case 'TLambda':
+            return `(${t.args
+                .map((arg) => typeHash(arg.typ))
+                .join(',')}) => ${typeHash(t.result)}`;
+        case 'TOps':
+            return `${typeHash(t.left)} ${t.right.map(
+                (right) => `${right.top} ${typeHash(right.right)}`,
+            )}`;
+        default:
+            let _: never = t;
+            throw new Error(`invalid type`);
+    }
+};
+
+const hasLoop = (path: TMPathItem[]) => {
+    const items: { [key: string]: { item: TMPathItem; idx: number } } = {};
+    for (let i = 0; i < path.length; i++) {
+        const item = path[i];
+        if (items[item]) {
+            return i - items[item].idx;
+        }
+        items[item] = { item, idx: i };
+    }
+};
+
+function updatePaths(path: TMPaths, candidate: Type, expected: Type) {
+    if (candidate.type === 'TRef' && candidate.ref.type === 'Global') {
+        path = {
+            ...path,
+            candidate: [...path.candidate, idToString(candidate.ref.id)],
+        };
+    }
+    if (expected.type === 'TRef' && expected.ref.type === 'Global') {
+        path = {
+            ...path,
+            expected: [...path.expected, idToString(expected.ref.id)],
+        };
+    }
+    if (
+        candidate.type === 'TApply' &&
+        candidate.target.type === 'TRef' &&
+        candidate.target.ref.type === 'Global'
+    ) {
+        path = {
+            ...path,
+            candidate: [...path.candidate, typeHash(candidate)],
+        };
+    }
+    if (
+        expected.type === 'TApply' &&
+        expected.target.type === 'TRef' &&
+        expected.target.ref.type === 'Global'
+    ) {
+        path = {
+            ...path,
+            expected: [...path.expected, typeHash(expected)],
+        };
+    }
+    return path;
+}

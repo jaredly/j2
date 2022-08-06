@@ -2,6 +2,7 @@ type A = <T: [*]>[T | `A]
 type B = [@expect("invalidEnum") A<[B]> | `B(int)]
 type List1 = [`Cons(List1, int) | `Nil]
 type List2 = [`Cons(List2, int) | `Nil]
+type List3 = [`Cons(List3, int) | `Nil | `B]
 let one = (v: int): List2 => `Cons(`Nil, v)
 let pop = (v: List2) => switch v {
     `Nil => 0;
@@ -10,4 +11,7 @@ let pop = (v: List2) => switch v {
 pop(`Cons(`Nil, 21))
 one(20)
 pop(one(1))
-let two = (v: int): List2 => `Cons(`Nil, v)
+let two: (v: int) => List2 = (v: int): List2 => `Cons(`Nil, v)
+let three: (v: int) => List3 = two
+pop(two(1))
+two(1)
