@@ -15,7 +15,7 @@ import { Ctx as TCtx } from '../typing/to-tast';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as ICtx } from '../ir/ir';
 import { noloc } from '../consts';
-import { makeApply } from './apply';
+import { makeApply } from './apply/makeApply';
 import { inferTaskType, tnever, tunit } from '../typing/tasks';
 import { getType } from '../typing/getType';
 import {

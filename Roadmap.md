@@ -2,10 +2,21 @@
 # UI!!!
 
 - [x] ok we've got a little react dealio
-- [ ] ooooooh ok so react's render reconciler, is getting afoul of the observation dealio
+- [x] ooooooh ok so react's render reconciler, is getting afoul of the observation dealio
 	I think I need to use a separately
+	- [x] HOVER and stuff is causing re-renders!
 
-	- [ ] HOVER and stuff is causing re-renders!
+
+
+🤔
+I think I might want ... a much more ... disciplined method for doing type inference.
+also: should I make `task` a full separate type kind?
+🤔
+
+- 
+
+
+
 
 - [ ] `node` inference isn't quite working, not sure why. The array inference somehow?
 	oh yeah it was the array.

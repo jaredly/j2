@@ -5,7 +5,7 @@ import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { maybeAutoType } from './apply';
+import { maybeAutoType } from './apply/maybeAutoType';
 
 export const grammar = `
 BinOp = first:WithUnary rest_drop:BinOpRight* 

@@ -1,4 +1,4 @@
-import { Apply, IApply } from './elements/apply';
+import { Apply, IApply } from './elements/apply/apply';
 import {
     Boolean,
     ITemplateString,
@@ -11,7 +11,7 @@ import {
     ITypeAbstraction,
     TypeAbstraction,
     TypeApplication,
-} from './elements/generics';
+} from './elements/generics/generics';
 import { Type } from './elements/type';
 import { Id, idToString } from './ids';
 import { IRecord, Record } from './elements/record-exprs';
@@ -19,7 +19,7 @@ import { ILambda, Lambda } from './elements/lambda';
 import { Await } from './elements/awaits';
 import { Block } from './elements/lets';
 export type { Id };
-export type { Apply, IApply } from './elements/apply';
+export type { Apply, IApply } from './elements/apply/apply';
 export type { Ctx as ACtx } from './typing/analyze';
 export type {
     Boolean,
@@ -40,7 +40,7 @@ export type {
     ITypeAbstraction,
     TypeAbstraction,
     TypeApplication,
-} from './elements/generics';
+} from './elements/generics/generics';
 export type { TApply, TVar, TVars } from './elements/type-vbls';
 export type {
     TAdd,

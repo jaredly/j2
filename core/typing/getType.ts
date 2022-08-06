@@ -1,6 +1,6 @@
 import { tref } from '../consts';
-import { unifiedTypes } from '../elements/apply';
-import { matchesBound } from '../elements/generics';
+import { unifiedTypes } from '../elements/apply/apply';
+import { matchesBound } from '../elements/generics/generics';
 import { getLocals, Locals } from '../elements/pattern';
 import { typeForPattern } from '../elements/patterns/typeForPattern';
 import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
