@@ -99,6 +99,7 @@ export type Result<Contents> =
 
 export const toJs = (
     t: t.Expression,
+    type: t.Type | null,
     ictx: ReturnType<typeof iCtx>,
     jctx: ReturnType<typeof jCtx>,
     pctx: ReturnType<typeof printCtx>,
@@ -120,7 +121,7 @@ export const toJs = (
         ictx,
     );
     const js = jctx.ToJS.Block(ir, jctx);
-    const type = ctx.getType(t);
+    // const type = ctx.getType(t);
     const tstring = type ? typeToString(type, ctx) : '[no type]';
     return { id, ir, js, type, tstring, simple: sast, name };
 };
@@ -460,11 +461,12 @@ export const processToplevel = (
     const irtops =
         errorCount(verify) === 0
             ? top.type === 'ToplevelExpression'
-                ? [toJs(top.expr, ictx, jctx, pctx, ctx)]
+                ? [toJs(top.expr, ctx.getType(top.expr), ictx, jctx, pctx, ctx)]
                 : top.type === 'ToplevelLet'
                 ? top.elements.map((el, i) =>
                       toJs(
                           el.expr,
+                          el.typ ?? ctx.getType(el.expr),
                           ictx,
                           jctx,
                           pctx,

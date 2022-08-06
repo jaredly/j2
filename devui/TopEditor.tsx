@@ -303,9 +303,6 @@ export function ShowInfo({
         <div>
             {info.contents.irtops?.map((item, j) => {
                 const value = cache[text]?.results?.info.exprs[i];
-                if (item.type) {
-                    vdomWidget(item.type, value, builtinContext);
-                }
                 return (
                     <div key={j}>
                         <pre
@@ -359,6 +356,9 @@ export function ShowInfo({
                                     : cache[text]?.results?.info.exprs[i],
                             )}
                         </pre>
+                        {item.type
+                            ? vdomWidget(item.type, value, builtinContext)
+                            : null}
                     </div>
                 );
             })}
