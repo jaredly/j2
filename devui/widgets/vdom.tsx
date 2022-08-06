@@ -45,7 +45,7 @@ type attrs = <Effects: task>{
     onClick: () => Task<Effects, ()> = () => \`Return(),
 }
 type Node = <Effects: task>[\`Node(string, attrs<Effects>, Array<Node<Effects>>) | \`Text(string)]
-type Render = <State>Task<[\`Render(((state: State) => Node<[\`SetState(State, ()) | \`Confirm((), bool)]>, State), [])], ()>
+type Render = <State>Task<[\`Render(((state: State) => Node<[\`SetState(State, ()) | \`Confirm(string, bool)]>, State), [])], ()>
 `;
 
 type Render<State> =

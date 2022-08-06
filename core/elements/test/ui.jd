@@ -17,7 +17,7 @@ let node = <Effects: task>(tag: string, attrs: attrs<Effects>, children: Array<N
     attrs,
     children,
 )
-type st = <T>[`SetState(T, ()) | `Confirm((), bool)]
+type st = <T>[`SetState(T, ()) | `Confirm(string, bool)]
 let div = <E: task>(attrs: attrs<E>, children: Array<Node<E>>) => node<E>("div", attrs, children)
 let span = <E: task>(attrs: attrs<E>, children: Array<Node<E>>) => node<E>("span", attrs, children)
 let button = <E: task>(attrs: attrs<E>, children: Array<Node<E>>) => node<E>(
@@ -39,13 +39,13 @@ let counter: (v: int) => Node<st<int>> = (state: int) => {
             span<st<int>>({style: {margin: "6px"}}, [`Text("A Counter ${toString(state)}")]),
             button<st<int>>(
                 {
-                    /*onClick: () => {
-                                                                                    if confirm("Advance by 10?")! {
-                                                                                        setState(state + 10)!;
-                                                                                    } else {
-                                                                                        ();
-                                                                                    };
-                                                                                },*/
+                    onClick: () => {
+                        if confirm("Advance by 10?")! {
+                            setState(state + 10)!;
+                        } else {
+                            ();
+                        };
+                    },
                     style: {backgroundColor: "black"},
                 },
                 [`Text("advance")],
