@@ -8,11 +8,14 @@ import { localTrackingVisitor } from './localTrackingVisitor';
 import { isUnit, getType } from './getType';
 import { Ctx, expandEnumCases, LocalUnexpandable } from './typeMatches';
 import { unifyTypes } from './unifyTypes';
-import { Ctx as ACtx } from './analyze';
+import { collapseConstraints, Ctx as ACtx } from './analyze';
 
 export const isTaskable = (t: Type, ctx: Ctx): boolean => {
     if (ctx.isBuiltinType(t, 'task')) {
         return true;
+    }
+    if (t.type === 'TVbl') {
+        t = collapseConstraints(ctx.currentConstraints(t.id), ctx) ?? t;
     }
     if (t.type === 'TRef' && t.ref.type === 'Local') {
         const bound = ctx.getBound(t.ref.sym);

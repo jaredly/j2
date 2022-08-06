@@ -1017,7 +1017,10 @@ function analyzeArgs(node: t.Apply, ctx: Ctx, atype: t.TLambda, hit: {}) {
                     ? expandTask(expected.loc, expected.args, ctx)
                     : null;
             // ctx.debugger();
-            typeMatches(at, expected, ctx);
+            const diffs: TDiffs = [];
+            typeMatches(at, expected, ctx, undefined, undefined, diffs);
+            console.log(`Ok arg ${i}`);
+            console.log(diffs);
 
             return decorate(arg, 'argWrongType', hit, ctx, [
                 {

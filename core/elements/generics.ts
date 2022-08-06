@@ -271,6 +271,8 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             }
             if (targ.bound && !matchesBound(arg, targ.bound, ctx)) {
                 changed = true;
+                // debugger;
+                // matchesBound(arg, targ.bound, ctx);
                 return tdecorate(arg, 'argWrongType', { hit, ctx }, [
                     {
                         label: 'expected',

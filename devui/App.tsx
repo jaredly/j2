@@ -621,7 +621,7 @@ export const App = () => {
                     }}
                     onChange={(data, text) => {
                         const name = hashName.slice('test:'.length);
-                        if (!equal(data, files.test[name])) {
+                        if (equal(data, files.test[name])) {
                             return;
                         }
                         const newTest = { ...files.test };
