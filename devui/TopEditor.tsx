@@ -41,6 +41,7 @@ export const TopEditor = ({
     onChange: (info: ToplevelInfo<FileContents>[]) => void;
     hover: HTMLDivElement;
 }) => {
+    console.log(`top Editor render`);
     const changed = React.useRef(false);
     const [text, setText] = React.useState(() =>
         item.type === 'Failed'
@@ -107,20 +108,17 @@ export const TopEditor = ({
         [ctx],
     );
     const tid = React.useRef(null as null | any);
+    const obsref = React.useRef(null as null | (() => () => void));
     return (
         <Hovery
-            style={{
-                position: 'relative',
-                // Hmmm
-                // outline: changed.current ? '1px dashed magenta' : 'none',
-            }}
+            style={{ position: 'relative' }}
             onMouseOut={(evt) => {
                 clearTimeout(tid.current);
-                // if (evt.target === evt.currentTarget) {
                 const target = evt.currentTarget;
-                tid.current = setTimeout(() => resetHighlights(target), 100);
-                // resetHighlights(target)
-                // }
+                tid.current = setTimeout(
+                    () => resetHighlights(target, obsref),
+                    100,
+                );
             }}
             onMouseOver={(evt) => {
                 clearTimeout(tid.current);
@@ -190,14 +188,14 @@ export const TopEditor = ({
                             hover.style.bottom = '8px';
                         }
                         const loc = anns.length ? anns[0].loc : errors[0].loc;
-                        highlightForLoc(evt, loc);
+                        highlightForLoc(evt, loc, obsref);
                     }
                 } else {
                     hover.style.display = 'none';
                     const target = evt.currentTarget;
                     // resetHighlights(target),
                     tid.current = setTimeout(
-                        () => resetHighlights(target),
+                        () => resetHighlights(target, obsref),
                         100,
                     );
                 }
@@ -205,6 +203,7 @@ export const TopEditor = ({
         >
             <Editor
                 text={text}
+                obsref={obsref}
                 onBlur={(text) => {
                     const file =
                         cache[text]?.file ??
@@ -229,9 +228,10 @@ export const TopEditor = ({
                         }, 10);
                     }
                 }}
-                onChange={(text) => {
-                    changed.current = true;
-                    setText(text);
+                onChange={(ntext) => {
+                    // changed.current = true;
+                    console.log('chagnedddd', text !== ntext);
+                    setText(ntext);
                 }}
                 extraLocs={extraLocs}
             />
@@ -367,17 +367,24 @@ export function ShowInfo({
     );
 }
 
-export function resetHighlights(target: HTMLElement) {
+export function resetHighlights(
+    target: HTMLElement,
+    obsref: React.RefObject<null | (() => () => void)>,
+) {
+    let out = obsref.current ? obsref.current() : null;
     target.querySelectorAll('[data-span]').forEach((el) => {
         // el.style.textDecoration = 'none';
         (el as HTMLElement).style.backgroundColor = 'transparent';
     });
+    out ? out() : null;
 }
 
 export function highlightForLoc(
     evt: React.MouseEvent<HTMLDivElement, MouseEvent>,
     al: Loc,
+    obsref: React.RefObject<null | (() => () => void)>,
 ) {
+    let out = obsref.current ? obsref.current() : null;
     evt.currentTarget.querySelectorAll('[data-span]').forEach((ell) => {
         const el = ell as HTMLElement;
         const [s, e] = el.getAttribute('data-span')!.split(':');
@@ -387,6 +394,7 @@ export function highlightForLoc(
             el.style.backgroundColor = 'transparent';
         }
     });
+    out ? out() : null;
 }
 
 export function sortedAnnotations(

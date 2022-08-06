@@ -2,8 +2,12 @@
 # UI!!!
 
 - [x] ok we've got a little react dealio
+- [ ] ooooooh ok so react's render reconciler, is getting afoul of the observation dealio
+	I think I need to use a separately
 - [ ] `node` inference isn't quite working, not sure why. The array inference somehow?
+	oh yeah it was the array.
 - [ ] then `render(counter, 1)` isn't quite working ... I think it's because my inference is too simplistic?
+- [ ] and then, I need a lot of perf stuff, I think.
 
 
 # North Starnstuff

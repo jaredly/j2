@@ -258,6 +258,7 @@ export const fileStatus = (name: string, file: FixtureFileType): Status => {
 
 export const App = () => {
     const hash = useHash();
+    console.log(`Top hash`);
 
     const [listing] = usePromise<{
         fixtures: string[];

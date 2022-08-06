@@ -133,6 +133,7 @@ export const TestSplit = ({
     onChange: (v: TestWhat, text: string) => void;
     changeName?: (v: string) => void;
 }) => {
+    console.log('test split');
     // can I attribute comments to each of the infos?
     // also, how do I add / remove items?
     const [items, setItems] = React.useState<TestItem[]>(() => {
@@ -224,6 +225,7 @@ export const TestSplit = ({
         .concat([
             <Editor
                 key={'last' + items.length}
+                obsref={{ current: () => () => {} }}
                 text={'// add new item'}
                 onBlur={(text) => {
                     const file = processFile(

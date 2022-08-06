@@ -66,3 +66,7 @@ let render = <State>(app: (current: State) => Node<st<State>>, initial: State) =
     (),
 )
 render<int>(counter, 1)
+button<st<int>>(
+    {onClick: () => setState(1), style: {backgroundColor: "black", margin: "4px"}},
+    [`Text("-")],
+)

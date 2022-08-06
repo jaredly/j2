@@ -175,11 +175,13 @@ export const vdomWidget = (type: t.Type, value: any, baseCtx: FullContext) => {
     const tv = ctx.newTypeVar(noloc);
 
     if (!types.named.Render) {
-        return console.error('no Render');
+        console.error('no Render');
+        return null;
     }
     const { hash } = extract(types.named.Render);
     if (!ctx.extract().types.hashed[hash]) {
-        return console.error('no Render in ctx');
+        console.error('no Render in ctx');
+        return null;
     }
 
     const Render = ctx.resolveAnalyzeType({
@@ -189,11 +191,11 @@ export const vdomWidget = (type: t.Type, value: any, baseCtx: FullContext) => {
     });
     if (!Render) {
         console.error('not resolved');
-        return;
+        return null;
     }
     const applied = applyType([tv], Render as t.TVars, ctx);
     if (!applied) {
-        return;
+        return null;
     }
 
     const tt = maybeExpandTask(applied, ctx) ?? applied;
@@ -224,4 +226,5 @@ export const vdomWidget = (type: t.Type, value: any, baseCtx: FullContext) => {
             <UI render={render.payload[0][0]} initial={render.payload[0][1]} />
         );
     }
+    return null;
 };

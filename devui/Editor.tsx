@@ -62,17 +62,21 @@ const initial = (v: string): History => ({
     idx: 0,
 });
 
+type Muter = () => () => void;
+
 export const Editor = ({
     text,
     onBlur,
     onChange,
     typeFile,
     extraLocs,
+    obsref,
 }: {
     text: string;
     onBlur: (text: string) => void;
     onChange: (v: string) => void;
     typeFile?: boolean;
+    obsref: React.MutableRefObject<Muter | null>;
     extraLocs?: (v: p.File | p.TypeFile, text: string) => HL[];
 }) => {
     const ref = React.useRef(null as null | HTMLDivElement);
@@ -95,20 +99,23 @@ export const Editor = ({
             curExtraLocs.current = extraLocs;
             const locs = highlightLocations(text, typeFile, extraLocs);
             if (text.length) {
+                const out = obsref.current ? obsref.current() : null;
                 setHtmlAndClean(
                     ref.current!,
                     treeToHtmlLines(markUpTree(text, locs), true),
                 );
+                out ? out() : null;
             } else {
-                ref.current!.innerHTML = '';
-                text.split('\n').map((line) => {
-                    const div = document.createElement('div');
-                    div.textContent = line;
-                    if (!line.length) {
-                        div.innerHTML = '<br/>';
-                    }
-                    ref.current!.append(div);
-                });
+                console.error('whattt');
+                // ref.current!.innerHTML = '';
+                // text.split('\n').map((line) => {
+                //     const div = document.createElement('div');
+                //     div.textContent = line;
+                //     if (!line.length) {
+                //         div.innerHTML = '<br/>';
+                //     }
+                //     ref.current!.append(div);
+                // });
             }
 
             if (pos != null) {
@@ -141,6 +148,7 @@ export const Editor = ({
             }
             const text = getText(ref.current!);
             if (text !== latest.current) {
+                obs.disconnect();
                 onChange(text);
                 const pos = getPos(ref.current!);
                 history.current = update(
@@ -150,7 +158,6 @@ export const Editor = ({
                     prevPos.current,
                 );
                 prevPos.current = pos;
-                obs.disconnect();
                 const locs = highlightLocations(
                     text,
                     typeFile,
@@ -164,6 +171,10 @@ export const Editor = ({
         };
         const obs = new MutationObserver(obsfn);
         obs.observe(ref.current!, options);
+        obsref.current = () => {
+            obs.disconnect();
+            return () => obs.observe(ref.current!, options);
+        };
 
         const keyfn = (evt: KeyboardEvent) => {
             if (evt.metaKey && evt.key === 'z') {
@@ -207,6 +218,38 @@ export const Editor = ({
         };
     }, [editing]);
 
+    // return (
+    //     <Editable
+    //         onRef={(node) => {
+    //             ref.current = node;
+    //             node.addEventListener('blur', () => {
+    //                 setEditing(false);
+    //                 onBlur(getText(node));
+    //             });
+    //             node.addEventListener('focus', () => {
+    //                 setEditing(true);
+    //             });
+    //             node.addEventListener('keydown', (evt) => {
+    //                 if (evt.key === 'Escape') {
+    //                     ref.current!.blur();
+    //                     document.getSelection()?.removeAllRanges();
+    //                 }
+    //                 if (evt.key === 'Tab') {
+    //                     evt.preventDefault();
+    //                     evt.stopPropagation();
+    //                     const range = document.getSelection()?.getRangeAt(0);
+    //                     if (range) {
+    //                         const node = document.createTextNode('  ');
+    //                         range.insertNode(node);
+    //                         range.selectNode(node);
+    //                         range.collapse(false);
+    //                     }
+    //                 }
+    //             });
+    //         }}
+    //     />
+    // );
+
     return (
         <div
             contentEditable
@@ -245,9 +288,43 @@ export const Editor = ({
                 }
             }}
             ref={(node) => (ref.current = node)}
-        ></div>
+        />
     );
 };
+
+// export const Editable = ({ onRef }: { onRef: (n: HTMLDivElement) => void }) => {
+//     const ref = React.useRef(null as null | HTMLDivElement);
+//     React.useEffect(() => {
+//         if (!ref.current) {
+//             console.error('editable not there');
+//             return;
+//         }
+//         const node = document.createElement('div');
+//         node.contentEditable = 'true';
+//         node.setAttribute('autoCorrect', 'off');
+//         node.setAttribute('autoCapitalize', 'off');
+//         node.spellcheck = false;
+//         node.className = 'editor-ce';
+//         Object.assign(node.style, {
+//             padding: 4,
+//             outline: 'none',
+//             whiteSpace: 'pre-wrap',
+//             minHeight: '1.5em',
+//             minWidth: 50,
+//             flexShrink: 0,
+//         });
+//         ref.current.appendChild(node);
+//         onRef(node);
+//     }, []);
+//     // ok
+//     return (
+//         <div
+//             ref={(node) => {
+//                 ref.current = node;
+//             }}
+//         />
+//     );
+// };
 
 const getPos = (target: HTMLElement) => {
     const sel = document.getSelection()!;
