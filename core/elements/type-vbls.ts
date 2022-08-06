@@ -233,7 +233,7 @@ export const tvarsMatches = (
             },
         )
     ) {
-        console.log('bad args');
+        // console.log('bad args');
         return false;
     }
     let maxSym = 0;

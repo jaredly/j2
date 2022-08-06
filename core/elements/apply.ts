@@ -647,7 +647,13 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                     ctx,
                 );
                 if (auto) {
-                    return auto;
+                    const ttype = ctx.getType(auto.target);
+                    if (!ttype || ttype.type !== 'TLambda') {
+                        return auto;
+                    }
+                    let { args } = analyzeArgs(node, ctx, ttype, hit);
+                    return { ...auto, args };
+                    // return auto;
                 }
             }
             // Check if there are multiples
@@ -670,7 +676,12 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
                     Object.keys(auto.constraints).forEach((key) => {
                         ctx.addTypeConstraint(+key, auto.constraints[+key]);
                     });
-                    return auto.apply;
+                    const ttype = ctx.getType(auto.apply.target);
+                    if (!ttype || ttype.type !== 'TLambda') {
+                        return auto.apply;
+                    }
+                    let { args } = analyzeArgs(node, ctx, ttype, hit);
+                    return { ...auto.apply, args };
                 }
             }
         }
@@ -734,68 +745,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             return decorate(node, 'wrongNumberOfArgs', hit, ctx);
         }
         const atype = ttype;
-        let changed = false;
-        const args = node.args.map((arg, i) => {
-            let at = ctx.getType(arg);
-            if (at == null) {
-                return arg;
-            }
-            // STOPSHIP(infer)
-            // if (at.type === 'TVbl') {
-            //     at = ctx.addTypeConstraint(at.id, atype.args[i].typ);
-            // }
-            const constraints: { [key: number]: Constraints } = {};
-            const expected = atype.args[i].typ;
-            // hmm so 'unconstrained' would be a thing.
-            if (!typeMatches(at, expected, ctx, undefined, constraints)) {
-                changed = true;
-                const taskEnum =
-                    expected.type === 'TApply' &&
-                    ctx.isBuiltinType(expected.target, 'Task')
-                        ? expandTask(expected.loc, expected.args, ctx)
-                        : null;
-                // ctx.debugger();
-                typeMatches(at, expected, ctx);
-
-                return decorate(arg, 'argWrongType', hit, ctx, [
-                    {
-                        label: 'expected',
-                        arg: {
-                            type: 'DType',
-                            loc: noloc,
-                            typ: atype.args[i].typ,
-                        },
-                        loc: noloc,
-                    } as t.Decorator['args'][0],
-                    {
-                        label: 'got',
-                        arg: {
-                            type: 'DType',
-                            loc: noloc,
-                            typ: at,
-                        },
-                        loc: noloc,
-                    } as t.Decorator['args'][0],
-                    ...(taskEnum
-                        ? [
-                              {
-                                  label: 'task',
-                                  arg: {
-                                      type: 'DType',
-                                      loc: noloc,
-                                      typ: taskEnum,
-                                  },
-                                  loc: noloc,
-                              } as t.Decorator['args'][0],
-                          ]
-                        : []),
-                ]);
-            }
-            Object.keys(constraints).forEach((k) => {
-                ctx.addTypeConstraint(+k, constraints[+k]);
-            });
-            return arg;
-        });
+        const { changed, args } = analyzeArgs(node, ctx, atype, hit);
         // iffff target is resolved, we check the args
         // if it's not resolved, then
         return changed ? { ...node, args } : null;
@@ -1031,3 +981,69 @@ export const autoTypeApply = (
         constraints,
     };
 };
+
+function analyzeArgs(node: t.Apply, ctx: Ctx, atype: t.TLambda, hit: {}) {
+    let changed = false;
+    const args = node.args.map((arg, i) => {
+        let at = ctx.getType(arg);
+        if (at == null) {
+            return arg;
+        }
+        // STOPSHIP(infer)
+        // if (at.type === 'TVbl') {
+        //     at = ctx.addTypeConstraint(at.id, atype.args[i].typ);
+        // }
+        const constraints: { [key: number]: Constraints } = {};
+        const expected = atype.args[i].typ;
+        // hmm so 'unconstrained' would be a thing.
+        if (!typeMatches(at, expected, ctx, undefined, constraints)) {
+            changed = true;
+            const taskEnum =
+                expected.type === 'TApply' &&
+                ctx.isBuiltinType(expected.target, 'Task')
+                    ? expandTask(expected.loc, expected.args, ctx)
+                    : null;
+            // ctx.debugger();
+            typeMatches(at, expected, ctx);
+
+            return decorate(arg, 'argWrongType', hit, ctx, [
+                {
+                    label: 'expected',
+                    arg: {
+                        type: 'DType',
+                        loc: noloc,
+                        typ: atype.args[i].typ,
+                    },
+                    loc: noloc,
+                } as t.Decorator['args'][0],
+                {
+                    label: 'got',
+                    arg: {
+                        type: 'DType',
+                        loc: noloc,
+                        typ: at,
+                    },
+                    loc: noloc,
+                } as t.Decorator['args'][0],
+                ...(taskEnum
+                    ? [
+                          {
+                              label: 'task',
+                              arg: {
+                                  type: 'DType',
+                                  loc: noloc,
+                                  typ: taskEnum,
+                              },
+                              loc: noloc,
+                          } as t.Decorator['args'][0],
+                      ]
+                    : []),
+            ]);
+        }
+        Object.keys(constraints).forEach((k) => {
+            ctx.addTypeConstraint(+k, constraints[+k]);
+        });
+        return arg;
+    });
+    return { changed, args };
+}

@@ -1,4 +1,11 @@
 
+# UI!!!
+
+- [x] ok we've got a little react dealio
+- [ ] `node` inference isn't quite working, not sure why. The array inference somehow?
+- [ ] then `render(counter, 1)` isn't quite working ... I think it's because my inference is too simplistic?
+
+
 # North Starnstuff
 
 WHAT IS MY

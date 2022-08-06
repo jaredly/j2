@@ -150,7 +150,7 @@ const superify: Visitor<SCtx> = {
         }
         const args = node.args.map((arg, i) => {
             const argt = ctx.getType(arg);
-            if (!argt) {
+            if (!argt || !t.args[i]) {
                 return arg;
             }
             // One way, but not the other
