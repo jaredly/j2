@@ -19,7 +19,12 @@ import { getTestResults, TestValues, TestWhat } from './App';
 import { BlurInput } from './BlurInput';
 import { Editor } from './Editor';
 import { HL } from './HL';
-import { reconcileChanges, TestItem, TopEditor } from './TopEditor';
+import {
+    ctxCacheKey,
+    reconcileChanges,
+    TestItem,
+    TopEditor,
+} from './TopEditor';
 
 /*
 
@@ -242,21 +247,27 @@ export const TestSplit = ({
                     }
                 }}
                 onChange={(text) => {}}
-                extraLocs={(v) => {
-                    if (v.type !== 'File') {
-                        return [];
-                    }
-                    const file = processFileR(
-                        v,
-                        ctx,
-                        undefined,
-                        shared.current.track,
-                        true,
-                    );
-                    const results = getTestResults(file, shared.current.terms);
-                    // ok, so we have an AST
-                    return testStatuses(file, results);
-                }}
+                extraLocs={React.useCallback(
+                    (v: p.File | p.TypeFile) => {
+                        if (v.type !== 'File') {
+                            return [];
+                        }
+                        const file = processFileR(
+                            v,
+                            ctx,
+                            undefined,
+                            shared.current.track,
+                            true,
+                        );
+                        const results = getTestResults(
+                            file,
+                            shared.current.terms,
+                        );
+                        // ok, so we have an AST
+                        return testStatuses(file, results);
+                    },
+                    [ctxCacheKey(ctx)],
+                )}
             />,
         ]);
 

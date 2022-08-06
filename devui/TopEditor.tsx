@@ -26,6 +26,15 @@ import { transformToplevel } from '../core/transform-tast';
 import { Colorable } from './Highlight';
 import { vdomWidget } from './widgets/vdom';
 
+export const ctxCacheKey = (ctx: FullContext) => {
+    const inner = ctx.extract();
+    return (
+        Object.keys(inner.types.hashed).sort().join(' ') +
+        ' /// ' +
+        Object.keys(inner.values.hashed).sort().join(' ')
+    );
+};
+
 export const TopEditor = ({
     item,
     ctx,
@@ -55,6 +64,7 @@ export const TopEditor = ({
                 : fmtItem(item.contents.refmt, item.comments),
         );
     }, [item]);
+    const cacheKey = ctxCacheKey(ctx);
     const cache = React.useMemo(
         () =>
             ({} as {
@@ -63,7 +73,7 @@ export const TopEditor = ({
                     results: TestValues | null;
                 };
             }),
-        [ctx],
+        [cacheKey],
     );
     if (!cache[text]) {
         const file = processFile(
@@ -105,7 +115,7 @@ export const TopEditor = ({
             // ok, so we have an AST
             return testStatuses(file, results).concat(extraHighlights(file));
         },
-        [ctx],
+        [cacheKey],
     );
     const tid = React.useRef(null as null | any);
     const obsref = React.useRef(null as null | (() => () => void));
@@ -229,7 +239,7 @@ export const TopEditor = ({
                     }
                 }}
                 onChange={(ntext) => {
-                    // changed.current = true;
+                    changed.current = true;
                     console.log('chagnedddd', text !== ntext);
                     setText(ntext);
                 }}

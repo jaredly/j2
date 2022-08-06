@@ -246,6 +246,7 @@ export function OneFixture({
                     <Card.Divider css={{ marginBlock: '$6' }} />
                     <Editor
                         text={editing ?? input}
+                        obsref={{ current: () => () => {} }}
                         onChange={setEditing}
                         onBlur={(input) => {
                             setEditing(null);

@@ -139,7 +139,8 @@ export const Editor = ({
             attributes: true,
             characterData: true,
         };
-        const obsfn = () => {
+        const obsfn = (obsevt: any) => {
+            console.log('change', obsevt);
             const sel = document.getSelection()!;
             if (!isAncestor(sel?.anchorNode, ref.current!)) {
                 setEditing(false);
@@ -171,6 +172,9 @@ export const Editor = ({
         };
         const obs = new MutationObserver(obsfn);
         obs.observe(ref.current!, options);
+        if (obsref.current) {
+            obsref.current();
+        }
         obsref.current = () => {
             obs.disconnect();
             return () => obs.observe(ref.current!, options);
@@ -218,113 +222,113 @@ export const Editor = ({
         };
     }, [editing]);
 
+    return (
+        <Editable
+            onRef={(node) => {
+                ref.current = node;
+                node.addEventListener('blur', () => {
+                    setEditing(false);
+                    onBlur(getText(node));
+                });
+                node.addEventListener('focus', () => {
+                    setEditing(true);
+                });
+                node.addEventListener('keydown', (evt) => {
+                    if (evt.key === 'Escape') {
+                        ref.current!.blur();
+                        document.getSelection()?.removeAllRanges();
+                    }
+                    if (evt.key === 'Tab') {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        const range = document.getSelection()?.getRangeAt(0);
+                        if (range) {
+                            const node = document.createTextNode('  ');
+                            range.insertNode(node);
+                            range.selectNode(node);
+                            range.collapse(false);
+                        }
+                    }
+                });
+            }}
+        />
+    );
+
     // return (
-    //     <Editable
-    //         onRef={(node) => {
-    //             ref.current = node;
-    //             node.addEventListener('blur', () => {
-    //                 setEditing(false);
-    //                 onBlur(getText(node));
-    //             });
-    //             node.addEventListener('focus', () => {
-    //                 setEditing(true);
-    //             });
-    //             node.addEventListener('keydown', (evt) => {
-    //                 if (evt.key === 'Escape') {
-    //                     ref.current!.blur();
-    //                     document.getSelection()?.removeAllRanges();
-    //                 }
-    //                 if (evt.key === 'Tab') {
-    //                     evt.preventDefault();
-    //                     evt.stopPropagation();
-    //                     const range = document.getSelection()?.getRangeAt(0);
-    //                     if (range) {
-    //                         const node = document.createTextNode('  ');
-    //                         range.insertNode(node);
-    //                         range.selectNode(node);
-    //                         range.collapse(false);
-    //                     }
-    //                 }
-    //             });
+    //     <div
+    //         contentEditable
+    //         autoCorrect="off"
+    //         autoCapitalize="off"
+    //         spellCheck={false}
+    //         className="editor-ce"
+    //         style={{
+    //             outline: editing ? '2px solid rgba(255,0,0,0.1)' : 'none',
+    //             padding: 4,
+    //             whiteSpace: 'pre-wrap',
+    //             minHeight: '1.5em',
+    //             minWidth: 50,
+    //             flexShrink: 0,
     //         }}
+    //         onBlur={() => {
+    //             setEditing(false);
+    //             onBlur(getText(ref.current!));
+    //         }}
+    //         onFocus={() => setEditing(true)}
+    //         onKeyDown={(evt) => {
+    //             if (evt.key === 'Escape') {
+    //                 ref.current!.blur();
+    //                 document.getSelection()?.removeAllRanges();
+    //             }
+    //             if (evt.key === 'Tab') {
+    //                 evt.preventDefault();
+    //                 evt.stopPropagation();
+    //                 const range = document.getSelection()?.getRangeAt(0);
+    //                 if (range) {
+    //                     const node = document.createTextNode('  ');
+    //                     range.insertNode(node);
+    //                     range.selectNode(node);
+    //                     range.collapse(false);
+    //                 }
+    //             }
+    //         }}
+    //         ref={(node) => (ref.current = node)}
     //     />
     // );
+};
 
+export const Editable = ({ onRef }: { onRef: (n: HTMLDivElement) => void }) => {
+    const ref = React.useRef(null as null | HTMLDivElement);
+    React.useEffect(() => {
+        if (!ref.current) {
+            console.error('editable not there');
+            return;
+        }
+        const node = document.createElement('div');
+        node.contentEditable = 'true';
+        node.setAttribute('autoCorrect', 'off');
+        node.setAttribute('autoCapitalize', 'off');
+        node.spellcheck = false;
+        node.className = 'editor-ce';
+        Object.assign(node.style, {
+            padding: 4,
+            outline: 'none',
+            whiteSpace: 'pre-wrap',
+            minHeight: '1.5em',
+            minWidth: 50,
+            flexShrink: 0,
+        });
+        ref.current.appendChild(node);
+        onRef(node);
+    }, []);
+    // ok
     return (
         <div
-            contentEditable
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
-            className="editor-ce"
-            style={{
-                outline: editing ? '2px solid rgba(255,0,0,0.1)' : 'none',
-                padding: 4,
-                whiteSpace: 'pre-wrap',
-                minHeight: '1.5em',
-                minWidth: 50,
-                flexShrink: 0,
+            ref={(node) => {
+                ref.current = node;
             }}
-            onBlur={() => {
-                setEditing(false);
-                onBlur(getText(ref.current!));
-            }}
-            onFocus={() => setEditing(true)}
-            onKeyDown={(evt) => {
-                if (evt.key === 'Escape') {
-                    ref.current!.blur();
-                    document.getSelection()?.removeAllRanges();
-                }
-                if (evt.key === 'Tab') {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    const range = document.getSelection()?.getRangeAt(0);
-                    if (range) {
-                        const node = document.createTextNode('  ');
-                        range.insertNode(node);
-                        range.selectNode(node);
-                        range.collapse(false);
-                    }
-                }
-            }}
-            ref={(node) => (ref.current = node)}
         />
     );
 };
-
-// export const Editable = ({ onRef }: { onRef: (n: HTMLDivElement) => void }) => {
-//     const ref = React.useRef(null as null | HTMLDivElement);
-//     React.useEffect(() => {
-//         if (!ref.current) {
-//             console.error('editable not there');
-//             return;
-//         }
-//         const node = document.createElement('div');
-//         node.contentEditable = 'true';
-//         node.setAttribute('autoCorrect', 'off');
-//         node.setAttribute('autoCapitalize', 'off');
-//         node.spellcheck = false;
-//         node.className = 'editor-ce';
-//         Object.assign(node.style, {
-//             padding: 4,
-//             outline: 'none',
-//             whiteSpace: 'pre-wrap',
-//             minHeight: '1.5em',
-//             minWidth: 50,
-//             flexShrink: 0,
-//         });
-//         ref.current.appendChild(node);
-//         onRef(node);
-//     }, []);
-//     // ok
-//     return (
-//         <div
-//             ref={(node) => {
-//                 ref.current = node;
-//             }}
-//         />
-//     );
-// };
 
 const getPos = (target: HTMLElement) => {
     const sel = document.getSelection()!;

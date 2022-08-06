@@ -424,8 +424,8 @@ export const newContext = (): FullContext => {
             }
             return gref;
         },
-        resolveRefsAndApplies(t, path) {
-            return resolveAnalyzeType(t, this, path);
+        resolveRefsAndApplies(t, path, constraints) {
+            return resolveAnalyzeType(t, this, path, constraints);
         },
         getValueType(id) {
             const { hash, idx } = extract(id);

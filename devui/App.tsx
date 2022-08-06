@@ -1,4 +1,5 @@
 import { Button, Divider, Link, Text } from '@nextui-org/react';
+import equal from 'fast-deep-equal';
 import * as React from 'react';
 import { builtinContext } from '../core/ctx';
 import {
@@ -619,8 +620,12 @@ export const App = () => {
                         location.hash = `#test:${name}`;
                     }}
                     onChange={(data, text) => {
+                        const name = hashName.slice('test:'.length);
+                        if (!equal(data, files.test[name])) {
+                            return;
+                        }
                         const newTest = { ...files.test };
-                        newTest[hashName.slice('test:'.length)] = data;
+                        newTest[name] = data;
                         setFiles({ ...files, test: newTest });
                         fetch(
                             `/elements/test/${hashName.slice('test:'.length)}`,

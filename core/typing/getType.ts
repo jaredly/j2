@@ -10,7 +10,12 @@ import { collapseConstraints } from './analyze';
 import { ifLocals } from './localTrackingVisitor';
 import { collapseOps } from './ops';
 import { collectEffects, inferTaskType, makeTaskType } from './tasks';
-import { Ctx, expandEnumCases, typeMatches } from './typeMatches';
+import {
+    ConstraintMap,
+    Ctx,
+    expandEnumCases,
+    typeMatches,
+} from './typeMatches';
 import { unifyTypes } from './unifyTypes';
 
 export const isConst = (type: Type, ctx: Ctx, path?: string[]): boolean => {
@@ -57,6 +62,7 @@ export const applyType = (
     args: Type[],
     target: TVars,
     ctx: Ctx,
+    constraints?: ConstraintMap,
     path?: string[],
 ) => {
     let minArgs = target.args.findIndex((arg) => arg.default_);
@@ -91,7 +97,7 @@ export const applyType = (
             },
             null,
         );
-        if (targ.bound && !matchesBound(arg!, targ.bound, ctx)) {
+        if (targ.bound && !matchesBound(arg!, targ.bound, ctx, constraints)) {
             failed = true;
         }
         ctx = ctx.withLocalTypes([{ sym: targ.sym, bound: arg }]);
@@ -132,7 +138,11 @@ const maybeTref = (ref: GlobalRef | null) => (ref ? tref(ref) : null);
 
 // ok so anyway
 // this could maybe do a ...visitor kind of thing as well.
-export const getType = (expr: Expression, ctx: Ctx): Type | null => {
+export const getType = (
+    expr: Expression,
+    ctx: Ctx,
+    constraints?: ConstraintMap,
+): Type | null => {
     switch (expr.type) {
         case 'Await': {
             const res = getType(expr.target, ctx);
@@ -188,7 +198,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
         case 'TypeApplication': {
             const target = getType(expr.target, ctx);
             if (target?.type === 'TVars') {
-                return applyType(expr.args, target, ctx);
+                return applyType(expr.args, target, ctx, constraints);
             }
             // If they're trying to apply and they shouldn't,
             // I'll still let the type resolve.

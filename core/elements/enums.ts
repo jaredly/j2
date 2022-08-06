@@ -219,6 +219,7 @@ import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { refsEqual } from '../refsEqual';
 import { unifyTypes } from '../typing/unifyTypes';
+import { inferTaskType, tunit } from '../typing/tasks';
 export const ToJS = {
     Enum({ loc, tag, payload }: t.IEnum, ctx: JCtx): b.Expression {
         if (!payload) {
@@ -441,6 +442,20 @@ export const enumTypeMatches = (
     // in expected. And there need to not be any collisions name-wise
     if (expected.type === 'TRef' && isWrappedEnum(expected, candidate, ctx)) {
         return true;
+    }
+    if (
+        expected.type === 'TApply' &&
+        ctx.isBuiltinType(expected.target, 'Task')
+    ) {
+        let [a1, a2 = tunit] = expected.args;
+        const inferred = inferTaskType(candidate, ctx);
+        if (!inferred || !a1 || !a2) {
+            return false;
+        }
+        return (
+            typeMatches(inferred.args[0], a1, ctx, path, constraints, diffs) &&
+            typeMatches(inferred.args[1], a2, ctx, path, constraints, diffs)
+        );
     }
     if (expected.type !== 'TEnum') {
         return false;

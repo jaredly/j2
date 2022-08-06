@@ -97,6 +97,7 @@ export const TypeTestView = ({
                     <Editor
                         typeFile
                         text={text}
+                        obsref={{ current: () => () => {} }}
                         extraLocs={(v) => {
                             if (v.type === 'File') {
                                 return [];

@@ -7,7 +7,7 @@ import {
     tdecorate,
 } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
-import { ConstraintMap, typeMatches } from '../typing/typeMatches';
+import { ConstraintMap, TDiffs, typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -915,11 +915,24 @@ export const autoTypeApply = (
         // <A, B: A>(a: A, b: B) =>
         // in this case, we've got some transitive constraint dependencies....
         const ok = args.every((arg, i) => {
+            if (!passedInArgs[i]) {
+                return false;
+            }
             const tt = transformType(arg, visitor, null);
-            return (
-                passedInArgs[i] &&
-                typeMatches(passedInArgs[i], tt, ctx, undefined, constraints)
+            const diffs: TDiffs = [];
+            const match = typeMatches(
+                passedInArgs[i],
+                tt,
+                ctx,
+                undefined,
+                constraints,
+                diffs,
             );
+            if (!match) {
+                console.log(`arg fail ${i}`);
+                console.log(diffs);
+            }
+            return match;
         });
         if (!ok) {
             return null;

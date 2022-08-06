@@ -56,7 +56,11 @@ export type Ctx = {
     getType(expr: Expression): Type | null;
     isBuiltinType(t: Type, name: string): boolean;
     getBuiltinRef(name: string): GlobalRef | null;
-    resolveRefsAndApplies(t: Type, path?: string[]): Type | null;
+    resolveRefsAndApplies(
+        t: Type,
+        path?: string[],
+        constraints?: ConstraintMap,
+    ): Type | null;
     getValueType(id: Id): Type | null;
     localType(sym: number): Type | null;
     getBound(sym: number): Type | null;
@@ -151,7 +155,7 @@ export const typeMatches = (
     expected: Type,
     ctx: Ctx,
     path: TMPaths = { candidate: [], expected: [] },
-    constraints?: { [key: number]: Constraints },
+    constraints?: ConstraintMap,
     diffs?: TDiffs,
 ): boolean => {
     path = updatePaths(path, candidate, expected);
@@ -165,8 +169,8 @@ export const typeMatches = (
     }
 
     // Ok I need like a "resolve refs" function
-    const c2 = ctx.resolveRefsAndApplies(candidate);
-    const e2 = ctx.resolveRefsAndApplies(expected);
+    const c2 = ctx.resolveRefsAndApplies(candidate, [], constraints);
+    const e2 = ctx.resolveRefsAndApplies(expected, [], constraints);
     if (c2 != null) {
         candidate = c2;
     }
@@ -216,6 +220,25 @@ export const typeMatches = (
     }
 
     if (ctx.isBuiltinType(expected, 'task')) {
+        if (candidate.type === 'TVbl' && constraints) {
+            const current = addNewConstraint(
+                candidate.id,
+                { outer: expected },
+                constraints,
+                ctx,
+            );
+            if (current) {
+                constraints[candidate.id] = current;
+                return true;
+            }
+            return addf(
+                diffs,
+                candidate,
+                expected,
+                ctx,
+                `unable to constrain vbl to be a task`,
+            );
+        }
         return (
             isTaskable(candidate, ctx) ||
             addf(diffs, candidate, expected, ctx, 'not a "task"')

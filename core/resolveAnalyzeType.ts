@@ -4,6 +4,7 @@ import { Type } from './typed-ast';
 import { applyType } from './typing/getType';
 import { FullContext, opaque } from './ctx';
 import { expandTask } from './typing/tasks';
+import { ConstraintMap } from './typing/typeMatches';
 
 // ugh ok so because
 // i've tied application to TRef, it makes things
@@ -15,13 +16,14 @@ export const resolveAnalyzeType = (
     type: Type,
     ctx: FullContext,
     path: string[] = [],
+    constraints?: ConstraintMap,
 ): Type | null => {
     if (type.type === 'TVbl') {
         // return ctx.currentConstraints(type.id);
         return null;
     }
     if (type.type === 'TDecorated') {
-        return resolveAnalyzeType(type.inner, ctx, path);
+        return resolveAnalyzeType(type.inner, ctx, path, constraints);
     }
     if (type.type === 'TRef') {
         if (type.ref.type === 'Global') {
@@ -59,6 +61,7 @@ export const resolveAnalyzeType = (
                     ),
                     ctx,
                     path.concat(idToString(type.ref.id)),
+                    constraints,
                 );
             }
         }
@@ -73,7 +76,12 @@ export const resolveAnalyzeType = (
             }
             const id = ctx.resolveTypeRecur(type.ref.idx);
             if (id) {
-                return resolveAnalyzeType(id, ctx, path.concat([k]));
+                return resolveAnalyzeType(
+                    id,
+                    ctx,
+                    path.concat([k]),
+                    constraints,
+                );
             }
         }
     }
@@ -82,12 +90,14 @@ export const resolveAnalyzeType = (
         //     return expandTask(type.loc, type.args, ctx);
         // }
 
-        const target = resolveAnalyzeType(type.target, ctx, path);
+        const target = resolveAnalyzeType(type.target, ctx, path, constraints);
         if (!target || target.type !== 'TVars') {
             return null;
         }
-        const applied = applyType(type.args, target, ctx, path);
-        return applied ? resolveAnalyzeType(applied, ctx, path) : null;
+        const applied = applyType(type.args, target, ctx, constraints, path);
+        return applied
+            ? resolveAnalyzeType(applied, ctx, path, constraints)
+            : null;
     }
     return type;
 };

@@ -1,7 +1,7 @@
 import { Visitor } from '../transform-tast';
 import { decorate, tdecorate } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
-import { TMPaths, typeMatches } from '../typing/typeMatches';
+import { ConstraintMap, TMPaths, typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -114,6 +114,7 @@ export const matchesBound = (
     t: t.Type,
     bound: t.Type | null,
     ctx: TMCtx,
+    constraints?: ConstraintMap,
     path?: TMPaths,
 ) => {
     if (!bound) {
@@ -127,7 +128,7 @@ export const matchesBound = (
     }
     if (t.type === 'TRef' && t.ref.type === 'Local') {
         const argbound = ctx.getBound(t.ref.sym);
-        if (argbound && typeMatches(argbound, bound, ctx, path)) {
+        if (argbound && typeMatches(argbound, bound, ctx, path, constraints)) {
             return true;
         }
     }
@@ -139,7 +140,7 @@ export const matchesBound = (
     ) {
         return true;
     }
-    return typeMatches(t, bound, ctx, path);
+    return typeMatches(t, bound, ctx, path, constraints);
 };
 
 export const ToAst = {
