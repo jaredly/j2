@@ -400,18 +400,18 @@ export const maybeExpandTask = (t: Type, ctx: Ctx): Type | null => {
     return t;
 };
 
-export const matchesTask = (
-    t: TEnum,
-    loc: Loc,
-    targs: Type[],
-    ctx: Ctx,
-): boolean => {
-    if (t.open) {
-        return false;
-    }
-    const expandedTask = expandTask(loc, targs, ctx);
-    return expandedTask != null && enumTypeMatches(t, expandedTask, ctx);
-};
+// export const matchesTask = (
+//     t: TEnum,
+//     loc: Loc,
+//     targs: Type[],
+//     ctx: Ctx,
+// ): boolean => {
+//     if (t.open) {
+//         return false;
+//     }
+//     const expandedTask = expandTask(loc, targs, ctx);
+//     return expandedTask != null && enumTypeMatches(t, expandedTask, ctx);
+// };
 
 export type TaskEffect = { tag: string; input: Type; output: Type };
 export type TaskArgs = {

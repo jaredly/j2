@@ -74,7 +74,7 @@ export const vdomWidget = (type: t.Type, value: any, baseCtx: FullContext) => {
     // Need to be able to typeMatches on two recursive types
     const ok = false;
     if (ok) {
-        if (!typeMatches(type, applied, ctx, [], constraints)) {
+        if (!typeMatches(type, applied, ctx, undefined, constraints)) {
             console.log('didnt match either');
             return;
         }

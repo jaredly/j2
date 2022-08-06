@@ -32,7 +32,7 @@ import {
     stringAddsMatch,
     stringOps,
 } from './ops';
-import { expandTask, isTaskable, matchesTask, maybeExpandTask } from './tasks';
+import { expandTask, isTaskable, maybeExpandTask } from './tasks';
 import { unifyTypes } from './unifyTypes';
 import { TopTypeKind } from './to-tast';
 import {
@@ -92,6 +92,7 @@ export const payloadsEqual = (
     ctx: Ctx,
     bidirectional: boolean,
     constraints?: ConstraintMap,
+    path?: TMPaths,
 ) => {
     if ((one != null) != (two != null)) {
         return false;
@@ -101,22 +102,23 @@ export const payloadsEqual = (
     }
     // Need bidirectional equality in this case
     return (
-        typeMatches(one, two, ctx, [], constraints) &&
-        (!bidirectional || typeMatches(two, one, ctx, [], constraints))
+        typeMatches(one, two, ctx, path, constraints) &&
+        (!bidirectional || typeMatches(two, one, ctx, path, constraints))
     );
 };
+
+export type TMPaths = { candidate: string[]; expected: string[] };
 
 export const typeMatches = (
     candidate: Type,
     expected: Type,
     ctx: Ctx,
-    path?: string[],
+    path: TMPaths = { candidate: [], expected: [] },
     constraints?: { [key: number]: Constraints },
 ): boolean => {
-    path = [];
     // Ok I need like a "resolve refs" function
-    const c2 = ctx.resolveRefsAndApplies(candidate, path);
-    const e2 = ctx.resolveRefsAndApplies(expected, path);
+    const c2 = ctx.resolveRefsAndApplies(candidate);
+    const e2 = ctx.resolveRefsAndApplies(expected);
     if (c2 != null) {
         candidate = c2;
     }
@@ -226,7 +228,7 @@ export const typeMatches = (
             }
             return false;
         case 'TRecord':
-            return recordMatches(candidate, expected, ctx, constraints);
+            return recordMatches(candidate, expected, ctx, path, constraints);
         case 'TEnum':
             return enumTypeMatches(candidate, expected, ctx, path, constraints);
         case 'TDecorated':
@@ -247,7 +249,7 @@ export const typeMatches = (
                     candidate.result,
                     expected.result,
                     ctx,
-                    [],
+                    path,
                     constraints,
                 ) &&
                 candidate.args.length === expected.args.length &&
@@ -256,7 +258,7 @@ export const typeMatches = (
                         (expected as TLambda).args[i].typ,
                         arg.typ,
                         ctx,
-                        [],
+                        path,
                         constraints,
                     ),
                 )

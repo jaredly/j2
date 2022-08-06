@@ -1,7 +1,7 @@
 import { Visitor } from '../transform-tast';
 import { Constraints, decorate, tdecorate } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
-import { getRef, typeMatches } from '../typing/typeMatches';
+import { getRef, TMPaths, typeMatches } from '../typing/typeMatches';
 import { unifyTypes } from '../typing/unifyTypes';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
@@ -277,6 +277,7 @@ export const recordMatches = (
     candidate: TRecord,
     expected: t.Type,
     ctx: TMCtx,
+    path: TMPaths,
     constraints?: { [key: number]: Constraints },
 ) => {
     if (expected.type !== 'TRecord') {
@@ -307,7 +308,7 @@ export const recordMatches = (
                 citems[key].value,
                 eitems[key].value,
                 ctx,
-                [],
+                path,
                 constraints,
             )
         ) {

@@ -1,7 +1,7 @@
 import { Visitor } from '../transform-tast';
 import { decorate, tdecorate } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
-import { typeMatches } from '../typing/typeMatches';
+import { TMPaths, typeMatches } from '../typing/typeMatches';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -114,7 +114,7 @@ export const matchesBound = (
     t: t.Type,
     bound: t.Type | null,
     ctx: TMCtx,
-    path?: string[],
+    path?: TMPaths,
 ) => {
     if (!bound) {
         return true;

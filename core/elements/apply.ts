@@ -133,7 +133,7 @@ export const maybeAutoType = (node: t.Apply, ctx: TCtx): t.Apply => {
             inner.args.forEach((arg, i) => {
                 const at = argTypes[i];
                 if (at) {
-                    typeMatches(at, arg.typ, ctx, [], constraints);
+                    typeMatches(at, arg.typ, ctx, undefined, constraints);
                 }
             });
         } else {
@@ -152,7 +152,7 @@ export const maybeAutoType = (node: t.Apply, ctx: TCtx): t.Apply => {
                         result: res,
                     },
                     ctx,
-                    [],
+                    undefined,
                     constraints,
                 );
             }
@@ -747,7 +747,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
             const constraints: { [key: number]: Constraints } = {};
             const expected = atype.args[i].typ;
             // hmm so 'unconstrained' would be a thing.
-            if (!typeMatches(at, expected, ctx, [], constraints)) {
+            if (!typeMatches(at, expected, ctx, undefined, constraints)) {
                 changed = true;
                 const taskEnum =
                     expected.type === 'TApply' &&
@@ -888,7 +888,7 @@ export const constraintsForApply = (
         //         continue;
         //     }
         // }
-        if (!typeMatches(argType, arg.typ, ctx, [], constraints)) {
+        if (!typeMatches(argType, arg.typ, ctx, undefined, constraints)) {
             return null;
         }
     }
@@ -968,7 +968,7 @@ export const autoTypeApply = (
             const tt = transformType(arg, visitor, null);
             return (
                 passedInArgs[i] &&
-                typeMatches(passedInArgs[i], tt, ctx, [], constraints)
+                typeMatches(passedInArgs[i], tt, ctx, undefined, constraints)
             );
         });
         if (!ok) {
@@ -1008,7 +1008,7 @@ export const autoTypeApply = (
                 unifiedTypes(passedInArgs, mapping[arg.sym.id], ctx),
                 arg.bound,
                 ctx,
-                [],
+                undefined,
                 constraints,
             )
         ) {

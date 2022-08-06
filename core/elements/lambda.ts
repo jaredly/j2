@@ -102,7 +102,7 @@ export const ToTast = {
             const bt = ctx.getType(tbody);
             if (bt) {
                 const constraints: ConstraintMap = {};
-                if (typeMatches(bt, tres, ctx, [], constraints)) {
+                if (typeMatches(bt, tres, ctx, undefined, constraints)) {
                     Object.keys(constraints).forEach((k) => {
                         ctx.addTypeConstraint(+k, constraints[+k]);
                     });
@@ -320,7 +320,9 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
                     res = makeTaskType(effects, res, ctx.ctx);
                 }
                 const constraints: ConstraintMap = {};
-                if (!typeMatches(res, node.res, ctx.ctx, [], constraints)) {
+                if (
+                    !typeMatches(res, node.res, ctx.ctx, undefined, constraints)
+                ) {
                     changed = true;
                     node = {
                         ...node,

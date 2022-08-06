@@ -12,6 +12,7 @@ import {
     Ctx as TMCtx,
     expandEnumCases,
     payloadsEqual,
+    TMPaths,
     typeMatches,
     unifyPayloads,
 } from '../typing/typeMatches';
@@ -429,7 +430,7 @@ export const enumTypeMatches = (
     candidate: TEnum,
     expected: t.Type,
     ctx: TMCtx,
-    path?: string[],
+    path: TMPaths,
     constraints?: ConstraintMap,
 ) => {
     // [ `What ] matches [ `What | `Who ]
@@ -441,8 +442,8 @@ export const enumTypeMatches = (
     if (expected.type !== 'TEnum') {
         return false;
     }
-    const canEnums = expandEnumCases(candidate, ctx, path);
-    const expEnums = expandEnumCases(expected, ctx, path);
+    const canEnums = expandEnumCases(candidate, ctx);
+    const expEnums = expandEnumCases(expected, ctx);
     if (!canEnums || !expEnums) {
         return false;
     }
@@ -471,7 +472,7 @@ export const enumTypeMatches = (
                 !expEnums.bounded.some(
                     (b) =>
                         b.type === 'task' &&
-                        typeMatches(inner, b.inner, ctx, [], constraints),
+                        typeMatches(inner, b.inner, ctx, path, constraints),
                 )
             ) {
                 return false;
@@ -494,6 +495,7 @@ export const enumTypeMatches = (
                 ctx,
                 false,
                 constraints,
+                path,
             )
         ) {
             // console.log(`Payload not equal ${kase.tag}`);

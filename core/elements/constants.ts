@@ -63,7 +63,7 @@ export const Analyze: Visitor<VisitorCtx> = {
                         expt,
                         ctx.typeByName('string')!,
                         ctx,
-                        [],
+                        undefined,
                         constraints,
                     )
                 ) {
@@ -99,7 +99,7 @@ export const ToTast = {
                         type,
                         ctx.typeByName('string')!,
                         ctx,
-                        [],
+                        undefined,
                         constraints,
                     );
                     Object.keys(constraints).forEach((k) => {
