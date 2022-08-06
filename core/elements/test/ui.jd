@@ -25,29 +25,27 @@ let button = <E: task>(attrs: attrs<E>, children: Array<Node<E>>) => node<E>(
     attrs,
     children,
 )
-button<[]>("what", (), [])
 let counter: (v: int) => Node<st<int>> = (state: int) => {
     div<st<int>>(
         {style: {display: "flex", flex: 1u}},
         [
             button<st<int>>(
-                "what",
                 {
                     onClick: () => setState(state - 1),
                     style: {backgroundColor: "black", margin: "4px"},
                 },
                 [`Text("-")],
             ),
-            span({style: {margin: "6px"}}, [`Text("A Counter ${toString(state)}")]),
-            button(
+            span<st<int>>({style: {margin: "6px"}}, [`Text("A Counter ${toString(state)}")]),
+            button<st<int>>(
                 {
-                    onClick: () => {
-                        if confirm("Advance by 10?")! {
-                            setState(state + 10)!;
-                        } else {
-                            ();
-                        };
-                    },
+                    /*onClick: () => {
+                                                                                    if confirm("Advance by 10?")! {
+                                                                                        setState(state + 10)!;
+                                                                                    } else {
+                                                                                        ();
+                                                                                    };
+                                                                                },*/
                     style: {backgroundColor: "black"},
                 },
                 [`Text("advance")],

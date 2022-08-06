@@ -27,7 +27,7 @@ export type ArrayExpr = {
     items: ArrayItem[];
     loc: t.Loc;
 };
-export type ArrayItem = t.Expression | SpreadExpr;
+export type ArrayItem = SpreadExpr | t.Expression;
 export type SpreadExpr = {
     type: 'SpreadExpr';
     inner: t.Expression;

@@ -61,8 +61,8 @@ import {
     TypeApplication,
     ArrayExpr,
     ArrayItem,
-    DecoratedExpression,
     SpreadExpr,
+    DecoratedExpression,
     TypeAlias,
     ToplevelLet,
     ToplevelAliases,
@@ -5570,82 +5570,6 @@ export const transformTypeApplication = <Ctx>(
     return node;
 };
 
-export const transformDecoratedExpression = <Ctx>(
-    node: DecoratedExpression,
-    visitor: Visitor<Ctx>,
-    ctx: Ctx,
-): DecoratedExpression => {
-    if (!node) {
-        throw new Error('No DecoratedExpression provided');
-    }
-
-    const transformed = visitor.DecoratedExpression
-        ? visitor.DecoratedExpression(node, ctx)
-        : null;
-    if (transformed === false) {
-        return node;
-    }
-    if (transformed != null) {
-        if (Array.isArray(transformed)) {
-            ctx = transformed[1];
-            if (transformed[0] != null) {
-                node = transformed[0];
-            }
-        } else {
-            node = transformed;
-        }
-    }
-
-    let changed0 = false;
-
-    let updatedNode = node;
-    {
-        let changed1 = false;
-
-        let updatedNode$decorators = node.decorators;
-        {
-            let changed2 = false;
-            const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
-                const result = transformDecorator(
-                    updatedNode$decorators$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$decorators$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$decorators = arr1;
-                changed1 = true;
-            }
-        }
-
-        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
-        changed1 = changed1 || updatedNode$expr !== node.expr;
-
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-        if (changed1) {
-            updatedNode = {
-                ...updatedNode,
-                decorators: updatedNode$decorators,
-                expr: updatedNode$expr,
-                loc: updatedNode$loc,
-            };
-            changed0 = true;
-        }
-    }
-
-    node = updatedNode;
-    if (visitor.DecoratedExpressionPost) {
-        const transformed = visitor.DecoratedExpressionPost(node, ctx);
-        if (transformed != null) {
-            node = transformed;
-        }
-    }
-    return node;
-};
-
 export const transformSpreadExpr = <Ctx>(
     node: SpreadExpr,
     visitor: Visitor<Ctx>,
@@ -5753,98 +5677,8 @@ export const transformArrayItem = <Ctx>(
     let updatedNode = node;
 
     switch (node.type) {
-        case 'If': {
-            updatedNode = transformIf(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'Ref': {
-            updatedNode = transformRef(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'Enum': {
-            updatedNode = transformEnum(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'Block': {
-            updatedNode = transformBlock(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'Apply': {
-            updatedNode = transformApply(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'Lambda': {
-            updatedNode = transformLambda(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'Record': {
-            updatedNode = transformRecord(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'Number': {
-            updatedNode = transformNumber(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'Switch': {
-            updatedNode = transformSwitch(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'Boolean': {
-            updatedNode = transformBoolean(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'Await': {
-            updatedNode = transformAwait(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'TypeAbstraction': {
-            updatedNode = transformTypeAbstraction(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'TemplateString': {
-            updatedNode = transformTemplateString(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'TypeApplication': {
-            updatedNode = transformTypeApplication(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'ArrayExpr': {
-            updatedNode = transformArrayExpr(node, visitor, ctx);
-            changed0 = changed0 || updatedNode !== node;
-            break;
-        }
-
-        case 'DecoratedExpression': {
-            updatedNode = transformDecoratedExpression(node, visitor, ctx);
+        case 'SpreadExpr': {
+            updatedNode = transformSpreadExpr(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -5852,7 +5686,7 @@ export const transformArrayItem = <Ctx>(
         default: {
             // let changed1 = false;
 
-            const updatedNode$0node = transformSpreadExpr(node, visitor, ctx);
+            const updatedNode$0node = transformExpression(node, visitor, ctx);
             changed0 = changed0 || updatedNode$0node !== node;
             updatedNode = updatedNode$0node;
         }
@@ -5943,6 +5777,82 @@ export const transformArrayExpr = <Ctx>(
     node = updatedNode;
     if (visitor.ArrayExprPost) {
         const transformed = visitor.ArrayExprPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformDecoratedExpression = <Ctx>(
+    node: DecoratedExpression,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): DecoratedExpression => {
+    if (!node) {
+        throw new Error('No DecoratedExpression provided');
+    }
+
+    const transformed = visitor.DecoratedExpression
+        ? visitor.DecoratedExpression(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$decorators = node.decorators;
+        {
+            let changed2 = false;
+            const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
+                const result = transformDecorator(
+                    updatedNode$decorators$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$decorators$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$decorators = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$expr = transformExpression(node.expr, visitor, ctx);
+        changed1 = changed1 || updatedNode$expr !== node.expr;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                decorators: updatedNode$decorators,
+                expr: updatedNode$expr,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.DecoratedExpressionPost) {
+        const transformed = visitor.DecoratedExpressionPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
