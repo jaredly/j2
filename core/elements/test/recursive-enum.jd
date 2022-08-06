@@ -1,0 +1,2 @@
+type A = <T: [*]>[T | `A]
+type B = [@expect("invalidEnum") A<[B]> | `B(int)]
