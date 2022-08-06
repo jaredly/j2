@@ -42,6 +42,8 @@ import {
     mergeConstraints,
 } from './analyze';
 import { isConst } from './getType';
+import { typeToString } from './__test__/typeToString';
+import { FullContext } from '../ctx';
 
 export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
     if (a.type === 'Unresolved' || b.type === 'Unresolved') {
@@ -93,6 +95,7 @@ export const payloadsEqual = (
     bidirectional: boolean,
     constraints?: ConstraintMap,
     path?: TMPaths,
+    diffs?: TDiffs,
 ) => {
     if ((one != null) != (two != null)) {
         return false;
@@ -102,13 +105,46 @@ export const payloadsEqual = (
     }
     // Need bidirectional equality in this case
     return (
-        typeMatches(one, two, ctx, path, constraints) &&
-        (!bidirectional || typeMatches(two, one, ctx, path, constraints))
+        typeMatches(one, two, ctx, path, constraints, diffs) &&
+        (!bidirectional || typeMatches(two, one, ctx, path, constraints, diffs))
     );
 };
 
-export type TMPathItem = string;
+export type TMPathApply = {
+    type: 'apply';
+    hash: string;
+    args: Array<Type>;
+};
+export type TMPathItem = string | TMPathApply;
 export type TMPaths = { candidate: TMPathItem[]; expected: TMPathItem[] };
+
+export type TDiff = {
+    candidate: Type;
+    cstring: string;
+    expected: Type;
+    estring: string;
+    text: string;
+};
+export type TDiffs = TDiff[];
+
+export const addf = (
+    diffs: TDiffs | undefined,
+    candidate: Type,
+    expected: Type,
+    ctx: Ctx,
+    text: string,
+) => {
+    if (diffs) {
+        diffs.push({
+            candidate: candidate,
+            cstring: typeToString(candidate, ctx as FullContext),
+            expected: expected,
+            estring: typeToString(expected, ctx as FullContext),
+            text,
+        });
+    }
+    return false;
+};
 
 export const typeMatches = (
     candidate: Type,
@@ -116,10 +152,11 @@ export const typeMatches = (
     ctx: Ctx,
     path: TMPaths = { candidate: [], expected: [] },
     constraints?: { [key: number]: Constraints },
+    diffs?: TDiffs,
 ): boolean => {
     path = updatePaths(path, candidate, expected);
-    const cl = hasLoop(path.candidate);
-    const el = hasLoop(path.expected);
+    const cl = hasLoop(path.candidate, ctx);
+    const el = hasLoop(path.expected, ctx);
     if (cl != null && el != null) {
         return cl === el;
     }
@@ -170,7 +207,10 @@ export const typeMatches = (
     }
 
     if (ctx.isBuiltinType(expected, 'task')) {
-        return isTaskable(candidate, ctx);
+        return (
+            isTaskable(candidate, ctx) ||
+            addf(diffs, candidate, expected, ctx, 'not a "task"')
+        );
     }
     if (
         expected.type === 'TApply' &&
@@ -188,7 +228,10 @@ export const typeMatches = (
     }
 
     if (ctx.isBuiltinType(expected, 'eq')) {
-        return !hasFunctions(candidate, ctx);
+        return (
+            !hasFunctions(candidate, ctx) ||
+            addf(diffs, candidate, expected, ctx, 'has functions')
+        );
     }
 
     if (candidate.type === 'TBlank' || expected.type === 'TBlank') {
@@ -197,8 +240,16 @@ export const typeMatches = (
 
     if (expected.type === 'TConst' && candidate.type !== 'TConst') {
         return (
-            isConst(candidate, ctx) &&
-            typeMatches(candidate, expected.inner, ctx, path, constraints)
+            (isConst(candidate, ctx) ||
+                addf(diffs, candidate, expected, ctx, 'not const')) &&
+            typeMatches(
+                candidate,
+                expected.inner,
+                ctx,
+                path,
+                constraints,
+                diffs,
+            )
         );
     }
 
@@ -210,6 +261,7 @@ export const typeMatches = (
                 ctx,
                 path,
                 constraints,
+                diffs,
             );
         case 'TVbl':
             if (expected.type === 'TVbl' && candidate.id === expected.id) {
@@ -230,15 +282,43 @@ export const typeMatches = (
             }
             const { outer, inner } = ctx.currentConstraints(candidate.id);
             if (inner) {
-                return typeMatches(inner, expected, ctx);
+                return typeMatches(
+                    inner,
+                    expected,
+                    ctx,
+                    undefined,
+                    undefined,
+                    diffs,
+                );
             } else if (outer) {
-                return typeMatches(outer, expected, ctx);
+                return typeMatches(
+                    outer,
+                    expected,
+                    ctx,
+                    undefined,
+                    undefined,
+                    diffs,
+                );
             }
             return false;
         case 'TRecord':
-            return recordMatches(candidate, expected, ctx, path, constraints);
+            return recordMatches(
+                candidate,
+                expected,
+                ctx,
+                path,
+                constraints,
+                diffs,
+            );
         case 'TEnum':
-            return enumTypeMatches(candidate, expected, ctx, path, constraints);
+            return enumTypeMatches(
+                candidate,
+                expected,
+                ctx,
+                path,
+                constraints,
+                diffs,
+            );
         case 'TDecorated':
             return typeMatches(
                 candidate.inner,
@@ -246,6 +326,7 @@ export const typeMatches = (
                 ctx,
                 path,
                 constraints,
+                diffs,
             );
         case 'TVars': {
             return tvarsMatches(candidate, expected, ctx);
@@ -253,22 +334,33 @@ export const typeMatches = (
         case 'TLambda':
             return (
                 expected.type === 'TLambda' &&
-                typeMatches(
+                (typeMatches(
                     candidate.result,
                     expected.result,
                     ctx,
                     path,
                     constraints,
-                ) &&
+                    diffs,
+                ) ||
+                    addf(diffs, candidate, expected, ctx, 'lambda result')) &&
                 candidate.args.length === expected.args.length &&
-                candidate.args.every((arg, i) =>
-                    typeMatches(
-                        (expected as TLambda).args[i].typ,
-                        arg.typ,
-                        ctx,
-                        path,
-                        constraints,
-                    ),
+                candidate.args.every(
+                    (arg, i) =>
+                        typeMatches(
+                            (expected as TLambda).args[i].typ,
+                            arg.typ,
+                            ctx,
+                            path,
+                            constraints,
+                            diffs,
+                        ) ||
+                        addf(
+                            diffs,
+                            candidate,
+                            expected,
+                            ctx,
+                            `lambda arg ${i}`,
+                        ),
                 )
             );
         case 'TOps': {
@@ -303,6 +395,7 @@ export const typeMatches = (
                     ctx,
                     path,
                     constraints,
+                    diffs,
                 ) &&
                 candidate.right.every(
                     (arg, i) =>
@@ -313,6 +406,7 @@ export const typeMatches = (
                             ctx,
                             path,
                             constraints,
+                            diffs,
                         ),
                 )
             );
@@ -351,10 +445,11 @@ export const typeMatches = (
                     ctx,
                     path,
                     constraints,
+                    diffs,
                 ) &&
                 cargs.length === eargs.length &&
                 cargs.every((arg, i) =>
-                    typeMatches(arg, eargs[i], ctx, path, constraints),
+                    typeMatches(arg, eargs[i], ctx, path, constraints, diffs),
                 )
             );
         }
@@ -576,14 +671,35 @@ export const typeHash = (t: Type): string => {
     }
 };
 
-const hasLoop = (path: TMPathItem[]) => {
-    const items: { [key: string]: { item: TMPathItem; idx: number } } = {};
+const hasLoop = (path: TMPathItem[], ctx: Ctx) => {
+    const items: { [key: string]: { item: TMPathItem; idx: number }[] } = {};
     for (let i = 0; i < path.length; i++) {
         const item = path[i];
-        if (items[item]) {
-            return i - items[item].idx;
+        if (typeof item === 'string') {
+            if (items[item]) {
+                return i - items[item][0].idx;
+            }
+            items[item] = [{ item, idx: i }];
+        } else {
+            if (items[item.hash] && items[item.hash].length) {
+                for (let one of items[item.hash]) {
+                    let oitem = one.item as TMPathApply;
+                    if (
+                        oitem.args.length === item.args.length &&
+                        oitem.args.every((arg, i) =>
+                            typeMatches(arg, item.args[i], ctx),
+                        )
+                    ) {
+                        return i - one.idx;
+                    }
+                }
+                items[item.hash].push({ item, idx: i });
+            } else {
+                items[item.hash] = [{ item, idx: i }];
+            }
+            // erggg
+            // itemssss
         }
-        items[item] = { item, idx: i };
     }
 };
 
@@ -607,7 +723,14 @@ function updatePaths(path: TMPaths, candidate: Type, expected: Type) {
     ) {
         path = {
             ...path,
-            candidate: [...path.candidate, typeHash(candidate)],
+            candidate: [
+                ...path.candidate,
+                {
+                    type: 'apply',
+                    hash: idToString(candidate.target.ref.id),
+                    args: candidate.args,
+                },
+            ],
         };
     }
     if (
@@ -617,7 +740,14 @@ function updatePaths(path: TMPaths, candidate: Type, expected: Type) {
     ) {
         path = {
             ...path,
-            expected: [...path.expected, typeHash(expected)],
+            expected: [
+                ...path.expected,
+                {
+                    type: 'apply',
+                    hash: idToString(expected.target.ref.id),
+                    args: expected.args,
+                },
+            ],
         };
     }
     return path;

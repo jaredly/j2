@@ -5,7 +5,11 @@ import { extract, Id, toId } from '../../core/ids';
 import { collapseConstraints } from '../../core/typing/analyze';
 import { applyType } from '../../core/typing/getType';
 import { maybeExpandTask } from '../../core/typing/tasks';
-import { ConstraintMap, typeMatches } from '../../core/typing/typeMatches';
+import {
+    ConstraintMap,
+    TDiffs,
+    typeMatches,
+} from '../../core/typing/typeMatches';
 import * as t from '../../core/typed-ast';
 import React from 'react';
 import { typeToString } from '../Highlight';
@@ -184,11 +188,15 @@ export const vdomWidget = (type: t.Type, value: any, baseCtx: FullContext) => {
     // Need to be able to typeMatches on two recursive types
     const ok = true;
     if (ok) {
-        debugger;
-        if (!typeMatches(type, tt, ctx, undefined, constraints)) {
-            console.log('didnt match either');
+        // debugger;
+        const diffs: TDiffs = [];
+        if (!typeMatches(type, tt, ctx, undefined, constraints, diffs)) {
+            console.log('didnt match either', diffs.length);
             console.log(typeToString(type, ctx));
             console.log(typeToString(tt, ctx));
+            diffs.forEach(({ cstring, estring, text, candidate }) => {
+                console.log({ cstring, estring, text, loc: candidate.loc });
+            });
             return;
         }
         const t = collapseConstraints(constraints[tv.id] || {}, ctx);

@@ -1,7 +1,13 @@
 import { Visitor } from '../transform-tast';
 import { Constraints, decorate, tdecorate } from '../typing/analyze';
 import { Ctx } from '../typing/analyze';
-import { getRef, TMPaths, typeMatches } from '../typing/typeMatches';
+import {
+    addf,
+    getRef,
+    TDiffs,
+    TMPaths,
+    typeMatches,
+} from '../typing/typeMatches';
 import { unifyTypes } from '../typing/unifyTypes';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
@@ -279,6 +285,7 @@ export const recordMatches = (
     ctx: TMCtx,
     path: TMPaths,
     constraints?: { [key: number]: Constraints },
+    diffs?: TDiffs,
 ) => {
     if (expected.type !== 'TRecord') {
         return false;
@@ -293,7 +300,8 @@ export const recordMatches = (
     }
     for (const key of Object.keys(eitems)) {
         if (!citems[key] && !eitems[key].default_) {
-            return false;
+            // return false;
+            return addf(diffs, candidate, expected, ctx, `missing key ${key}`);
         }
     }
     for (const key of Object.keys(citems)) {
@@ -301,7 +309,8 @@ export const recordMatches = (
             if (expected.open) {
                 continue;
             }
-            return false;
+            // return false;
+            return addf(diffs, candidate, expected, ctx, `extra key ${key}`);
         }
         if (
             !typeMatches(
@@ -310,9 +319,10 @@ export const recordMatches = (
                 ctx,
                 path,
                 constraints,
+                diffs,
             )
         ) {
-            return false;
+            return addf(diffs, candidate, expected, ctx, `record attr ${key}`);
         }
     }
     return true;

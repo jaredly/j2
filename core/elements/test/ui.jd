@@ -58,4 +58,4 @@ let render = <State>(app: (current: State) => Node<st<State>>, initial: State) =
     (app, initial),
     (),
 )
-render(counter, 1 * 1)
+render(counter#[:unresolved:], 1 * 1)

@@ -8,10 +8,12 @@ import { addDecorator, Constraints, Ctx, tdecorate } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
 import {
+    addf,
     ConstraintMap,
     Ctx as TMCtx,
     expandEnumCases,
     payloadsEqual,
+    TDiffs,
     TMPaths,
     typeMatches,
     unifyPayloads,
@@ -432,6 +434,7 @@ export const enumTypeMatches = (
     ctx: TMCtx,
     path: TMPaths,
     constraints?: ConstraintMap,
+    diffs?: TDiffs,
 ) => {
     // [ `What ] matches [ `What | `Who ]
     // So everything in candidate needs to match something
@@ -472,7 +475,14 @@ export const enumTypeMatches = (
                 !expEnums.bounded.some(
                     (b) =>
                         b.type === 'task' &&
-                        typeMatches(inner, b.inner, ctx, path, constraints),
+                        typeMatches(
+                            inner,
+                            b.inner,
+                            ctx,
+                            path,
+                            constraints,
+                            diffs,
+                        ),
                 )
             ) {
                 return false;
@@ -486,7 +496,14 @@ export const enumTypeMatches = (
                 continue;
             }
             // console.log('no extra', kase.tag, expected.open, candidate.open);
-            return false;
+            // return false;
+            return addf(
+                diffs,
+                candidate,
+                expected,
+                ctx,
+                `extra payload ${kase.tag}`,
+            );
         }
         if (
             !payloadsEqual(
@@ -496,6 +513,7 @@ export const enumTypeMatches = (
                 false,
                 constraints,
                 path,
+                diffs,
             )
         ) {
             // console.log(`Payload not equal ${kase.tag}`);
@@ -504,7 +522,13 @@ export const enumTypeMatches = (
             //     typeToString(expMap[kase.tag].payload!, ctx as FullContext),
             // );
             // console.log(kase.payload, expMap[kase.tag].payload);
-            return false;
+            return addf(
+                diffs,
+                candidate,
+                expected,
+                ctx,
+                `payload ${kase.tag} mismatch`,
+            );
         }
     }
     if (candidate.open && !expected.open) {
