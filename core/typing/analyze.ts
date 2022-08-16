@@ -17,6 +17,7 @@ import { constrainTypes, unifyTypes } from './unifyTypes';
 import { dtype } from '../elements/ifs';
 import { localTrackingVisitor } from './localTrackingVisitor';
 import { locWithin } from './__test__/verifyHL';
+import { GTCache } from './getType';
 
 export type Constraints = {
     // Type must match this types
@@ -300,6 +301,7 @@ export type VError =
     | { type: 'TVbl'; loc: t.Loc };
 
 export type Verify = {
+    cache: GTCache;
     expected: { loc: t.Loc; text: string | null; errors: VError[] }[];
     errors: VError[];
     untypedExpression: t.Loc[];
@@ -312,6 +314,11 @@ export type Verify = {
 
 export const errorCount = (v: Verify, excludeExpected = false): number => {
     return (
+        // v.cache.failures.length +
+        // Object.keys(v.cache.types).reduce(
+        //     (acc, k) => acc + v.cache.types[+k].failures.length,
+        //     0,
+        // ) +
         v.errors.length +
         (excludeExpected
             ? 0

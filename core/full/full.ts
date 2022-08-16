@@ -530,11 +530,14 @@ export const processToplevel = (
         ...ctx,
         allLocals: annotations,
     });
-    // allLocals.forEach((local) => {
-    //     // const type = getType(local.type, ctx);
-    //     const text = typeToString(local.type, ctx);
-    //     annotations.push({ loc: local.sym.loc, text });
-    // });
+    Object.keys(verify.cache.types).forEach((k) => {
+        verify.cache.types[+k].failures.forEach((failure) => {
+            annotations.push({
+                loc: failure.loc,
+                text: failure.error,
+            });
+        });
+    });
 
     // Ok, so here we want any extra verification.
     // Because I want to be able to ... re-run with

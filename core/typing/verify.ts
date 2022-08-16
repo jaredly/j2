@@ -7,6 +7,7 @@ import { refsEqual } from '../refsEqual';
 import { locWithin } from './__test__/verifyHL';
 import { localTrackingVisitor } from './localTrackingVisitor';
 import { Ctx, Verify, VError } from './analyze';
+import { GTCache } from './getType';
 
 type VCtx = Ctx & { switchType?: t.Type };
 export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
@@ -41,7 +42,7 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
             return null;
         },
         Expression(node, ctx) {
-            if (!ctx.getType(node)) {
+            if (!ctx.getType(node, results.cache)) {
                 results.untypedExpression.push(node.loc);
             }
             return null;
@@ -126,6 +127,7 @@ export const initVerify = (): Verify => ({
     errors: [],
     expected: [],
     untypedExpression: [],
+    cache: { types: {}, failures: [] },
     unresolved: {
         type: [],
         decorator: [],

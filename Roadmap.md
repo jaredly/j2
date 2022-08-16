@@ -25,9 +25,30 @@ currently, we do 'toTast' and then 'analyze' and then 'verify'.
 In future, 'verify' will use a cached getType that is permissive, but tracks errors.
 
 So steps:
-- [ ] after ToTast, assert that all idx's are unique.
+- [x] after ToTast, assert that all idx's are unique.
+	- [x] lol or just rewrite them all, lets be honest
+
+- [x] make getType start keeping track of errors
+	- do I want to generate getType? tbh I might. with a ctx and all that? Sure why not.
+	- and how about typeMatches? hmm not entirely sure.
+- [ ] have `verify` know about those errors
+- [ ] start removing the error decorator dealios
 
 
+- [ ] start removing 'analyze' dealios
+	- [ ] see which tests fail
+	- [ ] update our verify to use a GTCache and report errors accordingly.
+
+tbh I kinda do want to be able to target wasm.
+but I think GLSL is an easier target?
+
+### Plan for backing up to make type inference really solid:
+
+can I back things up to where I only have:
+- non-generic lambdas & application
+- builtin types & constant types
+
+then I can slowly add other things in?
 
 
 

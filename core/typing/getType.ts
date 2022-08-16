@@ -448,7 +448,7 @@ const getType_ = (
                     ];
                 }
                 const un = unifyTypes(t[0], element, ctx);
-                if (un) {
+                if (!un) {
                     af(cache, {
                         error: 'cannotUnify',
                         loc: item.loc,
