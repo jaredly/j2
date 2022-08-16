@@ -24,7 +24,8 @@ here's how it goes
 currently, we do 'toTast' and then 'analyze' and then 'verify'.
 In future, 'verify' will use a cached getType that is permissive, but tracks errors.
 
-
+So steps:
+- [ ] after ToTast, assert that all idx's are unique.
 
 
 

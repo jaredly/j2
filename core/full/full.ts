@@ -377,6 +377,40 @@ type Aliases = { [key: string]: string };
 
 type PCtx = ReturnType<typeof printCtx>;
 
+const reIdx = (t: t.Toplevel): t.Toplevel => {
+    let nidx = 0;
+    return transformToplevel(
+        t,
+        {
+            Loc(node, ctx) {
+                return { ...node, idx: nidx++ };
+            },
+        },
+        null,
+    );
+};
+
+const findIdxReuse = (t: t.Toplevel) => {
+    const used: { [k: number]: boolean } = {};
+    transformToplevel(
+        t,
+        {
+            Loc(node, ctx) {
+                if (used[node.idx] != null) {
+                    used[node.idx] = true;
+                } else {
+                    used[node.idx] = false;
+                }
+                return null;
+            },
+        },
+        null,
+    );
+    return Object.keys(used)
+        .filter((k) => used[+k] === true)
+        .map((k) => +k);
+};
+
 export const processToplevel = (
     t: p.Toplevel,
     ctx: FullContext,
@@ -414,6 +448,13 @@ export const processToplevel = (
         });
     }
     top = analyzeTop(top, ctx);
+
+    // TODO: fix the other code so I don't have to re-idx everything
+    top = reIdx(top);
+    const reused = findIdxReuse(top);
+    if (reused.length) {
+        console.error(reused);
+    }
 
     const verify = initVerify();
     transformToplevel(top, verifyVisitor(verify, ctx), ctx);

@@ -14,6 +14,7 @@ import { collectEffects, inferTaskType, makeTaskType } from './tasks';
 import { ConstraintMap, Ctx, typeMatches } from './typeMatches';
 import { expandEnumCases } from './expandEnumCases';
 import { unifyTypes } from './unifyTypes';
+import { ErrorTag } from '../errors';
 
 export const isConst = (type: Type, ctx: Ctx, path?: string[]): boolean => {
     if (type.type === 'TVbl') {
@@ -133,16 +134,52 @@ const maybeTref = (ref: GlobalRef | null) => (ref ? tref(ref) : null);
 
 // UMM So btw this will resolve all TRefs? Maybe? hmm maybe not..
 
-// ok so anyway
-// this could maybe do a ...visitor kind of thing as well.
+export type GTFailure = {
+    loc: Loc;
+    error: ErrorTag;
+    args?: { label: string; type: Type }[];
+};
+export type GTCache = {
+    types: { [idx: number]: { type: Type | null; failures: GTFailure[] } };
+    failures: GTFailure[];
+};
+
 export const getType = (
     expr: Expression,
     ctx: Ctx,
     constraints?: ConstraintMap,
+    cache?: GTCache,
+): Type | null => {
+    if (!cache) {
+        return getType_(expr, ctx, constraints, cache);
+    }
+    if (cache && cache.types[expr.loc.idx]) {
+        return cache.types[expr.loc.idx].type;
+    }
+    const failures: GTFailure[] = [];
+    const inner = getType_(expr, ctx, constraints, { ...cache, failures });
+    cache.types[expr.loc.idx] = { type: inner, failures };
+    return inner;
+};
+
+export const af = (cache: GTCache | undefined, failure: GTFailure) => {
+    if (cache) {
+        cache?.failures.push(failure);
+    }
+    return null;
+};
+
+// ok so anyway
+// this could maybe do a ...visitor kind of thing as well.
+const getType_ = (
+    expr: Expression,
+    ctx: Ctx,
+    constraints?: ConstraintMap,
+    cache?: GTCache,
 ): Type | null => {
     switch (expr.type) {
         case 'Await': {
-            const res = getType(expr.target, ctx);
+            const res = getType(expr.target, ctx, constraints, cache);
             if (!res) {
                 return null;
             }
@@ -151,7 +188,11 @@ export const getType = (
                 return asTask.args[1];
             }
             console.log('wait no', res, asTask);
-            return null;
+            return af(cache, {
+                error: 'notATask',
+                loc: expr.loc,
+                args: [{ label: 'type', type: res }],
+            });
         }
         case 'Lambda': {
             // TODO Args! Got to ... make type variables,
@@ -161,11 +202,11 @@ export const getType = (
                 getLocals(arg.pat, arg.typ, locals, ctx),
             );
             ctx = ctx.withLocals(locals);
-            let res = getType(expr.body, ctx);
+            let res = getType(expr.body, ctx, constraints, cache);
             if (!res) {
                 return null;
             }
-            const effects = collectEffects(expr.body, ctx);
+            const effects = collectEffects(expr.body, ctx, cache);
             if (effects.length) {
                 res = makeTaskType(effects, res, ctx);
             }
@@ -182,7 +223,7 @@ export const getType = (
         }
         case 'TypeAbstraction': {
             let innerCtx = ctx.withLocalTypes(expr.items);
-            const inner = getType(expr.body, innerCtx);
+            const inner = getType(expr.body, innerCtx, constraints, cache);
             return inner
                 ? {
                       type: 'TVars',
@@ -193,7 +234,7 @@ export const getType = (
                 : null;
         }
         case 'TypeApplication': {
-            const target = getType(expr.target, ctx);
+            const target = getType(expr.target, ctx, constraints, cache);
             if (target?.type === 'TVars') {
                 return applyType(expr.args, target, ctx, constraints);
             }
@@ -218,7 +259,7 @@ export const getType = (
                     return ctx.localType(expr.kind.sym);
             }
         case 'Apply':
-            let typ = getType(expr.target, ctx);
+            let typ = getType(expr.target, ctx, constraints, cache);
             if (typ?.type === 'TVbl') {
                 const current = ctx.currentConstraints(typ.id);
                 typ = collapseConstraints(current, ctx);
@@ -232,11 +273,11 @@ export const getType = (
         case 'Number':
             return expr;
         case 'DecoratedExpression':
-            return getType(expr.expr, ctx);
+            return getType(expr.expr, ctx, constraints, cache);
         case 'Record': {
             let alls: { [key: string]: TRecordKeyValue } = {};
             for (let spread of expr.spreads) {
-                const t = getType(spread, ctx);
+                const t = getType(spread, ctx, constraints, cache);
                 if (!t || t.type !== 'TRecord') {
                     return null;
                 }
@@ -244,9 +285,27 @@ export const getType = (
                 Object.assign(alls, items);
             }
             for (let item of expr.items) {
-                const t = getType(item.value, ctx);
+                let t = getType(item.value, ctx, constraints, cache);
                 if (!t) {
-                    return null;
+                    t = { type: 'TBlank', loc: item.value.loc };
+                }
+                if (alls[item.key]) {
+                    const un = unifyTypes(alls[item.key].value, t, ctx);
+                    if (!un) {
+                        af(cache, {
+                            error: 'cannotUnify',
+                            loc: item.value.loc,
+                            args: [
+                                {
+                                    label: 'expected',
+                                    type: alls[item.key].value,
+                                },
+                                { label: 'found', type: t },
+                            ],
+                        });
+                    } else {
+                        t = un;
+                    }
                 }
                 alls[item.key] = {
                     type: 'TRecordKeyValue',
@@ -276,7 +335,8 @@ export const getType = (
                         loc: expr.loc,
                         decorators: [],
                         payload: expr.payload
-                            ? getType(expr.payload, ctx) ?? undefined
+                            ? getType(expr.payload, ctx, constraints, cache) ??
+                              undefined
                             : undefined,
                     },
                 ],
@@ -290,7 +350,8 @@ export const getType = (
                 if (stmt.type === 'Let') {
                     const locals: Locals = [];
                     const typ =
-                        ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat, ctx);
+                        getType(stmt.expr, ctx, constraints, cache) ??
+                        typeForPattern(stmt.pat, ctx);
                     getLocals(stmt.pat, typ, locals, ctx);
                     ctx = ctx.withLocals(locals);
                 }
@@ -299,14 +360,16 @@ export const getType = (
             if (last.type === 'Let') {
                 return unit(expr.loc);
             }
-            return getType(last, ctx);
+            return getType(last, ctx, constraints, cache);
         }
         case 'If': {
             if (expr.no) {
-                const no = getType(expr.no, ctx);
+                const no = getType(expr.no, ctx, constraints, cache);
                 const yes = getType(
                     expr.yes.block,
                     ctx.withLocals(ifLocals(expr.yes, ctx)),
+                    constraints,
+                    cache,
                 );
                 const unified = no && yes && unifyTypes(yes, no, ctx);
                 return unified ? unified : null;
@@ -314,7 +377,7 @@ export const getType = (
             return unit(expr.loc);
         }
         case 'Switch': {
-            const ttype = getType(expr.target, ctx);
+            const ttype = getType(expr.target, ctx, constraints, cache);
             if (!ttype) {
                 return null;
             }
@@ -323,7 +386,12 @@ export const getType = (
                     const typ = ttype ?? typeForPattern(c.pat, ctx);
                     const locals: Locals = [];
                     getLocals(c.pat, typ, locals, ctx);
-                    return getType(c.expr, ctx.withLocals(locals));
+                    return getType(
+                        c.expr,
+                        ctx.withLocals(locals),
+                        constraints,
+                        cache,
+                    );
                 })
                 .filter(Boolean) as Type[];
             if (!types.length) {
@@ -350,13 +418,22 @@ export const getType = (
             for (let item of expr.items) {
                 let t: [Type, Type];
                 if (item.type === 'SpreadExpr') {
-                    let got = arrayType(getType(item.inner, ctx), ctx);
+                    const inner = getType(item.inner, ctx, constraints, cache);
+                    if (!inner) {
+                        continue;
+                    }
+                    let got = arrayType(inner, ctx);
                     if (!got) {
-                        return null;
+                        af(cache, {
+                            error: 'notAnArray',
+                            loc: item.loc,
+                            args: [{ label: 'type', type: inner }],
+                        });
+                        continue;
                     }
                     t = got;
                 } else {
-                    let el = getType(item, ctx);
+                    let el = getType(item, ctx, constraints, cache);
                     if (!el) {
                         continue;
                     }
@@ -371,6 +448,16 @@ export const getType = (
                     ];
                 }
                 const un = unifyTypes(t[0], element, ctx);
+                if (un) {
+                    af(cache, {
+                        error: 'cannotUnify',
+                        loc: item.loc,
+                        args: [
+                            { label: 'expected', type: element },
+                            { label: 'found', type: t[0] },
+                        ],
+                    });
+                }
                 element = un ? un : element;
                 length = collapseOps(
                     {
