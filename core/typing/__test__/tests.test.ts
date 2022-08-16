@@ -37,7 +37,7 @@ readdirSync(base)
                         ` ./core/elements/test/${file}:${top.loc.start.line}`;
                     describe(text, () => {
                         it(`should be valid`, () => {
-                            if (errorCount(info.verify) != 0) {
+                            if (errorCount(info.verify, true) != 0) {
                                 expect(info.verify).toEqual(empty);
                             }
                         });

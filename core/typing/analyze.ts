@@ -310,9 +310,9 @@ export type Verify = {
     };
 };
 
-export const errorCount = (v: Verify): number => {
+export const errorCount = (v: Verify, excludeExpected = false): number => {
     return (
-        (v.expected
+        (v.expected && excludeExpected
             ? v.errors.filter(
                   (err) =>
                       err.type !== 'Dec' ||
