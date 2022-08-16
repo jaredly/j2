@@ -79,7 +79,7 @@ export function OneFixture({
         newOutput.file.type === 'Error'
             ? 1
             : newOutput.file.info
-                  .map((i) => errorCount(i.verify))
+                  .map((i) => errorCount(i.verify, true))
                   .reduce((a, b) => a + b, 0);
 
     return (

@@ -312,18 +312,11 @@ export type Verify = {
 
 export const errorCount = (v: Verify, excludeExpected = false): number => {
     return (
-        (v.expected && excludeExpected
-            ? v.errors.filter(
-                  (err) =>
-                      err.type !== 'Dec' ||
-                      !v.expected.find(
-                          (expected) =>
-                              err.name === expected.text &&
-                              locWithin(expected.loc, err.loc),
-                      ),
-              )
-            : v.errors
-        ).length +
+        v.errors.length +
+        (excludeExpected
+            ? 0
+            : v.expected.reduce((acc, { errors }) => acc + errors.length, 0)) +
+        v.expected.filter((e) => e.errors.length === 0).length +
         v.untypedExpression.length +
         v.unresolved.type.length +
         v.unresolved.decorator.length +

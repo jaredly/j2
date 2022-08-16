@@ -1,11 +1,9 @@
-import { transformType } from '../../transform-tast';
-import { Constraints, decorate, tdecorate } from '../../typing/analyze';
-import { Ctx } from '../../typing/analyze';
-import { ConstraintMap, TDiffs, typeMatches } from '../../typing/typeMatches';
-import * as t from '../../typed-ast';
 import * as p from '../../grammar/base.parser';
-import { noloc } from '../../consts';
-import { constrainTypes, unifyTypes } from '../../typing/unifyTypes';
+import { transformType } from '../../transform-tast';
+import * as t from '../../typed-ast';
+import { Ctx } from '../../typing/analyze';
+import { ConstraintMap, typeMatches } from '../../typing/typeMatches';
+import { unifyTypes } from '../../typing/unifyTypes';
 
 export const grammar = `
 Apply = target:Atom suffixes_drop:Suffix*
@@ -80,8 +78,7 @@ export const equable = (a: t.Type, ctx: Ctx) => {
     return false;
 };
 
-import { expandTask, tnever } from '../../typing/tasks';
-import { applyType } from '../../typing/getType';
+import { tnever } from '../../typing/tasks';
 import { autoTypeApply } from './autoTypeApply';
 export const chooseAutoTypable = (
     node: t.Apply,

@@ -50,7 +50,16 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
             decorators.forEach((node) => {
                 if (refsEqual(expectDecorator, node.id.ref)) {
                     const text = textArg(node.args);
-                    results.expected.push({ loc, text, errors: [] });
+                    // results.expected.push({ loc, text, errors: [] });
+                    const ex: Verify['expected'][0] = { loc, text, errors: [] };
+                    results.expected.push(ex);
+                    results.errors = results.errors.filter((err) =>
+                        err.type !== 'Dec' ||
+                        err.name !== text ||
+                        !locWithin(err.loc, loc)
+                            ? true
+                            : (ex.errors.push(err), false),
+                    );
                     return null;
                 }
             });
@@ -60,7 +69,15 @@ export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
             decorators.forEach((node) => {
                 if (refsEqual(expectDecorator, node.id.ref)) {
                     const text = textArg(node.args);
-                    results.expected.push({ loc, text, errors: [] });
+                    const ex: Verify['expected'][0] = { loc, text, errors: [] };
+                    results.expected.push(ex);
+                    results.errors = results.errors.filter((err) =>
+                        err.type !== 'Dec' ||
+                        err.name !== text ||
+                        !locWithin(err.loc, loc)
+                            ? true
+                            : (ex.errors.push(err), false),
+                    );
                     return null;
                 }
             });

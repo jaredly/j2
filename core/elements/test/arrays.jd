@@ -20,3 +20,4 @@ switch [1, 2, 3] {
     [a, b, 3] => 10;
     [a, b, c, ...z] => a + b + c;
 }
+[1, @expect("argWrongType") "a"]

@@ -189,7 +189,7 @@ export const getTestResults = (
                 }
             }
         }
-        if (errorCount(info.verify)) {
+        if (errorCount(info.verify, true)) {
             values.debugs[i] = true;
             values.failed = true;
         }

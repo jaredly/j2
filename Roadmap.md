@@ -11,6 +11,25 @@ if we already notice the issues when doing getType,
 why implement it twice?
 yeah.
 
+
+So, the way to do this, I think...
+- do I want to redo typeMatches? and getType?
+- and then .. get rid of `analyze`, instead relying on
+	`verify`.
+
+hmm so the `analyze` thing needs to instead be `verify`.
+
+here's how it goes
+
+currently, we do 'toTast' and then 'analyze' and then 'verify'.
+In future, 'verify' will use a cached getType that is permissive, but tracks errors.
+
+
+
+
+
+
+
 ## Editor things:
  
 

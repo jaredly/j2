@@ -53,7 +53,8 @@ readdirSync(base)
                                 });
                             });
                         } else if (
-                            info.contents.top.type === 'ToplevelExpression'
+                            info.contents.top.type === 'ToplevelExpression' &&
+                            errorCount(info.verify) === 0
                         ) {
                             it(`should work`, () => {
                                 const { js, name, type } =
