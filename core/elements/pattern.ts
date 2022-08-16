@@ -3,17 +3,24 @@ import * as pp from '../printer/pp';
 import { Ctx as PCtx } from '../printer/to-pp';
 import { Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
-import { Ctx as ACtx } from '../typing/analyze';
+import { collapseConstraints, Ctx as ACtx } from '../typing/analyze';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { Ctx as TMCtx, expandEnumCases } from '../typing/typeMatches';
+import { Ctx as TMCtx } from '../typing/typeMatches';
+import { expandEnumCases } from '../typing/expandEnumCases';
 
 export const grammar = `
-Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PBlank / Number / String
+Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PArray / PBlank / Number / String
 PBlank = pseudo:"_"
 PName = name:$IdText hash:($JustSym)?
 PTuple = "(" _  items:PTupleItems? _ ")"
 PTupleItems = first:Pattern rest:(_ "," _ Pattern)*
+
+PArray = "[" _  items:PArrayItems? _ "]"
+PArrayItems = first:PArrayItem rest:(_ "," _ PArrayItem)*
+PArrayItem = Pattern / PSpread
+PSpread = "..." _ inner:Pattern
+
 PRecord = "{" _ fields:PRecordFields? _ ","? _ "}"
 PRecordFields = first:PRecordField rest:(_ "," _ PRecordField)*
 PRecordField = name:$IdText pat:PRecordValue?
@@ -32,11 +39,17 @@ export type PName = {
     loc: t.Loc;
 };
 
-// export type PTuple = {
-//     type: 'PTuple';
-//     items: Pattern[];
-//     loc: t.Loc;
-// };
+export type PArray = {
+    type: 'PArray';
+    items: PArrayItem[];
+    loc: t.Loc;
+};
+export type PArrayItem = Pattern | PSpread;
+export type PSpread = {
+    type: 'PSpread';
+    inner: Pattern;
+    loc: t.Loc;
+};
 
 export type PRecord = {
     type: 'PRecord';
@@ -56,6 +69,7 @@ export type Pattern =
     | PRecord
     | PBlank
     | PEnum
+    | PArray
     | t.Number
     | t.String
     | PDecorated;
@@ -68,249 +82,6 @@ export type PDecorated = {
 export type PBlank = { type: 'PBlank'; loc: t.Loc };
 
 export type Locals = { sym: t.Sym; type: t.Type }[];
-
-// export type PPath =
-//     | { type: 'Tuple'; idx: number }
-//     | {
-//           type: 'Enum';
-//           tag: string;
-//       };
-
-/*
-
-can we bring this back?
-
-// the arg is a vbl, right?
-// orr can we do like a `type from pattern`?
-// hmm maybe I can do that.
-((a, b)) => a + b
-
-*/
-
-// export const typeFromPattern = (pat: Pattern, ctx: TCtx): t.Type => {
-//     switch (pat.type) {
-//         case 'PName':
-//             return ctx.symType(pat.sym);
-//         // case 'PTuple':
-//         //     return {
-//         //         type: 'T'
-//         //     }
-//     }
-// };
-
-export const refineType = (
-    pat: Pattern,
-    type: t.Type,
-    ctx: TMCtx,
-): t.Type | null => {
-    switch (pat.type) {
-        case 'PBlank':
-        case 'PName':
-            return null;
-        case 'PRecord': {
-            if (type.type !== 'TRecord') {
-                return type;
-            }
-            const items = allRecordItems(type, ctx);
-            if (!items) {
-                return type;
-            }
-            // let res: t.RecordKeyValue = [];
-            // const byName: {[key: string]: Pattern} = {}
-            // pat.items.forEach(({name, pat}) => byName[name] = pat)
-            // for (let [name, value] of Object.entries(items)) {
-            //     if (byName[name]) {
-            //     }
-            // }
-            let remaining = false;
-
-            for (let { name, pat: cpat } of pat.items) {
-                if (!items[name]) {
-                    return type;
-                }
-                const res = refineType(cpat, items[name].value, ctx);
-                if (res != null) {
-                    remaining = true;
-                    items[name] = { ...items[name], value: res };
-                }
-            }
-            return remaining
-                ? {
-                      ...type,
-                      spreads: [],
-                      items: Object.values(items),
-                  }
-                : null;
-        }
-        case 'PDecorated': {
-            return refineType(pat.inner, type, ctx);
-        }
-        case 'PEnum': {
-            type = maybeExpandTask(type, ctx) ?? type;
-            if (type.type !== 'TEnum') {
-                return type;
-            }
-            const cases = expandEnumCases(type, ctx);
-            if (!cases) {
-                return { ...type, cases: [] }; // all out of cases!
-            }
-            const res: (t.Type | t.EnumCase)[] = [];
-            for (let kase of cases.cases) {
-                if (kase.tag === pat.tag) {
-                    if (!pat.payload) {
-                        // return {
-                        //     ...type,
-                        //     cases: cases.filter(k => k.tag !== pat.tag)
-                        // };
-                        continue;
-                    }
-                    if (kase.payload) {
-                        const inner = refineType(
-                            pat.payload,
-                            kase.payload,
-                            ctx,
-                        );
-                        if (inner == null) {
-                            continue;
-                        }
-                        res.push({ ...kase, payload: inner });
-                    }
-                    // return (
-                    //     kase.payload != null &&
-                    //     typeMatchesPattern(pat.payload, kase.payload, ctx)
-                    // );
-                } else {
-                    res.push(kase);
-                }
-            }
-            return {
-                ...type,
-                cases: res.concat(
-                    cases.bounded.map((m) =>
-                        m.type === 'local' ? m.local : m.inner,
-                    ),
-                ),
-            };
-        }
-        // TODO: Records and such
-    }
-    return type;
-};
-
-/**
- * Checks to see if the type of an arg or let is appropriate.
- */
-export const typeMatchesPattern = (
-    pat: Pattern,
-    type: t.Type,
-    ctx: TMCtx,
-): boolean => {
-    switch (pat.type) {
-        case 'Number': {
-            if (type.type === 'Number') {
-                return type.kind === pat.kind && type.value === pat.value;
-            }
-            return ctx.isBuiltinType(type, pat.kind.toLowerCase());
-        }
-        case 'String': {
-            if (type.type === 'String') {
-                return type.text === pat.text;
-            }
-            return ctx.isBuiltinType(type, 'string');
-        }
-        case 'PDecorated': {
-            return typeMatchesPattern(pat.inner, type, ctx);
-        }
-        case 'PEnum': {
-            type = maybeExpandTask(type, ctx) ?? type;
-            if (type.type !== 'TEnum') {
-                return false;
-            }
-            const cases = expandEnumCases(type, ctx);
-            if (!cases) {
-                return true;
-            }
-            for (let kase of cases.cases) {
-                if (kase.tag === pat.tag) {
-                    if (!pat.payload) {
-                        return true;
-                    }
-                    return (
-                        kase.payload != null &&
-                        typeMatchesPattern(pat.payload, kase.payload, ctx)
-                    );
-                }
-            }
-            return false;
-        }
-        case 'PRecord': {
-            if (type.type !== 'TRecord') {
-                return false;
-            }
-            const items = allRecordItems(type, ctx);
-            if (!items) {
-                return false;
-            }
-            for (let { name, pat: cpat } of pat.items) {
-                if (!items[name]) {
-                    return false;
-                }
-                if (!typeMatchesPattern(cpat, items[name].value, ctx)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        case 'PName':
-        case 'PBlank':
-            return true;
-    }
-};
-
-export const typeForPattern = (pat: Pattern, ctx?: TCtx): t.Type => {
-    switch (pat.type) {
-        case 'Number':
-        case 'String':
-            return pat;
-        case 'PEnum':
-            return {
-                type: 'TEnum',
-                open: false,
-                loc: pat.loc,
-                cases: [
-                    {
-                        type: 'EnumCase',
-                        tag: pat.tag,
-                        loc: pat.loc,
-                        payload: pat.payload
-                            ? typeForPattern(pat.payload, ctx)
-                            : undefined,
-                        decorators: [],
-                    },
-                ],
-            };
-        case 'PName':
-            return ctx ? ctx.newTypeVar() : { type: 'TBlank', loc: pat.loc };
-        case 'PDecorated':
-            return typeForPattern(pat.inner, ctx);
-        case 'PRecord':
-            return {
-                type: 'TRecord',
-                items: pat.items.map(({ name, pat }) => ({
-                    type: 'TRecordKeyValue',
-                    key: name,
-                    value: typeForPattern(pat, ctx),
-                    loc: pat.loc,
-                    default_: null,
-                })),
-                loc: pat.loc,
-                open: pat.items.length > 0,
-                spreads: [],
-            };
-        case 'PBlank':
-            return { type: 'TBlank', loc: pat.loc };
-    }
-};
 
 export const getLocals = (
     pat: Pattern,
@@ -328,7 +99,23 @@ export const getLocals = (
         case 'PName':
             locals.push({ sym: pat.sym, type });
             return;
+        case 'PArray':
+            const t = arrayType(type, ctx);
+            if (!t) {
+                return;
+            }
+            return pat.items.forEach((item) =>
+                item.type === 'PSpread'
+                    ? getLocals(item.inner, type, locals, ctx)
+                    : getLocals(item, t[0], locals, ctx),
+            );
         case 'PRecord':
+            if (type.type === 'TVbl') {
+                type = collapseConstraints(
+                    ctx.currentConstraints(type.id),
+                    ctx,
+                );
+            }
             type = ctx.resolveRefsAndApplies(type) ?? type;
             if (type.type !== 'TRecord') {
                 return;
@@ -343,6 +130,12 @@ export const getLocals = (
             }
             return;
         case 'PEnum': {
+            if (type.type === 'TVbl') {
+                type = collapseConstraints(
+                    ctx.currentConstraints(type.id),
+                    ctx,
+                );
+            }
             type = ctx.resolveRefsAndApplies(type) ?? type;
             type = maybeExpandTask(type, ctx) ?? type;
             if (type.type !== 'TEnum') {
@@ -372,11 +165,29 @@ export const ToTast = {
         if (name === '_' && !hash) {
             return { type: 'PBlank', loc };
         }
-        const sym = hash ? { name, id: +hash.slice(2, -1) } : ctx.sym(name);
+        const sym = hash
+            ? { name, id: +hash.slice(2, -1), loc }
+            : ctx.sym(name, loc);
         // locals.push({ sym, type: expected ?? ctx.newTypeVar() });
         return {
             type: 'PName',
             sym,
+            loc,
+        };
+    },
+    PArray({ items, loc }: p.PArray, ctx: TCtx): PArray {
+        return {
+            type: 'PArray',
+            items:
+                items?.items.map((item) => ctx.ToTast.PArrayItem(item, ctx)) ??
+                [],
+            loc,
+        };
+    },
+    PSpread({ inner, loc }: p.PSpread, ctx: TCtx): PSpread {
+        return {
+            type: 'PSpread',
+            inner: ctx.ToTast.Pattern(inner, ctx),
             loc,
         };
     },
@@ -480,6 +291,24 @@ export const ToAst = {
             loc,
         };
     },
+    PArray({ type, items, loc }: PArray, ctx: TACtx): p.PArray {
+        return {
+            type: 'PArray',
+            items: {
+                type: 'PArrayItems',
+                items: items.map((item) => ctx.ToAst.PArrayItem(item, ctx)),
+                loc,
+            },
+            loc,
+        };
+    },
+    PSpread({ inner, loc }: PSpread, ctx: TACtx): p.PSpread {
+        return {
+            type: 'PSpread',
+            inner: ctx.ToAst.Pattern(inner, ctx),
+            loc,
+        };
+    },
     PRecord({ type, items, loc }: PRecord, ctx: TACtx): p.Pattern {
         if (items.every((item, i) => item.name === i.toString())) {
             return {
@@ -522,12 +351,13 @@ export const ToAst = {
     TVbl({ id, loc }: t.TVbl, ctx: TACtx): p.Type {
         // TODO: I think we just get the current unity of the constraints?
         // throw new Error(`Unresolved type variables cant be represented?`);
+        // debugger;
         return { type: 'String', text: 'tvbl:' + id, loc };
     },
 };
 
 export const ToPP = {
-    PBlank({ type, loc }: PBlank, ctx: PCtx): pp.PP {
+    PBlank({ type, loc }: p.PBlank, ctx: PCtx): pp.PP {
         return pp.atom('_', loc);
     },
     PName({ type, name, hash, loc }: p.PName, ctx: PCtx): pp.PP {
@@ -558,6 +388,20 @@ export const ToPP = {
                 ctx.ToPP.Pattern(pat.inner, ctx),
             ],
             pat.loc,
+        );
+    },
+    PArray({ items, loc }: p.PArray, ctx: PCtx): pp.PP {
+        return pp.args(
+            items?.items?.map((item) => ctx.ToPP.PArrayItem(item, ctx)) ?? [],
+            loc,
+            '[',
+            ']',
+        );
+    },
+    PSpread({ inner, loc }: p.PSpread, ctx: PCtx): pp.PP {
+        return pp.items(
+            [pp.text('...', loc), ctx.ToPP.Pattern(inner, ctx)],
+            loc,
         );
     },
     PRecord({ type, fields, loc }: p.PRecord, ctx: PCtx): pp.PP {
@@ -601,16 +445,23 @@ export const ToIR = {
 
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import { allRecordItems } from './records';
+import { allRecordItems } from './records/allRecordItems';
 import { and } from './ifs';
 import { maybeExpandTask } from '../typing/tasks';
+import { arrayType } from '../typing/getType';
+import { collapseOps } from '../typing/ops';
 export const ToJS = {
+    /**
+     * An expression that evaluates to "true"
+     * if the expression matches.
+     */
     PatternCond(
         p: Pattern,
         target: b.Expression,
         type: t.Type,
         ctx: JCtx,
     ): b.Expression | null {
+        type = ctx.actx.resolveAnalyzeType(type) ?? type;
         // ctx.actx.debugger();
         switch (p.type) {
             case 'PBlank':
@@ -686,10 +537,85 @@ export const ToJS = {
                 return null;
             case 'PDecorated':
                 return ctx.ToJS.PatternCond(p.inner, target, type, ctx);
+            case 'PArray':
+                const t = arrayType(type, ctx.actx);
+                if (!t) {
+                    return b.booleanLiteral(false);
+                }
+                let count = 0;
+                const fulls = p.items.filter(
+                    (item) => item.type !== 'PSpread',
+                ).length;
+                const items = p.items.map((item, i) => {
+                    if (item.type === 'PSpread') {
+                        const inner = ctx.ToJS.PatternCond(
+                            item.inner,
+                            b.callExpression(
+                                b.memberExpression(
+                                    target,
+                                    b.identifier('slice'),
+                                ),
+                                [
+                                    b.numericLiteral(count),
+                                    b.numericLiteral(t.length),
+                                ],
+                            ),
+                            {
+                                type: 'TApply',
+                                loc: p.loc,
+                                args: [
+                                    t[0],
+                                    collapseOps(
+                                        {
+                                            left: t[1],
+                                            loc: p.loc,
+                                            type: 'TOps',
+                                            right: [
+                                                {
+                                                    top: '-',
+                                                    right: {
+                                                        type: 'Number',
+                                                        loc: p.loc,
+                                                        value: fulls,
+                                                        kind: 'UInt',
+                                                    },
+                                                },
+                                            ],
+                                        },
+                                        ctx.actx,
+                                    ),
+                                ],
+                                target: {
+                                    type: 'TRef',
+                                    ref: ctx.actx.getBuiltinRef('Array')!,
+                                    loc: p.loc,
+                                },
+                            },
+                            ctx,
+                        );
+                        return inner;
+                    }
+                    return ctx.ToJS.PatternCond(
+                        item,
+                        b.memberExpression(target, b.numericLiteral(i), true),
+                        t[0],
+                        ctx,
+                    );
+                });
+                // return items.some(Boolean) ? b.arrayPattern(items) : null;
+                return and([
+                    b.binaryExpression(
+                        '>=',
+                        b.memberExpression(target, b.identifier('length')),
+                        b.numericLiteral(fulls),
+                    ),
+                    ...(items.filter(Boolean) as b.Expression[]),
+                ]);
             case 'PRecord':
                 if (type.type !== 'TRecord' || p.items.length === 0) {
                     return null;
                 }
+                const trec = type;
                 if (p.items.every((item, i) => item.name === i.toString())) {
                     const hello = p.items
                         .map((item, i) => {
@@ -700,7 +626,7 @@ export const ToJS = {
                                     b.numericLiteral(i),
                                     true,
                                 ),
-                                type.items[i].value,
+                                trec.items[i].value,
                                 ctx,
                             );
                         })
@@ -718,7 +644,7 @@ export const ToJS = {
                                     target,
                                     b.identifier(item.name),
                                 ),
-                                type.items[i].value,
+                                trec.items[i].value,
                                 ctx,
                             );
                         })
@@ -746,6 +672,16 @@ export const ToJS = {
                         : null;
                 }
                 return null;
+            case 'PArray':
+                const items = p.items.map((item) => {
+                    if (item.type === 'PSpread') {
+                        const inner = ctx.ToJS.Pattern(item.inner, ctx);
+                        return inner ? b.restElement(inner) : null;
+                    }
+
+                    return ctx.ToJS.Pattern(item, ctx);
+                });
+                return items.some(Boolean) ? b.arrayPattern(items) : null;
             case 'PName':
                 return b.identifier(p.sym.name);
             case 'PDecorated':

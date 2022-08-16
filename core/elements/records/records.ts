@@ -1,16 +1,13 @@
-import { Visitor } from '../transform-tast';
-import { Constraints, decorate, tdecorate } from '../typing/analyze';
-import { Ctx } from '../typing/analyze';
-import { getRef, typeMatches } from '../typing/typeMatches';
-import { unifyTypes } from '../typing/unifyTypes';
-import * as t from '../typed-ast';
-import * as p from '../grammar/base.parser';
-import * as pp from '../printer/pp';
-import { Ctx as PCtx } from '../printer/to-pp';
-import { Ctx as TCtx } from '../typing/to-tast';
-import { Ctx as TACtx } from '../typing/to-ast';
-import { Ctx as TMCtx } from '../typing/typeMatches';
-import { noloc } from '../consts';
+import { Visitor } from '../../transform-tast';
+import { decorate, tdecorate } from '../../typing/analyze';
+import { Ctx } from '../../typing/analyze';
+import * as t from '../../typed-ast';
+import * as p from '../../grammar/base.parser';
+import * as pp from '../../printer/pp';
+import { Ctx as PCtx } from '../../printer/to-pp';
+import { Ctx as TCtx } from '../../typing/to-tast';
+import { Ctx as TACtx } from '../../typing/to-ast';
+import { noloc } from '../../consts';
 
 export const grammar = `
 TRecord = "{" _ items:TRecordItems? _ "}"
@@ -235,124 +232,7 @@ export const Analyze: Visitor<{ ctx: Ctx; hit: {} }> = {
     },
 };
 
-export const unifyRecords = (
-    candidate: TRecord,
-    expected: t.Type,
-    ctx: TMCtx,
-): false | t.Type => {
-    if (expected.type !== 'TRecord') {
-        return false;
-    }
-    if (candidate.open !== expected.open) {
-        return false;
-    }
-    const citems = allRecordItems(candidate, ctx);
-    const eitems = allRecordItems(expected, ctx);
-    if (!citems || !eitems) {
-        return false;
-    }
-    const cnum = Object.keys(citems).length;
-    const eenum = Object.keys(eitems).length;
-    if (cnum !== eenum) {
-        return false;
-    }
-    for (const key of Object.keys(citems)) {
-        if (!eitems[key]) {
-            return false;
-        }
-        const un = unifyTypes(citems[key].value, eitems[key].value, ctx);
-        if (un === false) {
-            return false;
-        }
-        citems[key] = { ...citems[key], value: un };
-    }
-    return {
-        ...candidate,
-        spreads: [],
-        items: Object.keys(citems).map((k) => citems[k]),
-    };
-};
-
-export const recordMatches = (
-    candidate: TRecord,
-    expected: t.Type,
-    ctx: TMCtx,
-    constraints?: { [key: number]: Constraints },
-) => {
-    if (expected.type !== 'TRecord') {
-        return false;
-    }
-    if (candidate.open && !expected.open) {
-        return false;
-    }
-    const citems = allRecordItems(candidate, ctx);
-    const eitems = allRecordItems(expected, ctx);
-    if (!citems || !eitems) {
-        return false;
-    }
-    for (const key of Object.keys(eitems)) {
-        if (!citems[key] && !eitems[key].default_) {
-            return false;
-        }
-    }
-    for (const key of Object.keys(citems)) {
-        if (!eitems[key]) {
-            if (expected.open) {
-                continue;
-            }
-            return false;
-        }
-        if (
-            !typeMatches(
-                citems[key].value,
-                eitems[key].value,
-                ctx,
-                [],
-                constraints,
-            )
-        ) {
-            return false;
-        }
-    }
-    return true;
-};
-
-export const allRecordItems = (
-    record: TRecord,
-    ctx: TMCtx,
-    path: string[] = [],
-): null | { [key: string]: t.TRecordKeyValue } => {
-    const items: { [key: string]: t.TRecordKeyValue } = {};
-    for (const spread of record.spreads) {
-        const resolved = ctx.resolveRefsAndApplies(spread);
-        if (!resolved || resolved.type !== 'TRecord') {
-            return null;
-        }
-
-        const r = getRef(spread);
-        if (r) {
-            const k = t.refHash(r.ref);
-            if (path.includes(k)) {
-                return null;
-            }
-            path = path.concat([k]);
-        }
-
-        const inner = allRecordItems(resolved, ctx, path);
-        if (!inner) {
-            return null;
-        }
-        for (let k of Object.keys(inner)) {
-            items[k] = inner[k];
-        }
-    }
-    for (const item of record.items) {
-        items[item.key] = item;
-    }
-    return items;
-};
-
-import { Ctx as ICtx } from '../ir/ir';
+import { Ctx as ICtx } from '../../ir/ir';
 export const ToIR = {
     Record({ items, loc, spreads }: t.Record, ctx: ICtx): t.IRecord {
         return {
@@ -368,7 +248,8 @@ export const ToIR = {
 };
 
 import * as b from '@babel/types';
-import { Ctx as JCtx } from '../ir/to-js';
+import { Ctx as JCtx } from '../../ir/to-js';
+import { allRecordItems } from './allRecordItems';
 export const ToJS = {
     Record({ items, spreads, loc }: t.IRecord, ctx: JCtx): b.Expression {
         const nums = irecordAsTuple({ items, spreads, loc, type: 'Record' });

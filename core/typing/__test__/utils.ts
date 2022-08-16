@@ -4,20 +4,11 @@ import { File, parseTypeFile, TypeFile } from '../../grammar/base.parser';
 import { fixComments } from '../../grammar/fixComments';
 import { Ctx } from '../to-tast';
 import { typeMatches } from '../typeMatches';
-import { printToString } from '../../printer/pp';
-import { newPPCtx } from '../../printer/to-pp';
-import { printCtx } from '../to-ast';
 import { Ctx as JCtx, ExecutionContext } from '../../ir/to-js';
 import { Ctx as iCtx } from '../../ir/ir';
 import * as t from '../../typed-ast';
 import { idToString } from '../../ids';
-
-export const typeToString = (t: t.Type, ctx: FullContext) => {
-    const actx = printCtx(ctx, false);
-    const pctx = newPPCtx(false);
-    const ast = actx.ToAst.Type(t, actx);
-    return printToString(pctx.ToPP.Type(ast, pctx), 100);
-};
+import { typeToString } from './typeToString';
 
 const getTypeArg = (args: t.DecoratorArg[]): string | t.DType => {
     if (args.length !== 1) {

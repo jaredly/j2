@@ -79,7 +79,7 @@ export function OneFixture({
         newOutput.file.type === 'Error'
             ? 1
             : newOutput.file.info
-                  .map((i) => errorCount(i.verify))
+                  .map((i) => errorCount(i.verify, true))
                   .reduce((a, b) => a + b, 0);
 
     return (
@@ -246,6 +246,7 @@ export function OneFixture({
                     <Card.Divider css={{ marginBlock: '$6' }} />
                     <Editor
                         text={editing ?? input}
+                        obsref={{ current: () => () => {} }}
                         onChange={setEditing}
                         onBlur={(input) => {
                             setEditing(null);

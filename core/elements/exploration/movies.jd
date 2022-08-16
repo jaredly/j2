@@ -1,30 +1,19 @@
 
-
-
-
-// app "movies"
-//     packages { pf: "./platform.roc" }
-//     imports [
-//         Task.{ Task },
-//         Json,
-//         Stdout,
-//         Stderr,
-//         Http.{ HttpErr },
-//         File.{ FileWriteErr },
-//         Encode.{ EncodeErr },
-//     ]
-//     provides { main } to pf
-
 type Movie = {
     title: str,
     year: int,
     starring: Array<string>,
 }
 
+let orFail = <R, F: [*]>(result: [Ok(R) | Err(F)]): Task<[Failure(F)], R> => switch result {
+	Ok(r) => Return(r)
+	Err(f) => Failure(f, ())
+}
+
 let movieFromLine = (line: string) => {
 	switch line->split("!") {
 		[title, year, starring] =>
-			{title, year: year->toInt!, starring: starring->split(",")}
+			{title, year: orFail<a, b>(year->toInt), starring: starring->split(",")}
 		_ => fail(InvalidLine(line))!
 	}
 }
@@ -50,10 +39,19 @@ Task<[Run(Task<[], R>, [Ok(R) | Err([HttpFail | NetFail | EnvFail | Failures])])
 	Run(task, (r: [Ok(R) | Err([HttpFail | NetFail | EnvFail | Failures])]) => Return(r))
 }
 
-let run = <Effects: Task, EffFail: [*], Failures: [*]>(task: Task<[Failure(Failures) | Effects], R>): Task<[Run(Task<[], R>, [Ok(R) | Err([EffFail | Failures])])], [Ok(R) | Err([EffFail | Failures])]>
+let run = <Effects: Task, EffFail: [*], Failures: [*]>(
+	task: Task<[Failure(Failures) | Effects], R>
+): Task<
+	[Run(
+		Task<[Failure(Failures) | Effects], R>,
+		[Ok(R) | Err([EffFail | Failures])]
+	)],
+	[Ok(R) | Err([EffFail | Failures])]
+>
  => {
 	Run(task, (r: [Ok(R) | Err([EffFail | Failures])]) => Return(r))
 }
+
 
 // could we do a series of `run`s, for just the things we're using?
 /*

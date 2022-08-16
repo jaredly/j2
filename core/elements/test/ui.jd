@@ -1,0 +1,69 @@
+type attrs = <Effects: task>{
+    style: {
+        display: string = "",
+        flex: uint = 1u,
+        padding: string = "",
+        margin: string = "",
+        backgroundColor: string = "",
+    } = (),
+    onClick: () => Task<Effects, ()> = () => `Return(),
+}
+type Node = <Effects: task>[`Node(string, attrs<Effects>, Array<Node<Effects>>) | `Text(string)]
+let setState = <State>(v: State) => `SetState(v, (()) => `Return())
+let confirm = (v: string) => `Confirm(v, (b: bool) => `Return(b))
+let getHttp = (url: string) => `HttpFetch(url, (v: string) => `Return(v))
+let node = <Effects: task>(tag: string, attrs: attrs<Effects>, children: Array<Node<Effects>>) => `Node(
+    tag,
+    attrs,
+    children,
+)
+type st = <T>[`SetState(T, ()) | `Confirm(string, bool)]
+let div = <E: task>(attrs: attrs<E>, children: Array<Node<E>>) => node<E>("div", attrs, children)
+let span = <E: task>(attrs: attrs<E>, children: Array<Node<E>>) => node<E>("span", attrs, children)
+let button = <E: task>(attrs: attrs<E>, children: Array<Node<E>>) => node<E>(
+    "button",
+    attrs,
+    children,
+)
+let counter: (v: int) => Node<st<int>> = (state: int) => {
+    div<st<int>>(
+        {style: {display: "flex", flex: 1u}},
+        [
+            button<st<int>>(
+                {
+                    onClick: () => setState(state - 1),
+                    style: {backgroundColor: "black", margin: "4px"},
+                },
+                [`Text("-")],
+            ),
+            span<st<int>>({style: {margin: "6px"}}, [`Text("A Counter ${toString(state)}")]),
+            button<st<int>>(
+                {
+                    onClick: () => {
+                        if confirm("Advance by 10?")! {
+                            setState(state + 10)!;
+                        } else {
+                            ();
+                        };
+                    },
+                    style: {backgroundColor: "black"},
+                },
+                [`Text("advance")],
+            ),
+            node(
+                "button",
+                {
+                    onClick: () => setState(state + 1),
+                    style: {backgroundColor: "black", margin: "4px"},
+                },
+                [`Text("+")],
+            ),
+        ],
+    );
+}
+let render = <State>(app: (current: State) => Node<st<State>>, initial: State) => `Render(
+    (app, initial),
+    (),
+)
+button({onClick: () => setState(1), style: {backgroundColor: "black", margin: "4px"}}, [`Text("-")])
+render<int>(counter, 1)

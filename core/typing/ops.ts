@@ -1,7 +1,8 @@
 import { noloc } from '../consts';
 import { idsEqual } from '../ids';
 import { Number, String, TOps, TRef, Type } from '../typed-ast';
-import { Ctx } from './typeMatches';
+import { collapseConstraints, mergeConstraints } from './analyze';
+import { ConstraintMap, Ctx } from './typeMatches';
 
 export const stringAddsMatch = (
     candidate: (string | true)[],
@@ -67,6 +68,7 @@ export const numOps = (
     expected: TOps | Number | TRef,
     // kind: Number['kind'],
     ctx: Ctx,
+    constraints?: ConstraintMap,
 ): EOps | false => {
     if (expected.type === 'Number') {
         return {
@@ -101,7 +103,6 @@ export const numOps = (
     }
     let num = 0;
     const mm = { upperLimit: true, lowerLimit: true };
-    // let ismax = false;
     const elements = [
         {
             op: '+',
@@ -116,7 +117,42 @@ export const numOps = (
     let kind: Number['kind'] | null = null;
 
     for (let i = 0; i < elements.length; i++) {
-        const { op, right: el } = elements[i];
+        let { op, right: el } = elements[i];
+        if (el.type === 'TRef') {
+            if (el.ref.type === 'Local') {
+                const bound = ctx.getBound(el.ref.sym);
+                if (bound) {
+                    el = bound;
+                }
+            }
+        }
+        if (el.type === 'TVbl') {
+            const current = constraints
+                ? mergeConstraints(
+                      constraints[el.id] ?? {},
+                      ctx.currentConstraints(el.id),
+                      ctx,
+                  )
+                : ctx.currentConstraints(el.id);
+            if (current) {
+                el = collapseConstraints(current, ctx);
+            }
+        }
+        if (el.type === 'TRef') {
+            if (el.ref.type === 'Global') {
+                if (idsEqual(el.ref.id, int)) {
+                    kind = 'Int';
+                } else if (idsEqual(el.ref.id, uint)) {
+                    kind = 'UInt';
+                } else if (idsEqual(el.ref.id, float)) {
+                    kind = 'Float';
+                } else {
+                    return false;
+                }
+                mm[op === '+' ? 'upperLimit' : 'lowerLimit'] = false;
+                continue;
+            }
+        }
         if (el.type === 'Number') {
             if (kind != null && el.kind !== kind) {
                 return false;
@@ -127,19 +163,6 @@ export const numOps = (
             } else {
                 num -= el.value;
             }
-            continue;
-        }
-        if (el.type === 'TRef' && el.ref.type === 'Global') {
-            if (idsEqual(el.ref.id, int)) {
-                kind = 'Int';
-            } else if (idsEqual(el.ref.id, uint)) {
-                kind = 'UInt';
-            } else if (idsEqual(el.ref.id, float)) {
-                kind = 'Float';
-            } else {
-                return false;
-            }
-            mm[op === '+' ? 'upperLimit' : 'lowerLimit'] = false;
             continue;
         }
         if (el.type === 'TOps') {
@@ -352,60 +375,3 @@ export const stringOps = (
     }
     return true;
 };
-
-// export const isBuiltinType = (t: Type, name: string, ctx: FullContext) =>
-//     t.type === 'TRef' &&
-//     t.ref.type === 'Global' &&
-//     refsEqual(t.ref, ctx.types.names[name]);
-
-// export const reduceConstant = (t: Type): Type => {
-//     if (t.type === 'TAdd') {
-//         if (t.elements[0].type === 'String') {
-//             let v = '';
-//             for (let el of t.elements) {
-//                 if (el.type !== 'String') {
-//                     return t;
-//                 }
-//                 v += el.text;
-//             }
-//             return { ...t, type: 'String', text: v };
-//         }
-//         if (t.elements[0].type === 'Number') {
-//             let v = 0;
-//             let k = t.elements[0].kind;
-//             for (let el of t.elements) {
-//                 if (el.type !== 'Number' || el.kind !== k) {
-//                     return t;
-//                 }
-//                 v += el.value;
-//             }
-//             return { ...t, type: 'Number', kind: k, value: v };
-//         }
-//     }
-//     if (t.type === 'TSub') {
-//         if (t.elements[0].type === 'Number') {
-//             let v = t.elements[0].value;
-//             let k = t.elements[0].kind;
-//             for (let i = 1; i < t.elements.length; i++) {
-//                 const el = t.elements[i];
-//                 if (el.type !== 'Number' || el.kind !== k) {
-//                     return t;
-//                 }
-//                 v -= el.value;
-//             }
-//             return { ...t, type: 'Number', kind: k, value: v };
-//         }
-//     }
-//     return t;
-// };
-
-// export const resolveRefs = (
-//     t: Type,
-//     ctx: FullContext,
-// ): Type => {
-//     while (t.type === 'TRef' && t.ref.type === 'Global') {
-//         const resolved = ctx.typeForId(t.ref.id)
-//         if (resolved)
-//     }
-//     return t
-// }

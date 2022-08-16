@@ -16,7 +16,7 @@ type Tree = <T>[Node<T> | `Leaf(T)]
 and Node = <T>[`Tree(Array<Tree<T>>)]
 
 --[output:expected]--
-alias Array#[he7bf755aa7882e15fa79faeef0820a69a5955b78]
+alias Array#[hfaffb478c8ace6bd4448b98b33f922f1bb3e15bf]
 type Tree = <T#[0]>[Node#[r1]<T#[0]> | `Leaf(T#[0])]
 and Node = <T#[1]>[`Tree(Array<Tree#[r0]<T#[1]>>)]
 
@@ -27,10 +27,10 @@ type z = [`Z]
 type x = [int | `Hello | y | z]
 
 --[output:expected]--
-alias Array#[he7bf755aa7882e15fa79faeef0820a69a5955b78]
+alias Array#[hfaffb478c8ace6bd4448b98b33f922f1bb3e15bf]
 type y = Array<10>
 type z = [`Z]
-alias error:notAnEnum#[hf16010a7ae4b37140f787a2e06b17030e8329fb3] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] y#[h4ca801fef170fbf8557a259a3ab3a1ef29bf4369] z#[h114960c32561e86d49cc34f0af6e3db3deb19ffc]
+alias error:notAnEnum#[hf16010a7ae4b37140f787a2e06b17030e8329fb3] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] y#[he15b94e16ff596eaaece4602a19eb5e89caa90aa] z#[h114960c32561e86d49cc34f0af6e3db3deb19ffc]
 type x = [@error:notAnEnum() int | `Hello | @error:notAnEnum() y | z]
 
 ==[recursive bound propagation]==
@@ -148,8 +148,5 @@ type B = [A<[B]> | `B]
 
 --[output:expected]--
 type A = <T#[0]: [*]>[T#[0] | `A]
-alias A#[hcab8a150870690a5be4fddec6c6cef35bb9e9b91] error:argWrongType#[hfcfe64cbbd9e081476f4c8c4a4b2f8f2f992804f] error:invalidEnum#[h49fbf0ea340043d002204371f9e00926593bae65] error:notAnEnum#[hf16010a7ae4b37140f787a2e06b17030e8329fb3]
-type B = [
-    @error:notAnEnum() A<@error:argWrongType(expected: :[*]) [@error:invalidEnum() B#[r0]]> |
-    `B
-]
+alias A#[h4d5914cdf69cafb864469a21396ea610f4735200] error:invalidEnum#[h49fbf0ea340043d002204371f9e00926593bae65]
+type B = [@error:invalidEnum() A<[@error:invalidEnum() B#[r0]]> | `B]

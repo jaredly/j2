@@ -17,6 +17,8 @@ import { fixComments } from '../grammar/fixComments';
 import { toId } from '../ids';
 import { iCtx } from '../ir/ir';
 import { jCtx, NameTrack, newExecutionContext } from '../ir/to-js';
+import { printToString } from '../printer/pp';
+import { newPPCtx } from '../printer/to-pp';
 import * as trat from '../transform-ast';
 import { transformToplevel, transformTypeToplevel } from '../transform-tast';
 import * as t from '../typed-ast';
@@ -24,11 +26,11 @@ import {
     analyzeTop,
     analyzeTypeTop,
     errorCount,
-    initVerify,
     Verify,
-    verifyVisitor,
 } from '../typing/analyze';
+import { initVerify, verifyVisitor } from '../typing/verify';
 import { printCtx } from '../typing/to-ast';
+import { typeToString } from '../typing/__test__/typeToString';
 import { simplify } from './simplify';
 
 export type TestResult = Result<FileContents>;
@@ -46,8 +48,10 @@ export const emptyFileResult: TestResult = {
 
 export type IrTop = {
     type: t.Type | null;
+    tstring: string;
     ir: t.IBlock;
     js: b.BlockStatement;
+    simple: p.Expression;
     id?: t.Id;
     name?: string;
 };
@@ -95,8 +99,10 @@ export type Result<Contents> =
 
 export const toJs = (
     t: t.Expression,
+    type: t.Type | null,
     ictx: ReturnType<typeof iCtx>,
     jctx: ReturnType<typeof jCtx>,
+    pctx: ReturnType<typeof printCtx>,
     ctx: FullContext,
     id?: t.Id,
     name?: string,
@@ -104,16 +110,20 @@ export const toJs = (
     // Here's where we simplify! and then re-verify.
     // and ... return something invalid if we messed up.
 
+    const simple = simplify(t, ctx);
+    const sast = pctx.ToAst.Expression(simple, pctx);
     const ir = ictx.ToIR.BlockSt(
         {
             type: 'Block',
-            stmts: [simplify(t, ctx)],
+            stmts: [simple],
             loc: t.loc,
         },
         ictx,
     );
     const js = jctx.ToJS.Block(ir, jctx);
-    return { id, ir, js, type: ctx.getType(t), name };
+    // const type = ctx.getType(t);
+    const tstring = type ? typeToString(type, ctx) : '[no type]';
+    return { id, ir, js, type, tstring, simple: sast, name };
 };
 
 export type ExecutionInfo = {
@@ -333,7 +343,16 @@ export const processTypeToplevel = (
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
     const uses: { [key: string]: true } = {};
-    transformTypeToplevel(type, annotationVisitor(annotations, uses), ctx);
+    // const allLocals: t.Locals = [];
+    transformTypeToplevel(type, annotationVisitor(annotations, uses), {
+        ...ctx,
+        allLocals: annotations,
+    });
+    // allLocals.forEach((local) => {
+    //     // const type = getType(local.type, ctx);
+    //     const text = typeToString(local.type, ctx);
+    //     annotations.push({ loc: local.sym.loc, text });
+    // });
 
     return {
         i: {
@@ -413,11 +432,11 @@ export const processToplevel = (
         }
     } else {
         if (top.type === 'ToplevelLet') {
-            console.log(
-                'yeah failed to verify, sorry',
-                verify,
-                top.elements.map((m) => m.name),
-            );
+            // console.log(
+            //     'yeah failed to verify, sorry',
+            //     verify,
+            //     top.elements.map((m) => m.name),
+            // );
         }
     }
 
@@ -431,16 +450,26 @@ export const processToplevel = (
             : top,
         pctx,
     );
+
+    if (errorCount(verify)) {
+        // console.log(`%cVERIFICATION FAILED`, 'color:orange');
+        // const pp = newPPCtx();
+        // console.log(printToString(pp.ToPP.Toplevel(refmt, pp), 100));
+        // console.log(verify);
+    }
+
     const irtops =
         errorCount(verify) === 0
             ? top.type === 'ToplevelExpression'
-                ? [toJs(top.expr, ictx, jctx, ctx)]
+                ? [toJs(top.expr, ctx.getType(top.expr), ictx, jctx, pctx, ctx)]
                 : top.type === 'ToplevelLet'
                 ? top.elements.map((el, i) =>
                       toJs(
                           el.expr,
+                          el.typ ?? ctx.getType(el.expr),
                           ictx,
                           jctx,
+                          pctx,
                           ctx,
                           toId((top as t.ToplevelLet).hash!, i),
                           jctx.addGlobalName(
@@ -455,7 +484,16 @@ export const processToplevel = (
     const uses: { [key: string]: true } = {};
     // let's do annotations
     const annotations: { loc: t.Loc; text: string }[] = [];
-    transformToplevel(top, annotationVisitor(annotations, uses), ctx);
+    // const allLocals: t.Locals = [];
+    transformToplevel(top, annotationVisitor(annotations, uses), {
+        ...ctx,
+        allLocals: annotations,
+    });
+    // allLocals.forEach((local) => {
+    //     // const type = getType(local.type, ctx);
+    //     const text = typeToString(local.type, ctx);
+    //     annotations.push({ loc: local.sym.loc, text });
+    // });
 
     // Ok, so here we want any extra verification.
     // Because I want to be able to ... re-run with

@@ -1,7 +1,9 @@
 import { Visitor } from '../transform-tast';
-import { caseLocals, decorate, pdecorate } from '../typing/analyze';
+import { decorate, pdecorate } from '../typing/analyze';
+import { caseLocals } from '../typing/localTrackingVisitor';
 import { Ctx as ACtx } from '../typing/analyze';
-import { expandEnumCases, typeMatches } from '../typing/typeMatches';
+import { ConstraintMap, typeMatches } from '../typing/typeMatches';
+import { expandEnumCases } from '../typing/expandEnumCases';
 import * as t from '../typed-ast';
 import * as p from '../grammar/base.parser';
 import * as pp from '../printer/pp';
@@ -12,12 +14,10 @@ import { Ctx as TMCtx } from '../typing/typeMatches';
 import { Ctx as ICtx } from '../ir/ir';
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
-import {
-    getLocals,
-    refineType,
-    typeForPattern,
-    typeMatchesPattern,
-} from './pattern';
+import { getLocals } from './pattern';
+import { typeForPattern } from './patterns/typeForPattern';
+import { typeMatchesPattern } from './patterns/typeMatchesPattern';
+import { refineType } from './patterns/refineType';
 import { iife } from './lets';
 import { unifyTypes } from '../typing/unifyTypes';
 import { dtype } from './ifs';
@@ -58,21 +58,44 @@ export type ICase = {
 export const ToTast = {
     Switch(ast: p.Switch, ctx: TCtx): Switch {
         const target = ctx.ToTast.Expression(ast.target, ctx);
+        const ttype = ctx.getType(target);
+        let res: t.Type | null = null;
         return {
             type: 'Switch',
             target,
             cases: ast.cases.map((c) => {
                 const pat = ctx.ToTast.Pattern(c.pat, ctx);
-                const typ = ctx.getType(target) ?? typeForPattern(pat, ctx);
+                const typ = ttype ?? typeForPattern(pat, ctx);
+
+                if (ttype) {
+                    const constraints: ConstraintMap = {};
+                    typeMatchesPattern(pat, ttype, ctx, constraints);
+                    Object.keys(constraints).forEach((k) => {
+                        ctx.addTypeConstraint(+k, constraints[+k]);
+                    });
+                }
+
                 const locals: t.Locals = [];
                 getLocals(pat, typ, locals, ctx);
+                const lctx = ctx.withLocals(locals) as TCtx;
+                const expr = ctx.ToTast.Expression(c.expr, lctx);
+                const et = lctx.getType(expr);
+                if (et) {
+                    if (res) {
+                        const constraints: ConstraintMap = {};
+                        const un = unifyTypes(res, et, ctx, constraints);
+                        Object.keys(constraints).forEach((k) => {
+                            ctx.addTypeConstraint(+k, constraints[+k]);
+                        });
+                        res = un ? un : res;
+                    } else {
+                        res = et;
+                    }
+                }
                 return {
                     type: 'Case',
                     pat: pat,
-                    expr: ctx.ToTast.Expression(
-                        c.expr,
-                        ctx.withLocals(locals) as TCtx,
-                    ),
+                    expr: expr,
                     loc: c.loc,
                 };
             }),
@@ -88,7 +111,8 @@ export const ToAst = {
             target: ctx.ToAst.Expression(tast.target, ctx),
             cases: tast.cases.map((c) => {
                 const typ =
-                    ctx.actx.getType(tast.target) ?? typeForPattern(c.pat);
+                    ctx.actx.getType(tast.target) ??
+                    typeForPattern(c.pat, ctx.actx);
                 const locals: t.Locals = [];
                 getLocals(c.pat, typ, locals, ctx.actx);
                 return {
@@ -144,16 +168,21 @@ export const ToIR = {
         return iife(ctx.ToIR.SwitchSt(tast, ctx), ctx);
     },
     SwitchSt(tast: Switch, ctx: ICtx): ISwitch {
+        const ttype = ctx.actx.getType(tast.target);
+        if (!ttype) {
+            debugger;
+        }
         return {
             type: 'Switch',
             target: ctx.ToIR.Expression(tast.target, ctx),
-            ttype: ctx.actx.getType(tast.target) ?? {
+            ttype: ttype ?? {
                 type: 'TBlank',
                 loc: tast.loc,
             },
             cases: tast.cases.map((c) => {
                 const typ =
-                    ctx.actx.getType(tast.target) ?? typeForPattern(c.pat);
+                    ctx.actx.getType(tast.target) ??
+                    typeForPattern(c.pat, ctx.actx);
                 const locals: t.Locals = [];
                 getLocals(c.pat, typ, locals, ctx.actx);
                 return {
@@ -210,7 +239,7 @@ export const ToJS = {
             const withTypes = node.cases.map((kase) => {
                 const v = { kase, refined };
 
-                // const matches = typeMatchesPattern(kase.pat, refined, ctx);
+                // const matches = typeMatchesPattern(kase.pat, refined, ctx.actx);
                 const res = refineType(kase.pat, refined, ctx.actx);
                 if (res) {
                     refined = res;
@@ -358,10 +387,11 @@ export type AVCtx = {
 
 export const Analyze: Visitor<AVCtx> = {
     Switch(node, { ctx, hit }) {
-        const target = ctx.getType(node.target);
+        let target = ctx.getType(node.target);
         if (!target) {
             return null;
         }
+        target = ctx.resolveAnalyzeType(target) ?? target;
         let body: null | t.Type = null;
         let changed = false;
 
@@ -370,6 +400,7 @@ export const Analyze: Visitor<AVCtx> = {
 
         const cases = node.cases.map((c) => {
             const matches = typeMatchesPattern(c.pat, refined, ctx);
+
             const res = refineType(c.pat, refined, ctx);
             let bt = ctx
                 .withLocals(caseLocals(refined, c, ctx))
@@ -409,12 +440,14 @@ export const Analyze: Visitor<AVCtx> = {
         }
         if (
             refined.type !== 'TBlank' &&
+            refined.type !== 'TVbl' &&
             !(
                 refined.type === 'TEnum' &&
                 !refined.cases.length &&
                 !refined.open
             )
         ) {
+            changed = true;
             node = {
                 ...node,
                 target: decorate(node.target, 'notExhaustive', hit, ctx),

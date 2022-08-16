@@ -122,10 +122,25 @@ const testIO = <T>(read: string, task: IO<T>): T => {
 };
 
 const builtins = {
+    get: <T>(v: Array<T>, n: number): T => v[n],
+    geti: <T>(v: Array<T>, n: number) => {
+        if (n < v.length) {
+            return { tag: 'Ok', payload: v[n] };
+        }
+        return { tag: 'Err', payload: 'IndexOutOfBounds' };
+    },
+    split: (a: string, b: string) => a.split(b),
     andThen,
     withHandler,
     testIO,
     equal,
+    toInt: (v: string) => {
+        const p = parseInt(v);
+        if (!isNaN(p) && p + '' === v) {
+            return { tag: 'Ok', payload: p };
+        }
+        return { tag: 'Err', payload: 'InvalidInt' };
+    },
     isSquare: (v: number) => Math.sqrt(v) % 1 === 0,
     toString: (v: any) => '' + v,
 };

@@ -1,17 +1,23 @@
 import { noloc } from '../consts';
-import { enumCaseMap, enumTypeMatches } from '../elements/enums';
-import { recordAsTuple, TRecord } from '../elements/records';
+import { enumCaseMap } from '../elements/enums/enums';
+import { enumTypeMatches } from '../elements/enums/enumTypeMatches';
+import { recordAsTuple, TRecord } from '../elements/records/records';
 import { transformExpression } from '../transform-tast';
 import { Loc, TApply, TEnum, Type, EnumCase, Expression } from '../typed-ast';
-import { initVerify, localTrackingVisitor, verifyVisitor } from './analyze';
+import { initVerify, verifyVisitor } from './verify';
+import { localTrackingVisitor } from './localTrackingVisitor';
 import { isUnit, getType } from './getType';
-import { Ctx, expandEnumCases, LocalUnexpandable } from './typeMatches';
+import { Ctx } from './typeMatches';
+import { expandEnumCases, LocalUnexpandable } from './expandEnumCases';
 import { unifyTypes } from './unifyTypes';
-import { Ctx as ACtx } from './analyze';
+import { collapseConstraints, Ctx as ACtx } from './analyze';
 
 export const isTaskable = (t: Type, ctx: Ctx): boolean => {
     if (ctx.isBuiltinType(t, 'task')) {
         return true;
+    }
+    if (t.type === 'TVbl') {
+        t = collapseConstraints(ctx.currentConstraints(t.id), ctx) ?? t;
     }
     if (t.type === 'TRef' && t.ref.type === 'Local') {
         const bound = ctx.getBound(t.ref.sym);
@@ -399,18 +405,18 @@ export const maybeExpandTask = (t: Type, ctx: Ctx): Type | null => {
     return t;
 };
 
-export const matchesTask = (
-    t: TEnum,
-    loc: Loc,
-    targs: Type[],
-    ctx: Ctx,
-): boolean => {
-    if (t.open) {
-        return false;
-    }
-    const expandedTask = expandTask(loc, targs, ctx);
-    return expandedTask != null && enumTypeMatches(t, expandedTask, ctx);
-};
+// export const matchesTask = (
+//     t: TEnum,
+//     loc: Loc,
+//     targs: Type[],
+//     ctx: Ctx,
+// ): boolean => {
+//     if (t.open) {
+//         return false;
+//     }
+//     const expandedTask = expandTask(loc, targs, ctx);
+//     return expandedTask != null && enumTypeMatches(t, expandedTask, ctx);
+// };
 
 export type TaskEffect = { tag: string; input: Type; output: Type };
 export type TaskArgs = {

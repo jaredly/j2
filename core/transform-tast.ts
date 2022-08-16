@@ -17,6 +17,9 @@ import {
     PRecord,
     PBlank,
     PEnum,
+    PArray,
+    PArrayItem,
+    PSpread,
     Number,
     String,
     PDecorated,
@@ -34,10 +37,11 @@ import {
     EnumCase,
     TVars,
     TVar,
-    TDecorated,
+    TConst,
     TApply,
     TRecord,
     TRecordKeyValue,
+    TDecorated,
     TOps,
     Block,
     Stmt,
@@ -55,6 +59,9 @@ import {
     TypeAbstraction,
     TemplateString,
     TypeApplication,
+    ArrayExpr,
+    ArrayItem,
+    SpreadExpr,
     DecoratedExpression,
     TypeAlias,
     ToplevelLet,
@@ -65,6 +72,9 @@ import {
     ILambda,
     IApply,
     ITemplateString,
+    IArrayExpr,
+    IArrayItem,
+    ISpreadExpr,
     ITypeAbstraction,
     IEnum,
     IRecord,
@@ -264,6 +274,11 @@ export type Visitor<Ctx> = {
         node: ITypeAbstraction,
         ctx: Ctx,
     ) => null | ITypeAbstraction;
+    TConst?: (
+        node: TConst,
+        ctx: Ctx,
+    ) => null | false | TConst | [TConst | null, Ctx];
+    TConstPost?: (node: TConst, ctx: Ctx) => null | TConst;
     TOps?: (node: TOps, ctx: Ctx) => null | false | TOps | [TOps | null, Ctx];
     TOpsPost?: (node: TOps, ctx: Ctx) => null | TOps;
     TRef?: (node: TRef, ctx: Ctx) => null | false | TRef | [TRef | null, Ctx];
@@ -409,6 +424,21 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | PName | [PName | null, Ctx];
     PNamePost?: (node: PName, ctx: Ctx) => null | PName;
+    PArray?: (
+        node: PArray,
+        ctx: Ctx,
+    ) => null | false | PArray | [PArray | null, Ctx];
+    PArrayPost?: (node: PArray, ctx: Ctx) => null | PArray;
+    PArrayItem?: (
+        node: PArrayItem,
+        ctx: Ctx,
+    ) => null | false | PArrayItem | [PArrayItem | null, Ctx];
+    PArrayItemPost?: (node: PArrayItem, ctx: Ctx) => null | PArrayItem;
+    PSpread?: (
+        node: PSpread,
+        ctx: Ctx,
+    ) => null | false | PSpread | [PSpread | null, Ctx];
+    PSpreadPost?: (node: PSpread, ctx: Ctx) => null | PSpread;
     PRecord?: (
         node: PRecord,
         ctx: Ctx,
@@ -470,6 +500,36 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | ICase | [ICase | null, Ctx];
     ICasePost?: (node: ICase, ctx: Ctx) => null | ICase;
+    ArrayExpr?: (
+        node: ArrayExpr,
+        ctx: Ctx,
+    ) => null | false | ArrayExpr | [ArrayExpr | null, Ctx];
+    ArrayExprPost?: (node: ArrayExpr, ctx: Ctx) => null | ArrayExpr;
+    ArrayItem?: (
+        node: ArrayItem,
+        ctx: Ctx,
+    ) => null | false | ArrayItem | [ArrayItem | null, Ctx];
+    ArrayItemPost?: (node: ArrayItem, ctx: Ctx) => null | ArrayItem;
+    SpreadExpr?: (
+        node: SpreadExpr,
+        ctx: Ctx,
+    ) => null | false | SpreadExpr | [SpreadExpr | null, Ctx];
+    SpreadExprPost?: (node: SpreadExpr, ctx: Ctx) => null | SpreadExpr;
+    IArrayExpr?: (
+        node: IArrayExpr,
+        ctx: Ctx,
+    ) => null | false | IArrayExpr | [IArrayExpr | null, Ctx];
+    IArrayExprPost?: (node: IArrayExpr, ctx: Ctx) => null | IArrayExpr;
+    IArrayItem?: (
+        node: IArrayItem,
+        ctx: Ctx,
+    ) => null | false | IArrayItem | [IArrayItem | null, Ctx];
+    IArrayItemPost?: (node: IArrayItem, ctx: Ctx) => null | IArrayItem;
+    ISpreadExpr?: (
+        node: ISpreadExpr,
+        ctx: Ctx,
+    ) => null | false | ISpreadExpr | [ISpreadExpr | null, Ctx];
+    ISpreadExprPost?: (node: ISpreadExpr, ctx: Ctx) => null | ISpreadExpr;
     RefKind_Global?: (
         node: GlobalRef,
         ctx: Ctx,
@@ -596,6 +656,11 @@ export type Visitor<Ctx> = {
         node: TypeApplication,
         ctx: Ctx,
     ) => null | Expression;
+    Expression_ArrayExpr?: (
+        node: ArrayExpr,
+        ctx: Ctx,
+    ) => null | false | Expression | [Expression | null, Ctx];
+    ExpressionPost_ArrayExpr?: (node: ArrayExpr, ctx: Ctx) => null | Expression;
     Expression_DecoratedExpression?: (
         node: DecoratedExpression,
         ctx: Ctx,
@@ -635,6 +700,14 @@ export type Visitor<Ctx> = {
     ) => null | false | IExpression | [IExpression | null, Ctx];
     IExpressionPost_TemplateString?: (
         node: ITemplateString,
+        ctx: Ctx,
+    ) => null | IExpression;
+    IExpression_ArrayExpr?: (
+        node: IArrayExpr,
+        ctx: Ctx,
+    ) => null | false | IExpression | [IExpression | null, Ctx];
+    IExpressionPost_ArrayExpr?: (
+        node: IArrayExpr,
         ctx: Ctx,
     ) => null | IExpression;
     IExpression_TypeAbstraction?: (
@@ -705,11 +778,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
     TypePost_TVars?: (node: TVars, ctx: Ctx) => null | Type;
-    Type_TDecorated?: (
-        node: TDecorated,
+    Type_TConst?: (
+        node: TConst,
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
-    TypePost_TDecorated?: (node: TDecorated, ctx: Ctx) => null | Type;
+    TypePost_TConst?: (node: TConst, ctx: Ctx) => null | Type;
     Type_TApply?: (
         node: TApply,
         ctx: Ctx,
@@ -720,6 +793,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Type | [Type | null, Ctx];
     TypePost_TRecord?: (node: TRecord, ctx: Ctx) => null | Type;
+    Type_TDecorated?: (
+        node: TDecorated,
+        ctx: Ctx,
+    ) => null | false | Type | [Type | null, Ctx];
+    TypePost_TDecorated?: (node: TDecorated, ctx: Ctx) => null | Type;
     Type_TOps?: (
         node: TOps,
         ctx: Ctx,
@@ -760,6 +838,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IStmt | [IStmt | null, Ctx];
     IStmtPost_Switch?: (node: ISwitch, ctx: Ctx) => null | IStmt;
+    PArrayItem_PSpread?: (
+        node: PSpread,
+        ctx: Ctx,
+    ) => null | false | PArrayItem | [PArrayItem | null, Ctx];
+    PArrayItemPost_PSpread?: (node: PSpread, ctx: Ctx) => null | PArrayItem;
     Pattern_PName?: (
         node: PName,
         ctx: Ctx,
@@ -780,6 +863,11 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | Pattern | [Pattern | null, Ctx];
     PatternPost_PEnum?: (node: PEnum, ctx: Ctx) => null | Pattern;
+    Pattern_PArray?: (
+        node: PArray,
+        ctx: Ctx,
+    ) => null | false | Pattern | [Pattern | null, Ctx];
+    PatternPost_PArray?: (node: PArray, ctx: Ctx) => null | Pattern;
     Pattern_Number?: (
         node: Number,
         ctx: Ctx,
@@ -800,6 +888,19 @@ export type Visitor<Ctx> = {
         ctx: Ctx,
     ) => null | false | IfCond | [IfCond | null, Ctx];
     IfCondPost_Let?: (node: Let, ctx: Ctx) => null | IfCond;
+    ArrayItem_SpreadExpr?: (
+        node: SpreadExpr,
+        ctx: Ctx,
+    ) => null | false | ArrayItem | [ArrayItem | null, Ctx];
+    ArrayItemPost_SpreadExpr?: (node: SpreadExpr, ctx: Ctx) => null | ArrayItem;
+    IArrayItem_SpreadExpr?: (
+        node: ISpreadExpr,
+        ctx: Ctx,
+    ) => null | false | IArrayItem | [IArrayItem | null, Ctx];
+    IArrayItemPost_SpreadExpr?: (
+        node: ISpreadExpr,
+        ctx: Ctx,
+    ) => null | IArrayItem;
 };
 export const transformId = <Ctx>(
     node: Id,
@@ -1033,7 +1134,18 @@ export const transformSym = <Ctx>(
     }
 
     let changed0 = false;
-    const updatedNode = node;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = { ...updatedNode, loc: updatedNode$loc };
+            changed0 = true;
+        }
+    }
 
     node = updatedNode;
     if (visitor.SymPost) {
@@ -1288,6 +1400,220 @@ export const transformPEnum = <Ctx>(
     node = updatedNode;
     if (visitor.PEnumPost) {
         const transformed = visitor.PEnumPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPSpread = <Ctx>(
+    node: PSpread,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PSpread => {
+    if (!node) {
+        throw new Error('No PSpread provided');
+    }
+
+    const transformed = visitor.PSpread ? visitor.PSpread(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$inner = transformPattern(node.inner, visitor, ctx);
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                inner: updatedNode$inner,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PSpreadPost) {
+        const transformed = visitor.PSpreadPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPArrayItem = <Ctx>(
+    node: PArrayItem,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PArrayItem => {
+    if (!node) {
+        throw new Error('No PArrayItem provided');
+    }
+
+    const transformed = visitor.PArrayItem
+        ? visitor.PArrayItem(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'PSpread': {
+            const transformed = visitor.PArrayItem_PSpread
+                ? visitor.PArrayItem_PSpread(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'PSpread': {
+            updatedNode = transformPSpread(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformPattern(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'PSpread': {
+            const transformed = visitor.PArrayItemPost_PSpread
+                ? visitor.PArrayItemPost_PSpread(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PArrayItemPost) {
+        const transformed = visitor.PArrayItemPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformPArray = <Ctx>(
+    node: PArray,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): PArray => {
+    if (!node) {
+        throw new Error('No PArray provided');
+    }
+
+    const transformed = visitor.PArray ? visitor.PArray(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformPArrayItem(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                items: updatedNode$items,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.PArrayPost) {
+        const transformed = visitor.PArrayPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2094,18 +2420,16 @@ export const transformTVars = <Ctx>(
     return node;
 };
 
-export const transformTDecorated = <Ctx>(
-    node: TDecorated,
+export const transformTConst = <Ctx>(
+    node: TConst,
     visitor: Visitor<Ctx>,
     ctx: Ctx,
-): TDecorated => {
+): TConst => {
     if (!node) {
-        throw new Error('No TDecorated provided');
+        throw new Error('No TConst provided');
     }
 
-    const transformed = visitor.TDecorated
-        ? visitor.TDecorated(node, ctx)
-        : null;
+    const transformed = visitor.TConst ? visitor.TConst(node, ctx) : null;
     if (transformed === false) {
         return node;
     }
@@ -2126,44 +2450,24 @@ export const transformTDecorated = <Ctx>(
     {
         let changed1 = false;
 
-        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
-        changed1 = changed1 || updatedNode$loc !== node.loc;
-
         const updatedNode$inner = transformType(node.inner, visitor, ctx);
         changed1 = changed1 || updatedNode$inner !== node.inner;
 
-        let updatedNode$decorators = node.decorators;
-        {
-            let changed2 = false;
-            const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
-                const result = transformDecorator(
-                    updatedNode$decorators$item1,
-                    visitor,
-                    ctx,
-                );
-                changed2 = changed2 || result !== updatedNode$decorators$item1;
-                return result;
-            });
-            if (changed2) {
-                updatedNode$decorators = arr1;
-                changed1 = true;
-            }
-        }
-
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
         if (changed1) {
             updatedNode = {
                 ...updatedNode,
-                loc: updatedNode$loc,
                 inner: updatedNode$inner,
-                decorators: updatedNode$decorators,
+                loc: updatedNode$loc,
             };
             changed0 = true;
         }
     }
 
     node = updatedNode;
-    if (visitor.TDecoratedPost) {
-        const transformed = visitor.TDecoratedPost(node, ctx);
+    if (visitor.TConstPost) {
+        const transformed = visitor.TConstPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2399,6 +2703,83 @@ export const transformTRecord = <Ctx>(
     node = updatedNode;
     if (visitor.TRecordPost) {
         const transformed = visitor.TRecordPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformTDecorated = <Ctx>(
+    node: TDecorated,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): TDecorated => {
+    if (!node) {
+        throw new Error('No TDecorated provided');
+    }
+
+    const transformed = visitor.TDecorated
+        ? visitor.TDecorated(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+
+        const updatedNode$inner = transformType(node.inner, visitor, ctx);
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+
+        let updatedNode$decorators = node.decorators;
+        {
+            let changed2 = false;
+            const arr1 = node.decorators.map((updatedNode$decorators$item1) => {
+                const result = transformDecorator(
+                    updatedNode$decorators$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$decorators$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$decorators = arr1;
+                changed1 = true;
+            }
+        }
+
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                loc: updatedNode$loc,
+                inner: updatedNode$inner,
+                decorators: updatedNode$decorators,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.TDecoratedPost) {
+        const transformed = visitor.TDecoratedPost(node, ctx);
         if (transformed != null) {
             node = transformed;
         }
@@ -2671,9 +3052,9 @@ export const transformType = <Ctx>(
             break;
         }
 
-        case 'TDecorated': {
-            const transformed = visitor.Type_TDecorated
-                ? visitor.Type_TDecorated(node, ctx)
+        case 'TConst': {
+            const transformed = visitor.Type_TConst
+                ? visitor.Type_TConst(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -2712,6 +3093,25 @@ export const transformType = <Ctx>(
         case 'TRecord': {
             const transformed = visitor.Type_TRecord
                 ? visitor.Type_TRecord(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
+        case 'TDecorated': {
+            const transformed = visitor.Type_TDecorated
+                ? visitor.Type_TDecorated(node, ctx)
                 : null;
             if (transformed != null) {
                 if (Array.isArray(transformed)) {
@@ -2799,8 +3199,8 @@ export const transformType = <Ctx>(
             break;
         }
 
-        case 'TDecorated': {
-            updatedNode = transformTDecorated(node, visitor, ctx);
+        case 'TConst': {
+            updatedNode = transformTConst(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -2813,6 +3213,12 @@ export const transformType = <Ctx>(
 
         case 'TRecord': {
             updatedNode = transformTRecord(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'TDecorated': {
+            updatedNode = transformTDecorated(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -2907,9 +3313,9 @@ export const transformType = <Ctx>(
             break;
         }
 
-        case 'TDecorated': {
-            const transformed = visitor.TypePost_TDecorated
-                ? visitor.TypePost_TDecorated(updatedNode, ctx)
+        case 'TConst': {
+            const transformed = visitor.TypePost_TConst
+                ? visitor.TypePost_TConst(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -2930,6 +3336,16 @@ export const transformType = <Ctx>(
         case 'TRecord': {
             const transformed = visitor.TypePost_TRecord
                 ? visitor.TypePost_TRecord(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'TDecorated': {
+            const transformed = visitor.TypePost_TDecorated
+                ? visitor.TypePost_TDecorated(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -3453,6 +3869,25 @@ export const transformPattern = <Ctx>(
             break;
         }
 
+        case 'PArray': {
+            const transformed = visitor.Pattern_PArray
+                ? visitor.Pattern_PArray(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'Number': {
             const transformed = visitor.Pattern_Number
                 ? visitor.Pattern_Number(node, ctx)
@@ -3538,6 +3973,12 @@ export const transformPattern = <Ctx>(
             break;
         }
 
+        case 'PArray': {
+            updatedNode = transformPArray(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'Number': {
             updatedNode = transformNumber(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -3593,6 +4034,16 @@ export const transformPattern = <Ctx>(
         case 'PEnum': {
             const transformed = visitor.PatternPost_PEnum
                 ? visitor.PatternPost_PEnum(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'PArray': {
+            const transformed = visitor.PatternPost_PArray
+                ? visitor.PatternPost_PArray(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -5119,6 +5570,220 @@ export const transformTypeApplication = <Ctx>(
     return node;
 };
 
+export const transformSpreadExpr = <Ctx>(
+    node: SpreadExpr,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): SpreadExpr => {
+    if (!node) {
+        throw new Error('No SpreadExpr provided');
+    }
+
+    const transformed = visitor.SpreadExpr
+        ? visitor.SpreadExpr(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$inner = transformExpression(node.inner, visitor, ctx);
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                inner: updatedNode$inner,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.SpreadExprPost) {
+        const transformed = visitor.SpreadExprPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformArrayItem = <Ctx>(
+    node: ArrayItem,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ArrayItem => {
+    if (!node) {
+        throw new Error('No ArrayItem provided');
+    }
+
+    const transformed = visitor.ArrayItem ? visitor.ArrayItem(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'SpreadExpr': {
+            const transformed = visitor.ArrayItem_SpreadExpr
+                ? visitor.ArrayItem_SpreadExpr(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'SpreadExpr': {
+            updatedNode = transformSpreadExpr(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformExpression(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'SpreadExpr': {
+            const transformed = visitor.ArrayItemPost_SpreadExpr
+                ? visitor.ArrayItemPost_SpreadExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ArrayItemPost) {
+        const transformed = visitor.ArrayItemPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformArrayExpr = <Ctx>(
+    node: ArrayExpr,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ArrayExpr => {
+    if (!node) {
+        throw new Error('No ArrayExpr provided');
+    }
+
+    const transformed = visitor.ArrayExpr ? visitor.ArrayExpr(node, ctx) : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformArrayItem(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                items: updatedNode$items,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ArrayExprPost) {
+        const transformed = visitor.ArrayExprPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformDecoratedExpression = <Ctx>(
     node: DecoratedExpression,
     visitor: Visitor<Ctx>,
@@ -5490,6 +6155,25 @@ export const transformExpression = <Ctx>(
             break;
         }
 
+        case 'ArrayExpr': {
+            const transformed = visitor.Expression_ArrayExpr
+                ? visitor.Expression_ArrayExpr(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'DecoratedExpression': {
             const transformed = visitor.Expression_DecoratedExpression
                 ? visitor.Expression_DecoratedExpression(node, ctx)
@@ -5593,6 +6277,12 @@ export const transformExpression = <Ctx>(
 
         case 'TypeApplication': {
             updatedNode = transformTypeApplication(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        case 'ArrayExpr': {
+            updatedNode = transformArrayExpr(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
             break;
         }
@@ -5744,6 +6434,16 @@ export const transformExpression = <Ctx>(
         case 'TypeApplication': {
             const transformed = visitor.ExpressionPost_TypeApplication
                 ? visitor.ExpressionPost_TypeApplication(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ArrayExpr': {
+            const transformed = visitor.ExpressionPost_ArrayExpr
+                ? visitor.ExpressionPost_ArrayExpr(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;
@@ -6756,6 +7456,228 @@ export const transformITemplateString = <Ctx>(
     return node;
 };
 
+export const transformISpreadExpr = <Ctx>(
+    node: ISpreadExpr,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): ISpreadExpr => {
+    if (!node) {
+        throw new Error('No ISpreadExpr provided');
+    }
+
+    const transformed = visitor.ISpreadExpr
+        ? visitor.ISpreadExpr(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        const updatedNode$inner = transformIExpression(
+            node.inner,
+            visitor,
+            ctx,
+        );
+        changed1 = changed1 || updatedNode$inner !== node.inner;
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                inner: updatedNode$inner,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.ISpreadExprPost) {
+        const transformed = visitor.ISpreadExprPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformIArrayItem = <Ctx>(
+    node: IArrayItem,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IArrayItem => {
+    if (!node) {
+        throw new Error('No IArrayItem provided');
+    }
+
+    const transformed = visitor.IArrayItem
+        ? visitor.IArrayItem(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    switch (node.type) {
+        case 'SpreadExpr': {
+            const transformed = visitor.IArrayItem_SpreadExpr
+                ? visitor.IArrayItem_SpreadExpr(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+    }
+
+    let updatedNode = node;
+
+    switch (node.type) {
+        case 'SpreadExpr': {
+            updatedNode = transformISpreadExpr(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
+        default: {
+            // let changed1 = false;
+
+            const updatedNode$0node = transformIExpression(node, visitor, ctx);
+            changed0 = changed0 || updatedNode$0node !== node;
+            updatedNode = updatedNode$0node;
+        }
+    }
+
+    switch (updatedNode.type) {
+        case 'SpreadExpr': {
+            const transformed = visitor.IArrayItemPost_SpreadExpr
+                ? visitor.IArrayItemPost_SpreadExpr(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IArrayItemPost) {
+        const transformed = visitor.IArrayItemPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
+export const transformIArrayExpr = <Ctx>(
+    node: IArrayExpr,
+    visitor: Visitor<Ctx>,
+    ctx: Ctx,
+): IArrayExpr => {
+    if (!node) {
+        throw new Error('No IArrayExpr provided');
+    }
+
+    const transformed = visitor.IArrayExpr
+        ? visitor.IArrayExpr(node, ctx)
+        : null;
+    if (transformed === false) {
+        return node;
+    }
+    if (transformed != null) {
+        if (Array.isArray(transformed)) {
+            ctx = transformed[1];
+            if (transformed[0] != null) {
+                node = transformed[0];
+            }
+        } else {
+            node = transformed;
+        }
+    }
+
+    let changed0 = false;
+
+    let updatedNode = node;
+    {
+        let changed1 = false;
+
+        let updatedNode$items = node.items;
+        {
+            let changed2 = false;
+            const arr1 = node.items.map((updatedNode$items$item1) => {
+                const result = transformIArrayItem(
+                    updatedNode$items$item1,
+                    visitor,
+                    ctx,
+                );
+                changed2 = changed2 || result !== updatedNode$items$item1;
+                return result;
+            });
+            if (changed2) {
+                updatedNode$items = arr1;
+                changed1 = true;
+            }
+        }
+
+        const updatedNode$loc = transformLoc(node.loc, visitor, ctx);
+        changed1 = changed1 || updatedNode$loc !== node.loc;
+        if (changed1) {
+            updatedNode = {
+                ...updatedNode,
+                items: updatedNode$items,
+                loc: updatedNode$loc,
+            };
+            changed0 = true;
+        }
+    }
+
+    node = updatedNode;
+    if (visitor.IArrayExprPost) {
+        const transformed = visitor.IArrayExprPost(node, ctx);
+        if (transformed != null) {
+            node = transformed;
+        }
+    }
+    return node;
+};
+
 export const transformITypeAbstraction = <Ctx>(
     node: ITypeAbstraction,
     visitor: Visitor<Ctx>,
@@ -7719,6 +8641,12 @@ export const transformIStmt = <Ctx>(
             break;
         }
 
+        case 'ArrayExpr': {
+            updatedNode = transformIArrayExpr(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TypeAbstraction': {
             updatedNode = transformITypeAbstraction(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -7997,6 +8925,12 @@ export const transformILambda = <Ctx>(
                 break;
             }
 
+            case 'ArrayExpr': {
+                updatedNode$body = transformIArrayExpr(node.body, visitor, ctx);
+                changed1 = changed1 || updatedNode$body !== node.body;
+                break;
+            }
+
             case 'TypeAbstraction': {
                 updatedNode$body = transformITypeAbstraction(
                     node.body,
@@ -8212,6 +9146,25 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
+        case 'ArrayExpr': {
+            const transformed = visitor.IExpression_ArrayExpr
+                ? visitor.IExpression_ArrayExpr(node, ctx)
+                : null;
+            if (transformed != null) {
+                if (Array.isArray(transformed)) {
+                    ctx = transformed[1];
+                    if (transformed[0] != null) {
+                        node = transformed[0];
+                    }
+                } else if (transformed == false) {
+                    return node;
+                } else {
+                    node = transformed;
+                }
+            }
+            break;
+        }
+
         case 'TypeAbstraction': {
             const transformed = visitor.IExpression_TypeAbstraction
                 ? visitor.IExpression_TypeAbstraction(node, ctx)
@@ -8309,6 +9262,12 @@ export const transformIExpression = <Ctx>(
             break;
         }
 
+        case 'ArrayExpr': {
+            updatedNode = transformIArrayExpr(node, visitor, ctx);
+            changed0 = changed0 || updatedNode !== node;
+            break;
+        }
+
         case 'TypeAbstraction': {
             updatedNode = transformITypeAbstraction(node, visitor, ctx);
             changed0 = changed0 || updatedNode !== node;
@@ -8384,6 +9343,16 @@ export const transformIExpression = <Ctx>(
         case 'TemplateString': {
             const transformed = visitor.IExpressionPost_TemplateString
                 ? visitor.IExpressionPost_TemplateString(updatedNode, ctx)
+                : null;
+            if (transformed != null) {
+                updatedNode = transformed;
+            }
+            break;
+        }
+
+        case 'ArrayExpr': {
+            const transformed = visitor.IExpressionPost_ArrayExpr
+                ? visitor.IExpressionPost_ArrayExpr(updatedNode, ctx)
                 : null;
             if (transformed != null) {
                 updatedNode = transformed;

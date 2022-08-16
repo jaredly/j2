@@ -2,11 +2,11 @@ import hashObject from 'object-hash';
 import { Ctx } from '.';
 import { noloc, tref } from './consts';
 import { DecoratorDecl } from './elements/decorators';
-import { typeForPattern } from './elements/pattern';
+import { typeForPattern } from './elements/patterns/typeForPattern';
 import { TVar } from './elements/type-vbls';
 import { errors } from './errors';
 import { Loc, parseType } from './grammar/base.parser';
-import { extract, Id, toId } from './ids';
+import { extract, Id, idToString, toId } from './ids';
 import { refsEqual } from './refsEqual';
 import { resolveAnalyzeType } from './resolveAnalyzeType';
 import { transformExpression, transformType, Visitor } from './transform-tast';
@@ -41,12 +41,13 @@ export type GlobalValue =
     | { type: 'builtin'; typ: Type }
     | { type: 'user'; typ: Type; expr: Expression };
 
+export type GlobalUserType = { type: 'user'; typ: Type };
 export type GlobalType =
     | {
           type: 'builtin';
           args: TVar[];
       }
-    | { type: 'user'; typ: Type };
+    | GlobalUserType;
 
 export const opaque = Symbol('opaque');
 
@@ -423,8 +424,8 @@ export const newContext = (): FullContext => {
             }
             return gref;
         },
-        resolveRefsAndApplies(t, path) {
-            return resolveAnalyzeType(t, this, path);
+        resolveRefsAndApplies(t, path, constraints) {
+            return resolveAnalyzeType(t, this, path, constraints);
         },
         getValueType(id) {
             const { hash, idx } = extract(id);
@@ -454,10 +455,11 @@ export const newContext = (): FullContext => {
             return resolveDecorator(this[opaque], name, rawHash);
         },
         ToTast: makeToTast(),
-        sym(name) {
+        sym(name, loc) {
             return {
                 name,
                 id: this[opaque].symid++,
+                loc,
             };
         },
 
@@ -473,12 +475,12 @@ export const newContext = (): FullContext => {
             };
         },
 
-        newTypeVar() {
+        newTypeVar(loc) {
             const id = this[opaque].symid++;
             return {
                 type: 'TVbl',
                 id,
-                loc: noloc,
+                loc,
             };
         },
 
@@ -507,6 +509,7 @@ export const newContext = (): FullContext => {
                 this[opaque].constraints[id] = mix;
                 return true;
             }
+            console.log('Failed to constraint', id, constraint);
             return false;
         },
 
@@ -692,12 +695,12 @@ export const newContext = (): FullContext => {
         //     return result;
         // },
         errorDecorators() {
-            const result: Id[] = [];
+            const result: { [idHash: string]: string } = {};
             Object.keys(this[opaque].decorators.names).forEach((name) => {
                 if (name.startsWith('error:')) {
-                    result.push(
-                        ...this[opaque].decorators.names[name].map((r) => r.id),
-                    );
+                    this[opaque].decorators.names[name].forEach((r) => {
+                        result[idToString(r.id)] = name.slice('error:'.length);
+                    });
                 }
             });
             return result;
@@ -764,18 +767,21 @@ andThen: <A: task, B: task, R, R2>(a: Task<A, R>, b: (res: R) => Task<B, R2>) =>
 testIO: <T>(read: string, task: Task<[\`Read((), string) | \`Print(string, ())], T>) => T
 withHandler: <Effects: task, Result, HandledEffects: task, Result2>(task: Task<Effects, Result, HandledEffects>, handler: (input: Task<[Effects | HandledEffects], Result>) => Task<Effects, Result2>) => Task<Effects, Result2>
 isSquare: (int) => bool
+toInt: (string) => [\`Ok(int) | \`Err([\`InvalidInt])]
+get: <T, A: const uint, B: A - 1u - uint>(arr: Array<T, A>, idx: B) => T
+geti: <T>(arr: Array<T, uint>, idx: uint) => [\`Ok(T) | \`Err([\`IndexOutOfBounds])]
+split: (string, string) => Array<string, uint>
+trim: (string) => string
+jsonify: (eq) => string
+jsonparse: <T: eq>(string) => [\`Ok(T) | \`Err([\`InvalidJson])]
 `;
-// withHandler: <A: task, B: task>
-/*
 
-withHandler
-takes a thing
-hmmmmmm what if Task gets a third optional argument?
-
-Task<Effects, Result=(), InnerEffects=[]>
-
-
-*/
+const tvar = (sym: Sym, bound?: RefKind, default_?: Type): TVar => ({
+    sym,
+    bound: bound ? tref(bound) : null,
+    loc: noloc,
+    default_: default_ ?? null,
+});
 
 export const setupDefaults = (ctx: FullContext) => {
     const named: { [key: string]: RefKind } = {};
@@ -783,29 +789,23 @@ export const setupDefaults = (ctx: FullContext) => {
         named[name] = addBuiltinType(ctx, name, []);
     });
     addBuiltinType(ctx, 'Task', [
-        {
-            sym: { id: 0, name: 'Effects' },
-            bound: tref(named['task']),
-            loc: noloc,
-            default_: null,
-        },
-        {
-            sym: { id: 1, name: 'Result' },
-            bound: null,
-            loc: noloc,
-            default_: tunit,
-        },
-        {
-            sym: { id: 1, name: 'ExtraInner' },
-            bound: tref(named['task']),
-            loc: noloc,
-            default_: tnever,
-        },
+        tvar({ id: 0, name: 'Effects', loc: noloc }, named['task']),
+        tvar({ id: 1, name: 'Result', loc: noloc }, undefined, tunit),
+        tvar({ id: 1, name: 'ExtraInner', loc: noloc }, named['task'], tnever),
+    ]);
+    addBuiltinType(ctx, 'Array', [
+        tvar({ id: 0, name: 'Value', loc: noloc }),
+        tvar(
+            { id: 1, name: 'Length', loc: noloc },
+            named['uint'],
+            tref(named['uint']),
+        ),
     ]);
     Object.keys(errors).forEach((tag) => {
         addBuiltinDecorator(ctx, `error:` + tag, 0);
     });
     addBuiltinDecorator(ctx, `test:type`, 0);
+    addBuiltinDecorator(ctx, 'expect', 0);
 
     builtinValues
         .split('\n')
@@ -823,7 +823,7 @@ export const setupDefaults = (ctx: FullContext) => {
                     transformType(tast, locClearVisitor, null),
                 );
             } catch (err) {
-                console.log(type);
+                console.log('Um unable to parse the type', type);
             }
         });
     ctx.resetSym();

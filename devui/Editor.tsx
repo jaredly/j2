@@ -1,8 +1,9 @@
 import * as React from 'react';
 import * as p from '../core/grammar/base.parser';
-import { colors, highlightLocations, styles } from './Highlight';
+import { highlightLocations } from './Highlight';
 import { HL } from './HL';
-import { markUpTree, Tree } from './markUpTree';
+import { markUpTree } from './markUpTree';
+import { treeToHtmlLines } from './treeToHtmlLines';
 
 export const isAncestor = (child: Node | null, parent: Node) => {
     while (child) {
@@ -61,17 +62,21 @@ const initial = (v: string): History => ({
     idx: 0,
 });
 
+type Muter = () => () => void;
+
 export const Editor = ({
     text,
     onBlur,
     onChange,
     typeFile,
     extraLocs,
+    obsref,
 }: {
     text: string;
     onBlur: (text: string) => void;
     onChange: (v: string) => void;
     typeFile?: boolean;
+    obsref: React.MutableRefObject<Muter | null>;
     extraLocs?: (v: p.File | p.TypeFile, text: string) => HL[];
 }) => {
     const ref = React.useRef(null as null | HTMLDivElement);
@@ -94,20 +99,23 @@ export const Editor = ({
             curExtraLocs.current = extraLocs;
             const locs = highlightLocations(text, typeFile, extraLocs);
             if (text.length) {
+                const out = obsref.current ? obsref.current() : null;
                 setHtmlAndClean(
                     ref.current!,
                     treeToHtmlLines(markUpTree(text, locs), true),
                 );
+                out ? out() : null;
             } else {
-                ref.current!.innerHTML = '';
-                text.split('\n').map((line) => {
-                    const div = document.createElement('div');
-                    div.textContent = line;
-                    if (!line.length) {
-                        div.innerHTML = '<br/>';
-                    }
-                    ref.current!.append(div);
-                });
+                console.error('whattt');
+                // ref.current!.innerHTML = '';
+                // text.split('\n').map((line) => {
+                //     const div = document.createElement('div');
+                //     div.textContent = line;
+                //     if (!line.length) {
+                //         div.innerHTML = '<br/>';
+                //     }
+                //     ref.current!.append(div);
+                // });
             }
 
             if (pos != null) {
@@ -131,7 +139,8 @@ export const Editor = ({
             attributes: true,
             characterData: true,
         };
-        const obsfn = () => {
+        const obsfn = (obsevt: any) => {
+            console.log('change', obsevt);
             const sel = document.getSelection()!;
             if (!isAncestor(sel?.anchorNode, ref.current!)) {
                 setEditing(false);
@@ -140,6 +149,7 @@ export const Editor = ({
             }
             const text = getText(ref.current!);
             if (text !== latest.current) {
+                obs.disconnect();
                 onChange(text);
                 const pos = getPos(ref.current!);
                 history.current = update(
@@ -149,7 +159,6 @@ export const Editor = ({
                     prevPos.current,
                 );
                 prevPos.current = pos;
-                obs.disconnect();
                 const locs = highlightLocations(
                     text,
                     typeFile,
@@ -163,6 +172,13 @@ export const Editor = ({
         };
         const obs = new MutationObserver(obsfn);
         obs.observe(ref.current!, options);
+        if (obsref.current) {
+            obsref.current();
+        }
+        obsref.current = () => {
+            obs.disconnect();
+            return () => obs.observe(ref.current!, options);
+        };
 
         const keyfn = (evt: KeyboardEvent) => {
             if (evt.metaKey && evt.key === 'z') {
@@ -207,127 +223,111 @@ export const Editor = ({
     }, [editing]);
 
     return (
-        <div
-            contentEditable
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
-            className="editor-ce"
-            style={{
-                outline: editing ? '2px solid rgba(255,0,0,0.1)' : 'none',
-                padding: 4,
-                whiteSpace: 'pre-wrap',
-                minHeight: '1.5em',
-                minWidth: 50,
-                flexShrink: 0,
-            }}
-            onBlur={() => {
-                setEditing(false);
-                onBlur(getText(ref.current!));
-            }}
-            onFocus={() => setEditing(true)}
-            onKeyDown={(evt) => {
-                if (evt.key === 'Escape') {
-                    ref.current!.blur();
-                    document.getSelection()?.removeAllRanges();
-                }
-                if (evt.key === 'Tab') {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    const range = document.getSelection()?.getRangeAt(0);
-                    if (range) {
-                        const node = document.createTextNode('  ');
-                        range.insertNode(node);
-                        range.selectNode(node);
-                        range.collapse(false);
+        <Editable
+            onRef={(node) => {
+                ref.current = node;
+                node.addEventListener('blur', () => {
+                    setEditing(false);
+                    onBlur(getText(node));
+                });
+                node.addEventListener('focus', () => {
+                    setEditing(true);
+                });
+                node.addEventListener('keydown', (evt) => {
+                    if (evt.key === 'Escape') {
+                        ref.current!.blur();
+                        document.getSelection()?.removeAllRanges();
                     }
-                }
+                    if (evt.key === 'Tab') {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        const range = document.getSelection()?.getRangeAt(0);
+                        if (range) {
+                            const node = document.createTextNode('  ');
+                            range.insertNode(node);
+                            range.selectNode(node);
+                            range.collapse(false);
+                        }
+                    }
+                });
             }}
-            ref={(node) => (ref.current = node)}
-        ></div>
+        />
     );
+
+    // return (
+    //     <div
+    //         contentEditable
+    //         autoCorrect="off"
+    //         autoCapitalize="off"
+    //         spellCheck={false}
+    //         className="editor-ce"
+    //         style={{
+    //             outline: editing ? '2px solid rgba(255,0,0,0.1)' : 'none',
+    //             padding: 4,
+    //             whiteSpace: 'pre-wrap',
+    //             minHeight: '1.5em',
+    //             minWidth: 50,
+    //             flexShrink: 0,
+    //         }}
+    //         onBlur={() => {
+    //             setEditing(false);
+    //             onBlur(getText(ref.current!));
+    //         }}
+    //         onFocus={() => setEditing(true)}
+    //         onKeyDown={(evt) => {
+    //             if (evt.key === 'Escape') {
+    //                 ref.current!.blur();
+    //                 document.getSelection()?.removeAllRanges();
+    //             }
+    //             if (evt.key === 'Tab') {
+    //                 evt.preventDefault();
+    //                 evt.stopPropagation();
+    //                 const range = document.getSelection()?.getRangeAt(0);
+    //                 if (range) {
+    //                     const node = document.createTextNode('  ');
+    //                     range.insertNode(node);
+    //                     range.selectNode(node);
+    //                     range.collapse(false);
+    //                 }
+    //             }
+    //         }}
+    //         ref={(node) => (ref.current = node)}
+    //     />
+    // );
 };
 
-const serializeStyles = (styles?: React.CSSProperties) => {
-    if (!styles) {
-        return '';
-    }
-    let items: string[] = [];
-    Object.keys(styles).forEach((k) => {
-        items.push(`${k}:${(styles as any)[k]}`);
-    });
-    return '; ' + items.join('; ');
-};
-
-export const openSpan = (hl: HL, noPrefix = false, noSuffix = false) =>
-    `<span class="${hl.type}" style="color: ${colors[hl.type] ?? '#aaa'}${
-        hl.underline
-            ? '; text-decoration: underline; text-decoration-style: wavy; text-decoration-color: ' +
-              hl.underline
-            : ''
-    }${serializeStyles(styles[hl.type])}"${
-        hl.prefix && !noPrefix
-            ? ` data-prefix="${escapeAttr(hl.prefix.text)}"`
-            : ''
-    }${
-        !noPrefix && hl.prefix?.message
-            ? ` data-message="${escapeAttr(
-                  hl.prefix.message,
-              )}" title="${escapeAttr(hl.prefix.message)}"`
-            : ''
-    }${
-        !noSuffix && hl.suffix
-            ? ` data-suffix="${escapeAttr(hl.suffix.text)}"`
-            : ''
-    }${
-        !noSuffix && hl.suffix?.message
-            ? ` data-suffix-message="${escapeAttr(
-                  hl.suffix.message,
-              )}" title="${escapeAttr(hl.suffix.message)}"`
-            : ''
-    }${
-        styles[hl.type]?.contentEditable == false
-            ? ' contentEditable="false"'
-            : ''
-    }>`;
-
-export const treeToHtmlLines = (tree: Tree, noPrefix = false) => {
-    return `<div>${treeToHtmlLinesInner(tree, [], noPrefix)}</div>`;
-};
-
-export const escapeLine = (line: string) => {
-    return line
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-};
-
-export const escapeAttr = (attr: string) => {
-    return escapeLine(attr).replace(/"/g, '&quot;');
-};
-
-export const treeToHtmlLinesInner = (
-    tree: Tree,
-    path: HL[],
-    noPrefix = false,
-): string => {
-    // ohhh how do I deal with opening lines and closing ones
-    return `${openSpan(tree.hl, noPrefix)}${tree.children
-        .map((child, i) =>
-            child.type === 'leaf'
-                ? `<span data-span="${child.span[0]}:${
-                      child.span[1]
-                  }">${child.text
-                      .split('\n')
-                      .map(escapeLine)
-                      .join(
-                          path.map(() => '</span>').join('') +
-                              '</div><div>' +
-                              path.map((h) => openSpan(h, true, true)).join(''),
-                      )}</span>`
-                : treeToHtmlLinesInner(child, path.concat([tree.hl]), noPrefix),
-        )
-        .join('')}</span>`;
+export const Editable = ({ onRef }: { onRef: (n: HTMLDivElement) => void }) => {
+    const ref = React.useRef(null as null | HTMLDivElement);
+    React.useEffect(() => {
+        if (!ref.current) {
+            console.error('editable not there');
+            return;
+        }
+        const node = document.createElement('div');
+        node.contentEditable = 'true';
+        node.setAttribute('autoCorrect', 'off');
+        node.setAttribute('autoCapitalize', 'off');
+        node.spellcheck = false;
+        node.className = 'editor-ce';
+        Object.assign(node.style, {
+            padding: 4,
+            outline: 'none',
+            whiteSpace: 'pre-wrap',
+            minHeight: '1.5em',
+            minWidth: 50,
+            flexShrink: 0,
+        });
+        ref.current.appendChild(node);
+        onRef(node);
+    }, []);
+    // ok
+    return (
+        <div
+            ref={(node) => {
+                ref.current = node;
+            }}
+        />
+    );
 };
 
 const getPos = (target: HTMLElement) => {

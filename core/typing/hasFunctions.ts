@@ -12,6 +12,9 @@ export const hasFunctions = (t: Type, ctx: Ctx): boolean => {
                 return false;
             },
             TRef(node, _) {
+                if (ctx.isBuiltinType(node, 'Array')) {
+                    return null;
+                }
                 const resolved = ctx.resolveRefsAndApplies(node);
                 // Probably still global
                 if (resolved?.type === 'TRef') {
@@ -22,6 +25,9 @@ export const hasFunctions = (t: Type, ctx: Ctx): boolean => {
                 return false;
             },
             TApply(node, _) {
+                if (ctx.isBuiltinType(node.target, 'Array')) {
+                    return null;
+                }
                 const resolved = ctx.resolveRefsAndApplies(node);
                 found =
                     found || (resolved ? hasFunctions(resolved, ctx) : true);

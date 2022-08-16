@@ -15,8 +15,10 @@ export const grammar = `
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TBlank / TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
+TAtom = TConst / TBlank / TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
+
+TConst = "const" __ inner:TAtom
 
 TOps = left:TOpInner right_drop:TRight*
 TRight = _ top:$top _ right:TOpInner
@@ -35,6 +37,12 @@ TypePair = name:$IdText _ "=" _ typ:Type
 TBlank = pseudo:"_"
 
 `;
+
+export type TConst = {
+    type: 'TConst';
+    inner: Type;
+    loc: t.Loc;
+};
 
 export type TOps = {
     type: 'TOps';
@@ -93,9 +101,10 @@ export type Type =
     | t.Number
     | t.String
     | TVars
-    | TDecorated
+    | TConst
     | TApply
     | t.TRecord
+    | TDecorated
     | TOps;
 
 // | TApply | TDecorated | TApply | TVars
@@ -125,8 +134,15 @@ export const asApply = (t: p.Type): p.TApply =>
         : t;
 
 export const ToTast = {
-    TBlank({ type, loc }: p.TBlank, ctx: TCtx): t.TBlank {
-        return { type, loc };
+    TBlank({ type, loc }: p.TBlank, ctx: TCtx): t.Type {
+        return ctx.newTypeVar(loc);
+    },
+    TConst({ type, inner, loc }: p.TConst, ctx: TCtx): TConst {
+        return {
+            type: 'TConst',
+            inner: ctx.ToTast.Type(inner, ctx),
+            loc,
+        };
     },
     TypeAlias({ loc, items }: p.TypeAlias, ctx: TCtx): t.TypeAlias {
         return {
@@ -219,6 +235,26 @@ export const ToTast = {
 export const ToAst = {
     TBlank(blank: t.TBlank, ctx: TACtx): p.TBlank {
         return { ...blank, pseudo: '_' };
+    },
+    TConst(constant: t.TConst, ctx: TACtx): p.TConst {
+        let inner = ctx.ToAst.Type(constant.inner, ctx);
+        if (
+            inner.type === 'TOps' ||
+            inner.type === 'TDecorated' ||
+            inner.type === 'TApply'
+        ) {
+            inner = {
+                type: 'TParens',
+                items: { type: 'TComma', items: [inner], loc: constant.loc },
+                loc: constant.loc,
+                open: null,
+            };
+        }
+        return {
+            type: 'TConst',
+            inner,
+            loc: constant.loc,
+        };
     },
     TypeAlias({ elements, loc }: t.TypeAlias, ctx: TACtx): p.TypeAlias {
         return {
@@ -313,8 +349,14 @@ export const ToAst = {
 };
 
 export const ToPP = {
-    TBlank({ loc }: t.TBlank, ctx: PCtx): pp.PP {
+    TBlank({ loc }: p.TBlank, ctx: PCtx): pp.PP {
         return pp.atom('_', loc);
+    },
+    TConst({ inner, loc }: p.TConst, ctx: PCtx): pp.PP {
+        return pp.items(
+            [pp.atom('const ', loc), ctx.ToPP.Type(inner, ctx)],
+            loc,
+        );
     },
     TypeAlias({ items, loc }: p.TypeAlias, ctx: PCtx): pp.PP {
         const lines: pp.PP[] = [];

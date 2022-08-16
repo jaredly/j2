@@ -25,7 +25,7 @@ Identifier = text:$IdText hash:IdHash?
 
 IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
 
-Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
+Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block / ArrayExpr
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -101,7 +101,11 @@ export const typeToplevel = (
 
 export const inferTopType = (expr: p.Expression, ctx: Ctx): t.Type => {
     if (expr.type === 'TypeAbstraction') {
-        const args = expr.args.items.map((t) => ctx.ToTast.TBArg(t, ctx));
+        const args = expr.args.items.map((t) => {
+            const arg = ctx.ToTast.TBArg(t, ctx);
+            ctx = ctx.withLocalTypes([arg]);
+            return arg;
+        });
         return {
             type: 'TVars',
             inner: inferTopType(expr.inner, ctx.withLocalTypes(args)),
@@ -204,8 +208,9 @@ export const removeErrorDecorators = (ctx: Ctx): Visitor<null> => {
             (t) =>
                 !(
                     t.id.ref.type === 'Global' &&
-                    errorDecs.some((i) =>
-                        idsEqual(i, (t.id.ref as t.GlobalRef).id),
+                    Object.keys(errorDecs).some(
+                        (idHash) =>
+                            idHash === idToString((t.id.ref as t.GlobalRef).id),
                     )
                 ),
         );
@@ -545,6 +550,7 @@ function determineKind(t: p.Type, ctx: ACtx): TopTypeKind {
         case 'TDecorated':
         case 'TVars':
         case 'TApply':
+        case 'TConst':
             return determineKind(t.inner, ctx);
         case 'TParens':
             if (t.items?.items.length === 1) {
@@ -578,6 +584,7 @@ function determineKindT(t: t.Type, ctx: ACtx): TopTypeKind {
         case 'String':
         case 'TOps':
         case 'TBlank':
+        case 'TConst':
             return 'builtin';
         case 'TDecorated':
         case 'TVars':
@@ -628,7 +635,7 @@ export const findBuiltinName = (id: t.Id, ctx: ACtx): string | null => {
 import * as b from '@babel/types';
 import { Ctx as JCtx } from '../ir/to-js';
 import { FullContext, nodebug } from '../ctx';
-import { idsEqual } from '../ids';
+import { idsEqual, idToString } from '../ids';
 import { transformToplevel, Visitor } from '../transform-tast';
 
 export const ToJS = {

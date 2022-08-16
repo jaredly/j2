@@ -1,4 +1,4 @@
-import { Apply, IApply } from './elements/apply';
+import { Apply, IApply } from './elements/apply/apply';
 import {
     Boolean,
     ITemplateString,
@@ -11,7 +11,7 @@ import {
     ITypeAbstraction,
     TypeAbstraction,
     TypeApplication,
-} from './elements/generics';
+} from './elements/generics/generics';
 import { Type } from './elements/type';
 import { Id, idToString } from './ids';
 import { IRecord, Record } from './elements/record-exprs';
@@ -19,7 +19,7 @@ import { ILambda, Lambda } from './elements/lambda';
 import { Await } from './elements/awaits';
 import { Block } from './elements/lets';
 export type { Id };
-export type { Apply, IApply } from './elements/apply';
+export type { Apply, IApply } from './elements/apply/apply';
 export type { Ctx as ACtx } from './typing/analyze';
 export type {
     Boolean,
@@ -40,11 +40,12 @@ export type {
     ITypeAbstraction,
     TypeAbstraction,
     TypeApplication,
-} from './elements/generics';
+} from './elements/generics/generics';
 export type { TApply, TVar, TVars } from './elements/type-vbls';
 export type {
     TAdd,
     TBlank,
+    TConst,
     TDecorated,
     TLambda,
     TOps,
@@ -54,9 +55,9 @@ export type {
     TVbl,
     Type,
 } from './elements/type';
-export type { EnumCase, TEnum } from './elements/enums';
+export type { EnumCase, TEnum } from './elements/enums/enums';
 export type { Enum, IEnum } from './elements/enum-exprs';
-export type { TRecord, TRecordKeyValue } from './elements/records';
+export type { TRecord, TRecordKeyValue } from './elements/records/records';
 export type {
     IRecord,
     IRecordKeyValue,
@@ -66,11 +67,14 @@ export type {
 export type { ILambda, LArg, Lambda } from './elements/lambda';
 export type {
     Locals,
+    PArray,
+    PArrayItem,
     PBlank,
     PDecorated,
     PEnum,
     PName,
     PRecord,
+    PSpread,
     Pattern,
 } from './elements/pattern';
 export type {
@@ -85,9 +89,18 @@ export type {
 } from './elements/lets';
 import { If } from './elements/ifs';
 import { Switch } from './elements/switchs';
+import { ArrayExpr, IArrayExpr } from './elements/array';
 export type { IIf, IIfYes, If, IfCond, IfYes } from './elements/ifs';
 export type { AVCtx, Case, ICase, ISwitch, Switch } from './elements/switchs';
 export type { Await } from './elements/awaits';
+export type {
+    ArrayExpr,
+    ArrayItem,
+    IArrayExpr,
+    IArrayItem,
+    ISpreadExpr,
+    SpreadExpr,
+} from './elements/array';
 
 export type GlobalRef = {
     type: 'Global';
@@ -197,6 +210,7 @@ export type Expression =
     | TypeAbstraction
     | TemplateString
     | TypeApplication
+    | ArrayExpr
     | DecoratedExpression;
 
 export type IExpression =
@@ -206,11 +220,12 @@ export type IExpression =
     | Boolean
     | IApply
     | ITemplateString
+    | IArrayExpr
     | ITypeAbstraction
     | IEnum
     | IRecord;
 
-export type Sym = { id: number; name: string };
+export type Sym = { id: number; name: string; loc: Loc };
 
 // export type
 /*

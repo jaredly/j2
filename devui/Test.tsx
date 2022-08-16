@@ -90,6 +90,7 @@ export const TestView = ({
                 >
                     <Editor
                         text={text}
+                        obsref={{ current: () => () => {} }}
                         extraLocs={(v) => {
                             if (v.type !== 'File') {
                                 return [];

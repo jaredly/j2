@@ -5,9 +5,12 @@ import { Ctx as PCtx } from '../printer/to-pp';
 import { transformIBlock, Visitor } from '../transform-tast';
 import * as t from '../typed-ast';
 import { Ctx as ACtx, decorate, pdecorate } from '../typing/analyze';
+import { letLocals } from '../typing/localTrackingVisitor';
 import { Ctx as TACtx } from '../typing/to-ast';
 import { Ctx as TCtx } from '../typing/to-tast';
-import { getLocals, typeForPattern, typeMatchesPattern } from './pattern';
+import { getLocals } from './pattern';
+import { typeForPattern } from './patterns/typeForPattern';
+import { typeMatchesPattern } from './patterns/typeMatchesPattern';
 
 export const grammar = `
 Block = "{" _ stmts:Stmts? _ "}"
@@ -73,7 +76,9 @@ export const ToTast = {
                         // ctx.debugger();
                         const typ =
                             ctx.getType(res.expr) ??
-                            typeForPattern(res.pat, ctx);
+                            typeForPattern(res.pat, ctx, (loc) =>
+                                ctx.newTypeVar(loc),
+                            );
                         getLocals(res.pat, typ, locals, ctx);
                         ctx = ctx.withLocals(locals) as TCtx;
                     }
@@ -104,7 +109,7 @@ export const ToAst = {
                               const locals: t.Locals = [];
                               const typ =
                                   ctx.actx.getType(stmt.expr) ??
-                                  typeForPattern(stmt.pat);
+                                  typeForPattern(stmt.pat, ctx.actx);
                               getLocals(stmt.pat, typ, locals, ctx.actx);
                               ctx = {
                                   ...ctx,
@@ -182,6 +187,13 @@ export const ToIR = {
             type: 'Block',
             stmts: node.stmts
                 .map((stmt, i): t.IStmt[] => {
+                    if (stmt.type === 'Let') {
+                        const locals = letLocals(stmt, ctx.actx);
+                        ctx = {
+                            ...ctx,
+                            actx: ctx.actx.withLocals(locals) as ACtx,
+                        };
+                    }
                     if (i < node.stmts.length - 1 || stmt.type === 'Let') {
                         return flatLet(ctx.ToIR.Stmt(stmt, ctx));
                     }
@@ -400,7 +412,8 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             if (stmt.type === 'Let') {
                 const locals: t.Locals = [];
                 const typ =
-                    ctx.ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
+                    ctx.ctx.getType(stmt.expr) ??
+                    typeForPattern(stmt.pat, ctx.ctx);
                 getLocals(stmt.pat, typ, locals, ctx.ctx);
                 ctx = { ...ctx, ctx: ctx.ctx.withLocals(locals) as ACtx };
                 const res = checkLet(stmt, ctx);

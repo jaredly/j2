@@ -15,8 +15,23 @@ import effects from '../core/elements/test/effects.jd?raw';
 import recursive from '../core/elements/test/recursive.jd?raw';
 // @ts-ignore
 import syntax from '../core/elements/test/syntax.jd?raw';
+// @ts-ignore
+import ui from '../core/elements/test/ui.jd?raw';
+// @ts-ignore
+import movies from '../core/elements/test/movies.jd?raw';
+// @ts-ignore
+import arrays from '../core/elements/test/arrays.jd?raw';
 
-const examples = { syntax, effects, records, effPaper, recursive };
+const examples = {
+    syntax,
+    effects,
+    records,
+    effPaper,
+    recursive,
+    ui,
+    movies,
+    arrays,
+};
 
 const darkTheme = createTheme({ type: 'dark' });
 

@@ -93,6 +93,7 @@ const ignore = [
     'LTCtx',
     'AVCtx',
     'ACtx',
+    'Constraints',
 ];
 
 const ctx: Ctx = {

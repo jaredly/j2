@@ -15,7 +15,8 @@ import { Ctx as JCtx } from '../ir/to-js';
 import { iife } from './lets';
 import { unifyTypes } from '../typing/unifyTypes';
 import { isUnit } from '../typing/getType';
-import { getLocals, typeForPattern } from './pattern';
+import { getLocals } from './pattern';
+import { typeForPattern } from './patterns/typeForPattern';
 
 export const grammar = `
 If = "if" __ yes:IfYes no:(_ "else" _ Else)?
@@ -66,7 +67,7 @@ export const ToTast = {
                     const c = ctx.ToTast.IfCond(cond, ctx);
                     if (c.type === 'Let') {
                         const typ =
-                            ctx.getType(c.expr) ?? typeForPattern(c.pat);
+                            ctx.getType(c.expr) ?? typeForPattern(c.pat, ctx);
                         getLocals(c.pat, typ, locals, ctx);
                     }
                     return c;
@@ -106,7 +107,7 @@ export const ToAst = {
                         if (cond.type === 'Let') {
                             const typ =
                                 ctx.actx.getType(cond.expr) ??
-                                typeForPattern(cond.pat);
+                                typeForPattern(cond.pat, ctx.actx);
                             getLocals(cond.pat, typ, locals, ctx.actx);
                         }
                         return ctx.ToAst.IfCond(cond, ctx);
@@ -184,7 +185,7 @@ export const ToIR = {
                     if (cond.type === 'Let') {
                         const typ =
                             ctx.actx.getType(cond.expr) ??
-                            typeForPattern(cond.pat);
+                            typeForPattern(cond.pat, ctx.actx);
                         getLocals(cond.pat, typ, locals, ctx.actx);
                     }
                     const c = ctx.ToIR.IfCond(cond, ctx);
@@ -222,18 +223,21 @@ export const and = (conds: b.Expression[]) => {
 
 export const ToJS = {
     IfYes(node: IIfYes, ctx: JCtx): [b.Expression | null, b.Statement] {
-        const locals: t.Locals = [];
         const conds = node.conds
             .map((cond) => ctx.ToJS.IfCond(cond, ctx))
             .filter(Boolean) as b.Expression[];
         const lets: t.ILet[] = node.conds.filter(
             (b) => b.type === 'Let',
         ) as t.ILet[];
+        const locals: t.Locals = [];
         lets.forEach((ilet) => {
             getLocals(ilet.pat, ilet.typ, locals, ctx.actx);
         });
         const yes = ctx.ToJS.Block(
-            { ...node.block, stmts: [...lets, ...node.block.stmts] },
+            {
+                ...node.block,
+                stmts: [...(locals.length ? lets : []), ...node.block.stmts],
+            },
             { ...ctx, actx: ctx.actx.withLocals(locals) as ACtx },
         );
         if (!conds.length) {
@@ -279,7 +283,8 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             if (cond.type === 'Let') {
                 getLocals(
                     cond.pat,
-                    ctx.ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
+                    ctx.ctx.getType(cond.expr) ??
+                        typeForPattern(cond.pat, ctx.ctx),
                     locals,
                     ctx.ctx,
                 );
@@ -304,7 +309,7 @@ export const Analyze: Visitor<{ ctx: ACtx; hit: {} }> = {
             } else {
                 getLocals(
                     cond.pat,
-                    ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
+                    ctx.getType(cond.expr) ?? typeForPattern(cond.pat, ctx),
                     locals,
                     ctx,
                 );

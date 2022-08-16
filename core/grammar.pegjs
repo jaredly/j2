@@ -62,8 +62,8 @@ StructDef = "type" __ id:Identifier typeVbls:TypeVbls? __ ("=" __)? decl:RecordD
 RecordDecl = "{" _ items:RecordItemCommas? _ "}" 
 // TODO: spreads much come first, then rows
 RecordItemCommas = first:RecordLine rest:(_ "," _ RecordLine)* ","? 
-RecordLine = RecordSpread / RecordItem
-RecordSpread = "..." constr:Identifier typeVbls:TypeVblsApply? defaults:(
+RecordLine = SpreadExpr / RecordItem
+SpreadExpr = "..." constr:Identifier typeVbls:TypeVblsApply? defaults:(
     _ "{" _ SpreadDefaults? _ "}"
 )? 
 SpreadDefaults = first:SpreadDefault rest:(_ "," _ SpreadDefault)* _ ","? 

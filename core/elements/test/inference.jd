@@ -1,11 +1,10 @@
-(v) => (+#[:unresolved:])<_, 1>(v, 1)
-((v) => (+#[:unresolved:])<_, 1>(v, 1))(2)
+(v) => v + 1
+((v) => v + 1)(2)
+({age}) => age + 1
 (v) => switch v {
     `One => 1;
-}
-({age}) => (+#[:unresolved:])<_, 1>(age, 1)
-(v) => switch v {
-    {age} => age#[:unresolved:] + 1;
+    `Two => 2;
+    `Three => 3;
 }
 let wint = (v: int) => v + 1
 (v) => wint(v)
@@ -15,3 +14,28 @@ let wage = (v: {age: int}) => 10
 (v) => wage({age: v})
 let wname = (v: [`Age(int)]) => 10
 (v) => wname(`Age(v))
+(v) => switch v {
+    {age} => wint(age);
+}
+(v) => switch v {
+    `One => 1;
+    `Hi(n) => wint(n);
+    `Ho({n}) => wint(n);
+}
+(v) => "Hi ${v}"
+(a): int => a(10)
+({a}): int => a
+(`A(a)): int => a
+let ok = <T>(a: T) => a
+ok(10)
+let ok = <T>(a: [`Hi(T)]) => 1
+ok(`Hi(10))
+let mk = <A, B: int>(a: [`Hi(A, B)]) => a
+mk(`Hi("hi", 2))
+let mkk = <A, B: A>(a: A, b: B) => a
+(v: int) => mkk(v, 2)
+mkk(1, 2)
+(v: Array<string, 5u>) => v->get<string, 5u, 3u>(3u)
+(v: Array<string, 5u>) => v->get(4u)
+let ok2 = <A, B: const uint>(b: Array<A>, c: B) => b
+(v: Array<string>) => ok2(v, 3u)

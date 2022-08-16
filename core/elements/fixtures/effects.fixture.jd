@@ -4,7 +4,7 @@
 let print = (v: string): Task<[`Print(string, ())]> => `Print(v, (()) => `Return())
 
 --[output:expected]--
-alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias Task#[h02d306973a63fe0a96506957cebf956e63e4dfbd] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let print = (v#[0]: string): Task<[`Print(string, ())]> => `Print(v#[0], (()) => `Return())
 // (string) => [`Print(string, (()) => [`Return()])]
 /* v => ({
@@ -36,7 +36,7 @@ let print = (v#[0]: string) => `Print(v#[0], (()) => `Return())
 (v: Task<[`One((), [])]>): Task<[`One((), []) | `Two((), [])]> => v
 
 --[output:expected]--
-alias Task#[h67d00eba961cd5135110775d8654598dc22e7274]
+alias Task#[h02d306973a63fe0a96506957cebf956e63e4dfbd]
 (v#[0]: Task<[`One((), [])]>): Task<[`One((), []) | `Two((), [])]> => v#[0]
 // (Task<[`One((), [])]>) => Task<[`One((), [])]>
 /* v => v */
@@ -47,11 +47,11 @@ let print = (v: string): Task<[`Print(string, ())]> => `Pront(v, () => `Return()
 let print = (v: string): Task<[`Print(string, ())]> => `Print(v, () => `Return(10))
 
 --[output:expected]--
-alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] error:resMismatch#[hb090f18487ae3bd77546a5c35ccf59b6adf3aa59] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
-let print = (v#[0]: string): @error:resMismatch(inferrred: :[`Pront(string, () => [`Return()])]) Task<
+alias Task#[h02d306973a63fe0a96506957cebf956e63e4dfbd] error:resMismatch#[hb090f18487ae3bd77546a5c35ccf59b6adf3aa59] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+let print = (v#[0]: string): @error:resMismatch(inferred: :[`Pront(string, () => [`Return()])]) Task<
     [`Print(string, ())],
 > => `Pront(v#[0], () => `Return())
-let print = (v#[0]: string): @error:resMismatch(inferrred: :[`Print(string, () => [`Return(10)])]) Task<
+let print = (v#[0]: string): @error:resMismatch(inferred: :[`Print(string, () => [`Return(10)])]) Task<
     [`Print(string, ())],
 > => `Print(v#[0], () => `Return(10))
 
@@ -68,7 +68,7 @@ let hello = (): Task<[`Print(string, ()) | `Read((), string)]> => {
 }
 
 --[output:expected]--
-alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias Task#[h02d306973a63fe0a96506957cebf956e63e4dfbd] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let hello = (): Task<[`Print(string, ()) | `Read((), string)]> => {
     `Print(
         "hello",
@@ -119,7 +119,7 @@ let helloFolks = ():Task<[ `Read((), string) | `Print(string, ()) ], string> => 
 }
 
 --[output:expected]--
-alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias Task#[h02d306973a63fe0a96506957cebf956e63e4dfbd] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let print = (value#[0]: string): Task<[`Print(string, ())], ()> => `Print(
     value#[0],
     (()) => `Return(),
@@ -141,7 +141,7 @@ let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
     payload: v
   })]
 }) */
-alias andThen#[h350018996371f8a646e144d264506c10d2ebde8b] print#[h63113b95561a5d4d1911853781042e6ba54df92c] read#[hea92485692e0593ccf7d20a1c0c459e71b77629a]
+alias andThen#[h8a83502eef9f0a692be8ab46bddf229baa127cfa] print#[h739808df664793f3dfd55b014243af93b8c17aec] read#[h3b9e6c471b89192d44f494dfdcb3dfdbd202aee7]
 let helloFolks = (): Task<[`Read((), string) | `Print(string, ())], string> => {
     andThen<[`Print(string, ())], [`Read((), string)], (), string>(
         print("What is your name?"),
@@ -183,7 +183,7 @@ let read = () => `Read((), (v#[0]: string) => `Return(v#[0]))
     payload: v
   })]
 }) */
-alias print#[he6c7e1c55ac010d20308e72d2fd9592e7ae96c4c] read#[hea92485692e0593ccf7d20a1c0c459e71b77629a]
+alias andThen#[h8a83502eef9f0a692be8ab46bddf229baa127cfa] print#[h38902bc29d78a0ce44800001aed73382dfc0aaea] read#[h3b9e6c471b89192d44f494dfdcb3dfdbd202aee7]
 let helloFolks = () => {
     print("What is your name?")!;
     print(read()!)!;
@@ -209,7 +209,7 @@ withHandler<[`Print(string, ())], string, [`Read((), string)], string>(
 }
 
 --[output:expected]--
-alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] withHandler#[ha096a125d17e577335cba67a01ae6f08c8a8254b]
+alias Task#[h02d306973a63fe0a96506957cebf956e63e4dfbd] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4] withHandler#[h27d4fa6bf4d53ec82ccaf6e88b53d82a6c9cdaea]
 let alwaysRead: (value: string, task: Task<[`Read((), string) | `Print(string, ())], string>) => Task<
     [`Print(string, ())],
     string,
@@ -226,7 +226,7 @@ let alwaysRead: (value: string, task: Task<[`Read((), string) | `Print(string, (
         );
     };
 }
-// (string, Task<[`Read((), string) | `Print(string, ())], string>) => [`Return(string) | `Print(string, (arg: ()) => Task<[`Print(string, ())], string>)]
+// (value: string, task: Task<[`Read((), string) | `Print(string, ())], string>) => Task<[`Print(string, ())], string>
 /* (value, task) => (() => {
   if (task.tag === "Return") {
     let {
@@ -260,7 +260,7 @@ let hello = (t: Task<[`Read((), string) | `Print(string, ())], int>) => {
 }
 
 --[output:expected]--
-alias Task#[h67d00eba961cd5135110775d8654598dc22e7274] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
+alias Task#[h02d306973a63fe0a96506957cebf956e63e4dfbd] int#[h942cd67cf31d350ec1f39bcd0c933f586dcd176f] string#[hd978df838905e7e1bd7bb33530ae12436e3756f4]
 let hello = (t#[0]: Task<[`Read((), string) | `Print(string, ())], int>) => {
     switch t#[0] {
         `Return(v#[1]) => v#[1];

@@ -1,0 +1,86 @@
+type Movie = {title: string, year: int, starring: Array<string>}
+let orFail = <R, F: [*]>(result: [`Ok(R) | `Err(F)]): Task<[`Failure(F, [])], R> => switch result {
+    `Ok(r) => `Return(r);
+    `Err(f) => `Failure(f, ());
+}
+let fail = <T: [*]>(f: T) => `Failure(f, ())
+let movieFromLine = (line: string) => {
+    switch line->split("!") {
+        [title, year, starring] => {
+            {title: title, year: year->toInt->orFail!, starring: starring->split(",")};
+        };
+        _ => {
+            fail(`InvalidLine(line))!;
+        };
+    };
+}
+movieFromLine("hello!100!folks,and,such") == `Return(
+    {title: "hello", year: 100, starring: ["folks", "and", "such"]},
+)
+movieFromLine("hello") == `Failure(`InvalidLine("hello"), ())
+let mapTask: <T, Effects: task, R>(values: Array<T>, fn: (v: T) => Task<Effects, R>) => Task<
+    Effects,
+    Array<R>,
+> = <T, Effects: task, R>(values: Array<T>, fn: (v: T) => Task<Effects, R>): Task<Effects, Array<R>> => {
+    switch values {
+        [one, ...rest] => {
+            let res = fn(one)!;
+            let coll = mapTask<T, Effects, R>(rest, fn)!;
+            [res, ...coll];
+        };
+        _ => [];
+    };
+}
+let httpFetchText = (url: string) => `HttpFetch(url, (data: string) => `Return(data))
+let writeFile = (path: string, data: string) => `WriteFile((path, data), (()) => `Return())
+let getMovies = (url: string) => {
+    let response = httpFetchText(url)!;
+    response->trim->split("\n")->mapTask<
+        string,
+        [`Failure([`InvalidInt | `InvalidLine(string)], [])],
+        {title: string, year: int, starring: Array<string, uint>},
+    >(movieFromLine)!;
+}
+let writeOutput = (movies: Array<Movie>) => {
+    writeFile("output.json", jsonify(movies));
+}
+let getEnv = (arg: string) => `GetEnv(arg, (v: string) => `Return(v))
+let run = <Effects: task, Fails: [*], Errors: [*], R>(task: Task<[Effects | `Failure(Fails, [])], R>) => `Run(
+    task,
+    (v: [`Ok(R) | `Err([Errors | Fails])]) => `Return(v),
+)
+let movieTask = () => {
+    let apiKey = getEnv("API_KEY")!;
+    let movies = getMovies("https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}")!;
+    writeOutput(movies)!;
+}
+let print = (value: string) => `Print(value, (()) => `Return())
+type Effects = [
+    `GetEnv(string, string) |
+    `HttpFetch(string, string) |
+    `WriteFile((string, string), ())
+]
+type MyErrors = [`InvalidInt | `InvalidLine(string)]
+type EffErrors = [`KeyMissing | `FetchError(string) | `WriteError(string)]
+let main = () => {
+    switch run<Effects, MyErrors, EffErrors, ()>(movieTask())! {
+        `Ok() => print("Ok")!;
+        `Err(`InvalidLine) => print("Movie parsing error")!;
+        `Err(`InvalidInt) => print("Movie parsing error")!;
+        `Err(`KeyMissing) => print("Need to provide API_KEY env vbl")!;
+        `Err(`FetchError(text)) => print("Unable to fetch: ${text}")!;
+        `Err(`WriteError(text)) => print("Unable to write to disk: ${text}")!;
+        `Err(x) => print("Failed? ${jsonify(x)}")!;
+    };
+}
+type MovieResult = {
+    genre_ids: Array<uint>,
+    id: uint,
+    original_language: string,
+    original_title: string,
+    overview: string,
+    popularity: float,
+    title: string,
+    vote_average: float,
+}
+type MovieResults = {page: uint, results: Array<MovieResult>}

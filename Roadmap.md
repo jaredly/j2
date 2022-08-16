@@ -1,4 +1,101 @@
 
+
+# I want much more solid type inference!
+yes.
+
+which means, among other things,
+rewriting the type inference from the ground up.
+also, I'm not totally sure about the 'analyze' pass.
+Decorators are pretty cool, but ...
+if we already notice the issues when doing getType,
+why implement it twice?
+yeah.
+
+
+So, the way to do this, I think...
+- do I want to redo typeMatches? and getType?
+- and then .. get rid of `analyze`, instead relying on
+	`verify`.
+
+hmm so the `analyze` thing needs to instead be `verify`.
+
+here's how it goes
+
+currently, we do 'toTast' and then 'analyze' and then 'verify'.
+In future, 'verify' will use a cached getType that is permissive, but tracks errors.
+
+
+
+
+
+
+
+## Editor things:
+ 
+
+To speed up,
+I think I want:
+
++ ast -> tast (does any inference)
+	- lambda arg type inference
+	- type application inference
+	- `_` blank inference
+- importantly, after ToTast, loc `idx` must be unique
+- also, we now have a mapping of type variables to constraints
+	- and a cached sym mapping?
+	- or wait, maybe we don't have type variables left at this point?
+		everything gets nailed down?
++ verify
+	- traverses the whole tree
+	- runs a /cached/ getType, which caches based on idx
+	- verifies types too, the whole shebang
+	- also finds any `expect` decorators
+
+and ... then ... so what do I think about aliases?
+
+maybe let's do the real structured editor!
+
+
+
+
+
+
+
+
+# UI!!!
+
+- [x] ok we've got a little react dealio
+- [x] ooooooh ok so react's render reconciler, is getting afoul of the observation dealio
+	I think I need to use a separately
+	- [x] HOVER and stuff is causing re-renders!
+
+
+
+🤔
+I think I might want ... a much more ... disciplined method for doing type inference.
+also: should I make `task` a full separate type kind?
+🤔
+
+- 
+
+
+
+
+- [ ] `node` inference isn't quite working, not sure why. The array inference somehow?
+	oh yeah it was the array.
+- [ ] then `render(counter, 1)` isn't quite working ... I think it's because my inference is too simplistic?
+- [ ] and then, I need a lot of perf stuff, I think.
+
+
+<!--
+
+candidate: [`SetState(1, (()) => [`Return()])]
+expected : Task<"tvbl:0", ()>
+
+-->
+
+
+
 # North Starnstuff
 
 WHAT IS MY
@@ -15,6 +112,24 @@ So, I probably want to be working toward running
 the effects examples
 and/or a nice error coalescing example.
 
+- [x] OOOH what if there's an error that doesn't correspond to a printed range? 🤔
+	like on an inferred type???
+
+
+- [x] make a simplify that pulls switch targets that are complex.
+- [x] process `await`s that aren't in `Block`s (the case example)
+- [x] put the annotation for functions at the end of the last line ...
+- [x] figure out the `failed to find bound` dealios
+- [ ] see if I can get stuff to work a lot fasterr
+- [ ] use the `expect` decorator to remove the red underlines
+
+What's next??
+- consider something other than ` for the Enum marker?
+	it's a little bit annoying to type.
+- make a cli harness for my movies example?
+	> and maybe do a "generate typescript harness function signatures" thing?
+- can I try to do some glsl stuff?
+	or maybe, take a look at coverage?
 
 ## HMM mm so typeMatches, and constraints
 
@@ -31,6 +146,43 @@ like `task & ['What(string, ())]`
 - at the end of the day, if there are both upper & lower bounds, you pick the upper bound, right?
 	after verifying that the upper bound 'matches' the lower bound.
 also, what if I reduce things down to only caring about ... simple, application?
+
+# Array folks
+
+- [x] the type?
+- [x] the expression whatsit
+	- so, spreads, right?
+	- hopefully this will be moderatly contained? as a change?
+- [x] type variable ... bound or default value, want to reference previous dealios
+- [x] inferrrrr the type arguments of `get<>`
+	- sooooo idk about these ...
+		yeah ok, so unless the bound
+- [x] switchhhhhh
+	- if-let ... array patterns?
+	- spread? I can skip that for now
+
+
+
+## Fancy Inference
+
+- [x] fix the bug!
+```
+let mkk = <A, B: A>(a: A, b: B) => a
+mkk(1, 2)
+```
+Why is it not supressing the <> in the reprint?
+
+
+
+
+whattt consts
+uint/int/float/string/bool/char
+is that it?
+huh maybe a single-item enum,
+where the contents are const...
+
+
+
 
 # Farther out
 

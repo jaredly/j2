@@ -4,21 +4,19 @@
 
 import { FullContext, GlobalType, GlobalValue } from '../ctx';
 import { noloc } from '../consts';
-import { typeToplevelT } from '../elements/base';
-import { getLocals, typeForPattern } from '../elements/pattern';
+import { getLocals } from '../elements/pattern';
+import { typeForPattern } from '../elements/patterns/typeForPattern';
 import { ErrorTag } from '../errors';
-import { Id, idsEqual } from '../ids';
-import {
-    transformFile,
-    transformToplevel,
-    transformTypeToplevel,
-    Visitor,
-} from '../transform-tast';
+import { Id } from '../ids';
+import { transformToplevel, transformTypeToplevel } from '../transform-tast';
 import * as t from '../typed-ast';
 import { analyzeVisitor } from './analyze.gen';
 import { ToplevelConfig, TopTypeKind } from './to-tast';
-import { Ctx as TMCtx, typeMatches } from './typeMatches';
+import { ConstraintMap, Ctx as TMCtx, typeMatches } from './typeMatches';
 import { constrainTypes, unifyTypes } from './unifyTypes';
+import { dtype } from '../elements/ifs';
+import { localTrackingVisitor } from './localTrackingVisitor';
+import { locWithin } from './__test__/verifyHL';
 
 export type Constraints = {
     // Type must match this types
@@ -34,8 +32,9 @@ export type Constraints = {
 export type Ctx = {
     typeByName(name: string): t.Type | null;
     getDecorator(name: string): t.RefKind[];
-    errorDecorators(): Id[];
+    errorDecorators(): { [idHash: string]: string };
     addTypeConstraint: (id: number, constraint: Constraints) => boolean;
+    newTypeVar: (loc: t.Loc) => t.TVbl;
 
     valueForSym: (sym: number) => null | { name: string; type: t.Type };
     typeForId: (id: Id) => GlobalType | null;
@@ -193,7 +192,7 @@ export const analyzeTypeTop = (
 
 export const collapseConstraints = (
     { outer, inner }: Constraints,
-    ctx: Ctx,
+    ctx: TMCtx,
 ): t.Type => {
     if (!outer && !inner) {
         return { type: 'TBlank', loc: noloc };
@@ -204,20 +203,47 @@ export const collapseConstraints = (
     return (inner || outer)!;
 };
 
+export const addNewConstraint = (
+    id: number,
+    newConstraint: Constraints,
+    constraints: ConstraintMap,
+    ctx: TMCtx,
+): Constraints | null => {
+    let current = mergeConstraints(
+        newConstraint,
+        ctx.currentConstraints(id),
+        ctx,
+        constraints,
+    );
+    if (!current) {
+        return null;
+    }
+    const waiting = constraints[id];
+    current = waiting
+        ? mergeConstraints(current, waiting, ctx, constraints)
+        : current;
+    return current;
+};
+
 export const mergeConstraints = (
     one: Constraints,
     two: Constraints,
     ctx: TMCtx,
+    constraints?: ConstraintMap,
 ): Constraints | null => {
     const outer =
         one.outer && two.outer
-            ? constrainTypes(one.outer, two.outer, ctx)
+            ? constrainTypes(one.outer, two.outer, ctx, constraints)
             : one.outer ?? two.outer;
     const inner =
         one.inner && two.inner
-            ? unifyTypes(one.inner, two.inner, ctx)
+            ? unifyTypes(one.inner, two.inner, ctx, constraints)
             : one.inner ?? two.inner;
-    if (inner && outer && !typeMatches(inner, outer, ctx)) {
+    if (
+        inner &&
+        outer &&
+        !typeMatches(inner, outer, ctx, undefined, constraints)
+    ) {
         return null;
     }
     return {
@@ -227,18 +253,37 @@ export const mergeConstraints = (
 };
 
 export const analyzeTop = (ast: t.Toplevel, ctx: Ctx): t.Toplevel => {
-    const top = transformToplevel(ast, analyzeVisitor(), { ctx, hit: {} });
+    const hit = {};
+    const top = transformToplevel(ast, analyzeVisitor(), { ctx, hit });
     return transformToplevel(
         top,
         {
+            ...localTrackingVisitor,
             Type_TVbl(node) {
-                return collapseConstraints(
-                    ctx.currentConstraints(node.id),
-                    ctx,
-                );
+                const { inner, outer } = ctx.currentConstraints(node.id);
+                if (outer && inner) {
+                    // So actually, if we've gotten this far, then the
+                    // constraints are valid.
+                    // if (typeMatches(inner, outer, ctx)) {
+                    // }
+                    // return tdecorate(
+                    //     { type: 'TBlank', loc: node.loc },
+                    //     'cannotReconcile',
+                    //     { ctx, hit },
+                    //     [
+                    //         dtype('inner', inner, node.loc),
+                    //         dtype('outer', outer, node.loc),
+                    //     ],
+                    // );
+                    return { ...inner, loc: node.loc };
+                }
+                return {
+                    ...(inner || outer || { type: 'TBlank', loc: node.loc }),
+                    loc: node.loc,
+                };
             },
         },
-        null,
+        ctx,
     );
 };
 
@@ -247,7 +292,7 @@ export const analyzeTop = (ast: t.Toplevel, ctx: Ctx): t.Toplevel => {
 // };
 
 export type VError =
-    | { type: 'Dec'; dec: t.Decorator; loc: t.Loc }
+    | { type: 'Dec'; dec: t.Decorator; loc: t.Loc; name: string }
     | {
           type: 'Blank';
           loc: t.Loc;
@@ -255,6 +300,7 @@ export type VError =
     | { type: 'TVbl'; loc: t.Loc };
 
 export type Verify = {
+    expected: { loc: t.Loc; text: string | null; errors: VError[] }[];
     errors: VError[];
     untypedExpression: t.Loc[];
     unresolved: {
@@ -264,9 +310,13 @@ export type Verify = {
     };
 };
 
-export const errorCount = (v: Verify): number => {
+export const errorCount = (v: Verify, excludeExpected = false): number => {
     return (
         v.errors.length +
+        (excludeExpected
+            ? 0
+            : v.expected.reduce((acc, { errors }) => acc + errors.length, 0)) +
+        v.expected.filter((e) => e.errors.length === 0).length +
         v.untypedExpression.length +
         v.unresolved.type.length +
         v.unresolved.decorator.length +
@@ -309,155 +359,4 @@ export const populateSyms = (top: t.Toplevel, ctx: Ctx) => {
         },
         null,
     );
-};
-
-export const blockLocals = (node: t.Block, ctx: TMCtx) => {
-    const locals: t.Locals = [];
-    node.stmts.forEach((stmt) => {
-        if (stmt.type === 'Let') {
-            const typ = ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
-            getLocals(stmt.pat, typ, locals, ctx);
-        }
-    });
-    return locals;
-};
-
-export const letLocals = (node: t.Let, ctx: TMCtx) => {
-    const locals: t.Locals = [];
-    const typ = ctx.getType(node.expr) ?? typeForPattern(node.pat);
-    getLocals(node.pat, typ, locals, ctx);
-    return locals;
-};
-
-export const ifLocals = (node: t.IfYes, ctx: TMCtx) => {
-    const locals: t.Locals = [];
-    node.conds.map((cond) => {
-        if (cond.type === 'Let') {
-            getLocals(
-                cond.pat,
-                ctx.getType(cond.expr) ?? typeForPattern(cond.pat),
-                locals,
-                ctx,
-            );
-        }
-        return cond;
-    });
-    return locals;
-};
-
-export const caseLocals = (switchType: t.Type, node: t.Case, ctx: TMCtx) => {
-    const locals: t.Locals = [];
-    getLocals(node.pat, switchType, locals, ctx);
-    return locals;
-};
-
-export type LTCtx = TMCtx & { switchType?: t.Type };
-export const localTrackingVisitor: Visitor<LTCtx> = {
-    Lambda(node, ctx) {
-        const locals: t.Locals = [];
-
-        node.args.forEach((arg) => getLocals(arg.pat, arg.typ, locals, ctx));
-        return [null, ctx.withLocals(locals) as Ctx];
-    },
-    Block(node, ctx) {
-        return [null, ctx.withLocals(blockLocals(node, ctx as Ctx)) as Ctx];
-    },
-    IfYes(node, ctx) {
-        return [null, ctx.withLocals(ifLocals(node, ctx as Ctx)) as Ctx];
-    },
-    Switch(node, ctx) {
-        const res = ctx.getType(node.target);
-        if (!res) {
-            console.error(`Unable to get type for switch!`);
-        }
-        return [null, { ...ctx, switchType: res ?? undefined }];
-    },
-    TypeAbstraction(node, ctx) {
-        return [null, ctx.withLocalTypes(node.items)];
-    },
-    Case(node, ctx) {
-        if (!ctx.switchType) {
-            console.error('no switch type');
-            return null;
-        }
-
-        return [
-            null,
-            ctx.withLocals(caseLocals(ctx.switchType, node, ctx as Ctx)) as Ctx,
-        ];
-    },
-};
-
-type VCtx = Ctx & { switchType?: t.Type };
-export const verifyVisitor = (results: Verify, _ctx: VCtx): Visitor<VCtx> => {
-    const errorDecorators = _ctx.errorDecorators();
-    return {
-        ...(localTrackingVisitor as any as Visitor<VCtx>),
-        Toplevel(node, ctx) {
-            return [
-                null,
-                ctx.toplevelConfig(typeToplevelT(node, ctx)) as FullContext,
-            ];
-        },
-        TVbl(node, ctx) {
-            results.errors.push({ type: 'TVbl', loc: node.loc });
-            return null;
-        },
-        TBlank(node) {
-            results.errors.push({ type: 'Blank', loc: node.loc });
-            return null;
-        },
-        TRef(node) {
-            if (node.ref.type === 'Unresolved') {
-                results.unresolved.type.push(node.loc);
-            }
-            return null;
-        },
-        Ref(node) {
-            if (node.kind.type === 'Unresolved') {
-                results.unresolved.value.push(node.loc);
-            }
-            return null;
-        },
-        Expression(node, ctx) {
-            if (!ctx.getType(node)) {
-                results.untypedExpression.push(node.loc);
-            }
-            return null;
-        },
-        Decorator(node) {
-            if (node.id.ref.type === 'Unresolved') {
-                results.unresolved.decorator.push(node.loc);
-            }
-            if (node.id.ref.type === 'Global') {
-                const id = node.id.ref.id;
-                const isError = errorDecorators.some((x) => idsEqual(x, id));
-                if (isError) {
-                    results.errors.push({
-                        type: 'Dec',
-                        dec: node,
-                        loc: node.loc,
-                    });
-                }
-            }
-            return null;
-        },
-    };
-};
-
-export const initVerify = (): Verify => ({
-    errors: [],
-    untypedExpression: [],
-    unresolved: {
-        type: [],
-        decorator: [],
-        value: [],
-    },
-});
-
-export const verify = (ast: t.File, ctx: Ctx): Verify => {
-    const results: Verify = initVerify();
-
-    transformFile(ast, verifyVisitor(results, ctx), ctx);
-    return results;
 };

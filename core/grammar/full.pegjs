@@ -28,7 +28,14 @@ Apply = target:Atom suffixes_drop:Suffix*
 Suffix = CallSuffix / TypeApplicationSuffix / AwaitSuffix / ArrowSuffix
 CallSuffix = "(" _ args:CommaExpr? ")"
 CommaExpr = first:Expression rest:( _ "," _ Expression)* _ ","? _
-ArrowSuffix = _ "->" _ name:Identifier args:CallSuffix?
+ArrowSuffix = _ "->" _ name:Identifier types:TypeApplicationSuffix? args:CallSuffix?
+
+
+// array.ts
+
+ArrayExpr = "[" _ items:ArrayItems? _ "]"
+ArrayItems = first:ArrayItem rest:( _ "," _ ArrayItem)* _ ","? _
+ArrayItem = Expression / SpreadExpr
 
 
 // awaits.ts
@@ -55,7 +62,7 @@ Identifier = text:$IdText hash:IdHash?
 
 IdHash = $(JustSym / HashRef / RecurHash / ShortRef / BuiltinHash / UnresolvedHash)
 
-Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block
+Atom = If / Switch / Number / Boolean / Identifier / ParenedOp / ParenedExpression / TemplateString / Enum / Record / Block / ArrayExpr
 
 ParenedExpression = "(" _ items:CommaExpr? _ ")"
 
@@ -181,11 +188,17 @@ LetPair = name:$IdText typ:(_ ":" _ Type)? _ "=" _ expr:Expression
 
 // pattern.ts
 
-Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PBlank / Number / String
+Pattern = PDecorated / PEnum / PName / PTuple / PRecord / PArray / PBlank / Number / String
 PBlank = pseudo:"_"
 PName = name:$IdText hash:($JustSym)?
 PTuple = "(" _  items:PTupleItems? _ ")"
 PTupleItems = first:Pattern rest:(_ "," _ Pattern)*
+
+PArray = "[" _  items:PArrayItems? _ "]"
+PArrayItems = first:PArrayItem rest:(_ "," _ PArrayItem)*
+PArrayItem = Pattern / PSpread
+PSpread = "..." _ inner:Pattern
+
 PRecord = "{" _ fields:PRecordFields? _ ","? _ "}"
 PRecordFields = first:PRecordField rest:(_ "," _ PRecordField)*
 PRecordField = name:$IdText pat:PRecordValue?
@@ -202,8 +215,8 @@ PEnum = "\`" text:$IdText payload:PTuple?
 
 Record = "{" _ items:RecordItems? _ "}"
 RecordItems = first:RecordItem rest:(_ "," _ RecordItem)* _ ","?
-RecordItem = RecordSpread / RecordKeyValue
-RecordSpread = "..." _ inner:Expression
+RecordItem = SpreadExpr / RecordKeyValue
+SpreadExpr = "..." _ inner:Expression
 RecordKeyValue = key:$AttrText _ ":" _ value:Expression
 
 
@@ -238,8 +251,10 @@ TBArg = label:$IdText hash:$JustSym? bound:(_ ":" _ Type)? default_:(_ "=" _ Typ
 Type = TOps
 TDecorated = decorators:(Decorator _)+ inner:TApply
 
-TAtom = TBlank / TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
+TAtom = TConst / TBlank / TRef / Number / String / TLambda / TVars / TParens / TEnum / TRecord
 TRef = text:($IdText) hash:($JustSym / $HashRef / $RecurHash / $BuiltinHash / $UnresolvedHash)?
+
+TConst = "const" __ inner:TAtom
 
 TOps = left:TOpInner right_drop:TRight*
 TRight = _ top:$top _ right:TOpInner

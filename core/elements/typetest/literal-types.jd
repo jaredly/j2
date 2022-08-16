@@ -1,3 +1,5 @@
+alias type:shouldMatch#[h192c0e4997957120f145e35f197b06a370cc3115]
+
 // Because of the -types suffix, this will be parsed
 // as a file of just toplevel types.
 // hm, I guess 'type aliases' and 'toplevel types'.
@@ -11,11 +13,21 @@
 
 @type:shouldMatch(:15) (10 + 5)
 
+alias uint#[h7f3ebb1dcbb38933edcaaabbbed6729a7c3bec83]
+
 @type:shouldMatch(:uint + 10u) 10u
 
 @type:shouldMatch(:uint + 10u) 11u
 
-@type:shouldNotMatch(:uint + 10) 9u
+alias error:invalidOps#[h5b2cd4121f17aafc0e0add71bffc73cdaed46019] type:shouldNotMatch#[h18cdade60873daf82b61c1a4804e2399e4d6fc4e]
+
+@type:shouldNotMatch(:@error:invalidOps() (uint + 10)) 9u
 
 // Decorators are ignored
 @type:shouldMatch(:@some#[:unresolved:]() 10) 10
+
+alias Array#[h4bd55ea928d9bdee7e39729aedfecce0967367c4]
+
+@type:shouldMatch(:Array<10>) Array<10, uint>
+
+@type:shouldMatch(:Array<10, uint>) Array<10>

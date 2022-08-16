@@ -1,4 +1,5 @@
 import { Button, Divider, Link, Text } from '@nextui-org/react';
+import equal from 'fast-deep-equal';
 import * as React from 'react';
 import { builtinContext } from '../core/ctx';
 import {
@@ -177,7 +178,6 @@ export const getTestResults = (
             const top = info.contents.irtops[0];
             if (top.type && file.ctx.isBuiltinType(top.type!, 'bool')) {
                 values.testResults.push({
-                    // success: values.info.exprs[i],
                     loc: info.contents.top.loc,
                     msg: values.info.exprs[i]
                         ? null
@@ -189,7 +189,7 @@ export const getTestResults = (
                 }
             }
         }
-        if (errorCount(info.verify)) {
+        if (errorCount(info.verify, true)) {
             values.debugs[i] = true;
             values.failed = true;
         }
@@ -259,6 +259,7 @@ export const fileStatus = (name: string, file: FixtureFileType): Status => {
 
 export const App = () => {
     const hash = useHash();
+    console.log(`Top hash`);
 
     const [listing] = usePromise<{
         fixtures: string[];
@@ -619,8 +620,12 @@ export const App = () => {
                         location.hash = `#test:${name}`;
                     }}
                     onChange={(data, text) => {
+                        const name = hashName.slice('test:'.length);
+                        if (equal(data, files.test[name])) {
+                            return;
+                        }
                         const newTest = { ...files.test };
-                        newTest[hashName.slice('test:'.length)] = data;
+                        newTest[name] = data;
                         setFiles({ ...files, test: newTest });
                         fetch(
                             `/elements/test/${hashName.slice('test:'.length)}`,

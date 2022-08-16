@@ -1,20 +1,65 @@
 import { tref } from '../consts';
-import { unifiedTypes } from '../elements/apply';
-import { matchesBound } from '../elements/generics';
-import { getLocals, Locals, typeForPattern } from '../elements/pattern';
-import { allRecordItems, TRecord, TRecordKeyValue } from '../elements/records';
+import { unifiedTypes } from '../elements/apply/apply';
+import { matchesBound } from '../elements/generics/generics';
+import { getLocals, Locals } from '../elements/pattern';
+import { typeForPattern } from '../elements/patterns/typeForPattern';
+import { TRecord, TRecordKeyValue } from '../elements/records/records';
+import { allRecordItems } from '../elements/records/allRecordItems';
 import { transformType } from '../transform-tast';
 import { Expression, GlobalRef, Loc, TVars, Type } from '../typed-ast';
-import { ifLocals } from './analyze';
+import { collapseConstraints } from './analyze';
+import { ifLocals } from './localTrackingVisitor';
 import { collapseOps } from './ops';
 import { collectEffects, inferTaskType, makeTaskType } from './tasks';
-import { Ctx, typeMatches } from './typeMatches';
+import { ConstraintMap, Ctx, typeMatches } from './typeMatches';
+import { expandEnumCases } from './expandEnumCases';
 import { unifyTypes } from './unifyTypes';
+
+export const isConst = (type: Type, ctx: Ctx, path?: string[]): boolean => {
+    if (type.type === 'TVbl') {
+        type = collapseConstraints(ctx.currentConstraints(type.id), ctx);
+    }
+    switch (type.type) {
+        case 'Number':
+        case 'String':
+            return true;
+        case 'TDecorated':
+            return isConst(type.inner, ctx);
+        case 'TRecord':
+            if (type.open) {
+                return false;
+            }
+            const items = allRecordItems(type, ctx, path);
+            return (
+                items != null &&
+                Object.values(items).every((item) =>
+                    isConst(item.value, ctx, path),
+                )
+            );
+        case 'TEnum':
+            if (type.open) {
+                return false;
+            }
+            const cases = expandEnumCases(type, ctx, path);
+            return (
+                cases != null &&
+                cases.bounded.length === 0 &&
+                cases.cases.every(
+                    (kase) => !kase.payload || isConst(kase.payload, ctx, path),
+                )
+            );
+        case 'TApply':
+        case 'TVbl':
+        default:
+            return false;
+    }
+};
 
 export const applyType = (
     args: Type[],
     target: TVars,
     ctx: Ctx,
+    constraints?: ConstraintMap,
     path?: string[],
 ) => {
     let minArgs = target.args.findIndex((arg) => arg.default_);
@@ -49,9 +94,10 @@ export const applyType = (
             },
             null,
         );
-        if (targ.bound && !matchesBound(arg!, targ.bound, ctx, path)) {
+        if (targ.bound && !matchesBound(arg!, targ.bound, ctx, constraints)) {
             failed = true;
         }
+        ctx = ctx.withLocalTypes([{ sym: targ.sym, bound: arg }]);
     });
     if (failed) {
         return null;
@@ -89,7 +135,11 @@ const maybeTref = (ref: GlobalRef | null) => (ref ? tref(ref) : null);
 
 // ok so anyway
 // this could maybe do a ...visitor kind of thing as well.
-export const getType = (expr: Expression, ctx: Ctx): Type | null => {
+export const getType = (
+    expr: Expression,
+    ctx: Ctx,
+    constraints?: ConstraintMap,
+): Type | null => {
     switch (expr.type) {
         case 'Await': {
             const res = getType(expr.target, ctx);
@@ -145,7 +195,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
         case 'TypeApplication': {
             const target = getType(expr.target, ctx);
             if (target?.type === 'TVars') {
-                return applyType(expr.args, target, ctx);
+                return applyType(expr.args, target, ctx, constraints);
             }
             // If they're trying to apply and they shouldn't,
             // I'll still let the type resolve.
@@ -168,7 +218,11 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                     return ctx.localType(expr.kind.sym);
             }
         case 'Apply':
-            const typ = getType(expr.target, ctx);
+            let typ = getType(expr.target, ctx);
+            if (typ?.type === 'TVbl') {
+                const current = ctx.currentConstraints(typ.id);
+                typ = collapseConstraints(current, ctx);
+            }
             if (typ?.type !== 'TLambda') {
                 return null;
             }
@@ -236,7 +290,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
                 if (stmt.type === 'Let') {
                     const locals: Locals = [];
                     const typ =
-                        ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat);
+                        ctx.getType(stmt.expr) ?? typeForPattern(stmt.pat, ctx);
                     getLocals(stmt.pat, typ, locals, ctx);
                     ctx = ctx.withLocals(locals);
                 }
@@ -266,7 +320,7 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             }
             const types = expr.cases
                 .map((c) => {
-                    const typ = ttype ?? typeForPattern(c.pat);
+                    const typ = ttype ?? typeForPattern(c.pat, ctx);
                     const locals: Locals = [];
                     getLocals(c.pat, typ, locals, ctx);
                     return getType(c.expr, ctx.withLocals(locals));
@@ -285,10 +339,85 @@ export const getType = (expr: Expression, ctx: Ctx): Type | null => {
             }
             return t;
         }
+        case 'ArrayExpr': {
+            let element: Type = { type: 'TBlank', loc: expr.loc };
+            let length: Type = {
+                type: 'Number',
+                kind: 'UInt',
+                loc: expr.loc,
+                value: 0,
+            };
+            for (let item of expr.items) {
+                let t: [Type, Type];
+                if (item.type === 'SpreadExpr') {
+                    let got = arrayType(getType(item.inner, ctx), ctx);
+                    if (!got) {
+                        return null;
+                    }
+                    t = got;
+                } else {
+                    let el = getType(item, ctx);
+                    if (!el) {
+                        continue;
+                    }
+                    t = [
+                        el,
+                        {
+                            type: 'Number',
+                            value: 1,
+                            kind: 'UInt',
+                            loc: item.loc,
+                        },
+                    ];
+                }
+                const un = unifyTypes(t[0], element, ctx);
+                element = un ? un : element;
+                length = collapseOps(
+                    {
+                        type: 'TOps',
+                        left: length,
+                        right: [{ top: '+', right: t[1] }],
+                        loc: expr.loc,
+                    },
+                    ctx,
+                );
+            }
+            return {
+                type: 'TApply',
+                target: {
+                    type: 'TRef',
+                    ref: ctx.getBuiltinRef('Array')!,
+                    loc: expr.loc,
+                },
+                args: [element, length],
+                loc: expr.loc,
+            };
+        }
         default:
             let _x: never = expr;
             return null;
     }
+};
+
+export const arrayType = (t: Type | null, ctx: Ctx): [Type, Type] | null => {
+    if (
+        t &&
+        t.type === 'TApply' &&
+        t.args.length >= 1 &&
+        t.target.type === 'TRef' &&
+        t.target.ref.type === 'Global' &&
+        ctx.isBuiltinType(t.target, 'Array')
+    ) {
+        return [
+            t.args[0],
+            t.args[1] ?? {
+                type: 'TRef',
+                ref: ctx.getBuiltinRef('uint')!,
+                loc: t.loc,
+            },
+        ];
+    }
+    return null;
 };
 
 export const isUnit = (t: Type): boolean =>
