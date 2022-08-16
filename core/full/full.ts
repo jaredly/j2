@@ -432,11 +432,11 @@ export const processToplevel = (
         }
     } else {
         if (top.type === 'ToplevelLet') {
-            console.log(
-                'yeah failed to verify, sorry',
-                verify,
-                top.elements.map((m) => m.name),
-            );
+            // console.log(
+            //     'yeah failed to verify, sorry',
+            //     verify,
+            //     top.elements.map((m) => m.name),
+            // );
         }
     }
 
@@ -452,10 +452,10 @@ export const processToplevel = (
     );
 
     if (errorCount(verify)) {
-        console.log(`%cVERIFICATION FAILED`, 'color:orange');
-        const pp = newPPCtx();
-        console.log(printToString(pp.ToPP.Toplevel(refmt, pp), 100));
-        console.log(verify);
+        // console.log(`%cVERIFICATION FAILED`, 'color:orange');
+        // const pp = newPPCtx();
+        // console.log(printToString(pp.ToPP.Toplevel(refmt, pp), 100));
+        // console.log(verify);
     }
 
     const irtops =

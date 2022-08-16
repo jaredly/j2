@@ -1,4 +1,48 @@
 
+
+# I want much more solid type inference!
+yes.
+
+which means, among other things,
+rewriting the type inference from the ground up.
+also, I'm not totally sure about the 'analyze' pass.
+Decorators are pretty cool, but ...
+if we already notice the issues when doing getType,
+why implement it twice?
+yeah.
+
+## Editor things:
+ 
+
+To speed up,
+I think I want:
+
++ ast -> tast (does any inference)
+	- lambda arg type inference
+	- type application inference
+	- `_` blank inference
+- importantly, after ToTast, loc `idx` must be unique
+- also, we now have a mapping of type variables to constraints
+	- and a cached sym mapping?
+	- or wait, maybe we don't have type variables left at this point?
+		everything gets nailed down?
++ verify
+	- traverses the whole tree
+	- runs a /cached/ getType, which caches based on idx
+	- verifies types too, the whole shebang
+	- also finds any `expect` decorators
+
+and ... then ... so what do I think about aliases?
+
+maybe let's do the real structured editor!
+
+
+
+
+
+
+
+
 # UI!!!
 
 - [x] ok we've got a little react dealio

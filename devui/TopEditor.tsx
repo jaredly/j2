@@ -252,8 +252,8 @@ export const TopEditor = ({
                             className="hello"
                             style={{
                                 position: 'absolute',
-                                top: -7,
-                                left: -12,
+                                top: -10,
+                                left: -15,
                                 cursor: 'pointer',
                                 fontSize: 30,
                                 opacity: results?.testResults.length

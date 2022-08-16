@@ -226,7 +226,7 @@ let alwaysRead: (value: string, task: Task<[`Read((), string) | `Print(string, (
         );
     };
 }
-// (string, Task<[`Read((), string) | `Print(string, ())], string>) => [`Return(string) | `Print(string, (arg: ()) => Task<[`Print(string, ())], string>)]
+// (value: string, task: Task<[`Read((), string) | `Print(string, ())], string>) => Task<[`Print(string, ())], string>
 /* (value, task) => (() => {
   if (task.tag === "Return") {
     let {

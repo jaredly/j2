@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'fs';
 import { processFile } from '../../full/full';
 import { ExecutionContext, newExecutionContext } from '../../ir/to-js';
+import { errorCount } from '../analyze';
 import { initVerify } from '../verify';
 
 // @ts-ignore
@@ -36,7 +37,9 @@ readdirSync(base)
                         ` ./core/elements/test/${file}:${top.loc.start.line}`;
                     describe(text, () => {
                         it(`should be valid`, () => {
-                            expect(info.verify).toEqual(empty);
+                            if (errorCount(info.verify) != 0) {
+                                expect(info.verify).toEqual(empty);
+                            }
                         });
                         if (
                             top.type === 'ToplevelLet' &&

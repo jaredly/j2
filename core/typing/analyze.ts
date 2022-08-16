@@ -16,6 +16,7 @@ import { ConstraintMap, Ctx as TMCtx, typeMatches } from './typeMatches';
 import { constrainTypes, unifyTypes } from './unifyTypes';
 import { dtype } from '../elements/ifs';
 import { localTrackingVisitor } from './localTrackingVisitor';
+import { locWithin } from './__test__/verifyHL';
 
 export type Constraints = {
     // Type must match this types
@@ -311,7 +312,18 @@ export type Verify = {
 
 export const errorCount = (v: Verify): number => {
     return (
-        v.errors.length +
+        (v.expected
+            ? v.errors.filter(
+                  (err) =>
+                      err.type !== 'Dec' ||
+                      !v.expected.find(
+                          (expected) =>
+                              err.name === expected.text &&
+                              locWithin(expected.loc, err.loc),
+                      ),
+              )
+            : v.errors
+        ).length +
         v.untypedExpression.length +
         v.unresolved.type.length +
         v.unresolved.decorator.length +

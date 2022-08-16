@@ -147,7 +147,7 @@ let longSum: (v: int) => int = (v#[0]: int) => if v#[0] > 0 {
 } else {
     0;
 }
-// (int) => int
+// (v: int) => int
 /* v => {
   if (v > 0) {
     return $terms.longSum(v + 1) - 1 + 1;

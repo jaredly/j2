@@ -125,8 +125,8 @@ export function analyzeArgs(
             // ctx.debugger();
             const diffs: TDiffs = [];
             typeMatches(at, expected, ctx, undefined, undefined, diffs);
-            console.log(`Ok arg ${i}`);
-            console.log(diffs);
+            // console.log(`Ok arg ${i}`);
+            // console.log(diffs);
 
             return decorate(arg, 'argWrongType', hit, ctx, [
                 {

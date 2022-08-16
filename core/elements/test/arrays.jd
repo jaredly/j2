@@ -7,7 +7,7 @@ let id = <T>(a: T) => a
 [1, 2, 3]
 [1, 2, ...[3, 4]]
 [1, 2, 3]->get(2u)
-[`Ok, `Good, `Folks(10)]
+[`Ok, `Good, `Folks(`One), `Folks(`Two(10))]
 [() => `Ok, () => `Good]
 [1, 2, ...[]]
 [1, 2]->geti(2u)
