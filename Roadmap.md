@@ -1,4 +1,12 @@
 
+### SO parsing, printing, and structured editing
+
+I want to take a whack at making my own grammar specification
+that can let me automate even more of this stuff.
+Text -> Ast -> Text
+
+would it even let me do Text -> Tast?? with some minimal guidance?
+ok that would be really cool.
 
 # I want much more solid type inference!
 yes.
