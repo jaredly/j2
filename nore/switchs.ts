@@ -1,6 +1,6 @@
-import { TopGram } from './types';
+import { Grams } from './types';
 
-export const grams: { [key: string]: TopGram } = {
+export const grams: Grams = {
     Switch: {
         type: 'tagged',
         tags: ['Expression'],

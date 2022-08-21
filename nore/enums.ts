@@ -1,4 +1,6 @@
-export const grams = {
+import { Grams } from './types';
+
+export const grams: Grams = {
     TEnum: {
         type: 'args',
         sep: '|',

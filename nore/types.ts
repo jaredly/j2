@@ -24,6 +24,15 @@ export type Gram =
     // This produces a {inferred: boolean, inner: T}
     // And it expects an `inferSomeThing` function to exist somewhere??
     | { type: 'inferrable'; item: Gram }
+    // I need a way to regex? Or something?
+    | {
+          type: 'binops';
+          inner: Gram;
+          precedence: string[][];
+          chars: string;
+          exclude: string[];
+      }
+    | { type: 'suffixes'; target: Gram; suffix: Gram }
     | Gram[];
 
 export type TopGram = Gram | { type: 'tagged'; tags: string[]; inner: Gram };
