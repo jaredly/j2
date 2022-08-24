@@ -1,4 +1,19 @@
 
+# So, what's a reasonably simple way to build up this hullabaloo?
+
+Getting binops to work at all is certainly a thing to tackle.
+so like a basic math dealio?
+
+And then, like separately,
+a basic lambda dealio
+maybe with ifs?
+
+
+
+
+
+
+
 # So, I want my new grammar format to:
 
 - generate the types of the (T?)Ast
