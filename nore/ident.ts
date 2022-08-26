@@ -1,17 +1,21 @@
 import { Grams } from './types';
 
 export const grams: Grams = {
-    Identifier: [
-        { type: 'named', name: 'text', inner: '$IdText' },
-        {
-            type: 'named',
-            name: 'ref',
-            inner: {
-                type: 'inferrable',
-                item: { type: 'or', options: ['IdHash', 'LocalHash'] },
+    Identifier: {
+        type: 'tagged',
+        tags: ['Expression', 'Type'],
+        inner: [
+            { type: 'named', name: 'text', inner: '$IdText' },
+            {
+                type: 'named',
+                name: 'ref',
+                inner: {
+                    type: 'inferrable',
+                    item: { type: 'or', options: ['IdHash', 'LocalHash'] },
+                },
             },
-        },
-    ],
+        ],
+    },
     LocalHash: [
         '#[:',
         { type: 'named', name: 'text', inner: 'UIntLiteral' },

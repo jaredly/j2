@@ -13,10 +13,13 @@ export type Gram =
     // if it starts with $ and then a capital, then it's the string value of the named grammar
     // otherwise, it's a literal
     | string
+
     // If the contents are empty, then take the other named thing in this story, and just use that.
     // hrmmmmmm do I want like a `drill` instead?
     // so it ends up being `main:Main rest:Main_Others?`?
-    | { type: 'drill'; inner: Gram }
+    // | { type: 'drill'; inner: Gram }
+    // ^ Yeah ok, I don't think I need drill
+
     // | { type: 'withDefault'; inner: Gram; default: any }
     | { type: 'or'; options: Gram[] }
     | { type: 'named'; name: string; inner: Gram }
@@ -32,7 +35,14 @@ export type Gram =
           chars: string;
           exclude: string[];
       }
+    // This requires that (target + any number of suffixes) matches the same "tag" as the suffixes.
     | { type: 'suffixes'; target: Gram; suffix: Gram }
+    // | {
+    //       type: 'ref';
+    //       kind: string; // will be passed to the autocomplete fn
+    //       pattern: string; // regex or similar
+    //       hash: Gram;
+    //   }
     | Gram[];
 
 export type TopGram = Gram | { type: 'tagged'; tags: string[]; inner: Gram };

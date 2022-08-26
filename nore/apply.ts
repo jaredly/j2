@@ -4,19 +4,12 @@ export const grams: Grams = {
     Apply: {
         type: 'tagged',
         tags: ['Expression'],
-        inner: [
+        inner: {
+            type: 'suffixes',
             // Can we infer this as 'Atom' vs 'Expression'?
-            {
-                type: 'named',
-                name: 'target',
-                inner: { type: 'drill', inner: 'Expression' },
-            },
-            {
-                type: 'named',
-                name: 'suffixes',
-                inner: { type: 'plus', item: 'Suffix' },
-            },
-        ],
+            target: 'Expression',
+            suffix: 'Suffix',
+        },
     },
     CallSuffix: {
         type: 'tagged',

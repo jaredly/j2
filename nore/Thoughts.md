@@ -1,4 +1,21 @@
 
+
+# Dealing with left-recursion
+
+Seems like ...
+the only places I'm allowing left-recursion is:
+- "suffixes"
+- "binops"
+
+...
+and that's it, right?
+
+yeah that sounds about right.
+
+anyway, so if you're at the end of a something, and you type a character, that might be the start of a suffix, or a binop, you need to wait until it gets obviously resolved?
+Also I need a way to specify that there's some autocomplete goodness to be done.
+
+
 # So, what's a reasonably simple way to build up this hullabaloo?
 
 Getting binops to work at all is certainly a thing to tackle.
@@ -7,12 +24,6 @@ so like a basic math dealio?
 And then, like separately,
 a basic lambda dealio
 maybe with ifs?
-
-
-
-
-
-
 
 # So, I want my new grammar format to:
 
