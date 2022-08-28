@@ -31,6 +31,21 @@ export const generatePeg = (grammar: Grams) => {
             lines.push({ name, defn: gram.raw + ` { return text() }` });
             continue;
         }
+        if (gram.type === 'derived') {
+            lines.push({
+                name,
+                defn:
+                    gramToPeg(gram.inner) +
+                    ` {
+                return {
+                    type: '${name}',
+                    raw: text(),
+                    value: (${gram.derive})(text()),
+                }
+            }`,
+            });
+            continue;
+        }
         let defn = topGramToPeg(
             name,
             gram.type === 'sequence' ? gram.items : gram.inner,

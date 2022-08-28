@@ -1,12 +1,5 @@
 import { Gram, Grams } from './types';
 
-const UIntLiteral: Gram<string> = {
-    type: 'derived',
-    inner: 'UIntLiteral',
-    typeName: 'number',
-    derive: (raw) => parseInt(raw),
-};
-
 export const grams: Grams = {
     Identifier: {
         type: 'tagged',
@@ -29,28 +22,34 @@ export const grams: Grams = {
     },
     HashText: {
         type: 'peggy',
-        raw: '"h" [0-9a-zA-Z]+',
+        raw: '[0-9a-zA-Z]+',
     },
     UIntLiteral: {
         type: 'peggy',
         raw: '[0-9]+',
+    },
+    UInt: {
+        type: 'derived',
+        inner: 'UIntLiteral',
+        typeName: 'number',
+        derive: (raw) => parseInt(raw),
     },
     LocalHash: [
         '#[:',
         {
             type: 'named',
             name: 'sym',
-            inner: UIntLiteral,
+            inner: 'UInt',
         },
         ']',
     ],
     IdHash: [
-        '#[',
+        '#[h',
         { type: 'named', name: 'hash', inner: '$HashText' },
         {
             type: 'named',
             name: 'idx',
-            inner: { type: 'optional', item: ['.', UIntLiteral] },
+            inner: { type: 'optional', item: ['.', 'UInt'] },
         },
         ']',
     ],

@@ -17,22 +17,24 @@ Identifier = text:IdText ref:(IdHash / LocalHash)? {
 
 IdText = ![0-9] [0-9a-zA-Z_]+ { return text() }
 
-HashText = "h" [0-9a-zA-Z]+ { return text() }
+HashText = [0-9a-zA-Z]+ { return text() }
 
 UIntLiteral = [0-9]+ { return text() }
 
-LocalHash = "#[:" sym:(UIntLiteral) "]" {
-            return { type: 'LocalHash', sym: {
-                raw: sym,
-                value: ((raw2) => parseInt(raw2))(sym)
-            } }
+UInt = UIntLiteral {
+                return {
+                    type: 'UInt',
+                    raw: text(),
+                    value: ((raw2) => parseInt(raw2))(text()),
+                }
+            }
+
+LocalHash = "#[:" sym:UInt "]" {
+            return { type: 'LocalHash', sym: sym }
         }
 
-IdHash = "#[" hash:HashText idx:("." UIntLiteral)? "]" {
-            return { type: 'IdHash', hash: hash, idx: idx ? {
-                raw: idx[1],
-                value: ((raw2) => parseInt(raw2))(idx[1])
-            } : null }
+IdHash = "#[h" hash:HashText idx:("." UInt)? "]" {
+            return { type: 'IdHash', hash: hash, idx: idx ? idx[1] : null }
         }
 
 CallSuffix = args:("(" Expression? _ (_ ',' _ Expression)* _ ','? _  ")") {

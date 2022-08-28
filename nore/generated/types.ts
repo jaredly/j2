@@ -32,21 +32,21 @@ export type HashText = string;
 
 export type UIntLiteral = string;
 
+export type UInt = {
+  type: "UInt";
+  raw: UIntLiteral;
+  value: number;
+};
+
 export type LocalHash = {
   type: "LocalHash";
-  sym: {
-    raw: UIntLiteral;
-    value: number;
-  };
+  sym: UInt;
 };
 
 export type IdHash = {
   type: "IdHash";
   hash: HashText;
-  idx: null | {
-    raw: UIntLiteral;
-    value: number;
-  };
+  idx: null | UInt;
 };
 
 export type CallSuffix = {

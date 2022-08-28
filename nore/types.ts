@@ -3,10 +3,17 @@
 export type GramDef<Extra> =
     | Or<Extra>
     | TopGram<Extra>
+    | Derived<Extra>
     | Gram<Extra>[]
     | { type: 'peggy'; raw: string };
 export type Grams = {
     [key: string]: GramDef<EExtra>;
+};
+export type Derived<Extra> = {
+    type: 'derived';
+    inner: Gram<Extra>;
+    typeName: string;
+    derive: (raw: string) => any;
 };
 export type Gram<Extra> =
     | {
@@ -16,12 +23,7 @@ export type Gram<Extra> =
           item: Gram<Extra>;
           last?: Gram<Extra>;
       }
-    | {
-          type: 'derived';
-          inner: Gram<Extra>;
-          typeName: string;
-          derive: (raw: string) => any;
-      }
+    | Derived<Extra>
 
     // If the contents are empty, then take the other named thing in this story, and just use that.
     // hrmmmmmm do I want like a `drill` instead?
@@ -84,6 +86,7 @@ export type TopGram<Extra> = {
 export type TGram<B> =
     | Or<B>
     | TopGram<B>
+    | Derived<B>
     | { type: 'peggy'; raw: string }
     | { type: 'sequence'; items: Gram<B>[] };
 
@@ -100,6 +103,14 @@ export const transformGram = <B>(
     }
     if (gram.type === 'peggy') {
         return gram;
+    }
+    if (gram.type === 'derived') {
+        return {
+            type: 'derived',
+            inner: transform(gram.inner, check, change),
+            typeName: gram.typeName,
+            derive: gram.derive,
+        };
     }
     if (gram.type === 'tagged') {
         return {

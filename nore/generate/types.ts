@@ -3,6 +3,7 @@
 import {
     change,
     check,
+    Derived,
     EExtra,
     Gram,
     Grams,
@@ -44,7 +45,11 @@ export const generateTypes = (grammar: Grams) => {
             continue;
         }
         let defn = topGramToType(
-            gram.type === 'sequence' ? gram.items : gram.inner,
+            gram.type === 'sequence'
+                ? gram.items
+                : gram.type === 'derived'
+                ? gram
+                : gram.inner,
         );
         lines.push({
             name,
@@ -80,7 +85,7 @@ export const generateTypes = (grammar: Grams) => {
 };
 
 export const topGramToType = (
-    gram: TopGram<never>['inner'],
+    gram: TopGram<never>['inner'] | Derived<never>,
 ): b.TSTypeLiteral => {
     if (Array.isArray(gram)) {
         const res = gramToType({ type: 'sequence', items: gram });
@@ -101,7 +106,10 @@ export const topGramToType = (
             ),
         ]);
     }
-    throw new Error(`not yet`);
+    if (gram.type === 'derived') {
+        return gramToType(gram) as b.TSTypeLiteral;
+    }
+    throw new Error(`not yet ${gram.type}`);
 };
 
 export const sequenceToType = (grams: Gram<never>[]): b.TSType => {
