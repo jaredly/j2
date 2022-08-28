@@ -22,7 +22,7 @@ writeFileSync('./nore/generated/grammar.ts', `// @ts-nocheck\n` + gram);
 console.log(
     JSON.stringify(
         generate(peg, { allowedStartRules: ['Expression'] }).parse(
-            'hello(1, 2)',
+            'hello(1, 2u)',
             {
                 startRule: 'Expression',
             },

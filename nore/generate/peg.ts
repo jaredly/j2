@@ -28,7 +28,7 @@ export const generatePeg = (grammar: Grams) => {
             });
         }
         if (gram.type === 'peggy') {
-            lines.push({ name, defn: gram.raw + ` { return text() }` });
+            lines.push({ name, defn: `$(${gram.raw})` });
             continue;
         }
         if (gram.type === 'derived') {
@@ -41,6 +41,7 @@ export const generatePeg = (grammar: Grams) => {
                     type: '${name}',
                     raw: text(),
                     value: (${gram.derive})(text()),
+                    loc: range(),
                 }
             }`,
             });
@@ -73,10 +74,7 @@ export const pegTransform = (vbl: string, gram: Gram<never>): string => {
         case 'inferrable':
             return `${vbl} ? {inferred: false, value: ${vbl}} : {inferred: true, value: undefined}`;
         case 'args':
-            return `[
-                ...(${vbl}[1] ? [${vbl}[1]] : []),
-                ...(${vbl}[3].map(item => item[3])),
-            ]`;
+            return vbl;
         case 'derived':
             return `{
                 raw: ${vbl},
@@ -114,7 +112,7 @@ export const topGramToPeg = (
         return (
             gramToPeg({ type: 'sequence', items: gram }) +
             ` {
-            return { type: '${name}', ${named.join(', ')} }
+            return { type: '${name}', ${named.join(', ')}, loc: range() }
         }`
         );
     }
@@ -125,7 +123,7 @@ export const topGramToPeg = (
             if (!suffixes.length) {
                 return target
             }
-            return {type: '${name}', target, suffixes}
+            return {type: '${name}', target, suffixes, loc: range()}
         }`;
     }
     throw new Error('not yet');
@@ -148,15 +146,24 @@ export const gramToPeg = (gram: Gram<never>): string => {
         case 'ref':
             return gram.id;
         case 'args': {
-            return [
-                `"${gram.bounds ? gram.bounds[0] : '('}"`,
-                `${gramToPeg(gram.item)}?`,
-                '_',
-                `(_ ',' _ ${gramToPeg(gram.item)})*`,
-                `_ ','? _`,
-                gram.last ? `last:(${gramToPeg(gram.last)})` : '',
-                `"${gram.bounds ? gram.bounds[1] : ')'}"`,
-            ].join(' ');
+            return (
+                '(' +
+                [
+                    `"${gram.bounds ? gram.bounds[0] : '('}"`,
+                    `first:${gramToPeg(gram.item)}?`,
+                    '_',
+                    `rest:(_ ',' _ @${gramToPeg(gram.item)})*`,
+                    `_ ','? _`,
+                    gram.last ? `last:(${gramToPeg(gram.last)})` : '',
+                    `"${gram.bounds ? gram.bounds[1] : ')'}"`,
+                ].join(' ') +
+                `
+            { return [
+                ...first ? [first] : [],
+                ...rest,
+            ]}
+            )`
+            );
         }
         case 'or': {
             return gram.options.map(gramToPeg).join(' / ');

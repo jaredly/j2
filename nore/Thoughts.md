@@ -1,4 +1,41 @@
 
+What about inferrable type application suffixes?
+
+🤔
+
+so, I feel like the inferrable type applications
+in question, are only found immediately before
+function calls.
+`x<y>(z)`
+
+could make things a little simpler, in that I could
+do an inferred type application prefix on a callexpression.
+of course in this case, I'd want to be .. inferring
+... with the arguments already available ...
+which I guess we would have?
+
+🤔
+
+so I'm a little bit sticking on ... the bit where
+we're doing inference while parsing.
+
+it seems like the "stack" might be a little hard to maintain.
+
+so I'm wondering, if we have like a parse tree where
+all of the inferrable things are just like "missing"
+
+and then we do a traverse to fill those in.
+
+yeah ok, so this means I need to write those traversal functions, right?
+
+should .. I ... focus on that first, or on
+making a structured editor?
+
+I don't think I would need that for the structured
+editor to work ...
+
+#
+
 So I think I'm going to need a `derived` dealio, for like
 evaluating a raw number into an actual number,
 and for booleans,

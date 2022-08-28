@@ -22,13 +22,19 @@ export const grams: Grams = {
                 inner: {
                     type: 'inferrable',
                     item: { type: 'or', options: ['u', 'i', 'f'] },
+                    infer: ({ num }: { num: { raw: string } }) => {
+                        if (num.raw.includes('.')) {
+                            return 'f';
+                        }
+                        return num.raw.startsWith('-') ? 'i' : 'u';
+                    },
                 },
             },
         ],
     },
     RawNumber: {
         type: 'peggy',
-        raw: '[0-9]+',
+        raw: '"-"? [0-9]+',
     },
     Boolean: {
         type: 'tagged',

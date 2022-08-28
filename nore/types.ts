@@ -37,7 +37,11 @@ export type Gram<Extra> =
     | { type: 'star' | 'plus' | 'optional'; item: Gram<Extra> }
     // This produces a {inferred: boolean, inner: T}
     // And it expects an `inferSomeThing` function to exist somewhere??
-    | { type: 'inferrable'; item: Gram<Extra> }
+    | {
+          type: 'inferrable';
+          item: Gram<Extra>;
+          infer: (locals: any, ctx: any) => any;
+      }
     // // I need a way to regex? Or something?
     // | Binops
     // // This requires that (target + any number of suffixes) matches the same "tag" as the suffixes.

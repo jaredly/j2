@@ -2,56 +2,59 @@ Number = num:(RawNumber) kind:("u" / "i" / "f")? {
             return { type: 'Number', num: {
                 raw: num,
                 value: ((raw2) => +raw2)(num)
-            }, kind: kind ? {inferred: false, value: kind} : {inferred: true, value: undefined} }
+            }, kind: kind ? {inferred: false, value: kind} : {inferred: true, value: undefined}, loc: range() }
         }
 
-RawNumber = [0-9]+ { return text() }
+RawNumber = $("-"? [0-9]+)
 
 Boolean = value:("true" / "false") {
-            return { type: 'Boolean', value: value }
+            return { type: 'Boolean', value: value, loc: range() }
         }
 
 Identifier = text:IdText ref:(IdHash / LocalHash)? {
-            return { type: 'Identifier', text: text, ref: ref ? {inferred: false, value: ref} : {inferred: true, value: undefined} }
+            return { type: 'Identifier', text: text, ref: ref ? {inferred: false, value: ref} : {inferred: true, value: undefined}, loc: range() }
         }
 
-IdText = ![0-9] [0-9a-zA-Z_]+ { return text() }
+IdText = $(![0-9] [0-9a-zA-Z_]+)
 
-HashText = [0-9a-zA-Z]+ { return text() }
+HashText = $([0-9a-zA-Z]+)
 
-UIntLiteral = [0-9]+ { return text() }
+UIntLiteral = $([0-9]+)
 
 UInt = UIntLiteral {
                 return {
                     type: 'UInt',
                     raw: text(),
                     value: ((raw2) => parseInt(raw2))(text()),
+                    loc: range(),
                 }
             }
 
 LocalHash = "#[:" sym:UInt "]" {
-            return { type: 'LocalHash', sym: sym }
+            return { type: 'LocalHash', sym: sym, loc: range() }
         }
 
 IdHash = "#[h" hash:HashText idx:("." UInt)? "]" {
-            return { type: 'IdHash', hash: hash, idx: idx ? idx[1] : null }
+            return { type: 'IdHash', hash: hash, idx: idx ? idx[1] : null, loc: range() }
         }
 
-CallSuffix = args:("(" Expression? _ (_ ',' _ Expression)* _ ','? _  ")") {
-            return { type: 'CallSuffix', args: [
-                ...(args[1] ? [args[1]] : []),
-                ...(args[3].map(item => item[3])),
-            ] }
+CallSuffix = args:(("(" first:Expression? _ rest:(_ ',' _ @Expression)* _ ','? _  ")"
+            { return [
+                ...first ? [first] : [],
+                ...rest,
+            ]}
+            )) {
+            return { type: 'CallSuffix', args: args, loc: range() }
         }
 
 Apply = target:Applyable suffixes:Suffix* {
             if (!suffixes.length) {
                 return target
             }
-            return {type: 'Apply', target, suffixes}
+            return {type: 'Apply', target, suffixes, loc: range()}
         }
 
-_ = [ \t\n\r]* { return text() }
+_ = $([ \t\n\r]*)
 
 Applyable = Number / Boolean / Identifier
 

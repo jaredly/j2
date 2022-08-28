@@ -1,0 +1,11 @@
+
+- Javascript (+React?)
+- Go?
+	- could be fun, idk
+- GLSL
+	- definitely want this
+- C++ for esp32/esp8266?
+- WASM?
+- Blockly??
+	- https://developers.google.com/blockly/guides/configure/web/serialization
+	- could be quite cool to allow importing of blockly blocks, like "if you don't want to mess with generics yet" ya know.
