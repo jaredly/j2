@@ -3,7 +3,7 @@ import { Grams } from './types';
 export const grams: Grams = {
     Number: {
         type: 'tagged',
-        tags: ['Expression', 'Type'],
+        tags: ['Applyable', 'Type'],
         inner: [
             // Can I transform this to/from a number?
             { type: 'named', name: 'raw', inner: '$RawNumber' },
@@ -17,9 +17,19 @@ export const grams: Grams = {
             },
         ],
     },
+    RawNumber: {
+        type: 'peggy',
+        raw: '[0-9]+',
+    },
     Boolean: {
         type: 'tagged',
-        tags: ['Expression', 'Type'],
-        inner: { type: 'or', options: ['true', 'false'] },
+        tags: ['Applyable', 'Type'],
+        inner: [
+            {
+                type: 'named',
+                name: 'value',
+                inner: { type: 'or', options: ['true', 'false'] },
+            },
+        ],
     },
 };

@@ -7,11 +7,13 @@ import { grams as switchs } from './switchs';
 import { grams as lambda } from './lambda';
 import { grams as dexpr } from './dexpr';
 import { grams as ident } from './ident';
+import { grams as comments } from './comments';
 
 export const grammar = {
+    ...constants,
     ...ident,
     ...apply,
+    ...comments,
     // ...binop,
     // ...lambda,
-    // ...constants,
 };

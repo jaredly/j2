@@ -3,7 +3,7 @@ import { Grams } from './types';
 export const grams: Grams = {
     Identifier: {
         type: 'tagged',
-        tags: ['Expression', 'Type'],
+        tags: ['Applyable', 'Type'],
         inner: [
             { type: 'named', name: 'text', inner: '$IdText' },
             {
@@ -15,6 +15,14 @@ export const grams: Grams = {
                 },
             },
         ],
+    },
+    IdText: {
+        type: 'peggy',
+        raw: '![0-9] [0-9a-zA-Z_]+',
+    },
+    HashText: {
+        type: 'peggy',
+        raw: '"h" [0-9a-zA-Z]+',
     },
     LocalHash: [
         '#[:',

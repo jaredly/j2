@@ -21,7 +21,7 @@ export const grams: Grams = {
         inner: {
             type: 'suffixes',
             // Can we infer this as 'Atom' vs 'Expression'?
-            target: 'Expression',
+            target: 'Applyable',
             suffix: 'Suffix',
         },
     },

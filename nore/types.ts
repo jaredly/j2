@@ -1,6 +1,10 @@
 // Ok folks
 
-export type GramDef<Extra> = Or<Extra> | TopGram<Extra> | Gram<Extra>[];
+export type GramDef<Extra> =
+    | Or<Extra>
+    | TopGram<Extra>
+    | Gram<Extra>[]
+    | { type: 'peggy'; raw: string };
 export type Grams = {
     [key: string]: GramDef<EExtra>;
 };
@@ -74,6 +78,7 @@ export type TopGram<Extra> = {
 export type TGram<B> =
     | Or<B>
     | TopGram<B>
+    | { type: 'peggy'; raw: string }
     | { type: 'sequence'; items: Gram<B>[] };
 
 export const transformGram = <B>(
@@ -86,6 +91,9 @@ export const transformGram = <B>(
             type: 'sequence',
             items: gram.map((g) => transform(g, check, change)),
         };
+    }
+    if (gram.type === 'peggy') {
+        return gram;
     }
     if (gram.type === 'tagged') {
         return {
@@ -160,4 +168,22 @@ export const transform = <A, B>(
             return gram;
         }
     }
+};
+
+export const check = (v: Gram<EExtra>): v is EExtra =>
+    typeof v === 'string' || Array.isArray(v);
+export const change = (v: EExtra): Gram<never> => {
+    if (typeof v === 'string') {
+        if (v.match(/^\$[A-Z]/)) {
+            return { type: 'literal-ref', id: v.slice(1) };
+        }
+        if (v.match(/^[A-Z]/)) {
+            return { type: 'ref', id: v };
+        }
+        return { type: 'literal', value: v };
+    }
+    return {
+        type: 'sequence',
+        items: v.map((b) => transform(b, check, change)),
+    };
 };

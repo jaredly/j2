@@ -1,6 +1,8 @@
 // Generate types
 
 import {
+    change,
+    check,
     EExtra,
     Gram,
     Grams,
@@ -11,24 +13,6 @@ import {
 } from '../types';
 import * as b from '@babel/types';
 import generate from '@babel/generator';
-
-const check = (v: Gram<EExtra>): v is EExtra =>
-    typeof v === 'string' || Array.isArray(v);
-const change = (v: EExtra): Gram<never> => {
-    if (typeof v === 'string') {
-        if (v.match(/^\$[A-Z]/)) {
-            return { type: 'literal-ref', id: v.slice(1) };
-        }
-        if (v.match(/^[A-Z]/)) {
-            return { type: 'ref', id: v };
-        }
-        return { type: 'literal', value: v };
-    }
-    return {
-        type: 'sequence',
-        items: v.map((b) => transform(b, check, change)),
-    };
-};
 
 // Next step:
 // - in addition to generating a tstype, also produce a peggy grammar string
@@ -54,6 +38,10 @@ export const generateTypes = (grammar: Grams) => {
                 if (!tags[tag]) tags[tag] = [];
                 tags[tag].push(name);
             });
+        }
+        if (gram.type === 'peggy') {
+            lines.push({ name, defn: b.tsStringKeyword() });
+            continue;
         }
         let defn = topGramToType(
             gram.type === 'sequence' ? gram.items : gram.inner,
@@ -113,7 +101,7 @@ export const topGramToType = (
             ),
         ]);
     }
-    throw new Error('not yet');
+    throw new Error(`not yet`);
 };
 
 export const sequenceToType = (grams: Gram<never>[]): b.TSType => {
@@ -152,7 +140,6 @@ export const gramToType = (gram: Gram<never>): b.TSType => {
         case 'literal':
             return b.tsLiteralType(b.stringLiteral(gram.value));
         case 'literal-ref':
-            return b.tsStringKeyword();
         case 'ref':
             return b.tsTypeReference(b.identifier(gram.id));
         case 'args': {
