@@ -14,11 +14,18 @@ export const grams: Grams = {
     CallSuffix: {
         type: 'tagged',
         tags: ['Suffix'],
-        inner: {
-            type: 'args',
-            item: 'Expression',
-        },
+        inner: [
+            {
+                type: 'named',
+                name: 'args',
+                inner: {
+                    type: 'args',
+                    item: 'Expression',
+                },
+            },
+        ],
     },
+    /*
     ArrowSuffix: {
         type: 'tagged',
         tags: ['Suffix'],
@@ -46,4 +53,5 @@ export const grams: Grams = {
             },
         ],
     },
+    */
 };

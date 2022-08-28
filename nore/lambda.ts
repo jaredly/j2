@@ -17,6 +17,7 @@ export const grams: { [key: string]: Gram } = {
 	}
 	*/
     Lambda: [
+        'fn',
         {
             type: 'named',
             name: 'args',

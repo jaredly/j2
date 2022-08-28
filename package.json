@@ -20,6 +20,7 @@
         "fixn": "env FIX=1 pnpm nojest",
         "fix": "env FIX=1 jest",
         "cov": "jest --coverage",
+        "nore": "./utils/esrun.js nore/generate/run.ts",
         "sandbox": "vite sandbox --port 2034 --config sandbox/config.js",
         "sandbox-build": "vite build sandbox --config sandbox/config.js",
         "deploy-sandbox": "npm run sandbox-build; surge sandbox/dist jerd-sandbox.surge.sh"

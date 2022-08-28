@@ -1,6 +1,6 @@
 // Ok folks
 
-export type Grams = { [key: string]: TopGram };
+export type Grams = { [key: string]: Or | TopGram | Gram[] };
 export type Gram =
     | {
           type: 'args';
@@ -21,22 +21,16 @@ export type Gram =
     // ^ Yeah ok, I don't think I need drill
 
     // | { type: 'withDefault'; inner: Gram; default: any }
-    | { type: 'or'; options: Gram[] }
+    | Or
     | { type: 'named'; name: string; inner: Gram }
     | { type: 'star' | 'plus' | 'optional'; item: Gram }
     // This produces a {inferred: boolean, inner: T}
     // And it expects an `inferSomeThing` function to exist somewhere??
     | { type: 'inferrable'; item: Gram }
-    // I need a way to regex? Or something?
-    | {
-          type: 'binops';
-          inner: Gram;
-          precedence: string[][];
-          chars: string;
-          exclude: string[];
-      }
-    // This requires that (target + any number of suffixes) matches the same "tag" as the suffixes.
-    | { type: 'suffixes'; target: Gram; suffix: Gram }
+    // // I need a way to regex? Or something?
+    // | Binops
+    // // This requires that (target + any number of suffixes) matches the same "tag" as the suffixes.
+    // | Suffixes
     // | {
     //       type: 'ref';
     //       kind: string; // will be passed to the autocomplete fn
@@ -44,5 +38,19 @@ export type Gram =
     //       hash: Gram;
     //   }
     | Gram[];
+export type Or = { type: 'or'; options: Gram[] };
 
-export type TopGram = Gram | { type: 'tagged'; tags: string[]; inner: Gram };
+export type Binops = {
+    type: 'binops';
+    inner: Gram;
+    precedence: string[][];
+    chars: string;
+    exclude: string[];
+};
+export type Suffixes = { type: 'suffixes'; target: Gram; suffix: Gram };
+
+export type TopGram = {
+    type: 'tagged';
+    tags: string[];
+    inner: Gram[] | Binops | Suffixes;
+};
