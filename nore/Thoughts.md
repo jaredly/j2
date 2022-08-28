@@ -1,4 +1,19 @@
 
+So I think I'm going to need a `derived` dealio, for like
+evaluating a raw number into an actual number,
+and for booleans,
+and for deserializing strings. (\\n to \n)
+
+yeah I think that makes sense.
+
+So, a derived dealio will need to specify .. in common terms...
+what the typescript type is going to be, right?
+or should I just restrict it to constants?
+I guess I can say "you give the string name
+of the type". That's fine.
+
+##
+
 
 So basically, I'll want to do a preprocessing pass on the whole grammar,
 caching the 'prefixes' and 'suffixes'

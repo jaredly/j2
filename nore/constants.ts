@@ -6,7 +6,18 @@ export const grams: Grams = {
         tags: ['Applyable', 'Type'],
         inner: [
             // Can I transform this to/from a number?
-            { type: 'named', name: 'raw', inner: '$RawNumber' },
+            {
+                type: 'named',
+                name: 'num',
+                inner: {
+                    type: 'derived',
+                    inner: 'RawNumber',
+                    typeName: 'number',
+                    derive(raw) {
+                        return +raw;
+                    },
+                },
+            },
             {
                 type: 'named',
                 name: 'kind',

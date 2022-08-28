@@ -42,15 +42,6 @@ export const generatePeg = (grammar: Grams) => {
             defn: tags[tag].join(' / '),
         });
     });
-    const builtins: { [key: string]: string } = {
-        UIntLiteral: '[0-9]+ { return +text() }',
-    };
-    Object.keys(builtins).forEach((k) => {
-        lines.push({
-            name: k,
-            defn: builtins[k],
-        });
-    });
     return lines.map(({ name, defn }) => `${name} = ${defn}`).join('\n\n');
 };
 
@@ -75,6 +66,8 @@ export const gramToPeg = (gram: Gram<never>): string => {
         case 'sequence': {
             return sequenceToPeg(gram.items);
         }
+        case 'derived':
+            return gramToPeg(gram.inner);
         case 'literal':
             return `"${gram.value}"`;
         case 'literal-ref':

@@ -1,4 +1,4 @@
-Number = raw:RawNumber kind:("u" / "i" / "f")?
+Number = num:(RawNumber) kind:("u" / "i" / "f")?
 
 RawNumber = [0-9]+
 
@@ -10,7 +10,9 @@ IdText = ![0-9] [0-9a-zA-Z_]+
 
 HashText = "h" [0-9a-zA-Z]+
 
-LocalHash = "#[:" text:UIntLiteral "]"
+UIntLiteral = [0-9]+
+
+LocalHash = "#[:" sym:(UIntLiteral) "]"
 
 IdHash = "#[" hash:HashText idx:("." UIntLiteral)? "]"
 
@@ -27,5 +29,3 @@ Type = Number / Boolean / Identifier
 Suffix = CallSuffix
 
 Expression = Apply
-
-UIntLiteral = [0-9]+ { return +text() }

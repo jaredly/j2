@@ -65,13 +65,13 @@ export const generateTypes = (grammar: Grams) => {
             ),
         });
     });
-    const builtins: { [key: string]: string } = { UIntLiteral: 'number' };
-    Object.keys(builtins).forEach((k) => {
-        lines.push({
-            name: k,
-            defn: b.tsTypeReference(b.identifier(builtins[k])),
-        });
-    });
+    // const builtins: { [key: string]: string } = { UIntLiteral: 'number' };
+    // Object.keys(builtins).forEach((k) => {
+    //     lines.push({
+    //         name: k,
+    //         defn: b.tsTypeReference(b.identifier(builtins[k])),
+    //     });
+    // });
     return lines
         .map(
             ({ name, defn }) => `export type ${name} = ${generate(defn).code};`,
@@ -136,6 +136,20 @@ export const gramToType = (gram: Gram<never>): b.TSType => {
     switch (gram.type) {
         case 'sequence': {
             return sequenceToType(gram.items);
+        }
+        case 'derived': {
+            return b.tsTypeLiteral([
+                b.tsPropertySignature(
+                    b.identifier('raw'),
+                    b.tsTypeAnnotation(gramToType(gram.inner)),
+                ),
+                b.tsPropertySignature(
+                    b.identifier('value'),
+                    b.tsTypeAnnotation(
+                        b.tsTypeReference(b.identifier(gram.typeName)),
+                    ),
+                ),
+            ]);
         }
         case 'literal':
             return b.tsLiteralType(b.stringLiteral(gram.value));

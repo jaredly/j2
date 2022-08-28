@@ -16,6 +16,12 @@ export type Gram<Extra> =
           item: Gram<Extra>;
           last?: Gram<Extra>;
       }
+    | {
+          type: 'derived';
+          inner: Gram<Extra>;
+          typeName: string;
+          derive: (raw: string) => any;
+      }
 
     // If the contents are empty, then take the other named thing in this story, and just use that.
     // hrmmmmmm do I want like a `drill` instead?
@@ -153,6 +159,7 @@ export const transform = <A, B>(
                 ),
             };
         }
+        case 'derived':
         case 'named': {
             return { ...gram, inner: transform(gram.inner, check, change) };
         }

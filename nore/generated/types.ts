@@ -1,6 +1,9 @@
 export type Number = {
   type: "Number";
-  raw: RawNumber;
+  num: {
+    raw: RawNumber;
+    value: number;
+  };
   kind: {
     inferred: boolean;
     item: "u" | "i" | "f";
@@ -21,14 +24,21 @@ export type Identifier = {
 };
 export type IdText = string;
 export type HashText = string;
+export type UIntLiteral = string;
 export type LocalHash = {
   type: "LocalHash";
-  text: UIntLiteral;
+  sym: {
+    raw: UIntLiteral;
+    value: number;
+  };
 };
 export type IdHash = {
   type: "IdHash";
   hash: HashText;
-  idx: null | UIntLiteral;
+  idx: null | {
+    raw: UIntLiteral;
+    value: number;
+  };
 };
 export type CallSuffix = {
   type: "CallSuffix";
@@ -44,4 +54,3 @@ export type Applyable = Number | Boolean | Identifier;
 export type Type = Number | Boolean | Identifier;
 export type Suffix = CallSuffix;
 export type Expression = Apply;
-export type UIntLiteral = number;
