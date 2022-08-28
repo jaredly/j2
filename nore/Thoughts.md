@@ -1,4 +1,36 @@
 
+## Structured Editor
+
+This exercise of hand-writing the structured editor is super useful.
+
+What I really need, is at-the-top focus control.
+And the ability to select non-atomic nodes.
+and the ability to move between nodes via the keyboard.
+
+hmmmmm what if ... there was a way to ... unwrapp ... all nodes
+so that references go through a toplevel map?
+by loc-idx?
+that way we can set up listeners, for each individual node.
+and update a node without updating everything under the sun.
+
+ok, and then we can do things like
+....
+
+wait, at that point should I even be using react?
+🤔
+hmmmmmmmm
+
+anyway, so first line of attack:
+- make an AST that uses a central lookup table.
+	it can be an id -> { path: [the path to here], kind: 'Expression', value: Expression }
+
+
+Ok, but before I do this, do I need to do the "blank" dealios?
+
+
+
+##
+
 What about inferrable type application suffixes?
 
 🤔

@@ -25,9 +25,12 @@ import generate from '@babel/generator';
 //     peg: string;
 // };
 
-export const generateTypes = (grammar: Grams) => {
+export const generateTypes = (
+    grammar: Grams,
+    tagDeps: { [key: string]: string[] },
+) => {
     const lines: { name: string; defn: b.TSType }[] = [];
-    const tags: { [name: string]: string[] } = {};
+    const tags: { [name: string]: string[] } = { ...tagDeps };
     for (const [name, egram] of Object.entries(grammar)) {
         const gram: TGram<never> = transformGram<never>(egram, check, change);
         if (gram.type === 'or') {
@@ -197,7 +200,7 @@ export const gramToType = (gram: Gram<never>): b.TSType => {
                     b.tsTypeAnnotation(b.tsBooleanKeyword()),
                 ),
                 b.tsPropertySignature(
-                    b.identifier('item'),
+                    b.identifier('value'),
                     b.tsTypeAnnotation(gramToType(gram.item)),
                 ),
             ]);

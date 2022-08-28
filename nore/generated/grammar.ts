@@ -169,7 +169,7 @@ function peg$parse(input, options) {
   var peg$FAILED = {};
   var peg$source = options.grammarSource;
 
-  var peg$startRuleFunctions = { Expression: peg$parseExpression };
+  var peg$startRuleFunctions = { Expression: peg$parseExpression, Applyable: peg$parseApplyable, Number: peg$parseNumber, Identifier: peg$parseIdentifier };
   var peg$startRuleFunction = peg$parseExpression;
 
   var peg$c0 = "u";

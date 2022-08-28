@@ -12,9 +12,13 @@ export const grams: Grams = {
                 name: 'no',
                 inner: {
                     type: 'optional',
-                    item: ['no', { type: 'or', options: ['If', 'Block'] }],
+                    item: ['else', { type: 'or', options: ['If', 'Block'] }],
                 },
             },
         ],
     },
+    IfYes: [
+        { type: 'named', name: 'cond', inner: 'Expression' },
+        { type: 'named', name: 'yes', inner: 'Block' },
+    ],
 };

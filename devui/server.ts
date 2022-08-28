@@ -1,14 +1,3 @@
-import path from 'path';
-import {
-    existsSync,
-    fstat,
-    readdirSync,
-    readFileSync,
-    unlinkSync,
-    writeFileSync,
-} from 'fs';
-import { createServer, request } from 'http';
-import { createServer as vite } from 'vite';
 import { viteFsProxy } from './vite-fs-proxy';
 
 viteFsProxy({

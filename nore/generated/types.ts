@@ -6,7 +6,7 @@ export type Number = {
   };
   kind: {
     inferred: boolean;
-    item: "u" | "i" | "f";
+    value: "u" | "i" | "f";
   };
 };
 
@@ -22,7 +22,7 @@ export type Identifier = {
   text: IdText;
   ref: {
     inferred: boolean;
-    item: IdHash | LocalHash;
+    value: IdHash | LocalHash;
   };
 };
 
@@ -62,10 +62,10 @@ export type Apply = {
 
 export type _ = string;
 
+export type Expression = Applyable | Apply;
+
 export type Applyable = Number | Boolean | Identifier;
 
 export type Type = Number | Boolean | Identifier;
 
 export type Suffix = CallSuffix;
-
-export type Expression = Apply;

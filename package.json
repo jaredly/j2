@@ -5,6 +5,7 @@
     "main": "index.js",
     "scripts": {
         "start": "esbuild --bundle devui/server.ts --platform=node --external:vite | node -",
+        "norui": "esbuild --bundle nore/server.ts --platform=node --external:vite | node -",
         "grammar": "./utils/esrun.js utils/build-grammar.ts",
         "aggregates": "./utils/esrun.js utils/aggregates.ts; prettier -w core/elements/macros.ts",
         "re-fixture": "./utils/esrun.js utils/re-fixture.ts",

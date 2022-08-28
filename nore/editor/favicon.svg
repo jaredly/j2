@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="40mm"
+   height="40mm"
+   viewBox="0 0 40 40"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (b8e25be8, 2022-02-05)"
+   sodipodi:docname="favicon.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:snap-bbox="true"
+     inkscape:snap-global="true"
+     inkscape:zoom="1.6500619"
+     inkscape:cx="30.604913"
+     inkscape:cy="113.93512"
+     inkscape:current-layer="layer1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0">
+    <inkscape:grid
+       type="xygrid"
+       id="grid9"
+       originx="-74.999998"
+       originy="-99.999997" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-75,-100)">
+    <path
+       id="path318"
+       style="fill:#ffffff;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 109.38672,102.37305 c -3.03518,0.0196 -6.07068,0.0116 -9.10547,0.0703 -1.207345,1.1904 -1.207741,3.00653 -1.702459,4.53026 -0.783011,3.73247 -0.973295,7.55354 -1.119807,11.3545 4.975556,1.81051 9.892306,3.90974 15.121096,4.88868 -0.0246,-6.75607 0.009,-13.70434 -2.33594,-20.13868 -0.18784,-0.30773 -0.41464,-0.7983 -0.85742,-0.70507 z m -31.964845,16.86523 c 0.07353,6.02971 0.26246,12.21369 2.421875,17.91992 0.645666,0.84061 1.819956,0.30273 2.709763,0.4405 2.406575,-0.001 4.81751,0.0818 7.219925,-0.10065 1.15831,-1.19432 1.160205,-2.97178 1.657506,-4.50255 0.787554,-3.71817 0.945798,-7.52829 1.119837,-11.31386 -4.986595,-1.82911 -9.913053,-3.90657 -15.158203,-4.9043 0.0098,0.82032 0.01953,1.64063 0.0293,2.46094 z" />
+    <rect
+       style="fill:#e6e6e6;stroke:none;stroke-width:0.499999"
+       id="rect430"
+       width="40"
+       height="40"
+       x="75"
+       y="100"
+       inkscape:export-filename="/Users/jared/clone/exploration/j2/nore/editor/favicon.png"
+       inkscape:export-xdpi="200"
+       inkscape:export-ydpi="200" />
+    <path
+       style="fill:#00ffff;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 75,120 c 0,0 0,20 4.999998,20 5,0 5,0 10.000001,0 5,0 5,-20 5,-20 0,0 0,-20 5.000001,-20 5,0 5,0 10,0 5,0 5,20 5,20 0,0 0,0 0,5 0,5 -40,-15 -40,-10 0,5 0,5 0,5 z"
+       id="path44" />
+    <path
+       id="path525"
+       style="fill:#000000;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 102.42773,105.8125 c -1.00987,3.31561 -1.18288,6.76449 -1.4414,10.19922 2.69777,0.98644 5.3844,2.01295 8.14453,2.81445 -0.10706,-4.39659 -0.32594,-8.83978 -1.64648,-13.04687 -1.68555,0.0111 -3.3711,0.0221 -5.05665,0.0332 z m -21.574214,15.43555 c 0.158751,4.35107 0.362276,8.74928 1.611328,12.94531 1.704484,0.005 3.408911,-0.003 5.113281,-0.0234 1.001525,-3.30496 1.163806,-6.74089 1.458984,-10.16015 -2.707523,-1.00574 -5.411248,-2.03076 -8.185547,-2.83985 z" />
+  </g>
+</svg>

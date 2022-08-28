@@ -17,3 +17,7 @@ export const grammar = {
     // ...binop,
     // ...lambda,
 };
+
+export const tags = {
+    Expression: ['Applyable'],
+};
