@@ -21,8 +21,8 @@ worth a shot, seems like.
 
 AND
 
-- generate TS types for the AST
-- generate peggyjs grammar w/ transformers (& resolvers!)
+- [x] generate TS types for the AST
+- [ ] generate peggyjs grammar w/ transformers (& resolvers!)
 - generate a printer AST->string
 - figure out the best way to automate AST->babeljs?
 - generate a structured editor of course!

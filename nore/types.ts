@@ -1,32 +1,31 @@
 // Ok folks
 
-export type Grams = { [key: string]: Or | TopGram | Gram[] };
-export type Gram =
+export type GramDef<Extra> = Or<Extra> | TopGram<Extra> | Gram<Extra>[];
+export type Grams = {
+    [key: string]: GramDef<EExtra>;
+};
+export type Gram<Extra> =
     | {
           type: 'args';
           sep?: string;
           bounds?: [string, string];
-          item: Gram;
-          last?: Gram;
+          item: Gram<Extra>;
+          last?: Gram<Extra>;
       }
-    // if it starts with a Capital letter, it's a named grammar
-    // if it starts with $ and then a capital, then it's the string value of the named grammar
-    // otherwise, it's a literal
-    | string
 
     // If the contents are empty, then take the other named thing in this story, and just use that.
     // hrmmmmmm do I want like a `drill` instead?
     // so it ends up being `main:Main rest:Main_Others?`?
-    // | { type: 'drill'; inner: Gram }
+    // | { type: 'drill'; inner: Recur }
     // ^ Yeah ok, I don't think I need drill
 
-    // | { type: 'withDefault'; inner: Gram; default: any }
-    | Or
-    | { type: 'named'; name: string; inner: Gram }
-    | { type: 'star' | 'plus' | 'optional'; item: Gram }
+    // | { type: 'withDefault'; inner: Recur; default: any }
+    | Or<Extra>
+    | { type: 'named'; name: string; inner: Gram<Extra> }
+    | { type: 'star' | 'plus' | 'optional'; item: Gram<Extra> }
     // This produces a {inferred: boolean, inner: T}
     // And it expects an `inferSomeThing` function to exist somewhere??
-    | { type: 'inferrable'; item: Gram }
+    | { type: 'inferrable'; item: Gram<Extra> }
     // // I need a way to regex? Or something?
     // | Binops
     // // This requires that (target + any number of suffixes) matches the same "tag" as the suffixes.
@@ -35,22 +34,130 @@ export type Gram =
     //       type: 'ref';
     //       kind: string; // will be passed to the autocomplete fn
     //       pattern: string; // regex or similar
-    //       hash: Gram;
+    //       hash: Recur;
     //   }
-    | Gram[];
-export type Or = { type: 'or'; options: Gram[] };
+    | { type: 'literal'; value: string }
+    | { type: 'literal-ref'; id: string }
+    | { type: 'ref'; id: string }
+    | { type: 'sequence'; items: Gram<Extra>[] }
+    | Extra;
 
-export type Binops = {
+// // if it starts with a Capital letter, it's a named grammar
+// // if it starts with $ and then a capital, then it's the string value of the named grammar
+// // otherwise, it's a literal
+// | string
+// | Gram[];
+export type Or<Extra> = { type: 'or'; options: Gram<Extra>[] };
+
+export type Binops<Extra> = {
     type: 'binops';
-    inner: Gram;
+    inner: Gram<Extra>;
     precedence: string[][];
     chars: string;
     exclude: string[];
 };
-export type Suffixes = { type: 'suffixes'; target: Gram; suffix: Gram };
+export type Suffixes<Extra> = {
+    type: 'suffixes';
+    target: Gram<Extra>;
+    suffix: Gram<Extra>;
+};
 
-export type TopGram = {
+export type EasyGram = Gram<EExtra>;
+export type EExtra = string | EasyGram[];
+
+export type TopGram<Extra> = {
     type: 'tagged';
     tags: string[];
-    inner: Gram[] | Binops | Suffixes;
+    inner: Gram<Extra>[] | Binops<Extra> | Suffixes<Extra>;
+};
+
+export type TGram<B> =
+    | Or<B>
+    | TopGram<B>
+    | { type: 'sequence'; items: Gram<B>[] };
+
+export const transformGram = <B>(
+    gram: Grams['a'],
+    check: (v: Gram<EExtra>) => v is EExtra,
+    change: (a: EExtra) => Gram<B>,
+): TGram<B> => {
+    if (Array.isArray(gram)) {
+        return {
+            type: 'sequence',
+            items: gram.map((g) => transform(g, check, change)),
+        };
+    }
+    if (gram.type === 'tagged') {
+        return {
+            type: 'tagged',
+            tags: gram.tags,
+            inner: Array.isArray(gram.inner)
+                ? gram.inner.map((g) => transform(g, check, change))
+                : gram.inner.type === 'binops'
+                ? {
+                      ...gram.inner,
+                      inner: transform(gram.inner.inner, check, change),
+                  }
+                : gram.inner.type === 'suffixes'
+                ? {
+                      type: 'suffixes',
+                      target: transform(gram.inner.target, check, change),
+                      suffix: transform(gram.inner.suffix, check, change),
+                  }
+                : gram.inner,
+        };
+    }
+    return {
+        type: 'or',
+        options: gram.options.map((g) => transform(g, check, change)),
+    };
+};
+
+export const transform = <A, B>(
+    gram: Gram<A>,
+    check: (v: Gram<A>) => v is A,
+    change: (a: A) => Gram<B>,
+): Gram<B> => {
+    if (check(gram)) {
+        return change(gram);
+    }
+    switch (gram.type) {
+        case 'sequence': {
+            return {
+                ...gram,
+                items: gram.items.map((item) => transform(item, check, change)),
+            };
+        }
+        case 'args': {
+            return {
+                ...gram,
+                item: transform(gram.item, check, change),
+                last: gram.last
+                    ? transform(gram.last, check, change)
+                    : undefined,
+            };
+        }
+        case 'or': {
+            return {
+                ...gram,
+                options: gram.options.map((item) =>
+                    transform(item, check, change),
+                ),
+            };
+        }
+        case 'named': {
+            return { ...gram, inner: transform(gram.inner, check, change) };
+        }
+        case 'inferrable': {
+            return { ...gram, item: transform(gram.item, check, change) };
+        }
+        case 'star':
+        case 'plus':
+        case 'optional': {
+            return { ...gram, item: transform(gram.item, check, change) };
+        }
+        default: {
+            return gram;
+        }
+    }
 };

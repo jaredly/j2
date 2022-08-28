@@ -15,14 +15,14 @@ export type IdHash = {
   hash: string;
   idx: null | UIntLiteral;
 };
+export type CallSuffix = {
+  type: "CallSuffix";
+  args: Expression[];
+};
 export type Apply = {
   type: "Apply";
   target: Expression;
   suffixes: Suffix[];
-};
-export type CallSuffix = {
-  type: "CallSuffix";
-  args: Expression[];
 };
 export type Expression = Identifier | Apply;
 export type Type = Identifier;
