@@ -76,7 +76,7 @@ export const generateTypes = (grammar: Grams) => {
         .map(
             ({ name, defn }) => `export type ${name} = ${generate(defn).code};`,
         )
-        .join('\n');
+        .join('\n\n');
 };
 
 export const topGramToType = (

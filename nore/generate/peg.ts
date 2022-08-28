@@ -28,10 +28,11 @@ export const generatePeg = (grammar: Grams) => {
             });
         }
         if (gram.type === 'peggy') {
-            lines.push({ name, defn: gram.raw });
+            lines.push({ name, defn: gram.raw + ` { return text() }` });
             continue;
         }
         let defn = topGramToPeg(
+            name,
             gram.type === 'sequence' ? gram.items : gram.inner,
         );
         lines.push({ name, defn });
@@ -45,14 +46,72 @@ export const generatePeg = (grammar: Grams) => {
     return lines.map(({ name, defn }) => `${name} = ${defn}`).join('\n\n');
 };
 
-export const topGramToPeg = (gram: TopGram<never>['inner']): string => {
+export const pegTransform = (vbl: string, gram: Gram<never>): string => {
+    switch (gram.type) {
+        case 'optional':
+            return `${vbl} ? ${pegTransform(vbl, gram.item)} : null`;
+        case 'literal':
+        case 'literal-ref':
+        case 'ref':
+        case 'or':
+            return vbl;
+        case 'inferrable':
+            return `${vbl} ? {inferred: false, value: ${vbl}} : {inferred: true, value: undefined}`;
+        case 'args':
+            return `[
+                ...(${vbl}[1] ? [${vbl}[1]] : []),
+                ...(${vbl}[3].map(item => item[3])),
+            ]`;
+        case 'derived':
+            return `{
+                raw: ${vbl},
+                value: (${gram.derive})(${vbl})
+            }`;
+        // Gotta be only one non-literal folks
+        case 'sequence': {
+            const first = gram.items.findIndex(
+                (item) =>
+                    item.type !== 'literal' && item.type !== 'literal-ref',
+            );
+            if (first === -1) {
+                return `":bad news bears:"`;
+            }
+            return pegTransform(`${vbl}[${first}]`, gram.items[first]);
+        }
+        default:
+            throw new Error(`Not impl ${gram.type}`);
+    }
+};
+
+export const topGramToPeg = (
+    name: string,
+    gram: TopGram<never>['inner'],
+): string => {
     if (Array.isArray(gram)) {
-        return gramToPeg({ type: 'sequence', items: gram });
+        const named: string[] = [];
+        gram.forEach((item) => {
+            if (item.type === 'named') {
+                named.push(
+                    `${item.name}: ${pegTransform(item.name, item.inner)}`,
+                );
+            }
+        });
+        return (
+            gramToPeg({ type: 'sequence', items: gram }) +
+            ` {
+            return { type: '${name}', ${named.join(', ')} }
+        }`
+        );
     }
     if (gram.type === 'suffixes') {
         return `target:${gramToPeg(gram.target)} suffixes:${gramToPeg(
             gram.suffix,
-        )}+`;
+        )}* {
+            if (!suffixes.length) {
+                return target
+            }
+            return {type: '${name}', target, suffixes}
+        }`;
     }
     throw new Error('not yet');
 };
@@ -76,9 +135,10 @@ export const gramToPeg = (gram: Gram<never>): string => {
         case 'args': {
             return [
                 `"${gram.bounds ? gram.bounds[0] : '('}"`,
+                `${gramToPeg(gram.item)}?`,
                 '_',
-                `items:(${gramToPeg(gram.item)} _ ',' _)*`,
-                `_ ',' _`,
+                `(_ ',' _ ${gramToPeg(gram.item)})*`,
+                `_ ','? _`,
                 gram.last ? `last:(${gramToPeg(gram.last)})` : '',
                 `"${gram.bounds ? gram.bounds[1] : ')'}"`,
             ].join(' ');

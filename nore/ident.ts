@@ -4,9 +4,7 @@ const UIntLiteral: Gram<string> = {
     type: 'derived',
     inner: 'UIntLiteral',
     typeName: 'number',
-    derive(raw) {
-        return parseInt(raw);
-    },
+    derive: (raw) => parseInt(raw),
 };
 
 export const grams: Grams = {

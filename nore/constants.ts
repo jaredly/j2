@@ -13,9 +13,7 @@ export const grams: Grams = {
                     type: 'derived',
                     inner: 'RawNumber',
                     typeName: 'number',
-                    derive(raw) {
-                        return +raw;
-                    },
+                    derive: (raw) => +raw,
                 },
             },
             {
