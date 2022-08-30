@@ -62,6 +62,10 @@ export const generateTypes = (
                     b.tsTypeAnnotation(b.tsLiteralType(b.stringLiteral(name))),
                 ),
                 ...defn.members,
+                b.tsPropertySignature(
+                    b.identifier('loc'),
+                    b.tsTypeAnnotation(b.tsTypeReference(b.identifier('Loc'))),
+                ),
             ]),
         });
     }
@@ -80,11 +84,19 @@ export const generateTypes = (
     //         defn: b.tsTypeReference(b.identifier(builtins[k])),
     //     });
     // });
-    return lines
-        .map(
-            ({ name, defn }) => `export type ${name} = ${generate(defn).code};`,
-        )
-        .join('\n\n');
+    return (
+        `export type Loc = {
+    start: number;
+    end: number;
+    idx: number;
+}\n\n` +
+        lines
+            .map(
+                ({ name, defn }) =>
+                    `export type ${name} = ${generate(defn).code};`,
+            )
+            .join('\n\n')
+    );
 };
 
 export const topGramToType = (

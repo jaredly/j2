@@ -41,7 +41,7 @@ export const generatePeg = (grammar: Grams) => {
                     type: '${name}',
                     raw: text(),
                     value: (${gram.derive})(text()),
-                    loc: range(),
+                    loc: loc(),
                 }
             }`,
             });
@@ -59,7 +59,21 @@ export const generatePeg = (grammar: Grams) => {
             defn: tags[tag].join(' / '),
         });
     });
-    return lines.map(({ name, defn }) => `${name} = ${defn}`).join('\n\n');
+    const prelude = `
+    {{
+        let idx = {current: 0};
+    }}
+
+    {
+        function loc() {
+            return {...range(), idx: idx.current++}
+        }
+    }
+    `;
+    return (
+        prelude +
+        lines.map(({ name, defn }) => `${name} = ${defn}`).join('\n\n')
+    );
 };
 
 export const pegTransform = (vbl: string, gram: Gram<never>): string => {
@@ -112,7 +126,7 @@ export const topGramToPeg = (
         return (
             gramToPeg({ type: 'sequence', items: gram }) +
             ` {
-            return { type: '${name}', ${named.join(', ')}, loc: range() }
+            return { type: '${name}', ${named.join(', ')}, loc: loc() }
         }`
         );
     }
@@ -123,7 +137,7 @@ export const topGramToPeg = (
             if (!suffixes.length) {
                 return target
             }
-            return {type: '${name}', target, suffixes, loc: range()}
+            return {type: '${name}', target, suffixes, loc: loc()}
         }`;
     }
     throw new Error('not yet');

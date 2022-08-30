@@ -3,6 +3,9 @@
 //
 // https://peggyjs.org/
 
+
+        let idx = {current: 0};
+    
 function peg$subclass(child, parent) {
   function C() { this.constructor = child; }
   C.prototype = parent.prototype;
@@ -213,40 +216,40 @@ function peg$parse(input, options) {
             return { type: 'Number', num: {
                 raw: num,
                 value: ((raw2) => +raw2)(num)
-            }, kind: kind ? {inferred: false, value: kind} : {inferred: true, value: undefined}, loc: range() }
+            }, kind: kind ? {inferred: false, value: kind} : {inferred: true, value: undefined}, loc: loc() }
         };
   var peg$f1 = function(value) {
-            return { type: 'Boolean', value: value, loc: range() }
+            return { type: 'Boolean', value: value, loc: loc() }
         };
   var peg$f2 = function(text, ref) {
-            return { type: 'Identifier', text: text, ref: ref ? {inferred: false, value: ref} : {inferred: true, value: undefined}, loc: range() }
+            return { type: 'Identifier', text: text, ref: ref ? {inferred: false, value: ref} : {inferred: true, value: undefined}, loc: loc() }
         };
   var peg$f3 = function() {
                 return {
                     type: 'UInt',
                     raw: text(),
                     value: ((raw2) => parseInt(raw2))(text()),
-                    loc: range(),
+                    loc: loc(),
                 }
             };
   var peg$f4 = function(sym) {
-            return { type: 'LocalHash', sym: sym, loc: range() }
+            return { type: 'LocalHash', sym: sym, loc: loc() }
         };
   var peg$f5 = function(hash, idx) {
-            return { type: 'IdHash', hash: hash, idx: idx ? idx[1] : null, loc: range() }
+            return { type: 'IdHash', hash: hash, idx: idx ? idx[1] : null, loc: loc() }
         };
   var peg$f6 = function(first, rest) { return [
                 ...first ? [first] : [],
                 ...rest,
             ]};
   var peg$f7 = function(args) {
-            return { type: 'CallSuffix', args: args, loc: range() }
+            return { type: 'CallSuffix', args: args, loc: loc() }
         };
   var peg$f8 = function(target, suffixes) {
             if (!suffixes.length) {
                 return target
             }
-            return {type: 'Apply', target, suffixes, loc: range()}
+            return {type: 'Apply', target, suffixes, loc: loc()}
         };
   var peg$currPos = 0;
   var peg$savedPos = 0;
@@ -994,6 +997,11 @@ function peg$parse(input, options) {
     return s0;
   }
 
+
+        function loc() {
+            return {...range(), idx: idx.current++}
+        }
+    
   peg$result = peg$startRuleFunction();
 
   if (peg$result !== peg$FAILED && peg$currPos === input.length) {

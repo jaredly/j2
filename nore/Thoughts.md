@@ -27,6 +27,15 @@ anyway, so first line of attack:
 
 Ok, but before I do this, do I need to do the "blank" dealios?
 
+What kinds of things do I want to ensure can "blank"?
+- Expression, Applyable
+- ... 
+
+Ok I think maybe I don't even want contentEditable?
+like maybe I'll try to take control of editing completely?
+idk, might be too much work. but maybe not.
+oh yeah so if I ditch contentEditable, then I get to use React!
+Which is nice.
 
 
 ##
