@@ -83,43 +83,67 @@ export type Applyable = Number | Boolean | Identifier;
 export type Type = Number | Boolean | Identifier;
 
 export type Suffix = CallSuffix;
-	
+ 
+export type MapNumber = {
+    type: 'Number',
+    value: Number,
+}
+
+export type MapBoolean = {
+    type: 'Boolean',
+    value: Boolean,
+}
+
+export type MapIdentifier = {
+    type: 'Identifier',
+    value: Identifier,
+}
+
+export type MapUInt = {
+    type: 'UInt',
+    value: UInt,
+}
+
+export type MapLocalHash = {
+    type: 'LocalHash',
+    value: LocalHash,
+}
+
+export type MapIdHash = {
+    type: 'IdHash',
+    value: IdHash,
+}
+
+export type MapCallSuffix = {
+    type: 'CallSuffix',
+    value: CallSuffix,
+}
+
+export type MapApply = {
+    type: 'Apply',
+    value: Apply,
+}
+
+export type MapExpression = {
+    type: 'Expression',
+    value: Expression,
+}
+
+export type MapApplyable = {
+    type: 'Applyable',
+    value: Applyable,
+}
+
+export type MapType = {
+    type: 'Type',
+    value: Type,
+}
+
+export type MapSuffix = {
+    type: 'Suffix',
+    value: Suffix,
+}
+
 export type Map = {
-	[key: number]: {
-			type: 'Number',
-			value: Number,
-		} | {
-			type: 'Boolean',
-			value: Boolean,
-		} | {
-			type: 'Identifier',
-			value: Identifier,
-		} | {
-			type: 'UInt',
-			value: UInt,
-		} | {
-			type: 'LocalHash',
-			value: LocalHash,
-		} | {
-			type: 'IdHash',
-			value: IdHash,
-		} | {
-			type: 'CallSuffix',
-			value: CallSuffix,
-		} | {
-			type: 'Apply',
-			value: Apply,
-		} | {
-			type: 'Expression',
-			value: Expression,
-		} | {
-			type: 'Applyable',
-			value: Applyable,
-		} | {
-			type: 'Type',
-			value: Type,
-		} | {
-			type: 'Suffix',
-			value: Suffix,
-		}
+	[key: number]: MapNumber | MapBoolean | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapCallSuffix | MapApply | MapExpression | MapApplyable | MapType | MapSuffix
 }

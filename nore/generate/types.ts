@@ -15,16 +15,6 @@ import {
 import * as b from '@babel/types';
 import generate from '@babel/generator';
 
-// Next step:
-// - in addition to generating a tstype, also produce a peggy grammar string
-//   and then a js processor
-
-// type Processed = {
-//     type: b.TSType;
-//     expr: b.Expression;
-//     peg: string;
-// };
-
 export type Options = { idRefs?: boolean; simpleRules?: string[] };
 
 export const generateTypes = (
@@ -32,6 +22,18 @@ export const generateTypes = (
     tagDeps: { [key: string]: string[] },
     options: Options = {},
 ) => {
+    const { lines, tags } = assembleTypes(grammar, tagDeps, options);
+    return typesToScript(lines, tags, grammar, options);
+};
+
+export const assembleTypes = (
+    grammar: Grams,
+    tagDeps: { [key: string]: string[] },
+    options: Options,
+): {
+    lines: { name: string; defn: b.TSType }[];
+    tags: { [name: string]: string[] };
+} => {
     const lines: { name: string; defn: b.TSType }[] = [];
     const tags: { [name: string]: string[] } = { ...tagDeps };
     for (const [name, egram] of Object.entries(grammar)) {
@@ -81,43 +83,7 @@ export const generateTypes = (
             ),
         });
     });
-    // const builtins: { [key: string]: string } = { UIntLiteral: 'number' };
-    // Object.keys(builtins).forEach((k) => {
-    //     lines.push({
-    //         name: k,
-    //         defn: b.tsTypeReference(b.identifier(builtins[k])),
-    //     });
-    // });
-    return (
-        `export type Loc = {
-    start: number;
-    end: number;
-    idx: number;
-}\n\n` +
-        lines
-            .map(
-                ({ name, defn }) =>
-                    `export type ${name} = ${generate(defn).code};`,
-            )
-            .join('\n\n') +
-        (options.idRefs
-            ? `
-	
-export type Map = {
-	[key: number]: ${Object.keys(grammar)
-        .filter((k) => (grammar[k] as any).type !== 'peggy')
-        .concat(Object.keys(tags))
-        .map(
-            (k) => `{
-			type: '${k}',
-			value: ${k},
-		}`,
-        )
-        .join(' | ')}
-}
-`
-            : '')
-    );
+    return { lines, tags };
 };
 
 export const topGramToType = (
@@ -256,3 +222,47 @@ export const gramToType = (gram: Gram<never>, options: Options): b.TSType => {
         //     throw new Error(`not sure about binops yet`);
     }
 };
+
+export function typesToScript(
+    lines: { name: string; defn: b.TSType }[],
+    tags: { [name: string]: string[] },
+    grammar: Grams,
+    options: Options,
+) {
+    return (
+        `export type Loc = {
+    start: number;
+    end: number;
+    idx: number;
+}\n\n` +
+        lines
+            .map(
+                ({ name, defn }) =>
+                    `export type ${name} = ${generate(defn).code};`,
+            )
+            .join('\n\n') +
+        (options.idRefs
+            ? `
+ 
+${Object.keys(grammar)
+    .filter((k) => (grammar[k] as any).type !== 'peggy')
+    .concat(Object.keys(tags))
+    .map(
+        (k) => `export type Map${k} = {
+    type: '${k}',
+    value: ${k},
+}`,
+    )
+    .join('\n\n')}
+
+export type Map = {
+	[key: number]: ${Object.keys(grammar)
+        .filter((k) => (grammar[k] as any).type !== 'peggy')
+        .concat(Object.keys(tags))
+        .map((k) => `Map${k}`)
+        .join(' | ')}
+}
+`
+            : '')
+    );
+}

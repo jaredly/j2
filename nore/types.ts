@@ -6,6 +6,7 @@ export type GramDef<Extra> =
     | Derived<Extra>
     | Gram<Extra>[]
     | { type: 'peggy'; raw: string };
+
 export type Grams = {
     [key: string]: GramDef<EExtra>;
 };
