@@ -208,15 +208,18 @@ export const gramToType = (gram: Gram<never>, options: Options): b.TSType => {
                 gramToType(gram.item, options),
             ]);
         case 'inferrable':
-            return b.tsTypeLiteral([
-                b.tsPropertySignature(
-                    b.identifier('inferred'),
-                    b.tsTypeAnnotation(b.tsBooleanKeyword()),
-                ),
-                b.tsPropertySignature(
-                    b.identifier('value'),
-                    b.tsTypeAnnotation(gramToType(gram.item, options)),
-                ),
+            return b.tsUnionType([
+                b.tsTypeLiteral([
+                    b.tsPropertySignature(
+                        b.identifier('inferred'),
+                        b.tsTypeAnnotation(b.tsBooleanKeyword()),
+                    ),
+                    b.tsPropertySignature(
+                        b.identifier('value'),
+                        b.tsTypeAnnotation(gramToType(gram.item, options)),
+                    ),
+                ]),
+                b.tsNullKeyword(),
             ]);
         // case 'binops':
         //     throw new Error(`not sure about binops yet`);

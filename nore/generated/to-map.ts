@@ -9,19 +9,21 @@ export const add = (map: tm.Map, item: tm.Map[0]) => {
 export const Identifier = (value: t.Identifier, map: tm.Map): tm.Identifier => {
     return {
         ...value,
-        ref: {
-            ...value.ref,
-            value:
-                value.ref.value.type === 'IdHash'
-                    ? add(map, {
-                          type: 'IdHash',
-                          value: IdHash(value.ref.value, map),
-                      })
-                    : add(map, {
-                          type: 'LocalHash',
-                          value: LocalHash(value.ref.value, map),
-                      }),
-        },
+        ref: value.ref
+            ? {
+                  ...value.ref,
+                  value:
+                      value.ref.value.type === 'IdHash'
+                          ? add(map, {
+                                type: 'IdHash',
+                                value: IdHash(value.ref.value, map),
+                            })
+                          : add(map, {
+                                type: 'LocalHash',
+                                value: LocalHash(value.ref.value, map),
+                            }),
+              }
+            : null,
     };
 };
 

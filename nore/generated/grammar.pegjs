@@ -12,7 +12,7 @@
             return { type: 'Number', num: {
                 raw: num,
                 value: ((raw) => +raw)(num)
-            }, kind: kind ? {inferred: false, value: kind} : {inferred: true, value: undefined}, loc: loc() }
+            }, kind: kind ? {inferred: false, value: kind} : null, loc: loc() }
         }
 
 RawNumber = $("-"? [0-9]+)
@@ -22,7 +22,7 @@ Boolean = value:("true" / "false") {
         }
 
 Identifier = text:IdText ref:(IdHash / LocalHash)? {
-            return { type: 'Identifier', text: text, ref: ref ? {inferred: false, value: ref} : {inferred: true, value: undefined}, loc: loc() }
+            return { type: 'Identifier', text: text, ref: ref ? {inferred: false, value: ref} : null, loc: loc() }
         }
 
 IdText = $(![0-9] [0-9a-zA-Z_]+)

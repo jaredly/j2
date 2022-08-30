@@ -1,6 +1,26 @@
 
 ## Structured Editor
 
+### Selection, navigation?
+
+hello ( 1 , 2 ) ( 3 , 4 )
+^^^^^   ^   ^ editing an atom
+	- if at the start, could be doing a binop from the right by adding a binop char
+	- if at the end, could be adding a binop story
+	- or could be adding a suffix
+
+               ^         ^ the "end" of a callSuffix, the start of another, between suffixes
+
+do .. I want to allow you to select
+the "before" of an expression, even when it's the same visual place as the start of an identifier?
+I don't think so? If you want to go up a level, just select the whole expression.
+
+ok well so one way to do this is to say all we can do is modal stuff
+- atom-edit-mode, we're editing an atom. some characters will take us up a level or whatever.
+- selection-and-such-mode, we're selecting a something
+
+### General, like it could be anything
+
 This exercise of hand-writing the structured editor is super useful.
 
 What I really need, is at-the-top focus control.

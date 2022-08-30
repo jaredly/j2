@@ -13,7 +13,7 @@ export type Number = {
   kind: {
     inferred: boolean;
     value: "u" | "i" | "f";
-  };
+  } | null;
   loc: Loc;
 };
 
@@ -31,7 +31,7 @@ export type Identifier = {
   ref: {
     inferred: boolean;
     value: IdHash | LocalHash;
-  };
+  } | null;
   loc: Loc;
 };
 

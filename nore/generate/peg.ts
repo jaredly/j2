@@ -86,7 +86,7 @@ export const pegTransform = (vbl: string, gram: Gram<never>): string => {
         case 'or':
             return vbl;
         case 'inferrable':
-            return `${vbl} ? {inferred: false, value: ${vbl}} : {inferred: true, value: undefined}`;
+            return `${vbl} ? {inferred: false, value: ${vbl}} : null`;
         case 'args':
             return vbl;
         case 'derived':

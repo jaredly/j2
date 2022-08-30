@@ -216,13 +216,13 @@ function peg$parse(input, options) {
             return { type: 'Number', num: {
                 raw: num,
                 value: ((raw) => +raw)(num)
-            }, kind: kind ? {inferred: false, value: kind} : {inferred: true, value: undefined}, loc: loc() }
+            }, kind: kind ? {inferred: false, value: kind} : null, loc: loc() }
         };
   var peg$f1 = function(value) {
             return { type: 'Boolean', value: value, loc: loc() }
         };
   var peg$f2 = function(text, ref) {
-            return { type: 'Identifier', text: text, ref: ref ? {inferred: false, value: ref} : {inferred: true, value: undefined}, loc: loc() }
+            return { type: 'Identifier', text: text, ref: ref ? {inferred: false, value: ref} : null, loc: loc() }
         };
   var peg$f3 = function() {
                 return {
