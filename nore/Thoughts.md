@@ -19,6 +19,16 @@ ok well so one way to do this is to say all we can do is modal stuff
 - atom-edit-mode, we're editing an atom. some characters will take us up a level or whatever.
 - selection-and-such-mode, we're selecting a something
 
+Selection?
+{type: 'edit', idx: number, at: 'start' | 'end' | 'change'}
+{type: 'select', idx: number, children: null | [number, number]}
+// how should I do "multiple" selection? I guess allowing for "children" selection.
+
+OH NICE I can do onMouseDown & swap with a contentEditable, and click to select just works!!!
+Very nice.
+
+ok so also, I guess if you want to edit a larger node, I can just pretty print, and let you edit free-form.
+
 ### General, like it could be anything
 
 This exercise of hand-writing the structured editor is super useful.
