@@ -274,8 +274,10 @@ export const Number = ({
                                 {
                                     type: 'CallSuffix',
                                     args: [parseExpression('1')],
+                                    loc: { start: 0, end: 0, idx: 0 },
                                 },
                             ],
+                            loc: { start: 0, end: 0, idx: 0 },
                         });
                     } catch (err) {}
                 }

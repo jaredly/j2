@@ -3,7 +3,7 @@
 ## Structured Editor
 
 - [x] loc's need an `idx`
-- [ ] gen type for locs
+- [x] gen type for locs
 - [ ] need to gen types w/ indirection.
 	- so anywhere there's a "ref", we go with `number` which is an idx
 
