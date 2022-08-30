@@ -25,16 +25,19 @@ import generate from '@babel/generator';
 //     peg: string;
 // };
 
+export type Options = { idRefs?: boolean; simpleRules?: string[] };
+
 export const generateTypes = (
     grammar: Grams,
     tagDeps: { [key: string]: string[] },
+    options: Options = {},
 ) => {
     const lines: { name: string; defn: b.TSType }[] = [];
     const tags: { [name: string]: string[] } = { ...tagDeps };
     for (const [name, egram] of Object.entries(grammar)) {
         const gram: TGram<never> = transformGram<never>(egram, check, change);
         if (gram.type === 'or') {
-            lines.push({ name, defn: gramToType(gram) });
+            lines.push({ name, defn: gramToType(gram, options) });
             continue;
         }
         if (gram.type === 'tagged') {
@@ -53,6 +56,7 @@ export const generateTypes = (
                 : gram.type === 'derived'
                 ? gram
                 : gram.inner,
+            options,
         );
         lines.push({
             name,
@@ -95,15 +99,33 @@ export const generateTypes = (
                 ({ name, defn }) =>
                     `export type ${name} = ${generate(defn).code};`,
             )
-            .join('\n\n')
+            .join('\n\n') +
+        (options.idRefs
+            ? `
+	
+export type Map = {
+	[key: number]: ${Object.keys(grammar)
+        .filter((k) => (grammar[k] as any).type !== 'peggy')
+        .concat(Object.keys(tags))
+        .map(
+            (k) => `{
+			type: '${k}',
+			value: ${k},
+		}`,
+        )
+        .join(' | ')}
+}
+`
+            : '')
     );
 };
 
 export const topGramToType = (
     gram: TopGram<never>['inner'] | Derived<never>,
+    options: Options,
 ): b.TSTypeLiteral => {
     if (Array.isArray(gram)) {
-        const res = gramToType({ type: 'sequence', items: gram });
+        const res = gramToType({ type: 'sequence', items: gram }, options);
         if (res.type === 'TSTypeLiteral') {
             return res;
         }
@@ -113,21 +135,26 @@ export const topGramToType = (
         return b.tsTypeLiteral([
             b.tsPropertySignature(
                 b.identifier('target'),
-                b.tsTypeAnnotation(gramToType(gram.target)),
+                b.tsTypeAnnotation(gramToType(gram.target, options)),
             ),
             b.tsPropertySignature(
                 b.identifier('suffixes'),
-                b.tsTypeAnnotation(b.tsArrayType(gramToType(gram.suffix))),
+                b.tsTypeAnnotation(
+                    b.tsArrayType(gramToType(gram.suffix, options)),
+                ),
             ),
         ]);
     }
     if (gram.type === 'derived') {
-        return gramToType(gram) as b.TSTypeLiteral;
+        return gramToType(gram, options) as b.TSTypeLiteral;
     }
     throw new Error(`not yet ${gram.type}`);
 };
 
-export const sequenceToType = (grams: Gram<never>[]): b.TSType => {
+export const sequenceToType = (
+    grams: Gram<never>[],
+    options: Options,
+): b.TSType => {
     const attrs: { [key: string]: b.TSType } = {};
     let firstNonString: null | Gram<EExtra> = null;
     grams.forEach((item) => {
@@ -139,11 +166,11 @@ export const sequenceToType = (grams: Gram<never>[]): b.TSType => {
             firstNonString = item;
         }
         if (item.type === 'named') {
-            attrs[item.name] = gramToType(item.inner);
+            attrs[item.name] = gramToType(item.inner, options);
         }
     });
     if (!Object.keys(attrs).length && firstNonString) {
-        return gramToType(firstNonString);
+        return gramToType(firstNonString, options);
     }
     return b.tsTypeLiteral(
         Object.keys(attrs).map((key) =>
@@ -155,16 +182,16 @@ export const sequenceToType = (grams: Gram<never>[]): b.TSType => {
     );
 };
 
-export const gramToType = (gram: Gram<never>): b.TSType => {
+export const gramToType = (gram: Gram<never>, options: Options): b.TSType => {
     switch (gram.type) {
         case 'sequence': {
-            return sequenceToType(gram.items);
+            return sequenceToType(gram.items, options);
         }
         case 'derived': {
             return b.tsTypeLiteral([
                 b.tsPropertySignature(
                     b.identifier('raw'),
-                    b.tsTypeAnnotation(gramToType(gram.inner)),
+                    b.tsTypeAnnotation(gramToType(gram.inner, options)),
                 ),
                 b.tsPropertySignature(
                     b.identifier('value'),
@@ -178,33 +205,42 @@ export const gramToType = (gram: Gram<never>): b.TSType => {
             return b.tsLiteralType(b.stringLiteral(gram.value));
         case 'literal-ref':
         case 'ref':
-            return b.tsTypeReference(b.identifier(gram.id));
+            if (options.idRefs && !options.simpleRules?.includes(gram.id)) {
+                return b.tsNumberKeyword();
+            } else {
+                return b.tsTypeReference(b.identifier(gram.id));
+            }
         case 'args': {
             if (gram.last) {
                 return b.tsTypeLiteral([
                     b.tsPropertySignature(
                         b.identifier('items'),
-                        b.tsTypeAnnotation(gramToType(gram.item)),
+                        b.tsTypeAnnotation(gramToType(gram.item, options)),
                     ),
                     b.tsPropertySignature(
                         b.identifier('last'),
-                        b.tsTypeAnnotation(gramToType(gram.last)),
+                        b.tsTypeAnnotation(gramToType(gram.last, options)),
                     ),
                 ]);
             }
-            return b.tsArrayType(gramToType(gram.item));
+            return b.tsArrayType(gramToType(gram.item, options));
         }
         case 'or': {
-            return b.tsUnionType(gram.options.map(gramToType));
+            return b.tsUnionType(
+                gram.options.map((v) => gramToType(v, options)),
+            );
         }
         case 'named':
             console.error(`Named in the wrong place`);
-            return gramToType(gram.inner);
+            return gramToType(gram.inner, options);
         case 'star':
         case 'plus':
-            return b.tsArrayType(gramToType(gram.item));
+            return b.tsArrayType(gramToType(gram.item, options));
         case 'optional':
-            return b.tsUnionType([b.tsNullKeyword(), gramToType(gram.item)]);
+            return b.tsUnionType([
+                b.tsNullKeyword(),
+                gramToType(gram.item, options),
+            ]);
         case 'inferrable':
             return b.tsTypeLiteral([
                 b.tsPropertySignature(
@@ -213,7 +249,7 @@ export const gramToType = (gram: Gram<never>): b.TSType => {
                 ),
                 b.tsPropertySignature(
                     b.identifier('value'),
-                    b.tsTypeAnnotation(gramToType(gram.item)),
+                    b.tsTypeAnnotation(gramToType(gram.item, options)),
                 ),
             ]);
         // case 'binops':

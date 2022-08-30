@@ -215,7 +215,7 @@ function peg$parse(input, options) {
   var peg$f0 = function(num, kind) {
             return { type: 'Number', num: {
                 raw: num,
-                value: ((raw2) => +raw2)(num)
+                value: ((raw) => +raw)(num)
             }, kind: kind ? {inferred: false, value: kind} : {inferred: true, value: undefined}, loc: loc() }
         };
   var peg$f1 = function(value) {
@@ -228,7 +228,7 @@ function peg$parse(input, options) {
                 return {
                     type: 'UInt',
                     raw: text(),
-                    value: ((raw2) => parseInt(raw2))(text()),
+                    value: ((raw) => parseInt(raw))(text()),
                     loc: loc(),
                 }
             };

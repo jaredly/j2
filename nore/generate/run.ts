@@ -6,8 +6,16 @@ import { generatePeg } from './peg';
 import { generateTypes } from './types';
 import { generate } from 'peggy';
 
-const raw = generateTypes(grammar, tags);
-writeFileSync('./nore/generated/types.ts', raw);
+writeFileSync('./nore/generated/types.ts', generateTypes(grammar, tags));
+writeFileSync(
+    './nore/generated/type-map.ts',
+    generateTypes(grammar, tags, {
+        idRefs: true,
+        simpleRules: Object.keys(grammar).filter(
+            (k) => (grammar[k] as any).type === 'peggy',
+        ),
+    }),
+);
 
 const peg = generatePeg(grammar);
 writeFileSync('./nore/generated/grammar.pegjs', peg);
