@@ -45,6 +45,7 @@ export type Store = {
     map: t.Map;
     listeners: { [key: string]: Array<() => void> };
     selection: null | Selection;
+    onDeselect: null | (() => void);
 };
 
 export const Editor = () => {
@@ -438,7 +439,6 @@ export const VApplyable = ({
 };
 
 export const notify = (store: Store, idxs: (number | null | undefined)[]) => {
-    // console.log('notify', idxs);
     idxs.forEach((idx) => {
         if (idx != null) {
             store.listeners[idx]?.forEach((fn) => fn());
@@ -457,7 +457,8 @@ export const setSelection = (
     if (store.selection?.idx === selection?.idx) {
         return;
     }
-    // console.log('sel', selection);
+    store.onDeselect ? store.onDeselect() : null;
+    console.log('Set Selection', selection);
     const prev = store.selection?.idx;
     store.selection = selection;
     notify(store, [prev, selection?.idx, ...(extraNotify || [])]);

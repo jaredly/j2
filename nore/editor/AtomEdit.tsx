@@ -5,7 +5,7 @@ import {
     parseExpression,
     parseSuffix,
 } from '../generated/parser';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     Store,
     Path,
@@ -28,14 +28,33 @@ const canRemove = (path: Path) => {
     return false;
 };
 
-const remove = (idx: number, path: Path, store: Store) => {
+const remove = (idx: number | null, path: Path, store: Store) => {
     console.log(`remove`, idx);
     const last = path[path.length - 1];
     switch (last.type) {
         case 'Apply_suffix': {
             const apply = getc(store, last.pid) as t.Apply;
-            const at = apply.suffixes.indexOf(idx);
-            apply.suffixes = apply.suffixes.filter((n) => n !== idx);
+            apply.suffixes =
+                idx == null
+                    ? apply.suffixes.slice(0, -1)
+                    : apply.suffixes.filter((n) => n !== idx);
+            const at =
+                idx == null
+                    ? apply.suffixes.length - 1
+                    : apply.suffixes.indexOf(idx);
+            if (apply.suffixes.length === 0) {
+                store.map[last.pid] = store.map[apply.target];
+                delete store.map[apply.target];
+                store.map[last.pid].value.loc.idx = last.pid;
+                notify(store, [last.pid]);
+                setSelection(store, {
+                    type: 'edit',
+                    idx: last.pid,
+                    at: 'end',
+                });
+                return;
+            }
+            notify(store, [last.pid]);
             setSelection(
                 store,
                 {
@@ -49,7 +68,10 @@ const remove = (idx: number, path: Path, store: Store) => {
         }
         case 'CallSuffix_args': {
             const call = getc(store, last.pid) as t.CallSuffix;
-            if (call.args.length === 1 && path.length > 1) {
+            if (
+                (call.args.length === 1 && path.length > 1) ||
+                (idx == null && call.args.length === 0)
+            ) {
                 // we're removing the whole thing, my folks
                 const prev = path[path.length - 2];
                 console.assert(prev.type === 'Apply_suffix');
@@ -79,6 +101,9 @@ const remove = (idx: number, path: Path, store: Store) => {
                     },
                     [prev.pid],
                 );
+                return;
+            }
+            if (idx == null) {
                 return;
             }
             const at = call.args.indexOf(idx);
@@ -192,6 +217,24 @@ export const AtomEdit = ({
             ? store.selection
             : null;
     const ref = useRef(null as null | HTMLSpanElement);
+    useEffect(() => {
+        if (selection?.type !== 'edit') {
+            return;
+        }
+        const fn = () => {
+            if (ref.current) {
+                const changed = ref.current.textContent!;
+                console.log('unmount, etc', changed, idx);
+                onFinishEdit(changed, idx, path, store, text, level);
+            }
+        };
+        store.onDeselect = fn;
+        return () => {
+            if (store.onDeselect === fn) {
+                store.onDeselect = null;
+            }
+        };
+    }, [selection?.type === 'edit']);
     if (selection?.type === 'edit') {
         return (
             <span
@@ -204,21 +247,26 @@ export const AtomEdit = ({
                 ref={(node) => {
                     if (!node) {
                         // We've got a runner! Unmounting, so let's commit this info
-                        if (ref.current) {
-                            const changed = ref.current.textContent!;
-                            onFinishEdit(
-                                changed,
-                                idx,
-                                path,
-                                store,
-                                text,
-                                level,
-                            );
-                        }
+                        // if (ref.current) {
+                        //     const changed = ref.current.textContent!;
+                        //     console.log('unmount, etc', changed, idx);
+                        //     onFinishEdit(
+                        //         changed,
+                        //         idx,
+                        //         path,
+                        //         store,
+                        //         text,
+                        //         level,
+                        //     );
+                        // }
+                        ref.current = null;
                         return;
                     }
-                    ref.current = node;
-                    node.textContent = text;
+                    if (!ref.current) {
+                        console.log('first mount', text, idx);
+                        ref.current = node;
+                        node.textContent = text;
+                    }
                     setDomSelection(selection as EditSelection, node);
                 }}
                 // TODO: Provide feedback on ... whether it's valid?
@@ -237,9 +285,7 @@ export const AtomEdit = ({
                     // So really, we need a 'select the previous thing' function
                     if (
                         evt.key === 'Backspace' &&
-                        canRemove(path) &&
-                        idx != null &&
-                        evt.currentTarget.textContent === ''
+                        getPos(evt.currentTarget) === 0
                     ) {
                         evt.preventDefault();
                         remove(idx, path, store);
@@ -264,6 +310,7 @@ export const AtomEdit = ({
                     }
                     if (evt.key === '(' && level === 'Expression') {
                         evt.preventDefault();
+                        store.onDeselect = null;
                         toCallExpression(
                             evt.currentTarget.textContent!,
                             store,
@@ -306,6 +353,16 @@ export const AtomEdit = ({
             {text}
         </span>
     );
+};
+
+const getPos = (target: HTMLElement) => {
+    const sel = document.getSelection()!;
+    const r = sel.getRangeAt(0).cloneRange();
+    sel.extend(target, 0);
+    const pos = sel.toString().length;
+    sel.removeAllRanges();
+    sel.addRange(r);
+    return pos;
 };
 
 function setDomSelection(selection: EditSelection, node: HTMLSpanElement) {
@@ -353,6 +410,8 @@ function toCallExpression(text: string, store: Store, idx: number) {
     try {
         target = to.Applyable(parseApplyable(text), store.map);
     } catch (err) {
+        console.log(`Unable to parse to applyable`);
+        console.log(err);
         return;
     }
     // const prev = store.map[idx].value;
