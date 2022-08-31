@@ -1,7 +1,8 @@
 import * as t from '../../generated/type-map';
 import React from 'react';
-import { AtomEdit } from '../AtomEdit';
-import { Store, Path, sel, setSelection, Expression } from '../Hand2';
+import { AtomEdit } from './AtomEdit';
+import { Store, Path, sel, setSelection } from '../Hand2';
+import { Expression } from './aggregates';
 
 // OHHH KKKKK I think I need a primitive that's like `SText`
 // for `SelectableText` that's like, this is some text that

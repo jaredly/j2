@@ -1,9 +1,10 @@
 import * as t from '../../generated/type-map';
 import React from 'react';
-import { AtomEdit } from '../AtomEdit';
+import { AtomEdit } from './AtomEdit';
 import { Blank } from './constants';
 import { CallSuffix } from './CallSuffix';
-import { Store, Path, sel, Applyable, useStore } from '../Hand2';
+import { Store, Path, sel, useStore } from '../Hand2';
+import { Applyable } from './aggregates';
 
 export const Apply = ({
     value,

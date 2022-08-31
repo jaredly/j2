@@ -1,11 +1,11 @@
+// Handwritten structured editor, round 2: now with maps
 import * as t from '../generated/type-map';
 import * as to from '../generated/to-map';
 import * as from from '../generated/from-map';
 import { parseExpression } from '../generated/parser';
 import React, { useEffect, useMemo, useState } from 'react';
 import { idx } from '../generated/grammar';
-import { Blank, Identifier, Boolean, Number } from './elements/constants';
-import { Apply } from './elements/Apply';
+import { Expression } from './elements/aggregates';
 
 export const nidx = () => idx.current++;
 export const newBlank = (): t.Blank => ({
@@ -51,7 +51,7 @@ export type Store = {
 
 export const Editor = () => {
     const store = useMemo(() => ({ map: {}, listeners: {} } as Store), []);
-    const [ast, setAst] = React.useState(() => {
+    const ast = useMemo(() => {
         return to.add(store.map, {
             type: 'Expression',
             value: to.Expression(
@@ -59,21 +59,12 @@ export const Editor = () => {
                 store.map,
             ),
         });
-    });
+    }, []);
 
     return (
         <div style={{ margin: 48, fontSize: 48 }}>
             <Expression id={ast} store={store} path={[]} />
-            <div
-                style={{
-                    marginTop: 48,
-                    fontSize: 10,
-                    fontFamily: 'monospace',
-                    whiteSpace: 'pre-wrap',
-                }}
-            >
-                <Dump store={store} id={ast} />
-            </div>
+            <Dump store={store} id={ast} />
         </div>
     );
 };
@@ -91,7 +82,14 @@ export const Dump = ({ store, id }: { store: Store; id: number }) => {
         };
     }, []);
     return (
-        <div>
+        <div
+            style={{
+                marginTop: 48,
+                fontSize: 10,
+                fontFamily: 'monospace',
+                whiteSpace: 'pre-wrap',
+            }}
+        >
             <div>{JSON.stringify(store.selection)}</div>
             {JSON.stringify(
                 from.Expression(store.map[id].value as t.Expression, store.map),
@@ -119,79 +117,7 @@ export const useStore = (store: Store, key: number) => {
 
 export type Path = PathItem[];
 
-export const Expression = ({
-    id,
-    store,
-    path,
-}: {
-    id: number;
-    store: Store;
-    path: Path;
-}) => {
-    const value = useStore(store, id) as t.Expression;
-    if (value.type === 'Apply') {
-        return <Apply value={value} store={store} path={path} />;
-    }
-    return (
-        <VApplyable
-            level="Expression"
-            value={value}
-            store={store}
-            path={path}
-        />
-    );
-};
-
 export const sel = { backgroundColor: `rgba(255, 255, 0, 0.2)` };
-
-export const Applyable = ({
-    id,
-    store,
-    path,
-}: {
-    id: number;
-    store: Store;
-    path: Path;
-}) => {
-    const value = useStore(store, id) as t.Applyable;
-    return (
-        <VApplyable value={value} store={store} path={path} level="Applyable" />
-    );
-};
-
-export const VApplyable = ({
-    value,
-    store,
-    level,
-    path,
-}: {
-    value: t.Applyable;
-    store: Store;
-    level: 'Expression' | 'Applyable';
-    path: Path;
-}) => {
-    if (value.type === 'Identifier') {
-        return (
-            <Identifier level={level} value={value} store={store} path={path} />
-        );
-    }
-    if (value.type === 'Boolean') {
-        return (
-            <Boolean level={level} value={value} store={store} path={path} />
-        );
-    }
-    if (value.type === 'Blank') {
-        return (
-            <Blank
-                idx={value.loc.idx}
-                store={store}
-                level={level}
-                path={path}
-            />
-        );
-    }
-    return <Number level={level} value={value} store={store} path={path} />;
-};
 
 export const notify = (store: Store, idxs: (number | null | undefined)[]) => {
     idxs.forEach((idx) => {
