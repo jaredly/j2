@@ -64,6 +64,9 @@ export const Apply = (value: t.Apply, map: tm.Map): tm.Apply => {
 };
 
 export const Suffix = (value: t.Suffix, map: tm.Map): tm.Suffix => {
+    if (value.type === 'Blank') {
+        return value;
+    }
     return CallSuffix(value, map);
 };
 
@@ -72,17 +75,17 @@ export const Expression = (value: t.Expression, map: tm.Map): tm.Expression => {
 };
 
 export const Applyable = (value: t.Applyable, map: tm.Map): tm.Applyable => {
-    return value.type === 'Number'
-        ? value
-        : value.type === 'Boolean'
+    return value.type === 'Number' ||
+        value.type === 'Blank' ||
+        value.type === 'Boolean'
         ? value
         : Identifier(value, map);
 };
 
 export const Type = (value: t.Type, map: tm.Map): tm.Type => {
-    return value.type === 'Number'
-        ? value
-        : value.type === 'Boolean'
+    return value.type === 'Number' ||
+        value.type === 'Blank' ||
+        value.type === 'Boolean'
         ? value
         : Identifier(value, map);
 };

@@ -20,7 +20,7 @@ writeFileSync(
 const peg = generatePeg(grammar);
 writeFileSync('./nore/generated/grammar.pegjs', peg);
 
-const starts = ['Expression', 'Applyable', 'Number', 'Identifier'];
+const starts = ['Expression', 'Applyable', 'Number', 'Identifier', 'Suffix'];
 
 const gram = generate(peg, {
     output: 'source',

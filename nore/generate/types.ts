@@ -34,7 +34,23 @@ export const assembleTypes = (
     lines: { name: string; defn: b.TSType }[];
     tags: { [name: string]: string[] };
 } => {
-    const lines: { name: string; defn: b.TSType }[] = [];
+    const lines: { name: string; defn: b.TSType }[] = [
+        {
+            name: 'Blank',
+            defn: b.tsTypeLiteral([
+                b.tsPropertySignature(
+                    b.identifier('type'),
+                    b.tsTypeAnnotation(
+                        b.tsLiteralType(b.stringLiteral('Blank')),
+                    ),
+                ),
+                b.tsPropertySignature(
+                    b.identifier('loc'),
+                    b.tsTypeAnnotation(b.tsTypeReference(b.identifier('Loc'))),
+                ),
+            ]),
+        },
+    ];
     const tags: { [name: string]: string[] } = { ...tagDeps };
     for (const [name, egram] of Object.entries(grammar)) {
         const gram: TGram<never> = transformGram<never>(egram, check, change);
@@ -79,7 +95,9 @@ export const assembleTypes = (
         lines.push({
             name: tag,
             defn: b.tsUnionType(
-                tags[tag].map((name) => b.tsTypeReference(b.identifier(name))),
+                tags[tag]
+                    .map((name) => b.tsTypeReference(b.identifier(name)))
+                    .concat([b.tsTypeReference(b.identifier('Blank'))]),
             ),
         });
     });

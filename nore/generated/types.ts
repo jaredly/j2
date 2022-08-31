@@ -4,6 +4,11 @@ export type Loc = {
     idx: number;
 }
 
+export type Blank = {
+  type: "Blank";
+  loc: Loc;
+};
+
 export type Number = {
   type: "Number";
   num: {
@@ -76,10 +81,10 @@ export type Apply = {
 
 export type _ = string;
 
-export type Expression = Applyable | Apply;
+export type Expression = Applyable | Apply | Blank;
 
-export type Applyable = Number | Boolean | Identifier;
+export type Applyable = Number | Boolean | Identifier | Blank;
 
-export type Type = Number | Boolean | Identifier;
+export type Type = Number | Boolean | Identifier | Blank;
 
-export type Suffix = CallSuffix;
+export type Suffix = CallSuffix | Blank;

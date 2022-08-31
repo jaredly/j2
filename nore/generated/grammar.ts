@@ -172,7 +172,7 @@ function peg$parse(input, options) {
   var peg$FAILED = {};
   var peg$source = options.grammarSource;
 
-  var peg$startRuleFunctions = { Expression: peg$parseExpression, Applyable: peg$parseApplyable, Number: peg$parseNumber, Identifier: peg$parseIdentifier };
+  var peg$startRuleFunctions = { Expression: peg$parseExpression, Applyable: peg$parseApplyable, Number: peg$parseNumber, Identifier: peg$parseIdentifier, Suffix: peg$parseSuffix };
   var peg$startRuleFunction = peg$parseExpression;
 
   var peg$c0 = "u";
@@ -985,6 +985,14 @@ function peg$parse(input, options) {
         s0 = peg$parseIdentifier();
       }
     }
+
+    return s0;
+  }
+
+  function peg$parseSuffix() {
+    var s0;
+
+    s0 = peg$parseCallSuffix();
 
     return s0;
   }

@@ -1,6 +1,10 @@
 import * as t from '../generated/type-map';
 import * as to from '../generated/to-map';
-import { parseApplyable, parseExpression } from '../generated/parser';
+import {
+    parseApplyable,
+    parseExpression,
+    parseSuffix,
+} from '../generated/parser';
 import React, { useEffect, useMemo, useState } from 'react';
 
 export type Selection =
@@ -84,6 +88,9 @@ export const Apply = ({ value, store }: { value: t.Apply; store: Store }) => {
 
 export const Suffix = ({ id, store }: { id: number; store: Store }) => {
     const value = useStore(store, id) as t.Suffix;
+    if (value.type === 'Blank') {
+        return <Blank idx={id} store={store} level="Suffix" />;
+    }
     return <CallSuffix value={value} store={store} />;
 };
 
@@ -133,7 +140,10 @@ export const VApplyable = ({
         return <Identifier level={level} value={value} store={store} />;
     }
     if (value.type === 'Boolean') {
-        return <Boolean value={value} store={store} />;
+        return <Boolean level={level} value={value} store={store} />;
+    }
+    if (value.type === 'Blank') {
+        return <Blank idx={value.loc.idx} store={store} level={level} />;
     }
     return <Number level={level} value={value} store={store} />;
 };
@@ -161,7 +171,7 @@ export const AtomEdit = ({
 }: {
     text: string;
     store: Store;
-    level: 'Expression' | 'Applyable';
+    level: 'Expression' | 'Applyable' | 'Suffix';
     idx: number;
 }) => {
     const selection = store.selection?.idx === idx ? store.selection : null;
@@ -177,6 +187,17 @@ export const AtomEdit = ({
                 onBlur={(evt) => {
                     const changed = evt.currentTarget.textContent;
                     if (changed && changed !== text) {
+                        if (level === 'Suffix') {
+                            const nw = to.Suffix(
+                                parseSuffix(changed),
+                                store.map,
+                            );
+                            nw.loc.idx = idx;
+                            store.map[idx] = {
+                                type: 'Suffix',
+                                value: nw,
+                            };
+                        }
                         if (level === 'Expression') {
                             const nw = to.Expression(
                                 parseExpression(changed),
@@ -215,6 +236,18 @@ export const AtomEdit = ({
     );
 };
 
+export const Blank = ({
+    idx,
+    store,
+    level,
+}: {
+    idx: number;
+    store: Store;
+    level: 'Expression' | 'Applyable' | 'Suffix';
+}) => {
+    return <AtomEdit text={''} idx={idx} store={store} level={level} />;
+};
+
 export const Identifier = ({
     value,
     store,
@@ -232,45 +265,6 @@ export const Identifier = ({
             level={level}
         />
     );
-    // const selection =
-    //     store.selection?.idx === value.loc.idx ? store.selection : null;
-    // if (selection?.type === 'edit') {
-    //     return (
-    //         <span
-    //             contentEditable
-    //             ref={(node) => {
-    //                 if (!node) return;
-    //                 node.textContent = value.text;
-    //                 node.focus();
-    //             }}
-    //             onBlur={(evt) => {
-    //                 const text = evt.currentTarget.textContent;
-    //                 if (text && text !== value.text) {
-    //                     const nw = to.Applyable(
-    //                         parseApplyable(text),
-    //                         store.map,
-    //                     );
-    //                     nw.loc.idx = value.loc.idx;
-    //                     store.map[value.loc.idx] = {
-    //                         type: 'Applyable',
-    //                         value: nw,
-    //                     };
-    //                     console.log('diff', text);
-    //                 }
-    //                 setSelection(store, null);
-    //             }}
-    //         />
-    //     );
-    // }
-    // return (
-    //     <span
-    //         onMouseDown={() =>
-    //             setSelection(store, { type: 'edit', idx: value.loc.idx })
-    //         }
-    //     >
-    //         {value.text}
-    //     </span>
-    // );
 };
 
 export const Number = ({
@@ -283,10 +277,6 @@ export const Number = ({
     level: 'Expression' | 'Applyable';
 }) => {
     return (
-        // <span>
-        //     {value.num.raw}
-        //     {value.kind ? value.kind.value : ''}
-        // </span>
         <AtomEdit
             text={value.num.raw + (value.kind ? value.kind.value : '')}
             idx={value.loc.idx}
@@ -299,9 +289,18 @@ export const Number = ({
 export const Boolean = ({
     value,
     store,
+    level,
 }: {
     value: t.Boolean;
     store: Store;
+    level: 'Expression' | 'Applyable';
 }) => {
-    return <span>{value.value}</span>;
+    return (
+        <AtomEdit
+            text={value.value}
+            idx={value.loc.idx}
+            store={store}
+            level={level}
+        />
+    );
 };
