@@ -42,7 +42,9 @@ Highlevel things I haven't solved at all:
 - [ ] CallSuffix end _ backspace should remove
 	- oooh OK so, backspace should switch it to `select:edit,at:change`
 	- and then another backspace removes it. yeah that makes a lot of sense.
-- [ ] CallSuffix inner + backspace hsould remove
+- [x] better suffix backspace
+- [x] CallSuffix inner + backspace hsould remove
+- [ ] ')' in an arg should select the end of the CallExpr
 - [ ] selecting the start of an apply should ... select the start of the target.
 
 - [ ] do live updates for atomedit indicating parseability

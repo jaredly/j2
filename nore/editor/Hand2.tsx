@@ -455,6 +455,7 @@ export const setSelection = (
     extraNotify?: number[],
 ) => {
     if (store.selection?.idx === selection?.idx) {
+        notify(store, extraNotify || []);
         return;
     }
     store.onDeselect ? store.onDeselect() : null;
