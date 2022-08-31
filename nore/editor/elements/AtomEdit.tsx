@@ -15,6 +15,7 @@ import {
     notify,
     Selection,
     EditSelection,
+    sel,
 } from '../Hand2';
 import { keyHandler } from './keyHandler';
 
@@ -144,6 +145,9 @@ export const AtomEdit = ({
                         ref.current = null;
                         return;
                     }
+                    if (idx != null) {
+                        store.nodes[idx] = { node, path };
+                    }
                     if (!ref.current) {
                         // console.log('first mount', text, idx);
                         ref.current = node;
@@ -165,7 +169,15 @@ export const AtomEdit = ({
     }
     return (
         <span
-            style={style}
+            style={{
+                ...style,
+                ...(selection?.type === 'select' ? sel : null),
+            }}
+            ref={(node) => {
+                if (node && idx != null) {
+                    store.nodes[idx] = { node, path };
+                }
+            }}
             onMouseDown={
                 idx != null
                     ? () => setSelection(store, { type: 'edit', idx: idx })

@@ -27,6 +27,11 @@ export const CallSuffix = ({
         store.selection.at === 'end';
     return (
         <span
+            ref={(node) => {
+                if (node) {
+                    store.nodes[value.loc.idx] = { node, path };
+                }
+            }}
             style={
                 selected && store.selection?.type === 'select' ? sel : undefined
             }
