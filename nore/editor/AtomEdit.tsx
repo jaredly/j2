@@ -5,7 +5,7 @@ import {
     parseExpression,
     parseSuffix,
 } from '../generated/parser';
-import React from 'react';
+import React, { useRef } from 'react';
 import { Store, Path, nidx, newBlank, setSelection, notify } from './Hand2';
 
 const canRemove = (path: Path) => {
@@ -107,6 +107,7 @@ export const AtomEdit = ({
             : store.selection?.idx === idx
             ? store.selection
             : null;
+    const ref = useRef(null as null | HTMLSpanElement);
     if (selection?.type === 'edit') {
         return (
             <span
@@ -116,7 +117,44 @@ export const AtomEdit = ({
                     backgroundColor: `rgba(255,0,255,0.1)`,
                 }}
                 ref={(node) => {
-                    if (!node) return;
+                    if (!node) {
+                        // We've got a runner! Unmounting, so let's commit this info
+                        if (ref.current && ref.current.textContent !== text) {
+                            const changed = ref.current.textContent!;
+                            if (changed.trim().length === 0) {
+                                // this never existed, to need to "remove" it
+                                if (idx == null) {
+                                    return;
+                                }
+                                const last = path[path.length - 1];
+                                if (last && last.type === 'CallSuffix_args') {
+                                    const call = store.map[last.pid]
+                                        .value as t.CallSuffix;
+                                    if (call.args.length === 1) {
+                                        call.args = [];
+                                        notify(store, [last.pid]);
+                                        return;
+                                    }
+                                }
+                                const nw = newBlank();
+                                nw.loc.idx = idx;
+                                store.map[idx].value = nw;
+                                notify(store, [idx]);
+                                return;
+                            }
+                            if (idx != null) {
+                                try {
+                                    reparse(level, changed, store, idx);
+                                    notify(store, [idx]);
+                                } catch (err) {
+                                    console.error(err);
+                                }
+                                console.log('diff', changed);
+                            }
+                        }
+                        return;
+                    }
+                    ref.current = node;
                     node.textContent = text;
                     node.focus();
                     if (selection.at === 'end') {
@@ -131,6 +169,9 @@ export const AtomEdit = ({
                             ?.getRangeAt(0)
                             .selectNodeContents(node);
                     }
+                }}
+                onInput={(evt) => {
+                    const text = evt.currentTarget.textContent!;
                 }}
                 onKeyDown={(evt) => {
                     if (evt.key === 'Escape') {
@@ -157,105 +198,37 @@ export const AtomEdit = ({
                         if (sel?.getRangeAt(0).toString() !== '') {
                             return;
                         }
-                        const prev = store.map[idx].value;
-                        prev.loc.idx = nidx();
                         evt.preventDefault();
-                        const blank = newBlank();
-                        const nw: t.Apply = {
-                            type: 'Apply',
-                            target: prev.loc.idx,
-                            suffixes: [
-                                to.add(store.map, {
-                                    type: 'Suffix',
-                                    value: {
-                                        type: 'CallSuffix',
-                                        args: [
-                                            to.add(store.map, {
-                                                type: 'Expression',
-                                                value: blank,
-                                            }),
-                                        ],
-                                        loc: {
-                                            idx: nidx(),
-                                            start: 0,
-                                            end: 0,
-                                        },
-                                    },
-                                }),
-                            ],
-                            loc: {
-                                idx: idx,
-                                start: 0,
-                                end: 0,
-                            },
-                        };
-                        if (level === 'Expression') {
-                            store.map[prev.loc.idx] = {
-                                type: 'Expression',
-                                value: prev as t.Expression,
-                            };
-                            store.map[idx] = {
-                                type: level,
-                                value: nw,
-                            };
-                            setSelection(store, {
-                                type: 'edit',
-                                idx: blank.loc.idx,
-                            });
-                        }
+                        toCallExpression(
+                            evt.currentTarget.textContent!,
+                            store,
+                            idx,
+                        );
                         // TODO check if selection is at the end, and such
                         console.log('paren');
                     }
                 }}
                 onBlur={(evt) => {
-                    const changed = evt.currentTarget.textContent;
-                    if (changed != null && changed.trim().length === 0) {
-                        if (idx == null) {
-                            setSelection(store, null);
-                            return;
-                        }
-                        const nw = newBlank();
-                        nw.loc.idx = idx;
-                        store.map[idx].value = nw;
-                        setSelection(store, null);
-                        return;
-                    }
-                    if (changed && changed !== text) {
-                        if (level === 'Suffix') {
-                            const nw = to.Suffix(
-                                parseSuffix(changed),
-                                store.map,
-                            );
-                            nw.loc.idx = idx;
-                            store.map[idx] = {
-                                type: 'Suffix',
-                                value: nw,
-                            };
-                        }
-                        if (level === 'Expression') {
-                            const nw = to.Expression(
-                                parseExpression(changed),
-                                store.map,
-                            );
-                            nw.loc.idx = idx;
-                            store.map[idx] = {
-                                type: 'Expression',
-                                value: nw,
-                            };
-                        }
-                        if (level === 'Applyable') {
-                            const nw = to.Applyable(
-                                parseApplyable(changed),
-                                store.map,
-                            );
-                            nw.loc.idx = idx;
-                            store.map[idx] = {
-                                type: 'Applyable',
-                                value: nw,
-                            };
-                        }
-                        console.log('diff', changed);
-                    }
+                    // const changed = evt.currentTarget.textContent;
+                    // if (changed != null && changed.trim().length === 0) {
+                    //     if (idx == null) {
+                    //         setSelection(store, null);
+                    //         return;
+                    //     }
+                    //     const nw = newBlank();
+                    //     nw.loc.idx = idx;
+                    //     store.map[idx].value = nw;
+                    //     setSelection(store, null);
+                    //     return;
+                    // }
+                    // if (changed && changed !== text && idx != null) {
+                    //     try {
+                    //         reparse(level, changed, store, idx);
+                    //     } catch (err) {
+                    //         console.error(err);
+                    //     }
+                    //     console.log('diff', changed);
+                    // }
                     setSelection(store, null);
                 }}
             />
@@ -263,9 +236,91 @@ export const AtomEdit = ({
     }
     return (
         <span
-            onMouseDown={() => setSelection(store, { type: 'edit', idx: idx })}
+            onMouseDown={
+                idx != null
+                    ? () => setSelection(store, { type: 'edit', idx: idx })
+                    : undefined
+            }
         >
             {text}
         </span>
     );
 };
+function reparse(level: string, changed: string, store: Store, idx: number) {
+    if (level === 'Suffix') {
+        const nw = to.Suffix(parseSuffix(changed), store.map);
+        nw.loc.idx = idx;
+        store.map[idx] = {
+            type: 'Suffix',
+            value: nw,
+        };
+    }
+    if (level === 'Expression') {
+        const nw = to.Expression(parseExpression(changed), store.map);
+        nw.loc.idx = idx;
+        store.map[idx] = {
+            type: 'Expression',
+            value: nw,
+        };
+    }
+    if (level === 'Applyable') {
+        const nw = to.Applyable(parseApplyable(changed), store.map);
+        nw.loc.idx = idx;
+        store.map[idx] = {
+            type: 'Applyable',
+            value: nw,
+        };
+    }
+}
+
+function toCallExpression(text: string, store: Store, idx: number) {
+    let target: t.Applyable;
+    try {
+        target = to.Applyable(parseApplyable(text), store.map);
+    } catch (err) {
+        return;
+    }
+    // const prev = store.map[idx].value;
+    // prev.loc.idx = nidx();
+    const blank = newBlank();
+    const nw: t.Apply = {
+        type: 'Apply',
+        target: target.loc.idx,
+        suffixes: [
+            to.add(store.map, {
+                type: 'Suffix',
+                value: {
+                    type: 'CallSuffix',
+                    args: [
+                        to.add(store.map, {
+                            type: 'Expression',
+                            value: blank,
+                        }),
+                    ],
+                    loc: {
+                        idx: nidx(),
+                        start: 0,
+                        end: 0,
+                    },
+                },
+            }),
+        ],
+        loc: {
+            idx: idx,
+            start: 0,
+            end: 0,
+        },
+    };
+    store.map[target.loc.idx] = {
+        type: 'Applyable',
+        value: target as t.Applyable,
+    };
+    store.map[idx] = {
+        type: 'Expression',
+        value: nw,
+    };
+    setSelection(store, {
+        type: 'edit',
+        idx: blank.loc.idx,
+    });
+}

@@ -9,7 +9,30 @@
 - [x] if no args, remove the callExpression
 - [ ] backspace to remove a suffix? idk
 - [x] clicking the left / right side of a `(` should do the expected
+- [x] simplify AtomEditor
 
+- [x] ooh ooh BUG
+	If I click into something else, it removes selection from the thing I was
+	editing, which gets unmounted, and then ... we lose that info.
+	- yay fixed
+
+- [x] so, thinking about blanks. obs with an arg ... that's not the sole arg,
+	we want to leave it as a blank.
+	but if it's the only arg, I think we ditch it.
+- [x] allow selection into the "interior" of a thing. like at: 'inner'
+
+- [ ] do live updates for atomedit indicating parseability
+	- hmm do I actually need this? hmm
+
+- [ ] drag to select ... I'll do the thing like I do, for drag & drop;
+	- have a central registry of all dom nodes
+	- gotta make sure to prune it folks
+	- on drag start, calculate relevant points
+		- use start & current mousepos to figure out the proper selection
+
+- [ ] ahhhhh ok so I do in fact have to stop editing things in-place, so that I
+	can do an undo stack.
+	yeah that makes sense.
 
 
 

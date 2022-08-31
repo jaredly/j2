@@ -31,7 +31,7 @@ export type Selection =
     | {
           type: 'edit';
           idx: number;
-          at?: 'start' | 'end' | 'change' | null;
+          at?: 'start' | 'end' | 'change' | 'inner' | null;
       }
     | {
           type: 'select';
@@ -78,7 +78,7 @@ const useStore = (store: Store, key: number) => {
     const [value, setValue] = useState({ item: store.map[key], tick: 0 });
     useEffect(() => {
         const fn = () => {
-            console.log('changed', key);
+            // console.log('changed', key);
             setValue((v) => ({ item: store.map[key], tick: v.tick + 1 }));
         };
         store.listeners[key] = store.listeners[key] || [];
@@ -214,18 +214,32 @@ export const CallSuffix = ({
         store.selection?.type === 'edit' &&
         store.selection.at === 'end';
     return (
-        <span style={selected && !selEnd ? sel : undefined}>
+        <span
+            style={
+                selected && store.selection?.type === 'select' ? sel : undefined
+            }
+        >
             <span
                 onMouseDown={(evt) => {
                     evt.preventDefault();
                     // so, selection ... is probably like the first
                     const box = evt.currentTarget.getBoundingClientRect();
                     const left = evt.clientX < box.left + box.width / 2;
-                    if (!left && value.args.length) {
-                        setSelection(store, {
-                            type: 'edit',
-                            idx: value.args[0],
-                        });
+                    if (!left) {
+                        setSelection(
+                            store,
+                            value.args.length
+                                ? {
+                                      type: 'edit',
+                                      idx: value.args[0],
+                                      at: 'start',
+                                  }
+                                : {
+                                      type: 'edit',
+                                      idx: value.loc.idx,
+                                      at: 'inner',
+                                  },
+                        );
                     } else {
                         const last = path[path.length - 1];
                         const apply = store.map[last.pid].value as t.Apply;
@@ -240,6 +254,24 @@ export const CallSuffix = ({
             >
                 (
             </span>
+            {value.args.length === 0 &&
+            selected &&
+            store.selection?.type === 'edit' &&
+            store.selection.at === 'inner' ? (
+                <AtomEdit
+                    level="Suffix"
+                    idx={null}
+                    store={store}
+                    text={''}
+                    path={path.concat([
+                        {
+                            type: 'CallSuffix_args',
+                            pid: value.loc.idx,
+                            arg: 0,
+                        },
+                    ])}
+                />
+            ) : null}
             {value.args.map((id, i) => (
                 <React.Fragment key={id}>
                     <Expression
@@ -285,11 +317,28 @@ export const CallSuffix = ({
             <span
                 onMouseDown={(evt) => {
                     // so, selection ... is probably like the first
-                    if (value.args.length) {
-                        evt.preventDefault();
+                    evt.preventDefault();
+                    const box = evt.currentTarget.getBoundingClientRect();
+                    const left = evt.clientX < box.left + box.width / 2;
+                    if (left) {
+                        setSelection(
+                            store,
+                            value.args.length
+                                ? {
+                                      type: 'edit',
+                                      idx: value.args[value.args.length - 1],
+                                      at: 'end',
+                                  }
+                                : {
+                                      type: 'edit',
+                                      idx: value.loc.idx,
+                                      at: 'inner',
+                                  },
+                        );
+                    } else {
                         setSelection(store, {
                             type: 'edit',
-                            idx: value.args[value.args.length - 1],
+                            idx: value.loc.idx,
                             at: 'end',
                         });
                     }
