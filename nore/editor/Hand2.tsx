@@ -18,6 +18,18 @@ export const newBlank = (): t.Blank => ({
     },
 });
 
+export type PathItem =
+    | {
+          type: 'Apply_target';
+          pid: number;
+      }
+    | { type: 'Apply_suffix'; pid: number; suffix: number }
+    | {
+          type: 'CallSuffix_args';
+          arg: number;
+          pid: number;
+      };
+
 export type Selection =
     | {
           type: 'edit';
@@ -50,7 +62,7 @@ export const Editor = () => {
 
     return (
         <div style={{ margin: 48, fontSize: 48 }}>
-            <Expression id={ast} store={store} />
+            <Expression id={ast} store={store} path={[]} />
             <div
                 style={{
                     marginTop: 48,
@@ -81,39 +93,104 @@ const useStore = (store: Store, key: number) => {
     return value.item.value;
 };
 
-export const Expression = ({ id, store }: { id: number; store: Store }) => {
+type Path = PathItem[];
+
+export const Expression = ({
+    id,
+    store,
+    path,
+}: {
+    id: number;
+    store: Store;
+    path: Path;
+}) => {
     const value = useStore(store, id) as t.Expression;
     if (value.type === 'Apply') {
-        return <Apply value={value} store={store} />;
+        return <Apply value={value} store={store} path={path} />;
     }
-    return <VApplyable level="Expression" value={value} store={store} />;
+    return (
+        <VApplyable
+            level="Expression"
+            value={value}
+            store={store}
+            path={path}
+        />
+    );
 };
 
 const sel = { backgroundColor: `rgba(255, 255, 0, 0.2)` };
 
-export const Apply = ({ value, store }: { value: t.Apply; store: Store }) => {
+export const Apply = ({
+    value,
+    store,
+    path,
+}: {
+    value: t.Apply;
+    store: Store;
+    path: Path;
+}) => {
     const selected = store.selection?.idx === value.loc.idx;
     return (
         <span style={selected ? sel : undefined}>
-            <Applyable id={value.target} store={store} />
-            {value.suffixes.map((id) => (
-                <Suffix key={id} id={id} store={store} />
+            <Applyable
+                id={value.target}
+                store={store}
+                path={path.concat([
+                    {
+                        type: 'Apply_target',
+                        pid: value.loc.idx,
+                    },
+                ])}
+            />
+            {value.suffixes.map((id, i) => (
+                <Suffix
+                    key={id}
+                    id={id}
+                    store={store}
+                    path={path.concat([
+                        {
+                            type: 'Apply_suffix',
+                            suffix: i,
+                            pid: value.loc.idx,
+                        },
+                    ])}
+                />
             ))}
             {selected &&
             store.selection?.type === 'edit' &&
             store.selection.at === 'end' ? (
-                <AtomEdit level="Suffix" idx={null} store={store} text={''} />
+                <AtomEdit
+                    level="Suffix"
+                    idx={null}
+                    store={store}
+                    text={''}
+                    path={path.concat([
+                        {
+                            type: 'Apply_suffix',
+                            pid: value.loc.idx,
+                            suffix: value.suffixes.length,
+                        },
+                    ])}
+                />
             ) : null}
         </span>
     );
 };
 
-export const Suffix = ({ id, store }: { id: number; store: Store }) => {
+export const Suffix = ({
+    id,
+    store,
+    path,
+}: {
+    id: number;
+    store: Store;
+    path: Path;
+}) => {
     const value = useStore(store, id) as t.Suffix;
     if (value.type === 'Blank') {
-        return <Blank idx={id} store={store} level="Suffix" />;
+        return <Blank idx={id} store={store} level="Suffix" path={path} />;
     }
-    return <CallSuffix value={value} store={store} />;
+    return <CallSuffix value={value} store={store} path={path} />;
 };
 
 // OHHH KKKKK I think I need a primitive that's like `SText`
@@ -126,9 +203,11 @@ export const Suffix = ({ id, store }: { id: number; store: Store }) => {
 export const CallSuffix = ({
     value,
     store,
+    path,
 }: {
     value: t.CallSuffix;
     store: Store;
+    path: Path;
 }) => {
     return (
         <span>
@@ -148,7 +227,18 @@ export const CallSuffix = ({
             </span>
             {value.args.map((id, i) => (
                 <React.Fragment key={id}>
-                    <Expression key={id} id={id} store={store} />
+                    <Expression
+                        key={id}
+                        id={id}
+                        store={store}
+                        path={path.concat([
+                            {
+                                type: 'CallSuffix_args',
+                                arg: i,
+                                pid: value.loc.idx,
+                            },
+                        ])}
+                    />
                     {i !== value.args.length - 1 && (
                         <span
                             onMouseDown={(evt) => {
@@ -184,30 +274,53 @@ export const CallSuffix = ({
     );
 };
 
-export const Applyable = ({ id, store }: { id: number; store: Store }) => {
+export const Applyable = ({
+    id,
+    store,
+    path,
+}: {
+    id: number;
+    store: Store;
+    path: Path;
+}) => {
     const value = useStore(store, id) as t.Applyable;
-    return <VApplyable value={value} store={store} level="Applyable" />;
+    return (
+        <VApplyable value={value} store={store} path={path} level="Applyable" />
+    );
 };
 
 export const VApplyable = ({
     value,
     store,
     level,
+    path,
 }: {
     value: t.Applyable;
     store: Store;
     level: 'Expression' | 'Applyable';
+    path: Path;
 }) => {
     if (value.type === 'Identifier') {
-        return <Identifier level={level} value={value} store={store} />;
+        return (
+            <Identifier level={level} value={value} store={store} path={path} />
+        );
     }
     if (value.type === 'Boolean') {
-        return <Boolean level={level} value={value} store={store} />;
+        return (
+            <Boolean level={level} value={value} store={store} path={path} />
+        );
     }
     if (value.type === 'Blank') {
-        return <Blank idx={value.loc.idx} store={store} level={level} />;
+        return (
+            <Blank
+                idx={value.loc.idx}
+                store={store}
+                level={level}
+                path={path}
+            />
+        );
     }
-    return <Number level={level} value={value} store={store} />;
+    return <Number level={level} value={value} store={store} path={path} />;
 };
 
 const notify = (store: Store, idxs: (number | null | undefined)[]) => {
@@ -231,12 +344,14 @@ export const AtomEdit = ({
     level,
     idx,
     onRemove,
+    path,
 }: {
     text: string;
     store: Store;
     level: 'Expression' | 'Applyable' | 'Suffix';
     idx: number | null;
     onRemove?: () => void;
+    path: Path;
 }) => {
     const selection =
         idx === null
@@ -406,22 +521,28 @@ export const Blank = ({
     idx,
     store,
     level,
+    path,
 }: {
     idx: number;
     store: Store;
     level: 'Expression' | 'Applyable' | 'Suffix';
+    path: Path;
 }) => {
-    return <AtomEdit text={''} idx={idx} store={store} level={level} />;
+    return (
+        <AtomEdit text={''} idx={idx} store={store} level={level} path={path} />
+    );
 };
 
 export const Identifier = ({
     value,
     store,
     level,
+    path,
 }: {
     value: t.Identifier;
     store: Store;
     level: 'Expression' | 'Applyable';
+    path: Path;
 }) => {
     return (
         <AtomEdit
@@ -429,6 +550,7 @@ export const Identifier = ({
             idx={value.loc.idx}
             store={store}
             level={level}
+            path={path}
         />
     );
 };
@@ -437,10 +559,12 @@ export const Number = ({
     value,
     store,
     level,
+    path,
 }: {
     value: t.Number;
     store: Store;
     level: 'Expression' | 'Applyable';
+    path: Path;
 }) => {
     return (
         <AtomEdit
@@ -448,6 +572,7 @@ export const Number = ({
             idx={value.loc.idx}
             store={store}
             level={level}
+            path={path}
         />
     );
 };
@@ -456,10 +581,12 @@ export const Boolean = ({
     value,
     store,
     level,
+    path,
 }: {
     value: t.Boolean;
     store: Store;
     level: 'Expression' | 'Applyable';
+    path: Path;
 }) => {
     return (
         <AtomEdit
@@ -467,6 +594,7 @@ export const Boolean = ({
             idx={value.loc.idx}
             store={store}
             level={level}
+            path={path}
         />
     );
 };
