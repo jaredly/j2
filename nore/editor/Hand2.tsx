@@ -42,7 +42,7 @@ export const Editor = () => {
         return to.add(store.map, {
             type: 'Expression',
             value: to.Expression(
-                parseExpression('hello(one, 1, 2u)'),
+                parseExpression('hello(one(2), 1, 2u)'),
                 store.map,
             ),
         });
@@ -89,13 +89,21 @@ export const Expression = ({ id, store }: { id: number; store: Store }) => {
     return <VApplyable level="Expression" value={value} store={store} />;
 };
 
+const sel = { backgroundColor: `rgba(255, 255, 0, 0.2)` };
+
 export const Apply = ({ value, store }: { value: t.Apply; store: Store }) => {
+    const selected = store.selection?.idx === value.loc.idx;
     return (
-        <span>
+        <span style={selected ? sel : undefined}>
             <Applyable id={value.target} store={store} />
             {value.suffixes.map((id) => (
                 <Suffix key={id} id={id} store={store} />
             ))}
+            {selected &&
+            store.selection?.type === 'edit' &&
+            store.selection.at === 'end' ? (
+                <AtomEdit level="Suffix" idx={null} store={store} text={''} />
+            ) : null}
         </span>
     );
 };
@@ -141,7 +149,20 @@ export const CallSuffix = ({
             {value.args.map((id, i) => (
                 <React.Fragment key={id}>
                     <Expression key={id} id={id} store={store} />
-                    {i !== value.args.length - 1 && <span>, </span>}
+                    {i !== value.args.length - 1 && (
+                        <span
+                            onMouseDown={(evt) => {
+                                evt.preventDefault();
+                                setSelection(store, {
+                                    type: 'edit',
+                                    idx: id,
+                                    at: 'end',
+                                });
+                            }}
+                        >
+                            ,{' '}
+                        </span>
+                    )}
                 </React.Fragment>
             ))}
             <span
@@ -209,18 +230,28 @@ export const AtomEdit = ({
     store,
     level,
     idx,
+    onRemove,
 }: {
     text: string;
     store: Store;
     level: 'Expression' | 'Applyable' | 'Suffix';
-    idx: number;
+    idx: number | null;
+    onRemove?: () => void;
 }) => {
-    const selection = store.selection?.idx === idx ? store.selection : null;
+    const selection =
+        idx === null
+            ? { type: 'edit', idx: 0, at: 'change' }
+            : store.selection?.idx === idx
+            ? store.selection
+            : null;
     if (selection?.type === 'edit') {
         return (
             <span
                 contentEditable
-                style={{ outline: 'none' }}
+                style={{
+                    outline: 'none',
+                    backgroundColor: `rgba(255,0,255,0.1)`,
+                }}
                 ref={(node) => {
                     if (!node) return;
                     node.textContent = text;
@@ -244,7 +275,16 @@ export const AtomEdit = ({
                         evt.currentTarget.blur();
                         return;
                     }
-                    if (evt.key === '(') {
+                    if (evt.key === 'Backspace' && onRemove) {
+                        if (evt.currentTarget.textContent === '') {
+                            evt.preventDefault();
+                            onRemove();
+                        }
+                    }
+                    if (idx == null) {
+                        return;
+                    }
+                    if (evt.key === '(' && level === 'Expression') {
                         const sel = document.getSelection();
                         if (sel?.getRangeAt(0).toString() !== '') {
                             return;
@@ -302,6 +342,10 @@ export const AtomEdit = ({
                 onBlur={(evt) => {
                     const changed = evt.currentTarget.textContent;
                     if (changed != null && changed.trim().length === 0) {
+                        if (idx == null) {
+                            setSelection(store, null);
+                            return;
+                        }
                         const nw = newBlank();
                         nw.loc.idx = idx;
                         store.map[idx].value = nw;
