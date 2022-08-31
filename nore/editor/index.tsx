@@ -7,7 +7,10 @@ import { testMutationObserver } from './testMutationObserver';
 
 testMutationObserver();
 
-const darkTheme = createTheme({ type: 'dark' });
+const darkTheme = createTheme({
+    type: 'dark',
+    theme: { colors: { background: '#0d0e16' } },
+});
 
 // @ts-ignore
 const root = (window.rootRoot =

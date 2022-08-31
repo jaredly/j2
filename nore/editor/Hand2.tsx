@@ -1,5 +1,6 @@
 import * as t from '../generated/type-map';
 import * as to from '../generated/to-map';
+import * as from from '../generated/from-map';
 import { parseExpression } from '../generated/parser';
 import React, { useEffect, useMemo, useState } from 'react';
 import { idx } from '../generated/grammar';
@@ -27,12 +28,13 @@ export type PathItem =
           pid: number;
       };
 
+export type EditSelection = {
+    type: 'edit';
+    idx: number;
+    at?: 'start' | 'end' | 'change' | 'inner' | null;
+};
 export type Selection =
-    | {
-          type: 'edit';
-          idx: number;
-          at?: 'start' | 'end' | 'change' | 'inner' | null;
-      }
+    | EditSelection
     | {
           type: 'select';
           idx: number;
@@ -68,8 +70,32 @@ export const Editor = () => {
                     whiteSpace: 'pre-wrap',
                 }}
             >
-                {JSON.stringify(store.map[ast], null, 2)}
+                <Dump store={store} id={ast} />
             </div>
+        </div>
+    );
+};
+
+export const Dump = ({ store, id }: { store: Store; id: number }) => {
+    const [tick, setTick] = useState(0);
+    console.log('tick');
+    useEffect(() => {
+        if (!store.listeners['']) {
+            store.listeners[''] = [];
+        }
+        const fn = () => setTick((tick) => tick + 1);
+        store.listeners[''].push(fn);
+        return () => {
+            store.listeners[''] = store.listeners[''].filter((x) => x !== fn);
+        };
+    }, []);
+    return (
+        <div>
+            {JSON.stringify(
+                from.Expression(store.map[id].value as t.Expression, store.map),
+                null,
+                2,
+            )}
         </div>
     );
 };
@@ -260,7 +286,7 @@ export const CallSuffix = ({
             store.selection?.type === 'edit' &&
             store.selection.at === 'inner' ? (
                 <AtomEdit
-                    level="Suffix"
+                    level="Expression"
                     idx={null}
                     store={store}
                     text={''}
@@ -274,9 +300,9 @@ export const CallSuffix = ({
                 />
             ) : null}
             {value.args.map((id, i) => (
-                <React.Fragment key={id}>
+                <React.Fragment key={id + ':' + i}>
                     <Expression
-                        key={id}
+                        key={id + ':' + i}
                         id={id}
                         store={store}
                         path={path.concat([
@@ -412,12 +438,15 @@ export const VApplyable = ({
 };
 
 export const notify = (store: Store, idxs: (number | null | undefined)[]) => {
-    console.log('notify', idxs);
+    // console.log('notify', idxs);
     idxs.forEach((idx) => {
         if (idx != null) {
             store.listeners[idx]?.forEach((fn) => fn());
         }
     });
+    if (store.listeners['']) {
+        store.listeners[''].forEach((fn) => fn());
+    }
 };
 
 export const setSelection = (
@@ -425,7 +454,10 @@ export const setSelection = (
     selection: null | Selection,
     extraNotify?: number[],
 ) => {
-    console.log('sel', selection);
+    if (store.selection?.idx === selection?.idx) {
+        return;
+    }
+    // console.log('sel', selection);
     const prev = store.selection?.idx;
     store.selection = selection;
     notify(store, [prev, selection?.idx, ...(extraNotify || [])]);
@@ -460,7 +492,7 @@ export const Identifier = ({
 }) => {
     return (
         <AtomEdit
-            style={{ color: '#5f7' }}
+            style={{ color: 'rgb(0 174 123)' }}
             text={value.text}
             idx={value.loc.idx}
             store={store}

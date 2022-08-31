@@ -1,13 +1,29 @@
 # Nore (new-core) Roadmap
 
+Highlevel things I haven't solved at all:
+- pretty-printingggg
+	so, breaking long lines.
+
+
 ### Structured Features
+
+#### First Step: basic editing, navigation, and selection
+
+##### Editing Stuff
+
+- [x] # Identifiers
+- [x] # Numbers
+- [ ] # Apply/CallSuffixes
+
+- [ ] binops probably??
+- [ ] lambdas, which means patterns, yaknow
+
 
 - [x] basic atom edit
 - [x] click a paren, select something close to it
 	- [ ] setSelection should go into selection, I think? ... 
 - [x] backspace to remove ... an arg
 - [x] if no args, remove the callExpression
-- [ ] backspace to remove a suffix? idk
 - [x] clicking the left / right side of a `(` should do the expected
 - [x] simplify AtomEditor
 
@@ -21,7 +37,11 @@
 	but if it's the only arg, I think we ditch it.
 - [x] allow selection into the "interior" of a thing. like at: 'inner'
 
+- [x] ',' comma to add an argggg
+	- [x] fix double-remove
 - [ ] CallSuffix end _ backspace should remove
+	- oooh OK so, backspace should switch it to `select:edit,at:change`
+	- and then another backspace removes it. yeah that makes a lot of sense.
 - [ ] CallSuffix inner + backspace hsould remove
 - [ ] selecting the start of an apply should ... select the start of the target.
 
@@ -38,6 +58,10 @@
 	can do an undo stack.
 	yeah that makes sense.
 
+#### Second Step: IDE features, autocomplete, etc.
+
+- [ ] autocomplete an identifier
+- [ ] when producing a `CallSuffix`, if the type of the thing is known, go ahead and populate `Blank`s for each expected argument. Would be great if the blanks knew their desired type, and even label if applicable.
 
 
 

@@ -6,7 +6,16 @@ import {
     parseSuffix,
 } from '../generated/parser';
 import React, { useRef } from 'react';
-import { Store, Path, nidx, newBlank, setSelection, notify } from './Hand2';
+import {
+    Store,
+    Path,
+    nidx,
+    newBlank,
+    setSelection,
+    notify,
+    Selection,
+    EditSelection,
+} from './Hand2';
 
 const canRemove = (path: Path) => {
     if (path.length === 0) return false;
@@ -20,10 +29,11 @@ const canRemove = (path: Path) => {
 };
 
 const remove = (idx: number, path: Path, store: Store) => {
+    console.log(`remove`, idx);
     const last = path[path.length - 1];
     switch (last.type) {
         case 'Apply_suffix': {
-            const apply = store.map[last.pid].value as t.Apply;
+            const apply = getc(store, last.pid) as t.Apply;
             const at = apply.suffixes.indexOf(idx);
             apply.suffixes = apply.suffixes.filter((n) => n !== idx);
             setSelection(
@@ -38,7 +48,7 @@ const remove = (idx: number, path: Path, store: Store) => {
             break;
         }
         case 'CallSuffix_args': {
-            const call = store.map[last.pid].value as t.CallSuffix;
+            const call = getc(store, last.pid) as t.CallSuffix;
             if (call.args.length === 1 && path.length > 1) {
                 // we're removing the whole thing, my folks
                 const prev = path[path.length - 2];
@@ -73,6 +83,7 @@ const remove = (idx: number, path: Path, store: Store) => {
             }
             const at = call.args.indexOf(idx);
             call.args = call.args.filter((n) => n !== idx);
+            delete store.map[idx];
             setSelection(
                 store,
                 {
@@ -88,6 +99,77 @@ const remove = (idx: number, path: Path, store: Store) => {
     }
 };
 
+// get for changing (having already done the shallow clones)
+const getc = (store: Store, idx: number) => {
+    store.map[idx] = { ...store.map[idx] };
+    return (store.map[idx].value = { ...store.map[idx].value });
+};
+
+const addBlank = (store: Store) => {
+    const blank = newBlank();
+    store.map[blank.loc.idx] = {
+        type: 'Expression',
+        value: blank,
+    };
+    return blank.loc.idx;
+};
+
+const onFinishEdit = (
+    changed: string,
+    idx: null | number,
+    path: Path,
+    store: Store,
+    text: string,
+    level: Level,
+) => {
+    if (idx != null && store.map[idx] == null) {
+        return; // we been deleted
+    }
+    if (changed.trim().length === 0) {
+        // this never existed, to need to "remove" it
+        if (idx == null) {
+            return;
+        }
+        const last = path[path.length - 1];
+        if (last && last.type === 'CallSuffix_args') {
+            const call = store.map[last.pid].value as t.CallSuffix;
+            if (call.args.length === 1) {
+                call.args = [];
+                notify(store, [last.pid]);
+                return;
+            }
+        }
+        const nw = newBlank();
+        nw.loc.idx = idx;
+        store.map[idx].value = nw;
+        notify(store, [idx]);
+        return;
+    }
+    if (changed !== text) {
+        if (idx == null) {
+            const last = path[path.length - 1];
+            if (last && last.type === 'CallSuffix_args') {
+                idx = addBlank(store);
+                const call = getc(store, last.pid) as t.CallSuffix;
+                call.args = call.args.concat([idx]);
+                notify(store, [last.pid]);
+            } else {
+                return;
+            }
+        }
+        try {
+            reparse(level, changed, store, idx);
+            notify(store, [idx]);
+        } catch (err) {
+            console.error(err);
+        }
+        console.log('diff', changed);
+    }
+    return;
+};
+
+type Level = 'Expression' | 'Applyable' | 'Suffix';
+
 export const AtomEdit = ({
     text,
     store,
@@ -98,7 +180,7 @@ export const AtomEdit = ({
 }: {
     text: string;
     store: Store;
-    level: 'Expression' | 'Applyable' | 'Suffix';
+    level: Level;
     idx: number | null;
     path: Path;
     style?: React.CSSProperties;
@@ -122,118 +204,93 @@ export const AtomEdit = ({
                 ref={(node) => {
                     if (!node) {
                         // We've got a runner! Unmounting, so let's commit this info
-                        if (ref.current && ref.current.textContent !== text) {
+                        if (ref.current) {
                             const changed = ref.current.textContent!;
-                            if (changed.trim().length === 0) {
-                                // this never existed, to need to "remove" it
-                                if (idx == null) {
-                                    return;
-                                }
-                                const last = path[path.length - 1];
-                                if (last && last.type === 'CallSuffix_args') {
-                                    const call = store.map[last.pid]
-                                        .value as t.CallSuffix;
-                                    if (call.args.length === 1) {
-                                        call.args = [];
-                                        notify(store, [last.pid]);
-                                        return;
-                                    }
-                                }
-                                const nw = newBlank();
-                                nw.loc.idx = idx;
-                                store.map[idx].value = nw;
-                                notify(store, [idx]);
-                                return;
-                            }
-                            if (idx != null) {
-                                try {
-                                    reparse(level, changed, store, idx);
-                                    notify(store, [idx]);
-                                } catch (err) {
-                                    console.error(err);
-                                }
-                                console.log('diff', changed);
-                            }
+                            onFinishEdit(
+                                changed,
+                                idx,
+                                path,
+                                store,
+                                text,
+                                level,
+                            );
                         }
                         return;
                     }
                     ref.current = node;
                     node.textContent = text;
-                    node.focus();
-                    if (selection.at === 'end') {
-                        const sel = document.getSelection();
-                        const r = sel?.getRangeAt(0)!;
-                        r.selectNodeContents(node);
-                        r.collapse(false);
-                    }
-                    if (selection.at === 'change') {
-                        document
-                            .getSelection()
-                            ?.getRangeAt(0)
-                            .selectNodeContents(node);
-                    }
+                    setDomSelection(selection as EditSelection, node);
                 }}
-                onInput={(evt) => {
-                    const text = evt.currentTarget.textContent!;
-                }}
+                // TODO: Provide feedback on ... whether it's valid?
+                // Also, autocomplete comes here!
+                // onInput={(evt) => {
+                //     const text = evt.currentTarget.textContent!;
+                // }}
                 onKeyDown={(evt) => {
                     if (evt.key === 'Escape') {
                         evt.preventDefault();
-                        evt.currentTarget.blur();
-                        return;
+                        return evt.currentTarget.blur();
                     }
+                    // Ok yeah, so if you're at the start of a thing,
+                    // and you're backspacing
+                    // When we want to `select:change` the previous thing.
+                    // So really, we need a 'select the previous thing' function
                     if (
                         evt.key === 'Backspace' &&
                         canRemove(path) &&
-                        idx != null
+                        idx != null &&
+                        evt.currentTarget.textContent === ''
                     ) {
-                        if (evt.currentTarget.textContent === '') {
-                            evt.preventDefault();
-                            remove(idx, path, store);
-                            return;
-                        }
+                        evt.preventDefault();
+                        remove(idx, path, store);
+                        return;
                     }
                     if (idx == null) {
                         return;
                     }
+                    if (evt.key === 'Enter' || evt.key === 'Return') {
+                        evt.preventDefault();
+                        onFinishEdit(
+                            evt.currentTarget.textContent!,
+                            idx,
+                            path,
+                            store,
+                            text,
+                            level,
+                        );
+                        // @ts-ignore
+                        store.selection.at = 'end';
+                        return;
+                    }
                     if (evt.key === '(' && level === 'Expression') {
-                        const sel = document.getSelection();
-                        if (sel?.getRangeAt(0).toString() !== '') {
-                            return;
-                        }
                         evt.preventDefault();
                         toCallExpression(
                             evt.currentTarget.textContent!,
                             store,
                             idx,
                         );
-                        // TODO check if selection is at the end, and such
-                        console.log('paren');
+                    }
+                    if (evt.key === ',' && level === 'Expression') {
+                        evt.preventDefault();
+                        const last = path[path.length - 1];
+                        if (last.type === 'CallSuffix_args') {
+                            const call = getc(store, last.pid) as t.CallSuffix;
+                            const blank = addBlank(store);
+                            call.args = call.args.slice();
+                            call.args.splice(last.arg + 1, 0, blank);
+                            setSelection(
+                                store,
+                                {
+                                    type: 'edit',
+                                    idx: blank,
+                                    at: 'change',
+                                },
+                                [last.pid],
+                            );
+                        }
                     }
                 }}
-                onBlur={(evt) => {
-                    // const changed = evt.currentTarget.textContent;
-                    // if (changed != null && changed.trim().length === 0) {
-                    //     if (idx == null) {
-                    //         setSelection(store, null);
-                    //         return;
-                    //     }
-                    //     const nw = newBlank();
-                    //     nw.loc.idx = idx;
-                    //     store.map[idx].value = nw;
-                    //     setSelection(store, null);
-                    //     return;
-                    // }
-                    // if (changed && changed !== text && idx != null) {
-                    //     try {
-                    //         reparse(level, changed, store, idx);
-                    //     } catch (err) {
-                    //         console.error(err);
-                    //     }
-                    //     console.log('diff', changed);
-                    // }
-                    setSelection(store, null);
-                }}
+                onBlur={() => setSelection(store, null)}
             />
         );
     }
@@ -250,6 +307,20 @@ export const AtomEdit = ({
         </span>
     );
 };
+
+function setDomSelection(selection: EditSelection, node: HTMLSpanElement) {
+    node.focus();
+    if (selection.at === 'end') {
+        const sel = document.getSelection();
+        const r = sel?.getRangeAt(0)!;
+        r.selectNodeContents(node);
+        r.collapse(false);
+    }
+    if (selection.at === 'change') {
+        document.getSelection()?.getRangeAt(0).selectNodeContents(node);
+    }
+}
+
 function reparse(level: string, changed: string, store: Store, idx: number) {
     if (level === 'Suffix') {
         const nw = to.Suffix(parseSuffix(changed), store.map);

@@ -41,7 +41,7 @@ export type Gram<Extra> =
     | {
           type: 'inferrable';
           item: Gram<Extra>;
-          infer: (locals: any, ctx: any) => any;
+          //   infer: (locals: any, ctx: any) => any;
       }
     // // I need a way to regex? Or something?
     // | Binops
