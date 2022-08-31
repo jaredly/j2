@@ -61,6 +61,7 @@ export const onFinishEdit = (
         }
         const nw = newBlank();
         nw.loc.idx = idx;
+        store.map[idx] = { ...store.map[idx] };
         store.map[idx].value = nw;
         notify(store, [idx]);
         return;

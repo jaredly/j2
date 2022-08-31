@@ -60,7 +60,7 @@ Highlevel things I haven't solved at all:
 - [ ] do live updates for atomedit indicating parseability
 	- hmm do I actually need this? hmm
 
-- [ ] drag to select ... I'll do the thing like I do, for drag & drop;
+- [x] drag to select ... I'll do the thing like I do, for drag & drop;
 	- have a central registry of all dom nodes
 	- gotta make sure to prune it folks
 	- on drag start, calculate relevant points
@@ -69,6 +69,8 @@ Highlevel things I haven't solved at all:
 - [ ] ahhhhh ok so I do in fact have to stop editing things in-place, so that I
 	can do an undo stack.
 	yeah that makes sense.
+
+BEFORE I get too far, let's make sure UNDO/REDO is a thing
 
 #### Second Step: IDE features, autocomplete, etc.
 

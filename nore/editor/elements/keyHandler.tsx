@@ -65,6 +65,7 @@ export const keyHandler = (
             text,
             level,
         );
+        store.selection = { ...store.selection! };
         // @ts-ignore
         store.selection.at = 'end';
         return;
