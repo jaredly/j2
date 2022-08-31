@@ -305,7 +305,11 @@ const keyHandler = (
     // and you're backspacing
     // When we want to `select:change` the previous thing.
     // So really, we need a 'select the previous thing' function
-    if (evt.key === 'Backspace' && getPos(evt.currentTarget) === 0) {
+    if (
+        evt.key === 'Backspace' &&
+        getPos(evt.currentTarget) === 0 &&
+        window.getSelection()?.toString() === ''
+    ) {
         evt.preventDefault();
         remove(idx, path, store);
         return;
@@ -329,27 +333,59 @@ const keyHandler = (
         store.onDeselect = null;
         toCallExpression(evt.currentTarget.textContent!, store, idx);
     }
-    if (evt.key === '(' && level === 'Suffix') {
-        evt.preventDefault();
-        const last = path[path.length - 1];
-        const apply = getc(store, last.pid) as t.Apply;
-        const blank = addBlank(store);
-        const nid = to.add(store.map, {
-            type: 'Suffix',
-            value: {
-                type: 'CallSuffix',
-                args: [blank],
-                loc: { start: 0, end: 0, idx: nidx() },
-            },
-        });
-        apply.suffixes = apply.suffixes.slice();
-        if (last.type === 'Apply_suffix') {
-            apply.suffixes.splice(last.suffix + 1, 0, nid);
-        } else {
-            apply.suffixes.push(nid);
+
+    if (evt.key === '(') {
+        if (level === 'Suffix' || level === 'Applyable') {
+            evt.preventDefault();
+            const last = path[path.length - 1];
+            const apply = getc(store, last.pid) as t.Apply;
+            const blank = addBlank(store);
+            const nid = to.add(store.map, {
+                type: 'Suffix',
+                value: {
+                    type: 'CallSuffix',
+                    args: [blank],
+                    loc: { start: 0, end: 0, idx: nidx() },
+                },
+            });
+            apply.suffixes = apply.suffixes.slice();
+            if (level === 'Applyable') {
+                apply.suffixes.unshift(nid);
+            } else if (last.type === 'Apply_suffix') {
+                apply.suffixes.splice(last.suffix + 1, 0, nid);
+            } else {
+                apply.suffixes.push(nid);
+            }
+            setSelection(store, { type: 'edit', idx: blank }, [last.pid]);
         }
-        setSelection(store, { type: 'edit', idx: blank }, [last.pid]);
     }
+
+    if (evt.key === ')') {
+        for (let i = path.length - 1; i >= 0; i--) {
+            const last = path[i];
+            if (last.type === 'Apply_suffix') {
+                evt.preventDefault();
+                const apply = getc(store, last.pid) as t.Apply;
+                // const blank = addBlank(store);
+                // call.args = call.args.slice();
+                // call.args.splice(last.suffix + 1, 0, blank);
+                setSelection(
+                    store,
+                    {
+                        type: 'edit',
+                        idx:
+                            last.suffix < apply.suffixes.length
+                                ? apply.suffixes[last.suffix]
+                                : last.pid,
+                        at: 'end',
+                    },
+                    [last.pid],
+                );
+                return;
+            }
+        }
+    }
+
     if (evt.key === ',') {
         for (let i = path.length - 1; i >= 0; i--) {
             const last = path[i];

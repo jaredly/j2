@@ -461,6 +461,18 @@ export const setSelection = (
     store.onDeselect ? store.onDeselect() : null;
     console.log('Set Selection', selection);
     const prev = store.selection?.idx;
+
+    if (selection?.type === 'edit') {
+        const v = store.map[selection.idx].value;
+        if (v.type === 'Apply') {
+            if (selection.at === 'start') {
+                selection.idx = v.target;
+            } else if (selection.at === 'end') {
+                selection.idx = v.suffixes[v.suffixes.length - 1];
+            }
+        }
+    }
+
     store.selection = selection;
     notify(store, [prev, selection?.idx, ...(extraNotify || [])]);
 };

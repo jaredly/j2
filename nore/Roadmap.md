@@ -39,13 +39,15 @@ Highlevel things I haven't solved at all:
 
 - [x] ',' comma to add an argggg
 	- [x] fix double-remove
-- [ ] CallSuffix end _ backspace should remove
+- [x] CallSuffix end _ backspace should remove
 	- oooh OK so, backspace should switch it to `select:edit,at:change`
 	- and then another backspace removes it. yeah that makes a lot of sense.
 - [x] better suffix backspace
 - [x] CallSuffix inner + backspace hsould remove
-- [ ] ')' in an arg should select the end of the CallExpr
-- [ ] selecting the start of an apply should ... select the start of the target.
+- [x] ')' in an arg should select the end of the CallExpr
+- [x] selecting the start of an apply should ... select the start of the target.
+
+- [ ] ARROW KEYSSS
 
 - [ ] do live updates for atomedit indicating parseability
 	- hmm do I actually need this? hmm
