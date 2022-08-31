@@ -61,7 +61,7 @@ export const generatePeg = (grammar: Grams) => {
     });
     const prelude = `
     {{
-        let idx = {current: 0};
+        export let idx = {current: 0};
     }}
 
     {

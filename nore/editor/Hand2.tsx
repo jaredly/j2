@@ -6,6 +6,17 @@ import {
     parseSuffix,
 } from '../generated/parser';
 import React, { useEffect, useMemo, useState } from 'react';
+import { idx } from '../generated/grammar';
+
+const nidx = () => idx.current++;
+export const newBlank = (): t.Blank => ({
+    type: 'Blank',
+    loc: {
+        start: 0,
+        end: 0,
+        idx: nidx(),
+    },
+});
 
 export type Selection =
     | {
@@ -30,7 +41,10 @@ export const Editor = () => {
     const [ast, setAst] = React.useState(() => {
         return to.add(store.map, {
             type: 'Expression',
-            value: to.Expression(parseExpression('hello(1, 2u)'), store.map),
+            value: to.Expression(
+                parseExpression('hello(one, 1, 2u)'),
+                store.map,
+            ),
         });
     });
 
@@ -183,6 +197,67 @@ export const AtomEdit = ({
                     if (!node) return;
                     node.textContent = text;
                     node.focus();
+                }}
+                onKeyDown={(evt) => {
+                    if (evt.key === 'Escape') {
+                        evt.preventDefault();
+                        evt.currentTarget.blur();
+                        return;
+                    }
+                    if (evt.key === '(') {
+                        const sel = document.getSelection();
+                        if (sel?.getRangeAt(0).toString() !== '') {
+                            return;
+                        }
+                        const prev = store.map[idx].value;
+                        prev.loc.idx = nidx();
+                        evt.preventDefault();
+                        const blank = newBlank();
+                        const nw: t.Apply = {
+                            type: 'Apply',
+                            target: prev.loc.idx,
+                            suffixes: [
+                                to.add(store.map, {
+                                    type: 'Suffix',
+                                    value: {
+                                        type: 'CallSuffix',
+                                        args: [
+                                            to.add(store.map, {
+                                                type: 'Expression',
+                                                value: blank,
+                                            }),
+                                        ],
+                                        loc: {
+                                            idx: nidx(),
+                                            start: 0,
+                                            end: 0,
+                                        },
+                                    },
+                                }),
+                            ],
+                            loc: {
+                                idx: idx,
+                                start: 0,
+                                end: 0,
+                            },
+                        };
+                        if (level === 'Expression') {
+                            store.map[prev.loc.idx] = {
+                                type: 'Expression',
+                                value: prev as t.Expression,
+                            };
+                            store.map[idx] = {
+                                type: level,
+                                value: nw,
+                            };
+                            setSelection(store, {
+                                type: 'edit',
+                                idx: blank.loc.idx,
+                            });
+                        }
+                        // TODO check if selection is at the end, and such
+                        console.log('paren');
+                    }
                 }}
                 onBlur={(evt) => {
                     const changed = evt.currentTarget.textContent;

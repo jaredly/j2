@@ -1,6 +1,6 @@
 
     {{
-        let idx = {current: 0};
+        export let idx = {current: 0};
     }}
 
     {

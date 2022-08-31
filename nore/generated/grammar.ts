@@ -4,7 +4,7 @@
 // https://peggyjs.org/
 
 
-        let idx = {current: 0};
+        export let idx = {current: 0};
     
 function peg$subclass(child, parent) {
   function C() { this.constructor = child; }

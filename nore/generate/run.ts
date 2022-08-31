@@ -43,15 +43,15 @@ ${starts
 `,
 );
 
-console.log(
-    JSON.stringify(
-        generate(peg, { allowedStartRules: ['Expression'] }).parse(
-            'hello(1, 2u)',
-            {
-                startRule: 'Expression',
-            },
-        ),
-        null,
-        2,
-    ),
-);
+// console.log(
+//     JSON.stringify(
+//         generate(peg, { allowedStartRules: ['Expression'] }).parse(
+//             'hello(1, 2u)',
+//             {
+//                 startRule: 'Expression',
+//             },
+//         ),
+//         null,
+//         2,
+//     ),
+// );
