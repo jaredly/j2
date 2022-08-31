@@ -58,14 +58,57 @@ const hitBox = (boxes: Box[], x: number, y: number) => {
     return boxes.find((box) => inBox(x, y, box));
 };
 
+const between = (x: number, a: number, b: number) => x >= a && x <= b;
+
+const boxIntersect = (inside: Box, outside: Box) => {
+    const inx =
+        between(inside.x0, outside.x0, outside.x1) ||
+        between(inside.x1, outside.x0, outside.x1);
+    const outx =
+        between(outside.x0, inside.x0, inside.x1) ||
+        between(outside.x1, inside.x0, inside.x1);
+    const iny =
+        between(inside.y0, outside.y0, outside.y1) ||
+        between(inside.y1, outside.y0, outside.y1);
+    const outy =
+        between(outside.y0, inside.y0, inside.y1) ||
+        between(outside.y1, inside.y0, inside.y1);
+    // They can cross, or inside can be fully inside outside,
+    // but you can't have ouside be fully inside inside
+    return (inx || iny) && (inx || outx) && (iny || outy);
+};
+
+const maxDist = (box: Box, { x, y }: { x: number; y: number }) => {
+    return {
+        x: Math.max(Math.abs(box.x0 - x), Math.abs(box.x1 - x)),
+        y: Math.max(Math.abs(box.y0 - y), Math.abs(box.y1 - y)),
+    };
+};
+
 const inOut = (
     boxes: Box[],
     inn: { x: number; y: number },
     out: { x: number; y: number },
 ) => {
-    return boxes.find(
-        (box) => inBox(inn.x, inn.y, box) && !inBox(out.x, out.y, box),
-    );
+    // const found = boxes.find(
+    //     (box) => inBox(inn.x, inn.y, box) && !inBox(out.x, out.y, box),
+    // );
+    // if (!found) {
+    const check = {
+        x0: Math.min(inn.x, out.x),
+        x1: Math.max(inn.x, out.x),
+        y0: Math.min(inn.y, out.y),
+        y1: Math.max(inn.y, out.y),
+    };
+    const ok = boxes
+        .filter((box) => boxIntersect(box, check as Box))
+        .map((box) => ({ box, dist: maxDist(box, out) }))
+        .sort((a, b) =>
+            a.dist.y === b.dist.y ? b.dist.x - a.dist.x : b.dist.y - a.dist.y,
+        );
+    return ok.length ? ok[0].box : null;
+    // }
+    // return found;
 };
 
 type Box = {
@@ -112,7 +155,12 @@ export const Editor = () => {
             onMouseDown={(evt) => {
                 // dn.current!.style.top = evt.clientY + 'px';
                 // dn.current!.style.left = evt.clientX + 'px';
+                boxes.splice(0, boxes.length);
                 Object.keys(store.nodes).forEach((key) => {
+                    const node = store.nodes[+key].node;
+                    if (!node.isConnected) {
+                        return;
+                    }
                     const box = store.nodes[+key].node.getBoundingClientRect();
                     boxes.push({
                         x0: box.left,
@@ -129,7 +177,7 @@ export const Editor = () => {
                     return;
                 }
                 store.drag = {
-                    start: { x: find.x0, y: find.y0, idx: find.idx },
+                    start: { x: evt.clientX, y: evt.clientY, idx: find.idx },
                     end: { x: evt.clientX, y: evt.clientY, idx: find.idx },
                 };
             }}
@@ -156,16 +204,13 @@ export const Editor = () => {
                         const sel = calcSelection(store, store.drag);
                         if (sel) {
                             evt.preventDefault();
-                            setSelection(store, {
-                                type: 'select',
-                                idx: sel,
-                                children: null,
-                            });
+                            setSelection(store, sel);
                         }
                         // dn.current!.style.top = box.y0 + 'px';
                         // dn.current!.style.left = box.x0 + 'px';
                         // dn.current!.style.width = box.x1 - box.x0 + 'px';
                         // dn.current!.style.height = box.y1 - box.y0 + 'px';
+                        // console.log(box.idx, store.nodes[box.idx]);
                     } else {
                         if (store.selection?.type === 'select') {
                             setSelection(store, {
@@ -261,6 +306,16 @@ export const notify = (store: Store, idxs: (number | null | undefined)[]) => {
     }
 };
 
+const kidsEqual = (
+    one: null | [number, number],
+    two: null | [number, number],
+) => {
+    if (!one || !two) {
+        return one === two;
+    }
+    return one[0] === two[0] && one[1] === two[1];
+};
+
 export const setSelection = (
     store: Store,
     selection: null | Selection,
@@ -270,7 +325,12 @@ export const setSelection = (
     if (
         store.selection?.idx === selection?.idx &&
         !force &&
-        selection?.type === store.selection?.type
+        selection?.type === store.selection?.type &&
+        !(
+            selection?.type === 'select' &&
+            store.selection?.type === 'select' &&
+            !kidsEqual(store.selection?.children, selection?.children)
+        )
     ) {
         notify(store, extraNotify || []);
         return;
@@ -293,24 +353,31 @@ export const setSelection = (
     notify(store, [prev, selection?.idx, ...(extraNotify || [])]);
 };
 
-function calcSelection(store: Store, drag: NonNullable<Store['drag']>) {
-    if (drag.start.idx === drag.end.idx) {
-        return drag.start.idx;
-    }
-    const p1 = store.nodes[drag.start.idx].path;
-    const p2 = store.nodes[drag.end.idx].path;
+function calcSelection(
+    store: Store,
+    drag: NonNullable<Store['drag']>,
+): Selection | undefined {
+    const p1 = store.nodes[drag.start.idx].path
+        .map((p) => p.pid)
+        .concat(drag.start.idx);
+    const p2 = store.nodes[drag.end.idx].path
+        .map((p) => p.pid)
+        .concat(drag.end.idx);
     for (let i = 0; i < p1.length && i < p2.length; i++) {
-        if (p1[i].pid !== p2[i].pid) {
+        if (p1[i] !== p2[i]) {
             if (i > 0) {
-                const idx = p1[i - 1];
-                return idx.pid;
+                return {
+                    type: 'select',
+                    idx: p1[i - 1],
+                    children: [p1[i], p2[i]],
+                };
             }
             return;
         }
     }
     if (p1.length < p2.length) {
-        return p1[p1.length - 1].pid;
+        return { type: 'select', idx: p1[p1.length - 1], children: null };
     } else {
-        return p2[p2.length - 1].pid;
+        return { type: 'select', idx: p2[p2.length - 1], children: null };
     }
 }

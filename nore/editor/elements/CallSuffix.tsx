@@ -11,6 +11,19 @@ import { Expression } from './aggregates';
 // Then it registers itself as a listener? I mean that's like a wholeeee
 // bunch of listeners, but maybe it's ok?
 
+const orderKids = (
+    children: [number, number],
+    args: number[],
+): [number, number] => {
+    const one = args.indexOf(children[0]);
+    const two = args.indexOf(children[1]);
+    return [Math.min(one, two), Math.max(one, two)];
+};
+
+const isSelected = (kids: null | [number, number], idx: number): boolean => {
+    return kids != null && kids[0] <= idx && kids[1] >= idx;
+};
+
 export const CallSuffix = ({
     value,
     store,
@@ -25,6 +38,12 @@ export const CallSuffix = ({
         selected &&
         store.selection?.type === 'edit' &&
         store.selection.at === 'end';
+    const selKids =
+        selected &&
+        store.selection?.type === 'select' &&
+        store.selection.children
+            ? orderKids(store.selection.children, value.args)
+            : null;
     return (
         <span
             ref={(node) => {
@@ -33,7 +52,11 @@ export const CallSuffix = ({
                 }
             }}
             style={
-                selected && store.selection?.type === 'select' ? sel : undefined
+                selected &&
+                store.selection?.type === 'select' &&
+                store.selection.children === null
+                    ? sel
+                    : undefined
             }
         >
             <span
@@ -91,7 +114,10 @@ export const CallSuffix = ({
                 />
             ) : null}
             {value.args.map((id, i) => (
-                <React.Fragment key={id + ':' + i}>
+                <span
+                    key={id + ':' + i}
+                    style={isSelected(selKids, i) ? sel : undefined}
+                >
                     <Expression
                         key={id + ':' + i}
                         id={id}
@@ -131,7 +157,7 @@ export const CallSuffix = ({
                             ,{' '}
                         </span>
                     )}
-                </React.Fragment>
+                </span>
             ))}
             <span
                 style={{ color: '#777' }}

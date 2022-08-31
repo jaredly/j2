@@ -51,7 +51,11 @@ Highlevel things I haven't solved at all:
 	- so, navigating ,right?
 	- got it good
 
-- [ ] selection?? should I do vim mode? or not yet?
+- [x] selection?? should I do vim mode? or not yet?
+	- [x] not yet on the vim mode
+	- [x] collect boxes for nodes
+	- [x] do a lowest common parent
+	- [x] figure out how to allow selecting multiple children
 
 - [ ] do live updates for atomedit indicating parseability
 	- hmm do I actually need this? hmm
