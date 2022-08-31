@@ -124,14 +124,41 @@ export const CallSuffix = ({
 }) => {
     return (
         <span>
-            <span>(</span>
+            <span
+                onMouseDown={(evt) => {
+                    // so, selection ... is probably like the first
+                    if (value.args.length) {
+                        evt.preventDefault();
+                        setSelection(store, {
+                            type: 'edit',
+                            idx: value.args[0],
+                        });
+                    }
+                }}
+            >
+                (
+            </span>
             {value.args.map((id, i) => (
                 <React.Fragment key={id}>
                     <Expression key={id} id={id} store={store} />
                     {i !== value.args.length - 1 && <span>, </span>}
                 </React.Fragment>
             ))}
-            <span>)</span>
+            <span
+                onMouseDown={(evt) => {
+                    // so, selection ... is probably like the first
+                    if (value.args.length) {
+                        evt.preventDefault();
+                        setSelection(store, {
+                            type: 'edit',
+                            idx: value.args[value.args.length - 1],
+                            at: 'end',
+                        });
+                    }
+                }}
+            >
+                )
+            </span>
         </span>
     );
 };
@@ -193,10 +220,23 @@ export const AtomEdit = ({
         return (
             <span
                 contentEditable
+                style={{ outline: 'none' }}
                 ref={(node) => {
                     if (!node) return;
                     node.textContent = text;
                     node.focus();
+                    if (selection.at === 'end') {
+                        const sel = document.getSelection();
+                        const r = sel?.getRangeAt(0)!;
+                        r.selectNodeContents(node);
+                        r.collapse(false);
+                    }
+                    if (selection.at === 'change') {
+                        document
+                            .getSelection()
+                            ?.getRangeAt(0)
+                            .selectNodeContents(node);
+                    }
                 }}
                 onKeyDown={(evt) => {
                     if (evt.key === 'Escape') {
