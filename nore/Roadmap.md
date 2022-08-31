@@ -47,7 +47,11 @@ Highlevel things I haven't solved at all:
 - [x] ')' in an arg should select the end of the CallExpr
 - [x] selecting the start of an apply should ... select the start of the target.
 
-- [ ] ARROW KEYSSS
+- [x] ARROW KEYSSS
+	- so, navigating ,right?
+	- got it good
+
+- [ ] selection?? should I do vim mode? or not yet?
 
 - [ ] do live updates for atomedit indicating parseability
 	- hmm do I actually need this? hmm

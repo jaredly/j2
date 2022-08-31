@@ -28,23 +28,176 @@ const canRemove = (path: Path) => {
     return false;
 };
 
+const goRight = (store: Store, idx: number | null, path: Path) => {
+    if (
+        !path.length ||
+        store.selection?.idx == null ||
+        store.selection.type !== 'edit'
+    ) {
+        return;
+    }
+    const current = store.map[store.selection.idx].value;
+    let lastIdx = path.length - 1;
+    let last = path[lastIdx];
+    while (
+        last.type === 'Apply_suffix' &&
+        lastIdx > 0 &&
+        last.suffix >=
+            (store.map[last.pid].value as t.Apply).suffixes.length - 1
+    ) {
+        lastIdx--;
+        last = path[lastIdx];
+    }
+    switch (last.type) {
+        case 'Apply_suffix': {
+            const apply = store.map[last.pid].value as t.Apply;
+            if (last.suffix < apply.suffixes.length - 1) {
+                const next = store.map[apply.suffixes[last.suffix + 1]]
+                    .value as t.CallSuffix;
+                if (next.args.length) {
+                    return setSelection(store, {
+                        type: 'edit',
+                        idx: next.args[0],
+                        at: 'start',
+                    });
+                } else {
+                    return setSelection(store, {
+                        type: 'edit',
+                        idx: apply.suffixes[last.suffix + 1],
+                        at: 'inner',
+                    });
+                }
+
+                // return setSelection(store, {
+                //     type: 'edit',
+                //     idx: apply.suffixes[last.suffix + 1],
+                //     at: 'start',
+                // });
+            }
+            return;
+        }
+        case 'CallSuffix_args': {
+            const call = store.map[last.pid].value as t.CallSuffix;
+            if (last.arg < call.args.length - 1) {
+                return setSelection(store, {
+                    type: 'edit',
+                    idx: call.args[last.arg + 1],
+                    at: 'start',
+                });
+            } else {
+                return setSelection(store, {
+                    type: 'edit',
+                    idx: call.loc.idx,
+                    at: 'end',
+                });
+            }
+        }
+        case 'Apply_target': {
+            const apply = store.map[last.pid].value as t.Apply;
+            const first = store.map[apply.suffixes[0]].value as t.CallSuffix;
+            if (first.args.length) {
+                return setSelection(store, {
+                    type: 'edit',
+                    idx: first.args[0],
+                    at: 'start',
+                });
+            } else {
+                return setSelection(store, {
+                    type: 'edit',
+                    idx: apply.suffixes[0],
+                    at: 'inner',
+                });
+            }
+        }
+    }
+};
+
+const goLeft = (store: Store, path: Path) => {
+    if (
+        !path.length ||
+        !store.selection?.idx ||
+        store.selection.type !== 'edit'
+    ) {
+        return;
+    }
+    const current = store.map[store.selection.idx].value;
+    if (current.type === 'CallSuffix') {
+        if (store.selection.at === 'end') {
+            if (current.args.length) {
+                return setSelection(store, {
+                    type: 'edit',
+                    idx: current.args[current.args.length - 1],
+                    at: 'end',
+                });
+            } else {
+                return setSelection(
+                    store,
+                    {
+                        type: 'edit',
+                        idx: current.loc.idx,
+                        at: 'inner',
+                    },
+                    undefined,
+                    true,
+                );
+            }
+        }
+    }
+    let lastIdx = path.length - 1;
+    let last = path[lastIdx];
+    while (last.type === 'Apply_target' && lastIdx > 0) {
+        lastIdx--;
+        last = path[lastIdx];
+    }
+
+    switch (last.type) {
+        case 'Apply_suffix': {
+            const apply = store.map[last.pid].value as t.Apply;
+            if (last.suffix > 0) {
+            }
+            return;
+        }
+        case 'CallSuffix_args': {
+            const call = store.map[last.pid].value as t.CallSuffix;
+            if (last.arg > 0) {
+                return setSelection(store, {
+                    type: 'edit',
+                    idx: call.args[last.arg - 1],
+                    at: 'end',
+                });
+            }
+            const prev = path[lastIdx - 1];
+            if (prev.type === 'Apply_suffix') {
+                const apply = store.map[prev.pid].value as t.Apply;
+                if (prev.suffix > 0) {
+                    return setSelection(store, {
+                        type: 'edit',
+                        idx: apply.suffixes[prev.suffix - 1],
+                        at: 'end',
+                    });
+                }
+                return setSelection(store, {
+                    type: 'edit',
+                    idx: apply.target,
+                    at: 'end',
+                });
+            }
+            return;
+        }
+    }
+};
+
 const remove = (idx: number | null, path: Path, store: Store) => {
-    console.log(`remove`, idx);
     const last = path[path.length - 1];
     switch (last.type) {
         case 'Apply_suffix': {
             const apply = getc(store, last.pid) as t.Apply;
-            console.log('will remove', apply.suffixes);
             apply.suffixes = apply.suffixes.slice();
             apply.suffixes.splice(
                 Math.min(apply.suffixes.length - 1, last.suffix),
                 1,
             );
-            // idx == null
-            //     ? apply.suffixes.slice(0, -1)
-            //     : apply.suffixes.filter((n) => n !== idx);
             const at = last.suffix;
-            console.log('removed a suffix', idx, apply.suffixes);
             if (apply.suffixes.length === 0) {
                 store.map[last.pid] = store.map[apply.target];
                 delete store.map[apply.target];
@@ -193,7 +346,6 @@ const onFinishEdit = (
         } catch (err) {
             console.error(err);
         }
-        console.log('diff', changed);
     }
     return;
 };
@@ -230,7 +382,7 @@ export const AtomEdit = ({
         const fn = () => {
             if (ref.current) {
                 const changed = ref.current.textContent!;
-                console.log('unmount, etc', changed, idx);
+                // console.log('unmount, etc', changed, idx);
                 onFinishEdit(changed, idx, path, store, text, level);
             }
         };
@@ -257,7 +409,7 @@ export const AtomEdit = ({
                         return;
                     }
                     if (!ref.current) {
-                        console.log('first mount', text, idx);
+                        // console.log('first mount', text, idx);
                         ref.current = node;
                         node.textContent = text;
                     }
@@ -301,6 +453,22 @@ const keyHandler = (
         evt.preventDefault();
         return evt.currentTarget.blur();
     }
+    if (
+        evt.key === 'ArrowLeft' &&
+        getSelection()?.toString() === '' &&
+        getPos(evt.currentTarget) === 0
+    ) {
+        evt.preventDefault();
+        goLeft(store, path);
+    }
+    if (
+        evt.key === 'ArrowRight' &&
+        getSelection()?.toString() === '' &&
+        getPos(evt.currentTarget) === evt.currentTarget.textContent!.length
+    ) {
+        evt.preventDefault();
+        goRight(store, idx, path);
+    }
     // Ok yeah, so if you're at the start of a thing,
     // and you're backspacing
     // When we want to `select:change` the previous thing.
@@ -311,6 +479,9 @@ const keyHandler = (
         window.getSelection()?.toString() === ''
     ) {
         evt.preventDefault();
+        if (evt.currentTarget.innerText !== '') {
+            return goLeft(store, path);
+        }
         remove(idx, path, store);
         return;
     }
@@ -361,22 +532,27 @@ const keyHandler = (
     }
 
     if (evt.key === ')') {
+        // debugger;
         for (let i = path.length - 1; i >= 0; i--) {
             const last = path[i];
             if (last.type === 'Apply_suffix') {
-                evt.preventDefault();
                 const apply = getc(store, last.pid) as t.Apply;
                 // const blank = addBlank(store);
                 // call.args = call.args.slice();
                 // call.args.splice(last.suffix + 1, 0, blank);
+                const next =
+                    last.suffix < apply.suffixes.length
+                        ? apply.suffixes[last.suffix]
+                        : last.pid;
+                if (next === store.selection?.idx) {
+                    continue;
+                }
+                evt.preventDefault();
                 setSelection(
                     store,
                     {
                         type: 'edit',
-                        idx:
-                            last.suffix < apply.suffixes.length
-                                ? apply.suffixes[last.suffix]
-                                : last.pid,
+                        idx: next,
                         at: 'end',
                     },
                     [last.pid],

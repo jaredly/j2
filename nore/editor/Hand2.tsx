@@ -5,6 +5,7 @@ import { parseExpression } from '../generated/parser';
 import React, { useEffect, useMemo, useState } from 'react';
 import { idx } from '../generated/grammar';
 import { AtomEdit } from './AtomEdit';
+import { Blank, Identifier, Boolean, Number } from './elements/constants';
 
 export const nidx = () => idx.current++;
 export const newBlank = (): t.Blank => ({
@@ -79,7 +80,6 @@ export const Editor = () => {
 
 export const Dump = ({ store, id }: { store: Store; id: number }) => {
     const [tick, setTick] = useState(0);
-    console.log('tick');
     useEffect(() => {
         if (!store.listeners['']) {
             store.listeners[''] = [];
@@ -92,6 +92,7 @@ export const Dump = ({ store, id }: { store: Store; id: number }) => {
     }, []);
     return (
         <div>
+            <div>{JSON.stringify(store.selection)}</div>
             {JSON.stringify(
                 from.Expression(store.map[id].value as t.Expression, store.map),
                 null,
@@ -105,7 +106,6 @@ const useStore = (store: Store, key: number) => {
     const [value, setValue] = useState({ item: store.map[key], tick: 0 });
     useEffect(() => {
         const fn = () => {
-            // console.log('changed', key);
             setValue((v) => ({ item: store.map[key], tick: v.tick + 1 }));
         };
         store.listeners[key] = store.listeners[key] || [];
@@ -453,13 +453,13 @@ export const setSelection = (
     store: Store,
     selection: null | Selection,
     extraNotify?: number[],
+    force?: boolean,
 ) => {
-    if (store.selection?.idx === selection?.idx) {
+    if (store.selection?.idx === selection?.idx && !force) {
         notify(store, extraNotify || []);
         return;
     }
     store.onDeselect ? store.onDeselect() : null;
-    console.log('Set Selection', selection);
     const prev = store.selection?.idx;
 
     if (selection?.type === 'edit') {
@@ -475,88 +475,4 @@ export const setSelection = (
 
     store.selection = selection;
     notify(store, [prev, selection?.idx, ...(extraNotify || [])]);
-};
-
-export const Blank = ({
-    idx,
-    store,
-    level,
-    path,
-}: {
-    idx: number;
-    store: Store;
-    level: 'Expression' | 'Applyable' | 'Suffix';
-    path: Path;
-}) => {
-    return (
-        <AtomEdit text={''} idx={idx} store={store} level={level} path={path} />
-    );
-};
-
-export const Identifier = ({
-    value,
-    store,
-    level,
-    path,
-}: {
-    value: t.Identifier;
-    store: Store;
-    level: 'Expression' | 'Applyable';
-    path: Path;
-}) => {
-    return (
-        <AtomEdit
-            style={{ color: 'rgb(0 174 123)' }}
-            text={value.text}
-            idx={value.loc.idx}
-            store={store}
-            level={level}
-            path={path}
-        />
-    );
-};
-
-export const Number = ({
-    value,
-    store,
-    level,
-    path,
-}: {
-    value: t.Number;
-    store: Store;
-    level: 'Expression' | 'Applyable';
-    path: Path;
-}) => {
-    return (
-        <AtomEdit
-            style={{ color: '#5af' }}
-            text={value.num.raw + (value.kind ? value.kind.value : '')}
-            idx={value.loc.idx}
-            store={store}
-            level={level}
-            path={path}
-        />
-    );
-};
-
-export const Boolean = ({
-    value,
-    store,
-    level,
-    path,
-}: {
-    value: t.Boolean;
-    store: Store;
-    level: 'Expression' | 'Applyable';
-    path: Path;
-}) => {
-    return (
-        <AtomEdit
-            text={value.value}
-            idx={value.loc.idx}
-            store={store}
-            level={level}
-            path={path}
-        />
-    );
 };
