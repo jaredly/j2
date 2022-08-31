@@ -94,12 +94,14 @@ export const AtomEdit = ({
     level,
     idx,
     path,
+    style,
 }: {
     text: string;
     store: Store;
     level: 'Expression' | 'Applyable' | 'Suffix';
     idx: number | null;
     path: Path;
+    style?: React.CSSProperties;
 }) => {
     const selection =
         idx === null
@@ -115,6 +117,7 @@ export const AtomEdit = ({
                 style={{
                     outline: 'none',
                     backgroundColor: `rgba(255,0,255,0.1)`,
+                    ...style,
                 }}
                 ref={(node) => {
                     if (!node) {
@@ -236,6 +239,7 @@ export const AtomEdit = ({
     }
     return (
         <span
+            style={style}
             onMouseDown={
                 idx != null
                     ? () => setSelection(store, { type: 'edit', idx: idx })

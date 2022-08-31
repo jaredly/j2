@@ -21,6 +21,10 @@
 	but if it's the only arg, I think we ditch it.
 - [x] allow selection into the "interior" of a thing. like at: 'inner'
 
+- [ ] CallSuffix end _ backspace should remove
+- [ ] CallSuffix inner + backspace hsould remove
+- [ ] selecting the start of an apply should ... select the start of the target.
+
 - [ ] do live updates for atomedit indicating parseability
 	- hmm do I actually need this? hmm
 

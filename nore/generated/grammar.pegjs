@@ -15,7 +15,7 @@
             }, kind: kind ? {inferred: false, value: kind} : null, loc: loc() }
         }
 
-RawNumber = $("-"? [0-9]+)
+RawNumber = $("-"? [0-9]+ ("." [0-9]+)?)
 
 Boolean = value:("true" / "false") {
             return { type: 'Boolean', value: value, loc: loc() }

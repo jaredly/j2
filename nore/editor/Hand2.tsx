@@ -220,6 +220,7 @@ export const CallSuffix = ({
             }
         >
             <span
+                style={{ color: '#777' }}
                 onMouseDown={(evt) => {
                     evt.preventDefault();
                     // so, selection ... is probably like the first
@@ -288,6 +289,7 @@ export const CallSuffix = ({
                     />
                     {i !== value.args.length - 1 && (
                         <span
+                            style={{ color: '#777' }}
                             onMouseDown={(evt) => {
                                 evt.preventDefault();
                                 const box =
@@ -315,6 +317,7 @@ export const CallSuffix = ({
                 </React.Fragment>
             ))}
             <span
+                style={{ color: '#777' }}
                 onMouseDown={(evt) => {
                     // so, selection ... is probably like the first
                     evt.preventDefault();
@@ -457,6 +460,7 @@ export const Identifier = ({
 }) => {
     return (
         <AtomEdit
+            style={{ color: '#5f7' }}
             text={value.text}
             idx={value.loc.idx}
             store={store}
@@ -479,6 +483,7 @@ export const Number = ({
 }) => {
     return (
         <AtomEdit
+            style={{ color: '#5af' }}
             text={value.num.raw + (value.kind ? value.kind.value : '')}
             idx={value.loc.idx}
             store={store}
