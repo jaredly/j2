@@ -1,14 +1,11 @@
 import * as t from '../generated/type-map';
 import * as to from '../generated/to-map';
-import {
-    parseApplyable,
-    parseExpression,
-    parseSuffix,
-} from '../generated/parser';
+import { parseExpression } from '../generated/parser';
 import React, { useEffect, useMemo, useState } from 'react';
 import { idx } from '../generated/grammar';
+import { AtomEdit } from './AtomEdit';
 
-const nidx = () => idx.current++;
+export const nidx = () => idx.current++;
 export const newBlank = (): t.Blank => ({
     type: 'Blank',
     loc: {
@@ -54,7 +51,7 @@ export const Editor = () => {
         return to.add(store.map, {
             type: 'Expression',
             value: to.Expression(
-                parseExpression('hello(one(2), 1, 2u)'),
+                parseExpression('hello(one(2)(3), 1, 2u)'),
                 store.map,
             ),
         });
@@ -93,7 +90,7 @@ const useStore = (store: Store, key: number) => {
     return value.item.value;
 };
 
-type Path = PathItem[];
+export type Path = PathItem[];
 
 export const Expression = ({
     id,
@@ -130,8 +127,12 @@ export const Apply = ({
     path: Path;
 }) => {
     const selected = store.selection?.idx === value.loc.idx;
+    const selEnd =
+        selected &&
+        store.selection?.type === 'edit' &&
+        store.selection.at === 'end';
     return (
-        <span style={selected ? sel : undefined}>
+        <span style={selected && !selEnd ? sel : undefined}>
             <Applyable
                 id={value.target}
                 store={store}
@@ -156,9 +157,7 @@ export const Apply = ({
                     ])}
                 />
             ))}
-            {selected &&
-            store.selection?.type === 'edit' &&
-            store.selection.at === 'end' ? (
+            {selEnd ? (
                 <AtomEdit
                     level="Suffix"
                     idx={null}
@@ -209,16 +208,32 @@ export const CallSuffix = ({
     store: Store;
     path: Path;
 }) => {
+    const selected = store.selection?.idx === value.loc.idx;
+    const selEnd =
+        selected &&
+        store.selection?.type === 'edit' &&
+        store.selection.at === 'end';
     return (
-        <span>
+        <span style={selected && !selEnd ? sel : undefined}>
             <span
                 onMouseDown={(evt) => {
+                    evt.preventDefault();
                     // so, selection ... is probably like the first
-                    if (value.args.length) {
-                        evt.preventDefault();
+                    const box = evt.currentTarget.getBoundingClientRect();
+                    const left = evt.clientX < box.left + box.width / 2;
+                    if (!left && value.args.length) {
                         setSelection(store, {
                             type: 'edit',
                             idx: value.args[0],
+                        });
+                    } else {
+                        const last = path[path.length - 1];
+                        const apply = store.map[last.pid].value as t.Apply;
+                        const at = apply.suffixes.indexOf(value.loc.idx);
+                        setSelection(store, {
+                            type: 'edit',
+                            idx: at > 0 ? apply.suffixes[at - 1] : apply.target,
+                            at: 'end',
                         });
                     }
                 }}
@@ -243,11 +258,23 @@ export const CallSuffix = ({
                         <span
                             onMouseDown={(evt) => {
                                 evt.preventDefault();
-                                setSelection(store, {
-                                    type: 'edit',
-                                    idx: id,
-                                    at: 'end',
-                                });
+                                const box =
+                                    evt.currentTarget.getBoundingClientRect();
+                                const left =
+                                    evt.clientX < box.left + box.width / 2;
+                                if (left) {
+                                    setSelection(store, {
+                                        type: 'edit',
+                                        idx: id,
+                                        at: 'end',
+                                    });
+                                } else {
+                                    setSelection(store, {
+                                        type: 'edit',
+                                        idx: value.args[i + 1],
+                                        at: 'start',
+                                    });
+                                }
                             }}
                         >
                             ,{' '}
@@ -270,6 +297,15 @@ export const CallSuffix = ({
             >
                 )
             </span>
+            {selEnd ? (
+                <AtomEdit
+                    level="Suffix"
+                    idx={null}
+                    store={store}
+                    text={''}
+                    path={path}
+                />
+            ) : null}
         </span>
     );
 };
@@ -323,7 +359,7 @@ export const VApplyable = ({
     return <Number level={level} value={value} store={store} path={path} />;
 };
 
-const notify = (store: Store, idxs: (number | null | undefined)[]) => {
+export const notify = (store: Store, idxs: (number | null | undefined)[]) => {
     console.log('notify', idxs);
     idxs.forEach((idx) => {
         if (idx != null) {
@@ -332,189 +368,15 @@ const notify = (store: Store, idxs: (number | null | undefined)[]) => {
     });
 };
 
-const setSelection = (store: Store, selection: null | Selection) => {
+export const setSelection = (
+    store: Store,
+    selection: null | Selection,
+    extraNotify?: number[],
+) => {
+    console.log('sel', selection);
     const prev = store.selection?.idx;
     store.selection = selection;
-    notify(store, [prev, selection?.idx]);
-};
-
-export const AtomEdit = ({
-    text,
-    store,
-    level,
-    idx,
-    onRemove,
-    path,
-}: {
-    text: string;
-    store: Store;
-    level: 'Expression' | 'Applyable' | 'Suffix';
-    idx: number | null;
-    onRemove?: () => void;
-    path: Path;
-}) => {
-    const selection =
-        idx === null
-            ? { type: 'edit', idx: 0, at: 'change' }
-            : store.selection?.idx === idx
-            ? store.selection
-            : null;
-    if (selection?.type === 'edit') {
-        return (
-            <span
-                contentEditable
-                style={{
-                    outline: 'none',
-                    backgroundColor: `rgba(255,0,255,0.1)`,
-                }}
-                ref={(node) => {
-                    if (!node) return;
-                    node.textContent = text;
-                    node.focus();
-                    if (selection.at === 'end') {
-                        const sel = document.getSelection();
-                        const r = sel?.getRangeAt(0)!;
-                        r.selectNodeContents(node);
-                        r.collapse(false);
-                    }
-                    if (selection.at === 'change') {
-                        document
-                            .getSelection()
-                            ?.getRangeAt(0)
-                            .selectNodeContents(node);
-                    }
-                }}
-                onKeyDown={(evt) => {
-                    if (evt.key === 'Escape') {
-                        evt.preventDefault();
-                        evt.currentTarget.blur();
-                        return;
-                    }
-                    if (evt.key === 'Backspace' && onRemove) {
-                        if (evt.currentTarget.textContent === '') {
-                            evt.preventDefault();
-                            onRemove();
-                        }
-                    }
-                    if (idx == null) {
-                        return;
-                    }
-                    if (evt.key === '(' && level === 'Expression') {
-                        const sel = document.getSelection();
-                        if (sel?.getRangeAt(0).toString() !== '') {
-                            return;
-                        }
-                        const prev = store.map[idx].value;
-                        prev.loc.idx = nidx();
-                        evt.preventDefault();
-                        const blank = newBlank();
-                        const nw: t.Apply = {
-                            type: 'Apply',
-                            target: prev.loc.idx,
-                            suffixes: [
-                                to.add(store.map, {
-                                    type: 'Suffix',
-                                    value: {
-                                        type: 'CallSuffix',
-                                        args: [
-                                            to.add(store.map, {
-                                                type: 'Expression',
-                                                value: blank,
-                                            }),
-                                        ],
-                                        loc: {
-                                            idx: nidx(),
-                                            start: 0,
-                                            end: 0,
-                                        },
-                                    },
-                                }),
-                            ],
-                            loc: {
-                                idx: idx,
-                                start: 0,
-                                end: 0,
-                            },
-                        };
-                        if (level === 'Expression') {
-                            store.map[prev.loc.idx] = {
-                                type: 'Expression',
-                                value: prev as t.Expression,
-                            };
-                            store.map[idx] = {
-                                type: level,
-                                value: nw,
-                            };
-                            setSelection(store, {
-                                type: 'edit',
-                                idx: blank.loc.idx,
-                            });
-                        }
-                        // TODO check if selection is at the end, and such
-                        console.log('paren');
-                    }
-                }}
-                onBlur={(evt) => {
-                    const changed = evt.currentTarget.textContent;
-                    if (changed != null && changed.trim().length === 0) {
-                        if (idx == null) {
-                            setSelection(store, null);
-                            return;
-                        }
-                        const nw = newBlank();
-                        nw.loc.idx = idx;
-                        store.map[idx].value = nw;
-                        setSelection(store, null);
-                        return;
-                    }
-                    if (changed && changed !== text) {
-                        if (level === 'Suffix') {
-                            const nw = to.Suffix(
-                                parseSuffix(changed),
-                                store.map,
-                            );
-                            nw.loc.idx = idx;
-                            store.map[idx] = {
-                                type: 'Suffix',
-                                value: nw,
-                            };
-                        }
-                        if (level === 'Expression') {
-                            const nw = to.Expression(
-                                parseExpression(changed),
-                                store.map,
-                            );
-                            nw.loc.idx = idx;
-                            store.map[idx] = {
-                                type: 'Expression',
-                                value: nw,
-                            };
-                        }
-                        if (level === 'Applyable') {
-                            const nw = to.Applyable(
-                                parseApplyable(changed),
-                                store.map,
-                            );
-                            nw.loc.idx = idx;
-                            store.map[idx] = {
-                                type: 'Applyable',
-                                value: nw,
-                            };
-                        }
-                        console.log('diff', changed);
-                    }
-                    setSelection(store, null);
-                }}
-            />
-        );
-    }
-    return (
-        <span
-            onMouseDown={() => setSelection(store, { type: 'edit', idx: idx })}
-        >
-            {text}
-        </span>
-    );
+    notify(store, [prev, selection?.idx, ...(extraNotify || [])]);
 };
 
 export const Blank = ({

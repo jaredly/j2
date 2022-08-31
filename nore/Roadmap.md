@@ -1,5 +1,19 @@
 # Nore (new-core) Roadmap
 
+### Structured Features
+
+- [x] basic atom edit
+- [x] click a paren, select something close to it
+	- [ ] setSelection should go into selection, I think? ... 
+- [x] backspace to remove ... an arg
+- [x] if no args, remove the callExpression
+- [ ] backspace to remove a suffix? idk
+- [x] clicking the left / right side of a `(` should do the expected
+
+
+
+
+
 ## Structured Editor
 
 - [x] loc's need an `idx`
@@ -11,13 +25,16 @@
 		I mean when I do a hash, I probably don't want to be involving the random idxs.
 		so yeah I probably do want to be able to convert back.
 		Also, for general tree manipulation, and like codegen and stuff, I probably want a straight tree?
-- [ ] try a structured editor with the mapified version!
+- [x] try a structured editor with the mapified version!
 	- central store, with
 	- the map of idx -> stuff
 	- listeners for when a stuff changes
 	- the current state of selection 🤔
 		- how do I define selection? like ... hm
 			or maybe the state of selection lives in the DOM?
+
+
+### Laters
 
 - [ ] autogen the to-map dealio, it's fine to be handwritten for the moment tho
 
