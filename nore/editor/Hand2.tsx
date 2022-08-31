@@ -301,6 +301,13 @@ export const AtomEdit = ({
                 }}
                 onBlur={(evt) => {
                     const changed = evt.currentTarget.textContent;
+                    if (changed != null && changed.trim().length === 0) {
+                        const nw = newBlank();
+                        nw.loc.idx = idx;
+                        store.map[idx].value = nw;
+                        setSelection(store, null);
+                        return;
+                    }
                     if (changed && changed !== text) {
                         if (level === 'Suffix') {
                             const nw = to.Suffix(
