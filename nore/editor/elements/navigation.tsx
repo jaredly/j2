@@ -85,6 +85,7 @@ export const goRight = (store: Store, idx: number | null, path: Path) => {
         }
     }
 };
+
 export const goLeft = (store: Store, path: Path) => {
     if (
         !path.length ||

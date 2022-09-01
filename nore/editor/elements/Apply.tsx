@@ -6,6 +6,20 @@ import { CallSuffix } from './CallSuffix';
 import { Store, Path, sel, useStore } from '../Hand2';
 import { Applyable } from './aggregates';
 
+const orderKids = (
+    children: [number, number],
+    target: number,
+    args: number[],
+): [number, number] => {
+    const one = target === children[0] ? -1 : args.indexOf(children[0]);
+    const two = target === children[1] ? -1 : args.indexOf(children[1]);
+    return [Math.min(one, two), Math.max(one, two)];
+};
+
+const isSelected = (kids: null | [number, number], idx: number): boolean => {
+    return kids != null && kids[0] <= idx && kids[1] >= idx;
+};
+
 export const Apply = ({
     value,
     store,
@@ -20,31 +34,49 @@ export const Apply = ({
         selected &&
         store.selection?.type === 'edit' &&
         store.selection.at === 'end';
+    const selKids =
+        selected &&
+        store.selection?.type === 'select' &&
+        store.selection.children
+            ? orderKids(store.selection.children, value.target, value.suffixes)
+            : null;
     return (
-        <span style={selected && !selEnd ? sel : undefined}>
-            <Applyable
-                id={value.target}
-                store={store}
-                path={path.concat([
-                    {
-                        type: 'Apply_target',
-                        pid: value.loc.idx,
-                    },
-                ])}
-            />
-            {value.suffixes.map((id, i) => (
-                <Suffix
-                    key={id}
-                    id={id}
+        <span
+            style={
+                selected &&
+                !selEnd &&
+                store.selection?.type === 'select' &&
+                store.selection.children == null
+                    ? sel
+                    : undefined
+            }
+        >
+            <span style={isSelected(selKids, -1) ? sel : undefined}>
+                <Applyable
+                    id={value.target}
                     store={store}
                     path={path.concat([
                         {
-                            type: 'Apply_suffix',
-                            suffix: i,
+                            type: 'Apply_target',
                             pid: value.loc.idx,
                         },
                     ])}
                 />
+            </span>
+            {value.suffixes.map((id, i) => (
+                <span key={id} style={isSelected(selKids, i) ? sel : undefined}>
+                    <Suffix
+                        id={id}
+                        store={store}
+                        path={path.concat([
+                            {
+                                type: 'Apply_suffix',
+                                suffix: i,
+                                pid: value.loc.idx,
+                            },
+                        ])}
+                    />
+                </span>
             ))}
             {selEnd ? (
                 <AtomEdit

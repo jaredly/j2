@@ -42,8 +42,21 @@ export type Selection =
           children: null | [number, number];
       };
 
+export type History = {
+    items: HistoryItem[];
+    idx: number;
+};
+
+export type HistoryItem = {
+    pre: t.Map;
+    post: t.Map;
+    preSelection: Selection;
+    postSelection: Selection;
+};
+
 export type Store = {
     map: t.Map;
+    history: History;
     listeners: { [key: string]: Array<() => void> };
     selection: null | Selection;
     onDeselect: null | (() => void);

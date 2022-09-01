@@ -69,8 +69,15 @@ Highlevel things I haven't solved at all:
 - [ ] ahhhhh ok so I do in fact have to stop editing things in-place, so that I
 	can do an undo stack.
 	yeah that makes sense.
+	- [ ] um command pattern? maybe? idk probably.
+		- "Replace node"
+		- "Delete node"
 
 BEFORE I get too far, let's make sure UNDO/REDO is a thing
+
+OHHHKKKK I guess I want a central command pattern. fine.
+then I can just pop any modified map nodes into an object, along with the current selection state.
+that'll be nice.
 
 #### Second Step: IDE features, autocomplete, etc.
 
