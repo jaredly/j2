@@ -14,6 +14,7 @@ import { Level } from './AtomEdit';
 import {
     addArg,
     addCallSuffix,
+    CallSuffix_args,
     onFinishEdit,
     toCallExpression,
 } from '../store/modify';
@@ -77,10 +78,26 @@ export const keyHandler = (
         store.selection.at = 'end';
         return;
     }
-    if (evt.key === '(' && level === 'Expression' && idx != null) {
+    if (evt.key === '(' && level === 'Expression') {
         evt.preventDefault();
         store.onDeselect = null;
+        if (idx == null) {
+            const nidx = onFinishEdit(
+                evt.currentTarget.textContent!,
+                idx,
+                path,
+                store,
+                text,
+                level,
+            );
+            if (nidx != null) {
+                idx = nidx;
+            } else {
+                return;
+            }
+        }
         toCallExpression(evt.currentTarget.textContent!, store, idx);
+        return;
     }
 
     if (evt.key === '(') {
@@ -91,7 +108,6 @@ export const keyHandler = (
     }
 
     if (evt.key === ')') {
-        // debugger;
         for (let i = path.length - 1; i >= 0; i--) {
             const last = path[i];
             if (last.type === 'Apply_suffix') {
@@ -119,6 +135,21 @@ export const keyHandler = (
     }
 
     if (evt.key === ',') {
+        if (idx == null && path[path.length - 1].type === 'CallSuffix_args') {
+            evt.preventDefault();
+            store.onDeselect = null;
+            console.log('ok', evt.currentTarget.textContent);
+            onFinishEdit(
+                evt.currentTarget.textContent!,
+                idx,
+                path,
+                store,
+                text,
+                level,
+            );
+            addArg(store, path[path.length - 1] as CallSuffix_args);
+            return;
+        }
         for (let i = path.length - 1; i >= 0; i--) {
             const last = path[i];
             if (last.type === 'CallSuffix_args') {

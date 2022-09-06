@@ -96,6 +96,7 @@ export const CallSuffix = ({
             >
                 (
             </span>
+
             {value.args.length === 0 &&
             selected &&
             store.selection?.type === 'edit' &&
@@ -114,6 +115,7 @@ export const CallSuffix = ({
                     ])}
                 />
             ) : null}
+
             {value.args.map((id, i) => (
                 <span
                     key={id + ':' + i}

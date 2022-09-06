@@ -67,6 +67,7 @@ export const onFinishEdit = (
         } catch (err) {
             console.error(err);
         }
+        return idx;
     }
     return;
 };
@@ -106,8 +107,6 @@ export function toCallExpression(text: string, store: Store, idx: number) {
         console.log(err);
         return;
     }
-    // const prev = store.map[idx].value;
-    // prev.loc.idx = nidx();
     const blank = newBlank();
     const nw: t.Apply = {
         type: 'Apply',
@@ -174,10 +173,13 @@ export function addCallSuffix(path: Path, store: Store, level: string) {
     setSelection(store, { type: 'edit', idx: blank }, [last.pid]);
 }
 
-export function addArg(
-    store: Store,
-    last: { type: 'CallSuffix_args'; arg: number; pid: number },
-) {
+export type CallSuffix_args = {
+    type: 'CallSuffix_args';
+    arg: number;
+    pid: number;
+};
+
+export function addArg(store: Store, last: CallSuffix_args) {
     const call = getc(store, last.pid) as t.CallSuffix;
     const blank = addBlank(store);
     call.args = call.args.slice();
