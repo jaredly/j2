@@ -15,6 +15,8 @@ Highlevel things I haven't solved at all:
 - [x] # Numbers
 - [ ] # Apply/CallSuffixes
 - [ ] UNDO/REDO
+	- isolate logic that changes things
+	- make sure every place I change things, I record a history item.
 
 - [ ] binops probably??
 - [ ] lambdas, which means patterns, yaknow

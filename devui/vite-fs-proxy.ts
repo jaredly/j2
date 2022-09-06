@@ -14,6 +14,7 @@ import { createServer as vite } from 'vite';
 export type Config = {
     root: string;
     port: number;
+    innerPort: number;
     dirmap: {
         [key: string]: string;
     };
@@ -132,6 +133,6 @@ export const viteFsProxy = async (config: Config) => {
         });
 
         req.pipe(proxy, { end: true });
-    }).listen(3000);
-    console.log(`Get it on http://localhost:3000`);
+    }).listen(config.innerPort);
+    console.log(`Get it on http://localhost:${config.innerPort}`);
 };
