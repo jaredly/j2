@@ -17,6 +17,8 @@ Highlevel things I haven't solved at all:
 - [ ] UNDO/REDO
 	- isolate logic that changes things
 	- make sure every place I change things, I record a history item.
+- [ ] fix bug around ',' placement while in a non-id'd CallSuffix_arg
+- [ ] make a 'debug drag select' mode, so I can know what's going on when it goes sideways
 
 - [ ] binops probably??
 - [ ] lambdas, which means patterns, yaknow
