@@ -6,66 +6,7 @@ import { parseExpression } from '../generated/parser';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { idx } from '../generated/grammar';
 import { Expression } from './elements/aggregates';
-
-export const nidx = () => idx.current++;
-export const newBlank = (): t.Blank => ({
-    type: 'Blank',
-    loc: {
-        start: 0,
-        end: 0,
-        idx: nidx(),
-    },
-});
-
-export type PathItem =
-    | {
-          type: 'Apply_target';
-          pid: number;
-      }
-    | { type: 'Apply_suffix'; pid: number; suffix: number }
-    | {
-          type: 'CallSuffix_args';
-          arg: number;
-          pid: number;
-      };
-
-export type EditSelection = {
-    type: 'edit';
-    idx: number;
-    at?: 'start' | 'end' | 'change' | 'inner' | null;
-};
-export type Selection =
-    | EditSelection
-    | {
-          type: 'select';
-          idx: number;
-          children: null | [number, number];
-      };
-
-export type History = {
-    items: HistoryItem[];
-    idx: number;
-};
-
-export type HistoryItem = {
-    pre: t.Map;
-    post: t.Map;
-    preSelection: Selection;
-    postSelection: Selection;
-};
-
-export type Store = {
-    map: t.Map;
-    history: History;
-    listeners: { [key: string]: Array<() => void> };
-    selection: null | Selection;
-    onDeselect: null | (() => void);
-    drag: null | {
-        start: { x: number; y: number; idx: number };
-        end: { x: number; y: number; idx: number };
-    };
-    nodes: { [key: number]: { node: HTMLElement; path: Path } };
-};
+import { Store, Selection, Path, setSelection } from './store/store';
 
 const hitBox = (boxes: Box[], x: number, y: number) => {
     return boxes.find((box) => inBox(x, y, box));
@@ -135,6 +76,42 @@ type Box = {
 
 const inBox = (x: number, y: number, box: Box) => {
     return x >= box.x0 && x <= box.x1 && y >= box.y0 && y <= box.y1;
+};
+
+const redo = (store: Store) => {};
+const undo = (store: Store) => {};
+
+const Keyboardians = ({ store }: { store: Store }) => {
+    useEffect(() => {
+        // const fn = () => {};
+        // store.listeners[':selection'] = [fn];
+
+        const keydown = (e: KeyboardEvent) => {
+            if (
+                e.key === 'Delete' ||
+                (e.key === 'Backspace' && store.selection?.type === 'select')
+            ) {
+                // OK? now we delete some thingssss
+            }
+            if (e.key === 'Z' && e.metaKey) {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    redo(store);
+                } else {
+                    undo(store);
+                }
+            }
+        };
+        document.addEventListener('keydown', keydown);
+
+        return () => {
+            // store.listeners[':selection'] = store.listeners[
+            //     ':selection'
+            // ].filter((l) => l !== fn);
+            document.removeEventListener('keydown', keydown);
+        };
+    }, []);
+    return null;
 };
 
 export const Editor = () => {
@@ -241,6 +218,7 @@ export const Editor = () => {
                 }
             }}
         >
+            <Keyboardians store={store} />
             <Expression id={ast} store={store} path={[]} />
             <Dump store={store} id={ast} />
             {/* <div
@@ -289,82 +267,7 @@ export const Dump = ({ store, id }: { store: Store; id: number }) => {
     );
 };
 
-export const useStore = (store: Store, key: number) => {
-    const [value, setValue] = useState({ item: store.map[key], tick: 0 });
-    useEffect(() => {
-        const fn = () => {
-            setValue((v) => ({ item: store.map[key], tick: v.tick + 1 }));
-        };
-        store.listeners[key] = store.listeners[key] || [];
-        store.listeners[key].push(fn);
-        return () => {
-            store.listeners[key] = store.listeners[key].filter((x) => x !== fn);
-        };
-    }, []);
-    return value.item.value;
-};
-
-export type Path = PathItem[];
-
 export const sel = { backgroundColor: `rgba(255, 255, 0, 0.2)` };
-
-export const notify = (store: Store, idxs: (number | null | undefined)[]) => {
-    idxs.forEach((idx) => {
-        if (idx != null) {
-            store.listeners[idx]?.forEach((fn) => fn());
-        }
-    });
-    if (store.listeners['']) {
-        store.listeners[''].forEach((fn) => fn());
-    }
-};
-
-const kidsEqual = (
-    one: null | [number, number],
-    two: null | [number, number],
-) => {
-    if (!one || !two) {
-        return one === two;
-    }
-    return one[0] === two[0] && one[1] === two[1];
-};
-
-export const setSelection = (
-    store: Store,
-    selection: null | Selection,
-    extraNotify?: number[],
-    force?: boolean,
-) => {
-    if (
-        store.selection?.idx === selection?.idx &&
-        !force &&
-        selection?.type === store.selection?.type &&
-        !(
-            selection?.type === 'select' &&
-            store.selection?.type === 'select' &&
-            !kidsEqual(store.selection?.children, selection?.children)
-        )
-    ) {
-        notify(store, extraNotify || []);
-        return;
-    }
-    store.onDeselect ? store.onDeselect() : null;
-    const prev = store.selection?.idx;
-
-    if (selection?.type === 'edit') {
-        const v = store.map[selection.idx].value;
-        if (v.type === 'Apply') {
-            if (selection.at === 'start') {
-                selection.idx = v.target;
-            } else if (selection.at === 'end') {
-                selection.idx = v.suffixes[v.suffixes.length - 1];
-            }
-        }
-    }
-
-    store.selection = selection;
-    notify(store, [prev, selection?.idx, ...(extraNotify || [])]);
-};
 
 function calcSelection(
     store: Store,

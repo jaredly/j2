@@ -1,15 +1,16 @@
 import * as t from '../../generated/type-map';
 import * as to from '../../generated/to-map';
 import React from 'react';
-import { Store, Path, nidx, setSelection } from '../Hand2';
-import { goLeft, goRight, remove } from './navigation';
 import {
-    Level,
-    onFinishEdit,
-    toCallExpression,
+    Store,
+    Path,
+    setSelection,
+    nidx,
     getc,
     addBlank,
-} from './AtomEdit';
+} from '../store/store';
+import { goLeft, goRight, remove } from '../store/navigation';
+import { Level, onFinishEdit, toCallExpression } from './AtomEdit';
 
 export const keyHandler = (
     evt: React.KeyboardEvent<HTMLSpanElement>,

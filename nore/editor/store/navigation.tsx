@@ -1,6 +1,5 @@
 import * as t from '../../generated/type-map';
-import { Store, Path, setSelection } from '../Hand2';
-import { getc } from './AtomEdit';
+import { Store, Path, setSelection, getc } from './store';
 
 export const goRight = (store: Store, idx: number | null, path: Path) => {
     if (

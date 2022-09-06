@@ -3,8 +3,9 @@ import React from 'react';
 import { AtomEdit } from './AtomEdit';
 import { Blank } from './constants';
 import { CallSuffix } from './CallSuffix';
-import { Store, Path, sel, useStore } from '../Hand2';
+import { Store, Path, useStore } from '../store/store';
 import { Applyable } from './aggregates';
+import { sel } from '../Hand2';
 
 const orderKids = (
     children: [number, number],

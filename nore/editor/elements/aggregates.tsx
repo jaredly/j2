@@ -2,7 +2,7 @@ import * as t from '../../generated/type-map';
 import React from 'react';
 import { Blank, Identifier, Boolean, Number } from './constants';
 import { Apply } from './Apply';
-import { Store, Path, useStore } from '../Hand2';
+import { Store, Path, useStore } from '../store/store';
 
 let aggregates = 1;
 export const Expression = ({

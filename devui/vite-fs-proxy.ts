@@ -100,16 +100,6 @@ export const viteFsProxy = async (config: Config) => {
                     res.writeHead(204);
                     return res.end();
                 }
-                // let data = '';
-                // req.setEncoding('utf8');
-                // req.on('data', (chunk) => {
-                //     data += chunk;
-                // });
-                // req.on('end', () => {
-                //     writeFileSync(full, data);
-                //     res.writeHead(200, { 'Content-Type': 'text/plain' });
-                //     res.end('OK');
-                // });
 
                 const body: Uint8Array[] = [];
                 req.on('data', (chunk) => {
@@ -122,20 +112,6 @@ export const viteFsProxy = async (config: Config) => {
                 });
                 return;
             }
-            // let [one, two] = rest.split(':');
-            // one = path.join(config.dirmap[key], one);
-            // two = path.join(config.dirmap[key], two);
-            // if (
-            //     existsSync(one) &&
-            //     existsSync(path.dirname(two)) &&
-            //     !existsSync(two)
-            // ) {
-            //     writeFileSync(two, readFileSync(one));
-            //     unlinkSync(one);
-            //     return res.writeHead(204).end();
-            // } else {
-            //     return res.writeHead(404).end(`${one} or ${two} not valid`);
-            // }
             res.writeHead(409, {
                 'Content-Type': 'text/plain',
             });

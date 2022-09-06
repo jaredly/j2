@@ -14,6 +14,7 @@ Highlevel things I haven't solved at all:
 - [x] # Identifiers
 - [x] # Numbers
 - [ ] # Apply/CallSuffixes
+- [ ] UNDO/REDO
 
 - [ ] binops probably??
 - [ ] lambdas, which means patterns, yaknow
@@ -66,7 +67,7 @@ Highlevel things I haven't solved at all:
 	- on drag start, calculate relevant points
 		- use start & current mousepos to figure out the proper selection
 
-- [ ] ahhhhh ok so I do in fact have to stop editing things in-place, so that I
+- [ ] UNDO REDO ahhhhh ok so I do in fact have to stop editing things in-place, so that I
 	can do an undo stack.
 	yeah that makes sense.
 	- [ ] um command pattern? maybe? idk probably.

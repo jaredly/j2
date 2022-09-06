@@ -15,24 +15,11 @@ import {
     notify,
     Selection,
     EditSelection,
-    sel,
-} from '../Hand2';
+    addBlank,
+    getc,
+} from '../store/store';
 import { keyHandler } from './keyHandler';
-
-// get for changing (having already done the shallow clones)
-export const getc = (store: Store, idx: number) => {
-    store.map[idx] = { ...store.map[idx] };
-    return (store.map[idx].value = { ...store.map[idx].value });
-};
-
-export const addBlank = (store: Store) => {
-    const blank = newBlank();
-    store.map[blank.loc.idx] = {
-        type: 'Expression',
-        value: blank,
-    };
-    return blank.loc.idx;
-};
+import { sel } from '../Hand2';
 
 export const onFinishEdit = (
     changed: string,
