@@ -10,7 +10,13 @@ import {
     addBlank,
 } from '../store/store';
 import { goLeft, goRight, remove } from '../store/navigation';
-import { Level, onFinishEdit, toCallExpression } from './AtomEdit';
+import { Level } from './AtomEdit';
+import {
+    addArg,
+    addCallSuffix,
+    onFinishEdit,
+    toCallExpression,
+} from '../store/modify';
 
 export const keyHandler = (
     evt: React.KeyboardEvent<HTMLSpanElement>,
@@ -80,26 +86,7 @@ export const keyHandler = (
     if (evt.key === '(') {
         if (level === 'Suffix' || level === 'Applyable') {
             evt.preventDefault();
-            const last = path[path.length - 1];
-            const apply = getc(store, last.pid) as t.Apply;
-            const blank = addBlank(store);
-            const nid = to.add(store.map, {
-                type: 'Suffix',
-                value: {
-                    type: 'CallSuffix',
-                    args: [blank],
-                    loc: { start: 0, end: 0, idx: nidx() },
-                },
-            });
-            apply.suffixes = apply.suffixes.slice();
-            if (level === 'Applyable') {
-                apply.suffixes.unshift(nid);
-            } else if (last.type === 'Apply_suffix') {
-                apply.suffixes.splice(last.suffix + 1, 0, nid);
-            } else {
-                apply.suffixes.push(nid);
-            }
-            setSelection(store, { type: 'edit', idx: blank }, [last.pid]);
+            addCallSuffix(path, store, level);
         }
     }
 
@@ -108,10 +95,7 @@ export const keyHandler = (
         for (let i = path.length - 1; i >= 0; i--) {
             const last = path[i];
             if (last.type === 'Apply_suffix') {
-                const apply = getc(store, last.pid) as t.Apply;
-                // const blank = addBlank(store);
-                // call.args = call.args.slice();
-                // call.args.splice(last.suffix + 1, 0, blank);
+                const apply = store.map[last.pid].value as t.Apply;
                 const next =
                     last.suffix < apply.suffixes.length
                         ? apply.suffixes[last.suffix]
@@ -139,19 +123,7 @@ export const keyHandler = (
             const last = path[i];
             if (last.type === 'CallSuffix_args') {
                 evt.preventDefault();
-                const call = getc(store, last.pid) as t.CallSuffix;
-                const blank = addBlank(store);
-                call.args = call.args.slice();
-                call.args.splice(last.arg + 1, 0, blank);
-                setSelection(
-                    store,
-                    {
-                        type: 'edit',
-                        idx: blank,
-                        at: 'change',
-                    },
-                    [last.pid],
-                );
+                addArg(store, last);
                 return;
             }
         }
