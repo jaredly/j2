@@ -7,11 +7,6 @@ import { idx } from '../../generated/grammar';
 import { Expression } from '../elements/aggregates';
 import { useEffect, useState } from 'react';
 
-export type History = {
-    items: HistoryItem[];
-    idx: number;
-};
-
 export type PathItem =
     | {
           type: 'Apply_target';
@@ -39,11 +34,40 @@ export type Selection =
           children: null | [number, number];
       };
 
+export type History = {
+    items: HistoryItem[];
+    idx: number;
+};
+
 export type HistoryItem = {
     pre: t.Map;
     post: t.Map;
-    preSelection: Selection;
-    postSelection: Selection;
+    preSelection: Selection | null;
+    postSelection: Selection | null;
+};
+
+export const updateStore = (
+    store: Store,
+    change: t.Map,
+    selection: Selection | null,
+) => {
+    const pre: t.Map = {};
+    Object.keys(change).forEach((item) => {
+        pre[+item] = store.map[+item];
+    });
+    const history: HistoryItem = {
+        pre,
+        post: change,
+        preSelection: store.selection,
+        postSelection: selection,
+    };
+    if (store.history.idx > 0) {
+        store.history.items = store.history.items.slice(0, store.history.idx);
+    }
+    store.history.items.push(history);
+    store.history.idx = 0;
+    Object.assign(store.map, change);
+    setSelection(store, selection);
 };
 
 export type Store = {
