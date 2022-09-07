@@ -14,6 +14,8 @@ import {
     notify,
     addBlank,
     getc,
+    updateStore,
+    Selection,
 } from './store';
 import { Level } from '../elements/AtomEdit';
 
@@ -71,11 +73,12 @@ export const onFinishEdit = (
     }
     return;
 };
-function reparse(level: string, changed: string, store: Store, idx: number) {
+
+const parse = (level: string, changed: string, store: Store, idx: number): t.Map[0] | null => {
     if (level === 'Suffix') {
         const nw = to.Suffix(parseSuffix(changed), store.map);
         nw.loc.idx = idx;
-        store.map[idx] = {
+        return {
             type: 'Suffix',
             value: nw,
         };
@@ -83,7 +86,7 @@ function reparse(level: string, changed: string, store: Store, idx: number) {
     if (level === 'Expression') {
         const nw = to.Expression(parseExpression(changed), store.map);
         nw.loc.idx = idx;
-        store.map[idx] = {
+        return {
             type: 'Expression',
             value: nw,
         };
@@ -91,14 +94,25 @@ function reparse(level: string, changed: string, store: Store, idx: number) {
     if (level === 'Applyable') {
         const nw = to.Applyable(parseApplyable(changed), store.map);
         nw.loc.idx = idx;
-        store.map[idx] = {
+        return {
             type: 'Applyable',
             value: nw,
         };
     }
+    return null
 }
 
-export function toCallExpression(text: string, store: Store, idx: number) {
+function reparse(level: string, changed: string, store: Store, idx: number) {
+    const res = parse(level, changed, store, idx)
+    if (res != null) {
+        updateStore(store, { map: { [idx]: res } })
+    }
+}
+
+export function toCallExpression(text: string, store: Store, idx: number): undefined | {
+    map: t.Map,
+    selection: Selection
+} {
     let target: t.Applyable;
     try {
         target = to.Applyable(parseApplyable(text), store.map);
@@ -136,18 +150,23 @@ export function toCallExpression(text: string, store: Store, idx: number) {
             end: 0,
         },
     };
-    store.map[target.loc.idx] = {
-        type: 'Applyable',
-        value: target as t.Applyable,
-    };
-    store.map[idx] = {
-        type: 'Expression',
-        value: nw,
-    };
-    setSelection(store, {
-        type: 'edit',
-        idx: blank.loc.idx,
-    });
+    return {
+        map: {
+            [target.loc.idx]: {
+                type: 'Applyable',
+                value: target as t.Applyable,
+            },
+            [idx]: {
+                type: 'Expression',
+                value: nw,
+            },
+        },
+        selection:
+        {
+            type: 'edit',
+            idx: blank.loc.idx,
+        }
+    }
 }
 
 export function addCallSuffix(path: Path, store: Store, level: string) {

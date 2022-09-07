@@ -2,13 +2,15 @@
 import * as t from '../generated/type-map';
 import * as to from '../generated/to-map';
 import * as from from '../generated/from-map';
+import * as React from 'react';
 import { parseExpression } from '../generated/parser';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { idx } from '../generated/grammar';
 import { Expression } from './elements/aggregates';
-import { Store, Selection, Path, setSelection } from './store/store';
+import { Store, Selection, Path } from './store/store';
+import { useDrag } from './useDrag';
 
-const hitBox = (boxes: Box[], x: number, y: number) => {
+export const hitBox = (boxes: Box[], x: number, y: number) => {
     return boxes.find((box) => inBox(x, y, box));
 };
 
@@ -39,7 +41,7 @@ const maxDist = (box: Box, { x, y }: { x: number; y: number }) => {
     };
 };
 
-const inOut = (
+export const inOut = (
     boxes: Box[],
     inn: { x: number; y: number },
     out: { x: number; y: number },
@@ -65,7 +67,7 @@ const inOut = (
     // return found;
 };
 
-type Box = {
+export type Box = {
     x0: number;
     y0: number;
     x1: number;
@@ -78,14 +80,11 @@ const inBox = (x: number, y: number, box: Box) => {
     return x >= box.x0 && x <= box.x1 && y >= box.y0 && y <= box.y1;
 };
 
-const redo = (store: Store) => {};
-const undo = (store: Store) => {};
+const redo = (store: Store) => { };
+const undo = (store: Store) => { };
 
 const Keyboardians = ({ store }: { store: Store }) => {
     useEffect(() => {
-        // const fn = () => {};
-        // store.listeners[':selection'] = [fn];
-
         const keydown = (e: KeyboardEvent) => {
             if (
                 e.key === 'Delete' ||
@@ -105,132 +104,31 @@ const Keyboardians = ({ store }: { store: Store }) => {
         document.addEventListener('keydown', keydown);
 
         return () => {
-            // store.listeners[':selection'] = store.listeners[
-            //     ':selection'
-            // ].filter((l) => l !== fn);
             document.removeEventListener('keydown', keydown);
         };
     }, []);
     return null;
 };
 
-export const Editor = () => {
-    const store = useMemo(
-        () =>
-            ({
-                map: {},
-                listeners: {},
-                selection: null,
-                drag: null,
-                nodes: {},
-            } as Store),
-        [],
-    );
-    const ast = useMemo(() => {
-        return to.add(store.map, {
-            type: 'Expression',
-            value: to.Expression(
-                parseExpression('hello(one(2)(3), 1, 2u)'),
-                store.map,
-            ),
-        });
-    }, []);
-    // const dn = useRef(null as null | HTMLDivElement);
+export const emptyStore = (): Store => ({
+    map: {},
+    listeners: {},
+    selection: null,
+    drag: null,
+    nodes: {},
+} as Store)
 
-    const boxes = useMemo(() => [] as Box[], []);
+export const Editor = ({ store, root }: { store: Store, root: number }) => {
+    const dragHandlers = useDrag(store)
 
     return (
         <div
             style={{ margin: 48, fontSize: 48 }}
-            onMouseDown={(evt) => {
-                // dn.current!.style.top = evt.clientY + 'px';
-                // dn.current!.style.left = evt.clientX + 'px';
-                boxes.splice(0, boxes.length);
-                Object.keys(store.nodes).forEach((key) => {
-                    const node = store.nodes[+key].node;
-                    if (!node.isConnected) {
-                        return;
-                    }
-                    const box = store.nodes[+key].node.getBoundingClientRect();
-                    boxes.push({
-                        x0: box.left,
-                        y0: box.top,
-                        x1: box.right,
-                        y1: box.bottom,
-                        idx: +key,
-                        depth: store.nodes[+key].path.length,
-                    });
-                });
-                boxes.sort((a, b) => b.depth - a.depth);
-                const find = hitBox(boxes, evt.clientX, evt.clientY);
-                if (!find) {
-                    return;
-                }
-                store.drag = {
-                    start: { x: evt.clientX, y: evt.clientY, idx: find.idx },
-                    end: { x: evt.clientX, y: evt.clientY, idx: find.idx },
-                };
-            }}
-            onMouseMove={(evt) => {
-                if (store.drag) {
-                    const box = inOut(
-                        boxes,
-                        { x: evt.clientX, y: evt.clientY },
-                        { x: store.drag.start.x, y: store.drag.start.y },
-                    );
-                    if (box) {
-                        store.drag.end = {
-                            x: box.x1,
-                            y: box.y1,
-                            idx: box.idx,
-                        };
-                        if (box.idx === store.drag.start.idx) {
-                            return;
-                        }
-                        const sell = document.getSelection();
-                        if (sell) {
-                            sell.removeAllRanges();
-                        }
-                        const sel = calcSelection(store, store.drag);
-                        if (sel) {
-                            evt.preventDefault();
-                            setSelection(store, sel);
-                        }
-                        // dn.current!.style.top = box.y0 + 'px';
-                        // dn.current!.style.left = box.x0 + 'px';
-                        // dn.current!.style.width = box.x1 - box.x0 + 'px';
-                        // dn.current!.style.height = box.y1 - box.y0 + 'px';
-                        // console.log(box.idx, store.nodes[box.idx]);
-                    } else {
-                        if (store.selection?.type === 'select') {
-                            setSelection(store, {
-                                type: 'select',
-                                idx: store.drag.start.idx,
-                                children: null,
-                            });
-                        }
-                    }
-                }
-            }}
-            onMouseUp={(evt) => {
-                if (store.drag) {
-                    store.drag = null;
-                }
-            }}
+            {...dragHandlers}
         >
             <Keyboardians store={store} />
-            <Expression id={ast} store={store} path={[]} />
-            <Dump store={store} id={ast} />
-            {/* <div
-                ref={(node) => (dn.current = node)}
-                style={{
-                    position: 'fixed',
-                    pointerEvents: 'none',
-                    backgroundColor: 'rgba(255,0,0,0.1)',
-                    width: 20,
-                    height: 20,
-                }}
-            /> */}
+            <Expression id={root} store={store} path={[]} />
+            <Dump store={store} id={root} />
         </div>
     );
 };
@@ -269,7 +167,7 @@ export const Dump = ({ store, id }: { store: Store; id: number }) => {
 
 export const sel = { backgroundColor: `rgba(255, 255, 0, 0.2)` };
 
-function calcSelection(
+export function calcSelection(
     store: Store,
     drag: NonNullable<Store['drag']>,
 ): Selection | undefined {

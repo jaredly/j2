@@ -16,7 +16,7 @@ export const goRight = (store: Store, idx: number | null, path: Path) => {
         last.type === 'Apply_suffix' &&
         lastIdx > 0 &&
         last.suffix >=
-            (store.map[last.pid].value as t.Apply).suffixes.length - 1
+        (store.map[last.pid].value as t.Apply).suffixes.length - 1
     ) {
         lastIdx--;
         last = path[lastIdx];
@@ -159,6 +159,7 @@ export const goLeft = (store: Store, path: Path) => {
         }
     }
 };
+
 export const remove = (idx: number | null, path: Path, store: Store) => {
     const last = path[path.length - 1];
     switch (last.type) {

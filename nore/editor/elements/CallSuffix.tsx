@@ -1,6 +1,6 @@
 import React from 'react';
 import * as t from '../../generated/type-map';
-import { sel } from '../Hand2';
+import { sel } from '../Editor';
 import { Path, setSelection, Store } from '../store/store';
 import { Expression } from './aggregates';
 import { AtomEdit } from './AtomEdit';

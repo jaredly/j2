@@ -5,7 +5,7 @@ import { Blank } from './constants';
 import { CallSuffix } from './CallSuffix';
 import { Store, Path, useStore } from '../store/store';
 import { Applyable } from './aggregates';
-import { sel } from '../Hand2';
+import { sel } from '../Editor';
 
 const orderKids = (
     children: [number, number],

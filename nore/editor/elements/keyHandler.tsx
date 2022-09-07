@@ -8,6 +8,7 @@ import {
     nidx,
     getc,
     addBlank,
+    updateStore,
 } from '../store/store';
 import { goLeft, goRight, remove } from '../store/navigation';
 import { Level } from './AtomEdit';
@@ -96,7 +97,10 @@ export const keyHandler = (
                 return;
             }
         }
-        toCallExpression(evt.currentTarget.textContent!, store, idx);
+        const res = toCallExpression(evt.currentTarget.textContent!, store, idx);
+        if (res) {
+            updateStore(store, res);
+        }
         return;
     }
 

@@ -1,7 +1,7 @@
 import * as t from '../../generated/type-map';
 import React from 'react';
 import { AtomEdit } from './AtomEdit';
-import { Store, Path } from '../Hand2';
+import { Store, Path } from '../store/store';
 
 export const Blank = ({
     idx,

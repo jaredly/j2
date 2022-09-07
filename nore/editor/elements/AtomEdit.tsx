@@ -7,7 +7,7 @@ import {
     EditSelection,
 } from '../store/store';
 import { keyHandler } from './keyHandler';
-import { sel } from '../Hand2';
+import { sel } from '../Editor';
 import { onFinishEdit } from '../store/modify';
 
 export type Level = 'Expression' | 'Applyable' | 'Suffix';
@@ -42,7 +42,6 @@ export const AtomEdit = ({
         const fn = () => {
             if (ref.current) {
                 const changed = ref.current.textContent!;
-                // console.log('unmount, etc', changed, idx);
                 onFinishEdit(changed, idx, path, store, text, level);
             }
         };

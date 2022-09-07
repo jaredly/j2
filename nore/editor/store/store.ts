@@ -1,23 +1,22 @@
 // Handwritten structured editor, round 2: now with maps
-import * as t from '../../generated/type-map';
-import * as to from '../../generated/to-map';
-import * as from from '../../generated/from-map';
-import { parseExpression } from '../../generated/parser';
-import { idx } from '../../generated/grammar';
-import { Expression } from '../elements/aggregates';
 import { useEffect, useState } from 'react';
+import { idx } from '../../generated/grammar';
+import * as t from '../../generated/type-map';
+import { emptyStore } from '../Editor';
+import * as to from '../../generated/to-map';
+import { parseExpression } from '../../generated/parser';
 
 export type PathItem =
     | {
-          type: 'Apply_target';
-          pid: number;
-      }
+        type: 'Apply_target';
+        pid: number;
+    }
     | { type: 'Apply_suffix'; pid: number; suffix: number }
     | {
-          type: 'CallSuffix_args';
-          arg: number;
-          pid: number;
-      };
+        type: 'CallSuffix_args';
+        arg: number;
+        pid: number;
+    };
 
 export type Path = PathItem[];
 
@@ -29,10 +28,10 @@ export type EditSelection = {
 export type Selection =
     | EditSelection
     | {
-          type: 'select';
-          idx: number;
-          children: null | [number, number];
-      };
+        type: 'select';
+        idx: number;
+        children: null | [number, number];
+    };
 
 export type History = {
     items: HistoryItem[];
@@ -43,13 +42,30 @@ export type HistoryItem = {
     pre: t.Map;
     post: t.Map;
     preSelection: Selection | null;
-    postSelection: Selection | null;
+    postSelection: Selection | null | undefined;
 };
+
+export type StoreUpdate = {
+    map: t.Map,
+    selection?: Selection | null
+}
+
+export const newStore = (text: string) => {
+    const store = emptyStore();
+
+    const root = to.add(store.map, {
+        type: 'Expression',
+        value: to.Expression(
+            parseExpression(text),
+            store.map,
+        ),
+    });
+    return { store, root }
+}
 
 export const updateStore = (
     store: Store,
-    change: t.Map,
-    selection: Selection | null,
+    { map: change, selection }: StoreUpdate,
 ) => {
     const pre: t.Map = {};
     Object.keys(change).forEach((item) => {
@@ -67,7 +83,9 @@ export const updateStore = (
     store.history.items.push(history);
     store.history.idx = 0;
     Object.assign(store.map, change);
-    setSelection(store, selection);
+    if (selection !== undefined) {
+        setSelection(store, selection);
+    }
 };
 
 export type Store = {
