@@ -116,7 +116,12 @@ export const emptyStore = (): Store => ({
     selection: null,
     drag: null,
     nodes: {},
-} as Store)
+    history: {
+        idx: 0,
+        items: []
+    },
+    onDeselect: null
+})
 
 export const Editor = ({ store, root }: { store: Store, root: number }) => {
     const dragHandlers = useDrag(store)

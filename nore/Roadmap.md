@@ -15,6 +15,8 @@ Highlevel things I haven't solved at all:
 	- ok, so my reliance on contentEditable means I can't actually test using jsdom.
 	  sooooo does this mean I should try to make a version that uses `<input>`?
 	  would that require a bunch of modifications? Or would it be ok?
+	  oh wait, I'll just do it ...
+	- nice ok, testing-library in an actual browser
 
 - [x] # Identifiers
 - [x] # Numbers
