@@ -52,7 +52,6 @@ test('type some text', async () => {
     await new Promise(res => setTimeout(res, 50))
     console.log(document.activeElement)
     const id = await screen.findByText('hello')
-    // userEvent.click(id)
     expect(document.activeElement, id)
     await userEvent.keyboard('awesome[Escape]')
     expect((store.map[node.target].value as t.Identifier).text, 'helloawesome')
@@ -70,5 +69,28 @@ export const run = async () => {
         cleanup()
     }
 
-    return results
+    return reportResults(results)
+}
+
+const reportResults = (results: { name: string, res: TestResult }[]) => {
+    const failed = results.filter(x => x.res)
+    const total = results.length
+    Object.assign(document.body.style, {
+        padding: '48px',
+        fontSize: '48px',
+        textAlign: 'center',
+    })
+    if (failed.length != 0) {
+        document.body.innerHTML =
+            failed.map(r => `X ` + r.name).join('<br/>') +
+            `<br/>Failure ${failed.length}/${total}<br/>`
+        const button = document.createElement('button')
+        button.onclick = () => run()
+        document.body.append(button)
+        button.textContent = `Re-Run`
+        button.style.color = 'black'
+    } else {
+        document.body.innerText = `Success!`
+    }
+    return failed.length > 0
 }

@@ -29,19 +29,11 @@ const runApp = () => {
 if (0 > 1) {
     runApp()
 } else {
-    run().then(results => {
-        const failed = results.filter(x => x.res).length
-        const total = results.length
-        Object.assign(document.body.style, {
-            padding: '48px',
-            fontSize: '48px',
-            textAlign: 'center',
-
+    setTimeout(() => {
+        run().then(failed => {
+            if (failed) {
+                run()
+            }
         })
-        if (failed != 0) {
-            document.body.innerHTML = `Failure ${failed}/${total}`
-        } else {
-            document.body.innerText = `Success!`
-        }
-    })
+    }, 500)
 }
