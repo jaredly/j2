@@ -11,6 +11,11 @@ Highlevel things I haven't solved at all:
 
 ##### Editing Stuff
 
+- [ ] testsssss?? pleassse??
+	- ok, so my reliance on contentEditable means I can't actually test using jsdom.
+	  sooooo does this mean I should try to make a version that uses `<input>`?
+	  would that require a bunch of modifications? Or would it be ok?
+
 - [x] # Identifiers
 - [x] # Numbers
 - [ ] # Apply/CallSuffixes

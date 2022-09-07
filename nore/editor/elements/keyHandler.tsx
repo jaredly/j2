@@ -30,7 +30,8 @@ export const keyHandler = (
 ) => {
     if (evt.key === 'Escape') {
         evt.preventDefault();
-        return evt.currentTarget.blur();
+        evt.currentTarget.blur();
+        return
     }
     if (
         evt.key === 'ArrowLeft' &&
