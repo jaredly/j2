@@ -4,10 +4,22 @@ import userEvent from '@testing-library/user-event';
 import equal from 'fast-deep-equal';
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
+import { idx } from '../generated/grammar';
 import * as t from '../generated/type-map';
 import { Editor } from './Editor';
 import './poly';
 import { newStore, Selection, setSelection } from './store/store';
+
+export const end = (idx: number): Selection => ({
+    type: 'edit',
+    idx,
+    at: 'end',
+});
+export const start = (idx: number): Selection => ({
+    type: 'edit',
+    idx,
+    at: 'start',
+});
 
 const darkTheme = createTheme({
     type: 'dark',
@@ -28,9 +40,28 @@ const Wrapper = () => {
     );
 };
 
+type Item = { type: 'selection'; selection: Selection | null };
+
 const Recorder = ({ text }: { text: string }) => {
-    const { store, root } = React.useMemo(() => newStore(text), []);
-    const items = React.useState([]);
+    const { store, root } = React.useMemo(() => {
+        idx.current = 0;
+        return newStore(text);
+    }, []);
+    const [items, setItems] = React.useState([] as Item[]);
+    React.useEffect(() => {
+        let last = store.selection;
+        const fn = () => {
+            if (store.selection !== last) {
+                last = store.selection;
+                setItems((items) =>
+                    items.concat([
+                        { type: 'selection', selection: store.selection },
+                    ]),
+                );
+            }
+        };
+        store.listeners[''] = (store.listeners[''] || []).concat(fn);
+    }, []);
     return (
         <NextUIProvider theme={darkTheme}>
             <Editor store={store} root={root} />
@@ -45,7 +76,8 @@ const Recorder = ({ text }: { text: string }) => {
                     style={{
                         display: 'grid',
                         alignItems: 'center',
-                        gridTemplateColumns: 'max-content max-content 1fr',
+                        gridTemplateColumns:
+                            'max-content max-content max-content max-content 1fr',
                     }}
                     onMouseLeave={() => {
                         setSelection(store, null);
@@ -71,6 +103,18 @@ const Recorder = ({ text }: { text: string }) => {
                             >
                                 {id}
                             </span>
+                            <button
+                                style={btstyle}
+                                onClick={() => setSelection(store, start(+id))}
+                            >
+                                &lt;
+                            </button>
+                            <button
+                                style={btstyle}
+                                onClick={() => setSelection(store, end(+id))}
+                            >
+                                &gt;
+                            </button>
                             <span style={{ marginRight: 8 }}>
                                 {store.map[+id].type}
                             </span>
@@ -79,8 +123,18 @@ const Recorder = ({ text }: { text: string }) => {
                     ))}
                 </div>
             </div>
+            <div>
+                {items.map((item, idx) => (
+                    <div key={idx}>{JSON.stringify(item)}</div>
+                ))}
+            </div>
         </NextUIProvider>
     );
+};
+
+const btstyle: React.CSSProperties = {
+    color: 'black',
+    marginRight: 4,
 };
 
 const serial = (v: any): string => {

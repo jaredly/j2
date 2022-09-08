@@ -9,7 +9,7 @@ Highlevel things I haven't solved at all:
 
 #### Making a test recorder!
 
-I want to be able to "highlight" a thing... when mousing over a dealio
+- [x] I want to be able to "highlight" a thing... when mousing over a dealio
 
 ### Structured Features
 
