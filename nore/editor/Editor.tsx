@@ -80,8 +80,8 @@ const inBox = (x: number, y: number, box: Box) => {
     return x >= box.x0 && x <= box.x1 && y >= box.y0 && y <= box.y1;
 };
 
-const redo = (store: Store) => { };
-const undo = (store: Store) => { };
+const redo = (store: Store) => {};
+const undo = (store: Store) => {};
 
 const Keyboardians = ({ store }: { store: Store }) => {
     useEffect(() => {
@@ -118,22 +118,19 @@ export const emptyStore = (): Store => ({
     nodes: {},
     history: {
         idx: 0,
-        items: []
+        items: [],
     },
-    onDeselect: null
-})
+    onDeselect: null,
+});
 
-export const Editor = ({ store, root }: { store: Store, root: number }) => {
-    const dragHandlers = useDrag(store)
+export const Editor = ({ store, root }: { store: Store; root: number }) => {
+    const dragHandlers = useDrag(store);
 
     return (
-        <div
-            style={{ margin: 48, fontSize: 48 }}
-            {...dragHandlers}
-        >
+        <div style={{ margin: 48, fontSize: 48 }} {...dragHandlers}>
             <Keyboardians store={store} />
             <Expression id={root} store={store} path={[]} />
-            <Dump store={store} id={root} />
+            {/* <Dump store={store} id={root} /> */}
         </div>
     );
 };
