@@ -1,6 +1,6 @@
-import { Gram } from './types';
+import { Grams } from './types';
 
-export const grams: { [key: string]: Gram } = {
+export const grams: Grams = {
     /*
 	type Lambda = {
 		type: 'Lambda',

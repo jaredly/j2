@@ -11,7 +11,7 @@ import {
     TopGram,
     transform,
     transformGram,
-} from '../types';
+} from '../grams/types';
 import * as b from '@babel/types';
 import generate from '@babel/generator';
 

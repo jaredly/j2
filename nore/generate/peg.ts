@@ -10,7 +10,7 @@ import {
     TopGram,
     transform,
     transformGram,
-} from '../types';
+} from '../grams/types';
 
 export const generatePeg = (grammar: Grams) => {
     const lines: { name: string; defn: string }[] = [];

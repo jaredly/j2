@@ -1,7 +1,7 @@
 // Main entry point
 
 import { writeFileSync } from 'fs';
-import { grammar, tags } from '..';
+import { grammar, tags } from '../grams';
 import { generatePeg } from './peg';
 import { generateTypes } from './types';
 import { generate } from 'peggy';
