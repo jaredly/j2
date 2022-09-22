@@ -35,6 +35,7 @@ export const grams: Grams = {
     RawNumber: {
         type: 'peggy',
         raw: '"-"? [0-9]+ ("." [0-9]+)?',
+        rx: /-?[0-9]+(\.[0-9]+)?/,
     },
     Boolean: {
         type: 'tagged',

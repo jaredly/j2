@@ -5,25 +5,29 @@ export type GramDef<Extra> =
     | TopGram<Extra>
     | Derived<Extra>
     | Gram<Extra>[]
-    | { type: 'peggy'; raw: string };
+    | { type: 'peggy'; raw: string; rx: RegExp };
 
 export type Grams = {
     [key: string]: GramDef<EExtra>;
 };
+
 export type Derived<Extra> = {
     type: 'derived';
     inner: Gram<Extra>;
     typeName: string;
     derive: (raw: string) => any;
 };
+
+export type Args<Extra> = {
+    type: 'args';
+    sep?: string;
+    bounds?: [string, string];
+    item: Gram<Extra>;
+    last?: Gram<Extra>;
+};
+
 export type Gram<Extra> =
-    | {
-          type: 'args';
-          sep?: string;
-          bounds?: [string, string];
-          item: Gram<Extra>;
-          last?: Gram<Extra>;
-      }
+    | Args<Extra>
     | Derived<Extra>
 
     // If the contents are empty, then take the other named thing in this story, and just use that.
@@ -85,7 +89,7 @@ export type EExtra = string | EasyGram[];
 export type TopGram<Extra> = {
     type: 'tagged';
     tags: string[];
-    inner: Gram<Extra>[] | Binops<Extra> | Suffixes<Extra>;
+    inner: Gram<Extra>[] | Binops<Extra> | Suffixes<Extra> | Args<Extra>;
 };
 
 export type TGram<B> =
@@ -121,20 +125,7 @@ export const transformGram = <B>(
         return {
             type: 'tagged',
             tags: gram.tags,
-            inner: Array.isArray(gram.inner)
-                ? gram.inner.map((g) => transform(g, check, change))
-                : gram.inner.type === 'binops'
-                ? {
-                      ...gram.inner,
-                      inner: transform(gram.inner.inner, check, change),
-                  }
-                : gram.inner.type === 'suffixes'
-                ? {
-                      type: 'suffixes',
-                      target: transform(gram.inner.target, check, change),
-                      suffix: transform(gram.inner.suffix, check, change),
-                  }
-                : gram.inner,
+            inner: transformAnother<B>(gram, check, change),
         };
     }
     return {
@@ -210,3 +201,35 @@ export const change = (v: EExtra): Gram<never> => {
         items: v.map((b) => transform(b, check, change)),
     };
 };
+
+function transformAnother<B>(
+    gram: TopGram<EExtra>,
+    check: (v: Gram<EExtra>) => v is EExtra,
+    change: (a: EExtra) => Gram<B>,
+): Args<B> | Gram<B>[] | Binops<B> | Suffixes<B> {
+    if (Array.isArray(gram.inner)) {
+        return gram.inner.map((g) => transform(g, check, change));
+    }
+    if (gram.inner.type === 'binops') {
+        return {
+            ...gram.inner,
+            inner: transform(gram.inner.inner, check, change),
+        };
+    }
+    if (gram.inner.type === 'suffixes') {
+        return {
+            type: 'suffixes',
+            target: transform(gram.inner.target, check, change),
+            suffix: transform(gram.inner.suffix, check, change),
+        };
+    }
+    return {
+        type: 'args',
+        sep: gram.inner.sep,
+        bounds: gram.inner.bounds,
+        item: transform(gram.inner.item, check, change),
+        last: gram.inner.last
+            ? transform(gram.inner.last, check, change)
+            : undefined,
+    };
+}

@@ -19,14 +19,17 @@ export const grams: Grams = {
     IdText: {
         type: 'peggy',
         raw: '![0-9] [0-9a-zA-Z_]+',
+        rx: /[a-zA-Z_][0-9a-zA-Z_]*/,
     },
     HashText: {
         type: 'peggy',
         raw: '[0-9a-zA-Z]+',
+        rx: /[0-9a-zA-Z_]+/,
     },
     UIntLiteral: {
         type: 'peggy',
         raw: '[0-9]+',
+        rx: /[0-9]+/,
     },
     UInt: {
         type: 'derived',

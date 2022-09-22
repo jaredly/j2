@@ -1,6 +1,16 @@
 import { Grams } from './types';
 
 export const grams: Grams = {
+    Apply: {
+        type: 'tagged',
+        tags: ['Expression'],
+        inner: {
+            type: 'suffixes',
+            // Can we infer this as 'Atom' vs 'Expression'?
+            target: 'Applyable',
+            suffix: 'Suffix',
+        },
+    },
     CallSuffix: {
         type: 'tagged',
         tags: ['Suffix'],
@@ -15,17 +25,14 @@ export const grams: Grams = {
             },
         ],
     },
-    Apply: {
-        type: 'tagged',
-        tags: ['Expression'],
-        inner: {
-            type: 'suffixes',
-            // Can we infer this as 'Atom' vs 'Expression'?
-            target: 'Applyable',
-            suffix: 'Suffix',
-        },
-    },
     /*
+    AwaitSuffix: {
+        type: 'await',
+        tags: ['Suffix'],
+        inner: [
+            '!'
+        ]
+    },
     ArrowSuffix: {
         type: 'tagged',
         tags: ['Suffix'],
