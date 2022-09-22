@@ -66,16 +66,16 @@ export type IdHash = {
   loc: Loc;
 };
 
-export type CallSuffix = {
-  type: "CallSuffix";
-  args: Expression[];
-  loc: Loc;
-};
-
 export type Apply = {
   type: "Apply";
   target: Applyable;
   suffixes: Suffix[];
+  loc: Loc;
+};
+
+export type CallSuffix = {
+  type: "CallSuffix";
+  args: Expression[];
   loc: Loc;
 };
 

@@ -149,9 +149,8 @@ export const sequenceToPeg = (grams: Gram<never>[]): string => {
 
 export const gramToPeg = (gram: Gram<never>): string => {
     switch (gram.type) {
-        case 'sequence': {
+        case 'sequence':
             return sequenceToPeg(gram.items);
-        }
         case 'derived':
             return gramToPeg(gram.inner);
         case 'literal':
@@ -179,9 +178,8 @@ export const gramToPeg = (gram: Gram<never>): string => {
             )`
             );
         }
-        case 'or': {
+        case 'or':
             return gram.options.map(gramToPeg).join(' / ');
-        }
         case 'named':
             switch (gram.inner.type) {
                 case 'optional':

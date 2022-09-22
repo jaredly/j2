@@ -5,6 +5,7 @@ import { grammar, tags } from '../grams';
 import { generatePeg } from './peg';
 import { generateTypes } from './types';
 import { generate } from 'peggy';
+import { generateReact } from './react';
 
 writeFileSync('./nore/generated/types.ts', generateTypes(grammar, tags));
 writeFileSync(
@@ -43,15 +44,25 @@ ${starts
 `,
 );
 
-// console.log(
-//     JSON.stringify(
-//         generate(peg, { allowedStartRules: ['Expression'] }).parse(
-//             'hello(1, 2u)',
-//             {
-//                 startRule: 'Expression',
-//             },
-//         ),
-//         null,
-//         2,
-//     ),
-// );
+const reacts = generateReact(grammar);
+writeFileSync(
+    `./nore/generated/react.tsx`,
+    `
+import React from 'react';
+import {parse} from './grammar';
+import * as t from './types';
+
+export const AtomEdit = ({value}: {value: string}) => {
+    return <input value={value} />
+}
+
+${Object.keys(reacts)
+    .map(
+        (name) =>
+            `export const ${name} = ({item}: {item: t.${name}}): JSX.Element => {
+    return ${reacts[name]};
+}`,
+    )
+    .join('\n\n')}
+`,
+);

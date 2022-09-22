@@ -66,16 +66,16 @@ export type IdHash = {
   loc: Loc;
 };
 
-export type CallSuffix = {
-  type: "CallSuffix";
-  args: number[];
-  loc: Loc;
-};
-
 export type Apply = {
   type: "Apply";
   target: number;
   suffixes: number[];
+  loc: Loc;
+};
+
+export type CallSuffix = {
+  type: "CallSuffix";
+  args: number[];
   loc: Loc;
 };
 
@@ -119,14 +119,14 @@ export type MapIdHash = {
     value: IdHash,
 }
 
-export type MapCallSuffix = {
-    type: 'CallSuffix',
-    value: CallSuffix,
-}
-
 export type MapApply = {
     type: 'Apply',
     value: Apply,
+}
+
+export type MapCallSuffix = {
+    type: 'CallSuffix',
+    value: CallSuffix,
 }
 
 export type MapExpression = {
@@ -150,5 +150,5 @@ export type MapSuffix = {
 }
 
 export type Map = {
-	[key: number]: MapNumber | MapBoolean | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapCallSuffix | MapApply | MapExpression | MapApplyable | MapType | MapSuffix
+	[key: number]: MapNumber | MapBoolean | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapApply | MapCallSuffix | MapExpression | MapApplyable | MapType | MapSuffix
 }

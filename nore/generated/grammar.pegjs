@@ -48,6 +48,13 @@ IdHash = "#[h" hash:HashText idx:("." UInt)? "]" {
             return { type: 'IdHash', hash: hash, idx: idx ? idx[1] : null, loc: loc() }
         }
 
+Apply = target:Applyable suffixes:Suffix* {
+            if (!suffixes.length) {
+                return target
+            }
+            return {type: 'Apply', target, suffixes, loc: loc()}
+        }
+
 CallSuffix = args:(("(" first:Expression? _ rest:(_ ',' _ @Expression)* _ ','? _  ")"
             { return [
                 ...first ? [first] : [],
@@ -57,19 +64,12 @@ CallSuffix = args:(("(" first:Expression? _ rest:(_ ',' _ @Expression)* _ ','? _
             return { type: 'CallSuffix', args: args, loc: loc() }
         }
 
-Apply = target:Applyable suffixes:Suffix* {
-            if (!suffixes.length) {
-                return target
-            }
-            return {type: 'Apply', target, suffixes, loc: loc()}
-        }
-
 _ = $([ \t\n\r]*)
 
 Applyable = Number / Boolean / Identifier
 
 Type = Number / Boolean / Identifier
 
-Suffix = CallSuffix
-
 Expression = Apply
+
+Suffix = CallSuffix
