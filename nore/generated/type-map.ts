@@ -87,6 +87,8 @@ export type Applyable = Number | Boolean | Identifier | Blank;
 
 export type Type = Number | Boolean | Identifier | Blank;
 
+export type Atom = Number | Boolean | Identifier | Blank;
+
 export type Suffix = CallSuffix | Blank;
  
 export type MapNumber = {
@@ -144,11 +146,16 @@ export type MapType = {
     value: Type,
 }
 
+export type MapAtom = {
+    type: 'Atom',
+    value: Atom,
+}
+
 export type MapSuffix = {
     type: 'Suffix',
     value: Suffix,
 }
 
 export type Map = {
-	[key: number]: MapNumber | MapBoolean | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapApply | MapCallSuffix | MapExpression | MapApplyable | MapType | MapSuffix
+	[key: number]: MapNumber | MapBoolean | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapApply | MapCallSuffix | MapExpression | MapApplyable | MapType | MapAtom | MapSuffix
 }

@@ -70,6 +70,8 @@ Applyable = Number / Boolean / Identifier
 
 Type = Number / Boolean / Identifier
 
+Atom = Number / Boolean / Identifier
+
 Expression = Apply
 
 Suffix = CallSuffix

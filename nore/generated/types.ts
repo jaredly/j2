@@ -87,4 +87,6 @@ export type Applyable = Number | Boolean | Identifier | Blank;
 
 export type Type = Number | Boolean | Identifier | Blank;
 
+export type Atom = Number | Boolean | Identifier | Blank;
+
 export type Suffix = CallSuffix | Blank;

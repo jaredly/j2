@@ -3,7 +3,7 @@ import { Gram, Grams } from './types';
 export const grams: Grams = {
     Identifier: {
         type: 'tagged',
-        tags: ['Applyable', 'Type'],
+        tags: ['Applyable', 'Type', 'Atom'],
         inner: [
             { type: 'named', name: 'text', inner: '$IdText' },
             {

@@ -1034,6 +1034,20 @@ function peg$parse(input, options) {
     return s0;
   }
 
+  function peg$parseAtom() {
+    var s0;
+
+    s0 = peg$parseNumber();
+    if (s0 === peg$FAILED) {
+      s0 = peg$parseBoolean();
+      if (s0 === peg$FAILED) {
+        s0 = peg$parseIdentifier();
+      }
+    }
+
+    return s0;
+  }
+
   function peg$parseExpression() {
     var s0;
 

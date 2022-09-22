@@ -5,7 +5,7 @@ import { grammar, tags } from '../grams';
 import { generatePeg } from './peg';
 import { generateTypes } from './types';
 import { generate } from 'peggy';
-import { generateReact } from './react';
+import { generateReact, prelude } from './react';
 
 writeFileSync('./nore/generated/types.ts', generateTypes(grammar, tags));
 writeFileSync(
@@ -48,14 +48,7 @@ const reacts = generateReact(grammar);
 writeFileSync(
     `./nore/generated/react.tsx`,
     `
-import React from 'react';
-import {parse} from './grammar';
-import * as t from './types';
-
-export const AtomEdit = ({value}: {value: string}) => {
-    return <input value={value} />
-}
-
+${prelude}
 ${Object.keys(reacts)
     .map(
         (name) =>

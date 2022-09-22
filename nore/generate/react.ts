@@ -19,6 +19,21 @@ type PathItem =
     | { type: 'sequence'; key: number }
     | { type: 'args'; key: 'item' | 'last' };
 
+export const prelude = `
+import React from 'react';
+import {parse} from './grammar';
+import * as t from './types';
+
+export type AtomConfig<T> = {
+    toString: (item: T) => string;
+    fromString: (str: string) => T;
+}
+
+export const AtomEdit = <T,>({value, config}: {value: T, config: AtomConfig<T>}) => {
+    return <input value={config.toString((value))} />
+}
+`;
+
 export const Sequence = ({ items }: { items: Gram<never>[] }) => {};
 
 export const generateReact = (grammar: Grams) => {
@@ -40,10 +55,14 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
         case 'derived':
             return gramToReact(gram.inner, value + '.raw', []);
         case 'peggy':
-            return `<AtomEdit value={${value}}/>`;
+            // return `<AtomEdit value={${value}}/>`;
+            return `<>{${value}}</>`;
         case 'sequence':
             return gramToReact(gram, value, []);
         case 'tagged':
+            if (gram.tags.includes('Atom')) {
+                return `<AtomEdit value={${value}}/>`;
+            }
             if (Array.isArray(gram.inner)) {
                 return gramToReact(
                     {
@@ -60,7 +79,7 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
                     case 'args':
                         return 'args';
                     case 'suffixes':
-                        return `<>${gramToReact(
+                        return `<span>${gramToReact(
                             gram.inner.target,
                             value + '.target',
                             [],
@@ -70,7 +89,7 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
                             gram.inner.suffix,
                             'item',
                             [],
-                        )})}</>`;
+                        )})}</span>`;
                 }
             }
     }
@@ -83,9 +102,9 @@ export const gramToReact = (
 ): string => {
     switch (gram.type) {
         case 'sequence':
-            return `<>${gram.items
+            return `<span>${gram.items
                 .map((child, i) => gramToReact(child, value, path))
-                .join('')}</>`;
+                .join('')}</span>`;
         case 'literal':
             return gram.value;
         case 'literal-ref':
@@ -105,11 +124,11 @@ export const gramToReact = (
             return gramToReact(gram.inner, `${value}.raw`, path);
         case 'optional':
         case 'inferrable':
-            return `{${value} ? <>${gramToReact(
+            return `{${value} ? <span>${gramToReact(
                 gram.item,
                 value,
                 path,
-            )}</> : null}`;
+            )}</span> : null}`;
         case 'or':
             return `{${value}}`;
         default:
