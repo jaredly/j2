@@ -3,6 +3,7 @@
 import React from 'react';
 import {parse} from './grammar';
 import * as t from './types';
+import * as c from './atomConfig';
 
 export type AtomConfig<T> = {
     toString: (item: T) => string;
@@ -10,11 +11,12 @@ export type AtomConfig<T> = {
 }
 
 export const AtomEdit = <T,>({value, config}: {value: T, config: AtomConfig<T>}) => {
-    return <input value={config.toString((value))} />
+    const [edit, setEdit] = React.useState(() => config.toString(value));
+    return <input value={edit} onChange={evt => setEdit(evt.target.value)} />
 }
 
 export const Number = ({item}: {item: t.Number}): JSX.Element => {
-    return <AtomEdit value={item}/>;
+    return <AtomEdit value={item} config={c.Number}/>;
 }
 
 export const RawNumber = ({item}: {item: t.RawNumber}): JSX.Element => {
@@ -22,11 +24,11 @@ export const RawNumber = ({item}: {item: t.RawNumber}): JSX.Element => {
 }
 
 export const Boolean = ({item}: {item: t.Boolean}): JSX.Element => {
-    return <AtomEdit value={item}/>;
+    return <AtomEdit value={item} config={c.Boolean}/>;
 }
 
 export const Identifier = ({item}: {item: t.Identifier}): JSX.Element => {
-    return <AtomEdit value={item}/>;
+    return <AtomEdit value={item} config={c.Identifier}/>;
 }
 
 export const IdText = ({item}: {item: t.IdText}): JSX.Element => {

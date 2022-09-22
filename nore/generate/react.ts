@@ -23,6 +23,7 @@ export const prelude = `
 import React from 'react';
 import {parse} from './grammar';
 import * as t from './types';
+import * as c from './atomConfig';
 
 export type AtomConfig<T> = {
     toString: (item: T) => string;
@@ -30,11 +31,10 @@ export type AtomConfig<T> = {
 }
 
 export const AtomEdit = <T,>({value, config}: {value: T, config: AtomConfig<T>}) => {
-    return <input value={config.toString((value))} />
+    const [edit, setEdit] = React.useState(() => config.toString(value));
+    return <input value={edit} onChange={evt => setEdit(evt.target.value)} />
 }
 `;
-
-export const Sequence = ({ items }: { items: Gram<never>[] }) => {};
 
 export const generateReact = (grammar: Grams) => {
     // const { lines, tags } = assembleTypes(grammar, tagDeps, options);
@@ -61,7 +61,7 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
             return gramToReact(gram, value, []);
         case 'tagged':
             if (gram.tags.includes('Atom')) {
-                return `<AtomEdit value={${value}}/>`;
+                return `<AtomEdit value={${value}} config={c.${name}}/>`;
             }
             if (Array.isArray(gram.inner)) {
                 return gramToReact(
