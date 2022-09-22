@@ -6,17 +6,40 @@ import { emptyStore } from '../Editor';
 import * as to from '../../generated/to-map';
 import { parseExpression } from '../../generated/parser';
 
+/*
+// So parentage types ... are like the inverse of the tree??
+type PCallSuffix = {
+    type: 'CallSuffix';
+    parent: PApply | null;
+    suffix: number | null;
+    idx: number | null;
+};
+type PApply = { type: 'apply'; parent: PExpression | null; idx: number | null };
+type PApplyTarget = {
+    type: 'ApplyTarget';
+    parent: PApply | null;
+    idx: number | null;
+};
+type PCallArg = {
+    type: 'CallArg';
+    parent: PCallSuffix | null;
+    arg: number | null;
+    idx: number | null;
+};
+type PExpression = PApplyTarget | PCallArg;
+*/
+
 export type PathItem =
     | {
-        type: 'Apply_target';
-        pid: number;
-    }
+          type: 'Apply_target';
+          pid: number;
+      }
     | { type: 'Apply_suffix'; pid: number; suffix: number }
     | {
-        type: 'CallSuffix_args';
-        arg: number;
-        pid: number;
-    };
+          type: 'CallSuffix_args';
+          arg: number;
+          pid: number;
+      };
 
 export type Path = PathItem[];
 
@@ -28,10 +51,10 @@ export type EditSelection = {
 export type Selection =
     | EditSelection
     | {
-        type: 'select';
-        idx: number;
-        children: null | [number, number];
-    };
+          type: 'select';
+          idx: number;
+          children: null | [number, number];
+      };
 
 export type History = {
     items: HistoryItem[];
@@ -46,22 +69,19 @@ export type HistoryItem = {
 };
 
 export type StoreUpdate = {
-    map: t.Map,
-    selection?: Selection | null
-}
+    map: t.Map;
+    selection?: Selection | null;
+};
 
 export const newStore = (text: string) => {
     const store = emptyStore();
 
     const root = to.add(store.map, {
         type: 'Expression',
-        value: to.Expression(
-            parseExpression(text),
-            store.map,
-        ),
+        value: to.Expression(parseExpression(text), store.map),
     });
-    return { store, root }
-}
+    return { store, root };
+};
 
 export const updateStore = (
     store: Store,

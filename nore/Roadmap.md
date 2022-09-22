@@ -11,9 +11,15 @@ Highlevel things I haven't solved at all:
 
 - [x] I want to be able to "highlight" a thing... when mousing over a dealio
 
+#### The 'level'
+
+Maybe I don't want it? Try removing, and just have the Path
+
 ### Structured Features
 
 #### First Step: basic editing, navigation, and selection
+
+letsssssss autogenereate the UI
 
 ##### Editing Stuff
 

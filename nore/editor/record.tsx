@@ -40,7 +40,12 @@ const Wrapper = () => {
     );
 };
 
-type Item = { type: 'selection'; selection: Selection | null };
+type Item =
+    | { type: 'selection'; selection: Selection | null }
+    | {
+          type: 'keys';
+          keys: string[];
+      };
 
 const Recorder = ({ text }: { text: string }) => {
     const { store, root } = React.useMemo(() => {
@@ -48,6 +53,8 @@ const Recorder = ({ text }: { text: string }) => {
         return newStore(text);
     }, []);
     const [items, setItems] = React.useState([] as Item[]);
+    const litems = React.useRef(items);
+    litems.current = items;
     React.useEffect(() => {
         let last = store.selection;
         const fn = () => {
@@ -61,6 +68,17 @@ const Recorder = ({ text }: { text: string }) => {
             }
         };
         store.listeners[''] = (store.listeners[''] || []).concat(fn);
+        const kfn = ({ key }: KeyboardEvent) => {
+            const items = litems.current;
+            const last = items[items.length - 1];
+            if (last && last.type === 'keys') {
+                last.keys = last.keys.concat([key]);
+            } else {
+                items.push({ type: 'keys', keys: [key] });
+            }
+        };
+        document.addEventListener('keydown', kfn, true);
+        return () => document.removeEventListener('keydown', kfn, true);
     }, []);
     return (
         <NextUIProvider theme={darkTheme}>
