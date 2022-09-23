@@ -113,11 +113,11 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
                 return `<span>${gramToReact(
                     gram.inner.target,
                     value + '.target',
-                    [],
+                    [{ type: 'named', name: 'target' }],
                 )}{${value}.suffixes.map(suffix => ${gramToReact(
                     gram.inner.suffix,
                     'suffix',
-                    [],
+                    [{ type: 'named', name: 'suffix' }],
                 )})}</span>`;
             }
             if (gram.inner.type === 'binops') {
