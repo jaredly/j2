@@ -13,13 +13,14 @@ import {
 // import * as b from '@babel/types';
 // import generate from '@babel/generator';
 
-type Path = {
-    type: string;
-    path: PathItem[];
-};
-type PathItem =
-    | { type: 'named'; name: string }
-    | { type: 'args'; key: 'item' | 'last'; i: string };
+type Path = { name: string; path: null | string };
+// type Path = {
+//     type: string;
+//     path: PathItem[];
+// };
+// type PathItem =
+//     | { type: 'named'; name: string }
+//     | { type: 'args'; key: 'item' | 'last'; i: string };
 
 export const prelude = `
 import React from 'react';
@@ -150,47 +151,41 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
             return `<>{${value}.raw}</>`;
         case 'tagged':
             if (gram.tags.includes('Atom')) {
-                return `<AtomEdit value={${value}} idx={idx} store={store} config={c.${name}} path={path.concat([{type: '${name}', path: []}])} />`;
+                return `<AtomEdit value={${value}} idx={idx} store={store} config={c.${name}} path={path.concat([{type: '${name}', idx, path: null}])} />`;
             }
             if (Array.isArray(gram.inner)) {
                 return gramToReact(
                     { type: 'sequence', items: gram.inner },
                     value,
-                    { type: name, path: [] },
+                    { name, path: null },
                 );
             }
             if (gram.inner.type === 'suffixes') {
                 return `<span>${gramToReact(
                     gram.inner.target,
                     value + '.target',
-                    { type: name, path: [{ type: 'named', name: 'target' }] },
+                    { name, path: `{at: 'target'}` },
                 )}{${value}.suffixes.map((suffix, i) => ${gramToReact(
                     gram.inner.suffix,
                     'suffix',
-                    {
-                        type: name,
-                        path: [
-                            { type: 'named', name: 'suffix' },
-                            { type: 'args', i: 'i', key: 'item' },
-                        ],
-                    },
+                    { name, path: `{at: 'suffix', suffix: i}` },
                 )})}</span>`;
             }
             if (gram.inner.type === 'binops') {
                 return `<>binops</>`;
             }
-            return gramToReact(gram.inner, value, { type: name, path: [] });
+            return gramToReact(gram.inner, value, { name, path: null });
         case 'peggy':
             return `<>{${value}}</>`;
         case 'sequence':
-            return gramToReact(gram, value, { type: name, path: [] });
+            return gramToReact(gram, value, { name, path: null });
     }
 };
 
 export const gramToReact = (
     gram: Gram<never>,
     value: string,
-    path: Path,
+    path: { name: string; path: null | string },
 ): string => {
     switch (gram.type) {
         case 'sequence':
@@ -203,26 +198,17 @@ export const gramToReact = (
             return `{${value}}`;
         case 'named':
             return gramToReact(gram.inner, `${value}.${gram.name}`, {
-                ...path,
-                path: path.path.concat([{ type: 'named', name: gram.name }]),
+                name: path.name,
+                path: `{at: '${gram.name}'}`,
             });
         case 'ref':
-            return `<${
-                gram.id
-            } idx={${value}} store={store} path={path.concat([${JSON.stringify(
-                path,
-            )}])} />`;
+            return `<${gram.id} idx={${value}} store={store} path={path.concat([{type: '${path.name}', idx, path: ${path.path}}])} />`;
         case 'args':
             const [l, r] = gram.bounds ?? ['(', ')'];
             return `${l}{${value}.map((arg, i) => ${gramToReact(
                 gram.item,
                 'arg',
-                {
-                    ...path,
-                    path: path.path.concat([
-                        { type: 'args', key: 'item', i: 'i' },
-                    ]),
-                },
+                { name: path.name, path: `{at: 'args', arg: i}` },
             )})}${r}`;
         case 'optional':
             return `{${value} ? ${gramToReact(gram.item, value, path)} : null}`;

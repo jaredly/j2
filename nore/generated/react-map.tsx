@@ -38,22 +38,22 @@ export type Path = {type: 'Number', idx: number, path: null | {at: 'before' | 'a
 
 export const Number = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.Number;
-    return <AtomEdit value={item} idx={idx} store={store} config={c.Number} path={path.concat([{type: 'Number', path: []}])} />;
+    return <AtomEdit value={item} idx={idx} store={store} config={c.Number} path={path.concat([{type: 'Number', idx, path: null}])} />;
 }
 
 export const Boolean = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.Boolean;
-    return <AtomEdit value={item} idx={idx} store={store} config={c.Boolean} path={path.concat([{type: 'Boolean', path: []}])} />;
+    return <AtomEdit value={item} idx={idx} store={store} config={c.Boolean} path={path.concat([{type: 'Boolean', idx, path: null}])} />;
 }
 
 export const PIdentifier = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.PIdentifier;
-    return <AtomEdit value={item} idx={idx} store={store} config={c.PIdentifier} path={path.concat([{type: 'PIdentifier', path: []}])} />;
+    return <AtomEdit value={item} idx={idx} store={store} config={c.PIdentifier} path={path.concat([{type: 'PIdentifier', idx, path: null}])} />;
 }
 
 export const Identifier = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.Identifier;
-    return <AtomEdit value={item} idx={idx} store={store} config={c.Identifier} path={path.concat([{type: 'Identifier', path: []}])} />;
+    return <AtomEdit value={item} idx={idx} store={store} config={c.Identifier} path={path.concat([{type: 'Identifier', idx, path: null}])} />;
 }
 
 export const UInt = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -63,32 +63,32 @@ export const UInt = ({idx, store, path}: {idx: number, store: Store, path: Path[
 
 export const LocalHash = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.LocalHash;
-    return <span>#[:<UInt idx={item.sym} store={store} path={path.concat([{"type":"LocalHash","path":[{"type":"named","name":"sym"}]}])} />]</span>;
+    return <span>#[:<UInt idx={item.sym} store={store} path={path.concat([{type: 'LocalHash', idx, path: {at: 'sym'}}])} />]</span>;
 }
 
 export const IdHash = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.IdHash;
-    return <span>#[h{item.hash}{item.idx ? <span>.<UInt idx={item.idx} store={store} path={path.concat([{"type":"IdHash","path":[{"type":"named","name":"idx"}]}])} /></span> : null}]</span>;
+    return <span>#[h{item.hash}{item.idx ? <span>.<UInt idx={item.idx} store={store} path={path.concat([{type: 'IdHash', idx, path: {at: 'idx'}}])} /></span> : null}]</span>;
 }
 
 export const Apply = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.Apply;
-    return <span><Applyable idx={item.target} store={store} path={path.concat([{"type":"Apply","path":[{"type":"named","name":"target"}]}])} />{item.suffixes.map((suffix, i) => <Suffix idx={suffix} store={store} path={path.concat([{"type":"Apply","path":[{"type":"named","name":"suffix"},{"type":"args","i":"i","key":"item"}]}])} />)}</span>;
+    return <span><Applyable idx={item.target} store={store} path={path.concat([{type: 'Apply', idx, path: {at: 'target'}}])} />{item.suffixes.map((suffix, i) => <Suffix idx={suffix} store={store} path={path.concat([{type: 'Apply', idx, path: {at: 'suffix', suffix: i}}])} />)}</span>;
 }
 
 export const CallSuffix = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.CallSuffix;
-    return <span>({item.args.map((arg, i) => <Expression idx={arg} store={store} path={path.concat([{"type":"CallSuffix","path":[{"type":"named","name":"args"},{"type":"args","key":"item","i":"i"}]}])} />)})</span>;
+    return <span>({item.args.map((arg, i) => <Expression idx={arg} store={store} path={path.concat([{type: 'CallSuffix', idx, path: {at: 'args', arg: i}}])} />)})</span>;
 }
 
 export const Lambda = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.Lambda;
-    return <span>fn({item.args.map((arg, i) => <Larg idx={arg} store={store} path={path.concat([{"type":"Lambda","path":[{"type":"named","name":"args"},{"type":"args","key":"item","i":"i"}]}])} />)})<>what inferrable</>=&gt;<Expression idx={item.body} store={store} path={path.concat([{"type":"Lambda","path":[{"type":"named","name":"body"}]}])} /></span>;
+    return <span>fn({item.args.map((arg, i) => <Larg idx={arg} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'args', arg: i}}])} />)})<>what inferrable</>=&gt;<Expression idx={item.body} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'body'}}])} /></span>;
 }
 
 export const Larg = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.Larg;
-    return <span><Pattern idx={item.pat} store={store} path={path.concat([{"type":"Larg","path":[{"type":"named","name":"pat"}]}])} /><>what inferrable</></span>;
+    return <span><Pattern idx={item.pat} store={store} path={path.concat([{type: 'Larg', idx, path: {at: 'pat'}}])} /><>what inferrable</></span>;
 }
 
 export const Applyable = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
