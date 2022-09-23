@@ -12,7 +12,7 @@ import {
 // import generate from '@babel/generator';
 
 type PathItem =
-    | { type: 'sequence'; key: number }
+    | { type: 'named'; name: string }
     | { type: 'args'; key: 'item' | 'last' };
 
 export const prelude = `
@@ -20,19 +20,22 @@ import React from 'react';
 import {parse} from './grammar';
 import * as t from './type-map';
 import * as c from './atomConfig';
+import { Store } from '../editor/store/store';
+
+export type Path = any;
 
 export type AtomConfig<T> = {
     toString: (item: T) => string;
     fromString: (str: string) => T;
 }
 
-export const AtomEdit = <T,>({value, config, map}: {value: T, config: AtomConfig<T>, map: t.Map}) => {
+export const AtomEdit = <T,>({value, config, store, path}: {value: T, store: Store, config: AtomConfig<T>, path: Path}) => {
     const [edit, setEdit] = React.useState(() => config.toString(value));
     return <input value={edit} onChange={evt => setEdit(evt.target.value)} />
 }
 
-export const Blank = ({item, map}: {item: t.Blank, map: t.Map}) => {
-    return <>Blank</>
+export const Blank = ({item, store, path}: {item: t.Blank, store: Store, path: Path}) => {
+    return <AtomEdit value={item} store={store} config={c.Blank} path={path.concat([{type: 'Blank'}])} />
 }
 `;
 
@@ -55,7 +58,7 @@ export const generateReact = (
         const value = topGramToReact(name, gram);
         components[
             name
-        ] = `export const ${name} = ({item, map}: {item: t.${name}, map: t.Map}): JSX.Element => {
+        ] = `export const ${name} = ({item, store, path}: {item: t.${name}, store: Store, path: Path}): JSX.Element => {
     return ${value};
 }`;
     }
@@ -65,7 +68,7 @@ export const generateReact = (
     Object.keys(tags).forEach((tag) => {
         components[
             tag
-        ] = `export const ${tag} = ({item, map}: {item: t.${tag}, map: t.Map}): JSX.Element => {
+        ] = `export const ${tag} = ({item, store, path}: {item: t.${tag}, store: Store, path: Path}): JSX.Element => {
 ${tags[tag]
     .concat(['Blank'])
     .map(
@@ -77,7 +80,7 @@ ${tags[tag]
                           .join(' || ')
                     : `item.type === "${child}"`
             }) {
-        return <${child} item={item} map={map} />;
+        return <${child} item={item} store={store} path={path} />;
     }`,
     )
     .join('\n\n')}
@@ -97,7 +100,7 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
             return `<>{${value}.raw}</>`;
         case 'tagged':
             if (gram.tags.includes('Atom')) {
-                return `<AtomEdit value={${value}} map={map} config={c.${name}} />`;
+                return `<AtomEdit value={${value}} store={store} config={c.${name}} path={path} />`;
             }
             if (Array.isArray(gram.inner)) {
                 return gramToReact(
@@ -143,9 +146,17 @@ export const gramToReact = (
         case 'literal-ref':
             return `{${value}}`;
         case 'named':
-            return gramToReact(gram.inner, `${value}.${gram.name}`, []);
+            return gramToReact(
+                gram.inner,
+                `${value}.${gram.name}`,
+                path.concat([{ type: 'named', name: gram.name }]),
+            );
         case 'ref':
-            return `<${gram.id} item={map[${value}].value as t.${gram.id}} map={map} />`;
+            return `<${gram.id} item={store.map[${value}].value as t.${
+                gram.id
+            }} store={store} path={${
+                path.length ? `path.concat(${JSON.stringify(path)})` : 'path'
+            }} />`;
         case 'args':
             const [l, r] = gram.bounds ?? ['(', ')'];
             return `${l}{${value}.map(arg => ${gramToReact(
