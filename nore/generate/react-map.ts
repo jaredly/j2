@@ -96,9 +96,31 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
         case 'derived':
             return `<>{${value}.raw}</>`;
         case 'tagged':
-            return gram.tags.includes('Atom')
-                ? `<AtomEdit value={${value}} map={map} config={c.${name}} />`
-                : `<>tagged</>`;
+            if (gram.tags.includes('Atom')) {
+                return `<AtomEdit value={${value}} map={map} config={c.${name}} />`;
+            }
+            if (Array.isArray(gram.inner)) {
+                return gramToReact(
+                    { type: 'sequence', items: gram.inner },
+                    value,
+                    [],
+                );
+            }
+            if (gram.inner.type === 'suffixes') {
+                return `<span>${gramToReact(
+                    gram.inner.target,
+                    value + '.target',
+                    [],
+                )}{${value}.suffixes.map(suffix => ${gramToReact(
+                    gram.inner.suffix,
+                    'suffix',
+                    [],
+                )})}</span>`;
+            }
+            if (gram.inner.type === 'binops') {
+                return `<>binops</>`;
+            }
+            return gramToReact(gram.inner, value, []);
         case 'peggy':
             return `<>{${value}}</>`;
         case 'sequence':
@@ -118,9 +140,22 @@ export const gramToReact = (
                 .join('')}</span>`;
         case 'literal':
             return gram.value;
+        case 'literal-ref':
+            return `{${value}}`;
         case 'named':
-            return `{${value}.${gram.name}}`;
+            return gramToReact(gram.inner, `${value}.${gram.name}`, []);
+        case 'ref':
+            return `<${gram.id} item={map[${value}].value as t.${gram.id}} map={map} />`;
+        case 'args':
+            const [l, r] = gram.bounds ?? ['(', ')'];
+            return `${l}{${value}.map(arg => ${gramToReact(
+                gram.item,
+                'arg',
+                [],
+            )})}${r}`;
+        case 'optional':
+            return `{${value} ? ${gramToReact(gram.item, value, [])} : null}`;
         default:
-            return `<>${gram.type}</>`;
+            return `<>what ${gram.type}</>`;
     }
 };

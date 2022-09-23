@@ -52,19 +52,19 @@ export const UInt = ({item, map}: {item: t.UInt, map: t.Map}): JSX.Element => {
 }
 
 export const LocalHash = ({item, map}: {item: t.LocalHash, map: t.Map}): JSX.Element => {
-    return <span>#[:{item.sym}]</span>;
+    return <span>#[:<UInt item={map[item.sym].value as t.UInt} map={map} />]</span>;
 }
 
 export const IdHash = ({item, map}: {item: t.IdHash, map: t.Map}): JSX.Element => {
-    return <span>#[h{item.hash}{item.idx}]</span>;
+    return <span>#[h{item.hash}{item.idx ? <span>.<UInt item={map[item.idx].value as t.UInt} map={map} /></span> : null}]</span>;
 }
 
 export const Apply = ({item, map}: {item: t.Apply, map: t.Map}): JSX.Element => {
-    return <>tagged</>;
+    return <span><Applyable item={map[item.target].value as t.Applyable} map={map} />{item.suffixes.map(suffix => <Suffix item={map[suffix].value as t.Suffix} map={map} />)}</span>;
 }
 
 export const CallSuffix = ({item, map}: {item: t.CallSuffix, map: t.Map}): JSX.Element => {
-    return <>tagged</>;
+    return <span>({item.args.map(arg => <Expression item={map[arg].value as t.Expression} map={map} />)})</span>;
 }
 
 export const _ = ({item, map}: {item: t._, map: t.Map}): JSX.Element => {
