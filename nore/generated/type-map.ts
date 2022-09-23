@@ -30,6 +30,16 @@ export type Boolean = {
   loc: Loc;
 };
 
+export type PIdentifier = {
+  type: "PIdentifier";
+  text: IdText;
+  ref: {
+    inferred: boolean;
+    value: number;
+  } | null;
+  loc: Loc;
+};
+
 export type Identifier = {
   type: "Identifier";
   text: IdText;
@@ -81,13 +91,36 @@ export type CallSuffix = {
 
 export type _ = string;
 
+export type Lambda = {
+  type: "Lambda";
+  args: number[];
+  res: {
+    inferred: boolean;
+    value: number;
+  } | null;
+  body: number;
+  loc: Loc;
+};
+
+export type Larg = {
+  type: "Larg";
+  pat: number;
+  typ: {
+    inferred: boolean;
+    value: number;
+  } | null;
+  loc: Loc;
+};
+
 export type Expression = Applyable | Apply | Blank;
 
 export type Applyable = Number | Boolean | Identifier | Blank;
 
 export type Type = Number | Boolean | Identifier | Blank;
 
-export type Atom = Number | Boolean | Identifier | Blank;
+export type Atom = Number | Boolean | PIdentifier | Identifier | Blank;
+
+export type Pattern = PIdentifier | Blank;
 
 export type Suffix = CallSuffix | Blank;
  
@@ -99,6 +132,11 @@ export type MapNumber = {
 export type MapBoolean = {
     type: 'Boolean',
     value: Boolean,
+}
+
+export type MapPIdentifier = {
+    type: 'PIdentifier',
+    value: PIdentifier,
 }
 
 export type MapIdentifier = {
@@ -131,6 +169,16 @@ export type MapCallSuffix = {
     value: CallSuffix,
 }
 
+export type MapLambda = {
+    type: 'Lambda',
+    value: Lambda,
+}
+
+export type MapLarg = {
+    type: 'Larg',
+    value: Larg,
+}
+
 export type MapExpression = {
     type: 'Expression',
     value: Expression,
@@ -151,11 +199,16 @@ export type MapAtom = {
     value: Atom,
 }
 
+export type MapPattern = {
+    type: 'Pattern',
+    value: Pattern,
+}
+
 export type MapSuffix = {
     type: 'Suffix',
     value: Suffix,
 }
 
 export type Map = {
-	[key: number]: MapNumber | MapBoolean | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapApply | MapCallSuffix | MapExpression | MapApplyable | MapType | MapAtom | MapSuffix
+	[key: number]: MapNumber | MapBoolean | MapPIdentifier | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapApply | MapCallSuffix | MapLambda | MapLarg | MapExpression | MapApplyable | MapType | MapAtom | MapPattern | MapSuffix
 }

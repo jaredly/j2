@@ -8,4 +8,5 @@ export type AtomConfig<T> = {
 export const Number: AtomConfig<t.Number> = {};
 export const Boolean: AtomConfig<t.Boolean> = {};
 export const Identifier: AtomConfig<t.Identifier> = {};
+export const PIdentifier: AtomConfig<t.PIdentifier> = {};
 export const Blank: AtomConfig<t.Blank> = {};

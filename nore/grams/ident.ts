@@ -1,6 +1,21 @@
 import { Gram, Grams } from './types';
 
 export const grams: Grams = {
+    PIdentifier: {
+        type: 'tagged',
+        tags: ['Pattern', 'Atom'],
+        inner: [
+            { type: 'named', name: 'text', inner: '$IdText' },
+            {
+                type: 'named',
+                name: 'ref',
+                inner: {
+                    type: 'inferrable',
+                    item: 'LocalHash',
+                },
+            },
+        ],
+    },
     Identifier: {
         type: 'tagged',
         tags: ['Applyable', 'Type', 'Atom'],

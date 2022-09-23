@@ -15,7 +15,7 @@ export const grammar = {
     ...apply,
     ...comments,
     // ...binop,
-    // ...lambda,
+    ...lambda,
 };
 
 export const tags = {

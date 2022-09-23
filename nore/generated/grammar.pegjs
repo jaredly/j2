@@ -21,6 +21,10 @@ Boolean = value:("true" / "false") {
             return { type: 'Boolean', value: value, loc: loc() }
         }
 
+PIdentifier = text:IdText ref:(LocalHash)? {
+            return { type: 'PIdentifier', text: text, ref: ref ? {inferred: false, value: ref} : null, loc: loc() }
+        }
+
 Identifier = text:IdText ref:(IdHash / LocalHash)? {
             return { type: 'Identifier', text: text, ref: ref ? {inferred: false, value: ref} : null, loc: loc() }
         }
@@ -66,11 +70,26 @@ CallSuffix = args:(("(" first:Expression? _ rest:(_ ',' _ @Expression)* _ ','? _
 
 _ = $([ \t\n\r]*)
 
+Lambda = "fn" args:(("(" first:Larg? _ rest:(_ ',' _ @Larg)* _ ','? _  ")"
+            { return [
+                ...first ? [first] : [],
+                ...rest,
+            ]}
+            )) res:(":" Type)? "=>" body:Expression {
+            return { type: 'Lambda', args: args, res: res ? {inferred: false, value: res} : null, body: body, loc: loc() }
+        }
+
+Larg = pat:Pattern typ:(":" Type)? {
+            return { type: 'Larg', pat: pat, typ: typ ? {inferred: false, value: typ} : null, loc: loc() }
+        }
+
 Applyable = Number / Boolean / Identifier
 
 Type = Number / Boolean / Identifier
 
-Atom = Number / Boolean / Identifier
+Atom = Number / Boolean / PIdentifier / Identifier
+
+Pattern = PIdentifier
 
 Expression = Apply
 

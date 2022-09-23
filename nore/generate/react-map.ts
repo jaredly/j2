@@ -35,7 +35,7 @@ export const AtomEdit = <T,>({value, config, store, path}: {value: T, store: Sto
 }
 
 export const Blank = ({item, store, path}: {item: t.Blank, store: Store, path: Path}) => {
-    return <AtomEdit value={item} store={store} config={c.Blank} path={path.concat([{type: 'Blank'}])} />
+    return <AtomEdit value={item} store={store} config={c.Blank} path={path.concat([{type: 'Blank', idx: item.loc.idx}])} />
 }
 `;
 
@@ -55,10 +55,17 @@ export const generateReact = (
                 tags[tag].push(name);
             });
         }
+        if (gram.type === 'peggy') {
+            continue;
+        }
         const value = topGramToReact(name, gram);
         components[
             name
-        ] = `export const ${name} = ({item, store, path}: {item: t.${name}, store: Store, path: Path}): JSX.Element => {
+        ] = `export const ${name} = ({item, store, path}: {item: t.${name}, store: Store, path: Path}): JSX.Element => {${
+            gram.type !== 'peggy'
+                ? `\n    path = path.concat([{type: 'Node', kind: '${name}', idx: item.loc.idx}])`
+                : ''
+        }
     return ${value};
 }`;
     }
@@ -114,10 +121,13 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
                     gram.inner.target,
                     value + '.target',
                     [{ type: 'named', name: 'target' }],
-                )}{${value}.suffixes.map(suffix => ${gramToReact(
+                )}{${value}.suffixes.map((suffix, i) => ${gramToReact(
                     gram.inner.suffix,
                     'suffix',
-                    [{ type: 'named', name: 'suffix' }],
+                    [
+                        { type: 'named', name: 'suffix' },
+                        { type: 'args', i: 'i', key: 'item' },
+                    ],
                 )})}</span>`;
             }
             if (gram.inner.type === 'binops') {
@@ -142,7 +152,7 @@ export const gramToReact = (
                 .map((child, i) => gramToReact(child, value, path))
                 .join('')}</span>`;
         case 'literal':
-            return gram.value;
+            return gram.value.replace(/>/g, '&gt;').replace(/</g, '&lt;');
         case 'literal-ref':
             return `{${value}}`;
         case 'named':
