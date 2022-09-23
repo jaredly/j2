@@ -112,8 +112,6 @@ export type Larg = {
   loc: Loc;
 };
 
-export type Expression = Applyable | Apply | Blank;
-
 export type Applyable = Number | Boolean | Identifier | Blank;
 
 export type Type = Number | Boolean | Identifier | Blank;
@@ -121,6 +119,8 @@ export type Type = Number | Boolean | Identifier | Blank;
 export type Atom = Number | Boolean | PIdentifier | Identifier | Blank;
 
 export type Pattern = PIdentifier | Blank;
+
+export type Expression = Apply | Applyable | Blank;
 
 export type Suffix = CallSuffix | Blank;
  
@@ -179,11 +179,6 @@ export type MapLarg = {
     value: Larg,
 }
 
-export type MapExpression = {
-    type: 'Expression',
-    value: Expression,
-}
-
 export type MapApplyable = {
     type: 'Applyable',
     value: Applyable,
@@ -204,11 +199,16 @@ export type MapPattern = {
     value: Pattern,
 }
 
+export type MapExpression = {
+    type: 'Expression',
+    value: Expression,
+}
+
 export type MapSuffix = {
     type: 'Suffix',
     value: Suffix,
 }
 
 export type Map = {
-	[key: number]: MapNumber | MapBoolean | MapPIdentifier | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapApply | MapCallSuffix | MapLambda | MapLarg | MapExpression | MapApplyable | MapType | MapAtom | MapPattern | MapSuffix
+	[key: number]: MapNumber | MapBoolean | MapPIdentifier | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapApply | MapCallSuffix | MapLambda | MapLarg | MapApplyable | MapType | MapAtom | MapPattern | MapExpression | MapSuffix
 }

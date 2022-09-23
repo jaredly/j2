@@ -172,8 +172,8 @@ function peg$parse(input, options) {
   var peg$FAILED = {};
   var peg$source = options.grammarSource;
 
-  var peg$startRuleFunctions = { Expression: peg$parseExpression, Applyable: peg$parseApplyable, Number: peg$parseNumber, Identifier: peg$parseIdentifier, Suffix: peg$parseSuffix };
-  var peg$startRuleFunction = peg$parseExpression;
+  var peg$startRuleFunctions = { Number: peg$parseNumber, Boolean: peg$parseBoolean, PIdentifier: peg$parsePIdentifier, Identifier: peg$parseIdentifier, Applyable: peg$parseApplyable, Type: peg$parseType, Atom: peg$parseAtom, Pattern: peg$parsePattern, Expression: peg$parseExpression, Suffix: peg$parseSuffix };
+  var peg$startRuleFunction = peg$parseNumber;
 
   var peg$c0 = "u";
   var peg$c1 = "i";
@@ -1287,6 +1287,14 @@ function peg$parse(input, options) {
         }
       }
     }
+
+    return s0;
+  }
+
+  function peg$parsePattern() {
+    var s0;
+
+    s0 = peg$parsePIdentifier();
 
     return s0;
   }

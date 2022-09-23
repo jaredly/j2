@@ -1,11 +1,36 @@
 // Main entry point
 
 import { writeFileSync } from 'fs';
-import { grammar, tags } from '../grams';
+import { grammar, tags as tagDeps } from '../grams';
 import { generatePeg } from './peg';
 import { generateTypes } from './types';
 import { generate } from 'peggy';
 import { generateReact, prelude } from './react-map';
+import { Grams } from '../grams/types';
+
+export const findTags = (
+    grammar: Grams,
+    tagDeps: { [name: string]: string[] },
+): { [name: string]: string[] } => {
+    const tags: { [name: string]: string[] } = {};
+    for (const [name, gram] of Object.entries(grammar)) {
+        if (!Array.isArray(gram) && gram.type === 'tagged') {
+            gram.tags.forEach((tag) => {
+                if (!tags[tag]) {
+                    tags[tag] = [];
+                }
+                tags[tag].push(name);
+            });
+        }
+    }
+
+    Object.keys(tagDeps).forEach((tag) => {
+        tags[tag].push(...tagDeps[tag]);
+    });
+    return tags;
+};
+
+const tags = findTags(grammar, tagDeps);
 
 writeFileSync('./nore/generated/types.ts', generateTypes(grammar, tags));
 writeFileSync(
@@ -21,7 +46,7 @@ writeFileSync(
 const peg = generatePeg(grammar);
 writeFileSync('./nore/generated/grammar.pegjs', peg);
 
-const starts = ['Expression', 'Applyable', 'Number', 'Identifier', 'Suffix'];
+const starts = tags['Atom'].concat(Object.keys(tags));
 
 const gram = generate(peg, {
     output: 'source',
@@ -38,19 +63,10 @@ import * as t from './types';
 ${starts
     .map(
         (x) =>
-            `export const parse${x} = (x: string): t.${x} => parse(x, {startRule: '${x}'})`,
+            `export const parse${x} = (x: string): t.${x} => parse(x, {startRule: '${x}'}) as t.${x};`,
     )
     .join('\n\n')}
 `,
 );
 
-const reacts = generateReact(grammar, tags);
-writeFileSync(
-    `./nore/generated/react-map.tsx`,
-    `
-${prelude}
-${Object.keys(reacts)
-    .map((name) => reacts[name])
-    .join('\n\n')}
-`,
-);
+writeFileSync(`./nore/generated/react-map.tsx`, generateReact(grammar, tags));

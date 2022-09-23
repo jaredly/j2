@@ -112,8 +112,6 @@ export type Larg = {
   loc: Loc;
 };
 
-export type Expression = Applyable | Apply | Blank;
-
 export type Applyable = Number | Boolean | Identifier | Blank;
 
 export type Type = Number | Boolean | Identifier | Blank;
@@ -121,5 +119,7 @@ export type Type = Number | Boolean | Identifier | Blank;
 export type Atom = Number | Boolean | PIdentifier | Identifier | Blank;
 
 export type Pattern = PIdentifier | Blank;
+
+export type Expression = Apply | Applyable | Blank;
 
 export type Suffix = CallSuffix | Blank;

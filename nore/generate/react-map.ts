@@ -3,7 +3,9 @@
 import {
     change,
     check,
+    EExtra,
     Gram,
+    GramDef,
     Grams,
     TGram,
     transformGram,
@@ -24,58 +26,99 @@ import React from 'react';
 import {parse} from './grammar';
 import * as t from './type-map';
 import * as c from './atomConfig';
-import { Store } from '../editor/store/store';
+import { updateStore, Store, useStore } from '../editor/store/store';
+import {ContentEditable} from './ContentEditable';
 
-export type Path = any;
-
-export type AtomConfig<T> = {
-    toString: (item: T) => string;
-    fromString: (str: string) => T;
-}
-
-export const AtomEdit = <T,>({value, config, store, path}: {value: T, store: Store, config: AtomConfig<T>, path: Path}) => {
+export const AtomEdit = <T,>({value, idx, config, store, path}: {value: T, idx: number, store: Store, config: c.AtomConfig<T>, path: Path[]}) => {
     const [edit, setEdit] = React.useState(() => config.toString(value));
-    return <input value={edit} onChange={evt => setEdit(evt.target.value)} />
+    return <ContentEditable value={edit} onChange={value => setEdit(value)} onBlur={() => {
+        updateStore(store, {map: {[idx]: {
+            type: store.map[idx].type,
+            value: config.fromString(edit, store.map)
+        } as t.Map[0]}})
+    }} />
 }
 
-export const Blank = ({item, store, path}: {item: t.Blank, store: Store, path: Path}) => {
-    return <AtomEdit value={item} store={store} config={c.Blank} path={path.concat([{type: 'Blank', idx: item.loc.idx}])} />
+export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path[]}) => {
+    const item = useStore(store, idx) as t.Blank;
+    return <AtomEdit value={item} idx={idx} store={store} config={c.Blank} path={path.concat([{type: 'Blank', idx: item.loc.idx, path: null}])} />
 }
 `;
 
+export const gramPaths = (egram: GramDef<EExtra>) => {
+    const gram: TGram<never> = transformGram<never>(egram, check, change);
+    const paths: string[] = [];
+    if (gram.type === 'tagged') {
+        if (Array.isArray(gram.inner)) {
+            gram.inner.forEach((item) => {
+                if (item.type === 'named') {
+                    if (item.inner.type === 'args') {
+                        paths.push(` | {at: '${item.name}', arg: number}`);
+                    } else {
+                        paths.push(` | {at: '${item.name}'}`);
+                    }
+                }
+            });
+        } else if (gram.inner.type === 'suffixes') {
+            paths.push(` | {at: 'suffix', suffix: number} | {at: 'target'}`);
+        }
+    }
+    return paths;
+};
+
+export const pathType = (grammar: Grams) => {
+    return Object.entries(grammar)
+        .filter(([_, v]) => Array.isArray(v) || v.type !== 'peggy')
+        .map(
+            ([k, v]) =>
+                `{type: '${k}', idx: number, path: null | {at: 'before' | 'after'} ${gramPaths(
+                    v,
+                ).join('')}}`, //\n// ${JSON.stringify(v)}`,
+        )
+        .concat(`{type: 'Blank', idx: number, path: null}`)
+        .join('\n| ');
+};
+
 export const generateReact = (
     grammar: Grams,
-    tagDeps: { [name: string]: string[] },
+    tags: { [key: string]: string[] },
 ) => {
-    const tags: { [name: string]: string[] } = {};
+    const reacts = generateReactComponents(grammar, tags);
+
+    return `
+${prelude}
+
+export type Path = ${pathType(grammar)};
+
+${Object.keys(reacts)
+    .map((name) => reacts[name])
+    .join('\n\n')}
+`;
+};
+
+export const generateReactComponents = (
+    grammar: Grams,
+    tags: { [key: string]: string[] },
+) => {
     const components: { [key: string]: string } = {};
     for (const [name, egram] of Object.entries(grammar)) {
         const gram: TGram<never> = transformGram<never>(egram, check, change);
-        if (gram.type === 'tagged') {
-            gram.tags.forEach((tag) => {
-                if (!tags[tag]) {
-                    tags[tag] = [];
-                }
-                tags[tag].push(name);
-            });
-        }
         if (gram.type === 'peggy') {
             continue;
         }
         const value = topGramToReact(name, gram);
         components[
             name
-        ] = `export const ${name} = ({item, store, path}: {item: t.${name}, store: Store, path: Path}): JSX.Element => {
+        ] = `export const ${name} = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
+    const item = useStore(store, idx) as t.${name};
     return ${value};
 }`;
     }
-    Object.keys(tagDeps).forEach((tag) => {
-        tags[tag].push(...tagDeps[tag]);
-    });
     Object.keys(tags).forEach((tag) => {
         components[
             tag
-        ] = `export const ${tag} = ({item, store, path}: {item: t.${tag}, store: Store, path: Path}): JSX.Element => {
+        ] = `export const ${tag} = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
+    const item = useStore(store, idx) as t.${tag};
 ${tags[tag]
     .concat(['Blank'])
     .map(
@@ -87,7 +130,7 @@ ${tags[tag]
                           .join(' || ')
                     : `item.type === "${child}"`
             }) {
-        return <${child} item={item} store={store} path={path} />;
+        return <${child} idx={idx} store={store} path={path} />;
     }`,
     )
     .join('\n\n')}
@@ -107,7 +150,7 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
             return `<>{${value}.raw}</>`;
         case 'tagged':
             if (gram.tags.includes('Atom')) {
-                return `<AtomEdit value={${value}} store={store} config={c.${name}} path={path.concat([{type: '${name}', path: []}])} />`;
+                return `<AtomEdit value={${value}} idx={idx} store={store} config={c.${name}} path={path.concat([{type: '${name}', path: []}])} />`;
             }
             if (Array.isArray(gram.inner)) {
                 return gramToReact(
@@ -164,9 +207,11 @@ export const gramToReact = (
                 path: path.path.concat([{ type: 'named', name: gram.name }]),
             });
         case 'ref':
-            return `<${gram.id} item={store.map[${value}].value as t.${
+            return `<${
                 gram.id
-            }} store={store} path={path.concat([${JSON.stringify(path)}])} />`;
+            } idx={${value}} store={store} path={path.concat([${JSON.stringify(
+                path,
+            )}])} />`;
         case 'args':
             const [l, r] = gram.bounds ?? ['(', ')'];
             return `${l}{${value}.map((arg, i) => ${gramToReact(

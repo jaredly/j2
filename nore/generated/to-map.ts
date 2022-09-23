@@ -6,6 +6,24 @@ export const add = (map: tm.Map, item: tm.Map[0]) => {
     return item.value.loc.idx;
 };
 
+export const PIdentifier = (
+    value: t.PIdentifier,
+    map: tm.Map,
+): tm.PIdentifier => {
+    return {
+        ...value,
+        ref: value.ref
+            ? {
+                  ...value.ref,
+                  value: add(map, {
+                      type: 'LocalHash',
+                      value: LocalHash(value.ref.value, map),
+                  }),
+              }
+            : null,
+    };
+};
+
 export const Identifier = (value: t.Identifier, map: tm.Map): tm.Identifier => {
     return {
         ...value,

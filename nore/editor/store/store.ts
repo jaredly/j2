@@ -104,7 +104,9 @@ export const updateStore = (
     store.history.idx = 0;
     Object.assign(store.map, change);
     if (selection !== undefined) {
-        setSelection(store, selection);
+        setSelection(store, selection, Object.keys(change).map(Number));
+    } else {
+        notify(store, Object.keys(change).map(Number));
     }
 };
 
