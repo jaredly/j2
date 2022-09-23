@@ -51,7 +51,10 @@ export const assembleTypes = (
             ]),
         },
     ];
-    const tags: { [name: string]: string[] } = { ...tagDeps };
+    const tags: { [name: string]: string[] } = {};
+    Object.keys(tagDeps).forEach((k) => {
+        tags[k] = tagDeps[k].slice();
+    });
     for (const [name, egram] of Object.entries(grammar)) {
         const gram: TGram<never> = transformGram<never>(egram, check, change);
         if (gram.type === 'or') {

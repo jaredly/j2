@@ -81,7 +81,7 @@ export type CallSuffix = {
 
 export type _ = string;
 
-export type Expression = Applyable | Apply | Apply | Blank;
+export type Expression = Applyable | Apply | Blank;
 
 export type Applyable = Number | Boolean | Identifier | Blank;
 

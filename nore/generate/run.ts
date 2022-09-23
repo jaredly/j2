@@ -5,7 +5,7 @@ import { grammar, tags } from '../grams';
 import { generatePeg } from './peg';
 import { generateTypes } from './types';
 import { generate } from 'peggy';
-import { generateReact, prelude } from './react';
+import { generateReact, prelude } from './react-map';
 
 writeFileSync('./nore/generated/types.ts', generateTypes(grammar, tags));
 writeFileSync(
@@ -44,18 +44,13 @@ ${starts
 `,
 );
 
-const reacts = generateReact(grammar);
+const reacts = generateReact(grammar, tags);
 writeFileSync(
-    `./nore/generated/react.tsx`,
+    `./nore/generated/react-map.tsx`,
     `
 ${prelude}
 ${Object.keys(reacts)
-    .map(
-        (name) =>
-            `export const ${name} = ({item}: {item: t.${name}}): JSX.Element => {
-    return ${reacts[name]};
-}`,
-    )
+    .map((name) => reacts[name])
     .join('\n\n')}
 `,
 );
