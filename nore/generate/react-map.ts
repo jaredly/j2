@@ -13,7 +13,7 @@ import {
 
 type PathItem =
     | { type: 'named'; name: string }
-    | { type: 'args'; key: 'item' | 'last' };
+    | { type: 'args'; key: 'item' | 'last'; i: string };
 
 export const prelude = `
 import React from 'react';
@@ -159,10 +159,10 @@ export const gramToReact = (
             }} />`;
         case 'args':
             const [l, r] = gram.bounds ?? ['(', ')'];
-            return `${l}{${value}.map(arg => ${gramToReact(
+            return `${l}{${value}.map((arg, i) => ${gramToReact(
                 gram.item,
                 'arg',
-                [],
+                path.concat([{ type: 'args', key: 'item', i: 'i' }]),
             )})}${r}`;
         case 'optional':
             return `{${value} ? ${gramToReact(gram.item, value, [])} : null}`;

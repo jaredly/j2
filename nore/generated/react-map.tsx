@@ -67,7 +67,7 @@ export const Apply = ({item, store, path}: {item: t.Apply, store: Store, path: P
 }
 
 export const CallSuffix = ({item, store, path}: {item: t.CallSuffix, store: Store, path: Path}): JSX.Element => {
-    return <span>({item.args.map(arg => <Expression item={store.map[arg].value as t.Expression} store={store} path={path} />)})</span>;
+    return <span>({item.args.map((arg, i) => <Expression item={store.map[arg].value as t.Expression} store={store} path={path.concat([{"type":"named","name":"args"},{"type":"args","key":"item","i":"i"}])} />)})</span>;
 }
 
 export const _ = ({item, store, path}: {item: t._, store: Store, path: Path}): JSX.Element => {
