@@ -9,6 +9,27 @@ export type Blank = {
   loc: Loc;
 };
 
+export type Lambda = {
+  type: "Lambda";
+  args: Larg[];
+  res: {
+    inferred: boolean;
+    value: Type;
+  } | null;
+  body: Expression;
+  loc: Loc;
+};
+
+export type Larg = {
+  type: "Larg";
+  pat: Pattern;
+  typ: {
+    inferred: boolean;
+    value: Type;
+  } | null;
+  loc: Loc;
+};
+
 export type Number = {
   type: "Number";
   num: {
@@ -91,26 +112,7 @@ export type CallSuffix = {
 
 export type _ = string;
 
-export type Lambda = {
-  type: "Lambda";
-  args: Larg[];
-  res: {
-    inferred: boolean;
-    value: Type;
-  } | null;
-  body: Expression;
-  loc: Loc;
-};
-
-export type Larg = {
-  type: "Larg";
-  pat: Pattern;
-  typ: {
-    inferred: boolean;
-    value: Type;
-  } | null;
-  loc: Loc;
-};
+export type Expression = Lambda | Apply | Applyable | Blank;
 
 export type Applyable = Number | Boolean | Identifier | Blank;
 
@@ -119,7 +121,5 @@ export type Type = Number | Boolean | Identifier | Blank;
 export type Atom = Number | Boolean | PIdentifier | Identifier | Blank;
 
 export type Pattern = PIdentifier | Blank;
-
-export type Expression = Apply | Applyable | Blank;
 
 export type Suffix = CallSuffix | Blank;

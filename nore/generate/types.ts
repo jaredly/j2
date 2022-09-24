@@ -51,22 +51,12 @@ export const assembleTypes = (
             ]),
         },
     ];
-    // const tags: { [name: string]: string[] } = {};
-    // Object.keys(tagDeps).forEach((k) => {
-    //     tags[k] = tagDeps[k].slice();
-    // });
     for (const [name, egram] of Object.entries(grammar)) {
         const gram: TGram<never> = transformGram<never>(egram, check, change);
         if (gram.type === 'or') {
             lines.push({ name, defn: gramToType(gram, options) });
             continue;
         }
-        // if (gram.type === 'tagged') {
-        //     gram.tags.forEach((tag) => {
-        //         if (!tags[tag]) tags[tag] = [];
-        //         tags[tag].push(name);
-        //     });
-        // }
         if (gram.type === 'peggy') {
             lines.push({ name, defn: b.tsStringKeyword() });
             continue;
@@ -242,8 +232,6 @@ export const gramToType = (gram: Gram<never>, options: Options): b.TSType => {
                 ]),
                 b.tsNullKeyword(),
             ]);
-        // case 'binops':
-        //     throw new Error(`not sure about binops yet`);
     }
 };
 

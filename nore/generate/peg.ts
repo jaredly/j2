@@ -144,7 +144,7 @@ export const topGramToPeg = (
 };
 
 export const sequenceToPeg = (grams: Gram<never>[]): string => {
-    return grams.map(gramToPeg).join(' ');
+    return grams.map(gramToPeg).join(' _ ');
 };
 
 export const gramToPeg = (gram: Gram<never>): string => {

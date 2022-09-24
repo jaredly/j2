@@ -16,27 +16,31 @@ export const grams: Grams = {
 		loc,
 	}
 	*/
-    Lambda: [
-        'fn',
-        {
-            type: 'named',
-            name: 'args',
-            inner: {
-                type: 'args',
-                item: 'Larg',
+    Lambda: {
+        type: 'tagged',
+        tags: ['Expression'],
+        inner: [
+            'fn',
+            {
+                type: 'named',
+                name: 'args',
+                inner: {
+                    type: 'args',
+                    item: 'Larg',
+                },
             },
-        },
-        {
-            type: 'named',
-            name: 'res',
-            inner: {
-                type: 'inferrable',
-                item: [':', 'Type'],
+            {
+                type: 'named',
+                name: 'res',
+                inner: {
+                    type: 'inferrable',
+                    item: [':', 'Type'],
+                },
             },
-        },
-        '=>',
-        { type: 'named', name: 'body', inner: 'Expression' },
-    ],
+            '=>',
+            { type: 'named', name: 'body', inner: 'Expression' },
+        ],
+    },
     Larg: [
         { type: 'named', name: 'pat', inner: 'Pattern' },
         {

@@ -7,6 +7,7 @@ import { generateTypes } from './types';
 import { generate } from 'peggy';
 import { generateReact, prelude } from './react-map';
 import { Grams } from '../grams/types';
+import { generateToMap } from './to-map';
 
 export const findTags = (
     grammar: Grams,
@@ -70,3 +71,4 @@ ${starts
 );
 
 writeFileSync(`./nore/generated/react-map.tsx`, generateReact(grammar, tags));
+writeFileSync(`./nore/generated/to-map.tsx`, generateToMap(grammar, tags));

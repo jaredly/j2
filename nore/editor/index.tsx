@@ -1,5 +1,6 @@
 import { createTheme, NextUIProvider } from '@nextui-org/react';
 import * as React from 'react';
+import { createRoot } from 'react-dom/client';
 import { Editor } from './Editor';
 import './poly';
 import { setupRecorder } from './record';
@@ -14,7 +15,8 @@ const runApp = () => {
         theme: { colors: { background: '#0d0e16' } },
     });
 
-    const { store, root } = newStore('hello(one(2)(3), 1, 2u)');
+    const { store, root } = newStore('hello(fn(a)=>a)');
+    // const { store, root } = newStore('hello(one(2)(3), 1, 2u)');
 
     // @ts-ignore
     const reactRoot = (window.rootRoot =
@@ -27,16 +29,11 @@ const runApp = () => {
     );
 };
 
-if (0 > 1) {
-    runApp();
-} else {
-    // run().then((failed) => {
-    //     if (failed) {
-    //         setTimeout(() => {
-    //             run();
-    //         }, 500);
-    //     }
-    // });
+const mode: string = 'app';
 
+if (mode === 'recorder') {
     setupRecorder();
+} else if (mode === 'gen') {
+} else {
+    runApp();
 }

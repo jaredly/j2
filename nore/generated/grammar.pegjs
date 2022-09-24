@@ -8,7 +8,20 @@
             return {...range(), idx: idx.current++}
         }
     }
-    Number = num:(RawNumber) kind:("u" / "i" / "f")? {
+    Lambda = "fn" _ args:(("(" first:Larg? _ rest:(_ ',' _ @Larg)* _ ','? _  ")"
+            { return [
+                ...first ? [first] : [],
+                ...rest,
+            ]}
+            )) _ res:(":" _ Type)? _ "=>" _ body:Expression {
+            return { type: 'Lambda', args: args, res: res ? {inferred: false, value: res} : null, body: body, loc: loc() }
+        }
+
+Larg = pat:Pattern _ typ:(":" _ Type)? {
+            return { type: 'Larg', pat: pat, typ: typ ? {inferred: false, value: typ} : null, loc: loc() }
+        }
+
+Number = num:(RawNumber) _ kind:("u" / "i" / "f")? {
             return { type: 'Number', num: {
                 raw: num,
                 value: ((raw) => +raw)(num)
@@ -21,11 +34,11 @@ Boolean = value:("true" / "false") {
             return { type: 'Boolean', value: value, loc: loc() }
         }
 
-PIdentifier = text:IdText ref:(LocalHash)? {
+PIdentifier = text:IdText _ ref:(LocalHash)? {
             return { type: 'PIdentifier', text: text, ref: ref ? {inferred: false, value: ref} : null, loc: loc() }
         }
 
-Identifier = text:IdText ref:(IdHash / LocalHash)? {
+Identifier = text:IdText _ ref:(IdHash / LocalHash)? {
             return { type: 'Identifier', text: text, ref: ref ? {inferred: false, value: ref} : null, loc: loc() }
         }
 
@@ -44,11 +57,11 @@ UInt = UIntLiteral {
                 }
             }
 
-LocalHash = "#[:" sym:UInt "]" {
+LocalHash = "#[:" _ sym:UInt _ "]" {
             return { type: 'LocalHash', sym: sym, loc: loc() }
         }
 
-IdHash = "#[h" hash:HashText idx:("." UInt)? "]" {
+IdHash = "#[h" _ hash:HashText _ idx:("." _ UInt)? _ "]" {
             return { type: 'IdHash', hash: hash, idx: idx ? idx[1] : null, loc: loc() }
         }
 
@@ -70,18 +83,7 @@ CallSuffix = args:(("(" first:Expression? _ rest:(_ ',' _ @Expression)* _ ','? _
 
 _ = $([ \t\n\r]*)
 
-Lambda = "fn" args:(("(" first:Larg? _ rest:(_ ',' _ @Larg)* _ ','? _  ")"
-            { return [
-                ...first ? [first] : [],
-                ...rest,
-            ]}
-            )) res:(":" Type)? "=>" body:Expression {
-            return { type: 'Lambda', args: args, res: res ? {inferred: false, value: res} : null, body: body, loc: loc() }
-        }
-
-Larg = pat:Pattern typ:(":" Type)? {
-            return { type: 'Larg', pat: pat, typ: typ ? {inferred: false, value: typ} : null, loc: loc() }
-        }
+Expression = Lambda / Apply
 
 Applyable = Number / Boolean / Identifier
 
@@ -90,7 +92,5 @@ Type = Number / Boolean / Identifier
 Atom = Number / Boolean / PIdentifier / Identifier
 
 Pattern = PIdentifier
-
-Expression = Apply
 
 Suffix = CallSuffix

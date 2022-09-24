@@ -6,7 +6,8 @@ import * as React from 'react';
 import { parseExpression } from '../generated/parser';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { idx } from '../generated/grammar';
-import { Expression } from './elements/aggregates';
+// import { Expression } from './elements/aggregates';
+import { Expression } from '../generated/react-map';
 import { Store, Selection, Path } from './store/store';
 import { useDrag } from './useDrag';
 
@@ -129,8 +130,8 @@ export const Editor = ({ store, root }: { store: Store; root: number }) => {
     return (
         <div style={{ margin: 48, fontSize: 48 }} {...dragHandlers}>
             <Keyboardians store={store} />
-            <Expression id={root} store={store} path={[]} />
-            {/* <Dump store={store} id={root} /> */}
+            <Expression idx={root} store={store} path={[]} />
+            <Dump store={store} id={root} />
         </div>
     );
 };

@@ -25,18 +25,31 @@ type Path = { name: string; path: null | string };
 export const prelude = `
 import React from 'react';
 import {parse} from './grammar';
+import * as parsers from './parser';
 import * as t from './type-map';
 import * as c from './atomConfig';
+import * as to from './to-map';
 import { updateStore, Store, useStore } from '../editor/store/store';
 import {ContentEditable} from './ContentEditable';
 
 export const AtomEdit = <T,>({value, idx, config, store, path}: {value: T, idx: number, store: Store, config: c.AtomConfig<T>, path: Path[]}) => {
     const [edit, setEdit] = React.useState(() => config.toString(value));
     return <ContentEditable value={edit} onChange={value => setEdit(value)} onBlur={() => {
+        const type = store.map[idx].type
+        console.log(path, type)
+        // @ts-ignore
+        const parsed = parsers['parse' + type](edit);
+        // @ts-ignore
+        const tomap = to[type]
         updateStore(store, {map: {[idx]: {
-            type: store.map[idx].type,
-            value: config.fromString(edit, store.map)
+            type: type,
+            value: tomap(parsed, store.map)
         } as t.Map[0]}})
+    }} onKeyDown={evt => {
+        if (evt.key === 'Enter') {
+            evt.preventDefault();
+            (evt.target as HTMLElement).blur()
+        }
     }} />
 }
 
@@ -49,6 +62,17 @@ export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path
 export const gramPaths = (egram: GramDef<EExtra>) => {
     const gram: TGram<never> = transformGram<never>(egram, check, change);
     const paths: string[] = [];
+    if (gram.type === 'sequence') {
+        gram.items.forEach((item) => {
+            if (item.type === 'named') {
+                if (item.inner.type === 'args') {
+                    paths.push(` | {at: '${item.name}', arg: number}`);
+                } else {
+                    paths.push(` | {at: '${item.name}'}`);
+                }
+            }
+        });
+    }
     if (gram.type === 'tagged') {
         if (Array.isArray(gram.inner)) {
             gram.inner.forEach((item) => {
@@ -67,7 +91,7 @@ export const gramPaths = (egram: GramDef<EExtra>) => {
     return paths;
 };
 
-export const pathType = (grammar: Grams) => {
+export const pathType = (grammar: Grams, tags: { [key: string]: string[] }) => {
     return Object.entries(grammar)
         .filter(([_, v]) => Array.isArray(v) || v.type !== 'peggy')
         .map(
@@ -77,6 +101,11 @@ export const pathType = (grammar: Grams) => {
                 ).join('')}}`, //\n// ${JSON.stringify(v)}`,
         )
         .concat(`{type: 'Blank', idx: number, path: null}`)
+        .concat(
+            Object.keys(tags).map(
+                (tag) => `{type: '${tag}', idx: number, path: null}`,
+            ),
+        )
         .join('\n| ');
 };
 
@@ -89,7 +118,7 @@ export const generateReact = (
     return `
 ${prelude}
 
-export type Path = ${pathType(grammar)};
+export type Path = ${pathType(grammar, tags)};
 
 ${Object.keys(reacts)
     .map((name) => reacts[name])
@@ -119,6 +148,7 @@ export const generateReactComponents = (
         components[
             tag
         ] = `export const ${tag} = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
+    path = path.concat([{type: '${tag}', idx, path: null}]);
     const item = useStore(store, idx) as t.${tag};
 ${tags[tag]
     .concat(['Blank'])
@@ -205,13 +235,19 @@ export const gramToReact = (
             return `<${gram.id} idx={${value}} store={store} path={path.concat([{type: '${path.name}', idx, path: ${path.path}}])} />`;
         case 'args':
             const [l, r] = gram.bounds ?? ['(', ')'];
-            return `${l}{${value}.map((arg, i) => ${gramToReact(
+            return `${l}{${value}.map((arg, i) => <>${gramToReact(
                 gram.item,
                 'arg',
                 { name: path.name, path: `{at: 'args', arg: i}` },
-            )})}${r}`;
+            )}{i < ${value}.length - 1 ? ', ' : ''}</>)}${r}`;
         case 'optional':
             return `{${value} ? ${gramToReact(gram.item, value, path)} : null}`;
+        case 'inferrable':
+            return `{${value} ? ${gramToReact(
+                gram.item,
+                value + '.value',
+                path,
+            )} : null}`;
         default:
             return `<>what ${gram.type}</>`;
     }

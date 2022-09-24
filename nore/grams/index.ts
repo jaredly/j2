@@ -10,12 +10,12 @@ import { grams as ident } from './ident';
 import { grams as comments } from './comments';
 
 export const grammar = {
+    ...lambda,
     ...constants,
     ...ident,
     ...apply,
     ...comments,
     // ...binop,
-    ...lambda,
 };
 
 export const tags = {
