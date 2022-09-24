@@ -1,7 +1,7 @@
 // Handwritten structured editor, round 2: now with maps
 import * as t from '../generated/type-map';
 import * as to from '../generated/to-map';
-import * as from from '../generated/from-map';
+// import * as from from '../generated/from-map';
 import * as React from 'react';
 import { parseExpression } from '../generated/parser';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -163,7 +163,10 @@ export const Dump = ({ store, id }: { store: Store; id: number }) => {
             <div>{JSON.stringify(store.selection)}</div>
             <div>{JSON.stringify(store.drag)}</div>
             {JSON.stringify(
-                from.Expression(store.map[id].value as t.Expression, store.map),
+                to.from_Expression(
+                    store.map[id].value as t.Expression,
+                    store.map,
+                ),
                 null,
                 2,
             )}

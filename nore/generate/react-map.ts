@@ -175,11 +175,11 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
                     gram.inner.target,
                     value + '.target',
                     { name, path: `{at: 'target'}` },
-                )}{${value}.suffixes.map((suffix, i) => ${gramToReact(
+                )}{${value}.suffixes.map((suffix, i) => <React.Fragment key={i}>${gramToReact(
                     gram.inner.suffix,
                     'suffix',
                     { name, path: `{at: 'suffix', suffix: i}` },
-                )})}</span>`;
+                )}</React.Fragment>)}</span>`;
             }
             if (gram.inner.type === 'binops') {
                 return `<>binops</>`;
@@ -229,11 +229,11 @@ export const gramToReact = (
             const [l, r] = gram.bounds ?? ['(', ')'];
             return (
                 (leadingSpace ? ' ' : '') +
-                `${l}{${value}.map((arg, i) => <>${gramToReact(
+                `${l}{${value}.map((arg, i) => <React.Fragment key={i}>${gramToReact(
                     gram.item,
                     'arg',
                     { name: path.name, path: `{at: 'args', arg: i}` },
-                )}{i < ${value}.length - 1 ? ', ' : ''}</>)}${r}`
+                )}{i < ${value}.length - 1 ? ', ' : ''}</React.Fragment>)}${r}`
             );
         case 'optional':
             return `{${value} ? ${gramToReact(

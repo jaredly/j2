@@ -13,7 +13,28 @@ Highlevel things I haven't solved at all:
 
 gotta have it
 
+- [x] to-map, it's good
+- [ ] from-map, less critical, but still cmon
 
+
+
+#
+
+Lisp, when it hits an "exception", it pops up an interactive question:
+- do you want to retry?
+- do you want to specify a different function that it should call?
+- modify the env and then retry?
+- or abort wholesale
+
+
+
+"punchcard compatible"
+
+"stop the world type checkers"
+
+look into Erlang/OTP
+
+Clerk ; clojure
 
 
 
