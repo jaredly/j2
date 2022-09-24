@@ -5,6 +5,28 @@ Highlevel things I haven't solved at all:
 	so, breaking long lines.
 
 
+## AUTOGEN REACT
+
+- so good
+
+## Autogen to-map from-map
+
+gotta have it
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### Testingggg
 
 #### Making a test recorder!

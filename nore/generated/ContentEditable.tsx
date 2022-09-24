@@ -5,11 +5,13 @@ export const ContentEditable = ({
     onChange,
     onKeyDown,
     onBlur,
+    style,
 }: {
     value: string;
     onChange: (value: string) => void;
     onKeyDown?: (e: React.KeyboardEvent) => void;
     onBlur?: (e: React.FocusEvent) => void;
+    style?: React.CSSProperties;
 }) => {
     const ref = useRef(null as null | HTMLSpanElement);
     useLayoutEffect(() => {
@@ -23,6 +25,10 @@ export const ContentEditable = ({
     return (
         <span
             ref={ref}
+            style={{
+                outline: 'none',
+                ...style,
+            }}
             onInput={(evt) => onChange(evt.currentTarget.textContent!)}
             onKeyDown={onKeyDown}
             onBlur={onBlur}

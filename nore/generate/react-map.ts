@@ -31,27 +31,7 @@ import * as c from './atomConfig';
 import * as to from './to-map';
 import { updateStore, Store, useStore } from '../editor/store/store';
 import {ContentEditable} from './ContentEditable';
-
-export const AtomEdit = <T,>({value, idx, config, store, path}: {value: T, idx: number, store: Store, config: c.AtomConfig<T>, path: Path[]}) => {
-    const [edit, setEdit] = React.useState(() => config.toString(value));
-    return <ContentEditable value={edit} onChange={value => setEdit(value)} onBlur={() => {
-        const type = store.map[idx].type
-        console.log(path, type)
-        // @ts-ignore
-        const parsed = parsers['parse' + type](edit);
-        // @ts-ignore
-        const tomap = to[type]
-        updateStore(store, {map: {[idx]: {
-            type: type,
-            value: tomap(parsed, store.map)
-        } as t.Map[0]}})
-    }} onKeyDown={evt => {
-        if (evt.key === 'Enter') {
-            evt.preventDefault();
-            (evt.target as HTMLElement).blur()
-        }
-    }} />
-}
+import {AtomEdit} from './AtomEdit';
 
 export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path[]}) => {
     const item = useStore(store, idx) as t.Blank;
@@ -216,39 +196,60 @@ export const gramToReact = (
     gram: Gram<never>,
     value: string,
     path: { name: string; path: null | string },
+    leadingSpace = false,
 ): string => {
     switch (gram.type) {
         case 'sequence':
             return `<span>${gram.items
-                .map((child, i) => gramToReact(child, value, path))
+                .map((child, i) => gramToReact(child, value, path, i > 0))
                 .join('')}</span>`;
         case 'literal':
-            return gram.value.replace(/>/g, '&gt;').replace(/</g, '&lt;');
+            return (
+                (leadingSpace ? ' ' : '') +
+                gram.value.replace(/>/g, '&gt;').replace(/</g, '&lt;')
+            );
         case 'literal-ref':
-            return `{${value}}`;
+            return (leadingSpace ? ' ' : '') + `{${value}}`;
         case 'named':
-            return gramToReact(gram.inner, `${value}.${gram.name}`, {
-                name: path.name,
-                path: `{at: '${gram.name}'}`,
-            });
+            return gramToReact(
+                gram.inner,
+                `${value}.${gram.name}`,
+                {
+                    name: path.name,
+                    path: `{at: '${gram.name}'}`,
+                },
+                leadingSpace,
+            );
         case 'ref':
-            return `<${gram.id} idx={${value}} store={store} path={path.concat([{type: '${path.name}', idx, path: ${path.path}}])} />`;
+            return (
+                (leadingSpace ? ' ' : '') +
+                `<${gram.id} idx={${value}} store={store} path={path.concat([{type: '${path.name}', idx, path: ${path.path}}])} />`
+            );
         case 'args':
             const [l, r] = gram.bounds ?? ['(', ')'];
-            return `${l}{${value}.map((arg, i) => <>${gramToReact(
-                gram.item,
-                'arg',
-                { name: path.name, path: `{at: 'args', arg: i}` },
-            )}{i < ${value}.length - 1 ? ', ' : ''}</>)}${r}`;
+            return (
+                (leadingSpace ? ' ' : '') +
+                `${l}{${value}.map((arg, i) => <>${gramToReact(
+                    gram.item,
+                    'arg',
+                    { name: path.name, path: `{at: 'args', arg: i}` },
+                )}{i < ${value}.length - 1 ? ', ' : ''}</>)}${r}`
+            );
         case 'optional':
-            return `{${value} ? ${gramToReact(gram.item, value, path)} : null}`;
+            return `{${value} ? ${gramToReact(
+                gram.item,
+                value,
+                path,
+                leadingSpace,
+            )} : null}`;
         case 'inferrable':
             return `{${value} ? ${gramToReact(
                 gram.item,
                 value + '.value',
                 path,
+                leadingSpace,
             )} : null}`;
         default:
-            return `<>what ${gram.type}</>`;
+            return (leadingSpace ? ' ' : '') + `<>what ${gram.type}</>`;
     }
 };

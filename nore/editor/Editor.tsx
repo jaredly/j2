@@ -128,7 +128,10 @@ export const Editor = ({ store, root }: { store: Store; root: number }) => {
     const dragHandlers = useDrag(store);
 
     return (
-        <div style={{ margin: 48, fontSize: 48 }} {...dragHandlers}>
+        <div
+            style={{ margin: 48, fontSize: 48, color: '#888' }}
+            {...dragHandlers}
+        >
             <Keyboardians store={store} />
             <Expression idx={root} store={store} path={[]} />
             <Dump store={store} id={root} />

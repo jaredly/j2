@@ -8,27 +8,7 @@ import * as c from './atomConfig';
 import * as to from './to-map';
 import { updateStore, Store, useStore } from '../editor/store/store';
 import {ContentEditable} from './ContentEditable';
-
-export const AtomEdit = <T,>({value, idx, config, store, path}: {value: T, idx: number, store: Store, config: c.AtomConfig<T>, path: Path[]}) => {
-    const [edit, setEdit] = React.useState(() => config.toString(value));
-    return <ContentEditable value={edit} onChange={value => setEdit(value)} onBlur={() => {
-        const type = store.map[idx].type
-        console.log(path, type)
-        // @ts-ignore
-        const parsed = parsers['parse' + type](edit);
-        // @ts-ignore
-        const tomap = to[type]
-        updateStore(store, {map: {[idx]: {
-            type: type,
-            value: tomap(parsed, store.map)
-        } as t.Map[0]}})
-    }} onKeyDown={evt => {
-        if (evt.key === 'Enter') {
-            evt.preventDefault();
-            (evt.target as HTMLElement).blur()
-        }
-    }} />
-}
+import {AtomEdit} from './AtomEdit';
 
 export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path[]}) => {
     const item = useStore(store, idx) as t.Blank;
@@ -57,12 +37,12 @@ export type Path = {type: 'Lambda', idx: number, path: null | {at: 'before' | 'a
 
 export const Lambda = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.Lambda;
-    return <span>fn({item.args.map((arg, i) => <><Larg idx={arg} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'args', arg: i}}])} />{i < item.args.length - 1 ? ', ' : ''}</>)}){item.res ? <span>:<Type idx={item.res.value} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'res'}}])} /></span> : null}=&gt;<Expression idx={item.body} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'body'}}])} /></span>;
+    return <span>fn ({item.args.map((arg, i) => <><Larg idx={arg} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'args', arg: i}}])} />{i < item.args.length - 1 ? ', ' : ''}</>)}){item.res ? <span>: <Type idx={item.res.value} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'res'}}])} /></span> : null} =&gt; <Expression idx={item.body} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'body'}}])} /></span>;
 }
 
 export const Larg = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.Larg;
-    return <span><Pattern idx={item.pat} store={store} path={path.concat([{type: 'Larg', idx, path: {at: 'pat'}}])} />{item.typ ? <span>:<Type idx={item.typ.value} store={store} path={path.concat([{type: 'Larg', idx, path: {at: 'typ'}}])} /></span> : null}</span>;
+    return <span><Pattern idx={item.pat} store={store} path={path.concat([{type: 'Larg', idx, path: {at: 'pat'}}])} />{item.typ ? <span>: <Type idx={item.typ.value} store={store} path={path.concat([{type: 'Larg', idx, path: {at: 'typ'}}])} /></span> : null}</span>;
 }
 
 export const Number = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -92,12 +72,12 @@ export const UInt = ({idx, store, path}: {idx: number, store: Store, path: Path[
 
 export const LocalHash = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.LocalHash;
-    return <span>#[:<UInt idx={item.sym} store={store} path={path.concat([{type: 'LocalHash', idx, path: {at: 'sym'}}])} />]</span>;
+    return <span>#[: <UInt idx={item.sym} store={store} path={path.concat([{type: 'LocalHash', idx, path: {at: 'sym'}}])} /> ]</span>;
 }
 
 export const IdHash = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.IdHash;
-    return <span>#[h{item.hash}{item.idx ? <span>.<UInt idx={item.idx} store={store} path={path.concat([{type: 'IdHash', idx, path: {at: 'idx'}}])} /></span> : null}]</span>;
+    return <span>#[h {item.hash}{item.idx ? <span>. <UInt idx={item.idx} store={store} path={path.concat([{type: 'IdHash', idx, path: {at: 'idx'}}])} /></span> : null} ]</span>;
 }
 
 export const Apply = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
