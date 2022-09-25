@@ -4,7 +4,7 @@ import * as parsers from './parser';
 import * as t from './type-map';
 import * as c from './atomConfig';
 import * as to from './to-map';
-import { updateStore, Store, useStore } from '../editor/store/store';
+import { updateStore, Store, useStore, newBlank } from '../editor/store/store';
 import { ContentEditable } from './ContentEditable';
 import { Path } from './react-map';
 
@@ -41,10 +41,11 @@ export const AtomEdit = <T,>({
     const [edit, setEdit] = React.useState(null as null | string);
     const commit = React.useCallback(() => {
         const type = store.map[idx].type;
-        console.log(path, type);
+        // console.log(path, type);
         try {
-            // @ts-ignore
-            const parsed = parsers['parse' + type](edit);
+            const parsed =
+                // @ts-ignore
+                edit?.length === 0 ? newBlank() : parsers['parse' + type](edit);
             // @ts-ignore
             const tomap = to[type];
             updateStore(store, {
@@ -75,7 +76,7 @@ export const AtomEdit = <T,>({
                 style={{
                     color: pathColor(path),
                     minHeight: '1.5em',
-                    minWidth: 10,
+                    // minWidth: 10,
                     backgroundColor: 'rgba(255, 255, 0, 0.05)',
                 }}
                 onMouseDown={(evt) => {
@@ -101,7 +102,7 @@ export const AtomEdit = <T,>({
                 color: pathColor(path),
                 outline: 'none',
                 minHeight: '1.5em',
-                minWidth: 10,
+                // minWidth: 10,
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
             }}
             onKeyDown={(evt) => {

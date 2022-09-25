@@ -10,6 +10,10 @@ import { updateStore, Store, useStore } from '../editor/store/store';
 import {ContentEditable} from './ContentEditable';
 import {AtomEdit} from './AtomEdit';
 
+export const Empty = () => {
+    return <span style={{height: '1em', color: 'red'}}>i</span>
+}
+
 export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path[]}) => {
     const item = useStore(store, idx) as t.Blank;
     return <AtomEdit value={item} idx={idx} store={store} config={c.Blank} path={path.concat([{type: 'Blank', idx: item.loc.idx, path: null}])} />
@@ -37,12 +41,28 @@ export type Path = {type: 'Lambda', idx: number, path: null | {at: 'before' | 'a
 
 export const Lambda = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.Lambda;
-    return <span>fn ({item.args.map((arg, i) => <React.Fragment key={i}><Larg idx={arg} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'args', arg: i}}])} />{i < item.args.length - 1 ? ', ' : ''}</React.Fragment>)}){item.res ? <span>: <Type idx={item.res.value} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'res'}}])} /></span> : null} =&gt; <Expression idx={item.body} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'body'}}])} /></span>;
+    return <span>
+            <Empty />
+            fn ({item.args.map((arg, i) => <React.Fragment key={i}><Larg idx={arg} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'args', arg: i}}])} />{i < item.args.length - 1 ? ', ' : ''}</React.Fragment>)}){item.res ? <span>
+            <Empty />
+            : <Type idx={item.res.value} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'res'}}])} />
+            <Empty />
+            </span> : null} =&gt; <Expression idx={item.body} store={store} path={path.concat([{type: 'Lambda', idx, path: {at: 'body'}}])} />
+            <Empty />
+            </span>;
 }
 
 export const Larg = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.Larg;
-    return <span><Pattern idx={item.pat} store={store} path={path.concat([{type: 'Larg', idx, path: {at: 'pat'}}])} />{item.typ ? <span>: <Type idx={item.typ.value} store={store} path={path.concat([{type: 'Larg', idx, path: {at: 'typ'}}])} /></span> : null}</span>;
+    return <span>
+            <Empty />
+            <Pattern idx={item.pat} store={store} path={path.concat([{type: 'Larg', idx, path: {at: 'pat'}}])} />{item.typ ? <span>
+            <Empty />
+            : <Type idx={item.typ.value} store={store} path={path.concat([{type: 'Larg', idx, path: {at: 'typ'}}])} />
+            <Empty />
+            </span> : null}
+            <Empty />
+            </span>;
 }
 
 export const Number = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -72,12 +92,24 @@ export const UInt = ({idx, store, path}: {idx: number, store: Store, path: Path[
 
 export const LocalHash = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.LocalHash;
-    return <span>#[: <UInt idx={item.sym} store={store} path={path.concat([{type: 'LocalHash', idx, path: {at: 'sym'}}])} /> ]</span>;
+    return <span>
+            <Empty />
+            #[: <UInt idx={item.sym} store={store} path={path.concat([{type: 'LocalHash', idx, path: {at: 'sym'}}])} /> ]
+            <Empty />
+            </span>;
 }
 
 export const IdHash = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.IdHash;
-    return <span>#[h {item.hash}{item.idx ? <span>. <UInt idx={item.idx} store={store} path={path.concat([{type: 'IdHash', idx, path: {at: 'idx'}}])} /></span> : null} ]</span>;
+    return <span>
+            <Empty />
+            #[h {item.hash}{item.idx ? <span>
+            <Empty />
+            . <UInt idx={item.idx} store={store} path={path.concat([{type: 'IdHash', idx, path: {at: 'idx'}}])} />
+            <Empty />
+            </span> : null} ]
+            <Empty />
+            </span>;
 }
 
 export const Apply = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -87,7 +119,11 @@ export const Apply = ({idx, store, path}: {idx: number, store: Store, path: Path
 
 export const CallSuffix = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     const item = useStore(store, idx) as t.CallSuffix;
-    return <span>({item.args.map((arg, i) => <React.Fragment key={i}><Expression idx={arg} store={store} path={path.concat([{type: 'CallSuffix', idx, path: {at: 'args', arg: i}}])} />{i < item.args.length - 1 ? ', ' : ''}</React.Fragment>)})</span>;
+    return <span>
+            <Empty />
+            ({item.args.map((arg, i) => <React.Fragment key={i}><Expression idx={arg} store={store} path={path.concat([{type: 'CallSuffix', idx, path: {at: 'args', arg: i}}])} />{i < item.args.length - 1 ? ', ' : ''}</React.Fragment>)})
+            <Empty />
+            </span>;
 }
 
 export const Expression = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {

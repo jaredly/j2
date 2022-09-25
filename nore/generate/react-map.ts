@@ -33,6 +33,10 @@ import { updateStore, Store, useStore } from '../editor/store/store';
 import {ContentEditable} from './ContentEditable';
 import {AtomEdit} from './AtomEdit';
 
+export const Empty = () => {
+    return <span style={{height: '1em', color: 'red'}}>i</span>
+}
+
 export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path[]}) => {
     const item = useStore(store, idx) as t.Blank;
     return <AtomEdit value={item} idx={idx} store={store} config={c.Blank} path={path.concat([{type: 'Blank', idx: item.loc.idx, path: null}])} />
@@ -200,9 +204,13 @@ export const gramToReact = (
 ): string => {
     switch (gram.type) {
         case 'sequence':
-            return `<span>${gram.items
+            return `<span>
+            <Empty />
+            ${gram.items
                 .map((child, i) => gramToReact(child, value, path, i > 0))
-                .join('')}</span>`;
+                .join('')}
+            <Empty />
+            </span>`;
         case 'literal':
             return (
                 (leadingSpace ? ' ' : '') +

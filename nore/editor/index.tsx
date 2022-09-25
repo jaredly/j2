@@ -15,8 +15,8 @@ const runApp = () => {
         theme: { colors: { background: '#0d0e16' } },
     });
 
-    const { store, root } = newStore('hello(fn(a)=>a)');
-    // const { store, root } = newStore('hello(one(2)(3), 1, 2u)');
+    // const { store, root } = newStore('hello(fn(a)=>a)');
+    const { store, root } = newStore('hello(one(2)(3), 1, 2u)');
 
     // @ts-ignore
     const reactRoot = (window.rootRoot =
