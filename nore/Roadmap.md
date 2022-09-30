@@ -25,7 +25,7 @@ should I say that ... there's a numeric index to each selection point?
 and so "current selection" would be an array of integers?
 Seems like a reasonable way to do it.
 
-- [ ] populate `path`... with the numbers?
+- [x] populate `path`... with the numbers?
 	- in a given dealio, have like `path.concat([pos++])` or something
 	- and then we need a function that is "get number of sub-selections"
 		Now going left/right is as simple as +/- one.
@@ -35,6 +35,7 @@ Seems like a reasonable way to do it.
 		0, then there's nothing to dive into, otherwise there is.
 		That sounds nice actually.
 - [ ] generate "childCountForPath" (or it could be runtime analysis of the grammar json)
+	- maybe include the idx's (if any) for the relevant children? yeah, idx + child cound. Sounds great.
 
 Sooooo what about the whole fancy type-specificable path dealio that I cooked up?
 maybe give all the types a `cid: number`. yeah that sounds good?

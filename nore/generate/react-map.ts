@@ -46,6 +46,14 @@ export const Empty = ({path}: {path: Path[]}) => {
     return <span style={{height: '1em', color: 'red'}}>i</span>
 }
 
+export const ClickSide = ({path, children}: {path: Path[], children: JSX.Element | string}) => {
+    return <span style={{color: 'blue'}} onMouseDown={(evt) => {
+        const box = evt.target.getBoundingClientRect();
+        const leftSide = evt.clientX < box.left + box.width / 2
+        console.log('ok what', leftSide, path)
+    }}>{children}</span>
+}
+
 export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path[]}) => {
     const item = useStore(store, idx) as t.Blank;
     return <AtomEdit value={item} idx={idx} store={store} config={c.Blank} path={path} />
@@ -222,10 +230,10 @@ export const gramToReact = (
             <Empty path={path.concat([{cid: cid++, idx}])} />
             </span>`;
         case 'literal':
-            return (
+            return `<ClickSide path={path.concat([{cid, idx}])}>${
                 (leadingSpace ? ' ' : '') +
                 gram.value.replace(/>/g, '&gt;').replace(/</g, '&lt;')
-            );
+            }</ClickSide>`;
         case 'literal-ref':
             return (leadingSpace ? ' ' : '') + `{${value}}`;
         case 'named':
@@ -245,14 +253,13 @@ export const gramToReact = (
             );
         case 'args':
             const [l, r] = gram.bounds ?? ['(', ')'];
-            return (
-                (leadingSpace ? ' ' : '') +
-                `${l}{${value}.map((arg, i) => <React.Fragment key={i}>${gramToReact(
-                    gram.item,
-                    'arg',
-                    { name: path.name, path: `{cid: cid++, idx}` },
-                )}{i < ${value}.length - 1 ? ', ' : ''}</React.Fragment>)}${r}`
-            );
+            return `<ClickSide path={path.concat([{cid, idx}])}>${
+                (leadingSpace ? ' ' : '') + l
+            }</ClickSide>{${value}.map((arg, i) => <React.Fragment key={i}>${gramToReact(
+                gram.item,
+                'arg',
+                { name: path.name, path: `{cid: cid++, idx}` },
+            )}{i < ${value}.length - 1 ? ', ' : ''}</React.Fragment>)}<ClickSide path={path.concat([{cid, idx}])}>${r}</ClickSide>`;
         case 'optional':
             return `{${value} ? ${gramToReact(
                 gram.item,
