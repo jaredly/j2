@@ -14,8 +14,30 @@ Highlevel things I haven't solved at all:
 gotta have it
 
 - [x] to-map, it's good
-- [ ] from-map, less critical, but still cmon
+- [x] from-map, less critical, but still cmon
 
+## Selection stuff?
+
+so should I just do the boundingbox dealio for selection movement too?
+seems annoyingly crude.
+
+should I say that ... there's a numeric index to each selection point?
+and so "current selection" would be an array of integers?
+Seems like a reasonable way to do it.
+
+- [ ] populate `path`... with the numbers?
+	- in a given dealio, have like `path.concat([pos++])` or something
+	- and then we need a function that is "get number of sub-selections"
+		Now going left/right is as simple as +/- one.
+		BUT how do we know if a given index corresponds to something we can dive into?
+		Should I ... construct like a tree of selection positions?
+		OR maybe I just have a function that is "childCountForPath" and if it's
+		0, then there's nothing to dive into, otherwise there is.
+		That sounds nice actually.
+- [ ] generate "childCountForPath" (or it could be runtime analysis of the grammar json)
+
+Sooooo what about the whole fancy type-specificable path dealio that I cooked up?
+maybe give all the types a `cid: number`. yeah that sounds good?
 
 
 #

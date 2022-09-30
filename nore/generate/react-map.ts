@@ -29,68 +29,78 @@ import * as parsers from './parser';
 import * as t from './type-map';
 import * as c from './atomConfig';
 import * as to from './to-map';
-import { updateStore, Store, useStore } from '../editor/store/store';
+import { updateStore, Store, Selection, useStore } from '../editor/store/store';
 import {ContentEditable} from './ContentEditable';
 import {AtomEdit} from './AtomEdit';
 
-export const Empty = () => {
+const selectionStyle = (selection: null | Selection, path: Path[], idx: number) => {
+    if (selection?.idx === idx) {
+        return {
+            outline: '1px solid magenta',
+        }
+    }
+    return {}
+}
+
+export const Empty = ({path}: {path: Path[]}) => {
     return <span style={{height: '1em', color: 'red'}}>i</span>
 }
 
 export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path[]}) => {
     const item = useStore(store, idx) as t.Blank;
-    return <AtomEdit value={item} idx={idx} store={store} config={c.Blank} path={path.concat([{type: 'Blank', idx: item.loc.idx, path: null}])} />
+    return <AtomEdit value={item} idx={idx} store={store} config={c.Blank} path={path} />
 }
 `;
 
-export const gramPaths = (egram: GramDef<EExtra>) => {
-    const gram: TGram<never> = transformGram<never>(egram, check, change);
-    const paths: string[] = [];
-    if (gram.type === 'sequence') {
-        gram.items.forEach((item) => {
-            if (item.type === 'named') {
-                if (item.inner.type === 'args') {
-                    paths.push(` | {at: '${item.name}', arg: number}`);
-                } else {
-                    paths.push(` | {at: '${item.name}'}`);
-                }
-            }
-        });
-    }
-    if (gram.type === 'tagged') {
-        if (Array.isArray(gram.inner)) {
-            gram.inner.forEach((item) => {
-                if (item.type === 'named') {
-                    if (item.inner.type === 'args') {
-                        paths.push(` | {at: '${item.name}', arg: number}`);
-                    } else {
-                        paths.push(` | {at: '${item.name}'}`);
-                    }
-                }
-            });
-        } else if (gram.inner.type === 'suffixes') {
-            paths.push(` | {at: 'suffix', suffix: number} | {at: 'target'}`);
-        }
-    }
-    return paths;
-};
+// export const gramPaths = (egram: GramDef<EExtra>) => {
+//     const gram: TGram<never> = transformGram<never>(egram, check, change);
+//     const paths: string[] = [];
+//     if (gram.type === 'sequence') {
+//         gram.items.forEach((item) => {
+//             if (item.type === 'named') {
+//                 if (item.inner.type === 'args') {
+//                     paths.push(` | {at: '${item.name}', arg: number}`);
+//                 } else {
+//                     paths.push(` | {at: '${item.name}'}`);
+//                 }
+//             }
+//         });
+//     }
+//     if (gram.type === 'tagged') {
+//         if (Array.isArray(gram.inner)) {
+//             gram.inner.forEach((item) => {
+//                 if (item.type === 'named') {
+//                     if (item.inner.type === 'args') {
+//                         paths.push(` | {at: '${item.name}', arg: number}`);
+//                     } else {
+//                         paths.push(` | {at: '${item.name}'}`);
+//                     }
+//                 }
+//             });
+//         } else if (gram.inner.type === 'suffixes') {
+//             paths.push(` | {at: 'suffix', suffix: number} | {at: 'target'}`);
+//         }
+//     }
+//     return paths;
+// };
 
 export const pathType = (grammar: Grams, tags: { [key: string]: string[] }) => {
-    return Object.entries(grammar)
-        .filter(([_, v]) => Array.isArray(v) || v.type !== 'peggy')
-        .map(
-            ([k, v]) =>
-                `{type: '${k}', idx: number, path: null | {at: 'before' | 'after'} ${gramPaths(
-                    v,
-                ).join('')}}`, //\n// ${JSON.stringify(v)}`,
-        )
-        .concat(`{type: 'Blank', idx: number, path: null}`)
-        .concat(
-            Object.keys(tags).map(
-                (tag) => `{type: '${tag}', idx: number, path: null}`,
-            ),
-        )
-        .join('\n| ');
+    return `{cid: number, idx: number}`;
+    //     return Object.entries(grammar)
+    //         .filter(([_, v]) => Array.isArray(v) || v.type !== 'peggy')
+    //         .map(
+    //             ([k, v]) =>
+    //                 `{type: '${k}', idx: number, path: null | {at: 'before' | 'after'} ${gramPaths(
+    //                     v,
+    //                 ).join('')}}`, //\n// ${JSON.stringify(v)}`,
+    //         )
+    //         .concat(`{type: 'Blank', idx: number, path: null}`)
+    //         .concat(
+    //             Object.keys(tags).map(
+    //                 (tag) => `{type: '${tag}', idx: number, path: null}`,
+    //             ),
+    //         )
+    //         .join('\n| ');
 };
 
 export const generateReact = (
@@ -124,6 +134,7 @@ export const generateReactComponents = (
         components[
             name
         ] = `export const ${name} = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
+    let cid = 0;
     const item = useStore(store, idx) as t.${name};
     return ${value};
 }`;
@@ -132,7 +143,6 @@ export const generateReactComponents = (
         components[
             tag
         ] = `export const ${tag} = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
-    path = path.concat([{type: '${tag}', idx, path: null}]);
     const item = useStore(store, idx) as t.${tag};
 ${tags[tag]
     .concat(['Blank'])
@@ -165,7 +175,7 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
             return `<>{${value}.raw}</>`;
         case 'tagged':
             if (gram.tags.includes('Atom')) {
-                return `<AtomEdit value={${value}} idx={idx} store={store} config={c.${name}} path={path.concat([{type: '${name}', idx, path: null}])} />`;
+                return `<AtomEdit value={${value}} idx={idx} store={store} config={c.${name}} path={path.concat({cid: -1, idx})} />`;
             }
             if (Array.isArray(gram.inner)) {
                 return gramToReact(
@@ -175,7 +185,7 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
                 );
             }
             if (gram.inner.type === 'suffixes') {
-                return `<span>${gramToReact(
+                return `<span style={selectionStyle(store.selection, path, idx)}>${gramToReact(
                     gram.inner.target,
                     value + '.target',
                     { name, path: `{at: 'target'}` },
@@ -205,11 +215,11 @@ export const gramToReact = (
     switch (gram.type) {
         case 'sequence':
             return `<span>
-            <Empty />
+            <Empty path={path.concat([{cid: cid++, idx}])} />
             ${gram.items
                 .map((child, i) => gramToReact(child, value, path, i > 0))
                 .join('')}
-            <Empty />
+            <Empty path={path.concat([{cid: cid++, idx}])} />
             </span>`;
         case 'literal':
             return (
@@ -224,14 +234,14 @@ export const gramToReact = (
                 `${value}.${gram.name}`,
                 {
                     name: path.name,
-                    path: `{at: '${gram.name}'}`,
+                    path: `{cid: cid++, idx}`,
                 },
                 leadingSpace,
             );
         case 'ref':
             return (
                 (leadingSpace ? ' ' : '') +
-                `<${gram.id} idx={${value}} store={store} path={path.concat([{type: '${path.name}', idx, path: ${path.path}}])} />`
+                `<${gram.id} idx={${value}} store={store} path={path.concat([{cid: cid++, idx}])} />`
             );
         case 'args':
             const [l, r] = gram.bounds ?? ['(', ')'];
@@ -240,7 +250,7 @@ export const gramToReact = (
                 `${l}{${value}.map((arg, i) => <React.Fragment key={i}>${gramToReact(
                     gram.item,
                     'arg',
-                    { name: path.name, path: `{at: 'args', arg: i}` },
+                    { name: path.name, path: `{cid: cid++, idx}` },
                 )}{i < ${value}.length - 1 ? ', ' : ''}</React.Fragment>)}${r}`
             );
         case 'optional':

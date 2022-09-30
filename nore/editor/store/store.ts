@@ -45,6 +45,7 @@ export type Path = PathItem[];
 
 export type EditSelection = {
     type: 'edit';
+    path: number[];
     idx: number;
     at?: 'start' | 'end' | 'change' | 'inner' | null;
 };
@@ -52,6 +53,7 @@ export type Selection =
     | EditSelection
     | {
           type: 'select';
+          path: number[];
           idx: number;
           children: null | [number, number];
       };
@@ -164,6 +166,9 @@ const kidsEqual = (
     }
     return one[0] === two[0] && one[1] === two[1];
 };
+
+// ToDO: idxForPath?
+// or I could just keep track of the idxs at each stage, might as well.
 
 export const setSelection = (
     store: Store,
