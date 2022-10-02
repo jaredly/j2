@@ -41,6 +41,11 @@ Sooooo what about the whole fancy type-specificable path dealio that I cooked up
 maybe give all the types a `cid: number`. yeah that sounds good?
 
 
+Cases that I want to work:
+- click ing the left side of `(` in `hello(what)` should select the end of `hello`, not the `Empty` that is `before` the CallSuffix.
+	- it'd be ok if it first selected the `Empty` and then ~slid to the identifier though.
+
+
 #
 
 Lisp, when it hits an "exception", it pops up an interactive question:
