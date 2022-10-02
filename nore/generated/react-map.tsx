@@ -62,28 +62,28 @@ export const Number = ({idx, store, path}: {idx: number, store: Store, path: Pat
     let cid = 0;
     let punct = 0;
     const item = useStore(store, idx) as t.Number;
-    return <AtomEdit value={item} idx={idx} store={store} config={c.Number} path={path.concat({cid: -1, idx, punct})} />;
+    return <AtomEdit value={item} idx={idx} store={store} config={c.Number} path={path} />;
 }
 
 export const Boolean = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     let cid = 0;
     let punct = 0;
     const item = useStore(store, idx) as t.Boolean;
-    return <AtomEdit value={item} idx={idx} store={store} config={c.Boolean} path={path.concat({cid: -1, idx, punct})} />;
+    return <AtomEdit value={item} idx={idx} store={store} config={c.Boolean} path={path} />;
 }
 
 export const PIdentifier = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     let cid = 0;
     let punct = 0;
     const item = useStore(store, idx) as t.PIdentifier;
-    return <AtomEdit value={item} idx={idx} store={store} config={c.PIdentifier} path={path.concat({cid: -1, idx, punct})} />;
+    return <AtomEdit value={item} idx={idx} store={store} config={c.PIdentifier} path={path} />;
 }
 
 export const Identifier = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     let cid = 0;
     let punct = 0;
     const item = useStore(store, idx) as t.Identifier;
-    return <AtomEdit value={item} idx={idx} store={store} config={c.Identifier} path={path.concat({cid: -1, idx, punct})} />;
+    return <AtomEdit value={item} idx={idx} store={store} config={c.Identifier} path={path} />;
 }
 
 export const UInt = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {

@@ -45,9 +45,9 @@ export type Path = PathItem[];
 
 export type EditSelection = {
     type: 'edit';
-    path: number[];
+    path: { cid: number; idx: number; punct: number }[];
     idx: number;
-    at?: 'start' | 'end' | 'change' | 'inner' | null;
+    at?: 'start' | 'end' | 'change' | 'inner' | number | null;
 };
 export type Selection =
     | EditSelection

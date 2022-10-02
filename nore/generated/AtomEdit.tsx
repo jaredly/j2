@@ -4,9 +4,14 @@ import * as parsers from './parser';
 import * as t from './type-map';
 import * as c from './atomConfig';
 import * as to from './to-map';
-import { updateStore, Store, useStore, newBlank } from '../editor/store/store';
-import { ContentEditable } from './ContentEditable';
+import {
+    updateStore,
+    Store,
+    newBlank,
+    setSelection,
+} from '../editor/store/store';
 import { Path } from './react-map';
+import { goRight } from './navigation';
 
 const colors: { [key: string]: string } = {
     Identifier: '#5bb6b7',
@@ -15,12 +20,13 @@ const colors: { [key: string]: string } = {
     Expression: 'white',
 };
 
-const pathColor = (path: Path[]) => {
+const pathColor = (path: Path[], store: Store) => {
     for (let i = path.length - 1; i >= 0; i--) {
-        const t = path[i].type;
+        const t = store.map[path[i].idx].value.type;
         if (colors[t]) {
             return colors[t];
         }
+        console.log(t);
     }
     return undefined;
 };
@@ -41,7 +47,6 @@ export const AtomEdit = <T,>({
     const [edit, setEdit] = React.useState(null as null | string);
     const commit = React.useCallback(() => {
         const type = store.map[idx].type;
-        // console.log(path, type);
         try {
             const parsed =
                 // @ts-ignore
@@ -74,13 +79,21 @@ export const AtomEdit = <T,>({
         return (
             <span
                 style={{
-                    color: pathColor(path),
+                    color: pathColor(
+                        path.concat([{ idx, cid: 0, punct: 0 }]),
+                        store,
+                    ),
                     minHeight: '1.5em',
-                    // minWidth: 10,
                     backgroundColor: 'rgba(255, 255, 0, 0.05)',
                 }}
                 onMouseDown={(evt) => {
                     setEdit(config.toString(value));
+                    setSelection(store, {
+                        type: 'edit',
+                        idx,
+                        path,
+                        at: 'change',
+                    });
                 }}
             >
                 {config.toString(value)}
@@ -92,17 +105,18 @@ export const AtomEdit = <T,>({
             data-idx={idx}
             contentEditable
             ref={ref}
-            // onChange={(value) => setEdit(value)}
             onInput={(evt) => setEdit(evt.currentTarget.textContent!)}
             onBlur={() => {
                 commit();
                 setEdit(null);
             }}
             style={{
-                color: pathColor(path),
+                color: pathColor(
+                    path.concat([{ idx, cid: 0, punct: 0 }]),
+                    store,
+                ),
                 outline: 'none',
                 minHeight: '1.5em',
-                // minWidth: 10,
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
             }}
             onKeyDown={(evt) => {
@@ -117,9 +131,28 @@ export const AtomEdit = <T,>({
                     console.log(path);
                     addArg(path, store);
                 }
+                if (
+                    evt.key === 'ArrowRight' &&
+                    getSelection()?.toString() === '' &&
+                    getPos(evt.currentTarget) ===
+                        evt.currentTarget.textContent!.length
+                ) {
+                    evt.preventDefault();
+                    console.log(`going right`, goRight(store, idx, path));
+                }
             }}
         />
     );
+};
+
+const getPos = (target: HTMLElement) => {
+    const sel = document.getSelection()!;
+    const r = sel.getRangeAt(0).cloneRange();
+    sel.extend(target, 0);
+    const pos = sel.toString().length;
+    sel.removeAllRanges();
+    sel.addRange(r);
+    return pos;
 };
 
 const addArg = (path: Path[], store: Store) => {
@@ -160,7 +193,7 @@ const addArg = (path: Path[], store: Store) => {
             };
             return updateStore(store, {
                 map: update,
-                selection: { idx: pidx, at: 'change', type: 'edit' },
+                selection: { idx: pidx, at: 'change', type: 'edit', path: [] },
             });
         }
 
@@ -189,7 +222,7 @@ const addArg = (path: Path[], store: Store) => {
             };
             return updateStore(store, {
                 map: update,
-                selection: { idx: pidx, at: 'change', type: 'edit' },
+                selection: { idx: pidx, at: 'change', type: 'edit', path: [] },
             });
         }
     }

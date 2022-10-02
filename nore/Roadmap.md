@@ -4,6 +4,12 @@ Highlevel things I haven't solved at all:
 - pretty-printingggg
 	so, breaking long lines.
 
+## Ok more selection
+
+childCountForPath?
+childThingsForPath?
+
+
 
 ## AUTOGEN REACT
 

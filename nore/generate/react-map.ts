@@ -126,7 +126,7 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
             return `<>{${value}.raw}</>`;
         case 'tagged':
             if (gram.tags.includes('Atom')) {
-                return `<AtomEdit value={${value}} idx={idx} store={store} config={c.${name}} path={path.concat({cid: -1, idx, punct})} />`;
+                return `<AtomEdit value={${value}} idx={idx} store={store} config={c.${name}} path={path} />`;
             }
             if (Array.isArray(gram.inner)) {
                 return gramToReact(
