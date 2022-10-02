@@ -102,7 +102,12 @@ export const AtomEdit = ({
             }}
             onMouseDown={
                 idx != null
-                    ? () => setSelection(store, { type: 'edit', idx: idx })
+                    ? () =>
+                          setSelection(store, {
+                              type: 'edit',
+                              idx: idx,
+                              path: [],
+                          })
                     : undefined
             }
         >

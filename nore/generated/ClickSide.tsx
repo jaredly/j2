@@ -22,3 +22,7 @@ export const ClickSide = ({
         </span>
     );
 };
+
+export const Empty = ({ path }: { path: Path[] }) => {
+    return <span style={{ height: '1em', color: 'red' }}></span>;
+};
