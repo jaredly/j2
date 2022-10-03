@@ -204,8 +204,12 @@ export const gramToReact = (
 ): string => {
     switch (gram.type) {
         case 'sequence':
-            // <Empty path={path.concat([{cid: cid++, idx, punct}])} />
             return `<span>
+            ${
+                gram.items[0].type === 'literal'
+                    ? `<Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />`
+                    : ''
+            }
             ${gram.items
                 .map((child, i) => gramToReact(child, value, path, i > 0))
                 .join('')}
@@ -325,8 +329,11 @@ export const gramToNumChildren = (
 ): string => {
     switch (gram.type) {
         case 'sequence':
-            // children.push({item: {cid: cid++, idx, punct}});
-            return `${gram.items
+            return `${
+                gram.items[0].type === 'literal'
+                    ? `children.push({item: {cid: cid++, idx, punct}});\n            `
+                    : ''
+            }${gram.items
                 .map((child, i) => gramToNumChildren(child, value, path, i > 0))
                 .join('\n    ')}
     children.push({item: {cid: cid++, idx, punct}});`;
