@@ -44,7 +44,11 @@ export const AtomEdit = <T,>({
     config: c.AtomConfig<T>;
     path: Path[];
 }) => {
-    const [edit, setEdit] = React.useState(null as null | string);
+    const editing = store.selection?.idx === idx;
+    let [edit, setEdit] = React.useState(null as null | string);
+
+    edit = edit == null ? config.toString(value) : edit;
+
     const commit = React.useCallback(() => {
         const type = store.map[idx].type;
         try {
@@ -71,11 +75,14 @@ export const AtomEdit = <T,>({
         if (!ref.current) {
             return;
         }
+        if (editing && ref.current !== document.activeElement) {
+            ref.current.focus();
+        }
         if (ref.current.textContent !== edit) {
             ref.current.textContent = edit;
         }
-    }, [edit]);
-    if (edit == null) {
+    }, [edit, editing]);
+    if (!editing) {
         return (
             <span
                 style={{
@@ -109,6 +116,7 @@ export const AtomEdit = <T,>({
             onBlur={() => {
                 commit();
                 setEdit(null);
+                setSelection(store, null);
             }}
             style={{
                 color: pathColor(
@@ -123,13 +131,13 @@ export const AtomEdit = <T,>({
                 if (evt.key === 'Enter') {
                     evt.preventDefault();
                     commit();
-                    setEdit(null);
+                    // setEdit(null);
+                    return;
                 }
                 if (evt.key === ',') {
                     evt.preventDefault();
                     evt.stopPropagation();
                     console.log(path);
-                    // addArg(path, store);
                 }
                 if (
                     evt.key === 'ArrowRight' &&
