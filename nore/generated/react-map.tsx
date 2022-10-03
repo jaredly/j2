@@ -32,6 +32,7 @@ export const BlankChildren = (item: t.Blank) => {
 
 
 export type Path = {cid: number, idx: number, punct: number};
+export type Child = {item: Path, idx?: number};
 
 export const Lambda = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
     let cid = 0;
@@ -48,11 +49,11 @@ export const Lambda = ({idx, store, path}: {idx: number, store: Store, path: Pat
             </span>;
 }
 
-export const LambdaChildren = (item: t.Lambda) => {
+export const LambdaChildren = (item: t.Lambda): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
+    const children: Child[] = [];
     children.push({item: {cid: cid++, idx, punct}});
     punct += 2;
     
@@ -78,6 +79,7 @@ export const LambdaChildren = (item: t.Lambda) => {
     punct += 1;
     children.push({idx: item.body, item: {cid: cid++, idx, punct}});
     children.push({item: {cid: cid++, idx, punct}});
+    return children;
 }
 
 export const Larg = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -95,11 +97,11 @@ export const Larg = ({idx, store, path}: {idx: number, store: Store, path: Path[
             </span>;
 }
 
-export const LargChildren = (item: t.Larg) => {
+export const LargChildren = (item: t.Larg): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
+    const children: Child[] = [];
     children.push({item: {cid: cid++, idx, punct}});
     children.push({idx: item.pat, item: {cid: cid++, idx, punct}});
     if (item.typ != null) {
@@ -110,6 +112,7 @@ export const LargChildren = (item: t.Larg) => {
     children.push({item: {cid: cid++, idx, punct}});
     }
     children.push({item: {cid: cid++, idx, punct}});
+    return children;
 }
 
 export const Number = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -119,12 +122,13 @@ export const Number = ({idx, store, path}: {idx: number, store: Store, path: Pat
     return <AtomEdit value={item} idx={idx} store={store} config={c.Number} path={path} />;
 }
 
-export const NumberChildren = (item: t.Number) => {
+export const NumberChildren = (item: t.Number): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
-    children.push({item: {idx: item, punct, cid: cid++}});
+    const children: Child[] = [];
+    children.push({item: {idx, punct, cid: cid++}});
+    return children;
 }
 
 export const Boolean = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -134,12 +138,13 @@ export const Boolean = ({idx, store, path}: {idx: number, store: Store, path: Pa
     return <AtomEdit value={item} idx={idx} store={store} config={c.Boolean} path={path} />;
 }
 
-export const BooleanChildren = (item: t.Boolean) => {
+export const BooleanChildren = (item: t.Boolean): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
-    children.push({item: {idx: item, punct, cid: cid++}});
+    const children: Child[] = [];
+    children.push({item: {idx, punct, cid: cid++}});
+    return children;
 }
 
 export const PIdentifier = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -149,12 +154,13 @@ export const PIdentifier = ({idx, store, path}: {idx: number, store: Store, path
     return <AtomEdit value={item} idx={idx} store={store} config={c.PIdentifier} path={path} />;
 }
 
-export const PIdentifierChildren = (item: t.PIdentifier) => {
+export const PIdentifierChildren = (item: t.PIdentifier): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
-    children.push({item: {idx: item, punct, cid: cid++}});
+    const children: Child[] = [];
+    children.push({item: {idx, punct, cid: cid++}});
+    return children;
 }
 
 export const Identifier = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -164,12 +170,13 @@ export const Identifier = ({idx, store, path}: {idx: number, store: Store, path:
     return <AtomEdit value={item} idx={idx} store={store} config={c.Identifier} path={path} />;
 }
 
-export const IdentifierChildren = (item: t.Identifier) => {
+export const IdentifierChildren = (item: t.Identifier): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
-    children.push({item: {idx: item, punct, cid: cid++}});
+    const children: Child[] = [];
+    children.push({item: {idx, punct, cid: cid++}});
+    return children;
 }
 
 export const UInt = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -179,12 +186,13 @@ export const UInt = ({idx, store, path}: {idx: number, store: Store, path: Path[
     return <>{item.raw}</>;
 }
 
-export const UIntChildren = (item: t.UInt) => {
+export const UIntChildren = (item: t.UInt): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
+    const children: Child[] = [];
     // derived
+    return children;
 }
 
 export const LocalHash = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -198,17 +206,18 @@ export const LocalHash = ({idx, store, path}: {idx: number, store: Store, path: 
             </span>;
 }
 
-export const LocalHashChildren = (item: t.LocalHash) => {
+export const LocalHashChildren = (item: t.LocalHash): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
+    const children: Child[] = [];
     children.push({item: {cid: cid++, idx, punct}});
     punct += 3;
     punct += 1;
     children.push({idx: item.sym, item: {cid: cid++, idx, punct}});
     punct += 2;
     children.push({item: {cid: cid++, idx, punct}});
+    return children;
 }
 
 export const IdHash = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -226,11 +235,11 @@ export const IdHash = ({idx, store, path}: {idx: number, store: Store, path: Pat
             </span>;
 }
 
-export const IdHashChildren = (item: t.IdHash) => {
+export const IdHashChildren = (item: t.IdHash): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
+    const children: Child[] = [];
     children.push({item: {cid: cid++, idx, punct}});
     punct += 3;
     punct += item.hash.length + 1;
@@ -243,6 +252,7 @@ export const IdHashChildren = (item: t.IdHash) => {
     }
     punct += 2;
     children.push({item: {cid: cid++, idx, punct}});
+    return children;
 }
 
 export const Apply = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -252,15 +262,16 @@ export const Apply = ({idx, store, path}: {idx: number, store: Store, path: Path
     return <span style={selectionStyle(store.selection, path, idx)}><Applyable idx={item.target} store={store} path={path.concat([{cid: cid++, idx, punct}])} />{item.suffixes.map((suffix, i) => <React.Fragment key={i}><Suffix idx={suffix} store={store} path={path.concat([{cid: cid++, idx, punct}])} /></React.Fragment>)}</span>;
 }
 
-export const ApplyChildren = (item: t.Apply) => {
+export const ApplyChildren = (item: t.Apply): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
+    const children: Child[] = [];
     children.push({idx: item.target, item: {cid: cid++, idx, punct}});
     item.suffixes.forEach((suffix, i) => {
         children.push({idx: suffix, item: {cid: cid++, idx, punct}});
     });
+    return children;
 }
 
 export const CallSuffix = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
@@ -274,11 +285,11 @@ export const CallSuffix = ({idx, store, path}: {idx: number, store: Store, path:
             </span>;
 }
 
-export const CallSuffixChildren = (item: t.CallSuffix) => {
+export const CallSuffixChildren = (item: t.CallSuffix): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
+    const children: Child[] = [];
     children.push({item: {cid: cid++, idx, punct}});
     
     punct += 1;
@@ -293,6 +304,7 @@ export const CallSuffixChildren = (item: t.CallSuffix) => {
     }
     punct += 1;
     children.push({item: {cid: cid++, idx, punct}});
+    return children;
 }
 
 export const Expression = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {

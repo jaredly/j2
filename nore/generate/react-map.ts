@@ -68,6 +68,7 @@ export const generateReact = (
 ${prelude}
 
 export type Path = ${pathType(grammar, tags)};
+export type Child = {item: Path, idx?: number};
 
 ${Object.keys(reacts)
     .map((name) => reacts[name])
@@ -97,12 +98,13 @@ export const generateReactComponents = (
 
         components[
             name + '_numc'
-        ] = `export const ${name}Children = (item: t.${name}) => {
+        ] = `export const ${name}Children = (item: t.${name}): Child[] => {
     let cid = 0;
     let punct = 0;
     const idx = item.loc.idx;
-    const children = [];
+    const children: Child[] = [];
     ${topGramToNumChildren(name, gram)}
+    return children;
 }`;
     }
     Object.keys(tags).forEach((tag) => {
@@ -279,7 +281,7 @@ export const topGramToNumChildren = (
             return `// derived`;
         case 'tagged':
             if (gram.tags.includes('Atom')) {
-                return `children.push({item: {idx: ${value}, punct, cid: cid++}});`;
+                return `children.push({item: {idx, punct, cid: cid++}});`;
             }
             if (Array.isArray(gram.inner)) {
                 return gramToNumChildren(
