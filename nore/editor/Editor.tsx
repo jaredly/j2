@@ -129,7 +129,8 @@ export const Editor = ({ store, root }: { store: Store; root: number }) => {
 
     return (
         <div
-            style={{ margin: 48, fontSize: 48, color: '#888' }}
+            // style={{ margin: 48, fontSize: 48, color: '#888' }}
+            style={{ margin: 48, fontSize: 28, color: '#888' }}
             {...dragHandlers}
         >
             <Keyboardians store={store} />
@@ -194,14 +195,25 @@ export function calcSelection(
                     type: 'select',
                     idx: p1[i - 1],
                     children: [p1[i], p2[i]],
+                    cid: 0,
                 };
             }
             return;
         }
     }
     if (p1.length < p2.length) {
-        return { type: 'select', idx: p1[p1.length - 1], children: null };
+        return {
+            type: 'select',
+            idx: p1[p1.length - 1],
+            children: null,
+            cid: 0,
+        };
     } else {
-        return { type: 'select', idx: p2[p2.length - 1], children: null };
+        return {
+            type: 'select',
+            idx: p2[p2.length - 1],
+            children: null,
+            cid: 0,
+        };
     }
 }

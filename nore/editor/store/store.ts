@@ -47,7 +47,8 @@ export type EditSelection = {
     type: 'edit';
     path: { cid: number; idx: number; punct: number }[];
     idx: number;
-    at?: 'start' | 'end' | 'change' | 'inner' | number | null;
+    at?: 'start' | 'end' | 'change' | 'inner' | null;
+    cid: number;
 };
 export type Selection =
     | EditSelection
@@ -56,6 +57,7 @@ export type Selection =
           path: number[];
           idx: number;
           children: null | [number, number];
+          cid: number;
       };
 
 export type History = {
@@ -178,7 +180,7 @@ export const setSelection = (
 ) => {
     if (
         store.selection?.idx === selection?.idx &&
-        store.selection?.at === selection?.at &&
+        store.selection?.cid === selection?.cid &&
         !force &&
         selection?.type === store.selection?.type &&
         !(
@@ -194,6 +196,10 @@ export const setSelection = (
     const prev = store.selection?.idx;
 
     if (selection?.type === 'edit') {
+        if (!store.map[selection.idx]) {
+            console.log(selection.idx);
+            debugger;
+        }
         const v = store.map[selection.idx].value;
         if (v.type === 'Apply') {
             if (selection.at === 'start') {

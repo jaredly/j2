@@ -29,7 +29,7 @@ export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
     const last = path[path.length - 1];
     const sel =
         // @ts-ignore
-        store.selection?.idx === last.idx && store.selection?.at === last.cid;
+        store.selection?.idx === last.idx && store.selection?.cid === last.cid;
     const ref = useRef(null as null | HTMLSpanElement);
     useLayoutEffect(() => {
         if (!ref.current) {
@@ -51,6 +51,7 @@ export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
                 onKeyDown={(evt) => {
                     if (evt.key === 'ArrowRight') {
                         evt.preventDefault();
+                        evt.stopPropagation();
                         const right = goRight(store, path, true);
                         console.log('going right', right);
                         if (right) {
@@ -59,6 +60,7 @@ export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
                     }
                     if (evt.key === 'ArrowLeft') {
                         evt.preventDefault();
+                        evt.stopPropagation();
                         const left = goLeft(store, path, true);
                         console.log('going left', left);
                         if (left) {

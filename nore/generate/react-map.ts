@@ -260,14 +260,14 @@ export const gramToReact = (
                 value,
                 path,
                 leadingSpace,
-            )} : null}`;
+            )} : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}`;
         case 'inferrable':
             return `{${value} ? ${gramToReact(
                 gram.item,
                 value + '.value',
                 path,
                 leadingSpace,
-            )} : null}`;
+            )} : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}`;
         default:
             return (leadingSpace ? ' ' : '') + `<>what ${gram.type}</>`;
     }
@@ -376,10 +376,14 @@ export const gramToNumChildren = (
         case 'optional':
             return `if (${value} != null) {
                 ${gramToNumChildren(gram.item, value, path, leadingSpace)}
+    } else {
+        children.push({item: {cid: cid++, idx, punct}});
     }`;
         case 'inferrable':
             return `if (${value} != null) {
         ${gramToNumChildren(gram.item, value + '.value', path, leadingSpace)}
+    } else {
+        children.push({item: {cid: cid++, idx, punct}});
     }`;
         default:
             return `throw new Error("what ${gram.type}");`;

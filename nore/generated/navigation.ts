@@ -11,6 +11,7 @@ export const goLeft = (
         return null;
     }
     const last = path[path.length - 1];
+    console.log(` > Left of`, last);
     const siblings = NodeChildren(store.map[last.idx].value);
     if (
         siblings[last.cid] == null ||
@@ -23,6 +24,7 @@ export const goLeft = (
     let next = last.cid - 1;
     while (next >= 0) {
         const child = siblings[next];
+        console.log(`Next`, next, child, punct, child.item.punct);
         if (child.item.punct < punct) {
             needPunct = false;
         }
@@ -45,10 +47,11 @@ export const goLeft = (
             type: 'edit',
             path: path.slice(0, -1),
             idx: child.item.idx,
-            at: child.item.cid,
+            cid: child.item.cid,
+            at: 'end',
         };
     }
-    return goLeft(store, path.slice(0, -1), needPunct);
+    return goLeft(store, path.slice(0, -1), needPunct && punct === 0);
 };
 
 export const goRight = (
@@ -95,7 +98,8 @@ export const goRight = (
             type: 'edit',
             path: path.slice(0, -1),
             idx: child.item.idx,
-            at: child.item.cid,
+            cid: child.item.cid,
+            at: 'start',
         };
     }
     return goRight(store, path.slice(0, -1), needPunct);
@@ -132,7 +136,8 @@ export const firstChild = (
         type: 'edit',
         path: path,
         idx: first.item.idx,
-        at: first.item.cid,
+        cid: first.item.cid,
+        at: 'start',
     };
 };
 
@@ -167,7 +172,8 @@ export const lastChild = (
         type: 'edit',
         path: path,
         idx: last.item.idx,
-        at: last.item.cid,
+        cid: last.item.cid,
+        at: 'end',
     };
 };
 

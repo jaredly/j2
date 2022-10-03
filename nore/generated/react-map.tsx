@@ -44,7 +44,7 @@ export const Lambda = ({idx, store, path}: {idx: number, store: Store, path: Pat
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}>:</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><Type idx={item.res.value} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            </span> : null}<ClickSide path={path.concat([{cid, idx, punct: punct += 3}])}> =&gt;</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><Expression idx={item.body} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
+            </span> : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide path={path.concat([{cid, idx, punct: punct += 3}])}> =&gt;</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><Expression idx={item.body} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             </span>;
 }
@@ -74,6 +74,8 @@ export const LambdaChildren = (item: t.Lambda): Child[] => {
     punct += 1;
     children.push({idx: item.res.value, item: {cid: cid++, idx, punct}});
     children.push({item: {cid: cid++, idx, punct}});
+    } else {
+        children.push({item: {cid: cid++, idx, punct}});
     }
     punct += 3;
     punct += 1;
@@ -92,7 +94,7 @@ export const Larg = ({idx, store, path}: {idx: number, store: Store, path: Path[
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}>:</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><Type idx={item.typ.value} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            </span> : null}
+            </span> : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             </span>;
 }
@@ -109,6 +111,8 @@ export const LargChildren = (item: t.Larg): Child[] => {
     punct += 1;
     children.push({idx: item.typ.value, item: {cid: cid++, idx, punct}});
     children.push({item: {cid: cid++, idx, punct}});
+    } else {
+        children.push({item: {cid: cid++, idx, punct}});
     }
     children.push({item: {cid: cid++, idx, punct}});
     return children;
@@ -229,7 +233,7 @@ export const IdHash = ({idx, store, path}: {idx: number, store: Store, path: Pat
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}>.</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><UInt idx={item.idx} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            </span> : null}<ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}> ]</ClickSide>
+            </span> : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}> ]</ClickSide>
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             </span>;
 }
@@ -248,6 +252,8 @@ export const IdHashChildren = (item: t.IdHash): Child[] => {
     punct += 1;
     children.push({idx: item.idx, item: {cid: cid++, idx, punct}});
     children.push({item: {cid: cid++, idx, punct}});
+    } else {
+        children.push({item: {cid: cid++, idx, punct}});
     }
     punct += 2;
     children.push({item: {cid: cid++, idx, punct}});

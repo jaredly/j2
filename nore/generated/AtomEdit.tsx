@@ -31,6 +31,10 @@ const pathColor = (path: Path[], store: Store) => {
     return undefined;
 };
 
+document.addEventListener('selectionchange', (evt) => {
+    // console.log('SEL', window.getSelection());
+});
+
 export const AtomEdit = <T,>({
     value,
     idx,
@@ -57,6 +61,7 @@ export const AtomEdit = <T,>({
                 edit?.length === 0 ? newBlank() : parsers['parse' + type](edit);
             // @ts-ignore
             const tomap = to[type];
+            parsed.loc.idx = idx;
             updateStore(store, {
                 map: {
                     [idx]: {
@@ -76,7 +81,28 @@ export const AtomEdit = <T,>({
             return;
         }
         if (editing && ref.current !== document.activeElement) {
+            console.log('> sel it up');
             ref.current.focus();
+            const at = store.selection?.type === 'edit' && store.selection.at;
+            if (at === 'end') {
+                const sel = window.getSelection()!;
+                console.log('select to end');
+                // if (sel) {
+                // const range = sel.getRangeAt(0);
+                // range.selectNodeContents(ref.current);
+                // sel.addRange(range);
+                sel.selectAllChildren(ref.current);
+                setTimeout(() => {
+                    sel.selectAllChildren(ref.current);
+                }, 50);
+                // range.collapse(false);
+                // const range = document.createRange();
+                // range.selectNodeContents(ref.current);
+                // range.collapse(false);
+                // sel.removeAllRanges();
+                // sel.addRange(range);
+                // }
+            }
         }
         if (ref.current.textContent !== edit) {
             ref.current.textContent = edit;
@@ -91,7 +117,7 @@ export const AtomEdit = <T,>({
                         store,
                     ),
                     minHeight: '1.5em',
-                    backgroundColor: 'rgba(255, 255, 0, 0.05)',
+                    // backgroundColor: 'rgba(255, 255, 0, 0.05)',
                 }}
                 onMouseDown={(evt) => {
                     setEdit(config.toString(value));
@@ -100,6 +126,7 @@ export const AtomEdit = <T,>({
                         idx,
                         path,
                         at: 'change',
+                        cid: 0,
                     });
                 }}
             >
@@ -125,7 +152,7 @@ export const AtomEdit = <T,>({
                 ),
                 outline: 'none',
                 minHeight: '1.5em',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                // backgroundColor: 'rgba(255, 255, 255, 0.1)',
             }}
             onKeyDown={(evt) => {
                 if (evt.key === 'Enter') {
@@ -146,6 +173,7 @@ export const AtomEdit = <T,>({
                         evt.currentTarget.textContent!.length
                 ) {
                     evt.preventDefault();
+                    evt.stopPropagation();
                     const right = goRight(store, path);
                     console.log(`going right`, right);
                     if (right) {
@@ -158,6 +186,7 @@ export const AtomEdit = <T,>({
                     getPos(evt.currentTarget) === 0
                 ) {
                     evt.preventDefault();
+                    evt.stopPropagation();
                     const left = goLeft(store, path);
                     console.log(`going left`, left);
                     if (left) {
@@ -170,6 +199,7 @@ export const AtomEdit = <T,>({
 };
 
 const getPos = (target: HTMLElement) => {
+    console.log('getting pos');
     const sel = document.getSelection()!;
     const r = sel.getRangeAt(0).cloneRange();
     sel.extend(target, 0);
