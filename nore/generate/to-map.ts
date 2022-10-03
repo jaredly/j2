@@ -20,7 +20,6 @@ type Options = { from: boolean };
 export const generateToMap = (
     grammar: Grams,
     tagDeps: { [key: string]: string[] },
-    options: Options,
 ) => {
     const items = assembleTypes(grammar, tagDeps, { from: false });
     const fromItems = assembleTypes(grammar, tagDeps, { from: true });

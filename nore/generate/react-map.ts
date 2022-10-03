@@ -47,6 +47,11 @@ export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path
     const item = useStore(store, idx) as t.Blank;
     return <AtomEdit value={item} idx={idx} store={store} config={c.Blank} path={path} />
 }
+
+export const BlankChildren = (item: t.Blank) => {
+    return [{item: {idx: item.loc.idx, cid: 0, punct: 0}}];
+}
+
 `;
 
 export const pathType = (grammar: Grams, tags: { [key: string]: string[] }) => {
@@ -89,6 +94,16 @@ export const generateReactComponents = (
     const item = useStore(store, idx) as t.${name};
     return ${value};
 }`;
+
+        components[
+            name + '_numc'
+        ] = `export const ${name}Children = (item: t.${name}) => {
+    let cid = 0;
+    let punct = 0;
+    const idx = item.loc.idx;
+    const children = [];
+    ${topGramToNumChildren(name, gram)}
+}`;
     }
     Object.keys(tags).forEach((tag) => {
         components[
@@ -107,6 +122,28 @@ ${tags[tag]
                     : `item.type === "${child}"`
             }) {
         return <${child} idx={idx} store={store} path={path} />;
+    }`,
+    )
+    .join('\n\n')}
+
+    throw new Error('Unexpected type ' + (item as any).type)
+}`;
+
+        components[
+            tag + '_numc'
+        ] = `export const ${tag}Children = (item: t.${tag}) => {
+${tags[tag]
+    .concat(['Blank'])
+    .map(
+        (child) =>
+            `    if (${
+                tags[child]
+                    ? tags[child]
+                          .map((inner) => `item.type === "${inner}"`)
+                          .join(' || ')
+                    : `item.type === "${child}"`
+            }) {
+        return ${child}Children(item);
     }`,
     )
     .join('\n\n')}
@@ -227,5 +264,115 @@ export const gramToReact = (
             )} : null}`;
         default:
             return (leadingSpace ? ' ' : '') + `<>what ${gram.type}</>`;
+    }
+};
+
+export const topGramToNumChildren = (
+    name: string,
+    gram: TGram<never>,
+): string => {
+    const value = 'item';
+    switch (gram.type) {
+        case 'or':
+            return '// orrr';
+        case 'derived':
+            return `// derived`;
+        case 'tagged':
+            if (gram.tags.includes('Atom')) {
+                return `children.push({item: {idx: ${value}, punct, cid: cid++}});`;
+            }
+            if (Array.isArray(gram.inner)) {
+                return gramToNumChildren(
+                    { type: 'sequence', items: gram.inner },
+                    value,
+                    { name, path: null },
+                );
+            }
+            if (gram.inner.type === 'suffixes') {
+                return `${gramToNumChildren(
+                    gram.inner.target,
+                    value + '.target',
+                    {
+                        name,
+                        path: `{at: 'target'}`,
+                    },
+                )}
+    ${value}.suffixes.forEach((suffix, i) => {
+        ${gramToNumChildren(gram.inner.suffix, 'suffix', {
+            name,
+            path: `{at: 'suffix', suffix: i}`,
+        })}
+    });`;
+            }
+            if (gram.inner.type === 'binops') {
+                return `// <>binops</>`;
+            }
+            return gramToNumChildren(gram.inner, value, { name, path: null });
+        case 'peggy':
+            return `// <>{${value}}</>`;
+        case 'sequence':
+            return gramToNumChildren(gram, value, { name, path: null });
+    }
+};
+
+export const gramToNumChildren = (
+    gram: Gram<never>,
+    value: string,
+    path: { name: string; path: null | string },
+    leadingSpace = false,
+): string => {
+    switch (gram.type) {
+        case 'sequence':
+            return `children.push({item: {cid: cid++, idx, punct}});
+    ${gram.items
+        .map((child, i) => gramToNumChildren(child, value, path, i > 0))
+        .join('\n    ')}
+    children.push({item: {cid: cid++, idx, punct}});`;
+        case 'literal':
+            return `punct += ${gram.value.length + (leadingSpace ? 1 : 0)};`;
+        case 'literal-ref':
+            return `punct += ${value}.length + ${leadingSpace ? 1 : 0};`;
+        case 'named':
+            return gramToNumChildren(
+                gram.inner,
+                `${value}.${gram.name}`,
+                {
+                    name: path.name,
+                    path: `{cid: cid++, idx, punct}`,
+                },
+                leadingSpace,
+            );
+        case 'ref':
+            return (
+                (leadingSpace ? 'punct += 1;\n    ' : '') +
+                `children.push({idx: ${value}, item: {cid: cid++, idx, punct}});`
+            );
+        case 'args':
+            const [l, r] = gram.bounds ?? ['(', ')'];
+            return `
+    punct += ${l.length + (leadingSpace ? 1 : 0)};
+    ${value}.forEach((arg, i) => {
+        ${gramToNumChildren(gram.item, 'arg', {
+            name: path.name,
+            path: `{cid: cid++, idx, punct}`,
+        })}
+        if (i < ${value}.length - 1) {
+            punct += 2;
+        }
+    })
+    if (!${value}.length) {
+        children.push({item: {cid: cid++, idx, punct}});
+    }
+    punct += ${r.length};`;
+        case 'optional':
+            return `if (${value} != null) {
+                ${gramToNumChildren(gram.item, value, path, leadingSpace)}
+    }`;
+        case 'inferrable':
+            return `if (${value} != null) {
+        ${gramToNumChildren(gram.item, value + '.value', path, leadingSpace)}
+    }`;
+        default:
+            return `throw new Error("what ${gram.type}");`;
     }
 };
