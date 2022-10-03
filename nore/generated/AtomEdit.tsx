@@ -11,7 +11,7 @@ import {
     setSelection,
 } from '../editor/store/store';
 import { Path } from './react-map';
-import { goRight } from './navigation';
+import { goLeft, goRight } from './navigation';
 
 const colors: { [key: string]: string } = {
     Identifier: '#5bb6b7',
@@ -150,6 +150,18 @@ export const AtomEdit = <T,>({
                     console.log(`going right`, right);
                     if (right) {
                         setSelection(store, right);
+                    }
+                }
+                if (
+                    evt.key === 'ArrowLeft' &&
+                    getSelection()?.toString() === '' &&
+                    getPos(evt.currentTarget) === 0
+                ) {
+                    evt.preventDefault();
+                    const left = goLeft(store, path);
+                    console.log(`going left`, left);
+                    if (left) {
+                        setSelection(store, left);
                     }
                 }
             }}

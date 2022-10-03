@@ -1,7 +1,7 @@
 import { Path } from './react-map';
 import React, { useLayoutEffect, useRef } from 'react';
 import { setSelection, Store } from '../editor/store/store';
-import { goRight } from './navigation';
+import { goLeft, goRight } from './navigation';
 
 export const ClickSide = ({
     path,
@@ -28,6 +28,7 @@ export const ClickSide = ({
 export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
     const last = path[path.length - 1];
     const sel =
+        // @ts-ignore
         store.selection?.idx === last.idx && store.selection?.at === last.cid;
     const ref = useRef(null as null | HTMLSpanElement);
     useLayoutEffect(() => {
@@ -54,6 +55,14 @@ export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
                         console.log('going right', right);
                         if (right) {
                             setSelection(store, right);
+                        }
+                    }
+                    if (evt.key === 'ArrowLeft') {
+                        evt.preventDefault();
+                        const left = goLeft(store, path, true);
+                        console.log('going left', left);
+                        if (left) {
+                            setSelection(store, left);
                         }
                     }
                 }}

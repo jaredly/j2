@@ -1,9 +1,56 @@
 import { Selection, Store } from '../editor/store/store';
 import { NodeChildren, Path } from './react-map';
 
-// RULE IS
-// - got to advance past at least one punct
-// - I think that's it
+export const goLeft = (
+    store: Store,
+    path: Path[],
+    needPunct = true,
+): null | Selection => {
+    if (!path.length) {
+        console.log('done path');
+        return null;
+    }
+    const last = path[path.length - 1];
+    const siblings = NodeChildren(store.map[last.idx].value);
+    if (
+        siblings[last.cid] == null ||
+        siblings[last.cid].item.cid !== last.cid
+    ) {
+        console.error(`WAIT cid is off`, siblings, last);
+        return null;
+    }
+    let punct = last.punct;
+    let next = last.cid - 1;
+    while (next >= 0) {
+        const child = siblings[next];
+        if (child.item.punct < punct) {
+            needPunct = false;
+        }
+        if (child.idx != null) {
+            const got = lastChild(
+                store,
+                child.idx,
+                path.slice(0, -1).concat([child.item]),
+                needPunct,
+            );
+            if (got) {
+                return got;
+            }
+        }
+        if (needPunct) {
+            next--;
+            continue;
+        }
+        return {
+            type: 'edit',
+            path: path.slice(0, -1),
+            idx: child.item.idx,
+            at: child.item.cid,
+        };
+    }
+    return goLeft(store, path.slice(0, -1), needPunct);
+};
+
 export const goRight = (
     store: Store,
     path: Path[],
@@ -86,6 +133,41 @@ export const firstChild = (
         path: path,
         idx: first.item.idx,
         at: first.item.cid,
+    };
+};
+
+export const lastChild = (
+    store: Store,
+    idx: number,
+    path: Path[],
+    needPunct = false,
+): null | Selection => {
+    const children = NodeChildren(store.map[idx].value);
+    if (!children.length) {
+        return null;
+    }
+    let last = children[children.length - 1];
+    if (needPunct) {
+        let found = null;
+        for (let i = children.length - 1; i >= 0; i--) {
+            if (children[i].item.punct < last.item.punct) {
+                found = children[i];
+                break;
+            }
+        }
+        if (found == null) {
+            return null;
+        }
+        last = found;
+    }
+    if (last.idx != null) {
+        return lastChild(store, last.idx, path.concat([last.item]));
+    }
+    return {
+        type: 'edit',
+        path: path,
+        idx: last.item.idx,
+        at: last.item.cid,
     };
 };
 

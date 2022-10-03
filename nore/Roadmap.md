@@ -18,9 +18,28 @@ yeah, the childPositions doesn't need to be recursive.
 
 ## Selection working
 
-- [ ] basic goRight
-- [ ] right out of fn body isn't owrking
-- [ ] make Empty's actually a text editorrr
+- [x] basic goRight
+- [x] right out of fn body isn't owrking
+- [x] make Empty's actually a text editorrr
+- [ ] basic goLeft
+	- oh it's breaking some
+	- need to actually keep going once I've hit the punct I need,
+		in case there's a sibling that is the same punct level as me.
+		and atoms and stuff will have a traverse in, so we won't skip over them.
+- [ ] make the editor do something!
+	- SO I think at least for the Empty in an Args, I should be able to
+		pass in the kind of thing you should be able to parse, right?
+		although parsing per se isn't quite the name of the game.
+		a given empty thing can only go a certain number of ways.
+		`fn` for a fn, digits for a number, alphanum for an identifier.
+		eventually `(` and `{` for tuples and records, `'` for enums or sth.
+	- [ ] if you ',', handle that
+		if you're /before/ a thing (or at the start of an atom I guess)
+		then we want a new arg before the current one. otherwise, after.
+	- [ ] if you do something else ... 
+		like binops eventually, or also fn call suffixes I guess.
+		this'll probably be bespoke until it's not? idk
+
 
 
 ## AUTOGEN REACT
