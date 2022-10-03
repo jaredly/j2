@@ -1,5 +1,7 @@
 import { Path } from './react-map';
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
+import { setSelection, Store } from '../editor/store/store';
+import { goRight } from './navigation';
 
 export const ClickSide = ({
     path,
@@ -23,6 +25,40 @@ export const ClickSide = ({
     );
 };
 
-export const Empty = ({ path }: { path: Path[] }) => {
+export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
+    const last = path[path.length - 1];
+    const sel =
+        store.selection?.idx === last.idx && store.selection?.at === last.cid;
+    const ref = useRef(null as null | HTMLSpanElement);
+    useLayoutEffect(() => {
+        if (!ref.current) {
+            return;
+        }
+        if (sel && ref.current !== document.activeElement) {
+            ref.current.focus();
+        }
+    }, [sel]);
+    if (sel) {
+        return (
+            <span
+                contentEditable
+                ref={ref}
+                style={{ height: '1em', color: 'white' }}
+                onBlur={() => {
+                    setSelection(store, null);
+                }}
+                onKeyDown={(evt) => {
+                    if (evt.key === 'ArrowRight') {
+                        evt.preventDefault();
+                        const right = goRight(store, path, true);
+                        console.log('going right', right);
+                        if (right) {
+                            setSelection(store, right);
+                        }
+                    }
+                }}
+            />
+        );
+    }
     return <span style={{ height: '1em', color: 'red' }}></span>;
 };

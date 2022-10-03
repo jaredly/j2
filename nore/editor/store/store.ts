@@ -178,6 +178,7 @@ export const setSelection = (
 ) => {
     if (
         store.selection?.idx === selection?.idx &&
+        store.selection?.at === selection?.at &&
         !force &&
         selection?.type === store.selection?.type &&
         !(

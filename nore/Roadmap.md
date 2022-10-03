@@ -9,6 +9,18 @@ Highlevel things I haven't solved at all:
 childCountForPath?
 childThingsForPath?
 
+ok, so like the ... efficient version would be to ... start at the top! Of course.
+Don't need to start at the bottom. ok.
+yeah, the childPositions doesn't need to be recursive.
+
+`LambdaChildren()`
+`ExpressionChildren()`
+
+## Selection working
+
+- [ ] basic goRight
+- [ ] right out of fn body isn't owrking
+- [ ] make Empty's actually a text editorrr
 
 
 ## AUTOGEN REACT

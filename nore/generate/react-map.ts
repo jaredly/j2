@@ -204,16 +204,16 @@ export const gramToReact = (
 ): string => {
     switch (gram.type) {
         case 'sequence':
+            // <Empty path={path.concat([{cid: cid++, idx, punct}])} />
             return `<span>
-            <Empty path={path.concat([{cid: cid++, idx, punct}])} />
             ${gram.items
                 .map((child, i) => gramToReact(child, value, path, i > 0))
                 .join('')}
-            <Empty path={path.concat([{cid: cid++, idx, punct}])} />
+            <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             </span>`;
         case 'literal':
             return `<ClickSide path={path.concat([{cid, idx, punct: punct += ${
-                gram.value.length
+                gram.value.length + (leadingSpace ? 1 : 0)
             }}])}>${
                 (leadingSpace ? ' ' : '') +
                 gram.value.replace(/>/g, '&gt;').replace(/</g, '&lt;')
@@ -247,7 +247,7 @@ export const gramToReact = (
                 gram.item,
                 'arg',
                 { name: path.name, path: `{cid: cid++, idx, punct}` },
-            )}{i < ${value}.length - 1 ? <ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}>, </ClickSide> : ''}</React.Fragment>) : <Empty path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide path={path.concat([{cid, idx, punct: punct += ${
+            )}{i < ${value}.length - 1 ? <ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}>, </ClickSide> : ''}</React.Fragment>) : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide path={path.concat([{cid, idx, punct: punct += ${
                 r.length
             }}])}>${r}</ClickSide>`;
         case 'optional':
@@ -325,10 +325,10 @@ export const gramToNumChildren = (
 ): string => {
     switch (gram.type) {
         case 'sequence':
-            return `children.push({item: {cid: cid++, idx, punct}});
-    ${gram.items
-        .map((child, i) => gramToNumChildren(child, value, path, i > 0))
-        .join('\n    ')}
+            // children.push({item: {cid: cid++, idx, punct}});
+            return `${gram.items
+                .map((child, i) => gramToNumChildren(child, value, path, i > 0))
+                .join('\n    ')}
     children.push({item: {cid: cid++, idx, punct}});`;
         case 'literal':
             return `punct += ${gram.value.length + (leadingSpace ? 1 : 0)};`;
