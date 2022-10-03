@@ -48,7 +48,7 @@ export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path
     return <AtomEdit value={item} idx={idx} store={store} config={c.Blank} path={path} />
 }
 
-export const BlankChildren = (item: t.Blank) => {
+export const BlankChildren = (item: t.Blank): Child[] => {
     return [{item: {idx: item.loc.idx, cid: 0, punct: 0}}];
 }
 

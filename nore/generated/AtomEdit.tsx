@@ -129,7 +129,7 @@ export const AtomEdit = <T,>({
                     evt.preventDefault();
                     evt.stopPropagation();
                     console.log(path);
-                    addArg(path, store);
+                    // addArg(path, store);
                 }
                 if (
                     evt.key === 'ArrowRight' &&
@@ -138,7 +138,11 @@ export const AtomEdit = <T,>({
                         evt.currentTarget.textContent!.length
                 ) {
                     evt.preventDefault();
-                    console.log(`going right`, goRight(store, idx, path));
+                    const right = goRight(store, path);
+                    console.log(`going right`, right);
+                    if (right) {
+                        setSelection(store, right);
+                    }
                 }
             }}
         />
@@ -155,6 +159,7 @@ const getPos = (target: HTMLElement) => {
     return pos;
 };
 
+/*
 const addArg = (path: Path[], store: Store) => {
     for (let i = path.length - 1; i >= 0; i--) {
         const p = path[i];
@@ -227,3 +232,4 @@ const addArg = (path: Path[], store: Store) => {
         }
     }
 };
+*/

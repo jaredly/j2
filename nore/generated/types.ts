@@ -123,3 +123,5 @@ export type Atom = Number | Boolean | PIdentifier | Identifier | Blank;
 export type Pattern = PIdentifier | Blank;
 
 export type Suffix = CallSuffix | Blank;
+
+export type Node = Lambda | Larg | Number | Boolean | PIdentifier | Identifier | UInt | LocalHash | IdHash | Apply | CallSuffix | Blank;

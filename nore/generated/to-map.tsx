@@ -315,3 +315,35 @@ export const Suffix_id = (value: t.Suffix, map: tm.Map): number => add(map, {
     type: "Suffix",
     value: Suffix(value, map)
 });
+
+
+export const Node = (value: t.Node, map: tm.Map): tm.Node => (value.type === "Lambda" ? Lambda(value, map) : 
+value.type === "Larg" ? Larg(value, map) : 
+value.type === "Number" ? Number(value, map) : 
+value.type === "Boolean" ? Boolean(value, map) : 
+value.type === "PIdentifier" ? PIdentifier(value, map) : 
+value.type === "Identifier" ? Identifier(value, map) : 
+value.type === "UInt" ? UInt(value, map) : 
+value.type === "LocalHash" ? LocalHash(value, map) : 
+value.type === "IdHash" ? IdHash(value, map) : 
+value.type === "Apply" ? Apply(value, map) : 
+value.type === "CallSuffix" ? CallSuffix(value, map) : 
+value.type === "Blank" ? Blank(value, map) : 
+fail("Unexpected type: " + (value as any).type));
+export const from_Node = (value: tm.Node, map: tm.Map): t.Node => (value.type === "Lambda" ? from_Lambda(value, map) : 
+value.type === "Larg" ? from_Larg(value, map) : 
+value.type === "Number" ? from_Number(value, map) : 
+value.type === "Boolean" ? from_Boolean(value, map) : 
+value.type === "PIdentifier" ? from_PIdentifier(value, map) : 
+value.type === "Identifier" ? from_Identifier(value, map) : 
+value.type === "UInt" ? from_UInt(value, map) : 
+value.type === "LocalHash" ? from_LocalHash(value, map) : 
+value.type === "IdHash" ? from_IdHash(value, map) : 
+value.type === "Apply" ? from_Apply(value, map) : 
+value.type === "CallSuffix" ? from_CallSuffix(value, map) : 
+value.type === "Blank" ? from_Blank(value, map) : 
+fail("Unexpected type: " + (value as any).type));
+export const Node_id = (value: t.Node, map: tm.Map): number => add(map, {
+    type: "Node",
+    value: Node(value, map)
+});

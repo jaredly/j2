@@ -28,10 +28,17 @@ export const findTags = (
     Object.keys(tagDeps).forEach((tag) => {
         tags[tag].push(...tagDeps[tag]);
     });
+    // tags = { ...tags };
+
     return tags;
 };
 
 const tags = findTags(grammar, tagDeps);
+
+const starts = tags['Atom'].concat(Object.keys(tags));
+
+// @ts-ignore
+tags['Node'] = Object.keys(grammar).filter((k) => grammar[k].type !== 'peggy');
 
 writeFileSync('./nore/generated/types.ts', generateTypes(grammar, tags));
 writeFileSync(
@@ -46,8 +53,6 @@ writeFileSync(
 
 const peg = generatePeg(grammar);
 writeFileSync('./nore/generated/grammar.pegjs', peg);
-
-const starts = tags['Atom'].concat(Object.keys(tags));
 
 const gram = generate(peg, {
     output: 'source',

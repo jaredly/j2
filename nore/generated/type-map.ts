@@ -123,6 +123,8 @@ export type Atom = Number | Boolean | PIdentifier | Identifier | Blank;
 export type Pattern = PIdentifier | Blank;
 
 export type Suffix = CallSuffix | Blank;
+
+export type Node = Lambda | Larg | Number | Boolean | PIdentifier | Identifier | UInt | LocalHash | IdHash | Apply | CallSuffix | Blank;
  
 export type MapLambda = {
     type: 'Lambda',
@@ -209,6 +211,11 @@ export type MapSuffix = {
     value: Suffix,
 }
 
+export type MapNode = {
+    type: 'Node',
+    value: Node,
+}
+
 export type Map = {
-	[key: number]: MapLambda | MapLarg | MapNumber | MapBoolean | MapPIdentifier | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapApply | MapCallSuffix | MapExpression | MapApplyable | MapType | MapAtom | MapPattern | MapSuffix
+	[key: number]: MapLambda | MapLarg | MapNumber | MapBoolean | MapPIdentifier | MapIdentifier | MapUInt | MapLocalHash | MapIdHash | MapApply | MapCallSuffix | MapExpression | MapApplyable | MapType | MapAtom | MapPattern | MapSuffix | MapNode
 }

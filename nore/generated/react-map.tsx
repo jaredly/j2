@@ -25,7 +25,7 @@ export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path
     return <AtomEdit value={item} idx={idx} store={store} config={c.Blank} path={path} />
 }
 
-export const BlankChildren = (item: t.Blank) => {
+export const BlankChildren = (item: t.Blank): Child[] => {
     return [{item: {idx: item.loc.idx, cid: 0, punct: 0}}];
 }
 
@@ -518,6 +518,111 @@ export const Suffix = ({idx, store, path}: {idx: number, store: Store, path: Pat
 }
 
 export const SuffixChildren = (item: t.Suffix) => {
+    if (item.type === "CallSuffix") {
+        return CallSuffixChildren(item);
+    }
+
+    if (item.type === "Blank") {
+        return BlankChildren(item);
+    }
+
+    throw new Error('Unexpected type ' + (item as any).type)
+}
+
+export const Node = ({idx, store, path}: {idx: number, store: Store, path: Path[]}): JSX.Element => {
+    const item = useStore(store, idx) as t.Node;
+    if (item.type === "Lambda") {
+        return <Lambda idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "Larg") {
+        return <Larg idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "Number") {
+        return <Number idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "Boolean") {
+        return <Boolean idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "PIdentifier") {
+        return <PIdentifier idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "Identifier") {
+        return <Identifier idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "UInt") {
+        return <UInt idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "LocalHash") {
+        return <LocalHash idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "IdHash") {
+        return <IdHash idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "Apply") {
+        return <Apply idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "CallSuffix") {
+        return <CallSuffix idx={idx} store={store} path={path} />;
+    }
+
+    if (item.type === "Blank") {
+        return <Blank idx={idx} store={store} path={path} />;
+    }
+
+    throw new Error('Unexpected type ' + (item as any).type)
+}
+
+export const NodeChildren = (item: t.Node) => {
+    if (item.type === "Lambda") {
+        return LambdaChildren(item);
+    }
+
+    if (item.type === "Larg") {
+        return LargChildren(item);
+    }
+
+    if (item.type === "Number") {
+        return NumberChildren(item);
+    }
+
+    if (item.type === "Boolean") {
+        return BooleanChildren(item);
+    }
+
+    if (item.type === "PIdentifier") {
+        return PIdentifierChildren(item);
+    }
+
+    if (item.type === "Identifier") {
+        return IdentifierChildren(item);
+    }
+
+    if (item.type === "UInt") {
+        return UIntChildren(item);
+    }
+
+    if (item.type === "LocalHash") {
+        return LocalHashChildren(item);
+    }
+
+    if (item.type === "IdHash") {
+        return IdHashChildren(item);
+    }
+
+    if (item.type === "Apply") {
+        return ApplyChildren(item);
+    }
+
     if (item.type === "CallSuffix") {
         return CallSuffixChildren(item);
     }

@@ -1,85 +1,173 @@
 import { Selection, Store } from '../editor/store/store';
-import { Path } from './react-map';
+import { NodeChildren, Path } from './react-map';
 
+// RULE IS
+// - got to advance past at least one punct
+// - I think that's it
 export const goRight = (
     store: Store,
-    idx: number,
     path: Path[],
+    needPunct = true,
 ): null | Selection => {
     if (!path.length) {
+        console.log('done path');
         return null;
     }
-    let last = path[path.length - 1];
-    const node = store.map[last.idx].value;
-    const children = nodeChildren(node);
-    const at = children.findIndex((c) => c.item.cid === last.cid);
-    if (at === -1) {
-        console.warn('bad children in goRight', node, last, children);
+    const last = path[path.length - 1];
+    const siblings = NodeChildren(store.map[last.idx].value);
+    if (
+        siblings[last.cid] == null ||
+        siblings[last.cid].item.cid !== last.cid
+    ) {
+        console.error(`WAIT cid is off`, siblings, last);
         return null;
     }
-    if (at < children.length - 1) {
-        let next = children[at + 1];
-        path = path.slice(0, -1).concat(next.item);
-        while (next.idx != null) {
-            const children = nodeChildren(store.map[next.idx].value);
-            if (!children.length) {
-                console.warn(
-                    `no children in goRight`,
-                    store.map[next.idx].value,
-                );
-                return null;
+    let punct = last.punct;
+    let next = last.cid + 1;
+    while (next < siblings.length) {
+        const child = siblings[next];
+        if (child.item.punct > punct) {
+            needPunct = false;
+        }
+        if (child.idx != null) {
+            const got = firstChild(
+                store,
+                child.idx,
+                path.slice(0, -1).concat([child.item]),
+                needPunct,
+            );
+            if (got) {
+                return got;
             }
-            next = children[0];
-            path.push(next.item);
+        }
+        if (needPunct) {
+            next++;
+            continue;
         }
         return {
             type: 'edit',
-            idx: next.item.idx,
-            path,
-            at: next.item.cid,
+            path: path.slice(0, -1),
+            idx: child.item.idx,
+            at: child.item.cid,
         };
     }
-    return goRight(store, last.idx, path.slice(0, -1));
+    return goRight(store, path.slice(0, -1), needPunct);
 };
 
-export const nodeChildren = (
-    node: Store['map'][number]['value'],
-): {
-    item: Path;
-    idx?: number;
-}[] => {
-    if (node.type === 'Apply') {
-        const children = [];
-        let idx = node.loc.idx;
-        let cid = 0;
-        children.push({ item: { cid: cid++, idx, punct: 0 } });
-        node.suffixes.forEach((suffix) => {
-            children.push({
-                item: { cid: cid++, idx, punct: 0 },
-                idx: suffix,
-            });
-        });
-        return children;
+export const firstChild = (
+    store: Store,
+    idx: number,
+    path: Path[],
+    needPunct = false,
+): null | Selection => {
+    const children = NodeChildren(store.map[idx].value);
+    if (!children.length) {
+        return null;
     }
-    if (node.type === 'CallSuffix') {
-        const children = [];
-        let idx = node.loc.idx;
-        let cid = 0;
-        let punct = 0;
-        children.push({ item: { cid: cid++, idx: node.loc.idx, punct } });
-        punct += 1;
-        node.args.forEach((arg, i) => {
-            children.push({ item: { cid: cid++, idx, punct }, idx: arg });
-            if (i < node.args.length - 1) {
-                punct += 2;
+    let first = children[0];
+    if (needPunct) {
+        let found = null;
+        for (let i = 0; i < children.length; i++) {
+            if (children[i].item.punct) {
+                found = children[i];
+                break;
             }
-        });
-        if (!node.args.length) {
-            children.push({ item: { cid: cid++, idx, punct } });
         }
-        punct += 1;
-        children.push({ item: { cid: cid++, idx: node.loc.idx, punct } });
-        return children;
+        if (found == null) {
+            return null;
+        }
+        first = found;
     }
-    return [];
+    if (first.idx != null) {
+        return firstChild(store, first.idx, path.concat([first.item]));
+    }
+    return {
+        type: 'edit',
+        path: path,
+        idx: first.item.idx,
+        at: first.item.cid,
+    };
 };
+
+// export const _goRight = (
+//     store: Store,
+//     idx: number,
+//     path: Path[],
+// ): null | Selection => {
+//     if (!path.length) {
+//         return null;
+//     }
+//     let last = path[path.length - 1];
+//     const node = store.map[last.idx].value;
+//     const children = nodeChildren(node);
+//     const at = children.findIndex((c) => c.item.cid === last.cid);
+//     if (at === -1) {
+//         console.warn('bad children in goRight', node, last, children);
+//         return null;
+//     }
+//     if (at < children.length - 1) {
+//         let next = children[at + 1];
+//         path = path.slice(0, -1).concat(next.item);
+//         while (next.idx != null) {
+//             const children = nodeChildren(store.map[next.idx].value);
+//             if (!children.length) {
+//                 console.warn(
+//                     `no children in goRight`,
+//                     store.map[next.idx].value,
+//                 );
+//                 return null;
+//             }
+//             next = children[0];
+//             path.push(next.item);
+//         }
+//         return {
+//             type: 'edit',
+//             idx: next.item.idx,
+//             path,
+//             at: next.item.cid,
+//         };
+//     }
+//     return goRight(store, last.idx, path.slice(0, -1));
+// };
+
+// export const nodeChildren = (
+//     node: Store['map'][number]['value'],
+// ): {
+//     item: Path;
+//     idx?: number;
+// }[] => {
+//     if (node.type === 'Apply') {
+//         const children = [];
+//         let idx = node.loc.idx;
+//         let cid = 0;
+//         children.push({ item: { cid: cid++, idx, punct: 0 } });
+//         node.suffixes.forEach((suffix) => {
+//             children.push({
+//                 item: { cid: cid++, idx, punct: 0 },
+//                 idx: suffix,
+//             });
+//         });
+//         return children;
+//     }
+//     if (node.type === 'CallSuffix') {
+//         const children = [];
+//         let idx = node.loc.idx;
+//         let cid = 0;
+//         let punct = 0;
+//         children.push({ item: { cid: cid++, idx: node.loc.idx, punct } });
+//         punct += 1;
+//         node.args.forEach((arg, i) => {
+//             children.push({ item: { cid: cid++, idx, punct }, idx: arg });
+//             if (i < node.args.length - 1) {
+//                 punct += 2;
+//             }
+//         });
+//         if (!node.args.length) {
+//             children.push({ item: { cid: cid++, idx, punct } });
+//         }
+//         punct += 1;
+//         children.push({ item: { cid: cid++, idx: node.loc.idx, punct } });
+//         return children;
+//     }
+//     return [];
+// };
