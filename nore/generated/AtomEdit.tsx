@@ -72,11 +72,11 @@ export const AtomEdit = <T,>({
         }
     }, [edit, value, idx]);
 
-    // useLayoutEffect(() => {
-    //     if (!editing) {
-    //         commit();
-    //     }
-    // }, [editing]);
+    useLayoutEffect(() => {
+        if (!editing) {
+            commit();
+        }
+    }, [editing]);
 
     const ref = useRef(null as null | HTMLSpanElement);
     useLayoutEffect(() => {
@@ -102,9 +102,6 @@ export const AtomEdit = <T,>({
         }
         if (ref.current.textContent !== edit) {
             ref.current.textContent = edit;
-        }
-        if (editing) {
-            return () => commit();
         }
     }, [edit, editing]);
     if (!editing) {

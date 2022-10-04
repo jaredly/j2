@@ -126,24 +126,21 @@ export type Store = {
 };
 
 export const useStore = (store: Store, key: number) => {
-    const [value, setValue] = useState({ item: store.map[key], tick: 0 });
+    const [_tick, setValue] = useState(0);
     useEffect(() => {
         const fn = () => {
             if (!store.map[key]) {
                 debugger;
             }
-            setValue((v) => ({ item: store.map[key], tick: v.tick + 1 }));
+            setValue((v) => v + 1);
         };
         store.listeners[key] = store.listeners[key] || [];
         store.listeners[key].push(fn);
         return () => {
             store.listeners[key] = store.listeners[key].filter((x) => x !== fn);
         };
-    }, []);
-    if (!value.item) {
-        debugger;
-    }
-    return value.item.value;
+    }, [key]);
+    return store.map[key].value;
 };
 
 export const notify = (store: Store, idxs: (number | null | undefined)[]) => {
