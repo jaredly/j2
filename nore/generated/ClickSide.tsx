@@ -6,8 +6,10 @@ import { goLeft, goRight } from './navigation';
 export const ClickSide = ({
     path,
     children,
+    store,
 }: {
     path: Path[];
+    store: Store;
     children: JSX.Element | string;
 }) => {
     return (
@@ -15,9 +17,43 @@ export const ClickSide = ({
             style={{ color: '#aaf' }}
             className="hover"
             onMouseDown={(evt) => {
+                evt.preventDefault();
                 const box = evt.currentTarget.getBoundingClientRect();
                 const leftSide = evt.clientX < box.left + box.width / 2;
-                console.log('ok what', leftSide, JSON.stringify(path));
+                const last = path[path.length - 1];
+                if (leftSide) {
+                    const left = goLeft(store, path, false);
+                    if (left) {
+                        setSelection(store, left);
+                    }
+                } else {
+                    if (last.cid === 0) {
+                        const left = goLeft(store, path, false);
+                        if (left) {
+                            const right = goRight(
+                                store,
+                                left.path.concat([
+                                    { cid: left.cid, idx: left.idx, punct: 0 },
+                                ]),
+                                false,
+                            );
+                            if (right) {
+                                setSelection(store, right);
+                            }
+                        }
+                    } else {
+                        const right = goRight(
+                            store,
+                            path
+                                .slice(0, -1)
+                                .concat([{ ...last, cid: last.cid - 1 }]),
+                            false,
+                        );
+                        if (right) {
+                            setSelection(store, right);
+                        }
+                    }
+                }
             }}
         >
             {children}

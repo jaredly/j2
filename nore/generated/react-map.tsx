@@ -40,11 +40,11 @@ export const Lambda = ({idx, store, path}: {idx: number, store: Store, path: Pat
     const item = useStore(store, idx) as t.Lambda;
     return <span>
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            <ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}>fn</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}> (</ClickSide>{item.args.length ? item.args.map((arg, i) => <React.Fragment key={i}><Larg idx={arg} store={store} path={path.concat([{cid: cid++, idx, punct}])} />{i < item.args.length - 1 ? <ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}>, </ClickSide> : ''}</React.Fragment>) : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}>)</ClickSide>{item.res ? <span>
+            <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 2}])}>fn</ClickSide><ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 2}])}> (</ClickSide>{item.args.length ? item.args.map((arg, i) => <React.Fragment key={i}><Larg idx={arg} store={store} path={path.concat([{cid: cid++, idx, punct}])} />{i < item.args.length - 1 ? <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 2}])}>, </ClickSide> : ''}</React.Fragment>) : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}>)</ClickSide>{item.res ? <span>
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            <ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}>:</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><Type idx={item.res.value} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
+            <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}>:</ClickSide><ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><Type idx={item.res.value} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            </span> : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide path={path.concat([{cid, idx, punct: punct += 3}])}> =&gt;</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><Expression idx={item.body} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
+            </span> : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 3}])}> =&gt;</ClickSide><ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><Expression idx={item.body} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             </span>;
 }
@@ -92,7 +92,7 @@ export const Larg = ({idx, store, path}: {idx: number, store: Store, path: Path[
             
             <Pattern idx={item.pat} store={store} path={path.concat([{cid: cid++, idx, punct}])} />{item.typ ? <span>
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            <ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}>:</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><Type idx={item.typ.value} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
+            <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}>:</ClickSide><ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><Type idx={item.typ.value} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             </span> : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
@@ -204,7 +204,7 @@ export const LocalHash = ({idx, store, path}: {idx: number, store: Store, path: 
     const item = useStore(store, idx) as t.LocalHash;
     return <span>
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            <ClickSide path={path.concat([{cid, idx, punct: punct += 3}])}>#[:</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><UInt idx={item.sym} store={store} path={path.concat([{cid: cid++, idx, punct}])} /><ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}> ]</ClickSide>
+            <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 3}])}>#[:</ClickSide><ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><UInt idx={item.sym} store={store} path={path.concat([{cid: cid++, idx, punct}])} /><ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 2}])}> ]</ClickSide>
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             </span>;
 }
@@ -229,11 +229,11 @@ export const IdHash = ({idx, store, path}: {idx: number, store: Store, path: Pat
     const item = useStore(store, idx) as t.IdHash;
     return <span>
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            <ClickSide path={path.concat([{cid, idx, punct: punct += 3}])}>#[h</ClickSide> {item.hash}{item.idx ? <span>
+            <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 3}])}>#[h</ClickSide> {item.hash}{item.idx ? <span>
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            <ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}>.</ClickSide><ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><UInt idx={item.idx} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
+            <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}>.</ClickSide><ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide><UInt idx={item.idx} store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
-            </span> : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}> ]</ClickSide>
+            </span> : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 2}])}> ]</ClickSide>
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             </span>;
 }
@@ -285,7 +285,7 @@ export const CallSuffix = ({idx, store, path}: {idx: number, store: Store, path:
     const item = useStore(store, idx) as t.CallSuffix;
     return <span>
             
-            <ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}>(</ClickSide>{item.args.length ? item.args.map((arg, i) => <React.Fragment key={i}><Expression idx={arg} store={store} path={path.concat([{cid: cid++, idx, punct}])} />{i < item.args.length - 1 ? <ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}>, </ClickSide> : ''}</React.Fragment>) : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}>)</ClickSide>
+            <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}>(</ClickSide>{item.args.length ? item.args.map((arg, i) => <React.Fragment key={i}><Expression idx={arg} store={store} path={path.concat([{cid: cid++, idx, punct}])} />{i < item.args.length - 1 ? <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 2}])}>, </ClickSide> : ''}</React.Fragment>) : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}>)</ClickSide>
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             </span>;
 }

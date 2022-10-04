@@ -216,7 +216,7 @@ export const gramToReact = (
             <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />
             </span>`;
         case 'literal':
-            return `<ClickSide path={path.concat([{cid, idx, punct: punct += ${
+            return `<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += ${
                 gram.value.length + (leadingSpace ? 1 : 0)
             }}])}>${
                 (leadingSpace ? ' ' : '') +
@@ -237,13 +237,13 @@ export const gramToReact = (
         case 'ref':
             return (
                 (leadingSpace
-                    ? '<ClickSide path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide>'
+                    ? '<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 1}])}> </ClickSide>'
                     : '') +
                 `<${gram.id} idx={${value}} store={store} path={path.concat([{cid: cid++, idx, punct}])} />`
             );
         case 'args':
             const [l, r] = gram.bounds ?? ['(', ')'];
-            return `<ClickSide path={path.concat([{cid, idx, punct: punct += ${
+            return `<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += ${
                 (leadingSpace ? 1 : 0) + l.length
             }}])}>${
                 (leadingSpace ? ' ' : '') + l
@@ -251,7 +251,7 @@ export const gramToReact = (
                 gram.item,
                 'arg',
                 { name: path.name, path: `{cid: cid++, idx, punct}` },
-            )}{i < ${value}.length - 1 ? <ClickSide path={path.concat([{cid, idx, punct: punct += 2}])}>, </ClickSide> : ''}</React.Fragment>) : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide path={path.concat([{cid, idx, punct: punct += ${
+            )}{i < ${value}.length - 1 ? <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 2}])}>, </ClickSide> : ''}</React.Fragment>) : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += ${
                 r.length
             }}])}>${r}</ClickSide>`;
         case 'optional':

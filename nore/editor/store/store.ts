@@ -54,7 +54,7 @@ export type Selection =
     | EditSelection
     | {
           type: 'select';
-          path: number[];
+          path: { cid: number; idx: number; punct: number }[];
           idx: number;
           children: null | [number, number];
           cid: number;
@@ -178,7 +178,6 @@ export const setSelection = (
     extraNotify?: number[],
     force?: boolean,
 ) => {
-    console.log('sel', selection);
     if (
         store.selection?.idx === selection?.idx &&
         store.selection?.cid === selection?.cid &&
@@ -190,7 +189,7 @@ export const setSelection = (
             !kidsEqual(store.selection?.children, selection?.children)
         )
     ) {
-        console.warn('skip sel');
+        console.warn('skip sel', selection, store.selection);
         notify(store, extraNotify || []);
         return;
     }
