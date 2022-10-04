@@ -81,20 +81,21 @@ export const AtomEdit = <T,>({
             return;
         }
         if (editing && ref.current !== document.activeElement) {
-            console.log('> sel it up');
-            ref.current.focus();
+            // console.log('> sel it up');
+            // ref.current.focus();
             const at = store.selection?.type === 'edit' && store.selection.at;
             if (at === 'end') {
                 const sel = window.getSelection()!;
-                console.log('select to end');
+                // console.log('select to end');
                 // if (sel) {
                 // const range = sel.getRangeAt(0);
                 // range.selectNodeContents(ref.current);
                 // sel.addRange(range);
-                sel.selectAllChildren(ref.current);
+                // sel.selectAllChildren(ref.current);
                 setTimeout(() => {
-                    sel.selectAllChildren(ref.current);
-                }, 50);
+                    sel.selectAllChildren(ref.current!);
+                    sel.getRangeAt(0).collapse(false);
+                }, 0);
                 // range.collapse(false);
                 // const range = document.createRange();
                 // range.selectNodeContents(ref.current);
@@ -102,6 +103,8 @@ export const AtomEdit = <T,>({
                 // sel.removeAllRanges();
                 // sel.addRange(range);
                 // }
+            } else {
+                ref.current.focus();
             }
         }
         if (ref.current.textContent !== edit) {
@@ -175,7 +178,7 @@ export const AtomEdit = <T,>({
                     evt.preventDefault();
                     evt.stopPropagation();
                     const right = goRight(store, path);
-                    console.log(`going right`, right);
+                    // console.log(`going right`, right);
                     if (right) {
                         setSelection(store, right);
                     }
@@ -188,7 +191,7 @@ export const AtomEdit = <T,>({
                     evt.preventDefault();
                     evt.stopPropagation();
                     const left = goLeft(store, path);
-                    console.log(`going left`, left);
+                    // console.log(`going left`, left);
                     if (left) {
                         setSelection(store, left);
                     }
@@ -199,7 +202,7 @@ export const AtomEdit = <T,>({
 };
 
 const getPos = (target: HTMLElement) => {
-    console.log('getting pos');
+    // console.log('getting pos');
     const sel = document.getSelection()!;
     const r = sel.getRangeAt(0).cloneRange();
     sel.extend(target, 0);

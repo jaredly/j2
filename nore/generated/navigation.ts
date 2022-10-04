@@ -11,7 +11,7 @@ export const goLeft = (
         return null;
     }
     const last = path[path.length - 1];
-    console.log(` > Left of`, last);
+    // console.log(` > Left of`, last);
     const siblings = NodeChildren(store.map[last.idx].value);
     if (
         siblings[last.cid] == null ||
@@ -24,7 +24,7 @@ export const goLeft = (
     let next = last.cid - 1;
     while (next >= 0) {
         const child = siblings[next];
-        console.log(`Next`, next, child, punct, child.item.punct);
+        // console.log(`Next`, next, child, punct, child.item.punct);
         if (child.item.punct < punct) {
             needPunct = false;
         }
@@ -152,6 +152,9 @@ export const lastChild = (
         return null;
     }
     let last = children[children.length - 1];
+    if (last.idx != null) {
+        return lastChild(store, last.idx, path.concat([last.item]), needPunct);
+    }
     if (needPunct) {
         let found = null;
         for (let i = children.length - 1; i >= 0; i--) {
@@ -166,7 +169,7 @@ export const lastChild = (
         last = found;
     }
     if (last.idx != null) {
-        return lastChild(store, last.idx, path.concat([last.item]));
+        return lastChild(store, last.idx, path.concat([last.item]), false);
     }
     return {
         type: 'edit',

@@ -53,7 +53,7 @@ export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
                         evt.preventDefault();
                         evt.stopPropagation();
                         const right = goRight(store, path, true);
-                        console.log('going right', right);
+                        // console.log('going right', right);
                         if (right) {
                             setSelection(store, right);
                         }
@@ -62,7 +62,7 @@ export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
                         evt.preventDefault();
                         evt.stopPropagation();
                         const left = goLeft(store, path, true);
-                        console.log('going left', left);
+                        // console.log('going left', left);
                         if (left) {
                             setSelection(store, left);
                         }
