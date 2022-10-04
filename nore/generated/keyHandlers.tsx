@@ -179,19 +179,24 @@ const handleOpenParen = (store: Store, path: Path) => {
     }
 };
 
-export const handleKey = (store: Store, path: Path[], key: string) => {
+export const handleKey = (
+    store: Store,
+    path: Path[],
+    key: string,
+    text: string,
+) => {
     if (!keyHandlers[key]) {
         return;
     }
     for (let i = path.length - 1; i >= 0; i--) {
-        if (keyHandlers[key](store, path[i])) {
+        if (keyHandlers[key](store, path[i], text)) {
             return;
         }
     }
 };
 
 export const keyHandlers: {
-    [key: string]: (store: Store, path: Path) => true | void;
+    [key: string]: (store: Store, path: Path, text: string) => true | void;
 } = {
     ',': handleOneComma,
     '(': handleOpenParen,

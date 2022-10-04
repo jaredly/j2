@@ -61,14 +61,12 @@ export const AtomEdit = <T,>({
             // @ts-ignore
             const tomap = to[type];
             parsed.loc.idx = idx;
-            updateStore(store, {
-                map: {
-                    [idx]: {
-                        type: type,
-                        value: tomap(parsed, store.map),
-                    } as t.Map[0],
-                },
-            });
+            const update: t.Map = {};
+            update[idx] = {
+                type: type,
+                value: tomap(parsed, update),
+            } as t.Map[0];
+            updateStore(store, { map: update });
         } catch (err) {
             console.error(err);
             setEdit(config.toString(value));
@@ -165,6 +163,7 @@ export const AtomEdit = <T,>({
                         store,
                         path.concat([{ idx, cid: 0, punct: 0 }]),
                         evt.key,
+                        evt.currentTarget.textContent!,
                     );
                 }
                 if (

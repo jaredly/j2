@@ -50,7 +50,12 @@ export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
                         evt.preventDefault();
                         evt.stopPropagation();
                         console.log(path);
-                        handleKey(store, path, evt.key);
+                        handleKey(
+                            store,
+                            path,
+                            evt.key,
+                            evt.currentTarget.textContent!,
+                        );
                     }
                 }}
             />

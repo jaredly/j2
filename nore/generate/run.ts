@@ -8,6 +8,7 @@ import { generate } from 'peggy';
 import { generateReact, prelude } from './react-map';
 import { Grams } from '../grams/types';
 import { generateToMap } from './to-map';
+import { execSync } from 'child_process';
 
 export const findTags = (
     grammar: Grams,
@@ -77,4 +78,6 @@ ${starts
 );
 
 writeFileSync(`./nore/generated/react-map.tsx`, generateReact(grammar, tags));
+execSync(`prettier --write ./nore/generated/react-map.tsx`);
 writeFileSync(`./nore/generated/to-map.tsx`, generateToMap(grammar, tags));
+execSync(`prettier --write ./nore/generated/to-map.tsx`);
