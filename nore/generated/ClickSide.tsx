@@ -15,7 +15,6 @@ export const ClickSide = ({
     return (
         <span
             style={{ color: '#aaf' }}
-            className="hover"
             onMouseDown={(evt) => {
                 evt.preventDefault();
                 const box = evt.currentTarget.getBoundingClientRect();

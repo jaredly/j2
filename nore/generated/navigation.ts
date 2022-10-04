@@ -43,6 +43,10 @@ export const goLeft = (
             next--;
             continue;
         }
+        if (next > 0 && siblings[next - 1].item.punct === punct) {
+            next--;
+            continue;
+        }
         return {
             type: 'edit',
             path: path.slice(0, -1),
@@ -152,6 +156,18 @@ export const lastChild = (
         return null;
     }
     let last = children[children.length - 1];
+    if (last.idx != null) {
+        return lastChild(store, last.idx, path.concat([last.item]), needPunct);
+    }
+    let i = children.length - 1;
+    while (
+        !last.idx &&
+        i > 0 &&
+        children[i - 1].item.punct === last.item.punct
+    ) {
+        i--;
+        last = children[i];
+    }
     if (last.idx != null) {
         return lastChild(store, last.idx, path.concat([last.item]), needPunct);
     }

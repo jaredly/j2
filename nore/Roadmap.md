@@ -4,28 +4,19 @@ Highlevel things I haven't solved at all:
 - pretty-printingggg
 	so, breaking long lines.
 
-## Ok more selection
-
-childCountForPath?
-childThingsForPath?
-
-ok, so like the ... efficient version would be to ... start at the top! Of course.
-Don't need to start at the bottom. ok.
-yeah, the childPositions doesn't need to be recursive.
-
-`LambdaChildren()`
-`ExpressionChildren()`
-
 ## Selection working
 
 - [x] basic goRight
 - [x] right out of fn body isn't owrking
 - [x] make Empty's actually a text editorrr
-- [ ] basic goLeft
+- [x] basic goLeft
 	- oh it's breaking some
 	- need to actually keep going once I've hit the punct I need,
 		in case there's a sibling that is the same punct level as me.
 		and atoms and stuff will have a traverse in, so we won't skip over them.
+- [x] make clickside work
+- [ ] ugh I want tests for my navigation functions.
+- [x] goLeft & goRight should continue to go /deeper/ if applicable.
 - [ ] make the editor do something!
 	- SO I think at least for the Empty in an Args, I should be able to
 		pass in the kind of thing you should be able to parse, right?
@@ -39,6 +30,20 @@ yeah, the childPositions doesn't need to be recursive.
 	- [ ] if you do something else ... 
 		like binops eventually, or also fn call suffixes I guess.
 		this'll probably be bespoke until it's not? idk
+
+
+## Ok more selection
+
+childCountForPath?
+childThingsForPath?
+
+ok, so like the ... efficient version would be to ... start at the top! Of course.
+Don't need to start at the bottom. ok.
+yeah, the childPositions doesn't need to be recursive.
+
+`LambdaChildren()`
+`ExpressionChildren()`
+
 
 
 
