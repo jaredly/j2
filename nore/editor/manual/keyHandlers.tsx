@@ -102,7 +102,7 @@ const handleCloseParen = (store: Store, path: Path) => {
         }
     }
 };
-const handleOpenParen = (store: Store, path: Path) => {
+const handleOpenParen = (store: Store, path: Path, text: string) => {
     const mapped = store.map[path.idx];
     console.log(path, mapped.type, mapped.value.type);
     if (mapped.value.type === 'Apply') {
@@ -137,6 +137,7 @@ const handleOpenParen = (store: Store, path: Path) => {
         (mapped.value.type === 'Identifier' || mapped.value.type === 'Number')
     ) {
         const map: t.Map = {};
+        const exp = to.Applyable(parsers.parseApplyable(text), map);
         const blank = to.add(map, {
             type: 'Expression',
             value: to.Expression(parsers.parseExpression('_'), map),
@@ -149,22 +150,19 @@ const handleOpenParen = (store: Store, path: Path) => {
                 loc: { start: 0, end: 0, idx: nidx() },
             },
         });
-        const tidx = nidx();
+        // const tidx = nidx();
         map[path.idx] = {
             type: 'Expression',
             value: {
                 suffixes: [suffix],
                 type: 'Apply',
-                target: tidx,
+                target: exp.loc.idx,
                 loc: { start: 0, end: 0, idx: path.idx },
             },
         };
-        map[tidx] = {
+        map[exp.loc.idx] = {
             type: 'Applyable',
-            value: {
-                ...mapped.value,
-                loc: { ...mapped.value.loc, idx: tidx },
-            },
+            value: exp,
         };
         updateStore(store, {
             map,
