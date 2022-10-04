@@ -18,12 +18,14 @@ Highlevel things I haven't solved at all:
 - [ ] ugh I want tests for my navigation functions.
 - [x] goLeft & goRight should continue to go /deeper/ if applicable.
 
-- [ ] remove path from selection
-	- [ ] make goLeft and goRight return the new selection & the path or sth idk
-- [ ] fix comma to select the new blank
-- [ ] blanks should auto-select for 'change' probably
-- [ ] make comma work for callsuffix
+- [x] remove path from selection
+	- [x] make goLeft and goRight return the new selection & the path or sth idk
+- [x] fix comma to select the new blank
+- [x] blanks should auto-select for 'change' probably
+- [x] make comma work for callsuffix
 - [ ] do a similar thing for '(', ...
+	- [ ] and ')'
+- [ ] allow deletion of args
 - [ ] autocomplete 'fn' where appropriate, might need to wrap in parens in some cases.
 
 

@@ -155,11 +155,10 @@ export const AtomEdit = <T,>({
                     // setEdit(null);
                     return;
                 }
-                if (evt.key === ',') {
+                if (keyHandlers[evt.key]) {
                     evt.preventDefault();
                     evt.stopPropagation();
-                    console.log(path);
-                    comma(store, path);
+                    handleKey(store, path, evt.key);
                 }
                 if (
                     evt.key === 'ArrowRight' &&
@@ -210,18 +209,13 @@ what valid characters exist for a given child position?
 like can we do a comma here? idk.
 */
 
-const comma = (store: Store, path: Path[]) => {
-    for (let i = path.length - 1; i >= 0; i--) {
-        if (handleOneComma(store, path[i])) {
-            return;
-        }
-    }
-};
-
 const handleOneComma = (store: Store, path: Path) => {
     const item = store.map[path.idx].value;
     if (item.type === 'CallSuffix') {
-        if (path.cid <= item.args.length) {
+        if (
+            path.cid < item.args.length ||
+            (path.cid === 0 && item.args.length === 0)
+        ) {
             const update: t.Map = {};
             const expr = to.Expression(parsers.parseExpression('_'), update);
             update[expr.loc.idx] = { type: 'Expression', value: expr };
@@ -279,77 +273,50 @@ const handleOneComma = (store: Store, path: Path) => {
     }
 };
 
-/*
-const addArg = (path: Path[], store: Store) => {
+export const handleKey = (store: Store, path: Path[], key: string) => {
+    if (!keyHandlers[key]) {
+        return;
+    }
     for (let i = path.length - 1; i >= 0; i--) {
-        const p = path[i];
-        if (p.type === 'Lambda' && p.path?.at === 'args') {
-            const arg = p.path.arg;
-            const v = store.map[p.idx].value as t.Lambda;
-            const pidx = idx.current++;
-            const aidx = idx.current++;
-            const update: t.Map = {
-                [pidx]: {
-                    type: 'Pattern',
-                    value: {
-                        type: 'Blank',
-                        loc: { idx: pidx, start: 0, end: 0 },
-                    },
-                },
-                [aidx]: {
-                    type: 'Larg',
-                    value: {
-                        type: 'Larg',
-                        loc: { idx: aidx, start: 0, end: 0 },
-                        pat: pidx,
-                        typ: null,
-                    },
-                },
-                [p.idx]: {
-                    type: store.map[p.idx].type,
-                    value: {
-                        ...v,
-                        args: v.args
-                            .slice(0, arg + 1)
-                            .concat([aidx])
-                            .concat(v.args.slice(arg + 1)),
-                    },
-                } as t.Map[0],
-            };
-            return updateStore(store, {
-                map: update,
-                selection: { idx: pidx, at: 'change', type: 'edit', path: [] },
-            });
-        }
-
-        if (p.type === 'CallSuffix' && p.path?.at === 'args') {
-            const arg = p.path.arg;
-            const v = store.map[p.idx].value as t.CallSuffix;
-            const pidx = idx.current++;
-            const update: t.Map = {
-                [pidx]: {
-                    type: 'Expression',
-                    value: {
-                        type: 'Blank',
-                        loc: { idx: pidx, start: 0, end: 0 },
-                    },
-                },
-                [p.idx]: {
-                    type: store.map[p.idx].type,
-                    value: {
-                        ...v,
-                        args: v.args
-                            .slice(0, arg + 1)
-                            .concat([pidx])
-                            .concat(v.args.slice(arg + 1)),
-                    },
-                } as t.Map[0],
-            };
-            return updateStore(store, {
-                map: update,
-                selection: { idx: pidx, at: 'change', type: 'edit', path: [] },
-            });
+        if (keyHandlers[key](store, path[i])) {
+            return;
         }
     }
 };
-*/
+
+const handleCloseParen = (store: Store, path: Path) => {
+    const item = store.map[path.idx].value;
+    if (item.type === 'Lambda') {
+        if (path.cid <= item.args.length) {
+            setSelection(store, {
+                type: 'edit',
+                idx: path.idx,
+                cid: Math.max(item.args.length, 1) + 1,
+            });
+            return true;
+        }
+    }
+    if (item.type === 'CallSuffix') {
+        if (
+            path.cid < item.args.length ||
+            (path.cid === 0 && item.args.length === 0)
+        ) {
+            setSelection(store, {
+                type: 'edit',
+                idx: path.idx,
+                cid: Math.max(item.args.length, 1),
+            });
+            return true;
+        }
+    }
+};
+
+const handleOpenParen = (store: Store, path: Path) => {};
+
+export const keyHandlers: {
+    [key: string]: (store: Store, path: Path) => true | void;
+} = {
+    ',': handleOneComma,
+    '(': handleOpenParen,
+    ')': handleCloseParen,
+};

@@ -32,7 +32,8 @@ import * as to from './to-map';
 import { updateStore, Store, Selection, useStore } from '../editor/store/store';
 import {ContentEditable} from './ContentEditable';
 import {AtomEdit} from './AtomEdit';
-import {ClickSide, Empty} from './ClickSide';
+import {ClickSide} from './ClickSide';
+import {Empty} from './Empty';
 
 const selectionStyle = (selection: null | Selection, path: Path[], idx: number) => {
     if (selection?.idx === idx) {
@@ -45,7 +46,7 @@ const selectionStyle = (selection: null | Selection, path: Path[], idx: number) 
 
 export const Blank = ({idx, store, path}: {idx: number, store: Store, path: Path[]}) => {
     const item = useStore(store, idx) as t.Blank;
-    return <AtomEdit value={item} idx={idx} store={store} config={c.Blank} path={path} />
+    return <AtomEdit key={idx} value={item} idx={idx} store={store} config={c.Blank} path={path} />
 }
 
 export const BlankChildren = (item: t.Blank): Child[] => {
@@ -165,7 +166,7 @@ export const topGramToReact = (name: string, gram: TGram<never>): string => {
             return `<>{${value}.raw}</>`;
         case 'tagged':
             if (gram.tags.includes('Atom')) {
-                return `<AtomEdit value={${value}} idx={idx} store={store} config={c.${name}} path={path} />`;
+                return `<AtomEdit key={idx} value={${value}} idx={idx} store={store} config={c.${name}} path={path} />`;
             }
             if (Array.isArray(gram.inner)) {
                 return gramToReact(
