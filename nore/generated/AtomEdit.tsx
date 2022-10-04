@@ -12,6 +12,7 @@ import {
 } from '../editor/store/store';
 import { Path } from './react-map';
 import { firstChild, goLeft, goRight } from './navigation';
+import { keyHandlers, handleKey } from './keyHandlers';
 
 const colors: { [key: string]: string } = {
     Identifier: '#5bb6b7',
@@ -53,8 +54,10 @@ export const AtomEdit = <T,>({
         const type = store.map[idx].type;
         try {
             const parsed =
-                // @ts-ignore
-                edit?.length === 0 ? newBlank() : parsers['parse' + type](edit);
+                edit?.length === 0
+                    ? newBlank()
+                    : // @ts-ignore
+                      parsers['parse' + type](edit!.trim());
             // @ts-ignore
             const tomap = to[type];
             parsed.loc.idx = idx;
@@ -158,7 +161,11 @@ export const AtomEdit = <T,>({
                 if (keyHandlers[evt.key]) {
                     evt.preventDefault();
                     evt.stopPropagation();
-                    handleKey(store, path, evt.key);
+                    handleKey(
+                        store,
+                        path.concat([{ idx, cid: 0, punct: 0 }]),
+                        evt.key,
+                    );
                 }
                 if (
                     evt.key === 'ArrowRight' &&
@@ -208,115 +215,3 @@ Should my NodeChildren function also return ... something to do with
 what valid characters exist for a given child position?
 like can we do a comma here? idk.
 */
-
-const handleOneComma = (store: Store, path: Path) => {
-    const item = store.map[path.idx].value;
-    if (item.type === 'CallSuffix') {
-        if (
-            path.cid < item.args.length ||
-            (path.cid === 0 && item.args.length === 0)
-        ) {
-            const update: t.Map = {};
-            const expr = to.Expression(parsers.parseExpression('_'), update);
-            update[expr.loc.idx] = { type: 'Expression', value: expr };
-            update[path.idx] = {
-                type: store.map[path.idx].type,
-                value: {
-                    ...item,
-                    args: [
-                        ...item.args.slice(0, path.cid + 1),
-                        expr.loc.idx,
-                        ...item.args.slice(path.cid + 1),
-                    ],
-                },
-            } as t.Map[0];
-            updateStore(store, {
-                map: update,
-                selection: {
-                    type: 'edit',
-                    at: 'change',
-                    idx: expr.loc.idx,
-                    cid: 0,
-                },
-            });
-            return true;
-        }
-    }
-    if (item.type === 'Lambda') {
-        if (
-            path.cid <= item.args.length ||
-            (item.args.length === 0 && path.cid === 1)
-        ) {
-            const update: t.Map = {};
-            const larg = to.Larg(parsers.parseLarg('_'), update);
-            update[larg.loc.idx] = { type: 'Larg', value: larg };
-            update[path.idx] = {
-                type: store.map[path.idx].type,
-                value: {
-                    ...item,
-                    args: item.args.concat([larg.loc.idx]),
-                },
-            } as t.Map[0];
-            updateStore(store, {
-                map: update,
-                selection: {
-                    type: 'edit',
-                    at: 'change',
-                    idx: larg.pat,
-                    cid: 0,
-                },
-            });
-            // return {update, idx: larg.loc.idx};
-            return true;
-        }
-        console.log('lo lam', path.cid, item.args.length);
-    }
-};
-
-export const handleKey = (store: Store, path: Path[], key: string) => {
-    if (!keyHandlers[key]) {
-        return;
-    }
-    for (let i = path.length - 1; i >= 0; i--) {
-        if (keyHandlers[key](store, path[i])) {
-            return;
-        }
-    }
-};
-
-const handleCloseParen = (store: Store, path: Path) => {
-    const item = store.map[path.idx].value;
-    if (item.type === 'Lambda') {
-        if (path.cid <= item.args.length) {
-            setSelection(store, {
-                type: 'edit',
-                idx: path.idx,
-                cid: Math.max(item.args.length, 1) + 1,
-            });
-            return true;
-        }
-    }
-    if (item.type === 'CallSuffix') {
-        if (
-            path.cid < item.args.length ||
-            (path.cid === 0 && item.args.length === 0)
-        ) {
-            setSelection(store, {
-                type: 'edit',
-                idx: path.idx,
-                cid: Math.max(item.args.length, 1),
-            });
-            return true;
-        }
-    }
-};
-
-const handleOpenParen = (store: Store, path: Path) => {};
-
-export const keyHandlers: {
-    [key: string]: (store: Store, path: Path) => true | void;
-} = {
-    ',': handleOneComma,
-    '(': handleOpenParen,
-    ')': handleCloseParen,
-};

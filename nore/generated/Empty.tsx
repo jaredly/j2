@@ -2,7 +2,7 @@ import { Path } from './react-map';
 import React, { useLayoutEffect, useRef } from 'react';
 import { setSelection, Store } from '../editor/store/store';
 import { goLeft, goRight } from './navigation';
-import { handleKey, keyHandlers } from './AtomEdit';
+import { handleKey, keyHandlers } from './keyHandlers';
 
 export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
     const last = path[path.length - 1];
