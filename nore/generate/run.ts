@@ -77,7 +77,10 @@ ${starts
 `,
 );
 
-writeFileSync(`./nore/generated/react-map.tsx`, generateReact(grammar, tags));
-execSync(`prettier --write ./nore/generated/react-map.tsx`);
-writeFileSync(`./nore/generated/to-map.tsx`, generateToMap(grammar, tags));
-execSync(`prettier --write ./nore/generated/to-map.tsx`);
+writeFileSync(
+    `./nore/editor/generated/react-map.tsx`,
+    generateReact(grammar, tags),
+);
+execSync(`prettier --write ./nore/editor/generated/react-map.tsx`);
+writeFileSync(`./nore/generated/to-map.ts`, generateToMap(grammar, tags));
+execSync(`prettier --write ./nore/generated/to-map.ts`);

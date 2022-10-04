@@ -1,6 +1,6 @@
-import { Path } from './react-map';
+import { Path } from '../generated/react-map';
 import React, { ReactNode } from 'react';
-import { setSelection, Store } from '../editor/store/store';
+import { setSelection, Store } from '../store/store';
 import { goLeft, goRight } from './navigation';
 
 export const ClickSide = ({

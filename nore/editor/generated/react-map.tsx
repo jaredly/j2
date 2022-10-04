@@ -1,14 +1,11 @@
 import React from 'react';
-import { parse } from './grammar';
-import * as parsers from './parser';
-import * as t from './type-map';
-import * as c from './atomConfig';
-import * as to from './to-map';
-import { updateStore, Store, Selection, useStore } from '../editor/store/store';
-import { ContentEditable } from './ContentEditable';
-import { AtomEdit } from './AtomEdit';
-import { ClickSide } from './ClickSide';
-import { Empty } from './Empty';
+import * as t from '../../generated/type-map';
+import * as c from '../manual/atomConfig';
+import * as to from '../../generated/to-map';
+import { updateStore, Store, Selection, useStore } from '../store/store';
+import { AtomEdit } from '../manual/AtomEdit';
+import { ClickSide } from '../manual/ClickSide';
+import { Empty } from '../manual/Empty';
 
 const selectionStyle = (
     selection: null | Selection,

@@ -1,8 +1,8 @@
-import * as parsers from './parser';
-import * as t from './type-map';
-import * as to from './to-map';
-import { updateStore, Store, setSelection, nidx } from '../editor/store/store';
-import { Path } from './react-map';
+import * as parsers from '../../generated/parser';
+import * as t from '../../generated/type-map';
+import * as to from '../../generated/to-map';
+import { updateStore, Store, setSelection, nidx } from '../store/store';
+import { Path } from '../generated/react-map';
 import { lastChild } from './navigation';
 
 export const handleOneComma = (store: Store, path: Path) => {

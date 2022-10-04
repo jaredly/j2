@@ -7,7 +7,7 @@ import { parseExpression } from '../generated/parser';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { idx } from '../generated/grammar';
 import { Expression as ManualExpression } from './elements/aggregates';
-import { Expression } from '../generated/react-map';
+import { Expression } from './generated/react-map';
 import { Store, Selection, Path } from './store/store';
 import { useDrag } from './useDrag';
 

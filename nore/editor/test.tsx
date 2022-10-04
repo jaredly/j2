@@ -9,13 +9,12 @@ import './poly';
 import { newStore, Selection, setSelection } from './store/store';
 
 // testMutationObserver();
-    const darkTheme = createTheme({
-        type: 'dark',
-        theme: { colors: { background: '#0d0e16' } },
-    });
+const darkTheme = createTheme({
+    type: 'dark',
+    theme: { colors: { background: '#0d0e16' } },
+});
 
 const init = (text = 'hello(one(2)(3), 1, 2u)') => {
-
     const { store, root } = newStore(text);
     render(
         <NextUIProvider theme={darkTheme}>
@@ -93,8 +92,18 @@ const test = (name: string, fn: () => Promise<TestResult>) => {
     tests.push({ name, fn });
 };
 
-export const end = (idx: number): Selection => ({ type: 'edit', idx, at: 'end' });
-export const start = (idx: number): Selection => ({ type: 'edit', idx, at: 'start' });
+export const end = (idx: number): Selection => ({
+    type: 'edit',
+    idx,
+    at: 'end',
+    cid: 0,
+});
+export const start = (idx: number): Selection => ({
+    type: 'edit',
+    idx,
+    at: 'start',
+    cid: 0,
+});
 
 test('type some text into an ID', async () => {
     const { store, root } = init('hello()');

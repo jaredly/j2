@@ -39,7 +39,7 @@ export const useDrag = (store: Store) => {
                 const box = inOut(
                     boxes,
                     { x: evt.clientX, y: evt.clientY },
-                    { x: store.drag.start.x, y: store.drag.start.y }
+                    { x: store.drag.start.x, y: store.drag.start.y },
                 );
                 if (box) {
                     store.drag.end = {
@@ -70,6 +70,7 @@ export const useDrag = (store: Store) => {
                             type: 'select',
                             idx: store.drag.start.idx,
                             children: null,
+                            cid: 0,
                         });
                     }
                 }
@@ -79,6 +80,6 @@ export const useDrag = (store: Store) => {
             if (store.drag) {
                 store.drag = null;
             }
-        }
+        },
     };
 };

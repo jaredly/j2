@@ -1,12 +1,12 @@
-import { idx } from './grammar';
+import { idx } from '../../generated/grammar';
 import {
     parseBoolean,
     parseIdentifier,
     parseNumber,
     parsePIdentifier,
-} from './parser';
-import * as t from './type-map';
-import * as to from './to-map';
+} from '../../generated/parser';
+import * as t from '../../generated/type-map';
+import * as to from '../../generated/to-map';
 
 export type AtomConfig<T> = {
     toString: (item: T) => string;

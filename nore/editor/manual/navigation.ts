@@ -1,5 +1,5 @@
-import { Selection, Store } from '../editor/store/store';
-import { NodeChildren, Path } from './react-map';
+import { Selection, Store } from '../store/store';
+import { NodeChildren, Path } from '../generated/react-map';
 
 type Nav = { sel: Selection; path: Path[] };
 

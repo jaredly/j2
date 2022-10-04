@@ -1,16 +1,11 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
-import { idx, parse } from './grammar';
-import * as parsers from './parser';
-import * as t from './type-map';
+import { idx, parse } from '../../generated/grammar';
+import * as parsers from '../../generated/parser';
+import * as t from '../../generated/type-map';
 import * as c from './atomConfig';
-import * as to from './to-map';
-import {
-    updateStore,
-    Store,
-    newBlank,
-    setSelection,
-} from '../editor/store/store';
-import { Path } from './react-map';
+import * as to from '../../generated/to-map';
+import { updateStore, Store, newBlank, setSelection } from '../store/store';
+import { Path } from '../generated/react-map';
 import { firstChild, goLeft, goRight } from './navigation';
 import { keyHandlers, handleKey } from './keyHandlers';
 
