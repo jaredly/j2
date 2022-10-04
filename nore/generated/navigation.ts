@@ -1,11 +1,13 @@
 import { Selection, Store } from '../editor/store/store';
 import { NodeChildren, Path } from './react-map';
 
+type Nav = { sel: Selection; path: Path[] };
+
 export const goLeft = (
     store: Store,
     path: Path[],
     needPunct = true,
-): null | Selection => {
+): null | Nav => {
     if (!path.length) {
         console.log('done path');
         return null;
@@ -48,11 +50,13 @@ export const goLeft = (
             continue;
         }
         return {
-            type: 'edit',
             path: path.slice(0, -1),
-            idx: child.item.idx,
-            cid: child.item.cid,
-            at: 'end',
+            sel: {
+                type: 'edit',
+                idx: child.item.idx,
+                cid: child.item.cid,
+                at: 'end',
+            },
         };
     }
     return goLeft(store, path.slice(0, -1), needPunct && punct === 0);
@@ -62,7 +66,7 @@ export const goRight = (
     store: Store,
     path: Path[],
     needPunct = true,
-): null | Selection => {
+): null | Nav => {
     if (!path.length) {
         console.log('done path');
         return null;
@@ -99,11 +103,13 @@ export const goRight = (
             continue;
         }
         return {
-            type: 'edit',
             path: path.slice(0, -1),
-            idx: child.item.idx,
-            cid: child.item.cid,
-            at: 'start',
+            sel: {
+                type: 'edit',
+                idx: child.item.idx,
+                cid: child.item.cid,
+                at: 'start',
+            },
         };
     }
     return goRight(store, path.slice(0, -1), needPunct);
@@ -114,7 +120,7 @@ export const firstChild = (
     idx: number,
     path: Path[],
     needPunct = false,
-): null | Selection => {
+): null | Nav => {
     const children = NodeChildren(store.map[idx].value);
     if (!children.length) {
         return null;
@@ -137,11 +143,13 @@ export const firstChild = (
         return firstChild(store, first.idx, path.concat([first.item]));
     }
     return {
-        type: 'edit',
-        path: path,
-        idx: first.item.idx,
-        cid: first.item.cid,
-        at: 'start',
+        path,
+        sel: {
+            type: 'edit',
+            idx: first.item.idx,
+            cid: first.item.cid,
+            at: 'start',
+        },
     };
 };
 
@@ -150,7 +158,7 @@ export const lastChild = (
     idx: number,
     path: Path[],
     needPunct = false,
-): null | Selection => {
+): null | Nav => {
     const children = NodeChildren(store.map[idx].value);
     if (!children.length) {
         return null;
@@ -188,11 +196,13 @@ export const lastChild = (
         return lastChild(store, last.idx, path.concat([last.item]), false);
     }
     return {
-        type: 'edit',
-        path: path,
-        idx: last.item.idx,
-        cid: last.item.cid,
-        at: 'end',
+        path,
+        sel: {
+            type: 'edit',
+            idx: last.item.idx,
+            cid: last.item.cid,
+            at: 'end',
+        },
     };
 };
 

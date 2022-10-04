@@ -23,7 +23,7 @@ export const ClickSide = ({
                 if (leftSide) {
                     const left = goLeft(store, path, false);
                     if (left) {
-                        setSelection(store, left);
+                        setSelection(store, left.sel);
                     }
                 } else {
                     if (last.cid === 0) {
@@ -32,12 +32,16 @@ export const ClickSide = ({
                             const right = goRight(
                                 store,
                                 left.path.concat([
-                                    { cid: left.cid, idx: left.idx, punct: 0 },
+                                    {
+                                        cid: left.sel.cid,
+                                        idx: left.sel.idx,
+                                        punct: 0,
+                                    },
                                 ]),
                                 false,
                             );
                             if (right) {
-                                setSelection(store, right);
+                                setSelection(store, right.sel);
                             }
                         }
                     } else {
@@ -49,7 +53,7 @@ export const ClickSide = ({
                             false,
                         );
                         if (right) {
-                            setSelection(store, right);
+                            setSelection(store, right.sel);
                         }
                     }
                 }
@@ -90,7 +94,7 @@ export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
                         const right = goRight(store, path, true);
                         // console.log('going right', right);
                         if (right) {
-                            setSelection(store, right);
+                            setSelection(store, right.sel);
                         }
                     }
                     if (evt.key === 'ArrowLeft') {
@@ -99,7 +103,7 @@ export const Empty = ({ path, store }: { path: Path[]; store: Store }) => {
                         const left = goLeft(store, path, true);
                         // console.log('going left', left);
                         if (left) {
-                            setSelection(store, left);
+                            setSelection(store, left.sel);
                         }
                     }
                 }}

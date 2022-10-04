@@ -17,6 +17,16 @@ Highlevel things I haven't solved at all:
 - [x] make clickside work
 - [ ] ugh I want tests for my navigation functions.
 - [x] goLeft & goRight should continue to go /deeper/ if applicable.
+
+- [ ] remove path from selection
+	- [ ] make goLeft and goRight return the new selection & the path or sth idk
+- [ ] fix comma to select the new blank
+- [ ] blanks should auto-select for 'change' probably
+- [ ] make comma work for callsuffix
+- [ ] do a similar thing for '(', ...
+- [ ] autocomplete 'fn' where appropriate, might need to wrap in parens in some cases.
+
+
 - [ ] make the editor do something!
 	- SO I think at least for the Empty in an Args, I should be able to
 		pass in the kind of thing you should be able to parse, right?

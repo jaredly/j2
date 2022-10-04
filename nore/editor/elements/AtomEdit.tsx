@@ -106,7 +106,7 @@ export const AtomEdit = ({
                           setSelection(store, {
                               type: 'edit',
                               idx: idx,
-                              path: [],
+                              cid: 0,
                           })
                     : undefined
             }

@@ -19,6 +19,7 @@ import {
     onFinishEdit,
     toCallExpression,
 } from '../store/modify';
+import { firstChild } from '../../generated/navigation';
 
 export const keyHandler = (
     evt: React.KeyboardEvent<HTMLSpanElement>,
@@ -31,7 +32,7 @@ export const keyHandler = (
     if (evt.key === 'Escape') {
         evt.preventDefault();
         evt.currentTarget.blur();
-        return
+        return;
     }
     if (
         evt.key === 'ArrowLeft' &&
@@ -98,7 +99,11 @@ export const keyHandler = (
                 return;
             }
         }
-        const res = toCallExpression(evt.currentTarget.textContent!, store, idx);
+        const res = toCallExpression(
+            evt.currentTarget.textContent!,
+            store,
+            idx,
+        );
         if (res) {
             updateStore(store, res);
         }
@@ -125,15 +130,10 @@ export const keyHandler = (
                     continue;
                 }
                 evt.preventDefault();
-                setSelection(
-                    store,
-                    {
-                        type: 'edit',
-                        idx: next,
-                        at: 'end',
-                    },
-                    [last.pid],
-                );
+                const child = firstChild(store, next, [], false);
+                if (child) {
+                    setSelection(store, child.sel, [last.pid]);
+                }
                 return;
             }
         }

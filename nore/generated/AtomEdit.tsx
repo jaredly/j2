@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { idx, parse } from './grammar';
 import * as parsers from './parser';
 import * as t from './type-map';
@@ -11,7 +11,7 @@ import {
     setSelection,
 } from '../editor/store/store';
 import { Path } from './react-map';
-import { goLeft, goRight } from './navigation';
+import { firstChild, goLeft, goRight } from './navigation';
 
 const colors: { [key: string]: string } = {
     Identifier: '#5bb6b7',
@@ -71,6 +71,13 @@ export const AtomEdit = <T,>({
             setEdit(config.toString(value));
         }
     }, [edit, value, idx]);
+
+    // useLayoutEffect(() => {
+    //     if (!editing) {
+    //         commit();
+    //     }
+    // }, [editing]);
+
     const ref = useRef(null as null | HTMLSpanElement);
     useLayoutEffect(() => {
         if (!ref.current) {
@@ -84,12 +91,20 @@ export const AtomEdit = <T,>({
                     sel.selectAllChildren(ref.current!);
                     sel.getRangeAt(0).collapse(false);
                 }, 0);
+            } else if (at === 'change') {
+                const sel = window.getSelection()!;
+                setTimeout(() => {
+                    sel.selectAllChildren(ref.current!);
+                }, 0);
             } else {
                 ref.current.focus();
             }
         }
         if (ref.current.textContent !== edit) {
             ref.current.textContent = edit;
+        }
+        if (editing) {
+            return () => commit();
         }
     }, [edit, editing]);
     if (!editing) {
@@ -108,8 +123,6 @@ export const AtomEdit = <T,>({
                     setSelection(store, {
                         type: 'edit',
                         idx,
-                        path,
-                        at: 'change',
                         cid: 0,
                     });
                 }}
@@ -162,7 +175,7 @@ export const AtomEdit = <T,>({
                     const right = goRight(store, path);
                     // console.log(`going right`, right);
                     if (right) {
-                        setSelection(store, right);
+                        setSelection(store, right.sel);
                     }
                 }
                 if (
@@ -175,7 +188,7 @@ export const AtomEdit = <T,>({
                     const left = goLeft(store, path);
                     // console.log(`going left`, left);
                     if (left) {
-                        setSelection(store, left);
+                        setSelection(store, left.sel);
                     }
                 }
             }}
@@ -210,6 +223,34 @@ const comma = (store: Store, path: Path[]) => {
 
 const handleOneComma = (store: Store, path: Path) => {
     const item = store.map[path.idx].value;
+    if (item.type === 'CallSuffix') {
+        if (path.cid <= item.args.length) {
+            const update: t.Map = {};
+            const expr = to.Expression(parsers.parseExpression('_'), update);
+            update[expr.loc.idx] = { type: 'Expression', value: expr };
+            update[path.idx] = {
+                type: store.map[path.idx].type,
+                value: {
+                    ...item,
+                    args: [
+                        ...item.args.slice(0, path.cid + 1),
+                        expr.loc.idx,
+                        ...item.args.slice(path.cid + 1),
+                    ],
+                },
+            } as t.Map[0];
+            updateStore(store, {
+                map: update,
+                selection: {
+                    type: 'edit',
+                    at: 'change',
+                    idx: expr.loc.idx,
+                    cid: 0,
+                },
+            });
+            return true;
+        }
+    }
     if (item.type === 'Lambda') {
         if (
             path.cid <= item.args.length ||
@@ -227,7 +268,12 @@ const handleOneComma = (store: Store, path: Path) => {
             } as t.Map[0];
             updateStore(store, {
                 map: update,
-                selection: null,
+                selection: {
+                    type: 'edit',
+                    at: 'change',
+                    idx: larg.pat,
+                    cid: 0,
+                },
             });
             // return {update, idx: larg.loc.idx};
             return true;
