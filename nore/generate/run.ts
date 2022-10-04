@@ -35,7 +35,8 @@ export const findTags = (
 
 const tags = findTags(grammar, tagDeps);
 
-const starts = tags['Atom'].concat(Object.keys(tags));
+// const starts = tags['Atom'].concat(Object.keys(tags));
+const starts = Object.keys(grammar).concat(Object.keys(tags));
 
 // @ts-ignore
 tags['Node'] = Object.keys(grammar).filter((k) => grammar[k].type !== 'peggy');

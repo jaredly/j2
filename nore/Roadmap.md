@@ -30,6 +30,8 @@ Highlevel things I haven't solved at all:
 	- [ ] if you do something else ... 
 		like binops eventually, or also fn call suffixes I guess.
 		this'll probably be bespoke until it's not? idk
+- [ ] autocompleteeeeete
+	- need to seed the context with some globals
 
 
 ## Ok more selection

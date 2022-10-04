@@ -172,8 +172,8 @@ function peg$parse(input, options) {
   var peg$FAILED = {};
   var peg$source = options.grammarSource;
 
-  var peg$startRuleFunctions = { Number: peg$parseNumber, Boolean: peg$parseBoolean, PIdentifier: peg$parsePIdentifier, Identifier: peg$parseIdentifier, Expression: peg$parseExpression, Applyable: peg$parseApplyable, Type: peg$parseType, Atom: peg$parseAtom, Pattern: peg$parsePattern, Suffix: peg$parseSuffix };
-  var peg$startRuleFunction = peg$parseNumber;
+  var peg$startRuleFunctions = { Lambda: peg$parseLambda, Larg: peg$parseLarg, Number: peg$parseNumber, RawNumber: peg$parseRawNumber, Boolean: peg$parseBoolean, PIdentifier: peg$parsePIdentifier, Identifier: peg$parseIdentifier, IdText: peg$parseIdText, HashText: peg$parseHashText, UIntLiteral: peg$parseUIntLiteral, UInt: peg$parseUInt, LocalHash: peg$parseLocalHash, IdHash: peg$parseIdHash, Apply: peg$parseApply, CallSuffix: peg$parseCallSuffix, _: peg$parse_, Expression: peg$parseExpression, Applyable: peg$parseApplyable, Type: peg$parseType, Atom: peg$parseAtom, Pattern: peg$parsePattern, Suffix: peg$parseSuffix };
+  var peg$startRuleFunction = peg$parseLambda;
 
   var peg$c0 = "fn";
   var peg$c1 = "(";

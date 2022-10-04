@@ -31,10 +31,6 @@ const pathColor = (path: Path[], store: Store) => {
     return undefined;
 };
 
-document.addEventListener('selectionchange', (evt) => {
-    // console.log('SEL', window.getSelection());
-});
-
 export const AtomEdit = <T,>({
     value,
     idx,
@@ -81,28 +77,13 @@ export const AtomEdit = <T,>({
             return;
         }
         if (editing && ref.current !== document.activeElement) {
-            // console.log('> sel it up');
-            // ref.current.focus();
             const at = store.selection?.type === 'edit' && store.selection.at;
             if (at === 'end') {
                 const sel = window.getSelection()!;
-                // console.log('select to end');
-                // if (sel) {
-                // const range = sel.getRangeAt(0);
-                // range.selectNodeContents(ref.current);
-                // sel.addRange(range);
-                // sel.selectAllChildren(ref.current);
                 setTimeout(() => {
                     sel.selectAllChildren(ref.current!);
                     sel.getRangeAt(0).collapse(false);
                 }, 0);
-                // range.collapse(false);
-                // const range = document.createRange();
-                // range.selectNodeContents(ref.current);
-                // range.collapse(false);
-                // sel.removeAllRanges();
-                // sel.addRange(range);
-                // }
             } else {
                 ref.current.focus();
             }
@@ -168,6 +149,7 @@ export const AtomEdit = <T,>({
                     evt.preventDefault();
                     evt.stopPropagation();
                     console.log(path);
+                    comma(store, path);
                 }
                 if (
                     evt.key === 'ArrowRight' &&
@@ -210,6 +192,48 @@ const getPos = (target: HTMLElement) => {
     sel.removeAllRanges();
     sel.addRange(r);
     return pos;
+};
+
+/*
+Should my NodeChildren function also return ... something to do with
+what valid characters exist for a given child position?
+like can we do a comma here? idk.
+*/
+
+const comma = (store: Store, path: Path[]) => {
+    for (let i = path.length - 1; i >= 0; i--) {
+        if (handleOneComma(store, path[i])) {
+            return;
+        }
+    }
+};
+
+const handleOneComma = (store: Store, path: Path) => {
+    const item = store.map[path.idx].value;
+    if (item.type === 'Lambda') {
+        if (
+            path.cid <= item.args.length ||
+            (item.args.length === 0 && path.cid === 1)
+        ) {
+            const update: t.Map = {};
+            const larg = to.Larg(parsers.parseLarg('_'), update);
+            update[larg.loc.idx] = { type: 'Larg', value: larg };
+            update[path.idx] = {
+                type: store.map[path.idx].type,
+                value: {
+                    ...item,
+                    args: item.args.concat([larg.loc.idx]),
+                },
+            } as t.Map[0];
+            updateStore(store, {
+                map: update,
+                selection: null,
+            });
+            // return {update, idx: larg.loc.idx};
+            return true;
+        }
+        console.log('lo lam', path.cid, item.args.length);
+    }
 };
 
 /*

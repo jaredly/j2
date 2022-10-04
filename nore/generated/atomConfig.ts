@@ -30,7 +30,7 @@ export const PIdentifier: AtomConfig<t.PIdentifier> = {
     fromString: (text, map) => to.PIdentifier(parsePIdentifier(text), map),
 };
 export const Blank: AtomConfig<t.Blank> = {
-    toString: () => '',
+    toString: () => '_',
     fromString: () => ({
         type: 'Blank',
         loc: { start: 0, end: 0, idx: idx.current++ },
