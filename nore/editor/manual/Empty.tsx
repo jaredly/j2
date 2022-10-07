@@ -4,7 +4,7 @@ import { setSelection, Store } from '../store/store';
 import { goLeft, goRight } from './navigation';
 import { handleKey, keyHandlers } from './keyHandlers';
 import * as parsers from '../../generated/parser';
-import { colors, pathColor } from './AtomEdit';
+import { colors, getPos, pathColor } from './AtomEdit';
 
 export const Empty = ({
     path,
@@ -30,7 +30,6 @@ export const Empty = ({
         }
     }, [sel]);
     const parsed = useMemo(() => {
-        // const last = store.map[path[path.length - 1].idx].type;
         try {
             // @ts-ignore
             const parsed = parsers['parse' + kind](edit);
@@ -48,7 +47,6 @@ export const Empty = ({
                 ref={ref}
                 style={{
                     height: '1em',
-                    // color: 'white',
                     outline: 'none',
                     color: (parsed && colors[parsed.type]) || 'white',
                 }}
@@ -57,20 +55,27 @@ export const Empty = ({
                 }}
                 onInput={(evt) => setEdit(evt.currentTarget.textContent!)}
                 onKeyDown={(evt) => {
-                    if (evt.key === 'ArrowRight') {
+                    if (
+                        evt.key === 'ArrowRight' &&
+                        getSelection()?.toString() === '' &&
+                        getPos(evt.currentTarget) ===
+                            evt.currentTarget.textContent!.length
+                    ) {
                         evt.preventDefault();
                         evt.stopPropagation();
                         const right = goRight(store, path, true);
-                        // console.log('going right', right);
                         if (right) {
                             setSelection(store, right.sel);
                         }
                     }
-                    if (evt.key === 'ArrowLeft') {
+                    if (
+                        evt.key === 'ArrowLeft' &&
+                        getSelection()?.toString() === '' &&
+                        getPos(evt.currentTarget) === 0
+                    ) {
                         evt.preventDefault();
                         evt.stopPropagation();
                         const left = goLeft(store, path, true);
-                        // console.log('going left', left);
                         if (left) {
                             setSelection(store, left.sel);
                         }

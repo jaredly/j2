@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { idx, parse } from '../../generated/grammar';
 import * as parsers from '../../generated/parser';
 import * as t from '../../generated/type-map';
@@ -125,6 +125,19 @@ export const AtomEdit = <T,>({
             ref.current.textContent = edit;
         }
     }, [edit, editing]);
+
+    const parsed = useMemo(() => {
+        const kind = store.map[idx].type;
+        try {
+            // @ts-ignore
+            const parsed = parsers['parse' + kind](edit);
+            return parsed;
+        } catch (err) {
+            console.log('no', err, kind);
+            return null;
+        }
+    }, [edit]);
+
     if (!editing) {
         return (
             <span
@@ -161,10 +174,12 @@ export const AtomEdit = <T,>({
                 setSelection(store, null);
             }}
             style={{
-                color: pathColor(
-                    path.concat([{ idx, cid: 0, punct: 0 }]),
-                    store,
-                ),
+                color: parsed
+                    ? colors[parsed.type]
+                    : pathColor(
+                          path.concat([{ idx, cid: 0, punct: 0 }]),
+                          store,
+                      ),
                 outline: 'none',
                 minHeight: '1.5em',
                 // backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -221,7 +236,7 @@ export const AtomEdit = <T,>({
     );
 };
 
-const getPos = (target: HTMLElement) => {
+export const getPos = (target: HTMLElement) => {
     // console.log('getting pos');
     const sel = document.getSelection()!;
     const r = sel.getRangeAt(0).cloneRange();
