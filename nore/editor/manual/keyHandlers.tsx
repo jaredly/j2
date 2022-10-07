@@ -99,6 +99,23 @@ const handleBackspace = (
         removeSuffix(fullPath, depth, store, idx);
         return true;
     }
+    if (depth === 1 && item.type === 'Larg' && cid === 2 && item.typ) {
+        console.log('empty type annotation', item);
+        const update: UpdateMap = {};
+        update[idx] = {
+            type: store.map[idx].type,
+            value: { ...item, typ: null },
+        } as t.Map[0];
+        update[item.typ!.value] = null;
+        const sel = lastChild(store, item.pat, []);
+        if (sel) {
+            updateStore(store, {
+                map: update,
+                selection: sel.sel,
+            });
+        }
+        return true;
+    }
     if (depth === 1 && item.type === 'Lambda') {
         const children = LambdaChildren(item);
         if (cid === children.length - 2) {
@@ -112,6 +129,7 @@ const handleBackspace = (
                 map: update,
                 selection: { type: 'edit', idx, cid: 0, at: 'change' },
             });
+            return true;
         }
     }
     if (depth === 1 && item.type === 'CallSuffix') {
@@ -146,6 +164,7 @@ const handleBackspace = (
             return true;
         } else {
             removeSuffix(fullPath, depth, store, idx);
+            return true;
         }
     }
 };

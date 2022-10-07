@@ -8,6 +8,7 @@ import { colors, getPos, pathColor } from './AtomEdit';
 import * as t from '../../generated/type-map';
 import * as to from '../../generated/to-map';
 
+// @ts-ignore
 window.parsers = parsers;
 
 export const Empty = ({
