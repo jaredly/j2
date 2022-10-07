@@ -6,6 +6,10 @@ Highlevel things I haven't solved at all:
 
 ## Selection working
 
+- [ ] delete empty type annotation
+- [ ] left from type annotation, it goes to an empty. I don't want it to be an empty
+
+
 - [x] basic goRight
 - [x] right out of fn body isn't owrking
 - [x] make Empty's actually a text editorrr

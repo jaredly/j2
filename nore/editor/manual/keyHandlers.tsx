@@ -238,6 +238,47 @@ const handleCloseParen = (store: Store, path: Path) => {
     }
 };
 
+const handleColon = (
+    store: Store,
+    path: Path,
+    text: string,
+    depth: number,
+    fullPath: Path[],
+) => {
+    const item = store.map[path.idx].value;
+    const map: t.Map = {};
+    if (depth === 1 && item.type === 'Larg') {
+        if (!item.typ) {
+            const blank = to.add(map, { type: 'Type', value: newBlank() });
+            map[path.idx] = {
+                type: store.map[path.idx].type,
+                value: {
+                    ...item,
+                    typ: { inferred: true, value: blank },
+                },
+            } as t.Map[0];
+            updateStore(store, {
+                map,
+                selection: {
+                    type: 'edit',
+                    at: 'change',
+                    idx: blank,
+                    cid: 0,
+                },
+            });
+            return true;
+        } else {
+            setSelection(store, {
+                type: 'edit',
+                at: 'start',
+                idx: item.typ.value,
+                cid: 0,
+            });
+            return true;
+        }
+    }
+};
+
 const handleOpenParen = (store: Store, path: Path, text: string) => {
     const mapped = store.map[path.idx];
     if (mapped.value.type === 'Apply') {
@@ -365,5 +406,6 @@ export const keyHandlers: {
     ',': handleOneComma,
     '(': handleOpenParen,
     ')': handleCloseParen,
+    ':': handleColon,
     Backspace: handleBackspace,
 };
