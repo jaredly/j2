@@ -100,7 +100,15 @@ export const AtomEdit = <T,>({
         }
         if (editing && ref.current !== document.activeElement) {
             const at = store.selection?.type === 'edit' && store.selection.at;
-            if (at === 'end') {
+            if (at === 'change' || edit === '_') {
+                const sel = window.getSelection()!;
+                setTimeout(() => {
+                    if (!ref.current) {
+                        return;
+                    }
+                    sel.selectAllChildren(ref.current);
+                }, 0);
+            } else if (at === 'end') {
                 const sel = window.getSelection()!;
                 setTimeout(() => {
                     if (!ref.current) {
@@ -108,14 +116,6 @@ export const AtomEdit = <T,>({
                     }
                     sel.selectAllChildren(ref.current);
                     sel.getRangeAt(0).collapse(false);
-                }, 0);
-            } else if (at === 'change') {
-                const sel = window.getSelection()!;
-                setTimeout(() => {
-                    if (!ref.current) {
-                        return;
-                    }
-                    sel.selectAllChildren(ref.current);
                 }, 0);
             } else {
                 ref.current.focus();

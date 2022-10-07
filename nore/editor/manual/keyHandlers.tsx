@@ -86,6 +86,7 @@ const handleBackspace = (
     fullPath: Path[],
 ) => {
     if (text.length) {
+        console.log('has text');
         return false;
     }
     const item = store.map[idx].value;
@@ -236,9 +237,9 @@ const handleCloseParen = (store: Store, path: Path) => {
         }
     }
 };
+
 const handleOpenParen = (store: Store, path: Path, text: string) => {
     const mapped = store.map[path.idx];
-    console.log(path, mapped.type, mapped.value.type);
     if (mapped.value.type === 'Apply') {
         // we can add a callsuffix somewhere
         const map: t.Map = {};
@@ -261,6 +262,24 @@ const handleOpenParen = (store: Store, path: Path, text: string) => {
                 type: 'edit',
                 idx: callsuffix.args[0],
                 cid: 0,
+                at: 'change',
+            },
+        });
+        return true;
+    }
+    if (mapped.type === 'Expression' && text.trim() === 'fn') {
+        const map: t.Map = {};
+        const lambda = to.Lambda(parsers.parseLambda('fn () => _'), map);
+        map[path.idx] = {
+            type: 'Expression',
+            value: { ...lambda, loc: { ...lambda.loc, idx: path.idx } },
+        };
+        updateStore(store, {
+            map,
+            selection: {
+                type: 'edit',
+                idx: path.idx,
+                cid: 1,
                 at: 'change',
             },
         });
