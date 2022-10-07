@@ -7,6 +7,8 @@ import {
     setSelection,
     nidx,
     Selection,
+    StoreUpdate,
+    UpdateMap,
 } from '../store/store';
 import { Path } from '../generated/react-map';
 import { firstChild, lastChild } from './navigation';
@@ -97,6 +99,27 @@ const handleBackspace = (
         const parent = store.map[ppath.idx].value as t.Apply;
         const newSuffixes = parent.suffixes.filter((id) => id !== idx);
         if (newSuffixes.length === 0) {
+            const update: UpdateMap = {};
+            update[ppath.idx] = {
+                type: store.map[ppath.idx].type,
+                value: {
+                    ...store.map[parent.target].value,
+                    loc: {
+                        ...store.map[parent.target].value.loc,
+                        idx: ppath.idx,
+                    },
+                },
+            } as t.Map[0];
+            update[parent.target] = null;
+            updateStore(store, {
+                map: update,
+                selection: {
+                    type: 'edit',
+                    idx: ppath.idx,
+                    cid: 0,
+                    at: 'end',
+                },
+            });
         } else {
             const update: t.Map = {};
             update[ppath.idx] = {
@@ -127,9 +150,9 @@ const handleBackspace = (
                         .concat(item.args.slice(cid + 1)),
                 },
             } as t.Map[0];
-            const next = item.args.length > 0 ? Math.max(0, cid - 1) : 0;
+            const next = item.args.length > 1 ? Math.max(0, cid - 1) : 0;
             const sel: Selection | undefined =
-                item.args.length > 0
+                item.args.length > 1
                     ? lastChild(store, item.args[next], [])?.sel
                     : ({
                           type: 'edit',
@@ -138,6 +161,7 @@ const handleBackspace = (
                           cid: 0,
                       } as Selection);
             if (sel) {
+                console.log('ok', store.selection, sel);
                 updateStore(store, {
                     map: update,
                     selection: sel,

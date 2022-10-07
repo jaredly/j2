@@ -64,14 +64,16 @@ export type History = {
 };
 
 export type HistoryItem = {
-    pre: t.Map;
-    post: t.Map;
+    pre: UpdateMap;
+    post: UpdateMap;
     preSelection: Selection | null;
     postSelection: Selection | null | undefined;
 };
 
+export type UpdateMap = { [key: string]: null | t.Map[0] };
+
 export type StoreUpdate = {
-    map: t.Map;
+    map: UpdateMap;
     selection?: Selection | null;
 };
 
@@ -89,7 +91,7 @@ export const updateStore = (
     store: Store,
     { map: change, selection }: StoreUpdate,
 ) => {
-    const pre: t.Map = {};
+    const pre: UpdateMap = {};
     Object.keys(change).forEach((item) => {
         pre[+item] = store.map[+item];
     });
@@ -104,7 +106,13 @@ export const updateStore = (
     }
     store.history.items.push(history);
     store.history.idx = 0;
-    Object.assign(store.map, change);
+    Object.keys(change).forEach((key) => {
+        if (change[key] == null) {
+            delete store.map[+key];
+        } else {
+            store.map[+key] = change[+key]!;
+        }
+    });
     if (selection !== undefined) {
         setSelection(store, selection, Object.keys(change).map(Number));
     } else {
@@ -130,7 +138,7 @@ export const useStore = (store: Store, key: number) => {
     useEffect(() => {
         const fn = () => {
             if (!store.map[key]) {
-                debugger;
+                // debugger;
             }
             setValue((v) => v + 1);
         };
@@ -173,6 +181,7 @@ export const setSelection = (
     extraNotify?: number[],
     force?: boolean,
 ) => {
+    console.log(new Error().stack);
     if (
         store.selection?.idx === selection?.idx &&
         store.selection?.cid === selection?.cid &&
