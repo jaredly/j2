@@ -105,6 +105,7 @@ export const Lambda = ({
             ) : (
                 <Empty
                     store={store}
+                    kind={'Larg'}
                     path={path.concat([{ cid: cid++, idx, punct }])}
                 />
             )}
@@ -700,6 +701,7 @@ export const CallSuffix = ({
             ) : (
                 <Empty
                     store={store}
+                    kind={'Expression'}
                     path={path.concat([{ cid: cid++, idx, punct }])}
                 />
             )}

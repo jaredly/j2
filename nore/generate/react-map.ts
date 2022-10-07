@@ -243,13 +243,18 @@ export const gramToReact = (
             const [l, r] = gram.bounds ?? ['(', ')'];
             return `<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += ${
                 (leadingSpace ? 1 : 0) + l.length
-            }}])}>${
-                (leadingSpace ? ' ' : '') + l
-            }</ClickSide>{${value}.length ? ${value}.map((arg, i) => <React.Fragment key={i}>${gramToReact(
-                gram.item,
-                'arg',
-                { name: path.name, path: `{cid: cid++, idx, punct}` },
-            )}{i < ${value}.length - 1 ? <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 2}])}>, </ClickSide> : ''}</React.Fragment>) : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += ${
+            }}])}>${(leadingSpace ? ' ' : '') + l}</ClickSide>{${value}.length
+                ? ${value}.map((arg, i) => <React.Fragment key={i}>
+                    ${gramToReact(gram.item, 'arg', {
+                        name: path.name,
+                        path: `{cid: cid++, idx, punct}`,
+                    })}{i < ${value}.length - 1 ? <ClickSide store={store} path={path.concat([{cid, idx, punct: punct += 2}])}>, </ClickSide> : ''}
+                </React.Fragment>)
+                : <Empty store={store} kind={${
+                    gram.item.type === 'ref'
+                        ? JSON.stringify(gram.item.id)
+                        : null
+                }} path={path.concat([{cid: cid++, idx, punct}])} />}<ClickSide store={store} path={path.concat([{cid, idx, punct: punct += ${
                 r.length
             }}])}>${r}</ClickSide>`;
         case 'optional':

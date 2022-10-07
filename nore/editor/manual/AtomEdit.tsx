@@ -9,14 +9,14 @@ import { Path } from '../generated/react-map';
 import { firstChild, goLeft, goRight } from './navigation';
 import { keyHandlers, handleKey } from './keyHandlers';
 
-const colors: { [key: string]: string } = {
+export const colors: { [key: string]: string } = {
     Identifier: '#5bb6b7',
     PIdentifier: '#82f682',
     Number: '#4848a5',
     Expression: 'white',
 };
 
-const pathColor = (path: Path[], store: Store) => {
+export const pathColor = (path: Path[], store: Store) => {
     for (let i = path.length - 1; i >= 0; i--) {
         const t = store.map[path[i].idx].value.type;
         if (colors[t]) {
