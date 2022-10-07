@@ -20,7 +20,9 @@ const runApp = () => {
         },
     });
 
-    const { store, root } = newStore('hello(23, fn(a)=>a(24), what(one))');
+    const { store, root } = newStore(
+        'hello(23, fn(a)=>a(24), what(one), more())',
+    );
     // const { store, root } = newStore('hello(one(2)(3), 1, 2u)');
 
     // @ts-ignore

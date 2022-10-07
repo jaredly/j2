@@ -181,7 +181,7 @@ export const setSelection = (
     extraNotify?: number[],
     force?: boolean,
 ) => {
-    console.log(new Error().stack);
+    // console.log(new Error().stack);
     if (
         store.selection?.idx === selection?.idx &&
         store.selection?.cid === selection?.cid &&

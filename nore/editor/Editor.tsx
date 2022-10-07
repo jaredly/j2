@@ -3,12 +3,9 @@ import * as t from '../generated/type-map';
 import * as to from '../generated/to-map';
 // import * as from from '../generated/from-map';
 import * as React from 'react';
-import { parseExpression } from '../generated/parser';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { idx } from '../generated/grammar';
-import { Expression as ManualExpression } from './elements/aggregates';
+import { useEffect, useState } from 'react';
 import { Expression } from './generated/react-map';
-import { Store, Selection, Path } from './store/store';
+import { Store, Selection } from './store/store';
 import { useDrag } from './useDrag';
 
 export const hitBox = (boxes: Box[], x: number, y: number) => {

@@ -48,7 +48,23 @@ export const AtomEdit = <T,>({
     const commit = React.useCallback(() => {
         const type = store.map[idx].type;
         if (!edit?.length) {
-            console.log('empty', path);
+            const last = path[path.length - 1];
+            const parent = store.map[last.idx].value;
+            if (
+                parent.type === 'CallSuffix' &&
+                parent.args.length === 1 &&
+                parent.args[0] === idx
+            ) {
+                updateStore(store, {
+                    map: {
+                        [last.idx]: {
+                            ...store.map[last.idx],
+                            value: { ...parent, args: [] },
+                        } as t.Map[0],
+                    },
+                });
+                return;
+            }
         }
         try {
             const parsed =
@@ -87,13 +103,19 @@ export const AtomEdit = <T,>({
             if (at === 'end') {
                 const sel = window.getSelection()!;
                 setTimeout(() => {
-                    sel.selectAllChildren(ref.current!);
+                    if (!ref.current) {
+                        return;
+                    }
+                    sel.selectAllChildren(ref.current);
                     sel.getRangeAt(0).collapse(false);
                 }, 0);
             } else if (at === 'change') {
                 const sel = window.getSelection()!;
                 setTimeout(() => {
-                    sel.selectAllChildren(ref.current!);
+                    if (!ref.current) {
+                        return;
+                    }
+                    sel.selectAllChildren(ref.current);
                 }, 0);
             } else {
                 ref.current.focus();
