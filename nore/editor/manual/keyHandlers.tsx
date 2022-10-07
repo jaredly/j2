@@ -130,6 +130,39 @@ const handleBackspace = (
                 selection: { type: 'edit', idx, cid: 0, at: 'change' },
             });
             return true;
+        } else {
+            console.log('nope', cid, children);
+        }
+    }
+    if (depth === 2 && item.type === 'Lambda') {
+        if (cid === 0) {
+            return false;
+        }
+        if (cid <= item.args.length) {
+            const update: UpdateMap = {};
+            update[idx] = {
+                type: store.map[idx].type,
+                value: {
+                    ...item,
+                    args: item.args.filter((_, i) => i !== cid - 1),
+                },
+                [item.args[cid - 1]]: null,
+            } as t.Map[0];
+            const sel: Selection | undefined =
+                cid === 1
+                    ? {
+                          type: 'edit',
+                          idx,
+                          cid: 0,
+                      }
+                    : lastChild(store, item.args[cid - 2], [])?.sel;
+            if (sel) {
+                updateStore(store, {
+                    map: update,
+                    selection: sel,
+                });
+            }
+            return true;
         }
     }
     if (depth === 1 && item.type === 'CallSuffix') {

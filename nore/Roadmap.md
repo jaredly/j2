@@ -8,6 +8,8 @@ Highlevel things I haven't solved at all:
 
 - [x] delete empty type annotation
 - [x] left from type annotation, it goes to an empty. I don't want it to be an empty
+- [x] delete an arg
+- [ ] empty arg, I need something better.
 
 - [ ] it would be great to do some pretty printing dealios
 	- [ ] so, we need to pass in "current indent" to everything, right?
