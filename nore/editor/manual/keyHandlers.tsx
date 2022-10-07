@@ -91,51 +91,10 @@ const handleBackspace = (
     if (
         depth === 0 &&
         item.type === 'CallSuffix' &&
-        item.args.length === 0 &&
-        cid === 0
+        ((item.args.length === 0 && cid === 0) || cid >= item.args.length)
     ) {
         console.log('ok rm call');
-        const ppath = fullPath[fullPath.length - 1 - depth - 1];
-        const parent = store.map[ppath.idx].value as t.Apply;
-        const newSuffixes = parent.suffixes.filter((id) => id !== idx);
-        if (newSuffixes.length === 0) {
-            const update: UpdateMap = {};
-            update[ppath.idx] = {
-                type: store.map[ppath.idx].type,
-                value: {
-                    ...store.map[parent.target].value,
-                    loc: {
-                        ...store.map[parent.target].value.loc,
-                        idx: ppath.idx,
-                    },
-                },
-            } as t.Map[0];
-            update[parent.target] = null;
-            updateStore(store, {
-                map: update,
-                selection: {
-                    type: 'edit',
-                    idx: ppath.idx,
-                    cid: 0,
-                    at: 'end',
-                },
-            });
-        } else {
-            const update: t.Map = {};
-            update[ppath.idx] = {
-                type: store.map[ppath.idx].type,
-                value: {
-                    ...parent,
-                    suffixes: newSuffixes,
-                },
-            } as t.Map[0];
-            const at = lastChild(
-                store,
-                ppath.cid > 1 ? newSuffixes[ppath.cid - 2] : parent.target,
-                [],
-            );
-            updateStore(store, { map: update, selection: at ? at.sel : null });
-        }
+        removeSuffix(fullPath, depth, store, idx);
         return true;
     }
     if (depth === 1 && item.type === 'CallSuffix') {
@@ -168,9 +127,60 @@ const handleBackspace = (
                 });
             }
             return true;
+        } else {
+            removeSuffix(fullPath, depth, store, idx);
         }
     }
 };
+
+function removeSuffix(
+    fullPath: Path[],
+    depth: number,
+    store: Store,
+    idx: number,
+) {
+    const ppath = fullPath[fullPath.length - 1 - depth - 1];
+    const parent = store.map[ppath.idx].value as t.Apply;
+    const newSuffixes = parent.suffixes.filter((id) => id !== idx);
+    if (newSuffixes.length === 0) {
+        const update: UpdateMap = {};
+        update[ppath.idx] = {
+            type: store.map[ppath.idx].type,
+            value: {
+                ...store.map[parent.target].value,
+                loc: {
+                    ...store.map[parent.target].value.loc,
+                    idx: ppath.idx,
+                },
+            },
+        } as t.Map[0];
+        update[parent.target] = null;
+        updateStore(store, {
+            map: update,
+            selection: {
+                type: 'edit',
+                idx: ppath.idx,
+                cid: 0,
+                at: 'end',
+            },
+        });
+    } else {
+        const update: t.Map = {};
+        update[ppath.idx] = {
+            type: store.map[ppath.idx].type,
+            value: {
+                ...parent,
+                suffixes: newSuffixes,
+            },
+        } as t.Map[0];
+        const at = lastChild(
+            store,
+            ppath.cid > 1 ? newSuffixes[ppath.cid - 2] : parent.target,
+            [],
+        );
+        updateStore(store, { map: update, selection: at ? at.sel : null });
+    }
+}
 
 const handleCloseParen = (store: Store, path: Path) => {
     const item = store.map[path.idx].value;
