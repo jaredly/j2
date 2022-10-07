@@ -10,6 +10,13 @@ Highlevel things I haven't solved at all:
 - [x] left from type annotation, it goes to an empty. I don't want it to be an empty
 
 - [ ] it would be great to do some pretty printing dealios
+	- [ ] so, we need to pass in "current indent" to everything, right?
+		- and, calculate the current width of things ...
+			- ergh this means we'll need to re-render all parents of the thing we're changing,
+				when we change something. Gotta remember that.
+	- [ ] so with the current indent, and a function to "calculate inline width" of the children at hand,
+		we can decide whether we're going to break a line.
+		- [ ] DO WE `<br/>`? or span flex? span flexing is easier, but br is more flexible ...
 
 
 - [x] basic goRight

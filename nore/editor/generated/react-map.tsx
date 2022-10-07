@@ -81,27 +81,29 @@ export const Lambda = ({
                 (
             </ClickSide>
             {item.args.length ? (
-                item.args.map((arg, i) => (
-                    <React.Fragment key={i}>
-                        <Larg
-                            idx={arg}
-                            store={store}
-                            path={path.concat([{ cid: cid++, idx, punct }])}
-                        />
-                        {i < item.args.length - 1 ? (
-                            <ClickSide
+                <span>
+                    {item.args.map((arg, i) => (
+                        <span key={i}>
+                            <Larg
+                                idx={arg}
                                 store={store}
-                                path={path.concat([
-                                    { cid, idx, punct: (punct += 2) },
-                                ])}
-                            >
-                                ,{' '}
-                            </ClickSide>
-                        ) : (
-                            ''
-                        )}
-                    </React.Fragment>
-                ))
+                                path={path.concat([{ cid: cid++, idx, punct }])}
+                            />
+                            {i < item.args.length - 1 ? (
+                                <ClickSide
+                                    store={store}
+                                    path={path.concat([
+                                        { cid, idx, punct: (punct += 2) },
+                                    ])}
+                                >
+                                    ,{' '}
+                                </ClickSide>
+                            ) : (
+                                ''
+                            )}
+                        </span>
+                    ))}
+                </span>
             ) : (
                 <Empty
                     store={store}
@@ -695,27 +697,29 @@ export const CallSuffix = ({
                 (
             </ClickSide>
             {item.args.length ? (
-                item.args.map((arg, i) => (
-                    <React.Fragment key={i}>
-                        <Expression
-                            idx={arg}
-                            store={store}
-                            path={path.concat([{ cid: cid++, idx, punct }])}
-                        />
-                        {i < item.args.length - 1 ? (
-                            <ClickSide
+                <span>
+                    {item.args.map((arg, i) => (
+                        <span key={i}>
+                            <Expression
+                                idx={arg}
                                 store={store}
-                                path={path.concat([
-                                    { cid, idx, punct: (punct += 2) },
-                                ])}
-                            >
-                                ,{' '}
-                            </ClickSide>
-                        ) : (
-                            ''
-                        )}
-                    </React.Fragment>
-                ))
+                                path={path.concat([{ cid: cid++, idx, punct }])}
+                            />
+                            {i < item.args.length - 1 ? (
+                                <ClickSide
+                                    store={store}
+                                    path={path.concat([
+                                        { cid, idx, punct: (punct += 2) },
+                                    ])}
+                                >
+                                    ,{' '}
+                                </ClickSide>
+                            ) : (
+                                ''
+                            )}
+                        </span>
+                    ))}
+                </span>
             ) : (
                 <Empty
                     store={store}
