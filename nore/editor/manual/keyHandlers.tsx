@@ -1,9 +1,15 @@
 import * as parsers from '../../generated/parser';
 import * as t from '../../generated/type-map';
 import * as to from '../../generated/to-map';
-import { updateStore, Store, setSelection, nidx } from '../store/store';
+import {
+    updateStore,
+    Store,
+    setSelection,
+    nidx,
+    Selection,
+} from '../store/store';
 import { Path } from '../generated/react-map';
-import { lastChild } from './navigation';
+import { firstChild, lastChild } from './navigation';
 
 export const handleOneComma = (store: Store, path: Path) => {
     const item = store.map[path.idx].value;
@@ -66,6 +72,79 @@ export const handleOneComma = (store: Store, path: Path) => {
             return true;
         }
         console.log('lo lam', path.cid, item.args.length);
+    }
+};
+
+const handleBackspace = (
+    store: Store,
+    { idx, cid }: Path,
+    text: string,
+    depth: number,
+    fullPath: Path[],
+) => {
+    if (text.length) {
+        return false;
+    }
+    const item = store.map[idx].value;
+    if (
+        depth === 0 &&
+        item.type === 'CallSuffix' &&
+        item.args.length === 0 &&
+        cid === 0
+    ) {
+        console.log('ok rm call');
+        const ppath = fullPath[fullPath.length - 1 - depth - 1];
+        const parent = store.map[ppath.idx].value as t.Apply;
+        const newSuffixes = parent.suffixes.filter((id) => id !== idx);
+        if (newSuffixes.length === 0) {
+        } else {
+            const update: t.Map = {};
+            update[ppath.idx] = {
+                type: store.map[ppath.idx].type,
+                value: {
+                    ...parent,
+                    suffixes: newSuffixes,
+                },
+            } as t.Map[0];
+            const at = lastChild(
+                store,
+                ppath.cid > 1 ? newSuffixes[ppath.cid - 2] : parent.target,
+                [],
+            );
+            updateStore(store, { map: update, selection: at ? at.sel : null });
+        }
+        return true;
+    }
+    if (depth === 1 && item.type === 'CallSuffix') {
+        if (cid < item.args.length) {
+            const update: t.Map = {};
+            update[idx] = {
+                type: store.map[idx].type,
+                value: {
+                    ...item,
+                    args: item.args
+                        .slice(0, cid)
+                        .concat(item.args.slice(cid + 1)),
+                },
+            } as t.Map[0];
+            const next = item.args.length > 0 ? Math.max(0, cid - 1) : 0;
+            const sel: Selection | undefined =
+                item.args.length > 0
+                    ? lastChild(store, item.args[next], [])?.sel
+                    : ({
+                          type: 'edit',
+                          at: 'end',
+                          idx: idx,
+                          cid: 0,
+                      } as Selection);
+            if (sel) {
+                updateStore(store, {
+                    map: update,
+                    selection: sel,
+                });
+            }
+            return true;
+        }
     }
 };
 
@@ -182,21 +261,35 @@ export const handleKey = (
     path: Path[],
     key: string,
     text: string,
-) => {
+): boolean | void => {
     if (!keyHandlers[key]) {
         return;
     }
     for (let i = path.length - 1; i >= 0; i--) {
-        if (keyHandlers[key](store, path[i], text)) {
-            return;
+        const res = keyHandlers[key](
+            store,
+            path[i],
+            text,
+            path.length - 1 - i,
+            path,
+        );
+        if (res != null) {
+            return res;
         }
     }
 };
 
 export const keyHandlers: {
-    [key: string]: (store: Store, path: Path, text: string) => true | void;
+    [key: string]: (
+        store: Store,
+        path: Path,
+        text: string,
+        depth: number,
+        fullPath: Path[],
+    ) => boolean | void;
 } = {
     ',': handleOneComma,
     '(': handleOpenParen,
     ')': handleCloseParen,
+    Backspace: handleBackspace,
 };

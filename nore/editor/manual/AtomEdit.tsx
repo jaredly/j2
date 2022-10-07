@@ -152,14 +152,17 @@ export const AtomEdit = <T,>({
                     return;
                 }
                 if (keyHandlers[evt.key]) {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    handleKey(
+                    const res = handleKey(
                         store,
                         path.concat([{ idx, cid: 0, punct: 0 }]),
                         evt.key,
                         evt.currentTarget.textContent!,
                     );
+                    if (res !== false) {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                    }
+                    return;
                 }
                 if (
                     evt.key === 'ArrowRight' &&
