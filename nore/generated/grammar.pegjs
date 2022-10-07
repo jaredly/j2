@@ -13,11 +13,11 @@
                 ...first ? [first] : [],
                 ...rest,
             ]}
-            )) _ res:(":" _ Type)? _ "=>" _ body:Expression {
+            )) _ res:(":" _ @Type)? _ "=>" _ body:Expression {
             return { type: 'Lambda', args: args, res: res ? {inferred: false, value: res} : null, body: body, loc: loc() }
         }
 
-Larg = pat:Pattern _ typ:(":" _ Type)? {
+Larg = pat:Pattern _ typ:(":" _ @Type)? {
             return { type: 'Larg', pat: pat, typ: typ ? {inferred: false, value: typ} : null, loc: loc() }
         }
 
@@ -61,7 +61,7 @@ LocalHash = "#[:" _ sym:UInt _ "]" {
             return { type: 'LocalHash', sym: sym, loc: loc() }
         }
 
-IdHash = "#[h" _ hash:HashText _ idx:("." _ UInt)? _ "]" {
+IdHash = "#[h" _ hash:HashText _ idx:("." _ @UInt)? _ "]" {
             return { type: 'IdHash', hash: hash, idx: idx ? idx[1] : null, loc: loc() }
         }
 

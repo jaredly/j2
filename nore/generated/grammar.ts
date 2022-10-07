@@ -544,8 +544,7 @@ function peg$parse(input, options) {
           s7 = peg$parse_();
           s8 = peg$parseType();
           if (s8 !== peg$FAILED) {
-            s6 = [s6, s7, s8];
-            s5 = s6;
+            s5 = s8;
           } else {
             peg$currPos = s5;
             s5 = peg$FAILED;
@@ -610,8 +609,7 @@ function peg$parse(input, options) {
         s5 = peg$parse_();
         s6 = peg$parseType();
         if (s6 !== peg$FAILED) {
-          s4 = [s4, s5, s6];
-          s3 = s4;
+          s3 = s6;
         } else {
           peg$currPos = s3;
           s3 = peg$FAILED;
@@ -1068,8 +1066,7 @@ function peg$parse(input, options) {
           s7 = peg$parse_();
           s8 = peg$parseUInt();
           if (s8 !== peg$FAILED) {
-            s6 = [s6, s7, s8];
-            s5 = s6;
+            s5 = s8;
           } else {
             peg$currPos = s5;
             s5 = peg$FAILED;

@@ -128,7 +128,7 @@ export const topGramToType = (
     throw new Error(`not yet ${gram.type}`);
 };
 
-const analyzeSequence = (
+export const analyzeSequence = (
     grams: Gram<never>[],
 ):
     | {
@@ -161,20 +161,6 @@ export const sequenceToType = (
     options: Options,
 ): b.TSType => {
     const result = analyzeSequence(grams);
-    // const attrs: { [key: string]: b.TSType } = {};
-    // let firstNonString: null | Gram<never> = null;
-    // grams.forEach((item) => {
-    //     if (
-    //         !firstNonString &&
-    //         item.type !== 'literal' &&
-    //         item.type !== 'literal-ref'
-    //     ) {
-    //         firstNonString = item;
-    //     }
-    //     if (item.type === 'named') {
-    //         attrs[item.name] = gramToType(item.inner, options);
-    //     }
-    // });
     if (result.type === 'only') {
         return gramToType(result.only, options);
     }

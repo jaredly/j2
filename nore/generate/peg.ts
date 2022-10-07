@@ -11,6 +11,7 @@ import {
     transform,
     transformGram,
 } from '../grams/types';
+import { analyzeSequence } from './types';
 
 export const generatePeg = (grammar: Grams) => {
     const lines: { name: string; defn: string }[] = [];
@@ -144,7 +145,14 @@ export const topGramToPeg = (
 };
 
 export const sequenceToPeg = (grams: Gram<never>[]): string => {
-    return grams.map(gramToPeg).join(' _ ');
+    const result = analyzeSequence(grams);
+    return grams
+        .map(
+            (item) =>
+                (result.type === 'only' && result.only === item ? '@' : '') +
+                gramToPeg(item),
+        )
+        .join(' _ ');
 };
 
 export const gramToPeg = (gram: Gram<never>): string => {
