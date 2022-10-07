@@ -7,7 +7,7 @@ Highlevel things I haven't solved at all:
 ## Selection working
 
 - [x] delete empty type annotation
-- [ ] left from type annotation, it goes to an empty. I don't want it to be an empty
+- [x] left from type annotation, it goes to an empty. I don't want it to be an empty
 
 - [ ] it would be great to do some pretty printing dealios
 

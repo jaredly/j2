@@ -26,9 +26,9 @@ export const goLeft = (
     let next = last.cid - 1;
     while (next >= 0) {
         const child = siblings[next];
-        // console.log(`Next`, next, child, punct, child.item.punct);
         if (child.item.punct < punct) {
             needPunct = false;
+            punct = child.item.punct;
         }
         if (child.idx != null) {
             const got = lastChild(
@@ -45,10 +45,53 @@ export const goLeft = (
             next--;
             continue;
         }
+        // Skip through positions that don't advance punctuation
         if (next > 0 && siblings[next - 1].item.punct === punct) {
             next--;
             continue;
         }
+        /*
+        Dunno if I need this
+        if (next === 0 && path.length > 1) {
+            const ppath = path[path.length - 2];
+            console.log('try aunth', ppath);
+            if (ppath.cid > 0) {
+                const psiblings = NodeChildren(store.map[ppath.idx].value);
+                let ppunct = psiblings[ppath.cid].item.punct;
+                let cpid = ppath.cid;
+                while (cpid > 0 && psiblings[cpid - 1].item.punct === ppunct) {
+                    cpid--;
+                    if (psiblings[cpid].idx != null) {
+                        break;
+                    }
+                }
+                if (cpid < ppath.cid) {
+                    const child = psiblings[cpid];
+                    if (child.idx) {
+                        const got = lastChild(
+                            store,
+                            child.idx,
+                            path.slice(0, -2).concat([child.item]),
+                            needPunct,
+                        );
+                        if (got) {
+                            return got;
+                        }
+                    } else {
+                        return {
+                            path: path.slice(0, -2),
+                            sel: {
+                                type: 'edit',
+                                idx: child.item.idx,
+                                cid: child.item.cid,
+                                at: 'end',
+                            },
+                        };
+                    }
+                }
+            }
+        }
+        */
         return {
             path: path.slice(0, -1),
             sel: {
