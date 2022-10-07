@@ -258,19 +258,19 @@ export const gramToReact = (
                 r.length
             }}])}>${r}</ClickSide>`;
         case 'optional':
-            return `{${value} ? ${gramToReact(
+            return `{${value} ? <>${gramToReact(
                 gram.item,
                 value,
                 path,
                 leadingSpace,
-            )} : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}`;
+            )}</> : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}`;
         case 'inferrable':
-            return `{${value} ? ${gramToReact(
+            return `{${value} ? <>${gramToReact(
                 gram.item,
                 value + '.value',
                 path,
                 leadingSpace,
-            )} : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}`;
+            )}</> : <Empty store={store} path={path.concat([{cid: cid++, idx, punct}])} />}`;
         default:
             return (leadingSpace ? ' ' : '') + `<>what ${gram.type}</>`;
     }

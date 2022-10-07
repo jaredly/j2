@@ -128,11 +128,15 @@ export const topGramToType = (
     throw new Error(`not yet ${gram.type}`);
 };
 
-export const sequenceToType = (
+const analyzeSequence = (
     grams: Gram<never>[],
-    options: Options,
-): b.TSType => {
-    const attrs: { [key: string]: b.TSType } = {};
+):
+    | {
+          type: 'only';
+          only: Gram<never>;
+      }
+    | { type: 'attrs'; attrs: { [key: string]: Gram<never> } } => {
+    const attrs: { [key: string]: Gram<never> } = {};
     let firstNonString: null | Gram<EExtra> = null;
     grams.forEach((item) => {
         if (
@@ -143,17 +147,42 @@ export const sequenceToType = (
             firstNonString = item;
         }
         if (item.type === 'named') {
-            attrs[item.name] = gramToType(item.inner, options);
+            attrs[item.name] = item.inner;
         }
     });
     if (!Object.keys(attrs).length && firstNonString) {
-        return gramToType(firstNonString, options);
+        return { type: 'only', only: firstNonString };
+    }
+    return { type: 'attrs', attrs };
+};
+
+export const sequenceToType = (
+    grams: Gram<never>[],
+    options: Options,
+): b.TSType => {
+    const result = analyzeSequence(grams);
+    // const attrs: { [key: string]: b.TSType } = {};
+    // let firstNonString: null | Gram<never> = null;
+    // grams.forEach((item) => {
+    //     if (
+    //         !firstNonString &&
+    //         item.type !== 'literal' &&
+    //         item.type !== 'literal-ref'
+    //     ) {
+    //         firstNonString = item;
+    //     }
+    //     if (item.type === 'named') {
+    //         attrs[item.name] = gramToType(item.inner, options);
+    //     }
+    // });
+    if (result.type === 'only') {
+        return gramToType(result.only, options);
     }
     return b.tsTypeLiteral(
-        Object.keys(attrs).map((key) =>
+        Object.keys(result.attrs).map((key) =>
             b.tsPropertySignature(
                 b.identifier(key),
-                b.tsTypeAnnotation(attrs[key]),
+                b.tsTypeAnnotation(gramToType(result.attrs[key], options)),
             ),
         ),
     );
