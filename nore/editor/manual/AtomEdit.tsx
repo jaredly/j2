@@ -47,6 +47,9 @@ export const AtomEdit = <T,>({
 
     const commit = React.useCallback(() => {
         const type = store.map[idx].type;
+        if (!edit?.length) {
+            console.log('empty', path);
+        }
         try {
             const parsed =
                 edit?.length === 0

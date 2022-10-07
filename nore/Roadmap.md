@@ -25,7 +25,9 @@ Highlevel things I haven't solved at all:
 - [x] make comma work for callsuffix
 - [x] do a similar thing for '(', ...
 	- [x] and ')'
-- [ ] allow deletion of args
+- [x] allow deletion of args
+- [x] deletion of suffixes
+- [ ] the blank that is a potential arg should work pls
 - [ ] autocomplete 'fn' where appropriate, might need to wrap in parens in some cases.
 
 

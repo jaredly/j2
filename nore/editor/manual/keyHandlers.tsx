@@ -9,8 +9,9 @@ import {
     Selection,
     StoreUpdate,
     UpdateMap,
+    newBlank,
 } from '../store/store';
-import { Path } from '../generated/react-map';
+import { LambdaChildren, Path } from '../generated/react-map';
 import { firstChild, lastChild } from './navigation';
 
 export const handleOneComma = (store: Store, path: Path) => {
@@ -97,8 +98,23 @@ const handleBackspace = (
         removeSuffix(fullPath, depth, store, idx);
         return true;
     }
+    if (depth === 1 && item.type === 'Lambda') {
+        const children = LambdaChildren(item);
+        if (cid === children.length - 2) {
+            // Replace the lambda with a blank
+            const update: UpdateMap = {};
+            update[idx] = {
+                type: store.map[idx].type,
+                value: newBlank(),
+            } as t.Map[0];
+            updateStore(store, {
+                map: update,
+                selection: { type: 'edit', idx, cid: 0, at: 'change' },
+            });
+        }
+    }
     if (depth === 1 && item.type === 'CallSuffix') {
-        if (cid < item.args.length) {
+        if (cid < item.args.length && item.args.length > 1) {
             const update: t.Map = {};
             update[idx] = {
                 type: store.map[idx].type,
@@ -142,8 +158,10 @@ function removeSuffix(
     const ppath = fullPath[fullPath.length - 1 - depth - 1];
     const parent = store.map[ppath.idx].value as t.Apply;
     const newSuffixes = parent.suffixes.filter((id) => id !== idx);
+    const update: UpdateMap = {};
+    // TODO: recursively traverse the suffix to remove any node children
+    update[idx] = null;
     if (newSuffixes.length === 0) {
-        const update: UpdateMap = {};
         update[ppath.idx] = {
             type: store.map[ppath.idx].type,
             value: {
@@ -165,7 +183,6 @@ function removeSuffix(
             },
         });
     } else {
-        const update: t.Map = {};
         update[ppath.idx] = {
             type: store.map[ppath.idx].type,
             value: {
@@ -194,7 +211,11 @@ const handleCloseParen = (store: Store, path: Path) => {
             return true;
         }
     }
-    if (item.type === 'Apply' && path.cid > 0) {
+    if (
+        item.type === 'Apply' &&
+        path.cid > 0 &&
+        path.cid < item.suffixes.length
+    ) {
         const last = lastChild(store, item.suffixes[path.cid], []);
         if (last) {
             setSelection(store, last.sel);

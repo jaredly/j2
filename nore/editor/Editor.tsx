@@ -124,6 +124,89 @@ export const emptyStore = (): Store => ({
     onDeselect: null,
 });
 
+const KeyMonitor = () => {
+    const [key, setKey] = useState<string>(' ');
+    useEffect(() => {
+        const keydown = (e: KeyboardEvent) => {
+            setKey(e.key);
+        };
+        document.addEventListener('keydown', keydown, true);
+        return () => {
+            document.removeEventListener('keydown', keydown, true);
+        };
+    }, []);
+    return (
+        <div style={{ marginTop: 16 }}>
+            <div
+                style={{
+                    padding: 8,
+                    borderRadius: 3,
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    display: 'inline-block',
+                    whiteSpace: 'pre',
+                }}
+            >
+                {key}
+            </div>
+        </div>
+    );
+};
+
+const KeyHistoryMonitor = () => {
+    const [keys, setKeys] = useState<string[]>([]);
+    useEffect(() => {
+        const keydown = (e: KeyboardEvent) => {
+            setKeys((k) => k.concat([e.key]));
+        };
+        document.addEventListener('keydown', keydown, true);
+        return () => {
+            document.removeEventListener('keydown', keydown, true);
+        };
+    }, []);
+    return (
+        <div style={{ marginTop: 16 }}>
+            {keys.slice(-10).map((k) => (
+                <div
+                    style={{
+                        fontSize: 20,
+                        padding: 8,
+                        borderRadius: 3,
+                        backgroundColor: 'rgba(255,255,255,0.2)',
+                        display: 'inline-block',
+                        whiteSpace: 'pre',
+                    }}
+                >
+                    {k}
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const AllKeyMonitor = () => {
+    const [keys, setKeys] = useState<string[]>([]);
+    useEffect(() => {
+        const keydown = (e: KeyboardEvent) => {
+            setKeys((keys) => {
+                if (keys.includes(e.key)) {
+                    return keys;
+                }
+                return [...keys, e.key];
+            });
+        };
+        const keyup = (e: KeyboardEvent) => {
+            setKeys((keys) => keys.filter((k) => k !== e.key));
+        };
+        document.addEventListener('keydown', keydown, true);
+        document.addEventListener('keyup', keyup, true);
+        return () => {
+            document.removeEventListener('keydown', keydown, true);
+            document.removeEventListener('keyup', keyup, true);
+        };
+    }, []);
+    return <div>{keys.join(', ')}&nbsp;</div>;
+};
+
 export const Editor = ({ store, root }: { store: Store; root: number }) => {
     const dragHandlers = useDrag(store);
 
@@ -136,6 +219,7 @@ export const Editor = ({ store, root }: { store: Store; root: number }) => {
             <Keyboardians store={store} />
             {/* <ManualExpression id={root} store={store} path={[]} /> */}
             <Expression idx={root} store={store} path={[]} />
+            <KeyMonitor />
             <Dump store={store} id={root} />
         </div>
     );

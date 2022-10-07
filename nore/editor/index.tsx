@@ -12,10 +12,15 @@ import { run } from './test';
 const runApp = () => {
     const darkTheme = createTheme({
         type: 'dark',
-        theme: { colors: { background: '#0d0e16' } },
+        theme: {
+            colors: {
+                background: '#0d0e16',
+                selection: 'rgba(255,255,255,0.2)',
+            },
+        },
     });
 
-    const { store, root } = newStore('hello(23, fn(a)=>a(24), what())');
+    const { store, root } = newStore('hello(23, fn(a)=>a(24), what(one))');
     // const { store, root } = newStore('hello(one(2)(3), 1, 2u)');
 
     // @ts-ignore
