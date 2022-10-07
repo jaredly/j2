@@ -17,6 +17,16 @@ export const verifyHL = (v: Verify) => {
         end: { column: 50, line: 0, offset: 50 },
     };
     const matched: Verify['expected'] = [];
+    Object.keys(v.cache.types).forEach((k) => {
+        v.cache.types[+k].failures.forEach((failure) => {
+            const status: HL = {
+                loc: failure.loc,
+                type: 'Error',
+                message: `${failure.error}`,
+            };
+            statuses.push(status);
+        });
+    });
     v.errors.forEach((err) => {
         if (err.loc.end.offset === -1) {
             debugger;

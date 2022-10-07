@@ -6,10 +6,12 @@ import {
     localTrackingVisitor,
     LTCtx,
 } from '../core/typing/localTrackingVisitor';
-import { getType } from '../core/typing/getType';
+import { getType, GTCache } from '../core/typing/getType';
 import { maybeExpandTask } from '../core/typing/tasks';
 import { typeToString } from './Highlight';
 
+// NOTE: CollectAnnotations is probably not waht you want.
+// look for annotationVisitor in full.ts
 export const collectAnnotations = (tast: File, ctx: FullContext) => {
     const annotations: { loc: Loc; text: string }[] = [];
     const visitor: tt.Visitor<FullContext & LTCtx> = annotationVisitor(
@@ -18,6 +20,7 @@ export const collectAnnotations = (tast: File, ctx: FullContext) => {
     );
     // const allLocals: AllLocals = [];
     tt.transformFile(tast, visitor, { ...ctx, allLocals: annotations });
+
     // allLocals.forEach((local) => {
     //     // const type = getType(local.type, ctx);
     //     const text = typeToString(local.type, ctx);

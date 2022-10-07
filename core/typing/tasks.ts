@@ -6,7 +6,7 @@ import { transformExpression } from '../transform-tast';
 import { Loc, TApply, TEnum, Type, EnumCase, Expression } from '../typed-ast';
 import { initVerify, verifyVisitor } from './verify';
 import { localTrackingVisitor } from './localTrackingVisitor';
-import { isUnit, getType } from './getType';
+import { isUnit, getType, GTCache } from './getType';
 import { Ctx } from './typeMatches';
 import { expandEnumCases, LocalUnexpandable } from './expandEnumCases';
 import { unifyTypes } from './unifyTypes';
@@ -452,6 +452,7 @@ export const makeTaskType = (
 export const collectEffects = (
     t: Expression,
     ctx: Ctx,
+    cache?: GTCache,
 ): (EnumCase | Type)[] => {
     const cases: EnumCase[] = [];
     const others: Type[] = [];
@@ -463,7 +464,7 @@ export const collectEffects = (
             // umm so gettype is likely going to fail here.
             // need something like the verifyvisitor if I want this to work
             Await(node, ctx) {
-                const res = getType(node.target, ctx);
+                const res = getType(node.target, ctx, cache);
                 if (!res) {
                     return null;
                 }

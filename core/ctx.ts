@@ -12,7 +12,7 @@ import { resolveAnalyzeType } from './resolveAnalyzeType';
 import { transformExpression, transformType, Visitor } from './transform-tast';
 import { Expression, GlobalRef, RefKind, Sym, TVars, Type } from './typed-ast';
 import { Constraints, Ctx as ACtx, mergeConstraints } from './typing/analyze';
-import { getType } from './typing/getType';
+import { getType, GTCache } from './typing/getType';
 import { tnever, tunit } from './typing/tasks';
 import { makeToTast, ToplevelConfig } from './typing/to-tast';
 import { Ctx as TCtx } from './typing/typeMatches';
@@ -608,8 +608,8 @@ export const newContext = (): FullContext => {
         },
 
         // Analyze!
-        getType(expr: Expression) {
-            return getType(expr, this);
+        getType(expr: Expression, cache?: GTCache) {
+            return getType(expr, this, undefined, cache);
         },
         resolveAnalyzeType(type: Type) {
             return resolveAnalyzeType(type, this);

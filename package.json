@@ -5,6 +5,7 @@
     "main": "index.js",
     "scripts": {
         "start": "esbuild --bundle devui/server.ts --platform=node --external:vite | node -",
+        "norui": "esbuild --bundle nore/server.ts --platform=node --external:vite | node -",
         "grammar": "./utils/esrun.js utils/build-grammar.ts",
         "aggregates": "./utils/esrun.js utils/aggregates.ts; prettier -w core/elements/macros.ts",
         "re-fixture": "./utils/esrun.js utils/re-fixture.ts",
@@ -15,11 +16,13 @@
         "transform-ast": "npm run sync && ./utils/esrun.js utils/generate-transform.ts ./core/grammar/base.parser.ts ./core/transform-ast.ts; prettier -w core/transform-ast.ts",
         "build": "npm run grammar && npm run transform && npm run aggregates && npm run transform-ast",
         "sync": "./utils/esrun.js utils/sync-imports.ts",
-        "test": "./utils/esrun.js core/tests/run.ts",
+        "oldtest": "./utils/esrun.js core/tests/run.ts",
+        "test": "vitest --config vitest.config.js",
         "nojest": "./utils/esrun.js core/typing/__test__/analyze.nojest.ts",
         "fixn": "env FIX=1 pnpm nojest",
         "fix": "env FIX=1 jest",
         "cov": "jest --coverage",
+        "nore": "./utils/esrun.js nore/generate/run.ts",
         "sandbox": "vite sandbox --port 2034 --config sandbox/config.js",
         "sandbox-build": "vite build sandbox --config sandbox/config.js",
         "deploy-sandbox": "npm run sandbox-build; surge sandbox/dist jerd-sandbox.surge.sh"
@@ -49,12 +52,16 @@
     },
     "devDependencies": {
         "@babel/preset-typescript": "^7.17.12",
+        "@testing-library/jest-dom": "^5.16.5",
+        "@testing-library/react": "^13.4.0",
         "@types/babel__core": "^7.1.19",
         "@types/babel__generator": "^7.6.4",
         "@types/jest": "^28.1.1",
         "@types/node": "^17.0.42",
         "@types/object-hash": "^2.2.1",
         "esbuild": "^0.14.43",
-        "jest": "^28.1.1"
+        "jest": "^28.1.1",
+        "jsdom": "^20.0.0",
+        "vitest": "^0.23.1"
     }
 }

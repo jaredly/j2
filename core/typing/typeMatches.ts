@@ -37,7 +37,7 @@ import {
     Constraints,
     mergeConstraints,
 } from './analyze';
-import { isConst } from './getType';
+import { GTCache, isConst } from './getType';
 import { typeToString } from './__test__/typeToString';
 import { FullContext } from '../ctx';
 import { expandEnumCases } from './expandEnumCases';
@@ -50,7 +50,7 @@ export const trefsEqual = (a: TRef['ref'], b: TRef['ref']): boolean => {
 };
 
 export type Ctx = {
-    getType(expr: Expression): Type | null;
+    getType(expr: Expression, cache?: GTCache): Type | null;
     isBuiltinType(t: Type, name: string): boolean;
     getBuiltinRef(name: string): GlobalRef | null;
     resolveRefsAndApplies(

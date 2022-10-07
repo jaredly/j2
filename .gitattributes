@@ -2,3 +2,4 @@ core/grammar/base.parser-untyped.ts binary
 core/grammar/base.parser-untyped.js binary
 core/transform-tast.ts binary
 core/transform-ast.ts binary
+nore/generated/grammar.ts binary

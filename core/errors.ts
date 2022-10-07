@@ -26,5 +26,8 @@ export const errors = {
     caseMismatch: 1,
     conditionNotBoolean: 1,
     cannotReconcile: 2,
+    notATask: 1,
+    cannotUnify: 2,
+    notAnArray: 1,
 };
 export type ErrorTag = keyof typeof errors;
