@@ -32,20 +32,30 @@ export const Empty = ({
         }
     }, [sel]);
     const parsed = useMemo(() => {
+        if (!kind) {
+            return null;
+        }
+        // @ts-ignore
+        const fn = parsers['parse' + kind];
+        if (!fn) {
+            console.warn(`I wanted a parse`, kind);
+            return null;
+        }
         try {
-            // @ts-ignore
-            const parsed = parsers['parse' + kind](edit);
+            const parsed = fn(edit.trim());
             return parsed;
         } catch (err) {
-            console.log('no', err, kind);
+            console.log('no', err, kind, JSON.stringify(edit));
             return null;
         }
     }, [edit]);
 
     const commit = React.useCallback(() => {
         if (!kind || !edit.length) {
+            console.log('no commit', kind, edit.length);
             return;
         }
+        console.log('lets commit', edit);
         try {
             // @ts-ignore
             const parsed = parsers['parse' + kind](edit!.trim());
@@ -69,6 +79,22 @@ export const Empty = ({
                         } as t.Map[0],
                     },
                 });
+            } else if (
+                parent.type === 'Lambda' &&
+                last.cid === 1 &&
+                parent.args.length === 0
+            ) {
+                updateStore(store, {
+                    map: {
+                        ...update,
+                        [last.idx]: {
+                            ...store.map[last.idx],
+                            value: { ...parent, args: [parsed.loc.idx] },
+                        } as t.Map[0],
+                    },
+                });
+            } else {
+                console.warn(`NOT TO COMMIT idk`, parent.type);
             }
         } catch (err) {
             console.error(err);
