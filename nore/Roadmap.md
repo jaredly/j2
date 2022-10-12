@@ -10,6 +10,8 @@ Highlevel things I haven't solved at all:
 - [x] left from type annotation, it goes to an empty. I don't want it to be an empty
 - [x] delete an arg
 - [ ] empty arg, I need something better.
+	because when you deselect it ... oh yeah
+	I need a "ondeselect" handler. let's do that.
 
 - [ ] it would be great to do some pretty printing dealios
 	- [ ] so, we need to pass in "current indent" to everything, right?
