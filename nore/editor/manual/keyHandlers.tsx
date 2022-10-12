@@ -12,7 +12,7 @@ import {
     newBlank,
 } from '../store/store';
 import { LambdaChildren, Path } from '../generated/react-map';
-import { firstChild, lastChild } from './navigation';
+import { lastChild } from './navigation';
 
 export const handleOneComma = (store: Store, path: Path) => {
     const item = store.map[path.idx].value;
