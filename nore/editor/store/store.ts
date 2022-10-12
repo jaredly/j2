@@ -75,6 +75,7 @@ export type UpdateMap = { [key: string]: null | t.Map[0] };
 export type StoreUpdate = {
     map: UpdateMap;
     selection?: Selection | null;
+    prev?: Selection | null;
 };
 
 export const newStore = (text: string) => {
@@ -89,8 +90,9 @@ export const newStore = (text: string) => {
 
 export const updateStore = (
     store: Store,
-    { map: change, selection }: StoreUpdate,
+    { map: change, selection, prev }: StoreUpdate,
 ) => {
+    console.log(`-> updateStore`, change, selection);
     const pre: UpdateMap = {};
     Object.keys(change).forEach((item) => {
         pre[+item] = store.map[+item];
@@ -98,7 +100,7 @@ export const updateStore = (
     const history: HistoryItem = {
         pre,
         post: change,
-        preSelection: store.selection,
+        preSelection: prev != undefined ? prev : store.selection,
         postSelection: selection,
     };
     if (store.history.idx > 0) {
@@ -118,6 +120,20 @@ export const updateStore = (
     } else {
         notify(store, Object.keys(change).map(Number));
     }
+};
+
+export const setDeselect = (
+    store: Store,
+    idx: number,
+    cid: number,
+    fn: () => void,
+) => {
+    console.log(`setting deselect for ${idx} ${cid}`);
+    store.listeners[`deselect-${idx}:${cid}`] = [fn];
+    return () => {
+        console.log(`dropping deselect-${idx}:${cid}`);
+        delete store.listeners[`deselect-${idx}:${cid}`];
+    };
 };
 
 export type Store = {
@@ -180,7 +196,8 @@ export const setSelection = (
     selection: null | Selection,
     extraNotify?: number[],
     force?: boolean,
-) => {
+): null | Selection => {
+    const prevSelection = store.selection;
     // console.log(new Error().stack);
     if (
         store.selection?.idx === selection?.idx &&
@@ -195,10 +212,18 @@ export const setSelection = (
     ) {
         console.warn('skip sel', selection, store.selection);
         notify(store, extraNotify || []);
-        return;
+        return prevSelection;
     }
     store.onDeselect ? store.onDeselect() : null;
     const prev = store.selection?.idx;
+
+    if (store.selection) {
+        const k = `deselect-${store.selection.idx}:${store.selection.cid}`;
+        if (store.listeners[k]) {
+            console.log('notifying deselect', k);
+            store.listeners[k].forEach((fn) => fn());
+        }
+    }
 
     if (selection?.type === 'edit') {
         if (!store.map[selection.idx]) {
@@ -217,6 +242,7 @@ export const setSelection = (
 
     store.selection = selection;
     notify(store, [prev, selection?.idx, ...(extraNotify || [])]);
+    return prevSelection;
 };
 
 // get for changing (having already done the shallow clones)

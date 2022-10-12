@@ -22,7 +22,8 @@ const runApp = () => {
 
     const { store, root } = newStore(
         // 'fn(a: ok)=>a(24)',
-        'hello(23, fn(a: ok)=>a(24), what(one), more(), fn(b, c) => 23, 45, hello, yes)',
+        // 'hello(23, fn(a: ok)=>a(24), what(one), more(), fn(b, c) => 23, 45, hello, yes)',
+        'hello()',
     );
     // const { store, root } = newStore('hello(one(2)(3), 1, 2u)');
 

@@ -1,6 +1,6 @@
 import { Path } from '../generated/react-map';
-import React, { useLayoutEffect, useMemo, useRef } from 'react';
-import { setSelection, Store, updateStore } from '../store/store';
+import React, { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { setDeselect, setSelection, Store, updateStore } from '../store/store';
 import { goLeft, goRight } from './navigation';
 import { handleKey, keyHandlers } from './keyHandlers';
 import * as parsers from '../../generated/parser';
@@ -35,7 +35,7 @@ export const Empty = ({
         }
     }, [sel]);
     const parsed = useMemo(() => {
-        if (!kind) {
+        if (!kind || !edit.length) {
             return null;
         }
         // @ts-ignore
@@ -106,11 +106,21 @@ export const Empty = ({
         }
     }, [edit, kind]);
 
-    useLayoutEffect(() => {
-        if (!sel) {
-            commit();
+    const lastCommit = useRef(commit);
+    lastCommit.current = commit;
+
+    // useLayoutEffect(() => {
+    //     if (!sel) {
+    //         commit();
+    //     }
+    // }, [sel, edit, kind]);
+    useEffect(() => {
+        if (sel) {
+            return setDeselect(store, last.idx, last.cid, () => {
+                lastCommit.current();
+            });
         }
-    }, [sel, edit, kind]);
+    }, [sel]);
 
     if (!sel) {
         return <span style={{ height: '1em', color: 'red' }} />;

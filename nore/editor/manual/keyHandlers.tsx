@@ -21,6 +21,9 @@ export const handleOneComma = (store: Store, path: Path) => {
             path.cid < item.args.length ||
             (path.cid === 0 && item.args.length === 0)
         ) {
+            const prev = setSelection(store, null);
+            const item = store.map[path.idx].value as t.CallSuffix;
+            console.log('clear selection');
             const update: t.Map = {};
             const expr = to.Expression(parsers.parseExpression('_'), update);
             update[expr.loc.idx] = { type: 'Expression', value: expr };
@@ -43,6 +46,7 @@ export const handleOneComma = (store: Store, path: Path) => {
                     idx: expr.loc.idx,
                     cid: 0,
                 },
+                prev,
             });
             return true;
         }
@@ -334,6 +338,8 @@ const handleColon = (
 const handleOpenParen = (store: Store, path: Path, text: string) => {
     const mapped = store.map[path.idx];
     if (mapped.value.type === 'Apply') {
+        const prev = setSelection(store, null);
+        const mapped = store.map[path.idx] as t.MapApply;
         // we can add a callsuffix somewhere
         const map: t.Map = {};
         const callsuffix = to.CallSuffix(parsers.parseCallSuffix('(_)'), map);
@@ -357,6 +363,7 @@ const handleOpenParen = (store: Store, path: Path, text: string) => {
                 cid: 0,
                 at: 'change',
             },
+            prev,
         });
         return true;
     }
@@ -382,6 +389,7 @@ const handleOpenParen = (store: Store, path: Path, text: string) => {
         mapped.type === 'Expression' &&
         (mapped.value.type === 'Identifier' || mapped.value.type === 'Number')
     ) {
+        const prev = setSelection(store, null);
         const map: t.Map = {};
         const exp = to.Applyable(parsers.parseApplyable(text), map);
         const blank = to.add(map, {
@@ -418,6 +426,7 @@ const handleOpenParen = (store: Store, path: Path, text: string) => {
                 cid: 0,
                 at: 'change',
             },
+            prev,
         });
         return true;
     }

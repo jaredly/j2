@@ -1,13 +1,18 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { idx, parse } from '../../generated/grammar';
 import * as parsers from '../../generated/parser';
-import * as t from '../../generated/type-map';
-import * as c from './atomConfig';
 import * as to from '../../generated/to-map';
-import { updateStore, Store, newBlank, setSelection } from '../store/store';
+import * as t from '../../generated/type-map';
 import { Path } from '../generated/react-map';
-import { firstChild, goLeft, goRight } from './navigation';
-import { keyHandlers, handleKey } from './keyHandlers';
+import {
+    newBlank,
+    setDeselect,
+    setSelection,
+    Store,
+    updateStore,
+} from '../store/store';
+import * as c from './atomConfig';
+import { handleKey, keyHandlers } from './keyHandlers';
+import { goLeft, goRight } from './navigation';
 
 export const colors: { [key: string]: string } = {
     Identifier: '#5bb6b7',
@@ -87,11 +92,23 @@ export const AtomEdit = <T,>({
         }
     }, [edit, value, idx]);
 
-    useLayoutEffect(() => {
-        if (!editing) {
-            commit();
+    const lastCommit = useRef(commit);
+    lastCommit.current = commit;
+
+    useEffect(() => {
+        if (editing) {
+            return setDeselect(store, idx, 0, () => {
+                console.log(`trying to commit`);
+                lastCommit.current();
+            });
         }
     }, [editing]);
+
+    // useLayoutEffect(() => {
+    //     if (!editing) {
+    //         commit();
+    //     }
+    // }, [editing]);
 
     const ref = useRef(null as null | HTMLSpanElement);
     useLayoutEffect(() => {
@@ -174,12 +191,11 @@ export const AtomEdit = <T,>({
                 setSelection(store, null);
             }}
             style={{
-                color: parsed
-                    ? colors[parsed.type]
-                    : pathColor(
-                          path.concat([{ idx, cid: 0, punct: 0 }]),
-                          store,
-                      ),
+                color: parsed ? colors[parsed.type] : 'red',
+                // pathColor(
+                //       path.concat([{ idx, cid: 0, punct: 0 }]),
+                //       store,
+                //   ),
                 outline: 'none',
                 minHeight: '1.5em',
                 // backgroundColor: 'rgba(255, 255, 255, 0.1)',
