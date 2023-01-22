@@ -13,6 +13,7 @@ export type Ctx = {
         };
     };
     visitorTypes: string[];
+    ignoredMembers: string[];
 };
 
 export const getTypeName = (t: t.TSTypeElement) =>
@@ -192,6 +193,9 @@ export const objectTransformer = (
         }
         if (member.key.type !== 'Identifier') {
             throw new Error(`unexpected key ${member.key.type}`);
+        }
+        if (ctx.ignoredMembers.includes(member.key.name)) {
+            return;
         }
         if (!member.typeAnnotation) {
             throw new Error(`No annotation`);

@@ -85,6 +85,11 @@ imports.forEach((imp) => {
 });
 
 const ignore = [
+    // for j3
+    'Node',
+    'NodeContents',
+    'NodeList',
+
     'Locals',
     'Ctx',
     'VisitorCtx',
@@ -101,6 +106,8 @@ const ctx: Ctx = {
     visitorTypes: visitorNames.filter((n) => !ignore.includes(n)),
     transformers: {},
     transformerStatus: {},
+    // for j3
+    ignoredMembers: ['form']
 };
 
 let text =

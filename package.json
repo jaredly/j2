@@ -12,6 +12,7 @@
         "macros": "./utils/esrun.js utils/macros.ts",
         "-fix-ids": "./utils/esrun.js utils/fix-ids.ts",
         "fix-ids": "./utils/esrun.js utils/fix-ids.ts",
+        "tx": "./utils/esrun.js utils/generate-transform.ts",
         "transform": "npm run sync; ./utils/esrun.js utils/generate-transform.ts ./core/typed-ast.ts ./core/transform-tast.ts; prettier -w core/transform-tast.ts",
         "transform-ast": "npm run sync && ./utils/esrun.js utils/generate-transform.ts ./core/grammar/base.parser.ts ./core/transform-ast.ts; prettier -w core/transform-ast.ts",
         "build": "npm run grammar && npm run transform && npm run aggregates && npm run transform-ast",
